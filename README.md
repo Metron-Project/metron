@@ -14,8 +14,8 @@ Currently the only comic book database the provides a REST API for users is <a h
 ## 🤝 <a href="contributing">Contributing</a>
  
 If you're interested in helping add comics to the database, head over to <https://metron.cloud> and read the [Editing Guidelines](https://metron.cloud/pages/guidelines/editing/) before signing up for an account.<br><br>
-If you got knowledge of Python, Django or System Administation, I'm always looking for help with the technical side of the project, so please contact me.<br><br>
-If you have any questions or suggestions, please head over to the [discussion page](https://github.com/bpepple/metron/discussions).
+If you got knowledge of Python, Django or System Administration, I'm always looking for help with the technical side of the project, so please contact me.<br><br>
+If you have any questions or suggestions, please head over to the [discussion page](https://github.com/Metron-Project/metron/discussions).
 
 ## 👍🏻 <a href="alternative">Alternatives</a>
 The project is fairly new compared to the other databases, so it might not meet your needs. Some alternatives include:

@@ -97,7 +97,7 @@ class SeriesForm(ModelForm):
         if cvid:
             series_type = self.cleaned_data["series_type"]
             # Don't allow cv_id information for Trade Paperbacks. Refer to:
-            # https://github.com/bpepple/metron/issues/219
+            # https://github.com/Metron-Project/metron/issues/219
             if series_type.id == TPB:
                 msg = (
                     "Adding a Comic Vine ID  is not allowed for Trade Paperbacks, "
