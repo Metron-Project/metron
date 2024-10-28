@@ -1,5 +1,6 @@
 {% extends parent_template|default:"base.html" %}
 {% load thumbnail %}
+{% load humanize %}
 {% load static %}
 {% block sitedesc %}
     <meta name="description" content="{{ issue }} Information">
@@ -447,7 +448,7 @@
                         {% endif %}
                         {% if issue.page %}
                             <p>
-                                <b>Page Count:</b> {{ issue.page }}
+                                <b>Page Count:</b> {{ issue.page|intcomma }}
                             </p>
                         {% endif %}
                         <!-- Ratings are always present -->
