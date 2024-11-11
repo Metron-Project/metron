@@ -11,6 +11,7 @@ from comicsdb.models import Arc, Character, Creator, Issue, Publisher, Series, T
 # Cache time to live is 30 minutes.
 CACHE_TTL = 60 * 30
 
+
 def _create_year_count_dict():
     years_count = cache.get("year_count_dict")
     if not years_count:
@@ -22,10 +23,7 @@ def _create_year_count_dict():
         )
         cache.set("year_count_dict", years_count, CACHE_TTL)
 
-    return {
-        year_count["year"].strftime("%Y"): year_count["c"]
-        for year_count in years_count
-    }
+    return {year_count["year"].strftime("%Y"): year_count["c"] for year_count in years_count}
 
 
 def _create_pub_dict() -> dict[str, int]:
@@ -49,10 +47,7 @@ def _create_monthly_issue_dict() -> dict[str, int]:
         )
         cache.set("monthly_issues", monthly_issues, CACHE_TTL)
 
-    return {
-        issue["month"].strftime("%b"): issue["c"]
-        for issue in monthly_issues[::-1]
-    }
+    return {issue["month"].strftime("%b"): issue["c"] for issue in monthly_issues[::-1]}
 
 
 def _create_daily_issue_dict() -> dict[str, int]:
@@ -66,11 +61,7 @@ def _create_daily_issue_dict() -> dict[str, int]:
         )
         cache.set("daily_issues", daily_issues, CACHE_TTL)
 
-    return {
-        issue["day"].strftime("%m/%d"): issue["c"]
-        for issue in daily_issues[::-1]
-    }
-
+    return {issue["day"].strftime("%m/%d"): issue["c"] for issue in daily_issues[::-1]}
 
 
 def _create_creator_dict() -> dict[str, int]:
@@ -87,7 +78,6 @@ def _create_creator_dict() -> dict[str, int]:
     return {creator["month"].strftime("%b"): creator["c"] for creator in creators[::-1]}
 
 
-
 def _create_character_dict() -> dict[str, int]:
     characters = cache.get("characters")
     if not characters:
@@ -98,16 +88,23 @@ def _create_character_dict() -> dict[str, int]:
             .order_by("-month")[:12]
         )
         cache.set("characters", characters, CACHE_TTL)
-        
-    return {character["month"].strftime("%b"): character["c"] for character in characters[::-1]}
 
+    return {
+        character["month"].strftime("%b"): character["c"] for character in characters[::-1]
+    }
 
 
 def statistics(request):
     # Resource totals
     cache_keys = [
-        "stats_update_time", "publishers_total", "series_total", "issue_total",
-        "characters_total", "creators_total", "teams_total", "arcs_total"
+        "stats_update_time",
+        "publishers_total",
+        "series_total",
+        "issue_total",
+        "characters_total",
+        "creators_total",
+        "teams_total",
+        "arcs_total",
     ]
     cache_values = cache.get_many(cache_keys)
 
