@@ -1,10 +1,10 @@
 # Metron
 
-A commmunity created comicbook database.
+A community created comic-book database.
 
 
 ## 🤔 <a href="motivation">Motivation</a>
-Currently the only comic book database the provides a REST API for users is <a href="https://comicvine.gamespot.com/">Comic Vine</a>. Unfortunately, since it's a corporately-owned service, the community that uses it has no control over the amount of resources provided to maintain it or ensure it's continued accessibility. So, I started Metron as an alternative to Comic Vine and as an educational exercise.
+Currently, the only comic book database the provides a REST API for users is <a href="https://comicvine.gamespot.com/">Comic Vine</a>. Unfortunately, since it's a corporately-owned service, the community that uses it has no control over the amount of resources provided to maintain it or ensure it's continued accessibility. So, I started Metron as an alternative to Comic Vine and as an educational exercise.
 
 ## 🔊 <a href="community">Community</a>
 

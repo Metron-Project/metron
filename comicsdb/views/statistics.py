@@ -12,91 +12,7 @@ from comicsdb.models import Arc, Character, Creator, Issue, Publisher, Series, T
 CACHE_TTL = 60 * 30
 
 
-def create_pub_dict() -> dict[str, int]:
-    publishers = cache.get("publishers")
-    if not publishers:
-        publishers = Publisher.objects.annotate(num_issues=Count("series__issues")).values(
-            "name", "num_issues"
-        )
-        cache.set("publishers", publishers, CACHE_TTL)
-    return {publisher["name"]: publisher["num_issues"] for publisher in publishers}
-
-
-def create_monthly_issue_dict() -> dict[str, int]:
-    monthly_issues = cache.get("monthly_issues")
-    if not monthly_issues:
-        monthly_issues = (
-            Issue.objects.annotate(month=TruncMonth("created_on"))
-            .values("month")
-            .annotate(c=Count("month"))
-            .order_by("-month")[:12]
-        )
-        cache.set("monthly_issues", monthly_issues, CACHE_TTL)
-    monthly_issue_dict = {}
-    for issue in reversed(monthly_issues):
-        month_str = issue["month"].strftime("%b")
-        monthly_issue_dict[month_str] = issue["c"]
-
-    return monthly_issue_dict
-
-
-def create_daily_issue_dict() -> dict[str, int]:
-    # To get the last 30 items we need to reverse sort by the 'created_on' date, which
-    # necessitates using python's reversed() function before creating the dict.
-    daily_issues = cache.get("daily_issues")
-    if not daily_issues:
-        daily_issues = (
-            Issue.objects.annotate(day=TruncDate("created_on"))
-            .values("day")
-            .annotate(c=Count("day"))
-            .order_by("-day")[:30]
-        )
-        cache.set("daily_issues", daily_issues, CACHE_TTL)
-
-    daily_issue_dict = {}
-    for issue in reversed(daily_issues):
-        day_str = issue["day"].strftime("%m/%d")
-        daily_issue_dict[day_str] = issue["c"]
-    return daily_issue_dict
-
-
-def create_creator_dict() -> dict[str, int]:
-    creators = cache.get("creators")
-    if not creators:
-        creators = (
-            Creator.objects.annotate(month=TruncMonth("created_on"))
-            .values("month")
-            .annotate(c=Count("month"))
-            .order_by("-month")[:12]
-        )
-        cache.set("creators", creators, CACHE_TTL)
-
-    creator_dict = {}
-    for creator in reversed(creators):
-        month_str = creator["month"].strftime("%b")
-        creator_dict[month_str] = creator["c"]
-    return creator_dict
-
-
-def create_character_dict() -> dict[str, int]:
-    characters = cache.get("characters")
-    if not characters:
-        characters = (
-            Character.objects.annotate(month=TruncMonth("created_on"))
-            .values("month")
-            .annotate(c=Count("month"))
-            .order_by("-month")[:12]
-        )
-        cache.set("characters", characters, CACHE_TTL)
-
-    character_dict = {}
-    for character in reversed(characters):
-        month_str = character["month"].strftime("%b")
-        character_dict[month_str] = character["c"]
-    return character_dict
-
-
-def create_year_count_dict():
+def _create_year_count_dict():
     years_count = cache.get("year_count_dict")
     if not years_count:
         years_count = (
@@ -107,76 +23,134 @@ def create_year_count_dict():
         )
         cache.set("year_count_dict", years_count, CACHE_TTL)
 
-    year_count_dict = {}
-    for year_count in years_count:
-        year_str = year_count["year"].strftime("%Y")
-        year_count_dict[year_str] = year_count["c"]
-    return year_count_dict
+    return {year_count["year"].strftime("%Y"): year_count["c"] for year_count in years_count}
+
+
+def _create_pub_dict() -> dict[str, int]:
+    publishers = cache.get("publishers")
+    if not publishers:
+        publishers = Publisher.objects.annotate(num_issues=Count("series__issues")).values(
+            "name", "num_issues"
+        )
+        cache.set("publishers", publishers, CACHE_TTL)
+    return {publisher["name"]: publisher["num_issues"] for publisher in publishers}
+
+
+def _create_monthly_issue_dict() -> dict[str, int]:
+    monthly_issues = cache.get("monthly_issues")
+    if not monthly_issues:
+        monthly_issues = (
+            Issue.objects.annotate(month=TruncMonth("created_on"))
+            .values("month")
+            .annotate(c=Count("month"))
+            .order_by("-month")[:12]
+        )
+        cache.set("monthly_issues", monthly_issues, CACHE_TTL)
+
+    return {issue["month"].strftime("%b"): issue["c"] for issue in monthly_issues[::-1]}
+
+
+def _create_daily_issue_dict() -> dict[str, int]:
+    daily_issues = cache.get("daily_issues")
+    if not daily_issues:
+        daily_issues = (
+            Issue.objects.annotate(day=TruncDate("created_on"))
+            .values("day")
+            .annotate(c=Count("day"))
+            .order_by("-day")[:30]
+        )
+        cache.set("daily_issues", daily_issues, CACHE_TTL)
+
+    return {issue["day"].strftime("%m/%d"): issue["c"] for issue in daily_issues[::-1]}
+
+
+def _create_creator_dict() -> dict[str, int]:
+    creators = cache.get("creators")
+    if not creators:
+        creators = (
+            Creator.objects.annotate(month=TruncMonth("created_on"))
+            .values("month")
+            .annotate(c=Count("month"))
+            .order_by("-month")[:12]
+        )
+        cache.set("creators", creators, CACHE_TTL)
+
+    return {creator["month"].strftime("%b"): creator["c"] for creator in creators[::-1]}
+
+
+def _create_character_dict() -> dict[str, int]:
+    characters = cache.get("characters")
+    if not characters:
+        characters = (
+            Character.objects.annotate(month=TruncMonth("created_on"))
+            .values("month")
+            .annotate(c=Count("month"))
+            .order_by("-month")[:12]
+        )
+        cache.set("characters", characters, CACHE_TTL)
+
+    return {
+        character["month"].strftime("%b"): character["c"] for character in characters[::-1]
+    }
 
 
 def statistics(request):
     # Resource totals
-    update_time = cache.get("stats_update_time")
+    cache_keys = [
+        "stats_update_time",
+        "publishers_total",
+        "series_total",
+        "issue_total",
+        "characters_total",
+        "creators_total",
+        "teams_total",
+        "arcs_total",
+    ]
+    cache_values = cache.get_many(cache_keys)
+
+    update_time = cache_values.get("stats_update_time")
     if not update_time:
         update_time = datetime.now()
         cache.set("stats_update_time", update_time, CACHE_TTL)
 
-    publishers_total = cache.get("publishers_total")
-    if not publishers_total:
-        publishers_total = Publisher.objects.count()
-        cache.set("publishers_total", publishers_total, CACHE_TTL)
+    model_cache_map = {
+        "publishers_total": Publisher,
+        "series_total": Series,
+        "issue_total": Issue,
+        "characters_total": Character,
+        "creators_total": Creator,
+        "teams_total": Team,
+        "arcs_total": Arc,
+    }
 
-    series_total = cache.get("series_total")
-    if not series_total:
-        series_total = Series.objects.count()
-        cache.set("series_total", series_total, CACHE_TTL)
-
-    issues_total = cache.get("issue_total")
-    if not issues_total:
-        issues_total = Issue.objects.count()
-        cache.set("issue_total", issues_total, CACHE_TTL)
-
-    characters_total = cache.get("characters_total")
-    if not characters_total:
-        characters_total = Character.objects.count()
-        cache.set("characters_total", characters_total, CACHE_TTL)
-
-    creators_total = cache.get("creators_total")
-    if not creators_total:
-        creators_total = Creator.objects.count()
-        cache.set("creators_total", creators_total, CACHE_TTL)
-
-    teams_total = cache.get("teams_total")
-    if not teams_total:
-        teams_total = Team.objects.count()
-        cache.set("teams_total", teams_total, CACHE_TTL)
-
-    arcs_total = cache.get("arcs_total")
-    if not arcs_total:
-        arcs_total = Arc.objects.count()
-        cache.set("arcs_total", arcs_total, CACHE_TTL)
+    totals = {}
+    for key, model in model_cache_map.items():
+        totals[key] = cache_values.get(key)
+        if totals[key] is None:
+            totals[key] = model.objects.count()
+            cache.set(key, totals[key], CACHE_TTL)
 
     # Time based statistics
     pub_chart = PieChart(
-        create_pub_dict(),
+        _create_pub_dict(),
         title="Percentage of Issues by Publisher",
         thousands=",",
         legend=False,
     )
     year_chart = PieChart(
-        create_year_count_dict(), title="Number of Issues Added per Year", thousands=","
+        _create_year_count_dict(), title="Number of Issues Added per Year", thousands=","
     )
     daily_chart = ColumnChart(
-        create_daily_issue_dict(), title="Number of Issues for the last 30 days"
+        _create_daily_issue_dict(), title="Number of Issues for the last 30 days"
     )
     monthly_chart = ColumnChart(
-        create_monthly_issue_dict(), title="Number of Issues Added by Month", thousands=","
+        _create_monthly_issue_dict(), title="Number of Issues Added by Month", thousands=","
     )
     creator_chart = ColumnChart(
-        create_creator_dict(), title="Number of Creators Added by Month"
+        _create_creator_dict(), title="Number of Creators Added by Month"
     )
     character_chart = ColumnChart(
-        create_character_dict(),
+        _create_character_dict(),
         title="Number of Characters Added by Month",
     )
 
@@ -190,13 +164,13 @@ def statistics(request):
             "monthly_chart": monthly_chart,
             "creator_chart": creator_chart,
             "character_chart": character_chart,
-            "publishers_total": publishers_total,
-            "series_total": series_total,
-            "issues_total": issues_total,
-            "characters_total": characters_total,
-            "creators_total": creators_total,
-            "teams_total": teams_total,
-            "arcs_total": arcs_total,
+            "publishers_total": totals["publishers_total"],
+            "series_total": totals["series_total"],
+            "issues_total": totals["issue_total"],
+            "characters_total": totals["characters_total"],
+            "creators_total": totals["creators_total"],
+            "teams_total": totals["teams_total"],
+            "arcs_total": totals["arcs_total"],
             "update_time": update_time,
         },
     )
