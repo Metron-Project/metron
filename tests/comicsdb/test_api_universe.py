@@ -3,7 +3,7 @@ from django.urls import reverse
 from rest_framework import status
 
 
-@pytest.fixture()
+@pytest.fixture
 def create_universe_data(dc_comics):
     return {
         "publisher": dc_comics.id,
@@ -13,7 +13,7 @@ def create_universe_data(dc_comics):
     }
 
 
-@pytest.fixture()
+@pytest.fixture
 def create_put_data():
     return {"name": "Spidey's Dark Turn", "slug": "spideys-dark-turn", "desc": "I've changed!"}
 

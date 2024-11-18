@@ -3,7 +3,7 @@ from django.urls import reverse
 from rest_framework import status
 
 
-@pytest.fixture()
+@pytest.fixture
 def create_team_data(john_byrne, earth_2_universe):
     return {
         "name": "The Crazies",
@@ -13,7 +13,7 @@ def create_team_data(john_byrne, earth_2_universe):
     }
 
 
-@pytest.fixture()
+@pytest.fixture
 def create_put_data():
     return {"name": "Still Crazy", "slug": "still-crazy"}
 

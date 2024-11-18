@@ -7,19 +7,19 @@ from comicsdb.models.credits import Credits, Role
 from comicsdb.models.issue import Issue
 
 
-@pytest.fixture()
+@pytest.fixture
 def create_data(issue_with_arc: Issue, walter_simonson: Creator, writer: Role):
     return {"issue": issue_with_arc.id, "creator": walter_simonson.id, "role": [writer.id]}
 
 
-@pytest.fixture()
+@pytest.fixture
 def issue_credit(issue_with_arc: Issue, walter_simonson: Creator, writer: Role) -> Credits:
     c = Credits.objects.create(issue=issue_with_arc, creator=walter_simonson)
     c.role.add(writer)
     return c
 
 
-@pytest.fixture()
+@pytest.fixture
 def create_put_data(john_byrne):
     return {"creator": john_byrne.id}
 

@@ -13,7 +13,7 @@ from comicsdb.models.series import SeriesType
 from comicsdb.serializers import SeriesListSerializer
 
 
-@pytest.fixture()
+@pytest.fixture
 def create_series_data(single_issue_type: SeriesType, dc_comics: Publisher):
     return {
         "name": "The Wasp",
@@ -28,7 +28,7 @@ def create_series_data(single_issue_type: SeriesType, dc_comics: Publisher):
     }
 
 
-@pytest.fixture()
+@pytest.fixture
 def create_put_data():
     return {
         "name": "Wasp",

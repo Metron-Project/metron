@@ -10,8 +10,8 @@ class Command(BaseCommand):
     def handle(self, *args, **options):
         # Check for Limited Series (11), One-Shots (5), or Single Issues (13)
         #
-        # Exclude Annual (6), Digital Chapter (12), Graphic Novel (9), Hardcover (8), Omnibus (15) and
-        # Trade Paperbacks (10)
+        # Exclude Annual (6), Digital Chapter (12), Graphic Novel (9), Hardcover (8),
+        # Omnibus (15) and Trade Paperbacks (10)
         excluded_series_types = [6, 12, 9, 8, 15, 10]
 
         pubs = Publisher.objects.only("id", "name").all()

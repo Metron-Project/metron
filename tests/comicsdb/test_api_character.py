@@ -9,7 +9,7 @@ from comicsdb.models.team import Team
 from comicsdb.models.universe import Universe
 
 
-@pytest.fixture()
+@pytest.fixture
 def create_character_data(
     john_byrne: Creator, teen_titans: Team, earth_2_universe: Universe
 ) -> dict[str, Any]:
@@ -25,7 +25,7 @@ def create_character_data(
     }
 
 
-@pytest.fixture()
+@pytest.fixture
 def create_put_data():
     return {"desc": "The Dark Knight", "alias": ["Bruce Wayne"]}
 

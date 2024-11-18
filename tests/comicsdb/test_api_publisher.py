@@ -5,7 +5,7 @@ from rest_framework import status
 from comicsdb.serializers import SeriesListSerializer
 
 
-@pytest.fixture()
+@pytest.fixture
 def create_publisher_data():
     return {
         "name": "Soulside",
@@ -14,7 +14,7 @@ def create_publisher_data():
     }
 
 
-@pytest.fixture()
+@pytest.fixture
 def create_put_data():
     return {
         "name": "Marvel",

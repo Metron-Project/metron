@@ -13,7 +13,7 @@ PAGINATE_DEFAULT_VAL = 28
 PAGINATE_DIFF_VAL = PAGINATE_TEST_VAL - PAGINATE_DEFAULT_VAL
 
 
-@pytest.fixture()
+@pytest.fixture
 def list_of_characters(create_user):
     user = create_user()
     for pub_num in range(PAGINATE_TEST_VAL):

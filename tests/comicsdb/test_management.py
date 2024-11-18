@@ -14,7 +14,7 @@ FAKE_DESC = "Duplicate Object"
 FAKE_ALIAS = ["Clark Kent"]
 
 
-@pytest.fixture()
+@pytest.fixture
 def other_character(create_user) -> Character:
     user = create_user()
     supes = Character.objects.create(
@@ -47,7 +47,7 @@ def test_merge_characters(
     assert superman.attribution.count() == 0
 
 
-@pytest.fixture()
+@pytest.fixture
 def other_arc(create_user) -> Arc:
     user = create_user()
     return Arc.objects.create(
@@ -65,7 +65,7 @@ def test_merge_arcs(fc_arc: Arc, other_arc: Arc, basic_issue: Issue) -> None:
     assert fc_arc in basic_issue.arcs.all()
 
 
-@pytest.fixture()
+@pytest.fixture
 def other_team(create_user) -> Team:
     user = create_user()
     return Team.objects.create(
@@ -83,7 +83,7 @@ def test_merge_teams(teen_titans: Team, other_team: Team, basic_issue: Issue) ->
     assert teen_titans in basic_issue.teams.all()
 
 
-@pytest.fixture()
+@pytest.fixture
 def other_creator(create_user) -> Creator:
     user = create_user()
     return Creator.objects.create(

@@ -3,7 +3,7 @@ from django.urls import reverse
 from rest_framework import status
 
 
-@pytest.fixture()
+@pytest.fixture
 def create_put_data(dc_comics) -> dict[str, str | int]:
     return {
         "name": "Vertigo",
