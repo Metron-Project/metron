@@ -4,13 +4,13 @@ from comicsdb.forms.issue import IssueForm
 from comicsdb.models import Rating
 
 
-@pytest.mark.django_db()
+@pytest.mark.django_db
 class TestIssueForm:
-    @pytest.fixture()
+    @pytest.fixture
     def rating(self):
         return Rating.objects.create(name="Test Rating")
 
-    @pytest.fixture()
+    @pytest.fixture
     def issue_data(self, fc_series, rating):
         return {
             "series": fc_series.id,

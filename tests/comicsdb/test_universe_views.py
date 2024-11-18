@@ -12,7 +12,7 @@ PAGINATE_DEFAULT_VAL = 28
 PAGINATE_DIFF_VAL = PAGINATE_TEST_VAL - PAGINATE_DEFAULT_VAL
 
 
-@pytest.fixture()
+@pytest.fixture
 def list_of_universes(create_user, dc_comics):
     user = create_user()
     for uni_num in range(PAGINATE_TEST_VAL):

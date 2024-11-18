@@ -7,7 +7,7 @@ from users.models import CustomUser
 HTML_OK_CODE = 200
 
 
-@pytest.fixture()
+@pytest.fixture
 def loggedin_user(db):
     user = CustomUser.objects.create(username="foo", email="foo@bar.com")
     user.set_password("1234")

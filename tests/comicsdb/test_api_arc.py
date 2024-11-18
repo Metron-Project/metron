@@ -6,7 +6,7 @@ from rest_framework import status
 from comicsdb.serializers import IssueListSerializer
 
 
-@pytest.fixture()
+@pytest.fixture
 def create_arc_data():
     return {
         "name": "Dark Web",
@@ -14,7 +14,7 @@ def create_arc_data():
     }
 
 
-@pytest.fixture()
+@pytest.fixture
 def create_put_data():
     return {"name": "Spidey's Dark Turn", "slug": "spideys-dark-turn", "desc": "I've changed!"}
 

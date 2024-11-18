@@ -9,7 +9,7 @@ def test_user_creation(create_user):
     assert str(user) == user.username
 
 
-@pytest.mark.django_db()
+@pytest.mark.django_db
 @pytest.mark.parametrize(("username", "email"), [("", "foo@bar.com"), ("Foo", "")])
 def test_user_creation_missing_info(username, email, test_password):
     with pytest.raises(ValueError):  # noqa: PT011
@@ -18,7 +18,7 @@ def test_user_creation_missing_info(username, email, test_password):
         )
 
 
-@pytest.mark.django_db()
+@pytest.mark.django_db
 def test_superuser_creation(test_password, test_email):
     obj = CustomUser.objects.create_superuser(
         username="Foo", password=test_password, email=test_email
@@ -28,7 +28,7 @@ def test_superuser_creation(test_password, test_email):
     assert obj.is_staff is True
 
 
-@pytest.mark.django_db()
+@pytest.mark.django_db
 @pytest.mark.parametrize(("superuser", "staff"), [(True, False), (False, True)])
 def test_superuser_creation_without_roles(superuser, staff, test_password, test_email):
     with pytest.raises(ValueError):  # noqa: PT011

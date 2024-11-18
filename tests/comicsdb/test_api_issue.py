@@ -10,7 +10,7 @@ from comicsdb.models.series import Series
 from comicsdb.models.universe import Universe
 
 
-@pytest.fixture()
+@pytest.fixture
 def create_issue_data(fc_series: Series, fc_arc: Arc, earth_2_universe: Universe):
     return {
         "series": fc_series.id,
@@ -27,7 +27,7 @@ def create_issue_data(fc_series: Series, fc_arc: Arc, earth_2_universe: Universe
     }
 
 
-@pytest.fixture()
+@pytest.fixture
 def create_put_data(earth_2_universe: Universe):
     return {
         "name": ["This Man, This Monster", "Blah, Blah"],

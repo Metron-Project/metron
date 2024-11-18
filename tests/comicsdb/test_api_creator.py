@@ -5,7 +5,7 @@ from django.urls import reverse
 from rest_framework import status
 
 
-@pytest.fixture()
+@pytest.fixture
 def create_creator_data():
     return {
         "name": "A.J. Mendez",
@@ -15,7 +15,7 @@ def create_creator_data():
     }
 
 
-@pytest.fixture()
+@pytest.fixture
 def create_put_data():
     return {"alias": ["JB"], "birth": date(1950, 7, 6)}
 
