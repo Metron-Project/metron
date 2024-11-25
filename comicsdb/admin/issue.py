@@ -96,7 +96,13 @@ class IssueAdmin(AdminImageMixin, admin.ModelAdmin):
     autocomplete_fields = ["series", "characters", "teams", "arcs", "universes", "reprints"]
     list_select_related = ("series",)
     date_hierarchy = "cover_date"
-    actions = ["add_teen_rating", "add_dc_credits", "add_marvel_credits", "add_reprint_info"]
+    actions = [
+        "add_teen_rating",
+        "add_dc_credits",
+        "add_marvel_credits",
+        "add_reprint_info",
+        "remove_cover",
+    ]
     actions_on_top = True
     # form view
     fieldsets = (
@@ -132,6 +138,20 @@ class IssueAdmin(AdminImageMixin, admin.ModelAdmin):
         ),
     )
     inlines = (CreditsInline, VariantInline, AttributionInline)
+
+    @admin.action(description="Remove cover from selected issues")
+    def remove_cover(self, request, queryset) -> None:
+        count = 0
+        for issue in queryset:
+            if issue.image:
+                issue.image.delete(save=True)
+                count += 1
+
+        self.message_user(
+            request,
+            ngettext("%d issue was updated.", "%d issues were updated.", count) % count,
+            messages.SUCCESS,
+        )
 
     @admin.action(description="Add current DC executive credits")
     def add_dc_credits(self, request, queryset) -> None:
