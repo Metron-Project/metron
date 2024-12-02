@@ -1,7 +1,7 @@
 from django.core.management import BaseCommand
 from django.db.models import Count
 
-from comicsdb.models import Publisher, Series
+from comicsdb.models import Publisher, Series, SeriesType
 
 
 class Command(BaseCommand):
@@ -12,23 +12,60 @@ class Command(BaseCommand):
         #
         # Exclude Annual (6), Digital Chapter (12), Graphic Novel (9), Hardcover (8),
         # Omnibus (15) and Trade Paperbacks (10)
-        excluded_series_types = [6, 12, 9, 8, 15, 10]
+        excluded_series_types = {6, 12, 9, 8, 15, 10}
 
         pubs = Publisher.objects.only("id", "name").all()
+        series_types_qs = SeriesType.objects.filter(pk__in=excluded_series_types).values_list(
+            "id", "name"
+        )
+
+        # Pre-fetch all series data
+        all_series = (
+            Series.objects.exclude(series_type__in=excluded_series_types)
+            .values("publisher_id", "name", "volume")
+            .annotate(volume_count=Count("volume"))
+            .filter(volume_count__gt=1)
+            .order_by("name")
+        )
+        all_series_by_publisher = {}
+        for series in all_series:
+            all_series_by_publisher.setdefault(series["publisher_id"], []).append(series)
+
         for pub in pubs:
             self.stdout.write(
                 self.style.WARNING(f"Searching '{pub}' for possible bad volumes")
             )
 
-            if qs := list(
-                Series.objects.filter(publisher=pub)
-                .exclude(series_type__in=excluded_series_types)
-                .values("name", "volume")
-                .annotate(volume_count=Count("volume"))
-                .filter(volume_count__gt=1)
-                .order_by("name")
-            ):
-                for i in qs:
+            if pub.id in all_series_by_publisher:
+                for i in all_series_by_publisher[pub.id]:
                     self.stdout.write(self.style.ERROR(f"{i['name']} - {i['volume_count']}"))
             else:
-                self.stdout.write(self.style.SUCCESS(f"No bad volumes found for '{pub}'"))
+                self.stdout.write(self.style.SUCCESS(f"{pub} has no bad volumes"))
+
+        # Pre-fetch all series data for excluded types
+        all_excluded_series = (
+            Series.objects.filter(series_type__in=excluded_series_types)
+            .values("publisher_id", "series_type_id", "name", "volume")
+            .annotate(volume_count=Count("volume"))
+            .filter(volume_count__gt=1)
+            .order_by("name")
+        )
+        all_excluded_series_by_publisher = {}
+        for series in all_excluded_series:
+            all_excluded_series_by_publisher.setdefault(
+                (series["publisher_id"], series["series_type_id"]), []
+            ).append(series)
+
+        for pub in pubs:
+            self.stdout.write(
+                self.style.WARNING(f"Searching '{pub}' for possible bad volumes")
+            )
+            for st in series_types_qs:
+                key = (pub.id, st[0])
+                if key in all_excluded_series_by_publisher:
+                    for i in all_excluded_series_by_publisher[key]:
+                        self.stdout.write(
+                            self.style.ERROR(f"{i['name']} - {i['volume_count']}")
+                        )
+                else:
+                    self.stdout.write(self.style.SUCCESS(f"{pub} has no bad {st[1]} volumes"))
