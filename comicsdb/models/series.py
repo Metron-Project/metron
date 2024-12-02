@@ -91,7 +91,7 @@ class Series(CommonInfo):
             models.Index(fields=["name"], name="series_name_idx"),
         ]
         ordering = ["sort_name", "year_began"]
-        unique_together = ["publisher", "imprint", "name", "volume", "series_type"]
+        unique_together = ["publisher", "name", "volume", "series_type"]
         verbose_name_plural = "Series"
 
 
