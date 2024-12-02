@@ -29,6 +29,6 @@ class Command(BaseCommand):
                 .order_by("name")
             ):
                 for i in qs:
-                    self.stdout.write(self.style.SUCCESS(f"{i['name']} - {i['volume_count']}"))
+                    self.stdout.write(self.style.ERROR(f"{i['name']} - {i['volume_count']}"))
             else:
                 self.stdout.write(self.style.SUCCESS(f"No bad volumes found for '{pub}'"))
