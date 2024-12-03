@@ -32,15 +32,13 @@ class Command(BaseCommand):
             all_series_by_publisher.setdefault(series["publisher_id"], []).append(series)
 
         for pub in pubs:
-            self.stdout.write(
-                self.style.WARNING(f"Searching '{pub}' for possible bad volumes")
-            )
-
             if pub.id in all_series_by_publisher:
                 for i in all_series_by_publisher[pub.id]:
-                    self.stdout.write(self.style.ERROR(f"{i['name']} - {i['volume_count']}"))
-            else:
-                self.stdout.write(self.style.SUCCESS(f"{pub} has no bad volumes"))
+                    self.stdout.write(
+                        self.style.ERROR(
+                            f"{i['name']} | {i['volume_count']} Duplicates | {pub} "
+                        )
+                    )
 
         # Pre-fetch all series data for excluded types
         all_excluded_series = (
@@ -57,15 +55,12 @@ class Command(BaseCommand):
             ).append(series)
 
         for pub in pubs:
-            self.stdout.write(
-                self.style.WARNING(f"Searching '{pub}' for possible bad volumes")
-            )
             for st in series_types_qs:
                 key = (pub.id, st[0])
                 if key in all_excluded_series_by_publisher:
                     for i in all_excluded_series_by_publisher[key]:
                         self.stdout.write(
-                            self.style.ERROR(f"{i['name']} - {i['volume_count']}")
+                            self.style.ERROR(
+                                f"{i['name']} | {i['volume_count']} Duplicates | {pub} "
+                            )
                         )
-                else:
-                    self.stdout.write(self.style.SUCCESS(f"{pub} has no bad {st[1]} volumes"))
