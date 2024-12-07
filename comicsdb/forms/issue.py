@@ -12,6 +12,8 @@ from comicsdb.forms.team import TeamsWidget
 from comicsdb.forms.universe import UniversesWidget
 from comicsdb.models import Issue, Rating, Series
 
+MINIMUM_YEAR = 1900
+
 
 class ArcsWidget(s2forms.ModelSelect2MultipleWidget):
     search_fields = [
@@ -95,6 +97,18 @@ class IssueForm(ModelForm):
             self.fields["title"].disabled = True
         self.fields["name"].delimiter = ";"
         self.collections = [8, 10]
+
+    def _validate_date(self, field: str):
+        form_date = self.cleaned_data[field]
+        if form_date is not None and form_date.year < MINIMUM_YEAR:
+            raise ValidationError("Date has a non-valid year.")
+        return form_date
+
+    def clean_store_date(self):
+        return self._validate_date("store_date")
+
+    def clean_cover_date(self):
+        return self._validate_date("cover_date")
 
     def clean_sku(self):
         sku = self.cleaned_data["sku"]

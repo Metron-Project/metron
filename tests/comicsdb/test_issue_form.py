@@ -1,3 +1,5 @@
+from datetime import date
+
 import pytest
 
 from comicsdb.forms.issue import IssueForm
@@ -41,12 +43,10 @@ class TestIssueForm:
             ("sku", "SKU123", "SKU123"),
             ("isbn", "0-87135-814-X", "087135814X"),
             ("upc", "123456789012", "123456789012"),
+            ("cover_date", date(2023, 1, 1), date(2023, 1, 1)),
+            ("store_date", date(2023, 1, 1), date(2023, 1, 1)),
         ],
-        ids=[
-            "valid_sku",
-            "valid_isbn",
-            "valid_upc",
-        ],
+        ids=["valid_sku", "valid_isbn", "valid_upc", "valid_cover_date", "valid_store_date"],
     )
     def test_clean_fields_valid(self, issue_data, field, value, expected):
         # Arrange
@@ -67,12 +67,16 @@ class TestIssueForm:
             ("isbn", "invalid_isbn", "ISBN is not a valid ISBN-10 or ISBN-13."),
             ("upc", "UPC 123", "UPC must be numeric. No spaces or hyphens allowed."),
             ("title", "Test Title", "Collection Title field is not allowed for this series.."),
+            ("cover_date", date(412, 1, 1), "Date has a non-valid year."),
+            ("store_date", date(412, 1, 1), "Date has a non-valid year."),
         ],
         ids=[
             "invalid_sku",
             "invalid_isbn",
             "invalid_upc",
             "invalid_title",
+            "invalid_cover_date",
+            "invalid_store_date",
         ],
     )
     def test_clean_fields_invalid(self, issue_data, field, value, error_message):
