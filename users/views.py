@@ -107,7 +107,7 @@ class ChangePasswordView(SuccessMessageMixin, PasswordChangeView):
 
 def change_profile(request):
     if not request.user.is_authenticated:
-        return redirect("signup")
+        return redirect("login")
     if request.method == "POST":
         form = CustomUserChangeForm(request.POST, request.FILES, instance=request.user)
         if form.is_valid():
