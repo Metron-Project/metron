@@ -9,7 +9,6 @@ from comicsdb.models.credits import Credits, Role
 from comicsdb.models.issue import Issue
 from comicsdb.models.team import Team
 
-FAKE_CVID = 9999
 FAKE_DESC = "Duplicate Object"
 FAKE_ALIAS = ["Clark Kent"]
 
@@ -20,7 +19,6 @@ def other_character(create_user) -> Character:
     supes = Character.objects.create(
         name="Superman",
         desc=FAKE_DESC,
-        cv_id=FAKE_CVID,
         alias=FAKE_ALIAS,
         edited_by=user,
         created_by=user,
@@ -40,7 +38,6 @@ def test_merge_characters(
     call_command("merge_characters", canonical=superman.id, other=other_character.id)
     superman.refresh_from_db()
     basic_issue.refresh_from_db()
-    assert superman.cv_id == FAKE_CVID
     assert superman.desc == FAKE_DESC
     assert superman.alias == FAKE_ALIAS
     assert superman in basic_issue.characters.all()
@@ -51,7 +48,7 @@ def test_merge_characters(
 def other_arc(create_user) -> Arc:
     user = create_user()
     return Arc.objects.create(
-        name="Final Crisis", desc=FAKE_DESC, cv_id=FAKE_CVID, edited_by=user, created_by=user
+        name="Final Crisis", desc=FAKE_DESC, edited_by=user, created_by=user
     )
 
 
@@ -60,7 +57,6 @@ def test_merge_arcs(fc_arc: Arc, other_arc: Arc, basic_issue: Issue) -> None:
     call_command("merge_arcs", canonical=fc_arc.id, other=other_arc.id)
     fc_arc.refresh_from_db()
     basic_issue.refresh_from_db()
-    assert fc_arc.cv_id == FAKE_CVID
     assert fc_arc.desc == FAKE_DESC
     assert fc_arc in basic_issue.arcs.all()
 
@@ -69,7 +65,7 @@ def test_merge_arcs(fc_arc: Arc, other_arc: Arc, basic_issue: Issue) -> None:
 def other_team(create_user) -> Team:
     user = create_user()
     return Team.objects.create(
-        name="Teen Titans", desc=FAKE_DESC, cv_id=FAKE_CVID, edited_by=user, created_by=user
+        name="Teen Titans", desc=FAKE_DESC, edited_by=user, created_by=user
     )
 
 
@@ -78,7 +74,6 @@ def test_merge_teams(teen_titans: Team, other_team: Team, basic_issue: Issue) ->
     call_command("merge_teams", canonical=teen_titans.id, other=other_team.id)
     teen_titans.refresh_from_db()
     basic_issue.refresh_from_db()
-    assert teen_titans.cv_id == FAKE_CVID
     assert teen_titans.desc == FAKE_DESC
     assert teen_titans in basic_issue.teams.all()
 
@@ -87,7 +82,7 @@ def test_merge_teams(teen_titans: Team, other_team: Team, basic_issue: Issue) ->
 def other_creator(create_user) -> Creator:
     user = create_user()
     return Creator.objects.create(
-        name="John Byre", desc=FAKE_DESC, cv_id=FAKE_CVID, edited_by=user, created_by=user
+        name="John Byre", desc=FAKE_DESC, edited_by=user, created_by=user
     )
 
 
@@ -100,5 +95,4 @@ def test_merge_creators(
     john_byrne.refresh_from_db()
     credit_obj.refresh_from_db()
     assert john_byrne.desc == FAKE_DESC
-    assert john_byrne.cv_id == FAKE_CVID
     assert credit_obj.creator == john_byrne
