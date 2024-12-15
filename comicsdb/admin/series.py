@@ -27,6 +27,7 @@ class SeriesAdmin(admin.ModelAdmin):
                     "associated",
                     "desc",
                     "cv_id",
+                    "gcd_id",
                     "edited_by",
                 )
             },

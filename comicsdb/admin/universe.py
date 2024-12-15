@@ -22,6 +22,7 @@ class UniverseAdmin(AdminImageMixin, admin.ModelAdmin):
                     "designation",
                     "desc",
                     "cv_id",
+                    "gcd_id",
                     "image",
                     "edited_by",
                 )

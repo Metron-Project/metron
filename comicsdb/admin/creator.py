@@ -11,6 +11,17 @@ class CreatorAdmin(AdminImageMixin, admin.ModelAdmin):
     prepopulated_fields = {"slug": ("name",)}
     list_filter = ("created_on", "modified")
     readonly_fields = ("modified",)
-    field = ("name", "slug", "modified", "birth", "death", "alias", "desc", "cv_id", "image")
+    field = (
+        "name",
+        "slug",
+        "modified",
+        "birth",
+        "death",
+        "alias",
+        "desc",
+        "cv_id",
+        "gcd_id",
+        "image",
+    )
     actions_on_top = True
     inlines = [AttributionInline]
