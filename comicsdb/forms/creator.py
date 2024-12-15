@@ -21,6 +21,7 @@ class CreatorForm(ModelForm):
             "birth",
             "death",
             "cv_id",
+            "gcd_id",
             "image",
         )
         widgets = {

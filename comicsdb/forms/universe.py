@@ -11,7 +11,14 @@ class UniversesWidget(s2forms.ModelSelect2MultipleWidget):
 class UniverseForm(ModelForm):
     class Meta:
         model = Universe
-        fields = ("publisher", "name", "designation", "desc", "image")
+        fields = (
+            "publisher",
+            "name",
+            "designation",
+            "desc",
+            "gcd_id",
+            "image",
+        )  # CV doesn't have universe resource
         widgets = {"image": ClearableFileInput()}
         help_texts = {
             "name": "Do not use a hyphen to separate text in this field. For example, "
