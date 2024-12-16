@@ -125,6 +125,7 @@ class IssueDetail(DetailView):
                     "image",
                     "cover_hash",
                     "cv_id",
+                    "gcd_id",
                     "created_by_id",
                     "edited_by_id",
                     "series__desc",
