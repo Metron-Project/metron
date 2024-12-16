@@ -31,9 +31,10 @@ class ArcSerializer(serializers.ModelSerializer):
         instance.desc = validated_data.get("desc", instance.desc)
         instance.image = validated_data.get("image", instance.image)
         instance.cv_id = validated_data.get("cv_id", instance.cv_id)
+        instance.gcd_id = validated_data.get("gcd_id", instance.gcd_id)
         instance.save()
         return instance
 
     class Meta:
         model = Arc
-        fields = ("id", "name", "desc", "image", "cv_id", "resource_url", "modified")
+        fields = ("id", "name", "desc", "image", "cv_id", "gcd_id", "resource_url", "modified")

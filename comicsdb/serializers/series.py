@@ -63,6 +63,7 @@ class SeriesSerializer(serializers.ModelSerializer):
         instance.publisher = validated_data.get("publisher", instance.publisher)
         instance.imprint = validated_data.get("imprint", instance.imprint)
         instance.cv_id = validated_data.get("cv_id", instance.cv_id)
+        instance.gcd_id = validated_data.get("gcd_id", instance.gcd_id)
         if genres_data := validated_data.pop("genres", None):
             instance.genres.add(*genres_data)
         if assoc_data := validated_data.pop("associated", None):
@@ -88,6 +89,7 @@ class SeriesSerializer(serializers.ModelSerializer):
             "genres",
             "associated",
             "cv_id",
+            "gcd_id",
             "resource_url",
             "modified",
         )

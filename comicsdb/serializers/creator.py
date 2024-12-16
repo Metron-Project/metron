@@ -34,6 +34,7 @@ class CreatorSerializer(serializers.ModelSerializer):
         instance.birth = validated_data.get("birth", instance.birth)
         instance.death = validated_data.get("death", instance.death)
         instance.cv_id = validated_data.get("cv_id", instance.cv_id)
+        instance.gcd_id = validated_data.get("gcd_id", instance.gcd_id)
         return instance
 
     class Meta:
@@ -47,6 +48,7 @@ class CreatorSerializer(serializers.ModelSerializer):
             "image",
             "alias",
             "cv_id",
+            "gcd_id",
             "resource_url",
             "modified",
         )
