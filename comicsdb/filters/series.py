@@ -36,6 +36,10 @@ class SeriesFilter(filters.FilterSet):
         label="Comic Vine ID", field_name="cv_id", lookup_expr="exact"
     )
     missing_cv_id = filters.filters.BooleanFilter(field_name="cv_id", lookup_expr="isnull")
+    gcd_id = filters.filters.NumberFilter(
+        label="Grand Comics Database ID", field_name="gcd_id", lookup_expr="exact"
+    )
+    missing_gcd_id = filters.filters.BooleanFilter(field_name="gcd_id", lookup_expr="isnull")
 
     class Meta:
         model = Series

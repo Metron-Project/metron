@@ -12,6 +12,9 @@ class ComicVineFilter(NameFilter):
     cv_id = filters.NumberFilter(
         label="Comic Vine ID", field_name="cv_id", lookup_expr="exact"
     )
+    gcd_id = filters.NumberFilter(
+        label="Grand Comics Database ID", field_name="gcd_id", lookup_expr="exact"
+    )
 
 
 class UniverseFilter(NameFilter):
