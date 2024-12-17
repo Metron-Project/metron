@@ -45,6 +45,7 @@ class CharacterSerializer(serializers.ModelSerializer):
         instance.image = validated_data.get("image", instance.image)
         instance.alias = validated_data.get("alias", instance.alias)
         instance.cv_id = validated_data.get("cv_id", instance.cv_id)
+        instance.gcd_id = validated_data.get("gcd_id", instance.gcd_id)
         if creators_data := validated_data.get("creators", None):
             instance.creators.add(*creators_data)
         if teams_data := validated_data.get("teams", None):
@@ -66,6 +67,7 @@ class CharacterSerializer(serializers.ModelSerializer):
             "teams",
             "universes",
             "cv_id",
+            "gcd_id",
             "resource_url",
             "modified",
         )

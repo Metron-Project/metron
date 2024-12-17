@@ -17,6 +17,7 @@ class CharacterForm(ModelForm):
             "teams",
             "universes",
             "cv_id",
+            "gcd_id",
             "image",
         )
         widgets = {

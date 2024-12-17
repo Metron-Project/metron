@@ -11,9 +11,9 @@ class PublisherWidget(s2forms.ModelSelect2Widget):
 class PublisherForm(ModelForm):
     class Meta:
         model = Publisher
-        fields = ["name", "desc", "founded", "cv_id", "image"]
+        fields = ["name", "desc", "founded", "cv_id", "gcd_id", "image"]
         widgets = {
             "image": ClearableFileInput(),
         }
 
-    field_order = ["name", "desc", "founded", "cv_id", "image"]
+    field_order = ["name", "desc", "founded", "cv_id", "gcd_id", "image"]

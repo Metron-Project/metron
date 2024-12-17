@@ -23,6 +23,7 @@ class TeamAdmin(AdminImageMixin, admin.ModelAdmin):
                     "creators",
                     "universes",
                     "cv_id",
+                    "gcd_id",
                     "image",
                     "edited_by",
                 )

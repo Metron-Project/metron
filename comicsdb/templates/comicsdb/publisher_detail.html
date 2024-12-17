@@ -256,6 +256,11 @@
                             <b>Comic Vine ID:</b> {{ publisher.cv_id }}
                         </p>
                     {% endif %}
+                    {% if publisher.gcd_id %}
+                        <p>
+                            <b>Grand Comics Database ID:</b> {{ publisher.gcd_id }}
+                        </p>
+                    {% endif %}
                 </div>
             </div>
         {% endif %}

@@ -40,6 +40,7 @@ class TeamSerializer(serializers.ModelSerializer):
         instance.desc = validated_data.get("desc", instance.desc)
         instance.image = validated_data.get("image", instance.image)
         instance.cv_id = validated_data.get("cv_id", instance.cv_id)
+        instance.gcd_id = validated_data.get("gcd_id", instance.gcd_id)
         if creators_data := validated_data.pop("creators", None):
             instance.creators.add(*creators_data)
         if universes_data := validated_data.pop("universes", None):
@@ -57,6 +58,7 @@ class TeamSerializer(serializers.ModelSerializer):
             "creators",
             "universes",
             "cv_id",
+            "gcd_id",
             "resource_url",
             "modified",
         )

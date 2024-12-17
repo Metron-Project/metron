@@ -13,7 +13,7 @@ class TeamsWidget(s2forms.ModelSelect2MultipleWidget):
 class TeamForm(ModelForm):
     class Meta:
         model = Team
-        fields = ("name", "desc", "creators", "universes", "cv_id", "image")
+        fields = ("name", "desc", "creators", "universes", "cv_id", "gcd_id", "image")
         widgets = {
             "creators": CreatorsWidget(attrs={"class": "input"}),
             "universes": UniversesWidget(attrs={"class": "input"}),

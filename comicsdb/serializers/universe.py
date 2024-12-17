@@ -33,6 +33,7 @@ class UniverseSerializer(serializers.ModelSerializer):
         instance.name = validated_data.get("name", instance.name)
         instance.designation = validated_data.get("designation", instance.designation)
         instance.desc = validated_data.get("desc", instance.desc)
+        instance.gcd_id = validated_data.get("gcd_id", instance.gcd_id)
         instance.image = validated_data.get("image", instance.image)
         instance.save()
         return instance
@@ -45,6 +46,7 @@ class UniverseSerializer(serializers.ModelSerializer):
             "name",
             "designation",
             "desc",
+            "gcd_id",
             "image",
             "resource_url",
             "modified",

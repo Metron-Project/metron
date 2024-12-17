@@ -130,6 +130,7 @@ class IssueAdmin(AdminImageMixin, admin.ModelAdmin):
                     "universes",
                     "reprints",
                     "cv_id",
+                    "gcd_id",
                     "image",
                     "created_by",
                     "edited_by",

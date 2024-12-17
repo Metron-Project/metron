@@ -67,6 +67,10 @@ class IssueFilter(df.rest_framework.FilterSet):
         label="Comic Vine ID", field_name="cv_id", lookup_expr="exact"
     )
     missing_cv_id = df.rest_framework.BooleanFilter(field_name="cv_id", lookup_expr="isnull")
+    gcd_id = df.rest_framework.NumberFilter(
+        label="Grand Comics Database ID", field_name="gcd_id", lookup_expr="exact"
+    )
+    missing_gcd_id = df.rest_framework.BooleanFilter(field_name="gcd_id", lookup_expr="isnull")
     cover_hash = df.rest_framework.CharFilter(
         label="Cover Hash", field_name="cover_hash", lookup_expr="iexact"
     )
@@ -109,6 +113,9 @@ class IssueViewFilter(df.FilterSet):
     upc = df.CharFilter(label="UPC Code", field_name="upc", lookup_expr="iexact")
     cv_id = df.rest_framework.NumberFilter(
         label="Comic Vine ID", field_name="cv_id", lookup_expr="exact"
+    )
+    gcd_id = df.rest_framework.NumberFilter(
+        label="Grand Comics Database ID", field_name="gcd_id", lookup_expr="exact"
     )
 
     class Meta:

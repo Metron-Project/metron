@@ -25,7 +25,8 @@ class CommonInfo(models.Model):
     name = models.CharField(max_length=255)
     slug = models.SlugField(max_length=255, unique=True)
     desc = models.TextField("Description", blank=True)
-    cv_id = models.PositiveIntegerField("Comic Vine ID", null=True, blank=True)
+    cv_id = models.PositiveIntegerField("Comic Vine ID", null=True, blank=True, unique=True)
+    gcd_id = models.PositiveIntegerField("GCD ID", null=True, blank=True, unique=True)
     modified = models.DateTimeField(auto_now=True)
     created_on = models.DateTimeField(db_default=Now())
 

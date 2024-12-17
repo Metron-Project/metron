@@ -305,6 +305,11 @@
                         <b>Comic Vine ID:</b> {{ series.cv_id }}
                     </p>
                 {% endif %}
+                {% if series.gcd_id %}
+                    <p>
+                        <b>Grand Comics Database ID:</b> {{ series.gcd_id }}
+                    </p>
+                {% endif %}
             </div>
             <!-- end series detail info -->
             <!-- associated series -->

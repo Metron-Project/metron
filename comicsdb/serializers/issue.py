@@ -112,6 +112,7 @@ class IssueSerializer(serializers.ModelSerializer):
         instance.desc = validated_data.get("desc", instance.desc)
         instance.image = validated_data.get("image", instance.image)
         instance.cv_id = validated_data.get("cv_id", instance.cv_id)
+        instance.gcd_id = validated_data.get("gcd_id", instance.gcd_id)
         if arcs_data := validated_data.pop("arcs", None):
             instance.arcs.add(*arcs_data)
         if characters_data := validated_data.pop("characters", None):
@@ -149,6 +150,7 @@ class IssueSerializer(serializers.ModelSerializer):
             "universes",
             "reprints",
             "cv_id",
+            "gcd_id",
             "resource_url",
         )
 
@@ -199,6 +201,7 @@ class IssueReadSerializer(serializers.ModelSerializer):
             "reprints",
             "variants",
             "cv_id",
+            "gcd_id",
             "resource_url",
             "modified",
         )

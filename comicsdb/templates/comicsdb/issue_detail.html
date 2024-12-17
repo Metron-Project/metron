@@ -496,6 +496,11 @@
                                 <b>Comic Vine ID:</b> {{ issue.cv_id }}
                             </p>
                         {% endif %}
+                        {% if issue.gcd_id %}
+                            <p>
+                                <b>Grand Comics Database ID:</b> {{ issue.gcd_id }}
+                            </p>
+                        {% endif %}
                     </div>
                 </div>
                 <!-- end misc info -->

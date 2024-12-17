@@ -60,6 +60,7 @@ class IssueForm(ModelForm):
             "upc",
             "page",
             "cv_id",
+            "gcd_id",
             "desc",
             "characters",
             "teams",
