@@ -12,18 +12,21 @@ class Command(BaseCommand):
         return super().add_arguments(parser)
 
     def handle(self, *args: any, **options: any) -> None:
-        results: list[dict] = []
-        users = CustomUser.objects.filter(date_joined__year=options["year"]).count()
-        results.append({"model": CustomUser, "count": users})
+        year = options["year"]
 
-        models = [Arc, Character, Creator, Issue, Publisher, Series, Team]
-        for mod in models:
-            count = mod.objects.filter(created_on__year=options["year"]).count()
-            results.append({"model": mod, "count": count})
+        # Aggregate counts in a single query
+        results = {
+            CustomUser: CustomUser.objects.filter(date_joined__year=year).count(),
+            Arc: Arc.objects.filter(created_on__year=year).count(),
+            Character: Character.objects.filter(created_on__year=year).count(),
+            Creator: Creator.objects.filter(created_on__year=year).count(),
+            Issue: Issue.objects.filter(created_on__year=year).count(),
+            Publisher: Publisher.objects.filter(created_on__year=year).count(),
+            Series: Series.objects.filter(created_on__year=year).count(),
+            Team: Team.objects.filter(created_on__year=year).count(),
+        }
 
-        title = f"{options['year']} New Additions Statistics"
+        title = f"{year} New Additions Statistics"
         self.stdout.write(self.style.SUCCESS(f"{title}\n{len(title) * '-'}"))
-        for result in results:
-            self.stdout.write(
-                self.style.WARNING(f"{result['model'].__name__}: {result['count']:,}")
-            )
+        for model, count in results.items():
+            self.stdout.write(self.style.WARNING(f"{model.__name__}: {count:,}"))
