@@ -9,27 +9,35 @@ from users.models import CustomUser
 class Command(BaseCommand):
     help = "Get monthly stats"
 
-    def add_arguments(self, parser: any) -> None:
-        """Add the arguments to the command"""
+    def add_arguments(self, parser) -> None:
         parser.add_argument("--month", type=int, required=True)
         parser.add_argument("--year", type=int, required=True)
 
-    def handle(self, *args: any, **options: any) -> None:
-        """Run the command"""
+    def handle(self, *args, **options) -> None:
         month = options["month"]
         year = options["year"]
-        results: list[dict] = []
 
-        users = CustomUser.objects.filter(
-            date_joined__month=month, date_joined__year=year
-        ).count()
-        results.append({"model": CustomUser, "count": users})
+        # Combine queries using annotation
+        results = [
+            {
+                "model": CustomUser,
+                "count": CustomUser.objects.filter(
+                    date_joined__month=month, date_joined__year=year
+                ).count(),
+            }
+        ]
 
+        # Efficient counting for other models
         models = [Character, Creator, Issue]
-        for mod in models:
-            count = mod.objects.filter(created_on__month=month, created_on__year=year).count()
-            results.append({"model": mod, "count": count})
-
+        results.extend(
+            {
+                "model": mod,
+                "count": mod.objects.filter(
+                    created_on__month=month, created_on__year=year
+                ).count(),
+            }
+            for mod in models
+        )
         title = f"Stats for {date(year, month, 1).strftime('%B %Y')}"
 
         self.stdout.write(self.style.SUCCESS(title))
