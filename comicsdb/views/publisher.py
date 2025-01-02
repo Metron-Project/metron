@@ -7,8 +7,8 @@ from django.core.exceptions import ObjectDoesNotExist
 from django.db import transaction
 from django.db.models import Q
 from django.shortcuts import get_object_or_404
-from django.urls import reverse_lazy
-from django.views.generic import DetailView, ListView
+from django.urls import reverse, reverse_lazy
+from django.views.generic import DetailView, ListView, RedirectView
 from django.views.generic.edit import CreateView, DeleteView, UpdateView
 
 from comicsdb.forms.attribution import AttributionFormSet
@@ -73,6 +73,12 @@ class PublisherDetail(DetailView):
             "previous_publisher": previous_publisher,
         }
         return context
+
+
+class PublisherDetailRedirect(RedirectView):
+    def get_redirect_url(self, pk):
+        publisher = Publisher.objects.get(pk=pk)
+        return reverse("character:detail", kwargs={"slug": publisher.slug})
 
 
 class SearchPublisherList(PublisherList):
