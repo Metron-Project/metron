@@ -7,8 +7,8 @@ from django.core.exceptions import ObjectDoesNotExist
 from django.db import transaction
 from django.db.models import Count, Prefetch, Q
 from django.shortcuts import get_object_or_404
-from django.urls import reverse_lazy
-from django.views.generic import DetailView, ListView
+from django.urls import reverse, reverse_lazy
+from django.views.generic import DetailView, ListView, RedirectView
 from django.views.generic.edit import CreateView, DeleteView, UpdateView
 
 from comicsdb.forms.attribution import AttributionFormSet
@@ -102,6 +102,12 @@ class CharacterDetail(DetailView):
             "previous_character": previous_character,
         }
         return context
+
+
+class CharacterDetailRedirect(RedirectView):
+    def get_redirect_url(self, pk):
+        character = Character.objects.get(pk=pk)
+        return reverse("character:detail", kwargs={"slug": character.slug})
 
 
 class SearchCharacterList(CharacterList):
