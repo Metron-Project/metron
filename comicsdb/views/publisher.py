@@ -78,7 +78,7 @@ class PublisherDetail(DetailView):
 class PublisherDetailRedirect(RedirectView):
     def get_redirect_url(self, pk):
         publisher = Publisher.objects.get(pk=pk)
-        return reverse("character:detail", kwargs={"slug": publisher.slug})
+        return reverse("publisher:detail", kwargs={"slug": publisher.slug})
 
 
 class SearchPublisherList(PublisherList):

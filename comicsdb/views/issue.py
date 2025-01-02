@@ -164,7 +164,7 @@ class IssueDetail(DetailView):
 class IssueDetailRedirect(RedirectView):
     def get_redirect_url(self, pk):
         issue = Issue.objects.get(pk=pk)
-        return reverse("character:detail", kwargs={"slug": issue.slug})
+        return reverse("issue:detail", kwargs={"slug": issue.slug})
 
 
 class SearchIssueList(IssueList):

@@ -64,7 +64,7 @@ class TeamDetail(DetailView):
 class TeamDetailRedirect(RedirectView):
     def get_redirect_url(self, pk):
         team = Team.objects.get(pk=pk)
-        return reverse("character:detail", kwargs={"slug": team.slug})
+        return reverse("team:detail", kwargs={"slug": team.slug})
 
 
 class SearchTeamList(TeamList):

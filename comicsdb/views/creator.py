@@ -94,7 +94,7 @@ class CreatorDetail(DetailView):
 class CreatorDetailRedirect(RedirectView):
     def get_redirect_url(self, pk):
         creator = Creator.objects.get(pk=pk)
-        return reverse("character:detail", kwargs={"slug": creator.slug})
+        return reverse("creator:detail", kwargs={"slug": creator.slug})
 
 
 class SearchCreatorList(CreatorList):

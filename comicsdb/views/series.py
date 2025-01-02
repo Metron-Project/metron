@@ -119,7 +119,7 @@ class SeriesDetail(DetailView):
 class SeriesDetailRedirect(RedirectView):
     def get_redirect_url(self, pk):
         series = Series.objects.get(pk=pk)
-        return reverse("character:detail", kwargs={"slug": series.slug})
+        return reverse("series:detail", kwargs={"slug": series.slug})
 
 
 class SearchSeriesList(SeriesList):
