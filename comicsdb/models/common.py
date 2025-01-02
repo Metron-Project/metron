@@ -6,7 +6,9 @@ from django.utils.text import slugify
 
 
 def generate_slug_from_name(instance):
-    slug_candidate = slug_original = slugify(instance.name)
+    slug_candidate = slug_original = (
+        slugify(f"{instance.name}-slug") if instance.name.isdigit() else slugify(instance.name)
+    )
     klass = instance.__class__
     for i in itertools.count(1):
         if not klass.objects.filter(slug=slug_candidate).exists():

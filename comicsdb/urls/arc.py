@@ -4,6 +4,7 @@ from comicsdb.views.arc import (
     ArcCreate,
     ArcDelete,
     ArcDetail,
+    ArcDetailRedirect,
     ArcIssueList,
     ArcList,
     ArcUpdate,
@@ -14,6 +15,7 @@ app_name = "arc"
 urlpatterns = [
     path("create/", ArcCreate.as_view(), name="create"),
     path("", ArcList.as_view(), name="list"),
+    path("<int:pk>/", ArcDetailRedirect.as_view(), name="redirect"),  # Keep this here
     path("<slug:slug>/", ArcDetail.as_view(), name="detail"),
     path("<slug:slug>/issue_list/", ArcIssueList.as_view(), name="issue"),
     path("<slug:slug>/update/", ArcUpdate.as_view(), name="update"),

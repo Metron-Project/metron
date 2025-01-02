@@ -25,6 +25,18 @@ def list_of_universes(create_user, dc_comics):
         )
 
 
+def test_universe_detail(earth_2_universe, auto_login_user):
+    client, _ = auto_login_user()
+    resp = client.get(f"/universe/{earth_2_universe.slug}/")
+    assert resp.status_code == HTML_OK_CODE
+
+
+def test_universe_redirect(earth_2_universe, auto_login_user):
+    client, _ = auto_login_user()
+    resp = client.get(f"/universe/{earth_2_universe.pk}/")
+    assert resp.status_code == HTML_REDIRECT_CODE
+
+
 def test_universe_search_view_url_exists_at_desired_location(auto_login_user):
     client, _ = auto_login_user()
     resp = client.get("/universe/search")

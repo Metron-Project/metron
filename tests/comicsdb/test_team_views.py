@@ -7,6 +7,7 @@ from comicsdb.models.attribution import Attribution
 from comicsdb.models.team import Team
 
 HTML_OK_CODE = 200
+HTML_REDIRECT_CODE = 302
 
 PAGINATE_TEST_VAL = 35
 PAGINATE_DEFAULT_VAL = 28
@@ -20,6 +21,18 @@ def list_of_series(create_user):
         Team.objects.create(
             name=f"Team {pub_num}", slug=f"team-{pub_num}", edited_by=user, created_by=user
         )
+
+
+def test_team_detail(avengers, auto_login_user):
+    client, _ = auto_login_user()
+    resp = client.get(f"/team/{avengers.slug}/")
+    assert resp.status_code == HTML_OK_CODE
+
+
+def test_team_redirect(avengers, auto_login_user):
+    client, _ = auto_login_user()
+    resp = client.get(f"/team/{avengers.pk}/")
+    assert resp.status_code == HTML_REDIRECT_CODE
 
 
 def test_team_search_view_url_exists_at_desired_location(auto_login_user):

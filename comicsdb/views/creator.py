@@ -7,8 +7,8 @@ from django.core.exceptions import ObjectDoesNotExist
 from django.db import transaction
 from django.db.models import Count, Q
 from django.shortcuts import get_object_or_404
-from django.urls import reverse_lazy
-from django.views.generic import DetailView, ListView
+from django.urls import reverse, reverse_lazy
+from django.views.generic import DetailView, ListView, RedirectView
 from django.views.generic.edit import CreateView, DeleteView, UpdateView
 
 from comicsdb.forms.attribution import AttributionFormSet
@@ -89,6 +89,12 @@ class CreatorDetail(DetailView):
         context["credits"] = series_issues
 
         return context
+
+
+class CreatorDetailRedirect(RedirectView):
+    def get_redirect_url(self, pk):
+        creator = Creator.objects.get(pk=pk)
+        return reverse("creator:detail", kwargs={"slug": creator.slug})
 
 
 class SearchCreatorList(CreatorList):

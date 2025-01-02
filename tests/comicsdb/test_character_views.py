@@ -7,6 +7,7 @@ from comicsdb.models.attribution import Attribution
 from comicsdb.models.character import Character
 
 HTML_OK_CODE = 200
+HTML_REDIRECT = 302
 
 PAGINATE_TEST_VAL = 35
 PAGINATE_DEFAULT_VAL = 28
@@ -23,6 +24,18 @@ def list_of_characters(create_user):
             edited_by=user,
             created_by=user,
         )
+
+
+def test_character_detail(superman, auto_login_user):
+    client, _ = auto_login_user()
+    resp = client.get("/character/superman/")
+    assert resp.status_code == HTML_OK_CODE
+
+
+def test_character_redirect(superman, auto_login_user):
+    client, _ = auto_login_user()
+    resp = client.get(f"/character/{superman.id}/")
+    assert resp.status_code == HTML_REDIRECT
 
 
 # Character Search

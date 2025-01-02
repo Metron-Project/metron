@@ -7,6 +7,7 @@ from comicsdb.models.arc import Arc
 from comicsdb.models.attribution import Attribution
 
 HTML_OK_CODE = 200
+HTML_REDIRECT = 302
 
 PAGINATE_TEST_VAL = 35
 PAGINATE_DEFAULT_VAL = 28
@@ -20,6 +21,18 @@ def list_of_arc(create_user):
         Arc.objects.create(
             name=f"Arc {pub_num}", slug=f"arc-{pub_num}", edited_by=user, created_by=user
         )
+
+
+def test_arc_detail(wwh_arc, auto_login_user):
+    client, _ = auto_login_user()
+    resp = client.get(f"/arc/{wwh_arc.slug}/")
+    assert resp.status_code == HTML_OK_CODE
+
+
+def test_arc_redirect(wwh_arc, auto_login_user):
+    client, _ = auto_login_user()
+    resp = client.get(f"/arc/{wwh_arc.pk}/")
+    assert resp.status_code == HTML_REDIRECT
 
 
 # Arc Search View

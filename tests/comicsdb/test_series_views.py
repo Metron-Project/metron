@@ -33,6 +33,18 @@ def list_of_series(create_user, dc_comics):
         )
 
 
+def test_series_detail(sandman_series, auto_login_user):
+    client, _ = auto_login_user()
+    resp = client.get(f"/series/{sandman_series.slug}/")
+    assert resp.status_code == HTML_OK_CODE
+
+
+def test_series_redirect(sandman_series, auto_login_user):
+    client, _ = auto_login_user()
+    resp = client.get(f"/series/{sandman_series.pk}/")
+    assert resp.status_code == HTML_REDIRECT_CODE
+
+
 def test_series_search_view_url_exists_at_desired_location(auto_login_user):
     client, _ = auto_login_user()
     resp = client.get("/series/search")

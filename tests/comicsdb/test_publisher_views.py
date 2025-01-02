@@ -26,6 +26,18 @@ def list_of_publishers(create_user):
         )
 
 
+def test_publisher_detail(dc_comics, auto_login_user):
+    client, _ = auto_login_user()
+    resp = client.get(f"/publisher/{dc_comics.slug}/")
+    assert resp.status_code == HTML_OK_CODE
+
+
+def test_publisher_redirect(dc_comics, auto_login_user):
+    client, _ = auto_login_user()
+    resp = client.get(f"/publisher/{dc_comics.pk}/")
+    assert resp.status_code == HTML_REDIRECT_CODE
+
+
 # def test_publisher_view_update(auto_login_user, dc_comics):
 #     client, _ = auto_login_user()
 #     resp = client.post(
