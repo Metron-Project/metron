@@ -5,6 +5,7 @@ from comicsdb.views.series import (
     SeriesCreate,
     SeriesDelete,
     SeriesDetail,
+    SeriesDetailRedirect,
     SeriesIssueList,
     SeriesList,
     SeriesUpdate,
@@ -14,6 +15,7 @@ app_name = "series"
 urlpatterns = [
     path("create/", SeriesCreate.as_view(), name="create"),
     path("", SeriesList.as_view(), name="list"),
+    path("<int:pk>/", SeriesDetailRedirect.as_view(), name="redirect"),  # Keep this here
     path("<slug:slug>/", SeriesDetail.as_view(), name="detail"),
     path("<slug:slug>/issue_list/", SeriesIssueList.as_view(), name="issue"),
     path("<slug:slug>/update/", SeriesUpdate.as_view(), name="update"),
