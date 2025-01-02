@@ -4,6 +4,7 @@ from comicsdb.views.creator import (
     CreatorCreate,
     CreatorDelete,
     CreatorDetail,
+    CreatorDetailRedirect,
     CreatorIssueList,
     CreatorList,
     CreatorSeriesList,
@@ -15,6 +16,7 @@ app_name = "creator"
 urlpatterns = [
     path("create/", CreatorCreate.as_view(), name="create"),
     path("", CreatorList.as_view(), name="list"),
+    path("<int:pk>/", CreatorDetailRedirect.as_view(), name="redirect"),  # Keep this here
     path("<slug:slug>/", CreatorDetail.as_view(), name="detail"),
     path("<slug:slug>/update/", CreatorUpdate.as_view(), name="update"),
     path("<slug:slug>/delete/", CreatorDelete.as_view(), name="delete"),

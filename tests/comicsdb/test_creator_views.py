@@ -26,6 +26,18 @@ def list_of_creators(create_user):
         )
 
 
+def test_creator_detail(walter_simonson, auto_login_user):
+    client, _ = auto_login_user()
+    resp = client.get(f"/creator/{walter_simonson.slug}/")
+    assert resp.status_code == HTML_OK_CODE
+
+
+def test_creator_redirect(walter_simonson, auto_login_user):
+    client, _ = auto_login_user()
+    resp = client.get(f"/creator/{walter_simonson.pk}/")
+    assert resp.status_code == HTML_REDIRECT_CODE
+
+
 # Creator Views
 def test_update_view_url_accessible_by_name(auto_login_user, john_byrne):
     client, _ = auto_login_user()
