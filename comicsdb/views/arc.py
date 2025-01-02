@@ -7,8 +7,8 @@ from django.core.exceptions import ObjectDoesNotExist
 from django.db import transaction
 from django.db.models import Prefetch, Q
 from django.shortcuts import get_object_or_404
-from django.urls import reverse_lazy
-from django.views.generic import DetailView, ListView
+from django.urls import reverse, reverse_lazy
+from django.views.generic import DetailView, ListView, RedirectView
 from django.views.generic.edit import CreateView, DeleteView, UpdateView
 
 from comicsdb.forms.arc import ArcForm
@@ -67,6 +67,12 @@ class ArcDetail(DetailView):
 
         context["navigation"] = {"next_arc": next_arc, "previous_arc": previous_arc}
         return context
+
+
+class ArcDetailRedirect(RedirectView):
+    def get_redirect_url(self, pk):
+        arc = Arc.objects.get(pk=pk)
+        return reverse("arc:detail", kwargs={"slug": arc.slug})
 
 
 class SearchArcList(ArcList):
