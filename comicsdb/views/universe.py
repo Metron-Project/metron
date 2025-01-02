@@ -7,8 +7,15 @@ from django.core.exceptions import ObjectDoesNotExist
 from django.db import transaction
 from django.db.models import Count, Prefetch, Q
 from django.shortcuts import get_object_or_404
-from django.urls import reverse_lazy
-from django.views.generic import CreateView, DeleteView, DetailView, ListView, UpdateView
+from django.urls import reverse, reverse_lazy
+from django.views.generic import (
+    CreateView,
+    DeleteView,
+    DetailView,
+    ListView,
+    RedirectView,
+    UpdateView,
+)
 
 from comicsdb.forms.attribution import AttributionFormSet
 from comicsdb.forms.universe import UniverseForm
@@ -106,6 +113,12 @@ class UniverseDetail(DetailView):
             "previous_universe": previous_universe,
         }
         return context
+
+
+class UniverseDetailRedirect(RedirectView):
+    def get_redirect_url(self, pk):
+        universe = Universe.objects.get(pk=pk)
+        return reverse("universe:detail", kwargs={"slug": universe.slug})
 
 
 class SearchUniverseList(UniverseList):
