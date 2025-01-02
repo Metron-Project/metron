@@ -2,10 +2,23 @@ from django.urls import reverse
 from pytest_django.asserts import assertTemplateUsed
 
 HTML_OK_CODE = 200
+HTML_REDIRECT_CODE = 302
 
 PAGINATE_TEST_VAL = 35
 PAGINATE_DEFAULT_VAL = 28
 PAGINATE_DIFF_VAL = PAGINATE_TEST_VAL - PAGINATE_DEFAULT_VAL
+
+
+def test_issue_detail(basic_issue, auto_login_user):
+    client, _ = auto_login_user()
+    resp = client.get(f"/issue/{basic_issue.slug}/")
+    assert resp.status_code == HTML_OK_CODE
+
+
+def test_issue_redirect(basic_issue, auto_login_user):
+    client, _ = auto_login_user()
+    resp = client.get(f"/issue/{basic_issue.pk}/")
+    assert resp.status_code == HTML_REDIRECT_CODE
 
 
 # Issue Search

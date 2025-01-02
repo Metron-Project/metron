@@ -6,6 +6,7 @@ from comicsdb.views.issue import (
     IssueCreate,
     IssueDelete,
     IssueDetail,
+    IssueDetailRedirect,
     IssueList,
     IssueUpdate,
     NextWeekList,
@@ -18,6 +19,7 @@ app_name = "issue"
 urlpatterns = [
     path("create/", IssueCreate.as_view(), name="create"),
     path("", IssueList.as_view(), name="list"),
+    path("<int:pk>/", IssueDetailRedirect.as_view(), name="redirect"),  # Keep this here
     path("<slug:slug>/", IssueDetail.as_view(), name="detail"),
     path("<slug:slug>/update/", IssueUpdate.as_view(), name="update"),
     path("<slug:slug>/delete/", IssueDelete.as_view(), name="delete"),

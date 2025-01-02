@@ -7,8 +7,8 @@ from django.contrib.auth.mixins import LoginRequiredMixin, PermissionRequiredMix
 from django.core.exceptions import ObjectDoesNotExist
 from django.db import transaction
 from django.db.models import Prefetch, Q
-from django.urls import reverse_lazy
-from django.views.generic import DetailView, ListView
+from django.urls import reverse, reverse_lazy
+from django.views.generic import DetailView, ListView, RedirectView
 from django.views.generic.edit import CreateView, DeleteView, UpdateView
 
 from comicsdb.filters.issue import IssueViewFilter
@@ -159,6 +159,12 @@ class IssueDetail(DetailView):
             "previous_issue": previous_issue,
         }
         return context
+
+
+class IssueDetailRedirect(RedirectView):
+    def get_redirect_url(self, pk):
+        issue = Issue.objects.get(pk=pk)
+        return reverse("character:detail", kwargs={"slug": issue.slug})
 
 
 class SearchIssueList(IssueList):
