@@ -211,28 +211,36 @@ class IssueAdmin(AdminImageMixin, admin.ModelAdmin):
 
     @admin.action(description="Add info from reprints")
     def add_reprint_info(self, request, queryset) -> None:
+        queryset = queryset.prefetch_related("reprints", "characters", "teams").order_by(
+            "reprints__cover_date"
+        )
         count = 0
         for i in queryset:
             modified = False
+            all_stories = set(i.name)  # Use a set for efficient membership checking
+            characters_to_add = set()
+            teams_to_add = set()
+            existing_characters = set(i.characters.all())
+            existing_teams = set(i.teams.all())
+
             for reprint in i.reprints.all():
-                # If reprint is not a single story let's bail.
                 if len(reprint.name) <= MAX_STORIES:
                     modified = True
-                    # Add stories
-                    if reprint.name:
-                        for story in reprint.name:
-                            if story not in i.name:
-                                i.name.append(story)
-                        i.save()
-                    # Add characters
+                    all_stories.update(reprint.name)  # Efficiently add new stories
+
                     for character in reprint.characters.all():
-                        if character not in i.characters.all():
-                            i.characters.add(character)
-                    # Add Teams
+                        if character not in existing_characters:
+                            characters_to_add.add(character)
+
                     for team in reprint.teams.all():
-                        if team not in i.teams.all():
-                            i.teams.add(team)
+                        if team not in existing_teams:
+                            teams_to_add.add(team)
+
             if modified:
+                i.name = list(all_stories)  # Convert back to list for saving
+                i.characters.add(*characters_to_add)  # Bulk add characters
+                i.teams.add(*teams_to_add)  # Bulk add teams
+                i.save()  # Save only once per issue
                 count += 1
 
         self.message_user(
