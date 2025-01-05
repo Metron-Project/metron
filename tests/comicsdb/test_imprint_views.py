@@ -25,6 +25,18 @@ def list_of_imprints(create_user, dc_comics):
         )
 
 
+def test_imprint_detail(vertigo_imprint, auto_login_user):
+    client, _ = auto_login_user()
+    resp = client.get(f"/imprint/{vertigo_imprint.slug}/")
+    assert resp.status_code == HTML_OK_CODE
+
+
+def test_imprint_redirect(vertigo_imprint, auto_login_user):
+    client, _ = auto_login_user()
+    resp = client.get(f"/imprint/{vertigo_imprint.pk}/")
+    assert resp.status_code == HTML_REDIRECT_CODE
+
+
 # def test_imprint_create_view(auto_login_user, dc_comics, imprint):
 #     imprint_name = "Atlas"
 #     imprint_slug = slugify(imprint_name)

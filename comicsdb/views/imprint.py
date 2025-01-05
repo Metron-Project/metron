@@ -7,8 +7,15 @@ from django.core.exceptions import ObjectDoesNotExist
 from django.db import transaction
 from django.db.models import Q
 from django.shortcuts import get_object_or_404
-from django.urls import reverse_lazy
-from django.views.generic import CreateView, DeleteView, DetailView, ListView, UpdateView
+from django.urls import reverse, reverse_lazy
+from django.views.generic import (
+    CreateView,
+    DeleteView,
+    DetailView,
+    ListView,
+    RedirectView,
+    UpdateView,
+)
 
 from comicsdb.forms.attribution import AttributionFormSet
 from comicsdb.forms.imprint import ImprintForm
@@ -72,6 +79,12 @@ class ImprintDetail(DetailView):
             "previous_imprint": previous_imprint,
         }
         return context
+
+
+class ImprintDetailRedirect(RedirectView):
+    def get_redirect_url(self, pk):
+        imprint = Imprint.objects.get(pk=pk)
+        return reverse("imprint:detail", kwargs={"slug": imprint.slug})
 
 
 class SearchImprintList(ImprintList):
