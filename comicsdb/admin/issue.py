@@ -211,9 +211,6 @@ class IssueAdmin(AdminImageMixin, admin.ModelAdmin):
 
     @admin.action(description="Add info from reprints")
     def add_reprint_info(self, request, queryset) -> None:
-        queryset = queryset.prefetch_related("reprints", "characters", "teams").order_by(
-            "reprints__cover_date"
-        )
         count = 0
         for i in queryset:
             modified = False
