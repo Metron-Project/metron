@@ -433,6 +433,11 @@
                         <p>
                             <b>Number:</b> {{ issue.number }}
                         </p>
+                        {% if issue.alt_number %}
+                            <p>
+                                <b>Alternative Number:</b> {{ issue.alt_number }}
+                            </p>
+                        {% endif %}
                         <p>
                             <b>Cover Date:</b> {{ issue.cover_date|date:"SHORT_DATE_FORMAT" }}
                         </p>
