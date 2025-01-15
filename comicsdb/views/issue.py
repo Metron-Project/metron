@@ -112,6 +112,7 @@ class IssueDetail(DetailView):
                 queryset=Issue.objects.select_related("series", "series__series_type")
                 .defer(
                     "title",
+                    "alt_number",
                     "desc",
                     "modified",
                     "name",
