@@ -77,7 +77,7 @@ class IssueFilter(df.rest_framework.FilterSet):
 
     class Meta:
         model = Issue
-        fields = ["number", "store_date"]
+        fields = ["number", "alt_number", "store_date"]
 
 
 class IssueViewFilter(df.FilterSet):
@@ -120,4 +120,4 @@ class IssueViewFilter(df.FilterSet):
 
     class Meta:
         model = Issue
-        fields = ["number", "store_date"]
+        fields = ["number", "alt_number", "store_date"]
