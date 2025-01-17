@@ -83,7 +83,7 @@ class VariantInline(admin.TabularInline):
 
 @admin.register(Issue)
 class IssueAdmin(AdminImageMixin, admin.ModelAdmin):
-    search_fields = ("series__name", "number")
+    search_fields = ("series__name", "number", "alt_number")
     list_display = ("__str__", "cover_date", "store_date", "created_on")
     list_filter = (
         FutureStoreDateListFilter,
@@ -112,6 +112,7 @@ class IssueAdmin(AdminImageMixin, admin.ModelAdmin):
                 "fields": (
                     "series",
                     "number",
+                    "alt_number",
                     "slug",
                     "name",
                     "title",

@@ -99,6 +99,7 @@ class IssueSerializer(serializers.ModelSerializer):
         """
         instance.series = validated_data.get("series", instance.series)
         instance.number = validated_data.get("number", instance.number)
+        instance.alt_number = validated_data.get("alt_number", instance.alt_number)
         instance.title = validated_data.get("title", instance.title)
         instance.name = validated_data.get("name", instance.name)
         instance.cover_date = validated_data.get("cover_date", instance.cover_date)
@@ -132,6 +133,7 @@ class IssueSerializer(serializers.ModelSerializer):
             "id",
             "series",
             "number",
+            "alt_number",
             "title",
             "name",
             "cover_date",
@@ -180,6 +182,7 @@ class IssueReadSerializer(serializers.ModelSerializer):
             "imprint",
             "series",
             "number",
+            "alt_number",
             "title",
             "name",
             "cover_date",

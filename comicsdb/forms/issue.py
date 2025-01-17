@@ -26,7 +26,7 @@ class CharactersWidget(s2forms.ModelSelect2MultipleWidget):
 
 
 class IssuesWidget(s2forms.ModelSelect2MultipleWidget):
-    search_fields = ["series__name__icontains", "number"]
+    search_fields = ["series__name__icontains", "number", "alt_number"]
 
 
 class IssueForm(ModelForm):
@@ -49,6 +49,7 @@ class IssueForm(ModelForm):
         fields = (
             "series",
             "number",
+            "alt_number",
             "title",
             "name",
             "cover_date",
@@ -78,6 +79,7 @@ class IssueForm(ModelForm):
             "image": ClearableFileInput(),
         }
         help_texts = {
+            "alt_number": "Primarily used for legacy numbering for DC and Marvel comics.",
             "name": "Separate multiple story titles by a semicolon",
             "title": "Only used with Collected Editions like a Trade Paperback.",
             "price": "In United States currency",

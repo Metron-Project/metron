@@ -42,6 +42,7 @@ class Issue(CommonInfo):
     name = ArrayField(models.CharField("Story Title", max_length=150), null=True, blank=True)
     title = models.CharField("Collection Title", max_length=255, blank=True)
     number = models.CharField(max_length=25)
+    alt_number = models.CharField("Alternative Number", max_length=25, blank=True)
     cover_date = models.DateField("Cover Date")
     store_date = models.DateField("In Store Date", null=True, blank=True)
     price = models.DecimalField(
