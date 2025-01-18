@@ -26,6 +26,12 @@ class IssueFilter(df.rest_framework.FilterSet):
     cover_month = df.rest_framework.NumberFilter(
         label="Cover Month", field_name="cover_date", lookup_expr="month"
     )
+    number = df.rest_framework.CharFilter(
+        label="Issue Number", field_name="number", lookup_expr="icontains"
+    )
+    alt_number = df.rest_framework.CharFilter(
+        label="Alternate Number", field_name="alt_number", lookup_expr="icontains"
+    )
     publisher_name = df.rest_framework.CharFilter(
         label="Publisher Name", field_name="series__publisher__name", lookup_expr="icontains"
     )
@@ -77,7 +83,7 @@ class IssueFilter(df.rest_framework.FilterSet):
 
     class Meta:
         model = Issue
-        fields = {"number": ["iexact"], "alt_number": ["iexact"], "store_date": ["exact"]}
+        fields = ["store_date"]
 
 
 class IssueViewFilter(df.FilterSet):
@@ -86,6 +92,12 @@ class IssueViewFilter(df.FilterSet):
     )
     cover_month = df.NumberFilter(
         label="Cover Month", field_name="cover_date", lookup_expr="month"
+    )
+    number = df.rest_framework.CharFilter(
+        label="Issue Number", field_name="number", lookup_expr="icontains"
+    )
+    alt_number = df.rest_framework.CharFilter(
+        label="Alternate Number", field_name="alt_number", lookup_expr="icontains"
     )
     publisher_name = df.CharFilter(
         label="Publisher Name", field_name="series__publisher__name", lookup_expr="icontains"
@@ -120,4 +132,4 @@ class IssueViewFilter(df.FilterSet):
 
     class Meta:
         model = Issue
-        fields = {"number": ["iexact"], "alt_number": ["iexact"], "store_date": ["exact"]}
+        fields = ["store_date"]
