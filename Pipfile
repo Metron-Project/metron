@@ -22,6 +22,7 @@ chartkick = "*"
 imagehash = "*"
 psycopg = "*"
 isbnlib = "*"
+django-countries = "*"
 
 [dev-packages]
 django-debug-toolbar = "*"

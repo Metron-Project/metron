@@ -57,6 +57,7 @@ def test_publisher_create_view(auto_login_user, marvel):
         "name": pub_name,
         "slug": pub_slug,
         "edited_by": user,
+        "country": "US",
         "comicsdb-attribution-content_type-object_id-TOTAL_FORMS": 1,
         "comicsdb-attribution-content_type-object_id-INITIAL_FORMS": 0,
         "comicsdb-attribution-content_type-object_id-0-source": "W",

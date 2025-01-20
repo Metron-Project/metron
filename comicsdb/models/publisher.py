@@ -6,6 +6,7 @@ from django.core.exceptions import ObjectDoesNotExist
 from django.db import models
 from django.db.models.signals import pre_save
 from django.urls import reverse
+from django_countries.fields import CountryField
 from sorl.thumbnail import ImageField
 
 from comicsdb.models.attribution import Attribution
@@ -17,6 +18,7 @@ LOGGER = logging.getLogger(__name__)
 
 class Publisher(CommonInfo):
     founded = models.PositiveSmallIntegerField("Year Founded", null=True, blank=True)
+    country = CountryField(default="US")
     image = ImageField("Logo", upload_to="publisher/%Y/%m/%d/", blank=True)
     attribution = GenericRelation(Attribution, related_query_name="publishers")
     created_by = models.ForeignKey(
