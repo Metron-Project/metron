@@ -17,6 +17,7 @@ class PublisherAdmin(AdminImageMixin, admin.ModelAdmin):
         "slug",
         "modified",
         "founded",
+        "country",
         "desc",
         "cv_id",
         "gcd_id",
