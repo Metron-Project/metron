@@ -60,6 +60,7 @@ INSTALLED_APPS = [
     "sorl.thumbnail",
     "django_simple_bulma",
     "chartkick.django",
+    "django_countries",
     "comicsdb",
     "users",
 ]
