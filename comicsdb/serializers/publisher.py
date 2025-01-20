@@ -1,3 +1,4 @@
+from django_countries.serializers import CountryFieldMixin
 from rest_framework import serializers
 
 from comicsdb.models import Publisher
@@ -9,7 +10,7 @@ class PublisherListSerializer(serializers.ModelSerializer):
         fields = ("id", "name", "modified")
 
 
-class PublisherSerializer(serializers.ModelSerializer):
+class PublisherSerializer(CountryFieldMixin, serializers.ModelSerializer):
     resource_url = serializers.SerializerMethodField("get_resource_url")
 
     def get_resource_url(self, obj: Publisher) -> str:
@@ -29,6 +30,7 @@ class PublisherSerializer(serializers.ModelSerializer):
         """
         instance.name = validated_data.get("name", instance.name)
         instance.founded = validated_data.get("founded", instance.founded)
+        instance.country = validated_data.get("country", instance.country)
         instance.desc = validated_data.get("desc", instance.desc)
         instance.image = validated_data.get("image", instance.image)
         instance.cv_id = validated_data.get("cv_id", instance.cv_id)
@@ -42,6 +44,7 @@ class PublisherSerializer(serializers.ModelSerializer):
             "id",
             "name",
             "founded",
+            "country",
             "desc",
             "image",
             "cv_id",
