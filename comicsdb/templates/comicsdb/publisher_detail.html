@@ -242,6 +242,10 @@
                             <b>Found:</b> {{ publisher.founded }}
                         </p>
                     {% endif %}
+                    <p>
+                        <b>Country:</b> {{ publisher.country.name }}
+                        <img src="{{ publisher.country.flag }}" alt="Flag Image">
+                    </p>
                     {% if publisher.series_count > 0 %}
                         <p>
                             <b>Number of Series:</b> {{ publisher.series_count|intcomma }}
