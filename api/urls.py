@@ -1,7 +1,7 @@
 from django.urls import include, path
 from rest_framework import routers
 
-from comicsdb.views.viewsets import (
+from api.views import (
     ArcViewSet,
     CharacterViewSet,
     CreatorViewSet,

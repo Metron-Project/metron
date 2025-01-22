@@ -1,9 +1,9 @@
 from rest_framework import serializers
 
+from api.v1_0.serializers.genre import GenreSerializer
+from api.v1_0.serializers.imprint import BasicImprintSerializer
+from api.v1_0.serializers.publisher import BasicPublisherSerializer
 from comicsdb.models import Series, SeriesType
-from comicsdb.serializers.genre import GenreSerializer
-from comicsdb.serializers.imprint import BasicImprintSerializer
-from comicsdb.serializers.publisher import BasicPublisherSerializer
 
 
 class SeriesListSerializer(serializers.ModelSerializer):

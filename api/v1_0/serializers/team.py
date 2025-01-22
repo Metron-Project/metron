@@ -1,8 +1,8 @@
 from rest_framework import serializers
 
+from api.v1_0.serializers.creator import CreatorListSerializer
+from api.v1_0.serializers.universe import UniverseListSerializer
 from comicsdb.models import Team
-from comicsdb.serializers.creator import CreatorListSerializer
-from comicsdb.serializers.universe import UniverseListSerializer
 
 
 class TeamListSerializer(serializers.ModelSerializer):

@@ -1,7 +1,7 @@
 from django.urls import reverse
 from rest_framework import status
 
-from comicsdb.serializers import RoleSerializer
+from api.v1_0.serializers import RoleSerializer
 
 
 def test_view_url_accessible_by_name(api_client_with_credentials):

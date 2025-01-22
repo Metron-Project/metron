@@ -3,7 +3,7 @@ from django.urls import reverse
 from rest_framework import status
 
 # from comicsdb.models.arc import Arc
-from comicsdb.serializers import IssueListSerializer
+from api.v1_0.serializers import IssueListSerializer
 
 
 @pytest.fixture

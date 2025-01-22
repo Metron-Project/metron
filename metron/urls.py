@@ -9,8 +9,8 @@ from django.urls import include, path
 from django.views.i18n import JavaScriptCatalog
 from drf_spectacular.views import SpectacularAPIView, SpectacularSwaggerView
 
+from api import urls as api_urls
 from comicsdb.urls import (
-    api as api_urls,
     arc as arc_urls,
     character as character_urls,
     creator as creator_urls,
