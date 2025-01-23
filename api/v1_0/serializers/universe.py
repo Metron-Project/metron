@@ -1,7 +1,7 @@
 from rest_framework import serializers
 
+from api.v1_0.serializers import BasicPublisherSerializer
 from comicsdb.models import Team, Universe
-from comicsdb.serializers import BasicPublisherSerializer
 
 
 class UniverseListSerializer(serializers.ModelSerializer):

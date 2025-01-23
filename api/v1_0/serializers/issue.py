@@ -1,16 +1,16 @@
 from rest_framework import serializers
 
+from api.v1_0.serializers import CreditReadSerializer
+from api.v1_0.serializers.arc import ArcListSerializer
+from api.v1_0.serializers.character import CharacterListSerializer
+from api.v1_0.serializers.genre import GenreSerializer
+from api.v1_0.serializers.imprint import BasicImprintSerializer
+from api.v1_0.serializers.publisher import BasicPublisherSerializer
+from api.v1_0.serializers.rating import RatingSerializer
+from api.v1_0.serializers.series import SeriesTypeSerializer
+from api.v1_0.serializers.team import TeamListSerializer
+from api.v1_0.serializers.universe import UniverseListSerializer
 from comicsdb.models import Issue, Series, Variant
-from comicsdb.serializers import CreditReadSerializer
-from comicsdb.serializers.arc import ArcListSerializer
-from comicsdb.serializers.character import CharacterListSerializer
-from comicsdb.serializers.genre import GenreSerializer
-from comicsdb.serializers.imprint import BasicImprintSerializer
-from comicsdb.serializers.publisher import BasicPublisherSerializer
-from comicsdb.serializers.rating import RatingSerializer
-from comicsdb.serializers.series import SeriesTypeSerializer
-from comicsdb.serializers.team import TeamListSerializer
-from comicsdb.serializers.universe import UniverseListSerializer
 
 
 class VariantsIssueSerializer(serializers.ModelSerializer):

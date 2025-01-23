@@ -61,6 +61,7 @@ INSTALLED_APPS = [
     "django_simple_bulma",
     "chartkick.django",
     "django_countries",
+    "api",
     "comicsdb",
     "users",
 ]

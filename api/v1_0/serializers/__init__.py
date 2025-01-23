@@ -1,23 +1,23 @@
-from comicsdb.serializers.publisher import (  # noqa: I001
+from api.v1_0.serializers.publisher import (  # noqa: I001
     BasicPublisherSerializer,
     PublisherListSerializer,
     PublisherSerializer,
 )
-from comicsdb.serializers.arc import ArcListSerializer, ArcSerializer
-from comicsdb.serializers.character import (
+from api.v1_0.serializers.arc import ArcListSerializer, ArcSerializer
+from api.v1_0.serializers.character import (
     CharacterListSerializer,
     CharacterReadSerializer,
     CharacterSerializer,
 )
-from comicsdb.serializers.creator import (
+from api.v1_0.serializers.creator import (
     CreatorListSerializer,
     CreatorSerializer,
     CreditReadSerializer,
     CreditSerializer,
     RoleSerializer,
 )
-from comicsdb.serializers.genre import GenreSerializer
-from comicsdb.serializers.issue import (
+from api.v1_0.serializers.genre import GenreSerializer
+from api.v1_0.serializers.issue import (
     IssueListSerializer,
     IssueListSeriesSerializer,
     IssueReadSerializer,
@@ -26,23 +26,22 @@ from comicsdb.serializers.issue import (
     ReprintSerializer,
     VariantsIssueSerializer,
 )
-from comicsdb.serializers.rating import RatingSerializer
-from comicsdb.serializers.series import (
+from api.v1_0.serializers.rating import RatingSerializer
+from api.v1_0.serializers.series import (
     AssociatedSeriesSerializer,
     SeriesListSerializer,
     SeriesReadSerializer,
     SeriesSerializer,
     SeriesTypeSerializer,
 )
-from comicsdb.serializers.team import TeamListSerializer, TeamReadSerializer, TeamSerializer
-from comicsdb.serializers.universe import (
+from api.v1_0.serializers.team import TeamListSerializer, TeamReadSerializer, TeamSerializer
+from api.v1_0.serializers.universe import (
     UniverseListSerializer,
     UniverseReadSerializer,
     UniverseSerializer,
 )
-from comicsdb.serializers.variant import VariantSerializer
-
-from comicsdb.serializers.imprint import (
+from api.v1_0.serializers.variant import VariantSerializer
+from api.v1_0.serializers.imprint import (
     BasicImprintSerializer,
     ImprintSerializer,
     ImprintListSerializer,

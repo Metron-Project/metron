@@ -7,10 +7,10 @@ from django.db.models import Q
 from django.urls import reverse
 from rest_framework import status
 
+from api.v1_0.serializers import SeriesListSerializer
 from comicsdb.models import Series
 from comicsdb.models.publisher import Publisher
 from comicsdb.models.series import SeriesType
-from comicsdb.serializers import SeriesListSerializer
 
 
 @pytest.fixture

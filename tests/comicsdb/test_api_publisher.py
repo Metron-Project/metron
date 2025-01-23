@@ -2,7 +2,7 @@ import pytest
 from django.urls import reverse
 from rest_framework import status
 
-from comicsdb.serializers import SeriesListSerializer
+from api.v1_0.serializers import SeriesListSerializer
 
 
 @pytest.fixture
