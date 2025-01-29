@@ -1,6 +1,7 @@
 from django.contrib import admin, messages
 from django.utils.translation import ngettext
 
+from comicsdb.admin.util import CreatedOnDateListFilter
 from comicsdb.models import Issue, Series, SeriesType
 
 
@@ -8,7 +9,7 @@ from comicsdb.models import Issue, Series, SeriesType
 class SeriesAdmin(admin.ModelAdmin):
     search_fields = ("name",)
     list_display = ("name", "year_began", "created_by")
-    list_filter = ("created_on", "modified", "series_type", "status", "publisher")
+    list_filter = (CreatedOnDateListFilter, "modified", "series_type", "status", "publisher")
     prepopulated_fields = {"slug": ("name", "year_began")}
     autocomplete_fields = ["associated"]
     actions = ["rename_issue_slugs"]
