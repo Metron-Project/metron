@@ -1,4 +1,4 @@
-import datetime
+from datetime import date
 from typing import Any
 
 from django.contrib import admin, messages
@@ -6,7 +6,7 @@ from django.db.models.query import QuerySet
 from django.utils.translation import ngettext
 from sorl.thumbnail.admin.current import AdminImageMixin
 
-from comicsdb.admin.util import AttributionInline
+from comicsdb.admin.util import AttributionInline, CreatedOnDateListFilter
 from comicsdb.models import Creator, Credits, Issue, Rating, Role, Variant
 
 MAX_STORIES = 1
@@ -21,7 +21,7 @@ class FutureStoreDateListFilter(admin.SimpleListFilter):
         return (("thisWeek", "This week"), ("nextWeek", "Next week"))
 
     def queryset(self, request: Any, queryset: QuerySet) -> QuerySet | None:
-        today = datetime.date.today()
+        today = date.today()
         year, week, _ = today.isocalendar()
 
         match self.value():
@@ -29,43 +29,6 @@ class FutureStoreDateListFilter(admin.SimpleListFilter):
                 return queryset.filter(store_date__week=week, store_date__year=year)
             case "nextWeek":
                 return queryset.filter(store_date__week=week + 1, store_date__year=year)
-            case _:
-                return None
-
-
-class CreatedOnDateListFilter(admin.SimpleListFilter):
-    title = "created on"
-
-    parameter_name = "created_on"
-
-    def lookups(self, request: Any, model_admin: Any):
-        return (
-            ("today", "Today"),
-            ("yesterday", "Yesterday"),
-            ("7day", "Past 7 days"),
-            ("thisMonth", "This month"),
-            ("thisYear", "This year"),
-        )
-
-    def queryset(self, request: Any, queryset: QuerySet[Any]) -> QuerySet[Any] | None:
-        # sourcery skip: use-datetime-now-not-today
-        today = datetime.date.today()
-        yesterday = datetime.datetime.today() - datetime.timedelta(days=1)
-        last_week = datetime.datetime.today() - datetime.timedelta(days=7)
-
-        match self.value():
-            case "today":
-                return queryset.filter(created_on__date=today)
-            case "yesterday":
-                return queryset.filter(created_on__date=yesterday.date())
-            case "7day":
-                return queryset.filter(created_on__date__gte=last_week.date())
-            case "thisMonth":
-                return queryset.filter(
-                    created_on__year=today.year, created_on__month=today.month
-                )
-            case "thisYear":
-                return queryset.filter(created_on__year=today.year)
             case _:
                 return None
 
