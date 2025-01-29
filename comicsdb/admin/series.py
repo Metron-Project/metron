@@ -7,7 +7,7 @@ from comicsdb.models import Issue, Series, SeriesType
 @admin.register(Series)
 class SeriesAdmin(admin.ModelAdmin):
     search_fields = ("name",)
-    list_display = ("name", "year_began")
+    list_display = ("name", "year_began", "created_by")
     list_filter = ("created_on", "modified", "series_type", "status", "publisher")
     prepopulated_fields = {"slug": ("name", "year_began")}
     autocomplete_fields = ["associated"]
@@ -22,6 +22,7 @@ class SeriesAdmin(admin.ModelAdmin):
                     "slug",
                     "sort_name",
                     "publisher",
+                    "imprint",
                     "volume",
                     "year_began",
                     "year_end",
