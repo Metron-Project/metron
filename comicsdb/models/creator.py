@@ -20,7 +20,7 @@ class Creator(CommonInfo):
     birth = models.DateField("Date of Birth", null=True, blank=True)
     death = models.DateField("Date of Death", null=True, blank=True)
     image = ImageField(upload_to="creator/%Y/%m/%d/", blank=True)
-    alias = ArrayField(models.CharField(max_length=100), null=True, blank=True)
+    alias = ArrayField(models.CharField(max_length=100), blank=True, default=list)
     attribution = GenericRelation(Attribution, related_query_name="creators")
     created_by = models.ForeignKey(
         CustomUser, default=1, on_delete=models.SET_DEFAULT, related_name="creator_created"

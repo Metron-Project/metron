@@ -21,7 +21,7 @@ LOGGER = logging.getLogger(__name__)
 
 class Character(CommonInfo):
     image = ImageField(upload_to="character/%Y/%m/%d/", blank=True)
-    alias = ArrayField(models.CharField(max_length=100), null=True, blank=True)
+    alias = ArrayField(models.CharField(max_length=100), blank=True, default=list)
     creators = models.ManyToManyField(Creator, blank=True, related_name="characters")
     teams = models.ManyToManyField(Team, blank=True, related_name="characters")
     universes = models.ManyToManyField(Universe, blank=True, related_name="characters")
