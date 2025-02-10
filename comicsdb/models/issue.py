@@ -39,7 +39,9 @@ class TradePaperbackManager(models.Manager):
 
 class Issue(CommonInfo):
     series = models.ForeignKey(Series, on_delete=models.CASCADE, related_name="issues")
-    name = ArrayField(models.CharField("Story Title", max_length=150), null=True, blank=True)
+    name = ArrayField(
+        models.CharField("Story Title", max_length=150), blank=True, default=list
+    )
     title = models.CharField("Collection Title", max_length=255, blank=True)
     number = models.CharField(max_length=25)
     alt_number = models.CharField("Alternative Number", max_length=25, blank=True)
