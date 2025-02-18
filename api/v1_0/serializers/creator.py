@@ -35,6 +35,7 @@ class CreatorSerializer(serializers.ModelSerializer):
         instance.death = validated_data.get("death", instance.death)
         instance.cv_id = validated_data.get("cv_id", instance.cv_id)
         instance.gcd_id = validated_data.get("gcd_id", instance.gcd_id)
+        instance.save()
         return instance
 
     class Meta:

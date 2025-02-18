@@ -81,7 +81,6 @@ class ArcViewSet(viewsets.ModelViewSet):
                 return ArcSerializer
 
     def get_permissions(self):
-        permission_classes = []
         if self.action in ["retrieve", "list", "issue_list"]:
             permission_classes = [IsAuthenticated]
         else:
@@ -139,7 +138,6 @@ class CharacterViewSet(viewsets.ModelViewSet):
                 return CharacterSerializer
 
     def get_permissions(self):
-        permission_classes = []
         if self.action in ["retrieve", "list", "issue_list"]:
             permission_classes = [IsAuthenticated]
         else:
@@ -192,7 +190,6 @@ class CreatorViewSet(viewsets.ModelViewSet):
                 return CreatorSerializer
 
     def get_permissions(self):
-        permission_classes = []
         if self.action in ["retrieve", "list"]:
             permission_classes = [IsAuthenticated]
         else:
@@ -327,7 +324,6 @@ class IssueViewSet(viewsets.ModelViewSet):
                 return IssueSerializer
 
     def get_permissions(self):
-        permission_classes = []
         if self.action in ["retrieve", "list"]:
             permission_classes = [IsAuthenticated]
         else:
@@ -373,7 +369,6 @@ class PublisherViewSet(viewsets.ModelViewSet):
                 return PublisherSerializer
 
     def get_permissions(self):
-        permission_classes = []
         if self.action in ["retrieve", "list", "series_list"]:
             permission_classes = [IsAuthenticated]
         else:
@@ -458,7 +453,6 @@ class SeriesViewSet(viewsets.ModelViewSet):
         return serializer_class(*args, **kwargs)
 
     def get_permissions(self):
-        permission_classes = []
         if self.action in ["retrieve", "list", "issue_list"]:
             permission_classes = [IsAuthenticated]
         else:
@@ -525,7 +519,6 @@ class TeamViewSet(viewsets.ModelViewSet):
                 return TeamSerializer
 
     def get_permissions(self):
-        permission_classes = []
         if self.action in ["retrieve", "list", "issue_list"]:
             permission_classes = [IsAuthenticated]
         else:
@@ -580,7 +573,6 @@ class UniverseViewSet(viewsets.ModelViewSet):
                 return UniverseSerializer
 
     def get_permissions(self):
-        permission_classes = []
         if self.action in ["retrieve", "list"]:
             permission_classes = [IsAuthenticated]
         else:
