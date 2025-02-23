@@ -28,7 +28,7 @@ urlpatterns = [
     path("future", FutureList.as_view(), name="future"),
     re_path(
         r"^creator-autocomplete/?$",
-        CreatorAutocomplete.as_view(create_field="name"),
+        CreatorAutocomplete.as_view(create_field="name", validate_create=True),
         name="creator-autocomplete",
     ),
     re_path(
