@@ -57,7 +57,13 @@ from comicsdb.models.series import SeriesType
 from comicsdb.models.variant import Variant
 
 
-class ArcViewSet(viewsets.ModelViewSet):
+class ArcViewSet(
+    mixins.CreateModelMixin,
+    mixins.RetrieveModelMixin,
+    mixins.ListModelMixin,
+    mixins.UpdateModelMixin,
+    viewsets.GenericViewSet,
+):
     """
     list:
     Returns a list of all the story arcs.
@@ -112,7 +118,13 @@ class ArcViewSet(viewsets.ModelViewSet):
         raise Http404
 
 
-class CharacterViewSet(viewsets.ModelViewSet):
+class CharacterViewSet(
+    mixins.CreateModelMixin,
+    mixins.RetrieveModelMixin,
+    mixins.ListModelMixin,
+    mixins.UpdateModelMixin,
+    viewsets.GenericViewSet,
+):
     """
     list:
     Return a list of all the characters.
@@ -168,7 +180,13 @@ class CharacterViewSet(viewsets.ModelViewSet):
         raise Http404
 
 
-class CreatorViewSet(viewsets.ModelViewSet):
+class CreatorViewSet(
+    mixins.CreateModelMixin,
+    mixins.RetrieveModelMixin,
+    mixins.ListModelMixin,
+    mixins.UpdateModelMixin,
+    viewsets.GenericViewSet,
+):
     """
     list:
     Return a list of all the creators.
@@ -238,7 +256,13 @@ class CreditViewset(
         return Response(serializer.data, status=status.HTTP_201_CREATED, headers=headers)
 
 
-class ImprintViewSet(viewsets.ModelViewSet):
+class ImprintViewSet(
+    mixins.CreateModelMixin,
+    mixins.RetrieveModelMixin,
+    mixins.ListModelMixin,
+    mixins.UpdateModelMixin,
+    viewsets.GenericViewSet,
+):
     """
     list:
     Returns a list of all imprints.
@@ -283,7 +307,13 @@ class ImprintViewSet(viewsets.ModelViewSet):
         return super().perform_update(serializer)
 
 
-class IssueViewSet(viewsets.ModelViewSet):
+class IssueViewSet(
+    mixins.CreateModelMixin,
+    mixins.RetrieveModelMixin,
+    mixins.ListModelMixin,
+    mixins.UpdateModelMixin,
+    viewsets.GenericViewSet,
+):
     """
     list:
     Return a list of all the issues.
@@ -339,7 +369,13 @@ class IssueViewSet(viewsets.ModelViewSet):
         return super().perform_update(serializer)
 
 
-class PublisherViewSet(viewsets.ModelViewSet):
+class PublisherViewSet(
+    mixins.CreateModelMixin,
+    mixins.RetrieveModelMixin,
+    mixins.ListModelMixin,
+    mixins.UpdateModelMixin,
+    viewsets.GenericViewSet,
+):
     """
     list:
     Returns a list of all publishers.
@@ -409,7 +445,13 @@ class RoleViewset(mixins.ListModelMixin, viewsets.GenericViewSet):
     throttle_classes = [UserRateThrottle]
 
 
-class SeriesViewSet(viewsets.ModelViewSet):
+class SeriesViewSet(
+    mixins.CreateModelMixin,
+    mixins.RetrieveModelMixin,
+    mixins.ListModelMixin,
+    mixins.UpdateModelMixin,
+    viewsets.GenericViewSet,
+):
     """
     list:
     Returns a list of all the comic series.
@@ -493,7 +535,13 @@ class SeriesTypeViewSet(mixins.ListModelMixin, viewsets.GenericViewSet):
     throttle_classes = [UserRateThrottle]
 
 
-class TeamViewSet(viewsets.ModelViewSet):
+class TeamViewSet(
+    mixins.CreateModelMixin,
+    mixins.RetrieveModelMixin,
+    mixins.ListModelMixin,
+    mixins.UpdateModelMixin,
+    viewsets.GenericViewSet,
+):
     """
     list:
     Return a list of all the teams.
@@ -549,7 +597,13 @@ class TeamViewSet(viewsets.ModelViewSet):
         raise Http404
 
 
-class UniverseViewSet(viewsets.ModelViewSet):
+class UniverseViewSet(
+    mixins.CreateModelMixin,
+    mixins.RetrieveModelMixin,
+    mixins.ListModelMixin,
+    mixins.UpdateModelMixin,
+    viewsets.GenericViewSet,
+):
     """
     list:
     Return a list of all the universes.
