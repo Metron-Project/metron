@@ -5,6 +5,7 @@ from rest_framework.decorators import action
 from rest_framework.parsers import FormParser, MultiPartParser
 from rest_framework.permissions import IsAdminUser, IsAuthenticated
 from rest_framework.response import Response
+from rest_framework.throttling import UserRateThrottle
 
 from api.v1_0.serializers import (
     ArcListSerializer,
@@ -54,10 +55,15 @@ from comicsdb.models import (
 )
 from comicsdb.models.series import SeriesType
 from comicsdb.models.variant import Variant
-from metron.throttle import GetUserRateThrottle, PostUserRateThrottle
 
 
-class ArcViewSet(viewsets.ModelViewSet):
+class ArcViewSet(
+    mixins.CreateModelMixin,
+    mixins.RetrieveModelMixin,
+    mixins.ListModelMixin,
+    mixins.UpdateModelMixin,
+    viewsets.GenericViewSet,
+):
     """
     list:
     Returns a list of all the story arcs.
@@ -69,7 +75,7 @@ class ArcViewSet(viewsets.ModelViewSet):
     queryset = Arc.objects.all()
     filterset_class = ComicVineFilter
     parser_classes = (MultiPartParser, FormParser)
-    throttle_classes = (GetUserRateThrottle, PostUserRateThrottle)
+    throttle_classes = [UserRateThrottle]
 
     def get_serializer_class(self):
         match self.action:
@@ -112,7 +118,13 @@ class ArcViewSet(viewsets.ModelViewSet):
         raise Http404
 
 
-class CharacterViewSet(viewsets.ModelViewSet):
+class CharacterViewSet(
+    mixins.CreateModelMixin,
+    mixins.RetrieveModelMixin,
+    mixins.ListModelMixin,
+    mixins.UpdateModelMixin,
+    viewsets.GenericViewSet,
+):
     """
     list:
     Return a list of all the characters.
@@ -124,7 +136,7 @@ class CharacterViewSet(viewsets.ModelViewSet):
     queryset = Character.objects.all()
     filterset_class = ComicVineFilter
     parser_classes = (MultiPartParser, FormParser)
-    throttle_classes = (GetUserRateThrottle, PostUserRateThrottle)
+    throttle_classes = [UserRateThrottle]
 
     def get_serializer_class(self):
         match self.action:
@@ -168,7 +180,13 @@ class CharacterViewSet(viewsets.ModelViewSet):
         raise Http404
 
 
-class CreatorViewSet(viewsets.ModelViewSet):
+class CreatorViewSet(
+    mixins.CreateModelMixin,
+    mixins.RetrieveModelMixin,
+    mixins.ListModelMixin,
+    mixins.UpdateModelMixin,
+    viewsets.GenericViewSet,
+):
     """
     list:
     Return a list of all the creators.
@@ -180,7 +198,7 @@ class CreatorViewSet(viewsets.ModelViewSet):
     queryset = Creator.objects.all()
     filterset_class = ComicVineFilter
     parser_classes = (MultiPartParser, FormParser)
-    throttle_classes = (GetUserRateThrottle, PostUserRateThrottle)
+    throttle_classes = [UserRateThrottle]
 
     def get_serializer_class(self):
         match self.action:
@@ -219,7 +237,7 @@ class CreditViewset(
     Update a Credit's data."""
 
     queryset = Credits.objects.all()
-    throttle_classes = (GetUserRateThrottle, PostUserRateThrottle)
+    throttle_classes = [UserRateThrottle]
 
     def get_serializer_class(self):
         return CreditSerializer
@@ -238,7 +256,13 @@ class CreditViewset(
         return Response(serializer.data, status=status.HTTP_201_CREATED, headers=headers)
 
 
-class ImprintViewSet(viewsets.ModelViewSet):
+class ImprintViewSet(
+    mixins.CreateModelMixin,
+    mixins.RetrieveModelMixin,
+    mixins.ListModelMixin,
+    mixins.UpdateModelMixin,
+    viewsets.GenericViewSet,
+):
     """
     list:
     Returns a list of all imprints.
@@ -256,7 +280,7 @@ class ImprintViewSet(viewsets.ModelViewSet):
     queryset = Imprint.objects.prefetch_related("series", "series__series_type")
     filterset_class = ComicVineFilter
     parser_classes = (MultiPartParser, FormParser)
-    throttle_classes = (GetUserRateThrottle, PostUserRateThrottle)
+    throttle_classes = [UserRateThrottle]
 
     def get_serializer_class(self):
         match self.action:
@@ -283,7 +307,13 @@ class ImprintViewSet(viewsets.ModelViewSet):
         return super().perform_update(serializer)
 
 
-class IssueViewSet(viewsets.ModelViewSet):
+class IssueViewSet(
+    mixins.CreateModelMixin,
+    mixins.RetrieveModelMixin,
+    mixins.ListModelMixin,
+    mixins.UpdateModelMixin,
+    viewsets.GenericViewSet,
+):
     """
     list:
     Return a list of all the issues.
@@ -312,7 +342,7 @@ class IssueViewSet(viewsets.ModelViewSet):
     )
     filterset_class = IssueFilter
     parser_classes = (MultiPartParser, FormParser)
-    throttle_classes = (GetUserRateThrottle, PostUserRateThrottle)
+    throttle_classes = [UserRateThrottle]
 
     def get_serializer_class(self):
         match self.action:
@@ -339,7 +369,13 @@ class IssueViewSet(viewsets.ModelViewSet):
         return super().perform_update(serializer)
 
 
-class PublisherViewSet(viewsets.ModelViewSet):
+class PublisherViewSet(
+    mixins.CreateModelMixin,
+    mixins.RetrieveModelMixin,
+    mixins.ListModelMixin,
+    mixins.UpdateModelMixin,
+    viewsets.GenericViewSet,
+):
     """
     list:
     Returns a list of all publishers.
@@ -357,7 +393,7 @@ class PublisherViewSet(viewsets.ModelViewSet):
     queryset = Publisher.objects.prefetch_related("series")
     filterset_class = ComicVineFilter
     parser_classes = (MultiPartParser, FormParser)
-    throttle_classes = (GetUserRateThrottle, PostUserRateThrottle)
+    throttle_classes = [UserRateThrottle]
 
     def get_serializer_class(self):
         match self.action:
@@ -406,10 +442,16 @@ class RoleViewset(mixins.ListModelMixin, viewsets.GenericViewSet):
     queryset = Role.objects.all()
     serializer_class = RoleSerializer
     filterset_class = NameFilter
-    throttle_classes = (GetUserRateThrottle, PostUserRateThrottle)
+    throttle_classes = [UserRateThrottle]
 
 
-class SeriesViewSet(viewsets.ModelViewSet):
+class SeriesViewSet(
+    mixins.CreateModelMixin,
+    mixins.RetrieveModelMixin,
+    mixins.ListModelMixin,
+    mixins.UpdateModelMixin,
+    viewsets.GenericViewSet,
+):
     """
     list:
     Returns a list of all the comic series.
@@ -427,7 +469,7 @@ class SeriesViewSet(viewsets.ModelViewSet):
     queryset = Series.objects.select_related("series_type", "publisher")
     serializer_class = SeriesSerializer
     filterset_class = SeriesFilter
-    throttle_classes = (GetUserRateThrottle, PostUserRateThrottle)
+    throttle_classes = [UserRateThrottle]
 
     def get_serializer_class(self):
         match self.action:
@@ -490,10 +532,16 @@ class SeriesTypeViewSet(mixins.ListModelMixin, viewsets.GenericViewSet):
     queryset = SeriesType.objects.all()
     serializer_class = SeriesTypeSerializer
     filterset_class = NameFilter
-    throttle_classes = (GetUserRateThrottle, PostUserRateThrottle)
+    throttle_classes = [UserRateThrottle]
 
 
-class TeamViewSet(viewsets.ModelViewSet):
+class TeamViewSet(
+    mixins.CreateModelMixin,
+    mixins.RetrieveModelMixin,
+    mixins.ListModelMixin,
+    mixins.UpdateModelMixin,
+    viewsets.GenericViewSet,
+):
     """
     list:
     Return a list of all the teams.
@@ -505,7 +553,7 @@ class TeamViewSet(viewsets.ModelViewSet):
     queryset = Team.objects.all()
     filterset_class = ComicVineFilter
     parser_classes = (MultiPartParser, FormParser)
-    throttle_classes = (GetUserRateThrottle, PostUserRateThrottle)
+    throttle_classes = [UserRateThrottle]
 
     def get_serializer_class(self):
         match self.action:
@@ -549,7 +597,13 @@ class TeamViewSet(viewsets.ModelViewSet):
         raise Http404
 
 
-class UniverseViewSet(viewsets.ModelViewSet):
+class UniverseViewSet(
+    mixins.CreateModelMixin,
+    mixins.RetrieveModelMixin,
+    mixins.ListModelMixin,
+    mixins.UpdateModelMixin,
+    viewsets.GenericViewSet,
+):
     """
     list:
     Return a list of all the universes.
@@ -561,7 +615,7 @@ class UniverseViewSet(viewsets.ModelViewSet):
     queryset = Universe.objects.all()
     filterset_class = UniverseFilter
     parser_classes = (MultiPartParser, FormParser)
-    throttle_classes = (GetUserRateThrottle, PostUserRateThrottle)
+    throttle_classes = [UserRateThrottle]
 
     def get_serializer_class(self):
         match self.action:
@@ -601,7 +655,7 @@ class VariantViewset(
     Update a Variant Cover's information."""
 
     queryset = Variant.objects.all()
-    throttle_classes = (GetUserRateThrottle, PostUserRateThrottle)
+    throttle_classes = [UserRateThrottle]
 
     def get_serializer_class(self):
         return VariantSerializer

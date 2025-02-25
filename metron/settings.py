@@ -168,14 +168,8 @@ REST_FRAMEWORK = {
         "rest_framework.authentication.BasicAuthentication",
         "rest_framework.authentication.SessionAuthentication",
     ),
-    "DEFAULT_THROTTLE_CLASSES": (
-        "metron.throttle.PostUserRateThrottle",
-        "metron.throttle.GetUserRateThrottle",
-    ),
-    "DEFAULT_THROTTLE_RATES": {
-        "get_user": "35/minute",
-        "post_user": "100/minute",
-    },
+    "DEFAULT_THROTTLE_CLASSES": ["rest_framework.throttling.UserRateThrottle"],
+    "DEFAULT_THROTTLE_RATES": {"user": "35/minute"},
     "DEFAULT_FILTER_BACKENDS": ("django_filters.rest_framework.DjangoFilterBackend",),
     "DEFAULT_PAGINATION_CLASS": "rest_framework.pagination.PageNumberPagination",
     "PAGE_SIZE": 100,
