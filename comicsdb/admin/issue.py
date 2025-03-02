@@ -184,7 +184,7 @@ class IssueAdmin(AdminImageMixin, admin.ModelAdmin):
             existing_characters = set(i.characters.all())
             existing_teams = set(i.teams.all())
 
-            for reprint in i.reprints.all():
+            for reprint in i.reprints.all().order_by("cover_date"):
                 if len(reprint.name) <= MAX_STORIES:
                     modified = True
                     all_stories.update(reprint.name)  # Efficiently add new stories
