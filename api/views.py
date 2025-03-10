@@ -5,7 +5,6 @@ from rest_framework.decorators import action
 from rest_framework.parsers import FormParser, MultiPartParser
 from rest_framework.permissions import IsAdminUser, IsAuthenticated
 from rest_framework.response import Response
-from rest_framework.throttling import UserRateThrottle
 
 from api.v1_0.serializers import (
     ArcListSerializer,
@@ -75,7 +74,6 @@ class ArcViewSet(
     queryset = Arc.objects.all()
     filterset_class = ComicVineFilter
     parser_classes = (MultiPartParser, FormParser)
-    throttle_classes = [UserRateThrottle]
 
     def get_serializer_class(self):
         match self.action:
@@ -136,7 +134,6 @@ class CharacterViewSet(
     queryset = Character.objects.all()
     filterset_class = ComicVineFilter
     parser_classes = (MultiPartParser, FormParser)
-    throttle_classes = [UserRateThrottle]
 
     def get_serializer_class(self):
         match self.action:
@@ -198,7 +195,6 @@ class CreatorViewSet(
     queryset = Creator.objects.all()
     filterset_class = ComicVineFilter
     parser_classes = (MultiPartParser, FormParser)
-    throttle_classes = [UserRateThrottle]
 
     def get_serializer_class(self):
         match self.action:
@@ -237,7 +233,6 @@ class CreditViewset(
     Update a Credit's data."""
 
     queryset = Credits.objects.all()
-    throttle_classes = [UserRateThrottle]
 
     def get_serializer_class(self):
         return CreditSerializer
@@ -280,7 +275,6 @@ class ImprintViewSet(
     queryset = Imprint.objects.prefetch_related("series", "series__series_type")
     filterset_class = ComicVineFilter
     parser_classes = (MultiPartParser, FormParser)
-    throttle_classes = [UserRateThrottle]
 
     def get_serializer_class(self):
         match self.action:
@@ -342,7 +336,6 @@ class IssueViewSet(
     )
     filterset_class = IssueFilter
     parser_classes = (MultiPartParser, FormParser)
-    throttle_classes = [UserRateThrottle]
 
     def get_serializer_class(self):
         match self.action:
@@ -393,7 +386,6 @@ class PublisherViewSet(
     queryset = Publisher.objects.prefetch_related("series")
     filterset_class = ComicVineFilter
     parser_classes = (MultiPartParser, FormParser)
-    throttle_classes = [UserRateThrottle]
 
     def get_serializer_class(self):
         match self.action:
@@ -442,7 +434,6 @@ class RoleViewset(mixins.ListModelMixin, viewsets.GenericViewSet):
     queryset = Role.objects.all()
     serializer_class = RoleSerializer
     filterset_class = NameFilter
-    throttle_classes = [UserRateThrottle]
 
 
 class SeriesViewSet(
@@ -469,7 +460,6 @@ class SeriesViewSet(
     queryset = Series.objects.select_related("series_type", "publisher")
     serializer_class = SeriesSerializer
     filterset_class = SeriesFilter
-    throttle_classes = [UserRateThrottle]
 
     def get_serializer_class(self):
         match self.action:
@@ -532,7 +522,6 @@ class SeriesTypeViewSet(mixins.ListModelMixin, viewsets.GenericViewSet):
     queryset = SeriesType.objects.all()
     serializer_class = SeriesTypeSerializer
     filterset_class = NameFilter
-    throttle_classes = [UserRateThrottle]
 
 
 class TeamViewSet(
@@ -553,7 +542,6 @@ class TeamViewSet(
     queryset = Team.objects.all()
     filterset_class = ComicVineFilter
     parser_classes = (MultiPartParser, FormParser)
-    throttle_classes = [UserRateThrottle]
 
     def get_serializer_class(self):
         match self.action:
@@ -615,7 +603,6 @@ class UniverseViewSet(
     queryset = Universe.objects.all()
     filterset_class = UniverseFilter
     parser_classes = (MultiPartParser, FormParser)
-    throttle_classes = [UserRateThrottle]
 
     def get_serializer_class(self):
         match self.action:
@@ -655,7 +642,6 @@ class VariantViewset(
     Update a Variant Cover's information."""
 
     queryset = Variant.objects.all()
-    throttle_classes = [UserRateThrottle]
 
     def get_serializer_class(self):
         return VariantSerializer
