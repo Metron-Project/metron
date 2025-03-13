@@ -3,7 +3,6 @@ from django.http import Http404
 from rest_framework import mixins, status, viewsets
 from rest_framework.decorators import action
 from rest_framework.parsers import FormParser, MultiPartParser
-from rest_framework.permissions import IsAdminUser, IsAuthenticated
 from rest_framework.response import Response
 
 from api.v1_0.serializers import (
@@ -84,14 +83,6 @@ class ArcViewSet(
             case _:
                 return ArcSerializer
 
-    def get_permissions(self):
-        if self.action in ["retrieve", "list", "issue_list"]:
-            permission_classes = [IsAuthenticated]
-        else:
-            permission_classes = [IsAdminUser]
-
-        return [permission() for permission in permission_classes]
-
     def perform_create(self, serializer: ArcSerializer) -> None:
         serializer.save(edited_by=self.request.user, created_by=self.request.user)
         return super().perform_create(serializer)
@@ -146,13 +137,6 @@ class CharacterViewSet(
             case _:
                 return CharacterSerializer
 
-    def get_permissions(self):
-        if self.action in ["retrieve", "list", "issue_list"]:
-            permission_classes = [IsAuthenticated]
-        else:
-            permission_classes = [IsAdminUser]
-        return [permission() for permission in permission_classes]
-
     def perform_create(self, serializer: CharacterSerializer) -> None:
         serializer.save(edited_by=self.request.user, created_by=self.request.user)
         return super().perform_create(serializer)
@@ -203,14 +187,6 @@ class CreatorViewSet(
             case _:
                 return CreatorSerializer
 
-    def get_permissions(self):
-        if self.action in ["retrieve", "list"]:
-            permission_classes = [IsAuthenticated]
-        else:
-            permission_classes = [IsAdminUser]
-
-        return [permission() for permission in permission_classes]
-
     def perform_create(self, serializer: CreatorSerializer) -> None:
         serializer.save(edited_by=self.request.user, created_by=self.request.user)
         return super().perform_create(serializer)
@@ -236,12 +212,6 @@ class CreditViewset(
 
     def get_serializer_class(self):
         return CreditSerializer
-
-    def get_permissions(self):
-        permission_classes = []
-        if self.action in ["create", "update", "partial_update"]:
-            permission_classes = [IsAdminUser]
-        return [permission() for permission in permission_classes]
 
     def create(self, request, *args, **kwargs) -> Response:
         serializer: CreditSerializer = self.get_serializer(data=request.data, many=True)
@@ -284,13 +254,6 @@ class ImprintViewSet(
                 return ImprintReadSerializer
             case _:
                 return ImprintSerializer
-
-    def get_permissions(self):
-        if self.action in ["retrieve", "list"]:
-            permission_classes = [IsAuthenticated]
-        else:
-            permission_classes = [IsAdminUser]
-        return [permission() for permission in permission_classes]
 
     def perform_create(self, serializer: ImprintSerializer) -> None:
         serializer.save(edited_by=self.request.user, created_by=self.request.user)
@@ -346,13 +309,6 @@ class IssueViewSet(
             case _:
                 return IssueSerializer
 
-    def get_permissions(self):
-        if self.action in ["retrieve", "list"]:
-            permission_classes = [IsAuthenticated]
-        else:
-            permission_classes = [IsAdminUser]
-        return [permission() for permission in permission_classes]
-
     def perform_create(self, serializer: IssueSerializer) -> None:
         serializer.save(edited_by=self.request.user, created_by=self.request.user)
         return super().perform_create(serializer)
@@ -395,13 +351,6 @@ class PublisherViewSet(
                 return SeriesListSerializer
             case _:
                 return PublisherSerializer
-
-    def get_permissions(self):
-        if self.action in ["retrieve", "list", "series_list"]:
-            permission_classes = [IsAuthenticated]
-        else:
-            permission_classes = [IsAdminUser]
-        return [permission() for permission in permission_classes]
 
     def perform_create(self, serializer: PublisherSerializer) -> None:
         serializer.save(edited_by=self.request.user, created_by=self.request.user)
@@ -484,13 +433,6 @@ class SeriesViewSet(
             kwargs["data"] = series_request_data
         return serializer_class(*args, **kwargs)
 
-    def get_permissions(self):
-        if self.action in ["retrieve", "list", "issue_list"]:
-            permission_classes = [IsAuthenticated]
-        else:
-            permission_classes = [IsAdminUser]
-        return [permission() for permission in permission_classes]
-
     def perform_create(self, serializer: SeriesSerializer) -> None:
         serializer.save(edited_by=self.request.user, created_by=self.request.user)
         return super().perform_create(serializer)
@@ -554,13 +496,6 @@ class TeamViewSet(
             case _:
                 return TeamSerializer
 
-    def get_permissions(self):
-        if self.action in ["retrieve", "list", "issue_list"]:
-            permission_classes = [IsAuthenticated]
-        else:
-            permission_classes = [IsAdminUser]
-        return [permission() for permission in permission_classes]
-
     def perform_create(self, serializer: TeamSerializer) -> None:
         serializer.save(edited_by=self.request.user, created_by=self.request.user)
         return super().perform_create(serializer)
@@ -613,13 +548,6 @@ class UniverseViewSet(
             case _:
                 return UniverseSerializer
 
-    def get_permissions(self):
-        if self.action in ["retrieve", "list"]:
-            permission_classes = [IsAuthenticated]
-        else:
-            permission_classes = [IsAdminUser]
-        return [permission() for permission in permission_classes]
-
     def perform_create(self, serializer: UniverseSerializer) -> None:
         serializer.save(edited_by=self.request.user, created_by=self.request.user)
         return super().perform_create(serializer)
@@ -645,9 +573,3 @@ class VariantViewset(
 
     def get_serializer_class(self):
         return VariantSerializer
-
-    def get_permissions(self):
-        permission_classes = []
-        if self.action in ["create", "update", "partial_update"]:
-            permission_classes = [IsAdminUser]
-        return [permission() for permission in permission_classes]
