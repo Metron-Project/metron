@@ -2,10 +2,12 @@ import uuid
 from datetime import date, datetime
 
 import pytest
+from django.contrib.auth.models import Group, Permission
+from django.contrib.contenttypes.models import ContentType
 from django.core.management import call_command
 from django.utils import timezone
 
-from comicsdb.models import Announcement, Imprint, Universe
+from comicsdb.models import Announcement, Credits, Imprint, Universe
 from comicsdb.models.arc import Arc
 from comicsdb.models.character import Character
 from comicsdb.models.creator import Creator
@@ -42,9 +44,36 @@ def create_user(db, test_password, test_email):
 
 
 @pytest.fixture
-def create_staff_user(create_user):
+def create_editor_group(db):
+    group, _ = Group.objects.get_or_create(name="editors")
+    models = [
+        Arc,
+        Character,
+        Creator,
+        Credits,
+        Imprint,
+        Issue,
+        Publisher,
+        Series,
+        Team,
+        Universe,
+    ]
+    for model in models:
+        ct = ContentType.objects.get_for_model(model)
+        perms = Permission.objects.filter(content_type=ct)
+        for perm in perms:
+            if "add" in perm.codename:
+                group.permissions.add(perm)
+            if "change" in perm.codename:
+                group.permissions.add(perm)
+    return group
+
+
+@pytest.fixture
+def create_staff_user(create_user, create_editor_group):
     user: CustomUser = create_user()
     user.is_staff = True
+    user.groups.add(create_editor_group)
     user.save()
     return user
 
