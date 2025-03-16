@@ -2,7 +2,6 @@ import logging
 
 from django.contrib import messages
 from django.contrib.auth import login, update_session_auth_hash
-from django.contrib.auth.models import Permission
 from django.contrib.auth.views import PasswordChangeView
 from django.contrib.messages.views import SuccessMessageMixin
 from django.contrib.sites.shortcuts import get_current_site
@@ -42,13 +41,6 @@ def activate(request, uidb64, token):
 
     user.is_active = True
     user.email_confirmed = True
-    # Needed so the user can add new creators in the Issue form.
-    try:
-        permission = Permission.objects.get(name="Can add creator")
-    except Permission.DoesNotExist:
-        permission = None
-    if permission is not None:
-        user.user_permissions.add(permission)
     user.save()
     login(request, user)
     # Send pushover notification tha user activated account
