@@ -13,6 +13,7 @@ from comicsdb.forms.universe import UniversesWidget
 from comicsdb.models import Issue, Rating, Series
 
 MINIMUM_YEAR = 1900
+HEAVY_METAL_MAGAZINE = 8503
 
 
 class ArcsWidget(s2forms.ModelSelect2MultipleWidget):
@@ -100,6 +101,14 @@ class IssueForm(ModelForm):
             self.fields["title"].disabled = True
         self.fields["name"].delimiter = ";"
         self.collections = [8, 10]
+
+    def clean_series(self):
+        series: Series = self.cleaned_data["series"]
+        if series.id == HEAVY_METAL_MAGAZINE:
+            raise ValidationError(
+                "This series currently does not allow new issues to be added."
+            )
+        return series
 
     def _validate_date(self, field: str):
         form_date = self.cleaned_data[field]
