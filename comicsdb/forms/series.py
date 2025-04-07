@@ -4,8 +4,9 @@ from django_select2 import forms as s2forms
 from comicsdb.models import Imprint, Publisher, Series
 
 # Series_Type objects id's
-TPB = 10
 HC = 8
+OMNI = 15
+TPB = 10
 
 
 class SeriesWidget(s2forms.ModelSelect2Widget):
@@ -94,10 +95,23 @@ class SeriesForm(ModelForm):
             "associated",
         ]
 
+    def clean_series_type(self):
+        series_type = self.cleaned_data["series_type"]
+        if series_type.id in [TPB, OMNI]:
+            msg = (
+                "Adding Trade Paperbacks and Omnibuses are currently disabled until "
+                "better documentation and tooling is available."
+            )
+            raise ValidationError(msg)
+        return series_type
+
     def clean_cv_id(self) -> any:
         cvid = self.cleaned_data["cv_id"]
         if cvid:
-            series_type = self.cleaned_data["series_type"]
+            try:
+                series_type = self.cleaned_data["series_type"]
+            except KeyError:
+                return None
             # Don't allow cv_id information for Trade Paperbacks. Refer to:
             # https://github.com/Metron-Project/metron/issues/219
             if series_type.id == TPB:
