@@ -97,7 +97,7 @@ class SeriesForm(ModelForm):
 
     def clean_series_type(self):
         series_type = self.cleaned_data["series_type"]
-        if series_type.id in [TPB, OMNI]:
+        if series_type.id in [HC, TPB, OMNI]:
             msg = (
                 "Adding Trade Paperbacks and Omnibuses are currently disabled until "
                 "better documentation and tooling is available."
