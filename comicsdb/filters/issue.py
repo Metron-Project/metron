@@ -54,6 +54,7 @@ class IssueFilter(df.rest_framework.FilterSet):
         label="Series Volume Number", field_name="series__volume", lookup_expr="exact"
     )
     store_date_range = df.rest_framework.DateFromToRangeFilter("store_date")
+    foc_date_range = df.rest_framework.DateFromToRangeFilter("foc_date")
     series_year_began = df.rest_framework.NumberFilter(
         label="Series Beginning Year", field_name="series__year_began", lookup_expr="exact"
     )
@@ -83,7 +84,7 @@ class IssueFilter(df.rest_framework.FilterSet):
 
     class Meta:
         model = Issue
-        fields = ["store_date"]
+        fields = ["store_date", "foc_date"]
 
 
 class IssueViewFilter(df.FilterSet):
@@ -118,6 +119,7 @@ class IssueViewFilter(df.FilterSet):
         label="Series Type", field_name="series__series_type__id", lookup_expr="exact"
     )
     store_date_range = df.DateFromToRangeFilter("store_date")
+    foc_date_range = df.DateFromToRangeFilter("foc_date")
     series_year_began = df.NumberFilter(
         label="Series Beginning Year", field_name="series__year_began", lookup_expr="exact"
     )
@@ -132,4 +134,4 @@ class IssueViewFilter(df.FilterSet):
 
     class Meta:
         model = Issue
-        fields = ["store_date"]
+        fields = ["store_date", "foc_date"]

@@ -54,6 +54,7 @@ class IssueForm(ModelForm):
             "name",
             "cover_date",
             "store_date",
+            "foc_date",
             "rating",
             "price",
             "sku",
@@ -87,6 +88,7 @@ class IssueForm(ModelForm):
                 "Add any issues that are reprinted. Do not add a '#' "
                 "in front of any issue number."
             ),
+            "foc_date": "This date should be earlier than the store date",
         }
         labels = {
             "name": "Story Title",
@@ -112,6 +114,9 @@ class IssueForm(ModelForm):
 
     def clean_cover_date(self):
         return self._validate_date("cover_date")
+
+    def clean_foc_date(self):
+        return self._validate_date("foc_date")
 
     def clean_sku(self):
         sku = self.cleaned_data["sku"]
