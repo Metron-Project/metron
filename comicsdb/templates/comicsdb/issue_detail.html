@@ -446,6 +446,11 @@
                                 <b>In Store Date:</b> {{ issue.store_date|date:"SHORT_DATE_FORMAT" }}
                             </p>
                         {% endif %}
+                        {% if issue.foc_date %}
+                            <p>
+                                <b><span title="Final Order Cutoff">FOC</span> Date:</b> {{ issue.foc_date|date:"SHORT_DATE_FORMAT" }}
+                            </p>
+                        {% endif %}
                         {% if issue.price %}
                             <p>
                                 <b>Cover Price:</b> ${{ issue.price }}
