@@ -81,6 +81,7 @@ class IssueAdmin(AdminImageMixin, admin.ModelAdmin):
                     "title",
                     "cover_date",
                     "store_date",
+                    "foc_date",
                     "price",
                     "rating",
                     "sku",

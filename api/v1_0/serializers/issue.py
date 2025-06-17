@@ -104,6 +104,7 @@ class IssueSerializer(serializers.ModelSerializer):
         instance.name = validated_data.get("name", instance.name)
         instance.cover_date = validated_data.get("cover_date", instance.cover_date)
         instance.store_date = validated_data.get("store_date", instance.store_date)
+        instance.foc_date = validated_data.get("foc_date", instance.foc_date)
         instance.price = validated_data.get("price", instance.price)
         instance.rating = validated_data.get("rating", instance.rating)
         instance.sku = validated_data.get("sku", instance.sku)
@@ -138,6 +139,7 @@ class IssueSerializer(serializers.ModelSerializer):
             "name",
             "cover_date",
             "store_date",
+            "foc_date",
             "price",
             "rating",
             "sku",
@@ -187,6 +189,7 @@ class IssueReadSerializer(serializers.ModelSerializer):
             "name",
             "cover_date",
             "store_date",
+            "foc_date",
             "price",
             "rating",
             "sku",
