@@ -47,6 +47,7 @@ class Issue(CommonInfo):
     alt_number = models.CharField("Alternative Number", max_length=25, blank=True)
     cover_date = models.DateField("Cover Date")
     store_date = models.DateField("In Store Date", null=True, blank=True)
+    foc_date = models.DateField("Final Order Cutoff Date", null=True, blank=True)
     price = models.DecimalField(
         "Cover Price", max_digits=5, decimal_places=2, null=True, blank=True
     )
