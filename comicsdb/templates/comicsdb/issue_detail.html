@@ -497,18 +497,20 @@
                                 </div>
                             {% endif %}
                         {% endwith %}
-                        <br />
+                    </div>
+                    <div class="box">
+                        <h1 class="title is-6">Identification Numbers</h1>
                         <p>
-                            <b>Metron ID:</b> {{ issue.id }}
+                            <b>Metron:</b> {{ issue.id }}
                         </p>
                         {% if issue.cv_id %}
                             <p>
-                                <b>Comic Vine ID:</b> {{ issue.cv_id }}
+                                <b>Comic Vine:</b> {{ issue.cv_id }}
                             </p>
                         {% endif %}
                         {% if issue.gcd_id %}
                             <p>
-                                <b>GCD ID:</b> {{ issue.gcd_id }}
+                                <b><span title="Grand Comics Database">GCD</span>:</b> {{ issue.gcd_id }}
                             </p>
                         {% endif %}
                     </div>
