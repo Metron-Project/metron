@@ -20,9 +20,9 @@ django-simple-bulma = "*"
 django-select2 = "*"
 chartkick = "*"
 imagehash = "*"
-psycopg = "*"
 isbnlib = "*"
 django-countries = "*"
+psycopg = {extras = ["pool"], version = "*"}
 
 [dev-packages]
 django-debug-toolbar = "*"

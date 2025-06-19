@@ -1,7 +1,7 @@
 {
     "_meta": {
         "hash": {
-            "sha256": "fa2c02041fe6e146e3b0703257a7c9d3d0e204df209537798292867c6bdf740d"
+            "sha256": "ce55b8d7c4cdde3586d9ff72d3dbdc5edb435d19856d43efafb92056926a72be"
         },
         "pipfile-spec": 6,
         "requires": {
@@ -369,13 +369,23 @@
             "version": "==11.2.1"
         },
         "psycopg": {
+            "extras": [
+                "pool"
+            ],
             "hashes": [
                 "sha256:01a8dadccdaac2123c916208c96e06631641c0566b22005493f09663c7a8d3b6",
                 "sha256:2fbb46fcd17bc81f993f28c47f1ebea38d66ae97cc2dbc3cad73b37cefbff700"
             ],
-            "index": "pypi",
             "markers": "python_version >= '3.8'",
             "version": "==3.2.9"
+        },
+        "psycopg-pool": {
+            "hashes": [
+                "sha256:0f92a7817719517212fbfe2fd58b8c35c1850cdd2a80d36b581ba2085d9148e5",
+                "sha256:5887318a9f6af906d041a0b1dc1c60f8f0dda8340c2572b74e10907b51ed5da7"
+            ],
+            "markers": "python_version >= '3.8'",
+            "version": "==3.2.6"
         },
         "python-dateutil": {
             "hashes": [
@@ -723,11 +733,11 @@
         },
         "typing-extensions": {
             "hashes": [
-                "sha256:a439e7c04b49fec3e5d3e2beaa21755cadbbdc391694e28ccdd36ca4a1408f8c",
-                "sha256:e6c81219bd689f51865d9e372991c540bda33a0379d5573cddb9a3a23f7caaef"
+                "sha256:8676b788e32f02ab42d9e7c61324048ae4c6d844a399eebace3d4979d75ceef4",
+                "sha256:a1514509136dd0b477638fc68d6a91497af5076466ad0fa6c338e44e359944af"
             ],
-            "markers": "python_version >= '3.8'",
-            "version": "==4.13.2"
+            "markers": "python_version >= '3.9'",
+            "version": "==4.14.0"
         },
         "uritemplate": {
             "hashes": [
