@@ -125,8 +125,8 @@ DATABASES = {
         "CONN_MAX_AGE": 0,
         "OPTIONS": {
             "pool": {
-                "min_size": 4,  # Keeps connections warm
-                "max_size": 10,  # Handles traffic spikes
+                "min_size": 2,  # Keeps connections warm
+                "max_size": 4,  # Handles traffic spikes
                 "timeout": 10,  # Fails fast under extreme load
                 "max_lifetime": 1800,  # 30 minutes maximum connection age
                 "max_idle": 300,  # Close idle connections after 5 minutes
