@@ -1,10 +1,37 @@
 {% extends parent_template|default:"base.html" %}
+{% load bulma_tags %}
 {% load thumbnail %}
 {% load static %}
 {% block title %}
     {{ customuser.username }}
 {% endblock title %}
 {% block content %}
+    {% if messages %}
+        {% for msg in messages %}
+            <div class="notification is-{{ msg.level_tag|bulma_message_tag }}">
+                <button class="delete"></button>
+                {{ msg.message|safe }}
+            </div>
+        {% endfor %}
+    {% endif %}
+    <!-- Nav / Edit -->
+    <nav class="level">
+        <div class="level-right">
+            {% if customuser.pk == request.user.pk %}
+                <p class="level-item">
+                    <a class="button is-info"
+                       href="{% url 'change_profile' %}"
+                       title="Edit user profile">
+                        <span class="icon is-small">
+                            <i class="fas fa-edit"></i>
+                        </span>
+                        <span>Edit</span>
+                    </a>
+                </p>
+            {% endif %}
+        </div>
+    </nav>
+    <!-- End Nav / Edit-->
     <!-- Main page content -->
     <div class="box">
         <article class="media">

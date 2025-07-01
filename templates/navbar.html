@@ -128,7 +128,7 @@
             </a>
             <div class="navbar-end">
                 {% if user.is_authenticated %}
-                    <a class="navbar-item" href="{% url 'change_profile' %}">Account</a>
+                    <a class="navbar-item" href="{% url 'user-detail' pk=user.pk %}">Account</a>
                 {% endif %}
                 <div class="navbar-item">
                     <div class="buttons">

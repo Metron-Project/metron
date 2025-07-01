@@ -106,7 +106,7 @@ def change_profile(request):
             user = form.save()
             update_session_auth_hash(request, user)  # Important!
             messages.success(request, "Your profile was successfully updated!")
-            return redirect("change_profile")
+            return redirect("user-detail", pk=request.user.pk)
         messages.error(request, "Please correct the error below.")
     else:
         form = CustomUserChangeForm(instance=request.user)
