@@ -448,74 +448,81 @@
                         {% endif %}
                         {% if issue.foc_date %}
                             <p>
-                                <b><span title="Final Order Cutoff">FOC</span> Date:</b> {{ issue.foc_date|date:"SHORT_DATE_FORMAT" }}
-                            </p>
-                        {% endif %}
-                        {% if issue.price %}
-                            <p>
-                                <b>Cover Price:</b> ${{ issue.price }}
-                            </p>
-                        {% endif %}
-                        {% if issue.page %}
-                            <p>
-                                <b>Page Count:</b> {{ issue.page|intcomma }}
-                            </p>
-                        {% endif %}
-                        <!-- Ratings are always present -->
-                        <p>
-                            <b>Rating:</b> <span title="{{ issue.rating.short_description }}">{{ issue.rating.name }}</span>
-                        </p>
-                        {% if issue.sku %}
-                            <p>
-                                <b>Distributor SKU:</b> {{ issue.sku }}
-                            </p>
-                        {% endif %}
-                        {% if issue.isbn %}
-                            <p>
-                                <b>ISBN:</b> {{ issue.isbn }}
-                            </p>
-                        {% endif %}
-                        {% if issue.upc %}
-                            <p>
-                                <b>UPC:</b> {{ issue.upc }}
-                            </p>
-                        {% endif %}
-                        {% with arcs=issue.arcs.all %}
-                            {% if arcs %}
-                                <br>
-                                <p>
-                                    <b>Story Arcs</b>
+                                <b><span title="Final Order Cutoff">FOC</span> Date:</b>
+                                {% if issue.is_foc_past_due %}
+                                    <span title="Past due FOC" class="has-text-danger-dark">
+                                    {% else %}
+                                        <span title="Still time to order" class="has-text-success-dark">
+                                        {% endif %}
+                                        {{ issue.foc_date|date:"SHORT_DATE_FORMAT" }}
+                                    </span>
                                 </p>
-                                <div class="content">
-                                    <ul>
-                                        {% for arc in arcs %}
-                                            <li>
-                                                <a href="{% url 'arc:detail' arc.slug %}">{{ arc.name }}</a>
-                                            </li>
-                                        {% endfor %}
-                                    </ul>
-                                </div>
                             {% endif %}
-                        {% endwith %}
-                    </div>
-                    <div class="box">
-                        <h1 class="title is-6">Identification Numbers</h1>
-                        <p>
-                            <b>Metron:</b> {{ issue.id }}
-                        </p>
-                        {% if issue.cv_id %}
+                            {% if issue.price %}
+                                <p>
+                                    <b>Cover Price:</b> ${{ issue.price }}
+                                </p>
+                            {% endif %}
+                            {% if issue.page %}
+                                <p>
+                                    <b>Page Count:</b> {{ issue.page|intcomma }}
+                                </p>
+                            {% endif %}
+                            <!-- Ratings are always present -->
                             <p>
-                                <b>Comic Vine:</b> {{ issue.cv_id }}
+                                <b>Rating:</b> <span title="{{ issue.rating.short_description }}">{{ issue.rating.name }}</span>
                             </p>
-                        {% endif %}
-                        {% if issue.gcd_id %}
+                            {% if issue.sku %}
+                                <p>
+                                    <b>Distributor SKU:</b> {{ issue.sku }}
+                                </p>
+                            {% endif %}
+                            {% if issue.isbn %}
+                                <p>
+                                    <b>ISBN:</b> {{ issue.isbn }}
+                                </p>
+                            {% endif %}
+                            {% if issue.upc %}
+                                <p>
+                                    <b>UPC:</b> {{ issue.upc }}
+                                </p>
+                            {% endif %}
+                            {% with arcs=issue.arcs.all %}
+                                {% if arcs %}
+                                    <br>
+                                    <p>
+                                        <b>Story Arcs</b>
+                                    </p>
+                                    <div class="content">
+                                        <ul>
+                                            {% for arc in arcs %}
+                                                <li>
+                                                    <a href="{% url 'arc:detail' arc.slug %}">{{ arc.name }}</a>
+                                                </li>
+                                            {% endfor %}
+                                        </ul>
+                                    </div>
+                                {% endif %}
+                            {% endwith %}
+                        </div>
+                        <div class="box">
+                            <h1 class="title is-6">Identification Numbers</h1>
                             <p>
-                                <b><span title="Grand Comics Database">GCD</span>:</b> {{ issue.gcd_id }}
+                                <b>Metron:</b> {{ issue.id }}
                             </p>
-                        {% endif %}
+                            {% if issue.cv_id %}
+                                <p>
+                                    <b>Comic Vine:</b> {{ issue.cv_id }}
+                                </p>
+                            {% endif %}
+                            {% if issue.gcd_id %}
+                                <p>
+                                    <b><span title="Grand Comics Database">GCD</span>:</b> {{ issue.gcd_id }}
+                                </p>
+                            {% endif %}
+                        </div>
                     </div>
+                    <!-- end misc info -->
                 </div>
-                <!-- end misc info -->
-            </div>
-            <!-- end of main page content -->
-        {% endblock content %}
+                <!-- end of main page content -->
+            {% endblock content %}
