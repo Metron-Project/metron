@@ -1,6 +1,7 @@
 import contextlib
 import itertools
 import logging
+from datetime import date
 
 import imagehash
 from django.contrib.contenttypes.fields import GenericRelation
@@ -88,6 +89,10 @@ class Issue(CommonInfo):
     @property
     def marvel(self):
         return self.attribution.filter(source=Attribution.Source.MARVEL)
+
+    @property
+    def is_foc_past_due(self):
+        return date.today() > self.foc_date
 
     def save(self, *args, **kwargs) -> None:
         # Let's delete the original image if we're replacing it by uploading a new one.
