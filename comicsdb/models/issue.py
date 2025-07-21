@@ -53,7 +53,7 @@ class Issue(CommonInfo):
         "Cover Price", max_digits=5, decimal_places=2, null=True, blank=True
     )
     rating = models.ForeignKey(Rating, default=1, on_delete=models.SET_DEFAULT)
-    sku = models.CharField("Distributor SKU", max_length=9, blank=True)
+    sku = models.CharField("Distributor SKU", max_length=12, blank=True)
     isbn = models.CharField("ISBN", max_length=13, blank=True)
     upc = models.CharField("UPC Code", max_length=20, blank=True)
     page = models.PositiveSmallIntegerField("Page Count", null=True, blank=True)
