@@ -67,88 +67,85 @@
 </div>
 <!-- end icons -->
 <!-- info -->
-<div class="tile is-ancestor">
-    <div class="tile is-7 is-parent is-vertical">
-        <article class="tile is-child notification is-info">
-            <div class="columns">
-                <div class="column is-narrow is-hidden-mobile">
-                    <figure class="block is-w-xl">
-                        <img src="{% static 'site/img/metron-300.png' %}" alt="Metron logo">
-                    </figure>
+<div class="fixed-grid">
+    <div class="grid">
+        <div class="cell">
+            <article class="box has-background-link has-text-link-invert">
+                <p class="title">What is Metron?</p>
+                <p class="content">
+                    <strong>Metron</strong> is a community-based site whose goal is to build an open database
+                    with a <a href="https://en.wikipedia.org/wiki/Representational_state_transfer">REST</a> API for comic
+                    books.
+                </p>
+                <p class="content">
+                    Currently, the only comic book database the provides a REST API for users is
+                    <a href="https://comicvine.gamespot.com/">Comic Vine</a>. Unfortunately, since it's a corporately-owned
+                    service, the community that uses it has no control over the amount of resources provided to maintain it
+                    or ensure it's continued accessibility.
+                </p>
+            </article>
+        </div>
+        <div class="cell">
+            <article class="box has-background-warning has-text-warning-invert">
+                <p class="title">Using the REST API</p>
+                <p class="content">
+                    If you want to use the data from Metron, there is a <a href="https://www.python.org/">Python</a> wrapper
+                    called <a href="https://github.com/Metron-Project/mokkari">Mokkari</a> to make it easy to use the API.
+                </p>
+                <p class="content">Want to tag your comic archives with metadata from Metron? You can use the following project:</p>
+                <div class="content">
+                    <ul>
+                        <li>
+                            <a href="https://github.com/Metron-Project/metron-tagger">Metron-Tagger</a>
+                        </li>
+                    </ul>
                 </div>
-                <div>
-                    <p class="title">What is Metron?</p>
-                    <p class="content">
-                        <strong>Metron</strong> is a community-based site whose goal is to build an open database
-                        with a <a href="https://en.wikipedia.org/wiki/Representational_state_transfer">REST</a> API for comic
-                        books.
-                    </p>
-                    <p class="content">
-                        Currently, the only comic book database the provides a REST API for users is
-                        <a href="https://comicvine.gamespot.com/">Comic Vine</a>. Unfortunately, since it's a corporately-owned
-                        service, the community that uses it has no control over the amount of resources provided to maintain it
-                        or ensure it's continued accessibility.
-                    </p>
+                <p class="content">
+                    For further information on the API, please refer to the
+                    <a href="{% url 'flatpage:api-guidelines' %}">API Guidelines</a>.
+                </p>
+            </article>
+        </div>
+        <div class="cell">
+            <article class="box has-background-primary has-text-primary-invert">
+                <p class="title">Want to Contribute?</p>
+                <p class="content">
+                    If you would like donate to help cover server and development costs, you can support us through
+                    <a href="https://opencollective.com/metron">OpenCollective</a>.
+                </p>
+                <p class="content">
+                    If you want to add information to Metron, sign-up for an account and read the
+                    <a href="{% url 'flatpage:editing-guidelines' %}">Editing Guidelines</a>
+                    before starting.
+                </p>
+                <p class="content">
+                    Want to help with the technical side of Metron? Metron is built with
+                    <a href="https://www.djangoproject.com/">Django</a>, so if you have knowledge of Python and Django head over
+                    to <a href="https://github.com/Metron-Project/metron">GitHub</a> to check out the sites code.
+                </p>
+            </article>
+        </div>
+        <div class="cell">
+            <article class="box has-background-danger has-text-danger-invert">
+                <p class="title">Questions?</p>
+                <p class="content">
+                    Have questions not covered here or suggestions? If so, feel free to contact us at either of these places:
+                </p>
+                <div class="content">
+                    <ul>
+                        <li>
+                            <a href="https://matrix.to/#/#metrondb:matrix.org">Matrix Chat</a>
+                        </li>
+                        <li>
+                            <a href="https://github.com/Metron-Project/metron/discussions">GitHub Discussions</a>
+                        </li>
+                        <li>
+                            <a href="mailto:bpepple@metron.cloud">Email Site Admin</a>
+                        </li>
+                    </ul>
                 </div>
-            </div>
-        </article>
-        <article class="tile is-child notification is-warning">
-            <p class="title">Using the REST API</p>
-            <p class="content">
-                If you want to use the data from Metron, there is a <a href="https://www.python.org/">Python</a> wrapper
-                called <a href="https://github.com/Metron-Project/mokkari">Mokkari</a> to make it easy to use the API.
-            </p>
-            <p class="content">Want to tag your comic archives with metadata from Metron? You can use the following project:</p>
-            <div class="content">
-                <ul>
-                    <li>
-                        <a href="https://github.com/Metron-Project/metron-tagger">Metron-Tagger</a>
-                    </li>
-                </ul>
-            </div>
-            <p class="content">
-                For further information on the API, please refer to the
-                <a href="{% url 'flatpage:api-guidelines' %}">API Guidelines</a>.
-            </p>
-        </article>
-    </div>
-    <div class="tile is-5 is-parent is-vertical">
-        <article class="tile is-child notification is-primary">
-            <p class="title">Want to Contribute?</p>
-            <p class="content">
-                If you would like donate to help cover server and development costs, you can support us through
-                <a href="https://opencollective.com/metron">OpenCollective</a>.
-            </p>
-            <p class="content">
-                If you want to add information to Metron, sign-up for an account and read the
-                <a href="{% url 'flatpage:editing-guidelines' %}">Editing Guidelines</a>
-                before starting.
-            </p>
-            <p class="content">
-                Want to help with the technical side of Metron? Metron is built with
-                <a href="https://www.djangoproject.com/">Django</a>, so if you have knowledge of Python and Django head over
-                to <a href="https://github.com/Metron-Project/metron">GitHub</a> to check out the sites code.
-            </p>
-        </article>
-        <article class="tile is-child notification is-danger">
-            <p class="title">Questions?</p>
-            <p class="content">
-                Have questions not covered here or suggestions? If so, feel free to contact us at either of these places:
-            </p>
-            <div class="content">
-                <ul>
-                    <li>
-                        <a href="https://matrix.to/#/#metrondb:matrix.org">Matrix Chat</a>
-                    </li>
-                    <li>
-                        <a href="https://github.com/Metron-Project/metron/discussions">GitHub Discussions</a>
-                    </li>
-                    <li>
-                        <a href="mailto:bpepple@metron.cloud">Email Site Admin</a>
-                    </li>
-                </ul>
-            </div>
-        </article>
+            </article>
+        </div>
     </div>
 </div>
 <!-- end info-->
