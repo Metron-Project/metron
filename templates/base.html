@@ -58,6 +58,8 @@
             </section>
         {% endif %}
         {% include "footer.html" %}
-        {% block js %}{% endblock %}
+        {% block js %}
+            <script src="{% static 'site/js/bulma-navbar-burger.js' %}"></script>
+        {% endblock %}
     </body>
 </html>
