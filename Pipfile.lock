@@ -34,20 +34,20 @@
         },
         "boto3": {
             "hashes": [
-                "sha256:82c6868cad18c3bd4170915e9525f9af5f83e9779c528417f8863629558fc2d0",
-                "sha256:fabb16360a93b449d5241006485bcc761c26694e75ac01009f4459f114acc06e"
+                "sha256:cf843228928fd1caebb46c21fbd757a390ce22672b937a354ae89a1d16cb99f8",
+                "sha256:d4ce6ba5c030d7ff2033b35e5574d2414e42b80b937bf40d080e11c4d9d0acc1"
             ],
             "index": "pypi",
             "markers": "python_version >= '3.9'",
-            "version": "==1.39.14"
+            "version": "==1.39.16"
         },
         "botocore": {
             "hashes": [
-                "sha256:4ed551c77194167b7e8063f33059bc2f9b2ead0ed4ee33dc7857273648ed4349",
-                "sha256:7fc44d4ad13b524e5d8a6296785776ef5898ac026ff74df9b35313831d507926"
+                "sha256:1f1c3b614ac88fd68f824c481cfd7686460c38fe13c01e2963556e7186be3248",
+                "sha256:b5a1416849637aa8e72292ee3e7b11cd0c22f9b96f6043d2ac6ba0092a193188"
             ],
             "markers": "python_version >= '3.9'",
-            "version": "==1.39.14"
+            "version": "==1.39.16"
         },
         "chartkick": {
             "hashes": [
@@ -110,11 +110,12 @@
         },
         "django-simple-bulma": {
             "hashes": [
-                "sha256:06a195e630f9bfa91060a0075a18ba6953bb72e7396fda3737561af0dfeab0d1",
-                "sha256:7660aac87f3bfb23f2bbbd564e216337f443c001698d344759ad5753f8e3a3c1"
+                "sha256:3769c45ac3f33d9ee2cb65f5cfca3b717c89009f431554ef19d6b17cdaf23e3e",
+                "sha256:8ccb008abc06118aff9c8a10fc3d0c13d3bca02ff7644b0ca6b0d49a5d28f2f2"
             ],
             "index": "pypi",
-            "version": "==2.6.0"
+            "markers": "python_version >= '3.12'",
+            "version": "==3.0.0"
         },
         "django-storages": {
             "hashes": [
