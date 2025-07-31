@@ -20,13 +20,13 @@
         <div class="level-left">
             <div class="level-item">
                 {% if navigation.previous_character %}
-                    <a class="button is-link"
+                    <a class="button is-rounded is-link"
                        href="{% url 'character:detail' navigation.previous_character.slug %}">
                         <span class="icon is-small"><i class="fas fa-arrow-left"></i></span>
                         <span>Previous Character</span>
                     </a>
                 {% else %}
-                    <a class="button" disabled>
+                    <a class="button is-rounded" disabled>
                         <span class="icon is-small"><i class="fas fa-arrow-left"></i></span>
                         <span>Previous Character</span>
                     </a>
@@ -34,13 +34,13 @@
             </div>
             <div class="level-item">
                 {% if navigation.next_character %}
-                    <a class="button is-link"
+                    <a class="button is-rounded is-link"
                        href="{% url 'character:detail' navigation.next_character.slug %}">
                         <span class="icon is-small"><i class="fas fa-arrow-right"></i></span>
                         <span>Next Character</span>
                     </a>
                 {% else %}
-                    <a class="button" disabled>
+                    <a class="button is-rounded" disabled>
                         <span class="icon is-small"><i class="fas fa-arrow-right"></i></span>
                         <span>Next Character</span>
                     </a>
@@ -50,7 +50,7 @@
         <div class="level-right">
             {% if user.is_authenticated %}
                 <p class="level-item">
-                    <a class="button is-primary"
+                    <a class="button is-rounded is-primary"
                        href="{% url 'character:create' %}"
                        title="Add a new character">
                         <span class="icon is-small"><i class="fas fa-plus"></i></span>
@@ -58,7 +58,7 @@
                     </a>
                 </p>
                 <p class="level-item">
-                    <a class="button is-info"
+                    <a class="button is-rounded is-info"
                        href="{% url 'character:update' character.slug %}"
                        title="Edit character">
                         <span class="icon is-small"><i class="fas fa-edit"></i></span>
@@ -67,7 +67,7 @@
                 </p>
                 {% if perms.comicsdb.delete_character %}
                     <p class="level-item">
-                        <a class="button is-danger"
+                        <a class="button is-rounded is-danger"
                            href="{% url 'character:delete' character.slug %}"
                            title="Delete character">
                             <span class="icon is-small"><i class="fas fa-trash"></i></span>
@@ -76,7 +76,7 @@
                     </p>
                 {% else %}
                     <p class="level-item">
-                        <a class="button is-danger" title="Delete character" disabled>
+                        <a class="button is-rounded is-danger" title="Delete character" disabled>
                             <span class="icon is-small"><i class="fas fa-trash"></i></span>
                             <span>Delete</span>
                         </a>

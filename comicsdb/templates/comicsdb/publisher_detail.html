@@ -22,13 +22,13 @@
         <div class="level-left">
             <div class="level-item">
                 {% if navigation.previous_publisher %}
-                    <a class="button is-link"
+                    <a class="button is-rounded is-link"
                        href="{% url 'publisher:detail' navigation.previous_publisher.slug %}">
                         <span class="icon is-small"><i class="fas fa-arrow-left"></i></span>
                         <span>Previous Publisher</span>
                     </a>
                 {% else %}
-                    <a class="button" disabled>
+                    <a class="button is-rounded" disabled>
                         <span class="icon is-small"><i class="fas fa-arrow-left"></i></span>
                         <span>Previous Publisher</span>
                     </a>
@@ -36,13 +36,13 @@
             </div>
             <div class="level-item">
                 {% if navigation.next_publisher %}
-                    <a class="button is-link"
+                    <a class="button is-rounded is-link"
                        href="{% url 'publisher:detail' navigation.next_publisher.slug %}">
                         <span>Next Publisher</span>
                         <span class="icon is-small"><i class="fas fa-arrow-right"></i></span>
                     </a>
                 {% else %}
-                    <a class="button" disabled>
+                    <a class="button is-rounded" disabled>
                         <span>Next Publisher</span>
                         <span class="icon is-small"><i class="fas fa-arrow-right"></i></span>
                     </a>
@@ -51,7 +51,7 @@
         </div>
         <div class="level-right">
             <div class="level-item">
-                <a class="button is-link"
+                <a class="button is-rounded is-link"
                    href="{% url 'publisher:series' publisher.slug %}"
                    title="Open series list for publisher">
                     <span class="icon is-small"><i class="fas fa-list"></i></span>
@@ -60,7 +60,7 @@
             </div>
             {% if user.is_authenticated %}
                 <p class="level-item">
-                    <a class="button is-primary"
+                    <a class="button is-rounded is-primary"
                        href="{% url 'publisher:create' %}"
                        title="Add a new publisher">
                         <span class="icon is-small"><i class="fas fa-plus"></i></span>
@@ -68,7 +68,7 @@
                     </a>
                 </p>
                 <p class="level-item">
-                    <a class="button is-info"
+                    <a class="button is-rounded is-info"
                        href="{% url 'publisher:update' publisher.slug %}"
                        title="Edit publisher">
                         <span class="icon is-small"><i class="fas fa-edit"></i></span>
@@ -77,7 +77,7 @@
                 </p>
                 {% if perms.comicsdb.delete_publisher %}
                     <p class="level-item">
-                        <a class="button is-danger"
+                        <a class="button is-rounded is-danger"
                            href="{% url 'publisher:delete' publisher.slug %}"
                            title="Delete publisher">
                             <span class="icon is-small"><i class="fas fa-trash"></i></span>
@@ -86,7 +86,7 @@
                     </p>
                 {% else %}
                     <p class="level-item">
-                        <a class="button is-danger" title="Delete publisher" disabled>Delete</a>
+                        <a class="button is-rounded is-danger" title="Delete publisher" disabled>Delete</a>
                     </p>
                 {% endif %}
             {% endif %}

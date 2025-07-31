@@ -20,13 +20,13 @@
         <div class="level-left">
             <div class="level-item">
                 {% if navigation.previous_universe %}
-                    <a class="button is-link"
+                    <a class="button is-rounded is-link"
                        href="{% url 'universe:detail' navigation.previous_universe.slug %}">
                         <span class="icon is-small"><i class="fas fa-arrow-left"></i></span>
                         <span>Previous Universe</span>
                     </a>
                 {% else %}
-                    <a class="button" disabled>
+                    <a class="button is-rounded" disabled>
                         <span class="icon is-small"><i class="fas fa-arrow-left"></i></span>
                         <span>Previous Universe</span>
                     </a>
@@ -34,13 +34,13 @@
             </div>
             <div class="level-item">
                 {% if navigation.next_universe %}
-                    <a class="button is-link"
+                    <a class="button is-rounded is-link"
                        href="{% url 'universe:detail' navigation.next_universe.slug %}">
                         <span class="icon is-small"><i class="fas fa-arrow-right"></i></span>
                         <span>Next Universe</span>
                     </a>
                 {% else %}
-                    <a class="button" disabled>
+                    <a class="button is-rounded" disabled>
                         <span class="icon is-small"><i class="fas fa-arrow-right"></i></span>
                         <span>Next Universe</span>
                     </a>
@@ -50,7 +50,7 @@
         <div class="level-right">
             {% if user.is_authenticated %}
                 <p class="level-item">
-                    <a class="button is-primary"
+                    <a class="button is-rounded is-primary"
                        href="{% url 'universe:create' %}"
                        title="Add a new universe">
                         <span class="icon is-small"><i class="fas fa-plus"></i></span>
@@ -58,7 +58,7 @@
                     </a>
                 </p>
                 <p class="level-item">
-                    <a class="button is-info"
+                    <a class="button is-rounded is-info"
                        href="{% url 'universe:update' universe.slug %}"
                        title="Edit universe">
                         <span class="icon is-small"><i class="fas fa-edit"></i></span>
@@ -67,7 +67,7 @@
                 </p>
                 {% if perms.comicsdb.delete_universe %}
                     <p class="level-item">
-                        <a class="button is-danger"
+                        <a class="button is-rounded is-danger"
                            href="{% url 'universe:delete' universe.slug %}"
                            title="Delete universe">
                             <span class="icon is-small"><i class="fas fa-trash"></i></span>
@@ -76,7 +76,7 @@
                     </p>
                 {% else %}
                     <p class="level-item">
-                        <a class="button is-danger" title="Delete universe" disabled>
+                        <a class="button is-rounded is-danger" title="Delete universe" disabled>
                             <span class="icon is-small"><i class="fas fa-trash"></i></span>
                             <span>Delete</span>
                         </a>

@@ -140,14 +140,14 @@
                         {% if user.is_authenticated %}
                             <form>
                                 {% csrf_token %}
-                                <button class="button is-light"
+                                <button class="button is-rounded is-light"
                                         formmethod="post"
                                         formaction="{% url 'logout' %}"
                                         type="submit">Log out</button>
                             </form>
                         {% else %}
-                            <a class="button is-primary" href="{% url 'signup' %}"><strong>Sign up</strong></a>
-                            <a class="button is-light" href="{% url 'login' %}">Log in</a>
+                            <a class="button is-rounded is-primary" href="{% url 'signup' %}"><strong>Sign up</strong></a>
+                            <a class="button is-rounded is-light" href="{% url 'login' %}">Log in</a>
                         {% endif %}
                     </div>
                 </div>

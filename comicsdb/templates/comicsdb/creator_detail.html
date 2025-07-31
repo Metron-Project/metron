@@ -20,7 +20,7 @@
         <div class="level-left">
             <div class="level-item">
                 {% if navigation.previous_creator %}
-                    <a class="button is-link"
+                    <a class="button is-rounded is-link"
                        href="{% url 'creator:detail' navigation.previous_creator.slug %}">
                         <span class="icon is-small">
                             <i class="fas fa-arrow-left"></i>
@@ -28,7 +28,7 @@
                         <span>Previous Creator</span>
                     </a>
                 {% else %}
-                    <a class="button" disabled>
+                    <a class="button is-rounded" disabled>
                         <span class="icon is-small">
                             <i class="fas fa-arrow-left"></i>
                         </span>
@@ -38,7 +38,7 @@
             </div>
             <div class="level-item">
                 {% if navigation.next_creator %}
-                    <a class="button is-link"
+                    <a class="button is-rounded is-link"
                        href="{% url 'creator:detail' navigation.next_creator.slug %}">
                         <span>Next Creator</span>
                         <span class="icon is-small">
@@ -46,7 +46,7 @@
                         </span>
                     </a>
                 {% else %}
-                    <a class="button" disabled>
+                    <a class="button is-rounded" disabled>
                         <span>Next Creator</span>
                         <span class="icon is-small">
                             <i class="fas fa-arrow-right"></i>
@@ -58,7 +58,7 @@
         <div class="level-right">
             {% if user.is_authenticated %}
                 <p class="level-item">
-                    <a class="button is-primary"
+                    <a class="button is-rounded is-primary"
                        href="{% url 'creator:create' %}"
                        title="Add a new creator">
                         <span class="icon is-small">
@@ -68,7 +68,7 @@
                     </a>
                 </p>
                 <p class="level-item">
-                    <a class="button is-info"
+                    <a class="button is-rounded is-info"
                        href="{% url 'creator:update' creator.slug %}"
                        title="Edit creator">
                         <span class="icon is-small">
@@ -79,7 +79,7 @@
                 </p>
                 {% if perms.comicsdb.delete_creator %}
                     <p class="level-item">
-                        <a class="button is-danger"
+                        <a class="button is-rounded is-danger"
                            href="{% url 'creator:delete' creator.slug %}"
                            title="Delete creator">
                             <span class="icon is-small">
@@ -90,7 +90,7 @@
                     </p>
                 {% else %}
                     <p class="level-item">
-                        <a class="button is-danger" title="Delete creator" disabled>
+                        <a class="button is-rounded is-danger" title="Delete creator" disabled>
                             <span class="icon is-small">
                                 <i class="fas fa-trash"></i>
                             </span>

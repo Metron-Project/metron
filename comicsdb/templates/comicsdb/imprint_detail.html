@@ -22,13 +22,13 @@
         <div class="level-left">
             <div class="level-item">
                 {% if navigation.previous_imprint %}
-                    <a class="button is-link"
+                    <a class="button is-rounded is-link"
                        href="{% url 'imprint:detail' navigation.previous_imprint.slug %}">
                         <span class="icon is-small"><i class="fas fa-arrow-left"></i></span>
                         <span>Previous Imprint</span>
                     </a>
                 {% else %}
-                    <a class="button" disabled>
+                    <a class="button is-rounded" disabled>
                         <span class="icon is-small"><i class="fas fa-arrow-left"></i></span>
                         <span>Previous Imprint</span>
                     </a>
@@ -36,13 +36,13 @@
             </div>
             <div class="level-item">
                 {% if navigation.next_imprint %}
-                    <a class="button is-link"
+                    <a class="button is-rounded is-link"
                        href="{% url 'imprint:detail' navigation.next_imprint.slug %}">
                         <span>Next Imprint</span>
                         <span class="icon is-small"><i class="fas fa-arrow-right"></i></span>
                     </a>
                 {% else %}
-                    <a class="button" disabled>
+                    <a class="button is-rounded" disabled>
                         <span>Next Imprint</span>
                         <span class="icon is-small"><i class="fas fa-arrow-right"></i></span>
                     </a>
@@ -51,7 +51,7 @@
         </div>
         <div class="level-right">
             <div class="level-item">
-                <a class="button is-link"
+                <a class="button is-rounded is-link"
                    href="{% url 'imprint:series' imprint.slug %}"
                    title="Open series list for imprint">
                     <span class="icon is-small"><i class="fas fa-list"></i></span>
@@ -60,7 +60,7 @@
             </div>
             {% if user.is_authenticated %}
                 <p class="level-item">
-                    <a class="button is-primary"
+                    <a class="button is-rounded is-primary"
                        href="{% url 'imprint:create' %}"
                        title="Add a new imprint">
                         <span class="icon is-small"><i class="fas fa-plus"></i></span>
@@ -68,7 +68,7 @@
                     </a>
                 </p>
                 <p class="level-item">
-                    <a class="button is-info"
+                    <a class="button is-rounded is-info"
                        href="{% url 'imprint:update' imprint.slug %}"
                        title="Edit imprint">
                         <span class="icon is-small"><i class="fas fa-edit"></i></span>
@@ -77,7 +77,7 @@
                 </p>
                 {% if perms.comicsdb.delete_imprint %}
                     <p class="level-item">
-                        <a class="button is-danger"
+                        <a class="button is-rounded is-danger"
                            href="{% url 'imprint:delete' imprint.slug %}"
                            title="Delete imprint">
                             <span class="icon is-small"><i class="fas fa-trash"></i></span>
@@ -86,7 +86,7 @@
                     </p>
                 {% else %}
                     <p class="level-item">
-                        <a class="button is-danger" title="Delete Imprint" disabled>Delete</a>
+                        <a class="button is-rounded is-danger" title="Delete Imprint" disabled>Delete</a>
                     </p>
                 {% endif %}
             {% endif %}
