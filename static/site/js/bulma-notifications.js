@@ -1,10 +1,9 @@
-window.addEventListener("DOMContentLoaded", function() {
-    const notifications = document.querySelectorAll(".notification");
-    for (let i = 0; i < notifications.length; i++) {
-        let button = notifications[i].querySelector("button.delete");
+document.addEventListener('DOMContentLoaded', () => {
+  (document.querySelectorAll('.notification .delete') || []).forEach(($delete) => {
+    const $notification = $delete.parentNode;
 
-        button.onclick = function() {
-            notifications[i].style.display = 'none';
-        }
-    }
+    $delete.addEventListener('click', () => {
+      $notification.parentNode.removeChild($notification);
+    });
+  });
 });
