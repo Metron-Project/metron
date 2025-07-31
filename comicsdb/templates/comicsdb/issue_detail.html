@@ -450,9 +450,9 @@
                             <p>
                                 <b><span title="Final Order Cutoff">FOC</span> Date:</b>
                                 {% if issue.is_foc_past_due %}
-                                    <span title="Past due FOC" class="has-text-danger-dark">
+                                    <span title="Past due FOC" class="has-text-danger">
                                     {% else %}
-                                        <span title="Still time to order" class="has-text-success-dark">
+                                        <span title="Still time to order" class="has-text-success">
                                         {% endif %}
                                         {{ issue.foc_date|date:"SHORT_DATE_FORMAT" }}
                                     </span>
