@@ -43,10 +43,10 @@
         <div class="level-left">
             <div class="level-item">
                 {% if navigation.previous_issue %}
-                    <a class="button is-link"
+                    <a class="button is-rounded is-link"
                        href="{% url 'issue:detail' navigation.previous_issue.slug %}">
                     {% else %}
-                        <a class="button" disabled>
+                        <a class="button is-rounded" disabled>
                         {% endif %}
                         <span>Previous Issue</span>
                         <span class="icon is-small"><i class="fas fa-arrow-left"></i></span>
@@ -54,10 +54,10 @@
                 </div>
                 <div class="level-item">
                     {% if navigation.next_issue %}
-                        <a class="button is-link"
+                        <a class="button is-rounded is-link"
                            href="{% url 'issue:detail' navigation.next_issue.slug %}">
                         {% else %}
-                            <a class="button" disabled>
+                            <a class="button is-rounded" disabled>
                             {% endif %}
                             <span class="icon is-small"><i class="fas fa-arrow-right"></i></span>
                             <span>Next Issue</span>
@@ -67,7 +67,7 @@
                 <div class="level-right">
                     {% if user.is_authenticated %}
                         <p class="level-item">
-                            <a class="button is-primary"
+                            <a class="button is-rounded is-primary"
                                href="{% url 'issue:create' %}"
                                title="Add a new issue">
                                 <span class="icon is-small"><i class="fas fa-plus"></i></span>
@@ -75,7 +75,7 @@
                             </a>
                         </p>
                         <p class="level-item">
-                            <a class="button is-info"
+                            <a class="button is-rounded is-info"
                                href="{% url 'issue:update' issue.slug %}"
                                title="Edit Issue">
                                 <span class="icon is-small"><i class="fas fa-edit"></i></span>
@@ -84,7 +84,7 @@
                         </p>
                         {% if perms.comicsdb.delete_issue %}
                             <p class="level-item">
-                                <a class="button is-danger"
+                                <a class="button is-rounded is-danger"
                                    href="{% url 'issue:delete' issue.slug %}"
                                    title="Delete Issue">
                                     <span class="icon is-small"><i class="fas fa-trash"></i></span>
@@ -93,7 +93,7 @@
                             </p>
                         {% else %}
                             <p class="level-item">
-                                <a class="button is-danger" title="Delete Issue" disabled>Delete</a>
+                                <a class="button is-rounded is-danger" title="Delete Issue" disabled>Delete</a>
                             </p>
                         {% endif %}
                     {% endif %}
@@ -450,9 +450,9 @@
                             <p>
                                 <b><span title="Final Order Cutoff">FOC</span> Date:</b>
                                 {% if issue.is_foc_past_due %}
-                                    <span title="Past due FOC" class="has-text-danger-dark">
+                                    <span title="Past due FOC" class="has-text-danger">
                                     {% else %}
-                                        <span title="Still time to order" class="has-text-success-dark">
+                                        <span title="Still time to order" class="has-text-success">
                                         {% endif %}
                                         {{ issue.foc_date|date:"SHORT_DATE_FORMAT" }}
                                     </span>

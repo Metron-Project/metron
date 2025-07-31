@@ -29,7 +29,7 @@
                                     <input class="input" name="q" type="search" placeholder="Find a arc">
                                 </p>
                                 <p class="control">
-                                    <button class="button">Search</button>
+                                    <button class="button is-rounded">Search</button>
                                 </p>
                             </div>
                         </form>
@@ -38,7 +38,7 @@
                 <div class="level-right">
                     <p class="level-item">
                         {% if user.is_authenticated %}
-                            <a class="button is-primary"
+                            <a class="button is-rounded is-primary"
                                href="{% url 'arc:create' %}"
                                title="Add a new story arc">
                                 <span class="icon is-small">
@@ -102,7 +102,7 @@
     {% else %}
         <section>
             <p>No Story Arcs currently available. Do you want to create one?</p>
-            <a class="button is-primary"
+            <a class="button is-rounded is-primary"
                href="{% url 'arc:create' %}"
                title="Add a new arc">New</a>
         </section>

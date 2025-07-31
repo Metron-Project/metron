@@ -8,11 +8,16 @@
         <a id="navbar-banner" class="navbar-item" href="{% url 'home' %}">
             <img src="{% static 'site/img/metron.svg' %}" alt="Logo">
         </a>
-        <span class="navbar-burger burger" data-target="navMenu">
-            <span></span>
-            <span></span>
-            <span></span>
-        </span>
+        <a class="navbar-burger"
+           role="button"
+           aria-label="menu"
+           aria-expanded="false"
+           data-target="navMenu">
+            <span aria-hidden="true"></span>
+            <span aria-hidden="true"></span>
+            <span aria-hidden="true"></span>
+            <span aria-hidden="true"></span>
+        </a>
     </div>
     <div id="navMenu" class="navbar-menu">
         <div class="navbar-start">
@@ -135,14 +140,14 @@
                         {% if user.is_authenticated %}
                             <form>
                                 {% csrf_token %}
-                                <button class="button is-light"
+                                <button class="button is-rounded is-light"
                                         formmethod="post"
                                         formaction="{% url 'logout' %}"
                                         type="submit">Log out</button>
                             </form>
                         {% else %}
-                            <a class="button is-primary" href="{% url 'signup' %}"><strong>Sign up</strong></a>
-                            <a class="button is-light" href="{% url 'login' %}">Log in</a>
+                            <a class="button is-rounded is-primary" href="{% url 'signup' %}"><strong>Sign up</strong></a>
+                            <a class="button is-rounded is-light" href="{% url 'login' %}">Log in</a>
                         {% endif %}
                     </div>
                 </div>

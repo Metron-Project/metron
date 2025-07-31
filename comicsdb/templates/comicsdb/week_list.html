@@ -34,7 +34,7 @@
                         <div class="level-right">
                             <p class="level-item">
                                 {% if user.is_authenticated %}
-                                    <a class="button is-primary"
+                                    <a class="button is-rounded is-primary"
                                        href="{% url 'issue:create' %}"
                                        title="Add a new issue">
                                         <span class="icon is-small">
@@ -103,7 +103,7 @@
         <section>
             <div class="container">
                 <p>No Issues currently available. Do you want to add one?</p>
-                <a class="button is-primary"
+                <a class="button is-rounded is-primary"
                    href="{% url 'issue:create' %}"
                    title="Add a new issue">
                     <span class="icon is-small">

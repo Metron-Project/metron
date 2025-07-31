@@ -20,7 +20,7 @@
         <div class="level-left">
             <div class="level-item">
                 {% if navigation.previous_series %}
-                    <a class="button is-link"
+                    <a class="button is-rounded is-link"
                        href="{% url 'series:detail' navigation.previous_series.slug %}">
                         <span class="icon is-small">
                             <i class="fas fa-arrow-left"></i>
@@ -28,7 +28,7 @@
                         <span>Previous Series</span>
                     </a>
                 {% else %}
-                    <a class="button" disabled>
+                    <a class="button is-rounded" disabled>
                         <span class="icon is-small">
                             <i class="fas fa-arrow-left"></i>
                         </span>
@@ -38,7 +38,7 @@
             </div>
             <div class="level-item">
                 {% if navigation.next_series %}
-                    <a class="button is-link"
+                    <a class="button is-rounded is-link"
                        href="{% url 'series:detail' navigation.next_series.slug %}">
                         <span>Next Series</span>
                         <span class="icon is-small">
@@ -46,7 +46,7 @@
                         </span>
                     </a>
                 {% else %}
-                    <a class="button" disabled>
+                    <a class="button is-rounded" disabled>
                         <span>Next Series</span>
                         <span class="icon is-small">
                             <i class="fas fa-arrow-right"></i>
@@ -57,7 +57,7 @@
         </div>
         <div class="level-right">
             <div class="level-item">
-                <a class="button is-link"
+                <a class="button is-rounded is-link"
                    href="{% url 'series:issue' series.slug %}"
                    title="Open issue list for series">
                     <span class="icon is-small">
@@ -68,7 +68,7 @@
             </div>
             {% if user.is_authenticated %}
                 <p class="level-item">
-                    <a class="button is-primary"
+                    <a class="button is-rounded is-primary"
                        href="{% url 'series:create' %}"
                        title="Add a new series">
                         <span class="icon is-small">
@@ -78,7 +78,7 @@
                     </a>
                 </p>
                 <p class="level-item">
-                    <a class="button is-info"
+                    <a class="button is-rounded is-info"
                        href="{% url 'series:update' series.slug %}"
                        title="Edit Series">
                         <span class="icon is-small">
@@ -89,7 +89,7 @@
                 </p>
                 {% if perms.comicsdb.delete_series %}
                     <p class="level-item">
-                        <a class="button is-danger"
+                        <a class="button is-rounded is-danger"
                            href="{% url 'series:delete' series.slug %}"
                            title="Delete Series">
                             <span class="icon is-small">
@@ -100,7 +100,7 @@
                     </p>
                 {% else %}
                     <p class="level-item">
-                        <a class="button is-danger" title="Delete Series" disabled>
+                        <a class="button is-rounded is-danger" title="Delete Series" disabled>
                             <span class="icon is-small">
                                 <i class="fas fa-trash"></i>
                             </span>
