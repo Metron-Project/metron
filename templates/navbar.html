@@ -8,11 +8,16 @@
         <a id="navbar-banner" class="navbar-item" href="{% url 'home' %}">
             <img src="{% static 'site/img/metron.svg' %}" alt="Logo">
         </a>
-        <span class="navbar-burger burger" data-target="navMenu">
-            <span></span>
-            <span></span>
-            <span></span>
-        </span>
+        <a class="navbar-burger"
+           role="button"
+           aria-label="menu"
+           aria-expanded="false"
+           data-target="navMenu">
+            <span aria-hidden="true"></span>
+            <span aria-hidden="true"></span>
+            <span aria-hidden="true"></span>
+            <span aria-hidden="true"></span>
+        </a>
     </div>
     <div id="navMenu" class="navbar-menu">
         <div class="navbar-start">
