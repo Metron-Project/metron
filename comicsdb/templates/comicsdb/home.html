@@ -15,7 +15,7 @@
     {% if active_announcements %}
         {% for announcement in active_announcements %}
             <div class="notification is-{{ announcement.display_type }}">
-                <button class="is-rounded delete"></button>
+                <button class="delete"></button>
                 {{ announcement.content|safe }}
             </div>
         {% endfor %}
@@ -26,7 +26,7 @@
 {% if messages %}
     {% for message in messages %}
         <div class="notification is-{{ message.tags }}">
-            <button class="is-rounded delete"></button>
+            <button class="delete"></button>
             {{ message|safe }}
         </div>
     {% endfor %}
@@ -200,4 +200,7 @@
     </div>
 </div>
 <!-- end recent issues -->
+{% endblock %}
+{% block js %}
+    <script src="{% static 'site/js/bulma-notifications.js' %}"></script>
 {% endblock %}
