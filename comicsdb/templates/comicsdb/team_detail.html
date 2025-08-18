@@ -26,7 +26,7 @@
                         <span>Previous Team</span>
                     </a>
                 {% else %}
-                    <a class="button" disabled>
+                    <a class="button is-rounded" disabled>
                         <span class="icon is-small"><i class="fas fa-arrow-left"></i></span>
                         <span>Previous Team</span>
                     </a>
@@ -34,13 +34,13 @@
             </div>
             <div class="level-item">
                 {% if navigation.next_team %}
-                    <a class="button is-link"
+                    <a class="button is-rounded is-link"
                        href="{% url 'team:detail' navigation.next_team.slug %}">
                         <span class="icon is-small"><i class="fas fa-arrow-right"></i></span>
                         <span>Next Team</span>
                     </a>
                 {% else %}
-                    <a class="button" disabled>
+                    <a class="button is-rounded" disabled>
                         <span class="icon is-small"><i class="fas fa-arrow-right"></i></span>
                         <span>Next Team</span>
                     </a>
@@ -50,7 +50,7 @@
         <div class="level-right">
             {% if user.is_authenticated %}
                 <p class="level-item">
-                    <a class="button is-primary"
+                    <a class="button is-rounded is-primary"
                        href="{% url 'team:create' %}"
                        title="Add a new team">
                         <span class="icon is-small"><i class="fas fa-plus"></i></span>
@@ -58,7 +58,7 @@
                     </a>
                 </p>
                 <p class="level-item">
-                    <a class="button is-info"
+                    <a class="button is-rounded is-info"
                        href="{% url 'team:update' team.slug %}"
                        title="Edit team">
                         <span class="icon is-small"><i class="fas fa-edit"></i></span>
@@ -67,7 +67,7 @@
                 </p>
                 {% if perms.comicsdb.delete_team %}
                     <p class="level-item">
-                        <a class="button is-danger"
+                        <a class="button is-rounded is-danger"
                            href="{% url 'team:delete' team.slug %}"
                            title="Delete team">
                             <span class="icon is-small"><i class="fas fa-trash"></i></span>
@@ -76,7 +76,7 @@
                     </p>
                 {% else %}
                     <p class="level-item">
-                        <a class="button is-danger" title="Delete team" disabled>
+                        <a class="button is-rounded is-danger" title="Delete team" disabled>
                             <span class="icon is-small"><i class="fas fa-trash"></i></span>
                             <span>Delete</span>
                         </a>
