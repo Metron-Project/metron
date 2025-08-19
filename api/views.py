@@ -198,7 +198,6 @@ class CreatorViewSet(
 
 class CreditViewset(
     mixins.CreateModelMixin,
-    mixins.UpdateModelMixin,
     viewsets.GenericViewSet,
 ):
     """
