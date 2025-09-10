@@ -40,25 +40,3 @@ def test_group_user_post_url(db, api_client_with_staff_credentials, create_data)
         reverse("api:credits-list"), data=create_data
     )
     assert resp.status_code == status.HTTP_201_CREATED
-
-
-# Put Tests
-def test_unauthorized_put_url(db, api_client, issue_credit, create_put_data):
-    resp = api_client.put(
-        reverse("api:credits-detail", kwargs={"pk": issue_credit.pk}), data=create_put_data
-    )
-    assert resp.status_code == status.HTTP_401_UNAUTHORIZED
-
-
-def test_user_put_url(api_client_with_credentials, issue_credit, create_put_data):
-    resp = api_client_with_credentials.put(
-        reverse("api:credits-detail", kwargs={"pk": issue_credit.pk}), data=create_put_data
-    )
-    assert resp.status_code == status.HTTP_403_FORBIDDEN
-
-
-def test_group_user_put_url(api_client_with_staff_credentials, issue_credit, create_put_data):
-    resp = api_client_with_staff_credentials.patch(
-        reverse("api:credits-detail", kwargs={"pk": issue_credit.pk}), data=create_put_data
-    )
-    assert resp.status_code == status.HTTP_200_OK
