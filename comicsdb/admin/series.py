@@ -31,6 +31,7 @@ class SeriesAdmin(admin.ModelAdmin):
                     "status",
                     "associated",
                     "desc",
+                    "collection",
                     "cv_id",
                     "gcd_id",
                     "edited_by",
