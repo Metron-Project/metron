@@ -3,11 +3,15 @@ from datetime import date, datetime
 from typing import Any
 
 from dal import autocomplete
+from django.contrib import messages
 from django.contrib.auth.mixins import LoginRequiredMixin, PermissionRequiredMixin
 from django.core.exceptions import ObjectDoesNotExist
 from django.db import transaction
 from django.db.models import Prefetch, Q
+from django.http import HttpResponseRedirect
+from django.shortcuts import get_object_or_404
 from django.urls import reverse, reverse_lazy
+from django.views import View
 from django.views.generic import DetailView, ListView, RedirectView
 from django.views.generic.edit import CreateView, DeleteView, UpdateView
 
@@ -274,6 +278,106 @@ class IssueUpdate(LoginRequiredMixin, UpdateView):
                 self.request.user,
             )
         return super().form_valid(form)
+
+
+class IssueReprintSyncView(LoginRequiredMixin, View):
+    """
+    View to synchronize characters and teams from reprinted issues
+    to the current issue.
+    """
+
+    def post(self, request, slug):
+        """
+        Add characters and teams from all reprinted issues to the current issue.
+        Only works for Trade Paperback and Omnibus series types.
+
+        Args:
+            request: HTTP request object
+            slug: Issue slug identifier
+
+        Returns:
+            HttpResponseRedirect to the issue detail page
+        """
+        issue = get_object_or_404(
+            Issue.objects.select_related("series", "series__series_type").prefetch_related(
+                "reprints", "reprints__characters", "reprints__teams", "characters", "teams"
+            ),
+            slug=slug,
+        )
+
+        # Check if series type is Trade Paperback or Omnibus
+        allowed_types = ["Trade Paperback", "Omnibus"]
+        if issue.series.series_type.name not in allowed_types:
+            messages.error(
+                request,
+                f"This function only works for {' and '.join(allowed_types)} series types. "
+                f"This issue is of type '{issue.series.series_type.name}'.",
+            )
+            return HttpResponseRedirect(reverse("issue:detail", args=[slug]))
+
+        # Check if there are any reprints
+        if not issue.reprints.exists():
+            messages.warning(request, f"No reprinted issues found for {issue}.")
+            return HttpResponseRedirect(reverse("issue:detail", args=[slug]))
+
+        # Check if issue already has characters or teams
+        if issue.characters.exists() or issue.teams.exists():
+            messages.info(
+                request,
+                f"{issue} already has characters or teams assigned. "
+                "Sync operation cancelled to preserve existing data.",
+            )
+            return HttpResponseRedirect(reverse("issue:detail", args=[slug]))
+
+        # Collect all characters and teams from reprints
+        characters_to_add = set()
+        teams_to_add = set()
+
+        for reprint in issue.reprints.all():
+            characters_to_add.update(reprint.characters.all())
+            teams_to_add.update(reprint.teams.all())
+
+        # Check if we found any characters or teams to add
+        if not characters_to_add and not teams_to_add:
+            messages.info(request, "No characters or teams found in the reprinted issues.")
+            return HttpResponseRedirect(reverse("issue:detail", args=[slug]))
+
+        # Add all characters and teams from reprints
+        with transaction.atomic():
+            if characters_to_add:
+                issue.characters.add(*characters_to_add)
+                LOGGER.info(
+                    "Added %d characters to %s from reprints by %s",
+                    len(characters_to_add),
+                    issue,
+                    request.user,
+                )
+
+            if teams_to_add:
+                issue.teams.add(*teams_to_add)
+                LOGGER.info(
+                    "Added %d teams to %s from reprints by %s",
+                    len(teams_to_add),
+                    issue,
+                    request.user,
+                )
+
+            # Update edited_by field
+            issue.edited_by = request.user
+            issue.save(update_fields=["edited_by", "modified"])
+
+        # Provide feedback
+        message_parts = []
+        if characters_to_add:
+            message_parts.append(f"{len(characters_to_add)} character(s)")
+        if teams_to_add:
+            message_parts.append(f"{len(teams_to_add)} team(s)")
+
+        messages.success(
+            request, f"Successfully added {' and '.join(message_parts)} from reprinted issues."
+        )
+
+        return HttpResponseRedirect(reverse("issue:detail", args=[slug]))
 
 
 class IssueDelete(PermissionRequiredMixin, DeleteView):
