@@ -29,6 +29,18 @@
         <button class="modal-close is-large" aria-label="close"></button>
     </div>
     <!-- end issue cover modal -->
+    <!-- messages -->
+    {% if messages %}
+        <div class="container">
+            {% for message in messages %}
+                <div class="notification {% if message.tags == 'error' %}is-danger{% elif message.tags == 'warning' %}is-warning{% elif message.tags == 'success' %}is-success{% elif message.tags == 'info' %}is-info{% endif %}">
+                    <button class="delete"></button>
+                    {{ message }}
+                </div>
+            {% endfor %}
+        </div>
+    {% endif %}
+    <!-- end messages -->
     <!-- issue title -->
     <nav class="level">
         <div class="level-left">
@@ -81,6 +93,18 @@
                                 <span class="icon is-small"><i class="fas fa-edit"></i></span>
                                 <span>Edit</span>
                             </a>
+                        </p>
+                        <p class="level-item">
+                            <form method="post"
+                                  action="{% url 'issue:sync-reprints' slug=issue.slug %}">
+                                {% csrf_token %}
+                                <button class="button is-rounded is-link"
+                                        type="submit"
+                                        title="Duplicate Resources">
+                                    <span class="icon is-small"><i class="fas fa-copy"></i></span>
+                                    <span>Duplicate</span>
+                                </button>
+                            </form>
                         </p>
                         {% if perms.comicsdb.delete_issue %}
                             <p class="level-item">
@@ -528,4 +552,5 @@
             {% endblock content %}
             {% block js %}
                 <script src="{% static 'site/js/bulma-modal.js' %}"></script>
+                <script src="{% static 'site/js/bulma-notifications.js' %}"></script>
             {% endblock %}
