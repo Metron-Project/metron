@@ -290,6 +290,8 @@ class IssueReprintSyncView(LoginRequiredMixin, View):
         """
         Add characters and teams from all reprinted issues to the current issue.
         Only works for Trade Paperback and Omnibus series types.
+        Only syncs issues with one story title or less.
+        Only syncs if the issue has no existing characters or teams.
 
         Args:
             request: HTTP request object
@@ -330,12 +332,28 @@ class IssueReprintSyncView(LoginRequiredMixin, View):
             return HttpResponseRedirect(reverse("issue:detail", args=[slug]))
 
         # Collect all characters and teams from reprints
+        # Only include reprints with one story title or less
         characters_to_add = set()
         teams_to_add = set()
+        skipped_reprints = []
 
         for reprint in issue.reprints.all():
+            story_count = len(reprint.name) if reprint.name else 0
+            if story_count > 1:
+                skipped_reprints.append(str(reprint))
+                continue
             characters_to_add.update(reprint.characters.all())
             teams_to_add.update(reprint.teams.all())
+
+        # Inform user if any reprints were skipped
+        if skipped_reprints:
+            messages.warning(
+                request,
+                f"Skipped {len(skipped_reprints)} reprinted issue(s) with "
+                "multiple story titles: "
+                f"{', '.join(skipped_reprints[:3])}"
+                f"{'...' if len(skipped_reprints) > 3 else ''}",  # noqa: PLR2004
+            )
 
         # Check if we found any characters or teams to add
         if not characters_to_add and not teams_to_add:
