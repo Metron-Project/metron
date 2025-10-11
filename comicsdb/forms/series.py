@@ -95,17 +95,7 @@ class SeriesForm(ModelForm):
             "associated",
         ]
 
-    def clean_series_type(self):
-        series_type = self.cleaned_data["series_type"]
-        if series_type.id in [HC, TPB, OMNI]:
-            msg = (
-                "Adding Trade Paperbacks and Omnibuses are currently disabled until "
-                "better documentation and tooling is available."
-            )
-            raise ValidationError(msg)
-        return series_type
-
-    def clean_cv_id(self) -> any:
+    def clean_cv_id(self):
         cvid = self.cleaned_data["cv_id"]
         if cvid:
             try:
@@ -122,13 +112,13 @@ class SeriesForm(ModelForm):
                 raise ValidationError(msg)
         return cvid
 
-    def clean_associated(self) -> any:
+    def clean_associated(self):
         assoc = self.cleaned_data["associated"]
         if assoc:
             series_type = self.cleaned_data["series_type"]
-            # If adding an associated series and self.series_type is a TPB or HC
+            # If adding an associated series and self.series_type is a TPB, OMNI, or HC
             # raise a validation error.
-            if series_type.id in [HC, TPB]:
+            if series_type.id in [HC, OMNI, TPB]:
                 raise ValidationError(
                     "Collections are not allowed to have an associated series."
                 )
