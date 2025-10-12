@@ -94,7 +94,7 @@
                                 <span>Edit</span>
                             </a>
                         </p>
-                        {% if issue.series.series_type.name == "Trade Paperback" or issue.series.series_type.name == "Omnibus" %}
+                        {% if issue.series.series_type.name == "Trade Paperback" or issue.series.series_type.name == "Omnibus" or issue.series.series_type.name == "Hardcover" %}
                             {% if issue.reprints.exists and not issue.characters.exists and not issue.teams.exists %}
                                 <form method="post"
                                       action="{% url 'issue:sync-reprints' slug=issue.slug %}">
