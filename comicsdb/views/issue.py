@@ -3,11 +3,15 @@ from datetime import date, datetime
 from typing import Any
 
 from dal import autocomplete
+from django.contrib import messages
 from django.contrib.auth.mixins import LoginRequiredMixin, PermissionRequiredMixin
 from django.core.exceptions import ObjectDoesNotExist
 from django.db import transaction
 from django.db.models import Prefetch, Q
+from django.http import HttpResponseRedirect
+from django.shortcuts import get_object_or_404
 from django.urls import reverse, reverse_lazy
+from django.views import View
 from django.views.generic import DetailView, ListView, RedirectView
 from django.views.generic.edit import CreateView, DeleteView, UpdateView
 
@@ -69,9 +73,7 @@ class IssueList(ListView):
 class IssueDetail(DetailView):
     model = Issue
     queryset = (
-        Issue.objects.select_related(
-            "series", "series__publisher", "series__series_type", "rating"
-        )
+        Issue.objects.select_related("series", "series__publisher", "series__series_type", "rating")
         .defer(
             "created_on",
             "cover_hash",
@@ -274,6 +276,124 @@ class IssueUpdate(LoginRequiredMixin, UpdateView):
                 self.request.user,
             )
         return super().form_valid(form)
+
+
+class IssueReprintSyncView(LoginRequiredMixin, View):
+    """
+    View to synchronize characters and teams from reprinted issues
+    to the current issue.
+    """
+
+    def post(self, request, slug):
+        """
+        Add characters and teams from all reprinted issues to the current issue.
+        Only works for Trade Paperback, Omnibus, and Hardcover series types.
+        Only syncs issues with one story title or less.
+        Only syncs if the issue has no existing characters or teams.
+
+        Args:
+            request: HTTP request object
+            slug: Issue slug identifier
+
+        Returns:
+            HttpResponseRedirect to the issue detail page
+        """
+        issue = get_object_or_404(
+            Issue.objects.select_related("series", "series__series_type").prefetch_related(
+                "reprints", "reprints__characters", "reprints__teams", "characters", "teams"
+            ),
+            slug=slug,
+        )
+
+        # Check if series type is Trade Paperback or Omnibus
+        allowed_types = ["Trade Paperback", "Omnibus", "Hardcover"]
+        if issue.series.series_type.name not in allowed_types:
+            messages.error(
+                request,
+                f"This function only works for {', '.join(allowed_types[:-1])} "
+                f"and {allowed_types[-1]} series types. "
+                f"This issue is of type '{issue.series.series_type.name}'.",
+            )
+            return HttpResponseRedirect(reverse("issue:detail", args=[slug]))
+
+        # Check if there are any reprints
+        if not issue.reprints.exists():
+            messages.warning(request, f"No reprinted issues found for {issue}.")
+            return HttpResponseRedirect(reverse("issue:detail", args=[slug]))
+
+        # Check if issue already has characters or teams
+        if issue.characters.exists() or issue.teams.exists():
+            messages.info(
+                request,
+                f"{issue} already has characters or teams assigned. "
+                "Sync operation cancelled to preserve existing data.",
+            )
+            return HttpResponseRedirect(reverse("issue:detail", args=[slug]))
+
+        # Collect all characters and teams from reprints
+        # Only include reprints with one story title or less
+        characters_to_add = set()
+        teams_to_add = set()
+        skipped_reprints = []
+
+        for reprint in issue.reprints.all():
+            story_count = len(reprint.name) if reprint.name else 0
+            if story_count > 1:
+                skipped_reprints.append(str(reprint))
+                continue
+            characters_to_add.update(reprint.characters.all())
+            teams_to_add.update(reprint.teams.all())
+
+        # Inform user if any reprints were skipped
+        if skipped_reprints:
+            messages.warning(
+                request,
+                f"Skipped {len(skipped_reprints)} reprinted issue(s) with multiple story titles: "
+                f"{', '.join(skipped_reprints[:3])}"
+                f"{'...' if len(skipped_reprints) > 3 else ''}",  # noqa: PLR2004
+            )
+
+        # Check if we found any characters or teams to add
+        if not characters_to_add and not teams_to_add:
+            messages.info(request, "No characters or teams found in the reprinted issues.")
+            return HttpResponseRedirect(reverse("issue:detail", args=[slug]))
+
+        # Add all characters and teams from reprints
+        with transaction.atomic():
+            if characters_to_add:
+                issue.characters.add(*characters_to_add)
+                LOGGER.info(
+                    "Added %d characters to %s from reprints by %s",
+                    len(characters_to_add),
+                    issue,
+                    request.user,
+                )
+
+            if teams_to_add:
+                issue.teams.add(*teams_to_add)
+                LOGGER.info(
+                    "Added %d teams to %s from reprints by %s",
+                    len(teams_to_add),
+                    issue,
+                    request.user,
+                )
+
+            # Update edited_by field
+            issue.edited_by = request.user
+            issue.save(update_fields=["edited_by", "modified"])
+
+        # Provide feedback
+        message_parts = []
+        if characters_to_add:
+            message_parts.append(f"{len(characters_to_add)} character(s)")
+        if teams_to_add:
+            message_parts.append(f"{len(teams_to_add)} team(s)")
+
+        messages.success(
+            request, f"Successfully added {' and '.join(message_parts)} from reprinted issues."
+        )
+
+        return HttpResponseRedirect(reverse("issue:detail", args=[slug]))
 
 
 class IssueDelete(PermissionRequiredMixin, DeleteView):

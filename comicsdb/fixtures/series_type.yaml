@@ -13,7 +13,7 @@
 - model: comicsdb.seriestype
   pk: 8
   fields:
-    name: Hard Cover
+    name: Hardcover
     notes: ''
     modified: 2018-11-21 14:52:46.410000+00:00
 - model: comicsdb.seriestype

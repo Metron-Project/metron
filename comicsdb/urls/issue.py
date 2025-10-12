@@ -8,6 +8,7 @@ from comicsdb.views.issue import (
     IssueDetail,
     IssueDetailRedirect,
     IssueList,
+    IssueReprintSyncView,
     IssueUpdate,
     NextWeekList,
     SearchIssueList,
@@ -26,6 +27,7 @@ urlpatterns = [
     path("thisweek", WeekList.as_view(), name="thisweek"),
     path("nextweek", NextWeekList.as_view(), name="nextweek"),
     path("future", FutureList.as_view(), name="future"),
+    path("<slug:slug>/sync-reprints/", IssueReprintSyncView.as_view(), name="sync-reprints"),
     re_path(
         r"^creator-autocomplete/?$",
         CreatorAutocomplete.as_view(),
