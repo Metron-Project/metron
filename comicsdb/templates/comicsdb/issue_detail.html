@@ -110,33 +110,37 @@
                             </form>
                         {% else %}
                             <p class="level-item">
-                            <a class="button is-rounded is-link" title="Sync" disabled>                                    <span class="icon is-small"><i class="fas fa-copy"></i></span>
-                            <span>Sync</span></a>
-                    </p>
-                {% endif %}
-            {% else %}
-                <p class="level-item">
-                <a class="button is-rounded is-link" title="Sync" disabled>                                    <span class="icon is-small"><i class="fas fa-copy"></i></span>
-                <span>Sync</span></a>
-        </p>
-    {% endif %}
-    {% if perms.comicsdb.delete_issue %}
-        <p class="level-item">
-            <a class="button is-rounded is-danger"
-               href="{% url 'issue:delete' issue.slug %}"
-               title="Delete Issue">
-                <span class="icon is-small"><i class="fas fa-trash"></i></span>
-                <span>Delete</span>
-            </a>
-        </p>
-    {% else %}
-        <p class="level-item">
-        <a class="button is-rounded is-danger" title="Delete Issue" disabled><span class="icon is-small"><i class="fas fa-trash"></i></span>
-        <span>Delete</span></a>
-</p>
-{% endif %}
-{% endif %}
-</div>
+                                <a class="button is-rounded is-link" title="Sync" disabled>
+                                    <span class="icon is-small"><i class="fas fa-copy"></i></span>
+                                    <span>Sync</span>
+                                </a>
+                            </p>
+                        {% endif %}
+                    {% else %}
+                        <p class="level-item">
+                            <a class="button is-rounded is-link" title="Sync" disabled>
+                                <span class="icon is-small"><i class="fas fa-copy"></i></span>
+                                <span>Sync</span>
+                            </a>
+                        </p>
+                    {% endif %}
+                    {% if perms.comicsdb.delete_issue %}
+                        <p class="level-item">
+                            <a class="button is-rounded is-danger"
+                               href="{% url 'issue:delete' issue.slug %}"
+                               title="Delete Issue">
+                                <span class="icon is-small"><i class="fas fa-trash"></i></span>
+                                <span>Delete</span>
+                            </a>
+                        </p>
+                    {% else %}
+                        <p class="level-item">
+                        <a class="button is-rounded is-danger" title="Delete Issue" disabled><span class="icon is-small"><i class="fas fa-trash"></i></span>
+                        <span>Delete</span></a>
+                </p>
+            {% endif %}
+        {% endif %}
+    </div>
 </nav>
 <!-- end of issue navigation -->
 <!-- main page content -->
