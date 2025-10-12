@@ -50,7 +50,7 @@ combine-as-imports = true
 "users/migrations/*.py" = ["E501", "N806"]
 "comicsdb/models/__init__.py" = ["I001"]
 "comicsdb/migrations/*.py" = ["E501", "N806"]
-"tests/*/*.py" = ["PLR2004", "PT004", "S101"]
+"tests/*/*.py" = ["PLR2004", "PT004", "S101", "PLR0913"]
 
 [tool.coverage.html]
 directory = "test-results/coverage"

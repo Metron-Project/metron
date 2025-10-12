@@ -349,3 +349,127 @@ def announcement(db):
     return Announcement.objects.create(
         title="Test Announcement", content="Nothing here.", active=True
     )
+
+
+@pytest.fixture
+def trade_paperback_type(db):
+    return SeriesType.objects.get(name="Trade Paperback")
+
+
+@pytest.fixture
+def omnibus_type(db):
+    return SeriesType.objects.get(name="Omnibus")
+
+
+@pytest.fixture
+def tpb_series(create_user, dc_comics, trade_paperback_type):
+    """Create a Trade Paperback series."""
+    user = create_user()
+    return Series.objects.create(
+        name="Batman: Year One",
+        slug="batman-year-one-tp",
+        publisher=dc_comics,
+        volume="1",
+        year_began=2005,
+        series_type=trade_paperback_type,
+        status=Series.Status.COMPLETED,
+        edited_by=user,
+        created_by=user,
+    )
+
+
+@pytest.fixture
+def omnibus_series(create_user, marvel, omnibus_type):
+    """Create an Omnibus series."""
+    user = create_user()
+    return Series.objects.create(
+        name="Spider-Man Omnibus",
+        slug="spider-man-omnibus",
+        publisher=marvel,
+        volume="1",
+        year_began=2020,
+        series_type=omnibus_type,
+        status=Series.Status.COMPLETED,
+        edited_by=user,
+        created_by=user,
+    )
+
+
+@pytest.fixture
+def single_story_issue(create_user, fc_series, superman, batman):
+    """Create an issue with one story title and characters."""
+    user = create_user()
+    issue = Issue.objects.create(
+        series=fc_series,
+        number="2",
+        slug="final-crisis-2",
+        name=["The Beginning"],
+        cover_date=timezone.now().date(),
+        edited_by=user,
+        created_by=user,
+    )
+    issue.characters.add(superman, batman)
+    return issue
+
+
+@pytest.fixture
+def multi_story_issue(create_user, fc_series, superman, teen_titans):
+    """Create an issue with multiple story titles."""
+    user = create_user()
+    issue = Issue.objects.create(
+        series=fc_series,
+        number="3",
+        slug="final-crisis-3",
+        name=["Story One", "Story Two", "Story Three"],
+        cover_date=timezone.now().date(),
+        edited_by=user,
+        created_by=user,
+    )
+    issue.characters.add(superman)
+    issue.teams.add(teen_titans)
+    return issue
+
+
+@pytest.fixture
+def no_story_issue(create_user, fc_series, batman, avengers):
+    """Create an issue with no story titles."""
+    user = create_user()
+    issue = Issue.objects.create(
+        series=fc_series,
+        number="4",
+        slug="final-crisis-4",
+        cover_date=timezone.now().date(),
+        edited_by=user,
+        created_by=user,
+    )
+    issue.characters.add(batman)
+    issue.teams.add(avengers)
+    return issue
+
+
+@pytest.fixture
+def tpb_issue(create_user, tpb_series):
+    """Create a Trade Paperback issue without characters or teams."""
+    user = create_user()
+    return Issue.objects.create(
+        series=tpb_series,
+        number="1",
+        slug="batman-year-one-tp-1",
+        cover_date=timezone.now().date(),
+        edited_by=user,
+        created_by=user,
+    )
+
+
+@pytest.fixture
+def omnibus_issue(create_user, omnibus_series):
+    """Create an Omnibus issue without characters or teams."""
+    user = create_user()
+    return Issue.objects.create(
+        series=omnibus_series,
+        number="1",
+        slug="spider-man-omnibus-1",
+        cover_date=timezone.now().date(),
+        edited_by=user,
+        created_by=user,
+    )
