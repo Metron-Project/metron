@@ -73,9 +73,7 @@ class IssueList(ListView):
 class IssueDetail(DetailView):
     model = Issue
     queryset = (
-        Issue.objects.select_related(
-            "series", "series__publisher", "series__series_type", "rating"
-        )
+        Issue.objects.select_related("series", "series__publisher", "series__series_type", "rating")
         .defer(
             "created_on",
             "cover_hash",
@@ -289,7 +287,7 @@ class IssueReprintSyncView(LoginRequiredMixin, View):
     def post(self, request, slug):
         """
         Add characters and teams from all reprinted issues to the current issue.
-        Only works for Trade Paperback and Omnibus series types.
+        Only works for Trade Paperback, Omnibus, and Hardcover series types.
         Only syncs issues with one story title or less.
         Only syncs if the issue has no existing characters or teams.
 
@@ -308,11 +306,12 @@ class IssueReprintSyncView(LoginRequiredMixin, View):
         )
 
         # Check if series type is Trade Paperback or Omnibus
-        allowed_types = ["Trade Paperback", "Omnibus"]
+        allowed_types = ["Trade Paperback", "Omnibus", "Hardcover"]
         if issue.series.series_type.name not in allowed_types:
             messages.error(
                 request,
-                f"This function only works for {' and '.join(allowed_types)} series types. "
+                f"This function only works for {', '.join(allowed_types[:-1])} "
+                f"and {allowed_types[-1]} series types. "
                 f"This issue is of type '{issue.series.series_type.name}'.",
             )
             return HttpResponseRedirect(reverse("issue:detail", args=[slug]))
@@ -349,8 +348,7 @@ class IssueReprintSyncView(LoginRequiredMixin, View):
         if skipped_reprints:
             messages.warning(
                 request,
-                f"Skipped {len(skipped_reprints)} reprinted issue(s) with "
-                "multiple story titles: "
+                f"Skipped {len(skipped_reprints)} reprinted issue(s) with multiple story titles: "
                 f"{', '.join(skipped_reprints[:3])}"
                 f"{'...' if len(skipped_reprints) > 3 else ''}",  # noqa: PLR2004
             )
