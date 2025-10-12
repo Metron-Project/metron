@@ -139,11 +139,22 @@ def test_sync_reprints_only_omnibus(auto_login_user, omnibus_issue, single_story
     assert omnibus_issue.characters.count() == 2  # superman and batman
 
 
-# Test: Rejects non-TPB/Omnibus series types
-def test_sync_reprints_rejects_wrong_series_type(
-    auto_login_user, basic_issue, single_story_issue
-):
-    """Test that sync rejects non-TPB/Omnibus series types."""
+# Test: Only works for Hardcover series type
+def test_sync_reprints_only_hardcover(auto_login_user, hardcover_issue, single_story_issue):
+    """Test that sync works for Hardcover series type."""
+    client, _ = auto_login_user()
+    hardcover_issue.reprints.add(single_story_issue)
+
+    resp = client.post(reverse("issue:sync-reprints", args=[hardcover_issue.slug]))
+    assert resp.status_code == HTML_REDIRECT_CODE
+
+    hardcover_issue.refresh_from_db()
+    assert hardcover_issue.characters.count() == 2  # superman and batman
+
+
+# Test: Rejects non-TPB/Omnibus/Hardcover series types
+def test_sync_reprints_rejects_wrong_series_type(auto_login_user, basic_issue, single_story_issue):
+    """Test that sync rejects non-TPB/Omnibus/Hardcover series types."""
     client, _ = auto_login_user()
     basic_issue.reprints.add(single_story_issue)
 
@@ -152,7 +163,7 @@ def test_sync_reprints_rejects_wrong_series_type(
 
     messages = list(resp.context["messages"])
     assert len(messages) == 1
-    assert "only works for Trade Paperback and Omnibus" in str(messages[0])
+    assert "only works for Trade Paperback, Omnibus and Hardcover" in str(messages[0])
 
     basic_issue.refresh_from_db()
     assert basic_issue.characters.count() == 0

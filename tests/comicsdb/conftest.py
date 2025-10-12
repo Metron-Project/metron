@@ -138,9 +138,7 @@ def dc_comics(create_user):
 @pytest.fixture
 def marvel(create_user):
     user = create_user()
-    return Publisher.objects.create(
-        name="Marvel", slug="marvel", edited_by=user, created_by=user
-    )
+    return Publisher.objects.create(name="Marvel", slug="marvel", edited_by=user, created_by=user)
 
 
 @pytest.fixture
@@ -302,9 +300,7 @@ def superman(create_user):
 @pytest.fixture
 def batman(create_user):
     user = create_user()
-    return Character.objects.create(
-        name="Batman", slug="batman", edited_by=user, created_by=user
-    )
+    return Character.objects.create(name="Batman", slug="batman", edited_by=user, created_by=user)
 
 
 @pytest.fixture
@@ -362,6 +358,11 @@ def omnibus_type(db):
 
 
 @pytest.fixture
+def hardcover_type(db):
+    return SeriesType.objects.get(name="Hardcover")
+
+
+@pytest.fixture
 def tpb_series(create_user, dc_comics, trade_paperback_type):
     """Create a Trade Paperback series."""
     user = create_user()
@@ -389,6 +390,23 @@ def omnibus_series(create_user, marvel, omnibus_type):
         volume="1",
         year_began=2020,
         series_type=omnibus_type,
+        status=Series.Status.COMPLETED,
+        edited_by=user,
+        created_by=user,
+    )
+
+
+@pytest.fixture
+def hardcover_series(create_user, dc_comics, hardcover_type):
+    """Create a Hardcover series."""
+    user = create_user()
+    return Series.objects.create(
+        name="Absolute Batman",
+        slug="absolute-batman",
+        publisher=dc_comics,
+        volume="1",
+        year_began=2015,
+        series_type=hardcover_type,
         status=Series.Status.COMPLETED,
         edited_by=user,
         created_by=user,
@@ -469,6 +487,20 @@ def omnibus_issue(create_user, omnibus_series):
         series=omnibus_series,
         number="1",
         slug="spider-man-omnibus-1",
+        cover_date=timezone.now().date(),
+        edited_by=user,
+        created_by=user,
+    )
+
+
+@pytest.fixture
+def hardcover_issue(create_user, hardcover_series):
+    """Create a Hardcover issue without characters or teams."""
+    user = create_user()
+    return Issue.objects.create(
+        series=hardcover_series,
+        number="1",
+        slug="absolute-batman-1",
         cover_date=timezone.now().date(),
         edited_by=user,
         created_by=user,
