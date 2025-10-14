@@ -284,12 +284,15 @@ class IssueReprintSyncView(LoginRequiredMixin, View):
     to the current issue.
     """
 
-    def post(self, request, slug):
+    def post(self, request, slug):  # noqa: PLR0912
         """
-        Add characters and teams from all reprinted issues to the current issue.
+        Add characters, teams, and story titles from all reprinted issues to the current issue.
         Only works for Trade Paperback, Omnibus, and Hardcover series types.
         Only syncs issues with one story title or less.
-        Only syncs if the issue has no existing characters or teams.
+        Only syncs if the issue has no existing characters, teams, or stories.
+
+        For story titles: If a reprinted issue has a story title, it's added.
+        If no story title exists, "[Untitled]" is added instead.
 
         Args:
             request: HTTP request object
@@ -321,11 +324,12 @@ class IssueReprintSyncView(LoginRequiredMixin, View):
             messages.warning(request, f"No reprinted issues found for {issue}.")
             return HttpResponseRedirect(reverse("issue:detail", args=[slug]))
 
-        # Check if issue already has characters or teams
-        if issue.characters.exists() or issue.teams.exists():
+        # Check if issue already has characters, teams, or stories
+        has_stories = issue.name and len(issue.name) > 0
+        if issue.characters.exists() or issue.teams.exists() or has_stories:
             messages.info(
                 request,
-                f"{issue} already has characters or teams assigned. "
+                f"{issue} already has characters, teams, or stories assigned. "
                 "Sync operation cancelled to preserve existing data.",
             )
             return HttpResponseRedirect(reverse("issue:detail", args=[slug]))
@@ -334,6 +338,7 @@ class IssueReprintSyncView(LoginRequiredMixin, View):
         # Only include reprints with one story title or less
         characters_to_add = set()
         teams_to_add = set()
+        stories_to_add = []
         skipped_reprints = []
 
         for reprint in issue.reprints.all():
@@ -341,8 +346,15 @@ class IssueReprintSyncView(LoginRequiredMixin, View):
             if story_count > 1:
                 skipped_reprints.append(str(reprint))
                 continue
+
             characters_to_add.update(reprint.characters.all())
             teams_to_add.update(reprint.teams.all())
+
+            # Add story title or [Untitled] if no story
+            if reprint.name and len(reprint.name) > 0:
+                stories_to_add.append(reprint.name[0])
+            else:
+                stories_to_add.append("[Untitled]")
 
         # Inform user if any reprints were skipped
         if skipped_reprints:
@@ -358,7 +370,7 @@ class IssueReprintSyncView(LoginRequiredMixin, View):
             messages.info(request, "No characters or teams found in the reprinted issues.")
             return HttpResponseRedirect(reverse("issue:detail", args=[slug]))
 
-        # Add all characters and teams from reprints
+        # Add all characters, teams, and stories from reprints
         with transaction.atomic():
             if characters_to_add:
                 issue.characters.add(*characters_to_add)
@@ -378,9 +390,19 @@ class IssueReprintSyncView(LoginRequiredMixin, View):
                     request.user,
                 )
 
+            # Add stories to the issue's name field
+            if stories_to_add:
+                issue.name = stories_to_add
+                LOGGER.info(
+                    "Added %d story title(s) to %s from reprints by %s",
+                    len(stories_to_add),
+                    issue,
+                    request.user,
+                )
+
             # Update edited_by field
             issue.edited_by = request.user
-            issue.save(update_fields=["edited_by", "modified"])
+            issue.save(update_fields=["edited_by", "modified", "name"])
 
         # Provide feedback
         message_parts = []
@@ -388,9 +410,15 @@ class IssueReprintSyncView(LoginRequiredMixin, View):
             message_parts.append(f"{len(characters_to_add)} character(s)")
         if teams_to_add:
             message_parts.append(f"{len(teams_to_add)} team(s)")
+        if stories_to_add:
+            message_parts.append(f"{len(stories_to_add)} story title(s)")
 
         messages.success(
-            request, f"Successfully added {' and '.join(message_parts)} from reprinted issues."
+            request,
+            f"Successfully added {', '.join(message_parts[:-1])} and "
+            f"{message_parts[-1]} from reprinted issues."
+            if len(message_parts) > 1
+            else f"Successfully added {message_parts[0]} from reprinted issues.",
         )
 
         return HttpResponseRedirect(reverse("issue:detail", args=[slug]))

@@ -1,5 +1,8 @@
 from django.urls import reverse
+from django.utils import timezone
 from pytest_django.asserts import assertTemplateUsed
+
+from comicsdb.models.issue import Issue
 
 HTML_OK_CODE = 200
 HTML_REDIRECT_CODE = 302
@@ -196,7 +199,7 @@ def test_sync_reprints_blocks_if_characters_exist(
 
     messages = list(resp.context["messages"])
     assert len(messages) == 1
-    assert "already has characters or teams assigned" in str(messages[0])
+    assert "already has characters, teams, or stories assigned" in str(messages[0])
 
     tpb_issue.refresh_from_db()
     assert tpb_issue.characters.count() == 1  # Only the one we added
@@ -216,10 +219,30 @@ def test_sync_reprints_blocks_if_teams_exist(
 
     messages = list(resp.context["messages"])
     assert len(messages) == 1
-    assert "already has characters or teams assigned" in str(messages[0])
+    assert "already has characters, teams, or stories assigned" in str(messages[0])
 
     tpb_issue.refresh_from_db()
     assert tpb_issue.teams.count() == 1  # Only the one we added
+
+
+# Test: Blocks sync if stories already exist
+def test_sync_reprints_blocks_if_stories_exist(auto_login_user, tpb_issue, single_story_issue):
+    """Test that sync is blocked if issue already has stories."""
+    client, _ = auto_login_user()
+    tpb_issue.reprints.add(single_story_issue)
+    tpb_issue.name = ["Existing Story"]
+    tpb_issue.save()
+
+    resp = client.post(reverse("issue:sync-reprints", args=[tpb_issue.slug]), follow=True)
+    assert resp.status_code == HTML_OK_CODE
+
+    messages = list(resp.context["messages"])
+    assert len(messages) == 1
+    assert "already has characters, teams, or stories assigned" in str(messages[0])
+
+    tpb_issue.refresh_from_db()
+    assert len(tpb_issue.name) == 1  # Only the one we added
+    assert tpb_issue.name[0] == "Existing Story"
 
 
 # Test: Syncs from single story reprints
@@ -238,6 +261,8 @@ def test_sync_reprints_from_single_story(auto_login_user, tpb_issue, single_stor
     tpb_issue.refresh_from_db()
     assert tpb_issue.characters.count() == 2  # superman and batman
     assert tpb_issue.teams.count() == 0
+    assert len(tpb_issue.name) == 1  # One story title
+    assert tpb_issue.name[0] == "The Beginning"
 
 
 # Test: Syncs from no story reprints
@@ -256,6 +281,8 @@ def test_sync_reprints_from_no_story(auto_login_user, tpb_issue, no_story_issue)
     tpb_issue.refresh_from_db()
     assert tpb_issue.characters.count() == 1  # batman
     assert tpb_issue.teams.count() == 1  # avengers
+    assert len(tpb_issue.name) == 1  # One [Untitled] entry
+    assert tpb_issue.name[0] == "[Untitled]"
 
 
 # Test: Skips multi-story reprints
@@ -280,6 +307,9 @@ def test_sync_reprints_skips_multi_story(
     assert tpb_issue.characters.count() == 2  # superman and batman from single_story_issue
     assert superman in tpb_issue.characters.all()
     assert batman in tpb_issue.characters.all()
+    # Should only have story from single_story_issue
+    assert len(tpb_issue.name) == 1
+    assert tpb_issue.name[0] == "The Beginning"
 
 
 # Test: Syncs both characters and teams
@@ -298,6 +328,10 @@ def test_sync_reprints_syncs_characters_and_teams(
     assert tpb_issue.characters.count() == 2
     # avengers from no_story
     assert tpb_issue.teams.count() == 1
+    # Two stories: "The Beginning" and "[Untitled]"
+    assert len(tpb_issue.name) == 2
+    assert "The Beginning" in tpb_issue.name
+    assert "[Untitled]" in tpb_issue.name
 
 
 # Test: Handles no characters/teams in reprints
@@ -343,3 +377,74 @@ def test_sync_reprints_redirects_to_detail(auto_login_user, tpb_issue, single_st
     resp = client.post(reverse("issue:sync-reprints", args=[tpb_issue.slug]))
     assert resp.status_code == HTML_REDIRECT_CODE
     assert resp.url == reverse("issue:detail", args=[tpb_issue.slug])
+
+
+# Test: Syncs stories with proper ordering
+def test_sync_reprints_maintains_story_order(
+    auto_login_user, tpb_issue, create_user, fc_series, superman, batman
+):
+    """Test that sync maintains the order of stories based on reprint order."""
+    client, user = auto_login_user()
+
+    # Create multiple issues with different stories
+    issue1 = Issue.objects.create(
+        series=fc_series,
+        number="10",
+        slug="final-crisis-10",
+        name=["First Story"],
+        cover_date=timezone.now().date(),
+        edited_by=user,
+        created_by=user,
+    )
+    issue1.characters.add(superman)
+
+    issue2 = Issue.objects.create(
+        series=fc_series,
+        number="11",
+        slug="final-crisis-11",
+        name=["Second Story"],
+        cover_date=timezone.now().date(),
+        edited_by=user,
+        created_by=user,
+    )
+    issue2.characters.add(batman)
+
+    issue3 = Issue.objects.create(
+        series=fc_series,
+        number="12",
+        slug="final-crisis-12",
+        cover_date=timezone.now().date(),
+        edited_by=user,
+        created_by=user,
+    )
+
+    # Add reprints in specific order
+    tpb_issue.reprints.add(issue1, issue2, issue3)
+
+    resp = client.post(reverse("issue:sync-reprints", args=[tpb_issue.slug]))
+    assert resp.status_code == HTML_REDIRECT_CODE
+
+    tpb_issue.refresh_from_db()
+    assert len(tpb_issue.name) == 3
+    assert tpb_issue.name[0] == "First Story"
+    assert tpb_issue.name[1] == "Second Story"
+    assert tpb_issue.name[2] == "[Untitled]"
+
+
+# Test: Success message includes story count
+def test_sync_reprints_success_message_includes_stories(
+    auto_login_user, tpb_issue, single_story_issue
+):
+    """Test that success message includes story title count."""
+    client, _ = auto_login_user()
+    tpb_issue.reprints.add(single_story_issue)
+
+    resp = client.post(reverse("issue:sync-reprints", args=[tpb_issue.slug]), follow=True)
+    assert resp.status_code == HTML_OK_CODE
+
+    messages = list(resp.context["messages"])
+    assert len(messages) == 1
+    message_text = str(messages[0])
+    assert "Successfully added" in message_text
+    assert "character(s)" in message_text
+    assert "story title(s)" in message_text
