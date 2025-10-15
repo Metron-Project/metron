@@ -9,248 +9,74 @@
     <header class="block has-text-centered">
         <h1 class="title">Issue Form</h1>
     </header>
-    <form method="post" enctype="multipart/form-data" id="issueForm">
+    <form method="post" enctype="multipart/form-data" id="issueForm" novalidate>
         {% csrf_token %}
-        <!-- main -->
+        <!-- Primary Information Section -->
         <div class="box">
             <h2 class="title is-5">Primary Information</h2>
-            {% if form.errors %}
-                {% for field in form %}
-                    {% for error in field.errors %}
-                        <div class="notification is-danger">
-                            <strong>{{ error|escape }}</strong>
-                        </div>
-                    {% endfor %}
-                {% endfor %}
-                {% for error in form.non_field_errors %}
-                    <div class="notification is-danger">
-                        <strong>{{ error|escape }}</strong>
-                    </div>
-                {% endfor %}
-            {% endif %}
+            {% include "comicsdb/partials/form_errors.html" with form=form %}
             {% for field in form.hidden_fields %}{{ field }}{% endfor %}
             {% for field in form.visible_fields %}
-                <div class="field" data-field-name="{{ field.name }}">
-                    {% if field|is_field_type:'checkbox' %}
-                        <div class="control">
-                            <div class="columns">
-                                <div class="column">
-                                    {% if field.auto_id %}
-                                        <label class="checkbox{% if field.field.required %} {{ form.required_css_class }}{% endif %}">
-                                            {{ field }} {{ field.label }}
-                                        </label>
-                                    {% endif %}
-                                </div>
-                            </div>
-                            {% for error in field.errors %}<span class="help is-danger {{ form.error_css_class }}">{{ error }}</span>{% endfor %}
-                            {% if field.help_text %}<p class="help">{{ field.help_text|safe }}</p>{% endif %}
-                        </div>
-                    {% elif field|is_field_type:'radio' %}
-                        {% if field.auto_id %}
-                            <label class="label{% if field.field.required %} {{ form.required_css_class }}{% endif %}">{{ field.label }}</label>
-                        {% endif %}
-                        <div class="control">
-                            <div class="columns">
-                                <div class="column">
-                                    {% for choice in field %}
-                                        <label class="radio">
-                                            {{ choice.tag }}
-                                            {{ choice.choice_label }}
-                                        </label>
-                                    {% endfor %}
-                                </div>
-                            </div>
-                            {% for error in field.errors %}<span class="help is-danger {{ form.error_css_class }}">{{ error }}</span>{% endfor %}
-                            {% if field.help_text %}<p class="help">{{ field.help_text|safe }}</p>{% endif %}
-                        </div>
-                    {% elif field|is_field_type:"select" %}
-                        <label class="label{% if field.field.required %} {{ form.required_css_class }}{% endif %}"
-                               for="{{ field.id_for_label }}">{{ field.label }}</label>
-                        <div class="control">
-                            <div class="columns is-form-field Select">
-                                <div class="column">
-                                    <span class="select{% if field|is_multiple %} is-multiple{% endif %}{% if field.errors|length > 0 %} is-danger{% endif %} is-fullwidth">
-                                        {{ field }}
-                                    </span>
-                                </div>
-                            </div>
-                            {% for error in field.errors %}<span class="help is-danger {{ form.error_css_class }}">{{ error }}</span>{% endfor %}
-                            {% if field.help_text %}<p class="help">{{ field.help_text|safe }}</p>{% endif %}
-                        {% elif field|is_field_type:"textarea" %}
-                            <label class="label{% if field.field.required %} {{ form.required_css_class }}{% endif %}"
-                                   for="{{ field.id_for_label }}">{{ field.label }}</label>
-                            <div class="control">
-                                {{ field|add_field_class:'textarea' }}
-                                {% for error in field.errors %}<span class="help is-danger {{ form.error_css_class }}">{{ error }}</span>{% endfor %}
-                                {% if field.help_text %}<p class="help">{{ field.help_text|safe }}</p>{% endif %}
-                            </div>
-                        {% elif field|is_field_type:'input' %}
-                            <label class="label{% if field.field.required %} {{ form.required_css_class }}{% endif %}"
-                                   for="{{ field.id_for_label }}">{{ field.label }}</label>
-                            <div class="control">
-                                {% if field|is_field_type:'split_dt' %}
-                                    {{ field|set_input_type|add_field_class:'input' }}
-                                {% elif field|is_field_type:'any_datetime' %}
-                                    {{ field|set_input_type|add_field_class:'input' }}
-                                {% else %}
-                                    {{ field|add_field_class:'input' }}
-                                {% endif %}
-                                {% for error in field.errors %}<span class="help is-danger {{ form.error_css_class }}">{{ error }}</span>{% endfor %}
-                                {% if field.help_text %}<p class="help">{{ field.help_text|safe }}</p>{% endif %}
-                            </div>
-                        {% else %}
-                            {% if field.auto_id %}
-                                <label class="label{% if field.field.required %} {{ form.required_css_class }}{% endif %}"
-                                       for="{{ field.auto_id }}">{{ field.label }}</label>
-                            {% endif %}
-                            <div class="control{% if field|is_multiple %} multiple-checkbox{% endif %}">
-                                {{ field }}
-                                {% for error in field.errors %}<span class="help is-danger {{ form.error_css_class }}">{{ error }}</span>{% endfor %}
-                                {% if field.help_text %}<p class="help">{{ field.help_text|safe }}</p>{% endif %}
-                            </div>
-                        {% endif %}
-                    </div>
-                {% endfor %}
+                {% include "comicsdb/partials/form_field.html" with field=field %}
+            {% endfor %}
+        </div>
+        <!-- Credits Section -->
+        <div class="box">
+            <h2 class="title is-5">Credits</h2>
+            {% include "comicsdb/partials/credits_formset.html" with formset=credits %}
+        </div>
+        <!-- Variant Covers Section -->
+        <div class="box">
+            <h2 class="title is-5">Variant Covers</h2>
+            {% include "comicsdb/partials/variants_formset.html" with formset=variants %}
+        </div>
+        <!-- Submit Button -->
+        <div class="field">
+            <div class="control">
+                <button class="button is-rounded is-info" type="submit">
+                    <span class="icon">
+                        <i class="fas fa-check"></i>
+                    </span>
+                    <span>Submit</span>
+                </button>
             </div>
-            <!-- end main -->
-            <!-- credits -->
-            <div class="box">
-                <h2 class="title is-5">Credits</h2>
-                <table class="table is-bordered is-striped is-narrow is-hoverable is-fullwidth"
-                       id="creditsTable">
-                    {{ credits.management_form }}
-                    {{ credits.non_form_errors }}
-                    <thead>
-                        <tr>
-                            <th>Creator</th>
-                            <th>
-                                <span title="Hold down “Control”, or “Command” on a Mac, to select more than one.">
-                                    Role <i class="fas fa-question-circle"></i>
-                                </span>
-                            </th>
-                            <th>Delete</th>
-                        </tr>
-                    </thead>
-                    {% for form in credits.forms %}
-                        <tr>
-                            {% for field in form.visible_fields %}
-                                <td>
-                                    {% if form.instance.pk %}{{ form.DELETE }}{% endif %}
-                                    {# Include the hidden fields in the form #}
-                                    {% if forloop.first %}
-                                        {% for hidden in form.hidden_fields %}{{ hidden }}{% endfor %}
-                                    {% endif %}
-                                    {# Show error for any formset errors #}
-                                    {% if forloop.first %}
-                                        {% for error in form.non_field_errors %}<strong class="has-text-danger">{{ error }}</strong>{% endfor %}
-                                    {% endif %}
-                                    {# Show errors for any fields #}
-                                    {% for error in field.errors %}<strong class="has-text-danger">{{ error }}</strong>{% endfor %}
-                                    <div class="field">
-                                        {% if field|is_field_type:"select" %}
-                                            <div class="control is-expanded">
-                                                <div class="select {% if field|is_multiple %}is-multiple{% endif %}">{{ field }}</div>
-                                            </div>
-                                        {% else %}
-                                            <div class="control">{{ field }}</div>
-                                        {% endif %}
-                                        {% if field.help_text %}
-                                            <ul>
-                                                <li class="help">{{ field.help_text|safe }}</li>
-                                            </ul>
-                                        {% endif %}
-                                    </div>
-                                </td>
-                            {% endfor %}
-                        </tr>
-                    {% endfor %}
-                </table>
-            </div>
-            <!-- end credits -->
-            <!-- variants -->
-            <div class="box">
-                <h2 class="title is-5">Variant Covers</h2>
-                <table class="table is-bordered is-striped is-narrow is-hoverable is-fullwidth"
-                       id="variantsTable">
-                    {{ variants.management_form }}
-                    {{ variants.non_form_errors }}
-                    <thead>
-                        <tr>
-                            <th>Image</th>
-                            <th>Name</th>
-                            <th>SKU</th>
-                            <th>UPC</th>
-                            <th>Delete</th>
-                        </tr>
-                    </thead>
-                    {% for form in variants.forms %}
-                        <tr>
-                            {% for field in form.visible_fields %}
-                                <td>
-                                    {% if form.instance.pk %}{{ form.DELETE }}{% endif %}
-                                    {# Include the hidden fields in the form #}
-                                    {% if forloop.first %}
-                                        {% for hidden in form.hidden_fields %}{{ hidden }}{% endfor %}
-                                    {% endif %}
-                                    {# Show error for any formset errors #}
-                                    {% if forloop.first %}
-                                        {% for error in form.non_field_errors %}<strong class="has-text-danger">{{ error }}</strong>{% endfor %}
-                                    {% endif %}
-                                    {# Show errors for any fields #}
-                                    {% for error in field.errors %}<strong class="has-text-danger">{{ error }}</strong>{% endfor %}
-                                    <div class="field" data-field-name="{{ field.name }}">
-                                        <div class="control is-expanded">
-                                            {% if field|is_field_type:"select" %}
-                                                <span class="select{% if field.errors|length > 0 %} is-danger{% endif %} is-fullwidth">{{ field }}</span>
-                                            {% elif field|is_field_type:'input' %}
-                                                {{ field|add_field_class:"input is-fullwidth" }}
-                                            {% else %}
-                                                {{ field }}
-                                            {% endif %}
-                                        </div>
-                                        {% if field.help_text %}
-                                            <ul>
-                                                <li class="help">{{ field.help_text|safe }}</li>
-                                            </ul>
-                                        {% endif %}
-                                    </div>
-                                </td>
-                            {% endfor %}
-                        </tr>
-                    {% endfor %}
-                </table>
-            </div>
-            <!-- endvariants -->
-            <!-- submit -->
-            <div class="field">
-                <div class="control">
-                    <button class="button is-rounded is-info" type="submit">Submit</button>
-                </div>
-            </div>
-            <!-- end submit -->
-        </form>
-    {% endblock %}
-    {% block js %}
-        <script src="{% static 'admin/js/vendor/jquery/jquery.js' %}"></script>
-        {{ form.media.js }}
-        <script src="{% static 'site/js/jquery.formset.js' %}"></script>
-        <script src="{% static 'site/js/bulma-fileupload.js' %}"></script>
-        <script type="text/javascript">
-        $(function () {
-            $('#issueForm #creditsTable tbody tr').formset({
-                prefix: '{{ credits.prefix }}',
-                deleteText: 'Remove?',
-                addText: 'Add another creator credit',
-            });
-        })
-        </script>
-        <script type="text/javascript">
-        $(function () {
-            $('#issueForm #variantsTable tbody tr').formset({
-                prefix: '{{ variants.prefix }}',
-                deleteText: 'Remove?',
-                addText: 'Add another variant cover',
-            });
-        })
-        </script>
-    {% endblock %}
+        </div>
+    </form>
+{% endblock %}
+{% block js %}
+    <script src="{% static 'admin/js/vendor/jquery/jquery.js' %}"></script>
+    {{ form.media.js }}
+    <script src="{% static 'site/js/jquery.formset.js' %}"></script>
+    <script src="{% static 'site/js/bulma-fileupload.js' %}"></script>
+    <script>
+$(function() {
+    'use strict';
+    
+    // Initialize credits formset
+    $('#issueForm #creditsTable tbody tr').formset({
+        prefix: '{{ credits.prefix }}',
+        deleteText: 'Remove?',
+        addText: 'Add another creator credit',
+        added: function($row) {
+            console.log('Credit row added');
+        },
+        removed: function($row) {
+            console.log('Credit row removed');
+        }
+    });
+    
+    // Initialize variants formset
+    $('#issueForm #variantsTable tbody tr').formset({
+        prefix: '{{ variants.prefix }}',
+        deleteText: 'Remove?',
+        addText: 'Add another variant cover',
+        added: function($row) {
+            console.log('Variant row added');
+        },
+        removed: function($row) {
+            console.log('Variant row removed');
+        }
+    });
+});
+    </script>
+{% endblock %}

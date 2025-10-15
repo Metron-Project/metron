@@ -1,0 +1,64 @@
+{% load bulma_tags %}
+{% comment %}
+    Renders a single form field with appropriate Bulma styling
+    Usage: {% include "comicsdb/partials/form_field.html" with field=field %}
+{% endcomment %}
+<div class="field" data-field-name="{{ field.name }}">
+    {% if field|is_field_type:'checkbox' %}
+        <div class="control">
+            <label class="checkbox{% if field.field.required %} {{ form.required_css_class }}{% endif %}">
+                {{ field }} {{ field.label }}
+            </label>
+            {% include "comicsdb/partials/field_help.html" %}
+        </div>
+    {% elif field|is_field_type:'radio' %}
+        {% if field.auto_id %}
+            <label class="label{% if field.field.required %} {{ form.required_css_class }}{% endif %}">{{ field.label }}</label>
+        {% endif %}
+        <div class="control">
+            {% for choice in field %}
+                <label class="radio">
+                    {{ choice.tag }}
+                    {{ choice.choice_label }}
+                </label>
+            {% endfor %}
+            {% include "comicsdb/partials/field_help.html" %}
+        </div>
+    {% elif field|is_field_type:"select" %}
+        <label class="label{% if field.field.required %} {{ form.required_css_class }}{% endif %}"
+               for="{{ field.id_for_label }}">{{ field.label }}</label>
+        <div class="control">
+            <span class="select{% if field|is_multiple %} is-multiple{% endif %}{% if field.errors %} is-danger{% endif %} is-fullwidth">
+                {{ field }}
+            </span>
+            {% include "comicsdb/partials/field_help.html" %}
+        </div>
+    {% elif field|is_field_type:"textarea" %}
+        <label class="label{% if field.field.required %} {{ form.required_css_class }}{% endif %}"
+               for="{{ field.id_for_label }}">{{ field.label }}</label>
+        <div class="control">
+            {{ field|add_field_class:'textarea' }}
+            {% include "comicsdb/partials/field_help.html" %}
+        </div>
+    {% elif field|is_field_type:'input' %}
+        <label class="label{% if field.field.required %} {{ form.required_css_class }}{% endif %}"
+               for="{{ field.id_for_label }}">{{ field.label }}</label>
+        <div class="control">
+            {% if field|is_field_type:'split_dt' or field|is_field_type:'any_datetime' %}
+                {{ field|set_input_type|add_field_class:'input' }}
+            {% else %}
+                {{ field|add_field_class:'input' }}
+            {% endif %}
+            {% include "comicsdb/partials/field_help.html" %}
+        </div>
+    {% else %}
+        {% if field.auto_id %}
+            <label class="label{% if field.field.required %} {{ form.required_css_class }}{% endif %}"
+                   for="{{ field.auto_id }}">{{ field.label }}</label>
+        {% endif %}
+        <div class="control{% if field|is_multiple %} multiple-checkbox{% endif %}">
+            {{ field }}
+            {% include "comicsdb/partials/field_help.html" %}
+        </div>
+    {% endif %}
+</div>

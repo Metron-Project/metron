@@ -1,0 +1,20 @@
+{% comment %}
+    Displays form errors in a consistent manner
+    Usage: {% include "comicsdb/partials/form_errors.html" with form=form %}
+{% endcomment %}
+{% if form.errors %}
+    {% for field in form %}
+        {% for error in field.errors %}
+            <div class="notification is-danger is-light">
+                <button class="delete" aria-label="close"></button>
+                <strong>{{ field.label }}:</strong> {{ error|escape }}
+            </div>
+        {% endfor %}
+    {% endfor %}
+    {% for error in form.non_field_errors %}
+        <div class="notification is-danger is-light">
+            <button class="delete" aria-label="close"></button>
+            <strong>{{ error|escape }}</strong>
+        </div>
+    {% endfor %}
+{% endif %}
