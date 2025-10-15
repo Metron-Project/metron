@@ -1,28 +1,62 @@
-<div class="box">
-    <h1 class="title is-5">Attribution</h1>
-    <div class="content">
-        {% for obj in object %}
-            {% if obj.source == "W" %}
-                <p>
-                    This article uses material from <a href={{ obj.url }}>Wikipedia</a>, which is released under the
-                    <a href="https://creativecommons.org/licenses/by-sa/3.0/">Creative Commons Attribution-Share-Alike License 3.0</a>.
-                </p>
-            {% elif obj.source == "M" %}
-                <p>
-                    Some data provided by <a href={{ obj.url }}>Marvel</a>. &copy; 2014 Marvel
-                </p>
-            {% elif obj.source == "G" %}
-                <p>
-                    This article uses material from the <a href={{ obj.url }}>Grand Comics Database&#8482;</a>, which is released under the
-                    <a href="https://creativecommons.org/licenses/by-sa/4.0/">
-                        Creative Commons Attribution-ShareAlike 4.0 International License (CC BY-SA 4.0)
-                    </a>.
-                </p>
-            {% elif obj.source == "D" %}
-                <p>
-                    Some data provided by <a href={{ obj.url }}>DC</a>. &copy; & &trade; DC
-                </p>
-            {% endif %}
-        {% endfor %}
+{% comment %}
+    Displays attribution information for various data sources
+    Usage: {% include "comicsdb/attribution.html" with object=attributions %}
+{% endcomment %}
+{% if object %}
+    <div class="box">
+        <h2 class="title is-5">Attribution</h2>
+        <div class="content">
+            {% for attribution in object %}
+                {% if attribution.source == "W" %}
+                    <p>
+                        This article uses material from
+                        <a href="{{ attribution.url }}"
+                           target="_blank"
+                           rel="noopener noreferrer">Wikipedia</a>,
+                        which is released under the
+                        <a href="https://creativecommons.org/licenses/by-sa/3.0/"
+                           target="_blank"
+                           rel="noopener noreferrer">Creative Commons Attribution-Share-Alike License 3.0</a>.
+                    </p>
+                {% elif attribution.source == "M" %}
+                    <p>
+                        Some data provided by
+                        <a href="{{ attribution.url }}"
+                           target="_blank"
+                           rel="noopener noreferrer">Marvel</a>.
+                        &copy; 2014 Marvel
+                    </p>
+                {% elif attribution.source == "G" %}
+                    <p>
+                        This article uses material from the
+                        <a href="{{ attribution.url }}"
+                           target="_blank"
+                           rel="noopener noreferrer">Grand Comics Database&#8482;</a>,
+                        which is released under the
+                        <a href="https://creativecommons.org/licenses/by-sa/4.0/"
+                           target="_blank"
+                           rel="noopener noreferrer">
+                            Creative Commons Attribution-ShareAlike 4.0 International License (CC BY-SA 4.0)
+                        </a>.
+                    </p>
+                {% elif attribution.source == "D" %}
+                    <p>
+                        Some data provided by
+                        <a href="{{ attribution.url }}"
+                           target="_blank"
+                           rel="noopener noreferrer">DC</a>.
+                        &copy; &amp; &trade; DC
+                    </p>
+                {% else %}
+                    {# Fallback for unknown source types #}
+                    <p>
+                        Data provided by
+                        <a href="{{ attribution.url }}"
+                           target="_blank"
+                           rel="noopener noreferrer">external source</a>.
+                    </p>
+                {% endif %}
+            {% endfor %}
+        </div>
     </div>
-</div>
+{% endif %}
