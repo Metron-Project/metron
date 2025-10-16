@@ -1,25 +1,29 @@
 {% extends parent_template|default:"base.html" %}
-{% load thumbnail %}
-{% load is_new %}
 {% load static %}
 {% block title %}
-    New Comics
-{% endblock title %}
+    {% if future %}
+        Future Releases - Metron
+    {% else %}
+        New Comics - {{ release_day|date:'F d, Y' }} - Metron
+    {% endif %}
+{% endblock %}
 {% block content %}
-    {% if issue_list %}
-        <header class="block has-text-centered">
+    <header class="block has-text-centered">
+        <h1 class="title">
             {% if not future %}
-                <h1 class="title">Comic{{ issue_list.count|pluralize }} released the week of {{ release_day|date:'F d, Y' }}</h1>
+                Comics Released the Week of {{ release_day|date:'F d, Y' }}
             {% else %}
-                <h1 class="title">Future releases</h1>
+                Future Releases
             {% endif %}
-        </header>
+        </h1>
+    </header>
+    {% if issue_list %}
         <section>
             <div class="columns">
-                <!-- Main Column -->
+                {# Main Column #}
                 <div class="column">
-                    <!-- navigation -->
-                    <nav class="level">
+                    {# Navigation Bar #}
+                    <nav class="level" aria-label="Weekly releases navigation">
                         <div class="level-left">
                             <div class="level-item">
                                 <p class="subtitle is-5">
@@ -31,90 +35,63 @@
                                 </p>
                             </div>
                         </div>
-                        <div class="level-right">
-                            <p class="level-item">
-                                {% if user.is_authenticated %}
+                        {% if user.is_authenticated %}
+                            <div class="level-right">
+                                <div class="level-item">
                                     <a class="button is-rounded is-primary"
                                        href="{% url 'issue:create' %}"
-                                       title="Add a new issue">
-                                        <span class="icon is-small">
+                                       title="Add a new issue"
+                                       aria-label="Add a new issue">
+                                        <span class="icon is-small" aria-hidden="true">
                                             <i class="fas fa-plus"></i>
                                         </span>
                                         <span>New</span>
                                     </a>
-                                {% endif %}
-                            </p>
-                        </div>
-                    </nav>
-                    <!-- end navigation -->
-                    <!-- issue list -->
-                    <div class="columns is-multiline">
-                        {% for issue in issue_list %}
-                            <div class="column is-one-quarter has-text-centered">
-                                <!-- issue card -->
-                                <div class="card">
-                                    <!-- card header -->
-                                    <header class="card-header">
-                                        {% with issue.created_on|is_new as is_new %}
-                                            <p class="card-header-title is is-centered">
-                                                {{ issue }}
-                                                {% if is_new %}&nbsp;<span class="tag is-primary is-rounded">New!</span>{% endif %}
-                                            </p>
-                                        {% endwith %}
-                                    </header>
-                                    <!-- end card header -->
-                                    <!-- card image -->
-                                    <div class="card-image">
-                                        <figure class="image is-2by3">
-                                            {% if issue.image %}
-                                                {% thumbnail issue.image "320x480" crop="center" format="WEBP" as im %}
-                                                    <img src="{{ im.url }}"
-                                                         width="{{ im.width }}"
-                                                         height="{{ im.height }}"
-                                                         alt="{{ issue }}">
-                                                {% endthumbnail %}
-                                            {% else %}
-                                                <img src="{% static 'site/img/image-not-found.webp' %}"
-                                                     alt="No image for {{ issue }}">
-                                            {% endif %}
-                                        </figure>
-                                    </div>
-                                    <!-- end card image -->
-                                    <!-- card footer -->
-                                    <footer class="card-footer">
-                                        <p class="card-footer-item">{{ issue.cover_date|date:"M Y" }}</p>
-                                        <a href="{% url 'issue:detail' issue.slug %}" class="card-footer-item">Info</a>
-                                    </footer>
-                                    <!-- end card footer -->
                                 </div>
-                                <!-- end issue card -->
                             </div>
-                        {% endfor %}
-                    </div>
-                    <!-- end issue list-->
+                        {% endif %}
+                    </nav>
+                    {# Issue Cards #}
+                    {% include "comicsdb/partials/issue_card_grid.html" with items=issue_list %}
                 </div>
-                <!-- End Main Column-->
-                <!-- Search Column -->
-                <div class="column is-one-fifth">{% include "comicsdb/issue_search_box.html" %}</div>
-                <!-- End of Search Column -->
+                {# Search Sidebar #}
+                <div class="column is-one-fifth">{% include "comicsdb/issue_search_box.html" with objects=series_type %}</div>
             </div>
         </section>
     {% else %}
-        <section>
-            <div class="container">
-                <p>No Issues currently available. Do you want to add one?</p>
-                <a class="button is-rounded is-primary"
-                   href="{% url 'issue:create' %}"
-                   title="Add a new issue">
-                    <span class="icon is-small">
-                        <i class="fas fa-plus"></i>
-                    </span>
-                    <span>New</span>
-                </a>
+        <section class="hero">
+            <div class="hero-body">
+                <div class="container has-text-centered">
+                    <div class="content">
+                        <span class="icon is-large has-text-grey-light" aria-hidden="true">
+                            <i class="fas fa-calendar-times fa-3x"></i>
+                        </span>
+                        <h2 class="title is-4">No Releases Found</h2>
+                        <p class="subtitle is-6 has-text-grey">
+                            {% if future %}
+                                No future releases have been scheduled yet.
+                            {% else %}
+                                No issues were released this week.
+                            {% endif %}
+                        </p>
+                        {% if user.is_authenticated %}
+                            <a class="button is-rounded is-primary is-medium"
+                               href="{% url 'issue:create' %}"
+                               title="Add a new issue"
+                               aria-label="Add a new issue">
+                                <span class="icon" aria-hidden="true">
+                                    <i class="fas fa-plus"></i>
+                                </span>
+                                <span>Add Issue</span>
+                            </a>
+                        {% endif %}
+                    </div>
+                </div>
             </div>
         </section>
     {% endif %}
 {% endblock %}
 {% block pagination %}
+    {% load pagination_tags %}
     {% include "comicsdb/partials/pagination.html" %}
 {% endblock %}

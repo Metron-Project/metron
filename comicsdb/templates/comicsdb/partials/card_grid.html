@@ -1,0 +1,99 @@
+{% load thumbnail %}
+{% load static %}
+{% load humanize %}
+{% comment %}
+    Reusable card grid for displaying items with images
+    Usage: {% include "comicsdb/partials/card_grid.html" with items=character_list ... %}
+    
+    Required parameters:
+    - items: List of items to display
+    - detail_url_name: URL name for detail view (e.g., "character:detail")
+    - image_ratio: Image aspect ratio class (e.g., "is-2by3", "is-square")
+    - default_image: Path to default image if item has no image
+    
+    Optional parameters:
+    - count_type: Which count to display - "issue" or "series" (default: "issue")
+    - count_url_name: URL name for count/list view (e.g., "character:issue")
+    - count_label: Label for count (e.g., "Issue", "Series")
+    - show_count: Boolean to show/hide count footer (default: True)
+{% endcomment %}
+<div class="columns is-multiline">
+    {% for item in items %}
+        <div class="column is-one-quarter">
+            <article class="card" aria-labelledby="card-title-{{ item.slug }}">
+                {# Card Header #}
+                <header class="card-header">
+                    <h2 id="card-title-{{ item.slug }}" class="card-header-title is-centered">{{ item }}</h2>
+                </header>
+                {# Card Image #}
+                <div class="card-image">
+                    <figure class="image {{ image_ratio }}">
+                        <a href="{% url detail_url_name item.slug %}"
+                           aria-label="View details for {{ item }}">
+                            {% if item.image %}
+                                {# Use different thumbnail sizes and crop based on ratio #}
+                                {% if image_ratio == "is-square" %}
+                                    {% thumbnail item.image "256x256" crop="top" format="WEBP" as im %}
+                                        <img src="{{ im.url }}"
+                                             width="{{ im.width }}"
+                                             height="{{ im.height }}"
+                                             alt="{{ item.name }}"
+                                             loading="lazy">
+                                    {% endthumbnail %}
+                                {% else %}
+                                    {# Default to 2:3 ratio (320x480) for comic covers #}
+                                    {% thumbnail item.image "320x480" crop="center" format="WEBP" as im %}
+                                        <img src="{{ im.url }}"
+                                             width="{{ im.width }}"
+                                             height="{{ im.height }}"
+                                             alt="{{ item.name }}"
+                                             loading="lazy">
+                                    {% endthumbnail %}
+                                {% endif %}
+                            {% else %}
+                                <img src="{% static default_image %}"
+                                     alt="No image available for {{ item.name }}"
+                                     loading="lazy">
+                            {% endif %}
+                        </a>
+                    </figure>
+                </div>
+                {# Card Footer #}
+                <footer class="card-footer">
+                    {% if show_count|default:True %}
+                        {# Determine which count to use based on count_type parameter #}
+                        {% if count_type == "series" %}
+                            {% with count=item.series_count %}
+                                {% if count and count_url_name %}
+                                    <a href="{% url count_url_name item.slug %}"
+                                       class="card-footer-item"
+                                       aria-label="{{ count }} {{ count_label }}{{ count|pluralize }} for {{ item }}">
+                                        {{ count|intcomma }} {{ count_label }}{{ count|pluralize }}
+                                    </a>
+                                {% else %}
+                                    <span class="card-footer-item" aria-label="No {{ count_label|lower }}s">0 {{ count_label }}s</span>
+                                {% endif %}
+                            {% endwith %}
+                        {% else %}
+                            {# Default to issue_count #}
+                            {% with count=item.issue_count %}
+                                {% if count and count_url_name %}
+                                    <a href="{% url count_url_name item.slug %}"
+                                       class="card-footer-item"
+                                       aria-label="{{ count }} {{ count_label }}{{ count|pluralize }} for {{ item }}">
+                                        {{ count|intcomma }} {{ count_label }}{{ count|pluralize }}
+                                    </a>
+                                {% else %}
+                                    <span class="card-footer-item" aria-label="No {{ count_label|lower }}s">0 {{ count_label }}s</span>
+                                {% endif %}
+                            {% endwith %}
+                        {% endif %}
+                    {% endif %}
+                    <a href="{% url detail_url_name item.slug %}"
+                       class="card-footer-item"
+                       aria-label="View information for {{ item }}">Info</a>
+                </footer>
+            </article>
+        </div>
+    {% endfor %}
+</div>

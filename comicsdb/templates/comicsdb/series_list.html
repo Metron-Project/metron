@@ -1,132 +1,27 @@
 {% extends parent_template|default:"base.html" %}
-{% load thumbnail %}
-{% load humanize %}
 {% load static %}
 {% block title %}
-    Series
-{% endblock title %}
+    {% if title %}{{ title }}{% endif %}
+    Series - Metron
+{% endblock %}
 {% block content %}
+    <header class="block has-text-centered">
+        <h1 class="title">
+            {% if title %}{{ title }}{% endif %}
+            Series
+        </h1>
+    </header>
     {% if series_list %}
-        <!-- header -->
-        <header class="block has-text-centered">
-            <h1 class="title">
-                {% if title %}{{ title }}{% endif %}
-                Series
-            </h1>
-        </header>
-        <!-- end header -->
-        <!-- series list -->
         <section>
-            <!-- navigation -->
-            <nav class="level">
-                <!-- search box -->
-                <div class="level-left">
-                    <div class="level-item">
-                        <p class="subtitle is-5">
-                            {% if page_obj.paginator %}
-                                <strong>{{ page_obj.paginator.count|intcomma }}</strong> Series
-                            {% else %}
-                                <strong>{{ series_list.count }}</strong> Series
-                            {% endif %}
-                        </p>
-                    </div>
-                    <div class="level-item">
-                        <form action="{% url 'series:search' %}"
-                              method="get"
-                              accept-charset="utf-8">
-                            <div class="field has-addons">
-                                <p class="control">
-                                    <label>
-                                        <input class="input" name="q" type="search" placeholder="Find a series">
-                                    </label>
-                                </p>
-                                <p class="control">
-                                    <button class="button is-rounded">Search</button>
-                                </p>
-                            </div>
-                        </form>
-                    </div>
-                </div>
-                <!-- end search box -->
-                <!-- add button -->
-                <div class="level-right">
-                    <p class="level-item">
-                        {% if user.is_authenticated %}
-                            <a class="button is-rounded is-primary"
-                               href="{% url 'series:create' %}"
-                               title="Add a new series">
-                                <span class="icon is-small">
-                                    <i class="fas fa-plus"></i>
-                                </span>
-                                <span>New</span>
-                            </a>
-                        {% endif %}
-                    </p>
-                </div>
-                <!-- end button -->
-            </nav>
-            <!-- end navigation -->
-            <!-- series columns -->
-            <div class="columns is-multiline">
-                {% for series in series_list %}
-                    <div class="column is-one-quarter has-text-centered">
-                        <!-- series card -->
-                        <div class="card">
-                            <!-- card header -->
-                            <header class="card-header">
-                                <p class="card-header-title is-centered">{{ series }}</p>
-                            </header>
-                            <!-- end card header -->
-                            <!-- card image -->
-                            <div class="card-image">
-                                <figure class="image is-2by3">
-                                    {% with cover=series.first_issue_cover %}
-                                        {% if cover %}
-                                            {% thumbnail cover "320x480" crop="center" format="WEBP" as im %}
-                                                <img src="{{ im.url }}"
-                                                     width="{{ im.width }}"
-                                                     height="{{ im.height }}"
-                                                     alt="{{ series }}">
-                                            {% endthumbnail %}
-                                        {% else %}
-                                            <img src="{% static 'site/img/image-not-found.webp' %}"
-                                                 alt="No image for {{ series }}">
-                                        {% endif %}
-                                    {% endwith %}
-                                </figure>
-                            </div>
-                            <!-- end card image -->
-                            <!-- card footer -->
-                            <footer class="card-footer">
-                                {% with count=series.issue_count %}
-                                    {% if count %}
-                                        <a href="{% url 'series:issue' series.slug %}" class="card-footer-item">
-                                            {{ count|intcomma }} issue{{ count|pluralize }}
-                                        </a>
-                                    {% else %}
-                                        <p class="card-footer-item">0 issues</p>
-                                    {% endif %}
-                                {% endwith %}
-                                <a href="{% url 'series:detail' series.slug %}" class="card-footer-item">Info</a>
-                            </footer>
-                            <!-- end card footer -->
-                        </div>
-                        <!-- end series card -->
-                    </div>
-                {% endfor %}
-            </div>
-            <!-- end series columns -->
+            {% include "comicsdb/partials/list_header.html" with title="Series" count=page_obj.paginator.count|default:series_list.count search_url="series:search" search_placeholder="Find a series" create_url="series:create" create_title="Add a new series" %}
+            {# Note: Series uses first_issue_cover, needs custom handling #}
+            {% include "comicsdb/partials/series_card_grid.html" with items=series_list %}
         </section>
-        <!-- end series list -->
     {% else %}
-        <section>
-            <p>No Series currently available. Do you want to add one?</p>
-            <a class="button is-rounded is-primary"
-               href="{% url 'series:create' %}"
-               title="Add a new series">New</a>
-        </section>
+        {% include "comicsdb/partials/empty_state.html" with item_type="Series" create_url="series:create" create_title="Add a new series" %}
     {% endif %}
 {% endblock %}
 {% block pagination %}
+    {% load pagination_tags %}
     {% include "comicsdb/partials/pagination.html" %}
 {% endblock %}

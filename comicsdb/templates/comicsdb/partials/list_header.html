@@ -1,0 +1,67 @@
+{% load humanize %}
+{% comment %}
+    Reusable list header with count, search, and add button
+    Usage: {% include "comicsdb/partials/list_header.html" with title="Characters" ... %}
+    
+    Required parameters:
+    - title: Display title (e.g., "Character", "Publisher")
+    - count: Total item count from paginator
+    - search_url: URL name for search action
+    - search_placeholder: Placeholder text for search input
+    - create_url: URL name for create action (optional)
+    - create_title: Title attribute for create button
+{% endcomment %}
+<nav class="level" aria-label="List navigation and actions">
+    <div class="level-left">
+        {# Item Count #}
+        <div class="level-item">
+            <p class="subtitle is-5">
+                <strong>{{ count|intcomma }}</strong> {{ title }}{{ count|pluralize }}
+            </p>
+        </div>
+        {# Search Form #}
+        <div class="level-item">
+            <form action="{% url search_url %}"
+                  method="get"
+                  accept-charset="utf-8"
+                  role="search"
+                  aria-label="Search {{ title|lower }}s">
+                <div class="field has-addons">
+                    <div class="control">
+                        <label for="search-input-{{ title|lower }}" class="is-sr-only">Search {{ title }}s</label>
+                        <input id="search-input-{{ title|lower }}"
+                               class="input"
+                               name="q"
+                               type="search"
+                               placeholder="{{ search_placeholder }}"
+                               aria-label="{{ search_placeholder }}">
+                    </div>
+                    <div class="control">
+                        <button class="button is-rounded" type="submit" aria-label="Search">
+                            <span class="icon" aria-hidden="true">
+                                <i class="fas fa-search"></i>
+                            </span>
+                            <span>Search</span>
+                        </button>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+    {# Add Button (only show if user is authenticated and create_url provided) #}
+    {% if create_url and user.is_authenticated %}
+        <div class="level-right">
+            <div class="level-item">
+                <a class="button is-rounded is-primary"
+                   href="{% url create_url %}"
+                   title="{{ create_title }}"
+                   aria-label="{{ create_title }}">
+                    <span class="icon is-small" aria-hidden="true">
+                        <i class="fas fa-plus"></i>
+                    </span>
+                    <span>New</span>
+                </a>
+            </div>
+        </div>
+    {% endif %}
+</nav>

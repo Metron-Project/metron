@@ -1,123 +1,20 @@
 {% extends parent_template|default:"base.html" %}
-{% load thumbnail %}
-{% load humanize %}
 {% load static %}
-{% block title %}
-    Creators
-{% endblock title %}
+{% block title %}Creators - Metron{% endblock %}
 {% block content %}
+    <header class="block has-text-centered">
+        <h1 class="title">Creators List</h1>
+    </header>
     {% if creator_list %}
-        <!-- header -->
-        <header class="block has-text-centered">
-            <h1 class="title">Creator{{ creator_list.count|pluralize }} List</h1>
-        </header>
-        <!-- end header -->
-        <!-- creator list -->
         <section>
-            <!-- navigation -->
-            <nav class="level">
-                <!-- search box -->
-                <div class="level-left">
-                    <div class="level-item">
-                        <p class="subtitle is-5">
-                            <strong>{{ page_obj.paginator.count|intcomma }}</strong> Creator{{ page_obj.paginator.count|pluralize }}
-                        </p>
-                    </div>
-                    <div class="level-item">
-                        <form action="{% url 'creator:search' %}"
-                              method="get"
-                              accept-charset="utf-8">
-                            <div class="field has-addons">
-                                <p class="control">
-                                    <label>
-                                        <input class="input" name="q" type="search" placeholder="Find a creator">
-                                    </label>
-                                </p>
-                                <p class="control">
-                                    <button class="button is-rounded">Search</button>
-                                </p>
-                            </div>
-                        </form>
-                    </div>
-                </div>
-                <!-- end search box -->
-                <!-- add button -->
-                <div class="level-right">
-                    <p class="level-item">
-                        {% if user.is_authenticated %}
-                            <a class="button is-rounded is-primary"
-                               href="{% url 'creator:create' %}"
-                               title="Add a new creator">
-                                <span class="icon is-small">
-                                    <i class="fas fa-plus"></i>
-                                </span>
-                                <span>New</span>
-                            </a>
-                        {% endif %}
-                    </p>
-                </div>
-                <!-- end add button -->
-            </nav>
-            <!-- end navigation -->
-            <!-- creator columns -->
-            <div class="columns is-multiline">
-                {% for creator in creator_list %}
-                    <div class="column is-one-quarter has-text-centered">
-                        <!-- card-->
-                        <div class="card">
-                            <!-- card header -->
-                            <header class="card-header">
-                                <p class="card-header-title is-centered">{{ creator }}</p>
-                            </header>
-                            <!-- end card header -->
-                            <!-- card image -->
-                            <div class="card-image">
-                                <figure class="image is-square">
-                                    {% if creator.image %}
-                                        {% thumbnail creator.image "256x256" crop="top" format="WEBP" as im %}
-                                            <img src="{{ im.url }}"
-                                                 width="{{ im.width }}"
-                                                 height="{{ im.height }}"
-                                                 alt="{{ creator.name }}">
-                                        {% endthumbnail %}
-                                    {% else %}
-                                        <img src="{% static 'site/img/creator-not-found.webp' %}"
-                                             alt="No image for {{ creator.name }}">
-                                    {% endif %}
-                                </figure>
-                            </div>
-                            <!-- end card image -->
-                            <!-- card footer -->
-                            <footer class="card-footer">
-                                {% with count=creator.issue_count %}
-                                    {% if count %}
-                                        <a href="{% url 'creator:issue' creator.slug %}"
-                                           class="card-footer-item">{{ count|intcomma }} Issue{{ count|pluralize }}</a>
-                                    {% else %}
-                                        <p class="card-footer-item">0 Issues</p>
-                                    {% endif %}
-                                {% endwith %}
-                                <a href="{% url 'creator:detail' creator.slug %}"
-                                   class="card-footer-item">Info</a>
-                            </footer>
-                            <!-- end card footer -->
-                        </div>
-                        <!-- end card -->
-                    </div>
-                {% endfor %}
-            </div>
-            <!-- end creator columns -->
+            {% include "comicsdb/partials/list_header.html" with title="Creator" count=page_obj.paginator.count search_url="creator:search" search_placeholder="Find a creator" create_url="creator:create" create_title="Add a new creator" %}
+            {% include "comicsdb/partials/card_grid.html" with items=creator_list detail_url_name="creator:detail" image_ratio="is-square" default_image="site/img/creator-not-found.webp" count_url_name="creator:issue" count_label="Issue" %}
         </section>
-        <!-- end creator list -->
     {% else %}
-        <section>
-            <p>No Creators currently available. Do you want to create one?</p>
-            <a class="button is-rounded is-primary"
-               href="{% url 'creator:create' %}"
-               title="Add a new creator">New</a>
-        </section>
+        {% include "comicsdb/partials/empty_state.html" with item_type="Creator" create_url="creator:create" create_title="Add a new creator" %}
     {% endif %}
 {% endblock %}
 {% block pagination %}
+    {% load pagination_tags %}
     {% include "comicsdb/partials/pagination.html" %}
 {% endblock %}

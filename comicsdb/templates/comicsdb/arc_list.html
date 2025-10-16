@@ -1,113 +1,20 @@
 {% extends parent_template|default:"base.html" %}
-{% load humanize %}
-{% load thumbnail %}
 {% load static %}
-{% block title %}
-    Story Arcs
-{% endblock title %}
+{% block title %}Story Arcs - Metron{% endblock %}
 {% block content %}
+    <header class="block has-text-centered">
+        <h1 class="title">Story Arcs List</h1>
+    </header>
     {% if arc_list %}
-        <!-- header -->
-        <header class="block has-text-centered">
-            <h1 class="title">Story Arc{{ arc_list.count|pluralize }} List</h1>
-        </header>
-        <!-- end header -->
-        <!-- arc list -->
         <section>
-            <!-- navigation -->
-            <nav class="level">
-                <div class="level-left">
-                    <div class="level-item">
-                        <p class="subtitle is-5">
-                            <strong>{{ page_obj.paginator.count|intcomma }}</strong> Story Arc{{ page_obj.paginator.count|pluralize }}
-                        </p>
-                    </div>
-                    <div class="level-item">
-                        <form action="{% url 'arc:search' %}" method="get" accept-charset="utf-8">
-                            <div class="field has-addons">
-                                <p class="control">
-                                    <input class="input" name="q" type="search" placeholder="Find a arc">
-                                </p>
-                                <p class="control">
-                                    <button class="button is-rounded">Search</button>
-                                </p>
-                            </div>
-                        </form>
-                    </div>
-                </div>
-                <div class="level-right">
-                    <p class="level-item">
-                        {% if user.is_authenticated %}
-                            <a class="button is-rounded is-primary"
-                               href="{% url 'arc:create' %}"
-                               title="Add a new story arc">
-                                <span class="icon is-small">
-                                    <i class="fas fa-plus"></i>
-                                </span>
-                                <span>New</span>
-                            </a>
-                        {% endif %}
-                    </p>
-                </div>
-            </nav>
-            <!-- end navigation -->
-            <!-- arc columns -->
-            <div class="columns is-multiline">
-                {% for arc in arc_list %}
-                    <div class="column is-one-quarter has-text-centered">
-                        <!-- arc card -->
-                        <div class="card">
-                            <!-- card header -->
-                            <header class="card-header">
-                                <p class="card-header-title is is-centered">{{ arc }}</p>
-                            </header>
-                            <!-- end card header -->
-                            <!-- card image -->
-                            <div class="card-image">
-                                <figure class="image is-2by3">
-                                    {% if arc.image %}
-                                        {% thumbnail arc.image "320x480" crop="center" format="WEBP" as im %}
-                                            <img src="{{ im.url }}"
-                                                 width="{{ im.width }}"
-                                                 height="{{ im.height }}"
-                                                 alt="{{ arc.name }}">
-                                        {% endthumbnail %}
-                                    {% else %}
-                                        <img src="{% static 'site/img/image-not-found.webp' %}"
-                                             alt="No image for {{ arc.name }}">
-                                    {% endif %}
-                                </figure>
-                            </div>
-                            <!-- end card image -->
-                            <!-- card footer -->
-                            <footer class="card-footer">
-                                {% with count=arc.issue_count %}
-                                    {% if count %}
-                                        <a href="{% url 'arc:issue' arc.slug %}" class="card-footer-item">{{ count }} Issue{{ count|pluralize }}</a>
-                                    {% else %}
-                                        <p class="card-footer-item">0 Issues</p>
-                                    {% endif %}
-                                {% endwith %}
-                                <a href="{% url 'arc:detail' arc.slug %}" class="card-footer-item">Info</a>
-                            </footer>
-                            <!-- end card footer -->
-                        </div>
-                        <!-- end arc card -->
-                    </div>
-                {% endfor %}
-            </div>
-            <!-- end arc columns-->
+            {% include "comicsdb/partials/list_header.html" with title="Story Arc" count=page_obj.paginator.count search_url="arc:search" search_placeholder="Find an arc" create_url="arc:create" create_title="Add a new story arc" %}
+            {% include "comicsdb/partials/card_grid.html" with items=arc_list detail_url_name="arc:detail" image_ratio="is-2by3" default_image="site/img/image-not-found.webp" count_url_name="arc:issue" count_label="Issue" %}
         </section>
-        <!-- end arc list-->
     {% else %}
-        <section>
-            <p>No Story Arcs currently available. Do you want to create one?</p>
-            <a class="button is-rounded is-primary"
-               href="{% url 'arc:create' %}"
-               title="Add a new arc">New</a>
-        </section>
+        {% include "comicsdb/partials/empty_state.html" with item_type="Story Arc" create_url="arc:create" create_title="Add a new story arc" %}
     {% endif %}
 {% endblock %}
 {% block pagination %}
+    {% load pagination_tags %}
     {% include "comicsdb/partials/pagination.html" %}
 {% endblock %}
