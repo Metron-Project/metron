@@ -1,39 +1,55 @@
+{% extends "base.html" %}
 {% load static %}
-{% load django_simple_bulma %}
-<!DOCTYPE html>
-<html lang="en">
-    <head>
-        <meta charset="utf-8">
-        <meta name="viewport" content="width=device-width, initial-scale=1">
-        <title>{{ flatpage.title }}</title>
-        {% bulma %}
-        {% font_awesome %}
-        <link rel="stylesheet" href="{% static 'site/css/base.css' %}">
-    </head>
-    <body class="has-navbar-fixed-top">
-        <!-- navbar -->
-        {% include "partials/navbar.html" %}
-        <!-- end navbar -->
-        <!-- hero -->
-        <section class="hero">
-            <div class="hero-body">
-                <div class="container has-text-centered">
-                    <h1 class="title is-3">{{ flatpage.title }}</h1>
-                </div>
+{% block title %}{{ flatpage.title }} - Metron Comic Book Database{% endblock %}
+{% block sitedesc %}
+    <meta name="description"
+          content="{{ flatpage.content|striptags|truncatewords:30 }}">
+{% endblock %}
+{% block social_meta %}
+    {# Custom social meta for flatpages #}
+    <meta property="og:type" content="article">
+    <meta property="og:site_name" content="Metron Comic Book Database">
+    <meta property="og:title" content="{{ flatpage.title }}">
+    <meta property="og:description"
+          content="{{ flatpage.content|striptags|truncatewords:30 }}">
+    <meta property="og:url" content="{{ request.build_absolute_uri }}">
+    <meta name="twitter:card" content="summary">
+    <meta name="twitter:site" content="@MetronDB">
+    <meta name="twitter:title" content="{{ flatpage.title }}">
+    <meta name="twitter:description"
+          content="{{ flatpage.content|striptags|truncatewords:30 }}">
+{% endblock %}
+{% block content %}
+    {# Hero Section #}
+    <section class="hero is-medium is-link mb-5">
+        <div class="hero-body">
+            <div class="container has-text-centered">
+                <h1 class="title is-2">{{ flatpage.title }}</h1>
+                {% if flatpage.registration_required %}
+                    <p class="subtitle">
+                        <span class="icon" aria-hidden="true">
+                            <i class="fas fa-lock"></i>
+                        </span>
+                        <span>Authentication Required</span>
+                    </p>
+                {% endif %}
             </div>
-        </section>
-        <!-- end hero -->
-        <!-- content -->
-        <section>
-            <div class="container">
-                <div class="box">
-                    <div class="content">{{ flatpage.content }}</div>
-                </div>
-            </div>
-        </section>
-        <!-- end content -->
-        <!-- footer -->
-        {% include "partials/footer.html" %}
-        <!-- end footer -->
-    </body>
-</html>
+        </div>
+    </section>
+    {# Page Content #}
+    <div class="box">
+        <article class="content">{{ flatpage.content|safe }}</article>
+        {# Metadata Footer #}
+        {% if flatpage.enable_comments %}
+            <hr>
+            <footer class="has-text-grey is-size-7">
+                <p>
+                    <span class="icon is-small" aria-hidden="true">
+                        <i class="fas fa-calendar-alt"></i>
+                    </span>
+                    <span>Last updated: {% now "F j, Y" %}</span>
+                </p>
+            </footer>
+        {% endif %}
+    </div>
+{% endblock %}
