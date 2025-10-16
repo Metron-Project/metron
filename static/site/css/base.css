@@ -222,3 +222,101 @@ a:focus-visible {
 .footer .icon {
     vertical-align: middle;
 }
+
+/* ========================================
+   Home Page Enhancements
+   Add to: static/site/css/base.css
+   ======================================== */
+
+/* Equal height boxes in grid */
+.is-height-100 {
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+}
+
+.is-height-100 .content {
+    flex-grow: 1;
+}
+
+/* Ensure grid cells stretch to full height */
+.fixed-grid .cell {
+    display: flex;
+}
+
+/* Hero improvements */
+.hero .level {
+    max-width: 600px;
+    margin-left: auto;
+    margin-right: auto;
+}
+
+.hero .level-item .icon {
+    color: rgba(255, 255, 255, 0.9);
+}
+
+.hero .level-item .heading {
+    font-size: 0.875rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-top: 0.5rem;
+}
+
+/* Announcement styling */
+.announcements .notification {
+    animation: slideDown 0.3s ease-out;
+}
+
+/* Ensure links in colored boxes are visible and accessible */
+.has-text-link-invert a,
+.has-text-warning-invert a,
+.has-text-primary-invert a,
+.has-text-danger-invert a {
+    text-decoration: underline;
+    text-decoration-thickness: 1px;
+    text-underline-offset: 2px;
+}
+
+.has-text-link-invert a:hover,
+.has-text-warning-invert a:hover,
+.has-text-primary-invert a:hover,
+.has-text-danger-invert a:hover {
+    text-decoration-thickness: 2px;
+}
+
+/* Box title colors */
+.box .title {
+    margin-bottom: 1rem;
+}
+
+/* Mobile responsive improvements */
+@media screen and (max-width: 768px) {
+    .hero.is-medium .hero-body {
+        padding: 3rem 1.5rem;
+    }
+    
+    .hero .level-item {
+        flex-basis: 33.333%;
+    }
+    
+    .hero .level-item .icon {
+        font-size: 1.5rem;
+    }
+    
+    .hero .level-item .heading {
+        font-size: 0.75rem;
+    }
+}
+
+/* Recently edited section */
+.recently-edited-header {
+    border-bottom: 2px solid #dbdbdb;
+    padding-bottom: 1rem;
+    margin-bottom: 1.5rem;
+}
+
+/* Ensure proper spacing */
+.section + .section {
+    padding-top: 3rem;
+}
