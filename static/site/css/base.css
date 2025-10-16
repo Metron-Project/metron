@@ -1,18 +1,173 @@
+/* ========================================
+   Accessibility & UX Enhancements
+   ======================================== */
+
+/* Screen reader only content */
+.is-sr-only {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border-width: 0;
+}
+
+/* Focus visible for better keyboard navigation */
+*:focus-visible {
+    outline: 2px solid #3273dc;
+    outline-offset: 2px;
+}
+
+/* Remove focus for mouse users but keep for keyboard */
+*:focus:not(:focus-visible) {
+    outline: none;
+}
+
+/* Improve link focus states */
+a:focus-visible {
+    outline: 2px solid #3273dc;
+    outline-offset: 2px;
+    text-decoration: underline;
+}
+
+/* Button focus states */
+.button:focus-visible {
+    box-shadow: 0 0 0 0.125em rgba(50, 115, 220, 0.25);
+}
+
+/* Ensure sufficient color contrast for light text */
+.has-text-light {
+    color: #f5f5f5 !important;
+}
+
+.has-text-grey-light {
+    color: #b5b5b5 !important;
+}
+
+/* Ensure footer links are visible */
+.footer a {
+    text-decoration: underline;
+    text-decoration-skip-ink: auto;
+}
+
+.footer a:hover {
+    color: cadetblue;
+    text-decoration: none;
+}
+
+/* Improve navbar dropdown accessibility */
+.navbar-dropdown {
+    box-shadow: 0 8px 16px rgba(10, 10, 10, 0.1);
+}
+
+.navbar-item:focus-visible {
+    background-color: rgba(0, 0, 0, 0.1);
+}
+
+/* Messages notification improvements */
+.messages {
+    position: relative;
+    z-index: 50;
+    margin-bottom: 1.5rem;
+}
+
+.notification {
+    animation: slideDown 0.3s ease-out;
+}
+
+@keyframes slideDown {
+    from {
+        opacity: 0;
+        transform: translateY(-10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* External link indicator */
+.external-link-icon {
+    margin-left: 0.25em;
+    font-size: 0.75em;
+    vertical-align: super;
+}
+
+/* Reduce motion for users who prefer it */
+@media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
+    }
+    
+    .notification {
+        animation: none;
+    }
+}
+
+/* High contrast mode support */
+@media (prefers-contrast: high) {
+    .button {
+        border: 2px solid currentColor;
+    }
+    
+    a {
+        text-decoration: underline;
+    }
+}
+
+/* Print styles */
+@media print {
+    .navbar,
+    .footer,
+    .messages,
+    .button,
+    .pagination {
+        display: none !important;
+    }
+    
+    a[href]:after {
+        content: " (" attr(href) ")";
+    }
+    
+    a[href^="#"]:after,
+    a[href^="javascript:"]:after {
+        content: "";
+    }
+    
+    body {
+        font-size: 12pt;
+    }
+    
+    .container {
+        max-width: 100% !important;
+    }
+}
+
+/* Improved navbar logo sizing */
 #navbar-banner {
     background-color: transparent;
 }
 
 #navbar-banner img {
     max-height: 3rem;
+    width: auto;
 }
 
+/* Logo backgrounds with better contrast */
 #pycharm-logo {
-padding-bottom: 2px;
+    padding-bottom: 2px;
     background: url(https://resources.jetbrains.com/storage/products/company/brand/logos/PyCharm.png) no-repeat center;
     filter: invert(1);
     background-size: 68px 25.5px;
     background-position: -1px -2px;
-    color: #00000000;
+    color: transparent;
 }
 
 #django-logo {
@@ -21,7 +176,7 @@ padding-bottom: 2px;
     filter: grayscale(1) invert(0.02);
     background-size: 52px 25.5px;
     background-position: -1px -2px;
-    color: #00000000;
+    color: transparent;
 }
 
 #bulma-logo {
@@ -29,9 +184,41 @@ padding-bottom: 2px;
     height: 20px;
     background: url(https://bulma.io/assets/brand/Bulma%20Logo%20White.png) no-repeat center;
     background-size: 60px;
-    color: #00000000;
+    color: transparent;
 }
 
-footer a:hover{
-    color :cadetblue
+/* Improve navbar divider visibility */
+.navbar-divider {
+    background-color: rgba(255, 255, 255, 0.1);
+}
+
+/* Better spacing for navbar items with icons */
+.navbar-item .icon + span {
+    margin-left: 0.5em;
+}
+
+/* Ensure proper spacing in footer */
+.footer .columns {
+    margin-bottom: 0;
+}
+
+.footer .column {
+    padding-top: 1.5rem;
+    padding-bottom: 1.5rem;
+}
+
+/* List styling in footer */
+.footer ul {
+    list-style: none;
+    margin-left: 0;
+    padding-left: 0;
+}
+
+.footer li {
+    margin-bottom: 0.5rem;
+}
+
+/* Icon alignment in footer */
+.footer .icon {
+    vertical-align: middle;
 }

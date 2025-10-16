@@ -3,53 +3,57 @@
 <html lang="en">
     <head>
         <meta charset="utf-8">
-        {% block sitedesc %}{% endblock %}
-        {% block sitekeywords %}{% endblock %}
         <meta name="viewport" content="width=device-width, initial-scale=1">
+        {# SEO Meta Tags #}
         <title>
-            {% block title %}{% endblock %}
+            {% block title %}Metron Comic Book Database{% endblock %}
         </title>
-        <!-- Social: Twitter -->
-        <meta name="twitter:card" content="summary_large_image" />
-        <meta name="twitter:site" content="@MetronDB" />
-        <meta name="twitter:title" content="Metron Comic Book Database" />
-        <meta name="twitter:description"
-              content="A community-based comic book database." />
-        <meta name="twitter:image"
-              content="https://metron-static.nyc3.digitaloceanspaces.com/misc/metron-twitter-card.jpg" />
-        <meta name="twitter:image:alt"
-              content="A image of the New God Metron seated and pondering the universe." />
-        <!-- End Social: Twitter -->
-        <!-- Social: Open Graph -->
-        <meta property="og:type" content="website" />
-        <meta property="og:title" content="Metron Comic Book Database" />
-        <meta property="og:description"
-              content="A community-based comic book database." />
-        <meta property="og:url" content="https://metron.cloud/" />
-        <meta property="og:image"
-              content="https://metron-static.nyc3.digitaloceanspaces.com/misc/metron-twitter-card.jpg" />
-        <!-- End Social: Open Graph-->
-        <!-- Favicon -->
+        {% block sitedesc %}
+            <meta name="description"
+                  content="A community-based comic book database with comprehensive information about comics, creators, characters, and more.">
+        {% endblock %}
+        {% block sitekeywords %}
+            <meta name="keywords"
+                  content="comics, comic books, database, Marvel, DC, creators, characters">
+        {% endblock %}
+        {# Social Media Meta Tags #}
+        {% block social_meta %}
+            {% include "partials/social_meta.html" %}
+        {% endblock %}
+        {# Favicon #}
         <link rel="shortcut icon"
-              type="image/png"
-              href="{% static 'site/img/favicon.ico' %}" />
-        <!-- End Favicon -->
-        <!-- Resources -->
+              type="image/x-icon"
+              href="{% static 'site/img/favicon.ico' %}">
+        <link rel="icon"
+              type="image/x-icon"
+              href="{% static 'site/img/favicon.ico' %}">
+        {# Preconnect for performance #}
+        <link rel="preconnect"
+              href="https://metron-static.nyc3.digitaloceanspaces.com">
+        {# Styles #}
         {% load django_simple_bulma %}
         {% bulma %}
         {% font_awesome %}
         <link rel="stylesheet" href="{% static 'site/css/base.css' %}">
         {% block headcss %}{% endblock %}
+        {# Head Scripts #}
         {% block headscripts %}{% endblock %}
-        <!-- End Resources -->
     </head>
     <body class="has-navbar-fixed-top">
-        {% include "navbar.html" %}
-        <main class="section is-flex-grow-1">
+        {# Navigation #}
+        {% include "partials/navbar.html" %}
+        {# Main Content #}
+        <main id="main-content" class="section is-flex-grow-1">
             <div class="container">
+                {# Messages/Notifications #}
+                {% if messages %}
+                    {% include "partials/messages.html" %}
+                {% endif %}
+                {# Page Content #}
                 {% block content %}{% endblock %}
             </div>
         </main>
+        {# Pagination Section #}
         {% if is_paginated %}
             <section class="section">
                 <div class="container">
@@ -57,9 +61,12 @@
                 </div>
             </section>
         {% endif %}
-        {% include "footer.html" %}
-        {% block js %}
-        {% endblock js %}
+        {# Footer #}
+        {% include "partials/footer.html" %}
+        {# Scripts #}
+        {% block js %}{% endblock %}
         <script src="{% static 'site/js/bulma-navbar-burger.js' %}"></script>
+        {# Analytics or other tracking scripts can go here #}
+        {% block analytics %}{% endblock %}
     </body>
 </html>
