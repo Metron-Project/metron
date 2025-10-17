@@ -1,26 +1,61 @@
+{% comment %}
+    Custom template for Django's ClearableFileInput widget
+    Styled with Bulma CSS framework for consistency with Metron
+{% endcomment %}
 {% if widget.is_initial %}
-    <div class="field is-grouped">
-        <div class="control">
-            <label>{{ widget.initial_text }}:</label>
-            <a href="{{ widget.value.url }}">{{ widget.value }}</a>
-        </div>
-        {% if not widget.required %}
-            <div class="control">
-                <label class="checkbox">
-                    <input type="checkbox"
-                           name="{{ widget.checkbox_name }}"
-                           id="{{ widget.checkbox_id }}">
-                    {{ widget.clear_checkbox_label }}
-                </label>
+    {# Display current file #}
+    <div class="field mb-4">
+        <div class="notification is-light">
+            <div class="level is-mobile">
+                <div class="level-left">
+                    <div class="level-item">
+                        <span class="icon has-text-success">
+                            <i class="fas fa-file-check"></i>
+                        </span>
+                    </div>
+                    <div class="level-item">
+                        <div>
+                            <p class="is-size-7 has-text-grey">{{ widget.initial_text }}:</p>
+                            <p>
+                                <a href="{{ widget.value.url }}"
+                                   target="_blank"
+                                   rel="noopener noreferrer"
+                                   class="has-text-link">
+                                    <span class="icon is-small">
+                                        <i class="fas fa-external-link-alt"></i>
+                                    </span>
+                                    <span>{{ widget.value }}</span>
+                                </a>
+                            </p>
+                        </div>
+                    </div>
+                </div>
             </div>
-        {% endif %}
-    </div>
-    <div class="field is-grouped">
-        <div class="control">
-            <label>{{ widget.input_text }}:</label>
+            {# Clear checkbox #}
+            {% if not widget.required %}
+                <div class="field mt-3">
+                    <div class="control">
+                        <label class="checkbox">
+                            <input type="checkbox"
+                                   name="{{ widget.checkbox_name }}"
+                                   id="{{ widget.checkbox_id }}">
+                            <span class="has-text-danger ml-2">
+                                <span class="icon is-small">
+                                    <i class="fas fa-trash"></i>
+                                </span>
+                                {{ widget.clear_checkbox_label }}
+                            </span>
+                        </label>
+                    </div>
+                </div>
+            {% endif %}
         </div>
+    </div>
+    {# Change/Upload new file section #}
+    <div class="field">
+        <label class="label is-size-7 has-text-grey">{{ widget.input_text }}:</label>
         <div class="control">
-            <div class="file has-name">
+            <div class="file has-name is-fullwidth">
                 <label class="file-label">
                     <input class="file-input"
                            type="{{ widget.type }}"
@@ -30,15 +65,16 @@
                         <span class="file-icon">
                             <i class="fas fa-upload"></i>
                         </span>
-                        <span class="file-label">Choose a file…</span>
+                        <span class="file-label">Choose new file…</span>
                     </span>
-                    <span class="file-name" id="filename"></span>
+                    <span class="file-name" id="filename-{{ widget.name }}">No file selected</span>
                 </label>
             </div>
         </div>
     </div>
 {% else %}
-    <div class="file has-name">
+    {# No current file - standard file upload #}
+    <div class="file has-name is-fullwidth">
         <label class="file-label">
             <input class="file-input"
                    type="{{ widget.type }}"
@@ -50,7 +86,26 @@
                 </span>
                 <span class="file-label">Choose a file…</span>
             </span>
-            <span class="file-name" id="filename"></span>
+            <span class="file-name" id="filename-{{ widget.name }}">No file selected</span>
         </label>
     </div>
 {% endif %}
+<script>
+    // Update filename display when file is selected
+    (function() {
+        const fileInputs = document.querySelectorAll('input[name="{{ widget.name }}"]');
+        const fileNameDisplay = document.getElementById('filename-{{ widget.name }}');
+        
+        fileInputs.forEach(function(input) {
+            if (input.type === 'file' && fileNameDisplay) {
+                input.addEventListener('change', function(e) {
+                    if (e.target.files.length > 0) {
+                        fileNameDisplay.textContent = e.target.files[0].name;
+                    } else {
+                        fileNameDisplay.textContent = 'No file selected';
+                    }
+                });
+            }
+        });
+    })();
+</script>
