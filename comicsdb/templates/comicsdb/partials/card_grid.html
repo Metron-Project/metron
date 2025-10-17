@@ -67,8 +67,8 @@
                                 {% if count and count_url_name %}
                                     <a href="{% url count_url_name item.slug %}"
                                        class="card-footer-item"
-                                       aria-label="{{ count }} {{ count_label }}{{ count|pluralize }} for {{ item }}">
-                                        {{ count|intcomma }} {{ count_label }}{{ count|pluralize }}
+                                       aria-label="{{ count }} {{ count_label }} for {{ item }}">
+                                        {{ count|intcomma }} {{ count_label }}
                                     </a>
                                 {% else %}
                                     <span class="card-footer-item" aria-label="No {{ count_label|lower }}s">0 {{ count_label }}s</span>
