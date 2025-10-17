@@ -1,118 +1,20 @@
 {% extends parent_template|default:"base.html" %}
-{% load thumbnail %}
-{% load humanize %}
 {% load static %}
-{% block title %}
-    Characters
-{% endblock title %}
+{% block title %}Characters - Metron{% endblock %}
 {% block content %}
+    <header class="block has-text-centered">
+        <h1 class="title">Characters List</h1>
+    </header>
     {% if character_list %}
-        <!-- header -->
-        <header class="block has-text-centered">
-            <h1 class="title">Character{{ character_list.count|pluralize }} List</h1>
-        </header>
-        <!-- end header -->
-        <!-- character list -->
         <section>
-            <!-- navigation -->
-            <nav class="level">
-                <div class="level-left">
-                    <div class="level-item">
-                        <p class="subtitle is-5">
-                            <strong>{{ page_obj.paginator.count|intcomma }}</strong> Character{{ page_obj.paginator.count|pluralize }}
-                        </p>
-                    </div>
-                    <div class="level-item">
-                        <form action="{% url 'character:search' %}"
-                              method="get"
-                              accept-charset="utf-8">
-                            <div class="field has-addons">
-                                <p class="control">
-                                    <label>
-                                        <input class="input" name="q" type="search" placeholder="Find a character">
-                                    </label>
-                                </p>
-                                <p class="control">
-                                    <button class="button is-rounded">Search</button>
-                                </p>
-                            </div>
-                        </form>
-                    </div>
-                </div>
-                <div class="level-right">
-                    <p class="level-item">
-                        {% if user.is_authenticated %}
-                            <a class="button is-rounded is-primary"
-                               href="{% url 'character:create' %}"
-                               title="Add a new character">
-                                <span class="icon is-small">
-                                    <i class="fas fa-plus"></i>
-                                </span>
-                                <span>New</span>
-                            </a>
-                        {% endif %}
-                    </p>
-                </div>
-            </nav>
-            <!-- end navigation -->
-            <!-- character columns -->
-            <div class="columns is-multiline">
-                {% for character in character_list %}
-                    <div class="column is-one-quarter has-text-centered">
-                        <!-- card -->
-                        <div class="card">
-                            <!-- card header -->
-                            <header class="card-header">
-                                <p class="card-header-title is-centered">{{ character }}</p>
-                            </header>
-                            <!-- end card header -->
-                            <!-- card image -->
-                            <div class="card-image">
-                                <figure class="image is-2by3">
-                                    {% if character.image %}
-                                        {% thumbnail character.image "320x480" crop="top" format="WEBP" as im %}
-                                            <img src="{{ im.url }}"
-                                                 width="{{ im.width }}"
-                                                 height="{{ im.height }}"
-                                                 alt="{{ character.name }}">
-                                        {% endthumbnail %}
-                                    {% else %}
-                                        <img src="{% static 'site/img/image-not-found.webp' %}"
-                                             alt="No image for {{ character.name }}">
-                                    {% endif %}
-                                </figure>
-                            </div>
-                            <!-- end card image -->
-                            <!-- card footer -->
-                            <footer class="card-footer">
-                                {% with count=character.issue_count %}
-                                    {% if count %}
-                                        <a href="{% url 'character:issue' character.slug %}"
-                                           class="card-footer-item">{{ count|intcomma }} Issue{{ count|pluralize }}</a>
-                                    {% else %}
-                                        <p class="card-footer-item">0 Issues</p>
-                                    {% endif %}
-                                {% endwith %}
-                                <a href="{% url 'character:detail' character.slug %}"
-                                   class="card-footer-item">Info</a>
-                            </footer>
-                            <!-- end card footer -->
-                        </div>
-                        <!-- end card -->
-                    </div>
-                {% endfor %}
-            </div>
-            <!-- end character columns -->
+            {% include "comicsdb/partials/list_header.html" with title="Character" count=page_obj.paginator.count search_url="character:search" search_placeholder="Find a character" create_url="character:create" create_title="Add a new character" %}
+            {% include "comicsdb/partials/card_grid.html" with items=character_list detail_url_name="character:detail" image_ratio="is-2by3" default_image="site/img/image-not-found.webp" count_type="issue" count_url_name="character:issue" count_label="Issue" %}
         </section>
     {% else %}
-        <section>
-            <p>No characters currently available. Do you want to create one?</p>
-            <a class="button is-rounded is-primary"
-               href="{% url 'character:create' %}"
-               title="Add a new character">New</a>
-        </section>
+        {% include "comicsdb/partials/empty_state.html" with item_type="Character" create_url="character:create" create_title="Add a new character" %}
     {% endif %}
 {% endblock %}
 {% block pagination %}
-    {% include "comicsdb/pagination.html" %}
+    {% load pagination_tags %}
+    {% include "comicsdb/partials/pagination.html" %}
 {% endblock %}

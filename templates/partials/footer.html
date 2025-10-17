@@ -1,0 +1,102 @@
+{% comment %}
+    Site footer with contact information, credits, and license
+{% endcomment %}
+<footer class="footer has-background-dark has-text-light">
+    <div class="container">
+        <div class="columns">
+            {# Contact Information #}
+            <div class="column is-one-quarter">
+                <h2 class="title is-5 has-text-light">Contact Us</h2>
+                <nav aria-label="Contact links">
+                    <ul>
+                        <li class="mb-2">
+                            <a href="mailto:bpepple@metron.cloud"
+                               class="has-text-light"
+                               aria-label="Email site administrator">
+                                <span class="icon is-small" aria-hidden="true">
+                                    <i class="fas fa-envelope"></i>
+                                </span>
+                                <span>Email Site Admin</span>
+                            </a>
+                        </li>
+                        <li class="mb-2">
+                            <a href="https://matrix.to/#/#metrondb:matrix.org"
+                               class="has-text-light"
+                               target="_blank"
+                               rel="noopener noreferrer"
+                               aria-label="Join our Matrix chat">
+                                <span class="icon is-small" aria-hidden="true">
+                                    <i class="fas fa-comments"></i>
+                                </span>
+                                <span>Matrix Chat</span>
+                            </a>
+                        </li>
+                        <li class="mb-2">
+                            <a href="https://github.com/Metron-Project/metron/discussions"
+                               class="has-text-light"
+                               target="_blank"
+                               rel="noopener noreferrer"
+                               aria-label="Join GitHub discussions">
+                                <span class="icon is-small" aria-hidden="true">
+                                    <i class="fab fa-github"></i>
+                                </span>
+                                <span>GitHub Discussions</span>
+                            </a>
+                        </li>
+                    </ul>
+                </nav>
+            </div>
+            {# Credits and License #}
+            <div class="column is-three-quarters">
+                <div class="content has-text-light">
+                    {# Built With #}
+                    <p>
+                        Built with
+                        <a href="https://www.djangoproject.com/"
+                           target="_blank"
+                           rel="noopener noreferrer"
+                           class="has-text-light">
+                            <span id="django-logo">Django</span>
+                        </a>,
+                        <a href="https://bulma.io"
+                           target="_blank"
+                           rel="noopener noreferrer"
+                           class="has-text-light">
+                            <span id="bulma-logo">Bulma</span>
+                        </a>, and
+                        <a href="https://www.jetbrains.com/pycharm/"
+                           target="_blank"
+                           rel="noopener noreferrer"
+                           class="has-text-light">
+                            <span id="pycharm-logo">PyCharm</span>
+                        </a>
+                    </p>
+                    {# License #}
+                    <div class="mt-4">
+                        <p>
+                            This work is licensed under a
+                            <a href="http://creativecommons.org/licenses/by-sa/4.0/"
+                               target="_blank"
+                               rel="license noopener noreferrer"
+                               class="has-text-light">
+                                Creative Commons Attribution-ShareAlike 4.0 International License
+                            </a>, except where noted otherwise.
+                        </p>
+                        <a href="http://creativecommons.org/licenses/by-sa/4.0/"
+                           target="_blank"
+                           rel="license noopener noreferrer"
+                           aria-label="Creative Commons License">
+                            <img src="https://i.creativecommons.org/l/by-sa/4.0/88x31.png"
+                                 alt="Creative Commons License"
+                                 loading="lazy"
+                                 width="88"
+                                 height="31">
+                        </a>
+                    </div>
+                    {# Copyright #}
+                    <p class="mt-4 is-size-7 has-text-grey-light">&copy; {% now "Y" %} Metron Project. All rights reserved.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</footer>

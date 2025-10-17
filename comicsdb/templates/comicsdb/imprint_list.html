@@ -1,123 +1,20 @@
 {% extends parent_template|default:"base.html" %}
-{% load thumbnail %}
 {% load static %}
-{% load humanize %}
-{% block title %}
-    Imprints
-{% endblock title %}
+{% block title %}Imprints - Metron{% endblock %}
 {% block content %}
+    <header class="block has-text-centered">
+        <h1 class="title">Imprints List</h1>
+    </header>
     {% if imprint_list %}
-        <!-- header -->
-        <header class="block has-text-centered">
-            <h1 class="title">Imprint{{ imprint_list.count|pluralize }} List</h1>
-        </header>
-        <!-- end header -->
-        <!-- imprint list -->
         <section>
-            <!-- navigation -->
-            <nav class="level">
-                <!-- search box -->
-                <div class="level-left">
-                    <div class="level-item">
-                        <p class="subtitle is-5">
-                            <strong>{{ page_obj.paginator.count }}</strong> Imprint{{ page_obj.paginator.count|pluralize }}
-                        </p>
-                    </div>
-                    <div class="level-item">
-                        <form action="{% url 'imprint:search' %}"
-                              method="get"
-                              accept-charset="utf-8">
-                            <div class="field has-addons">
-                                <p class="control">
-                                    <label>
-                                        <input class="input" name="q" type="search" placeholder="Find a imprint">
-                                    </label>
-                                </p>
-                                <p class="control">
-                                    <button class="button is-rounded">Search</button>
-                                </p>
-                            </div>
-                        </form>
-                    </div>
-                </div>
-                <!-- end search box -->
-                <!-- add button -->
-                <div class="level-right">
-                    <p class="level-item">
-                        {% if user.is_authenticated %}
-                            <a class="button is-rounded is-primary"
-                               href="{% url 'imprint:create' %}"
-                               title="Add a new imprint">
-                                <span class="icon is-small">
-                                    <i class="fas fa-plus"></i>
-                                </span>
-                                <span>New</span>
-                            </a>
-                        {% endif %}
-                    </p>
-                </div>
-                <!-- end add button-->
-            </nav>
-            <!-- end navigation -->
-            <!-- imprint columns -->
-            <div class="columns is-multiline">
-                {% for imprint in imprint_list %}
-                    <div class="column is-one-quarter has-text-centered">
-                        <!-- series card -->
-                        <div class="card">
-                            <!-- card header -->
-                            <header class="card-header">
-                                <p class="card-header-title is-centered">{{ imprint }}</p>
-                            </header>
-                            <!-- end card header -->
-                            <!-- card image -->
-                            <div class="card-image">
-                                <figure class="image is-2by3">
-                                    {% if imprint.image %}
-                                        {% thumbnail imprint.image "320x480" crop="center" format="WEBP" as im %}
-                                            <img src="{{ im.url }}"
-                                                 width="{{ im.width }}"
-                                                 height="{{ im.height }}"
-                                                 alt="{{ imprint.name }}">
-                                        {% endthumbnail %}
-                                    {% else %}
-                                        <img src="{% static 'site/img/image-not-found.webp' %}"
-                                             alt="No image for {{ imprint.name }}">
-                                    {% endif %}
-                                </figure>
-                            </div>
-                            <!-- end card image -->
-                            <!-- card footer -->
-                            <footer class="card-footer">
-                                {% with count=imprint.series_count %}
-                                    {% if count %}
-                                        <a href="{% url 'imprint:series' imprint.slug %}"
-                                           class="card-footer-item">{{ count|intcomma }} Series</a>
-                                    {% else %}
-                                        <p class="card-footer-item">0 Series</p>
-                                    {% endif %}
-                                {% endwith %}
-                                <a href="{% url 'imprint:detail' imprint.slug %}"
-                                   class="card-footer-item">Info</a>
-                            </footer>
-                            <!-- end card footer -->
-                        </div>
-                        <!-- end series card -->
-                    </div>
-                {% endfor %}
-            </div>
-            <!-- end imprint columns -->
+            {% include "comicsdb/partials/list_header.html" with title="Imprint" count=page_obj.paginator.count search_url="imprint:search" search_placeholder="Find an imprint" create_url="imprint:create" create_title="Add a new imprint" %}
+            {% include "comicsdb/partials/card_grid.html" with items=imprint_list detail_url_name="imprint:detail" image_ratio="is-2by3" default_image="site/img/image-not-found.webp" count_url_name="imprint:series" count_label="Series" %}
         </section>
-        <!-- end imprint list -->
     {% else %}
-        <section>
-            <p>No Imprints currently available. Do you want to create one?</p>
-            <a class="button is-rounded is-primary"
-               href="{% url 'imprint:create' %}"
-               title="Add a new imprint">New</a>
-        </section>
+        {% include "comicsdb/partials/empty_state.html" with item_type="Imprint" create_url="imprint:create" create_title="Add a new imprint" %}
     {% endif %}
 {% endblock %}
 {% block pagination %}
-    {% include "comicsdb/pagination.html" %}
+    {% load pagination_tags %}
+    {% include "comicsdb/partials/pagination.html" %}
 {% endblock %}

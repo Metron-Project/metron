@@ -1,0 +1,62 @@
+{% load bulma_tags %}
+{% comment %}
+    Credits formset table
+    Usage: {% include "comicsdb/partials/credits_formset.html" with formset=credits %}
+{% endcomment %}
+<table class="table is-bordered is-striped is-narrow is-hoverable is-fullwidth"
+       id="creditsTable">
+    {{ formset.management_form }}
+    {% if formset.non_form_errors %}
+        <caption class="has-text-danger">
+            {% for error in formset.non_form_errors %}<strong>{{ error }}</strong>{% endfor %}
+        </caption>
+    {% endif %}
+    <thead>
+        <tr>
+            <th scope="col">Creator</th>
+            <th scope="col">
+                <span title="Hold down 'Control', or 'Command' on a Mac, to select more than one.">
+                    Role <i class="fas fa-question-circle" aria-hidden="true"></i>
+                </span>
+            </th>
+            <th scope="col">Delete</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for form in formset.forms %}
+            <tr>
+                {% for field in form.visible_fields %}
+                    <td>
+                        {% if form.instance.pk %}{{ form.DELETE }}{% endif %}
+                        {# Hidden fields and non-field errors in first column only #}
+                        {% if forloop.first %}
+                            {% for hidden in form.hidden_fields %}{{ hidden }}{% endfor %}
+                            {% for error in form.non_field_errors %}
+                                <p class="has-text-danger">
+                                    <strong>{{ error }}</strong>
+                                </p>
+                            {% endfor %}
+                        {% endif %}
+                        {# Field errors #}
+                        {% for error in field.errors %}
+                            <p class="has-text-danger">
+                                <strong>{{ error }}</strong>
+                            </p>
+                        {% endfor %}
+                        {# Field widget #}
+                        <div class="field">
+                            {% if field|is_field_type:"select" %}
+                                <div class="control is-expanded">
+                                    <div class="select{% if field|is_multiple %} is-multiple{% endif %}">{{ field }}</div>
+                                </div>
+                            {% else %}
+                                <div class="control">{{ field }}</div>
+                            {% endif %}
+                            {% if field.help_text %}<p class="help">{{ field.help_text|safe }}</p>{% endif %}
+                        </div>
+                    </td>
+                {% endfor %}
+            </tr>
+        {% endfor %}
+    </tbody>
+</table>

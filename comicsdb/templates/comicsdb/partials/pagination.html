@@ -1,0 +1,63 @@
+{% load pagination_tags %}
+{% comment %}
+    Generic pagination component that preserves all query parameters.
+    Works with any list view that uses Django's pagination.
+    
+    Required context variables:
+    - is_paginated: Boolean indicating if pagination is needed
+    - page_obj: Current page object
+    - paginator: Paginator object
+    - request: HttpRequest object (for query params)
+{% endcomment %}
+{% if is_paginated %}
+    <nav class="pagination is-rounded is-centered"
+         role="navigation"
+         aria-label="pagination">
+        {# Previous Page Button #}
+        {% if page_obj.has_previous %}
+            <a class="pagination-previous"
+               href="?{% url_replace page=page_obj.previous_page_number %}"
+               aria-label="Go to previous page">Previous</a>
+        {% else %}
+            <span class="pagination-previous"
+                  title="This is the first page"
+                  disabled
+                  aria-disabled="true">Previous</span>
+        {% endif %}
+        {# Next Page Button #}
+        {% if page_obj.has_next %}
+            <a class="pagination-next"
+               href="?{% url_replace page=page_obj.next_page_number %}"
+               aria-label="Go to next page">Next page</a>
+        {% else %}
+            <span class="pagination-next"
+                  title="This is the last page"
+                  disabled
+                  aria-disabled="true">Next page</span>
+        {% endif %}
+        {# Page Numbers #}
+        <ul class="pagination-list">
+            {% get_pagination_range page_obj paginator as page_range %}
+            {% for page_num in page_range %}
+                {% if page_num == 'ellipsis' %}
+                    <li>
+                        <span class="pagination-ellipsis" aria-hidden="true">&hellip;</span>
+                    </li>
+                {% elif page_num == page_obj.number %}
+                    <li>
+                        <a class="pagination-link is-current"
+                           href="?{% url_replace page=page_num %}"
+                           aria-label="Page {{ page_num }}"
+                           aria-current="page">{{ page_num }}</a>
+                    </li>
+                {% else %}
+                    <li>
+                        <a class="pagination-link"
+                           href="?{% url_replace page=page_num %}"
+                           aria-label="Go to page {{ page_num }}">{{ page_num }}</a>
+                    </li>
+                {% endif %}
+            {% endfor %}
+        </ul>
+    </nav>
+{% endif %}

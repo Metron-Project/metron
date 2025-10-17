@@ -1,0 +1,60 @@
+{% load bulma_tags %}
+{% comment %}
+    Attribution formset table
+    Usage: {% include "comicsdb/partials/attribution_formset.html" with formset=attribution %}
+{% endcomment %}
+<table class="table is-bordered is-striped is-narrow is-hoverable is-fullwidth"
+       id="attributionTable">
+    {{ formset.management_form }}
+    {% if formset.non_form_errors %}
+        <caption class="has-text-danger">
+            {% for error in formset.non_form_errors %}<strong>{{ error }}</strong>{% endfor %}
+        </caption>
+    {% endif %}
+    <thead>
+        <tr>
+            <th scope="col">Source</th>
+            <th scope="col">URL</th>
+            <th scope="col">Delete</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for form in formset.forms %}
+            <tr>
+                {% for field in form.visible_fields %}
+                    <td>
+                        {% if form.instance.pk %}{{ form.DELETE }}{% endif %}
+                        {# Hidden fields and non-field errors in first column only #}
+                        {% if forloop.first %}
+                            {% for hidden in form.hidden_fields %}{{ hidden }}{% endfor %}
+                            {% for error in form.non_field_errors %}
+                                <p class="has-text-danger">
+                                    <strong>{{ error }}</strong>
+                                </p>
+                            {% endfor %}
+                        {% endif %}
+                        {# Field errors #}
+                        {% for error in field.errors %}
+                            <p class="has-text-danger">
+                                <strong>{{ error }}</strong>
+                            </p>
+                        {% endfor %}
+                        {# Field widget #}
+                        <div class="field" data-field-name="{{ field.name }}">
+                            <div class="control is-expanded">
+                                {% if field|is_field_type:"select" %}
+                                    <span class="select{% if field.errors %} is-danger{% endif %} is-fullwidth">{{ field }}</span>
+                                {% elif field|is_field_type:'input' %}
+                                    {{ field|add_field_class:"input is-fullwidth" }}
+                                {% else %}
+                                    {{ field }}
+                                {% endif %}
+                            </div>
+                            {% if field.help_text %}<p class="help">{{ field.help_text|safe }}</p>{% endif %}
+                        </div>
+                    </td>
+                {% endfor %}
+            </tr>
+        {% endfor %}
+    </tbody>
+</table>

@@ -1,0 +1,39 @@
+{% comment %}
+    Empty state message with optional create button
+    Usage: {% include "comicsdb/partials/empty_state.html" with item_type="Character" ... %}
+    
+    Parameters:
+    - item_type: Type of item (e.g., "Character", "Publisher")
+    - create_url: URL name for create action (optional)
+    - create_title: Title for create button
+{% endcomment %}
+<section class="hero">
+    <div class="hero-body">
+        <div class="container has-text-centered">
+            <div class="content">
+                <span class="icon is-large has-text-grey-light" aria-hidden="true">
+                    <i class="fas fa-inbox fa-3x"></i>
+                </span>
+                <h2 class="title is-4">No {{ item_type }}s Available</h2>
+                <p class="subtitle is-6 has-text-grey">
+                    {% if user.is_authenticated and create_url %}
+                        Get started by creating your first {{ item_type|lower }}.
+                    {% else %}
+                        No {{ item_type|lower }}s have been added yet.
+                    {% endif %}
+                </p>
+                {% if user.is_authenticated and create_url %}
+                    <a class="button is-rounded is-primary is-medium"
+                       href="{% url create_url %}"
+                       title="{{ create_title }}"
+                       aria-label="{{ create_title }}">
+                        <span class="icon" aria-hidden="true">
+                            <i class="fas fa-plus"></i>
+                        </span>
+                        <span>Create {{ item_type }}</span>
+                    </a>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</section>

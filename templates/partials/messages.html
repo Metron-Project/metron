@@ -1,0 +1,65 @@
+{% load bulma_tags %}
+{% comment %}
+    Django messages display component
+    Shows success, error, warning, and info messages
+    Usage: Automatically included in base.html when messages exist
+{% endcomment %}
+<div class="messages">
+    {% for message in messages %}
+        <div class="notification is-{{ message.tags|bulma_message_tag }} is-light"
+             role="alert">
+            <button class="delete" aria-label="close notification"></button>
+            <div class="media">
+                <div class="media-left">
+                    <span class="icon is-medium" aria-hidden="true">
+                        {% if message.tags == 'success' %}
+                            <i class="fas fa-check-circle fa-lg"></i>
+                        {% elif message.tags == 'error' or message.tags == 'danger' %}
+                            <i class="fas fa-exclamation-circle fa-lg"></i>
+                        {% elif message.tags == 'warning' %}
+                            <i class="fas fa-exclamation-triangle fa-lg"></i>
+                        {% else %}
+                            <i class="fas fa-info-circle fa-lg"></i>
+                        {% endif %}
+                    </span>
+                </div>
+                <div class="media-content">
+                    <div class="content">
+                        <p>
+                            <strong>{{ message }}</strong>
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    {% endfor %}
+</div>
+<script>
+// Auto-dismiss notifications after 5 seconds
+document.addEventListener('DOMContentLoaded', function() {
+    'use strict';
+    
+    const notifications = document.querySelectorAll('.notification');
+    
+    notifications.forEach(function(notification) {
+        // Delete button functionality
+        const deleteBtn = notification.querySelector('.delete');
+        if (deleteBtn) {
+            deleteBtn.addEventListener('click', function() {
+                notification.remove();
+            });
+        }
+        
+        // Auto-dismiss after 5 seconds (except for errors)
+        if (!notification.classList.contains('is-danger')) {
+            setTimeout(function() {
+                notification.style.transition = 'opacity 0.5s';
+                notification.style.opacity = '0';
+                setTimeout(function() {
+                    notification.remove();
+                }, 500);
+            }, 5000);
+        }
+    });
+});
+</script>

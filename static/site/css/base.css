@@ -1,18 +1,173 @@
+/* ========================================
+   Accessibility & UX Enhancements
+   ======================================== */
+
+/* Screen reader only content */
+.is-sr-only {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border-width: 0;
+}
+
+/* Focus visible for better keyboard navigation */
+*:focus-visible {
+    outline: 2px solid #3273dc;
+    outline-offset: 2px;
+}
+
+/* Remove focus for mouse users but keep for keyboard */
+*:focus:not(:focus-visible) {
+    outline: none;
+}
+
+/* Improve link focus states */
+a:focus-visible {
+    outline: 2px solid #3273dc;
+    outline-offset: 2px;
+    text-decoration: underline;
+}
+
+/* Button focus states */
+.button:focus-visible {
+    box-shadow: 0 0 0 0.125em rgba(50, 115, 220, 0.25);
+}
+
+/* Ensure sufficient color contrast for light text */
+.has-text-light {
+    color: #f5f5f5 !important;
+}
+
+.has-text-grey-light {
+    color: #b5b5b5 !important;
+}
+
+/* Ensure footer links are visible */
+.footer a {
+    text-decoration: underline;
+    text-decoration-skip-ink: auto;
+}
+
+.footer a:hover {
+    color: cadetblue;
+    text-decoration: none;
+}
+
+/* Improve navbar dropdown accessibility */
+.navbar-dropdown {
+    box-shadow: 0 8px 16px rgba(10, 10, 10, 0.1);
+}
+
+.navbar-item:focus-visible {
+    background-color: rgba(0, 0, 0, 0.1);
+}
+
+/* Messages notification improvements */
+.messages {
+    position: relative;
+    z-index: 50;
+    margin-bottom: 1.5rem;
+}
+
+.notification {
+    animation: slideDown 0.3s ease-out;
+}
+
+@keyframes slideDown {
+    from {
+        opacity: 0;
+        transform: translateY(-10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* External link indicator */
+.external-link-icon {
+    margin-left: 0.25em;
+    font-size: 0.75em;
+    vertical-align: super;
+}
+
+/* Reduce motion for users who prefer it */
+@media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
+    }
+    
+    .notification {
+        animation: none;
+    }
+}
+
+/* High contrast mode support */
+@media (prefers-contrast: high) {
+    .button {
+        border: 2px solid currentColor;
+    }
+    
+    a {
+        text-decoration: underline;
+    }
+}
+
+/* Print styles */
+@media print {
+    .navbar,
+    .footer,
+    .messages,
+    .button,
+    .pagination {
+        display: none !important;
+    }
+    
+    a[href]:after {
+        content: " (" attr(href) ")";
+    }
+    
+    a[href^="#"]:after,
+    a[href^="javascript:"]:after {
+        content: "";
+    }
+    
+    body {
+        font-size: 12pt;
+    }
+    
+    .container {
+        max-width: 100% !important;
+    }
+}
+
+/* Improved navbar logo sizing */
 #navbar-banner {
     background-color: transparent;
 }
 
 #navbar-banner img {
     max-height: 3rem;
+    width: auto;
 }
 
+/* Logo backgrounds with better contrast */
 #pycharm-logo {
-padding-bottom: 2px;
+    padding-bottom: 2px;
     background: url(https://resources.jetbrains.com/storage/products/company/brand/logos/PyCharm.png) no-repeat center;
     filter: invert(1);
     background-size: 68px 25.5px;
     background-position: -1px -2px;
-    color: #00000000;
+    color: transparent;
 }
 
 #django-logo {
@@ -21,7 +176,7 @@ padding-bottom: 2px;
     filter: grayscale(1) invert(0.02);
     background-size: 52px 25.5px;
     background-position: -1px -2px;
-    color: #00000000;
+    color: transparent;
 }
 
 #bulma-logo {
@@ -29,9 +184,139 @@ padding-bottom: 2px;
     height: 20px;
     background: url(https://bulma.io/assets/brand/Bulma%20Logo%20White.png) no-repeat center;
     background-size: 60px;
-    color: #00000000;
+    color: transparent;
 }
 
-footer a:hover{
-    color :cadetblue
+/* Improve navbar divider visibility */
+.navbar-divider {
+    background-color: rgba(255, 255, 255, 0.1);
+}
+
+/* Better spacing for navbar items with icons */
+.navbar-item .icon + span {
+    margin-left: 0.5em;
+}
+
+/* Ensure proper spacing in footer */
+.footer .columns {
+    margin-bottom: 0;
+}
+
+.footer .column {
+    padding-top: 1.5rem;
+    padding-bottom: 1.5rem;
+}
+
+/* List styling in footer */
+.footer ul {
+    list-style: none;
+    margin-left: 0;
+    padding-left: 0;
+}
+
+.footer li {
+    margin-bottom: 0.5rem;
+}
+
+/* Icon alignment in footer */
+.footer .icon {
+    vertical-align: middle;
+}
+
+/* ========================================
+   Home Page Enhancements
+   Add to: static/site/css/base.css
+   ======================================== */
+
+/* Equal height boxes in grid */
+.is-height-100 {
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+}
+
+.is-height-100 .content {
+    flex-grow: 1;
+}
+
+/* Ensure grid cells stretch to full height */
+.fixed-grid .cell {
+    display: flex;
+}
+
+/* Hero improvements */
+.hero .level {
+    max-width: 600px;
+    margin-left: auto;
+    margin-right: auto;
+}
+
+.hero .level-item .icon {
+    color: rgba(255, 255, 255, 0.9);
+}
+
+.hero .level-item .heading {
+    font-size: 0.875rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-top: 0.5rem;
+}
+
+/* Announcement styling */
+.announcements .notification {
+    animation: slideDown 0.3s ease-out;
+}
+
+/* Ensure links in colored boxes are visible and accessible */
+.has-text-link-invert a,
+.has-text-warning-invert a,
+.has-text-primary-invert a,
+.has-text-danger-invert a {
+    text-decoration: underline;
+    text-decoration-thickness: 1px;
+    text-underline-offset: 2px;
+}
+
+.has-text-link-invert a:hover,
+.has-text-warning-invert a:hover,
+.has-text-primary-invert a:hover,
+.has-text-danger-invert a:hover {
+    text-decoration-thickness: 2px;
+}
+
+/* Box title colors */
+.box .title {
+    margin-bottom: 1rem;
+}
+
+/* Mobile responsive improvements */
+@media screen and (max-width: 768px) {
+    .hero.is-medium .hero-body {
+        padding: 3rem 1.5rem;
+    }
+    
+    .hero .level-item {
+        flex-basis: 33.333%;
+    }
+    
+    .hero .level-item .icon {
+        font-size: 1.5rem;
+    }
+    
+    .hero .level-item .heading {
+        font-size: 0.75rem;
+    }
+}
+
+/* Recently edited section */
+.recently-edited-header {
+    border-bottom: 2px solid #dbdbdb;
+    padding-bottom: 1rem;
+    margin-bottom: 1.5rem;
+}
+
+/* Ensure proper spacing */
+.section + .section {
+    padding-top: 3rem;
 }

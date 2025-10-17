@@ -1,0 +1,60 @@
+{% load thumbnail %}
+{% load static %}
+{% load humanize %}
+{% comment %}
+    Series-specific card grid (uses first_issue_cover instead of series.image)
+    Usage: {% include "comicsdb/partials/series_card_grid.html" with items=series_list %}
+{% endcomment %}
+<div class="columns is-multiline">
+    {% for series in items %}
+        <div class="column is-one-quarter">
+            <article class="card" aria-labelledby="card-title-{{ series.slug }}">
+                {# Card Header #}
+                <header class="card-header">
+                    <h2 id="card-title-{{ series.slug }}"
+                        class="card-header-title is-centered">{{ series }}</h2>
+                </header>
+                {# Card Image #}
+                <div class="card-image">
+                    <figure class="image is-2by3">
+                        <a href="{% url 'series:detail' series.slug %}"
+                           aria-label="View details for {{ series }}">
+                            {% with cover=series.first_issue_cover %}
+                                {% if cover %}
+                                    {% thumbnail cover "320x480" crop="center" format="WEBP" as im %}
+                                        <img src="{{ im.url }}"
+                                             width="{{ im.width }}"
+                                             height="{{ im.height }}"
+                                             alt="{{ series }}"
+                                             loading="lazy">
+                                    {% endthumbnail %}
+                                {% else %}
+                                    <img src="{% static 'site/img/image-not-found.webp' %}"
+                                         alt="No image available for {{ series }}"
+                                         loading="lazy">
+                                {% endif %}
+                            {% endwith %}
+                        </a>
+                    </figure>
+                </div>
+                {# Card Footer #}
+                <footer class="card-footer">
+                    {% with count=series.issue_count %}
+                        {% if count %}
+                            <a href="{% url 'series:issue' series.slug %}"
+                               class="card-footer-item"
+                               aria-label="{{ count }} issue{{ count|pluralize }} for {{ series }}">
+                                {{ count|intcomma }} issue{{ count|pluralize }}
+                            </a>
+                        {% else %}
+                            <span class="card-footer-item" aria-label="No issues">0 issues</span>
+                        {% endif %}
+                    {% endwith %}
+                    <a href="{% url 'series:detail' series.slug %}"
+                       class="card-footer-item"
+                       aria-label="View information for {{ series }}">Info</a>
+                </footer>
+            </article>
+        </div>
+    {% endfor %}
+</div>

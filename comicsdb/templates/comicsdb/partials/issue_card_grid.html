@@ -1,0 +1,57 @@
+{% load thumbnail %}
+{% load static %}
+{% load is_new %}
+{% comment %}
+    Issue-specific card grid with "New!" tags and cover date
+    Usage: {% include "comicsdb/partials/issue_card_grid.html" with items=issue_list %}
+{% endcomment %}
+<div class="columns is-multiline">
+    {% for issue in items %}
+        <div class="column is-one-quarter">
+            <article class="card" aria-labelledby="card-title-{{ issue.slug }}">
+                {# Card Header #}
+                <header class="card-header">
+                    {% with issue.created_on|is_new as is_new %}
+                        <h2 id="card-title-{{ issue.slug }}"
+                            class="card-header-title is-centered">
+                            {{ issue }}
+                            {% if is_new %}&nbsp;<span class="tag is-primary is-rounded" aria-label="Recently added">New!</span>{% endif %}
+                        </h2>
+                    {% endwith %}
+                </header>
+                {# Card Image #}
+                <div class="card-image">
+                    <figure class="image is-2by3">
+                        <a href="{% url 'issue:detail' issue.slug %}"
+                           aria-label="View details for {{ issue }}">
+                            {% if issue.image %}
+                                {% thumbnail issue.image "320x480" crop="center" format="WEBP" as im %}
+                                    <img src="{{ im.url }}"
+                                         width="{{ im.width }}"
+                                         height="{{ im.height }}"
+                                         alt="{{ issue }}"
+                                         loading="lazy">
+                                {% endthumbnail %}
+                            {% else %}
+                                <img src="{% static 'site/img/image-not-found.webp' %}"
+                                     alt="No image available for {{ issue }}"
+                                     loading="lazy">
+                            {% endif %}
+                        </a>
+                    </figure>
+                </div>
+                {# Card Footer #}
+                <footer class="card-footer">
+                    <span class="card-footer-item">
+                        <time datetime="{{ issue.cover_date|date:'Y-m' }}">
+                            {{ issue.cover_date|date:"M Y" }}
+                        </time>
+                    </span>
+                    <a href="{% url 'issue:detail' issue.slug %}"
+                       class="card-footer-item"
+                       aria-label="View information for {{ issue }}">Info</a>
+                </footer>
+            </article>
+        </div>
+    {% endfor %}
+</div>

@@ -1,0 +1,6 @@
+{% comment %}
+    Displays field errors and help text
+    Requires 'field' context variable
+{% endcomment %}
+{% for error in field.errors %}<p class="help is-danger {{ form.error_css_class }}">{{ error }}</p>{% endfor %}
+{% if field.help_text %}<p class="help">{{ field.help_text|safe }}</p>{% endif %}
