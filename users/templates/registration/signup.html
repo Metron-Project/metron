@@ -1,50 +1,97 @@
 {% extends parent_template|default:"base.html" %}
 {% load bulma_tags %}
-{% block title %}Sign Up{% endblock %}
-{% block headscripts %}<script src="https://hcaptcha.com/1/api.js" async defer></script>{% endblock %}
+{% load static %}
+{% block title %}
+    Sign Up - Metron
+{% endblock title %}
+{% block headscripts %}
+    <script src="https://hcaptcha.com/1/api.js" async defer></script>
+{% endblock headscripts %}
 {% block content %}
-    <h1 class="title">Sign up</h1>
-    <form method="post">
-        {% csrf_token %}
-        {% for field in form.hidden_fields %}{{ field }}{% endfor %}
-        <!-- Error notifications -->
-        {% if form.errors %}
-            {% for field in form %}
-                {% for error in field.errors %}
-                    <div class="notification is-danger">
-                        <button class="delete"></button>
-                        <strong>{{ error|escape }}</strong>
+    {# Page Header #}
+    <header class="block has-text-centered mt-5">
+        <span class="icon is-large has-text-primary">
+            <i class="fas fa-user-plus fa-3x"></i>
+        </span>
+        <h1 class="title is-3 mt-4">Join Metron</h1>
+        <p class="subtitle has-text-grey">Create an account to contribute to the comic book database</p>
+    </header>
+    {# Sign Up Form #}
+    <div class="columns is-centered">
+        <div class="column is-one-third">
+            <div class="box">
+                <form method="post">
+                    {% csrf_token %}
+                    {% for field in form.hidden_fields %}{{ field }}{% endfor %}
+                    {# Form Errors #}
+                    {% if form.non_field_errors %}
+                        <div class="notification is-danger is-light">
+                            <button class="delete" aria-label="close"></button>
+                            {% for error in form.non_field_errors %}<p>{{ error }}</p>{% endfor %}
+                        </div>
+                    {% endif %}
+                    {# Form Fields #}
+                    {% for field in form.visible_fields %}
+                        <div class="field" data-field-name="{{ field.name }}">
+                            <label class="label{% if field.field.required %} {{ form.required_css_class }}{% endif %}"
+                                   for="{{ field.id_for_label }}">{{ field.label }}</label>
+                            <div class="control has-icons-left">
+                                {{ field|add_field_class:'input' }}
+                                <span class="icon is-small is-left">
+                                    {% if field.name == 'username' %}
+                                        <i class="fas fa-user"></i>
+                                    {% elif field.name == 'email' %}
+                                        <i class="fas fa-envelope"></i>
+                                    {% elif 'password' in field.name %}
+                                        <i class="fas fa-lock"></i>
+                                    {% else %}
+                                        <i class="fas fa-info-circle"></i>
+                                    {% endif %}
+                                </span>
+                            </div>
+                            {% for error in field.errors %}<p class="help is-danger {{ form.error_css_class }}">{{ error }}</p>{% endfor %}
+                            {% if field.help_text %}<p class="help">{{ field.help_text|safe }}</p>{% endif %}
+                        </div>
+                    {% endfor %}
+                    {# hCaptcha #}
+                    <div class="field">
+                        <div class="h-captcha" data-sitekey="32255603-3eb7-4897-b7f7-65b8874a261e"></div>
                     </div>
-                {% endfor %}
-            {% endfor %}
-            {% for error in form.non_field_errors %}
-                <div class="notification is-danger">
-                    <button class="delete"></button>
-                    <strong>{{ error|escape }}</strong>
-                </div>
-            {% endfor %}
-        {% endif %}
-        <!-- end notifications -->
-        <!-- form fields -->
-        {% for field in form.visible_fields %}
-            <div class="field" data-field-name="{{ field.name }}">
-                <label class="label{% if field.field.required %} {{ form.required_css_class }}{% endif %}"
-                       for="{{ field.id_for_label }}">{{ field.label }}</label>
-                <div class="control">
-                    {{ field|add_field_class:'input' }}
-                    {% for error in field.errors %}<span class="help is-danger {{ form.error_css_class }}">{{ error }}</span>{% endfor %}
-                    {% if field.help_text %}<p class="help">{{ field.help_text|safe }}</p>{% endif %}
+                    {# Submit Button #}
+                    <div class="field mt-5">
+                        <div class="control">
+                            <button class="button is-primary is-fullwidth" type="submit">
+                                <span class="icon">
+                                    <i class="fas fa-user-plus"></i>
+                                </span>
+                                <span>Create Account</span>
+                            </button>
+                        </div>
+                    </div>
+                    {# Additional Links #}
+                    <div class="field mt-4">
+                        <p class="has-text-centered">
+                            Already have an account?
+                            <a href="{% url 'login' %}" class="has-text-link has-text-weight-bold">Log in here</a>
+                        </p>
+                    </div>
+                </form>
+            </div>
+            {# Information Box #}
+            <div class="notification is-info is-light">
+                <p class="has-text-weight-bold mb-2">Why create an account?</p>
+                <div class="content">
+                    <ul>
+                        <li>Contribute to the comic book database</li>
+                        <li>Add and edit comic information</li>
+                        <li>Access the API for developers</li>
+                        <li>Join our community of comic enthusiasts</li>
+                    </ul>
                 </div>
             </div>
-        {% endfor %}
-        <div class="field">
-            <div class="h-captcha" data-sitekey="32255603-3eb7-4897-b7f7-65b8874a261e"></div>
         </div>
-        <div class="field">
-            <div class="control">
-                <button class="button is-rounded is-rounded is-link" type="submit">Sign up</button>
-            </div>
-        </div>
-        <!-- end form fields -->
-    </form>
+    </div>
+{% endblock %}
+{% block js %}
+    <script src="{% static 'site/js/bulma-notifications.js' %}"></script>
 {% endblock %}
