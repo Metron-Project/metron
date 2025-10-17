@@ -1,0 +1,590 @@
+/* ========================================
+   User Profile & Account Styles
+   Add to: static/site/css/users.css
+   ======================================== */
+
+/* Profile Image Enhancements */
+.media-left .image.is-128x128 img {
+    border: 3px solid #dbdbdb;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.media-left .image.is-128x128 img:hover {
+    transform: scale(1.05);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+/* User Stats Level */
+.media-content .level {
+    background-color: #f5f5f5;
+    border-radius: 6px;
+    padding: 1rem;
+}
+
+.media-content .level .level-item {
+    padding: 0 1rem;
+}
+
+.media-content .level .heading {
+    text-transform: uppercase;
+    font-size: 0.75rem;
+    letter-spacing: 0.5px;
+    font-weight: 600;
+    color: #7a7a7a;
+}
+
+/* User Role Tags */
+.title .tag {
+    vertical-align: middle;
+    margin-left: 0.5rem;
+    font-size: 0.75rem;
+}
+
+.title .tag .icon {
+    margin-right: 0.25rem;
+}
+
+/* Bio Box Styling */
+.box.has-background-light {
+    border-left: 4px solid #3273dc;
+}
+
+/* Form Field Icons */
+.control.has-icons-left .icon {
+    color: #7a7a7a;
+}
+
+.control.has-icons-left .input:focus ~ .icon,
+.control.has-icons-left .textarea:focus ~ .icon {
+    color: #3273dc;
+}
+
+/* File Upload Styling */
+.file.has-name {
+    max-width: 100%;
+}
+
+.file.has-name .file-name {
+    max-width: 100%;
+}
+
+/* Contribution Stats Box */
+.box .notification.is-light {
+    border: 2px dashed #dbdbdb;
+    background-color: #fafafa;
+}
+
+/* Account Settings Icons */
+.content .icon {
+    vertical-align: middle;
+}
+
+/* Form Divider */
+.divider {
+    height: 1px;
+    background-color: #dbdbdb;
+    margin: 2rem 0;
+}
+
+/* Welcome Notification */
+.notification.is-primary.is-light {
+    animation: slideDown 0.5s ease-out;
+}
+
+/* Responsive Adjustments */
+@media screen and (max-width: 768px) {
+    .media-left .image.is-128x128 {
+        margin-bottom: 1rem;
+    }
+    
+    .media-content .level {
+        flex-direction: column;
+    }
+    
+    .media-content .level .level-item {
+        padding: 0.5rem 0;
+    }
+    
+    .title .tag {
+        display: block;
+        margin: 0.5rem 0;
+        width: fit-content;
+    }
+}
+
+/* Print Styles for User Profile */
+@media print {
+    .buttons,
+    .notification.is-primary.is-light,
+    nav.level {
+        display: none !important;
+    }
+    
+    .media-left .image.is-128x128 img {
+        border: 1px solid #000;
+    }
+}
+
+/* Enhanced Focus States for Accessibility */
+.button:focus-visible,
+a:focus-visible {
+    outline: 2px solid #3273dc;
+    outline-offset: 2px;
+}
+
+/* Improved Tag Contrast */
+.tag.is-primary {
+    background-color: #3273dc;
+    color: #fff;
+}
+
+.tag.is-info {
+    background-color: #209cee;
+    color: #fff;
+}
+
+.tag.is-success {
+    background-color: #48c774;
+    color: #fff;
+}
+
+.tag.is-warning {
+    background-color: #ffdd57;
+    color: rgba(0, 0, 0, 0.7);
+}
+
+/* Loading Animation for Profile Images */
+.image.is-128x128 img[loading="lazy"] {
+    background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+    background-size: 200% 100%;
+    animation: loading 1.5s ease-in-out infinite;
+}
+
+@keyframes loading {
+    0% {
+        background-position: 200% 0;
+    }
+    100% {
+        background-position: -200% 0;
+    }
+}
+
+.image.is-128x128 img[loading="lazy"].loaded {
+    animation: none;
+    background: transparent;
+}
+
+/* Smooth Transitions */
+.box,
+.notification,
+.button {
+    transition: all 0.2s ease;
+}
+
+.box:hover {
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+/* Form Field Groups */
+.field.is-grouped {
+    flex-wrap: wrap;
+    justify-content: center;
+}
+
+.field.is-grouped .control {
+    margin: 0.25rem;
+}
+
+/* Help Text Styling */
+.help {
+    font-size: 0.875rem;
+    margin-top: 0.25rem;
+}
+
+.help.is-danger {
+    font-weight: 600;
+}
+
+/* Required Field Indicator */
+.label.required::after {
+    content: " *";
+    color: #f14668;
+}
+
+/* Success Message Animation */
+@keyframes successPulse {
+    0%, 100% {
+        transform: scale(1);
+    }
+    50% {
+        transform: scale(1.02);
+    }
+}
+
+.notification.is-success {
+    animation: successPulse 0.5s ease-out;
+}
+
+/* Slide Down Animation */
+@keyframes slideDown {
+    from {
+        opacity: 0;
+        transform: translateY(-20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* Password Strength Indicator (if implemented) */
+.password-strength {
+    height: 4px;
+    border-radius: 2px;
+    margin-top: 0.5rem;
+    transition: all 0.3s ease;
+}
+
+.password-strength.weak {
+    width: 33%;
+    background-color: #f14668;
+}
+
+.password-strength.medium {
+    width: 66%;
+    background-color: #ffdd57;
+}
+
+.password-strength.strong {
+    width: 100%;
+    background-color: #48c774;
+}
+
+/* Empty State Styling */
+.notification.is-light .icon.fa-chart-bar {
+    opacity: 0.3;
+}
+
+/* Profile Completion Indicator */
+.profile-completion {
+    margin-bottom: 1.5rem;
+}
+
+.profile-completion .progress {
+    margin-top: 0.5rem;
+}
+
+/* Bio Character Count */
+.character-count {
+    text-align: right;
+    font-size: 0.75rem;
+    color: #7a7a7a;
+    margin-top: 0.25rem;
+}
+
+.character-count.warning {
+    color: #ffdd57;
+}
+
+.character-count.danger {
+    color: #f14668;
+}
+
+/* Email Confirmation Badge */
+.email-status {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+/* Contribution Stats Grid */
+.stats-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+    gap: 1rem;
+    margin-top: 1rem;
+}
+
+.stat-item {
+    text-align: center;
+    padding: 1rem;
+    background-color: #f5f5f5;
+    border-radius: 6px;
+    transition: background-color 0.2s ease;
+}
+
+.stat-item:hover {
+    background-color: #e8e8e8;
+}
+
+.stat-item .stat-value {
+    font-size: 2rem;
+    font-weight: bold;
+    color: #3273dc;
+    display: block;
+    margin-bottom: 0.5rem;
+}
+
+.stat-item .stat-label {
+    font-size: 0.875rem;
+    color: #7a7a7a;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+/* Activity Timeline */
+.activity-timeline {
+    position: relative;
+    padding-left: 2rem;
+}
+
+.activity-timeline::before {
+    content: '';
+    position: absolute;
+    left: 0.5rem;
+    top: 0;
+    bottom: 0;
+    width: 2px;
+    background-color: #dbdbdb;
+}
+
+.activity-item {
+    position: relative;
+    padding-bottom: 1.5rem;
+}
+
+.activity-item::before {
+    content: '';
+    position: absolute;
+    left: -1.625rem;
+    top: 0.25rem;
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    background-color: #3273dc;
+    border: 2px solid #fff;
+}
+
+.activity-item:last-child {
+    padding-bottom: 0;
+}
+
+/* Dark Mode Support (if implemented) */
+@media (prefers-color-scheme: dark) {
+    .media-left .image.is-128x128 img {
+        border-color: #4a4a4a;
+    }
+    
+    .media-content .level {
+        background-color: #2b2b2b;
+    }
+    
+    .box.has-background-light {
+        background-color: #363636 !important;
+        border-left-color: #209cee;
+    }
+    
+    .stat-item {
+        background-color: #363636;
+    }
+    
+    .stat-item:hover {
+        background-color: #4a4a4a;
+    }
+}
+
+/* Accessibility: High Contrast Mode */
+@media (prefers-contrast: high) {
+    .media-left .image.is-128x128 img {
+        border: 3px solid currentColor;
+    }
+    
+    .tag {
+        border: 2px solid currentColor;
+    }
+    
+    .box {
+        border: 2px solid currentColor;
+    }
+}
+
+/* Reduced Motion */
+@media (prefers-reduced-motion: reduce) {
+    .media-left .image.is-128x128 img,
+    .box,
+    .notification,
+    .button {
+        transition: none;
+    }
+    
+    .notification.is-success,
+    .notification.is-primary.is-light {
+        animation: none;
+    }
+    
+    .media-left .image.is-128x128 img:hover {
+        transform: none;
+    }
+}
+
+/* Print Optimization */
+@media print {
+    .media-content .level {
+        background-color: transparent;
+        border: 1px solid #000;
+    }
+    
+    .tag {
+        border: 1px solid #000;
+    }
+    
+    .box {
+        page-break-inside: avoid;
+    }
+}
+
+/* Mobile Optimizations */
+@media screen and (max-width: 480px) {
+    .field.is-grouped.is-grouped-centered {
+        flex-direction: column;
+    }
+    
+    .field.is-grouped .control {
+        width: 100%;
+    }
+    
+    .field.is-grouped .button {
+        width: 100%;
+    }
+    
+    .media-content .level .title.is-6 {
+        font-size: 0.875rem;
+    }
+}
+
+/* Form Validation Visual Feedback */
+.input.is-danger,
+.textarea.is-danger,
+.select.is-danger select {
+    animation: shake 0.3s ease-in-out;
+}
+
+@keyframes shake {
+    0%, 100% {
+        transform: translateX(0);
+    }
+    25% {
+        transform: translateX(-5px);
+    }
+    75% {
+        transform: translateX(5px);
+    }
+}
+
+/* Loading State for Form Submission */
+.button.is-loading::after {
+    border-color: transparent transparent currentColor currentColor;
+}
+
+/* Success State Visual Enhancement */
+.form-success {
+    position: relative;
+}
+
+.form-success::before {
+    content: '\2713';
+    position: absolute;
+    right: 1rem;
+    top: 50%;
+    transform: translateY(-50%);
+    color: #48c774;
+    font-size: 1.5rem;
+    font-weight: bold;
+    animation: checkmarkPop 0.3s ease-out;
+}
+
+@keyframes checkmarkPop {
+    0% {
+        transform: translateY(-50%) scale(0);
+    }
+    50% {
+        transform: translateY(-50%) scale(1.2);
+    }
+    100% {
+        transform: translateY(-50%) scale(1);
+    }
+}
+
+/* Tooltip Styling for Help Icons */
+.help-tooltip {
+    position: relative;
+    display: inline-block;
+    cursor: help;
+}
+
+.help-tooltip .tooltip-text {
+    visibility: hidden;
+    width: 200px;
+    background-color: #363636;
+    color: #fff;
+    text-align: center;
+    border-radius: 6px;
+    padding: 0.5rem;
+    position: absolute;
+    z-index: 1;
+    bottom: 125%;
+    left: 50%;
+    margin-left: -100px;
+    opacity: 0;
+    transition: opacity 0.3s;
+    font-size: 0.875rem;
+}
+
+.help-tooltip:hover .tooltip-text {
+    visibility: visible;
+    opacity: 1;
+}
+
+/* Avatar Upload Preview */
+.avatar-preview {
+    margin-top: 1rem;
+    text-align: center;
+}
+
+.avatar-preview img {
+    max-width: 200px;
+    max-height: 200px;
+    border-radius: 50%;
+    border: 3px solid #dbdbdb;
+}
+
+/* Form Section Headers */
+.form-section-header {
+    border-bottom: 2px solid #3273dc;
+    padding-bottom: 0.5rem;
+    margin: 2rem 0 1rem 0;
+    font-weight: 600;
+    color: #363636;
+}
+
+/* Inline Form Feedback */
+.field-feedback {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    margin-top: 0.5rem;
+    font-size: 0.875rem;
+}
+
+.field-feedback.is-success {
+    color: #48c774;
+}
+
+.field-feedback.is-danger {
+    color: #f14668;
+}
+
+.field-feedback .icon {
+    flex-shrink: 0;
+}
