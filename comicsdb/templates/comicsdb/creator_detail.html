@@ -6,105 +6,70 @@
     {{ creator.name }}
 {% endblock title %}
 {% block content %}
-    <!-- creator title -->
-    <nav class="level">
+    {# Page Header #}
+    <header class="block">
+        <h1 class="title">{{ creator.name }}</h1>
+    </header>
+    {# Navigation Bar #}
+    <nav class="level mb-5" aria-label="Creator navigation">
         <div class="level-left">
-            <div class="level-item">
-                <p class="title">{{ creator.name }}</p>
-            </div>
+            {% if navigation.previous_creator %}
+                <a class="button is-rounded is-link"
+                   href="{% url 'creator:detail' navigation.previous_creator.slug %}"
+                   aria-label="Go to {{ navigation.previous_creator }}">
+                    <span class="icon is-small"><i class="fas fa-arrow-left" aria-hidden="true"></i></span>
+                    <span>Previous Creator</span>
+                </a>
+            {% else %}
+                <button class="button is-rounded" disabled aria-disabled="true">
+                    <span class="icon is-small"><i class="fas fa-arrow-left" aria-hidden="true"></i></span>
+                    <span>Previous Creator</span>
+                </button>
+            {% endif %}
+            {% if navigation.next_creator %}
+                <a class="button is-rounded is-link ml-2"
+                   href="{% url 'creator:detail' navigation.next_creator.slug %}"
+                   aria-label="Go to {{ navigation.next_creator }}">
+                    <span>Next Creator</span>
+                    <span class="icon is-small"><i class="fas fa-arrow-right" aria-hidden="true"></i></span>
+                </a>
+            {% else %}
+                <button class="button is-rounded ml-2" disabled aria-disabled="true">
+                    <span>Next Creator</span>
+                    <span class="icon is-small"><i class="fas fa-arrow-right" aria-hidden="true"></i></span>
+                </button>
+            {% endif %}
         </div>
-    </nav>
-    <!--  end creator title -->
-    <!-- creator nav -->
-    <nav class="level">
-        <div class="level-left">
-            <div class="level-item">
-                {% if navigation.previous_creator %}
-                    <a class="button is-rounded is-link"
-                       href="{% url 'creator:detail' navigation.previous_creator.slug %}">
-                        <span class="icon is-small">
-                            <i class="fas fa-arrow-left"></i>
-                        </span>
-                        <span>Previous Creator</span>
-                    </a>
-                {% else %}
-                    <a class="button is-rounded" disabled>
-                        <span class="icon is-small">
-                            <i class="fas fa-arrow-left"></i>
-                        </span>
-                        <span>Previous Creator</span>
-                    </a>
-                {% endif %}
-            </div>
-            <div class="level-item">
-                {% if navigation.next_creator %}
-                    <a class="button is-rounded is-link"
-                       href="{% url 'creator:detail' navigation.next_creator.slug %}">
-                        <span>Next Creator</span>
-                        <span class="icon is-small">
-                            <i class="fas fa-arrow-right"></i>
-                        </span>
-                    </a>
-                {% else %}
-                    <a class="button is-rounded" disabled>
-                        <span>Next Creator</span>
-                        <span class="icon is-small">
-                            <i class="fas fa-arrow-right"></i>
-                        </span>
-                    </a>
-                {% endif %}
-            </div>
-        </div>
-        <div class="level-right">
-            {% if user.is_authenticated %}
-                <p class="level-item">
+        {% if user.is_authenticated %}
+            <div class="level-right">
+                <div class="buttons">
                     <a class="button is-rounded is-primary"
                        href="{% url 'creator:create' %}"
                        title="Add a new creator">
-                        <span class="icon is-small">
-                            <i class="fas fa-plus"></i>
-                        </span>
+                        <span class="icon is-small"><i class="fas fa-plus" aria-hidden="true"></i></span>
                         <span>New</span>
                     </a>
-                </p>
-                <p class="level-item">
                     <a class="button is-rounded is-info"
                        href="{% url 'creator:update' creator.slug %}"
-                       title="Edit creator">
-                        <span class="icon is-small">
-                            <i class="fas fa-edit"></i>
-                        </span>
+                       title="Edit this creator">
+                        <span class="icon is-small"><i class="fas fa-edit" aria-hidden="true"></i></span>
                         <span>Edit</span>
                     </a>
-                </p>
-                {% if perms.comicsdb.delete_creator %}
-                    <p class="level-item">
+                    {% if perms.comicsdb.delete_creator %}
                         <a class="button is-rounded is-danger"
                            href="{% url 'creator:delete' creator.slug %}"
-                           title="Delete creator">
-                            <span class="icon is-small">
-                                <i class="fas fa-trash"></i>
-                            </span>
+                           title="Delete this creator">
+                            <span class="icon is-small"><i class="fas fa-trash" aria-hidden="true"></i></span>
                             <span>Delete</span>
                         </a>
-                    </p>
-                {% else %}
-                    <p class="level-item">
-                        <a class="button is-rounded is-danger" title="Delete creator" disabled>
-                            <span class="icon is-small">
-                                <i class="fas fa-trash"></i>
-                            </span>
-                            <span>Delete</span>
-                        </a>
-                    </p>
-                {% endif %}
-            {% endif %}
-        </div>
+                    {% endif %}
+                </div>
+            </div>
+        {% endif %}
     </nav>
-    <!-- end of creator nav -->
-    <!-- main page content -->
+    {# Main Content #}
     <div class="columns">
-        <!-- creator image -->
+        {# Creator Image #}
         <div class="column is-one-quarter">
             <div class="box">
                 <figure class="image is-square">
@@ -113,120 +78,118 @@
                             <img src="{{ im.url }}"
                                  width="{{ im.width }}"
                                  height="{{ im.height }}"
-                                 alt="{{ creator.name }}">
+                                 alt="{{ creator.name }}"
+                                 loading="lazy">
                         {% endthumbnail %}
                     {% else %}
                         <img src="{% static 'site/img/creator-not-found.webp' %}"
-                             alt="No image for {{ creator.name }}">
+                             alt="No image for {{ creator.name }}"
+                             loading="lazy">
                     {% endif %}
                 </figure>
             </div>
         </div>
-        <!-- end of creator image -->
-        <!-- center column -->
+        {# Creator Information #}
         <div class="column">
-            <!-- summary -->
+            {# Summary #}
             <div class="box">
-                <h1 class="title is-5">Summary</h1>
+                <h2 class="title is-5">Summary</h2>
                 {% if creator.desc %}
-                    <p>{{ creator.desc|linebreaksbr }}</p>
-                    <br />
+                    <div class="content">{{ creator.desc|linebreaksbr }}</div>
                 {% else %}
-                    <p>
-                        No information available.
-                        <p>
-                            <br />
-                        {% endif %}
-                        <div class="content is-small is-italic">
-                            Last edited on {{ creator.modified }} by
-                            <a href="{% url 'user-detail' creator.edited_by.id %}">{{ creator.edited_by.username }}</a>
-                        </div>
-                    </div>
-                    <!-- end of summary -->
-                    <!-- series -->
-                    {% with series=credits %}
-                        {% if series %}
-                            <div class="box">
-                                <h1 class="title is-5">Series</h1>
-                                <div class="content">
-                                    <ul>
-                                        {% for i in series %}
-                                            <li>
-                                                <a href="{% url 'series:detail' slug=i.issue__series__slug %}">
-                                                    {{ i.issue__series__name }}
-                                                    {% if i.issue__series__series_type == 10 %}
-                                                        TPB
-                                                    {% elif i.issue__series__series_type == 9 %}
-                                                        GN
-                                                    {% elif i.issue__series__series_type == 8 %}
-                                                        HC
-                                                    {% elif i.issues__series__series_type == 12 %}
-                                                        Digital
-                                                    {% endif %}
-                                                    ({{ i.issue__series__year_began }})
-                                                </a>:
-                                                <a href="{% url 'creator:series' creator=creator.slug series=i.issue__series__slug %}">
-                                                    {{ i.issue__count }} issue{{ i.issue__count|pluralize }}
-                                                </a>
-                                            </li>
-                                        {% endfor %}
-                                    </ul>
-                                </div>
-                            </div>
-                        {% endif %}
-                    {% endwith %}
-                    <!-- end series -->
-                    <!-- attribution -->
-                    {% with attribution=creator.attribution.all %}
-                        {% if attribution|length > 0 %}
-                            {% include "comicsdb/attribution.html" with object=attribution %}
-                        {% endif %}
-                    {% endwith %}
-                    <!-- end attribution-->
-                </div>
-                <!-- end of center column -->
-                <!-- misc info -->
-                <div class="column is-one-fifth">
-                    <div class="box">
-                        <h1 class="title is-6">Creator Details</h1>
-                        {% if creator.birth %}
-                            <p>
-                                <b>Birth:</b> {{ creator.birth|date:"SHORT_DATE_FORMAT" }}
-                            </p>
-                        {% endif %}
-                        {% if creator.death %}
-                            <p>
-                                <b>Death:</b> {{ creator.death|date:"SHORT_DATE_FORMAT" }}
-                            </p>
-                        {% endif %}
-                        <p>
-                            <b>Number of Issue:</b> {{ creator.issue_count|intcomma }}
-                        </p>
-                        {% if creator.alias %}
-                            {% with aliases=creator.alias %}
-                                <p>
-                                    <b>Alias{{ aliases|pluralize:"es" }}:</b>
-                                    {{ aliases|join:", " }}
-                                </p>
-                            {% endwith %}
-                        {% endif %}
-                        <br />
-                        <p>
-                            <b>Metron ID:</b> {{ creator.id }}
-                        </p>
-                        {% if creator.cv_id %}
-                            <p>
-                                <b>Comic Vine ID:</b> {{ creator.cv_id }}
-                            </p>
-                        {% endif %}
-                        {% if creator.gcd_id %}
-                            <p>
-                                <b>GCD ID:</b> {{ creator.gcd_id }}
-                            </p>
-                        {% endif %}
-                    </div>
-                </div>
-                <!-- end misc info -->
+                    <p class="has-text-grey">No information available.</p>
+                {% endif %}
+                <footer class="content is-small is-italic mt-4">
+                    Last edited on <time datetime="{{ creator.modified|date:'c' }}">{{ creator.modified }}</time> by
+                    <a href="{% url 'user-detail' creator.edited_by.id %}">{{ creator.edited_by.username }}</a>
+                </footer>
             </div>
-            <!-- end of main page content -->
-        {% endblock %}
+            {# Series Credits #}
+            {% if credits %}
+                <div class="box">
+                    <h2 class="title is-5">Series</h2>
+                    <div class="content">
+                        <ul>
+                            {% for series in credits %}
+                                <li>
+                                    <a href="{% url 'series:detail' slug=series.issue__series__slug %}">
+                                        {{ series.issue__series__name }}
+                                        {% if series.issue__series__series_type == 10 %}
+                                            TPB
+                                        {% elif series.issue__series__series_type == 9 %}
+                                            GN
+                                        {% elif series.issue__series__series_type == 8 %}
+                                            HC
+                                        {% elif series.issue__series__series_type == 12 %}
+                                            Digital
+                                        {% endif %}
+                                        ({{ series.issue__series__year_began }})
+                                    </a>:
+                                    <a href="{% url 'creator:series' creator=creator.slug series=series.issue__series__slug %}">
+                                        {{ series.issue__count }} issue{{ series.issue__count|pluralize }}
+                                    </a>
+                                </li>
+                            {% endfor %}
+                        </ul>
+                    </div>
+                </div>
+            {% endif %}
+            {# Attribution #}
+            {% with attribution=creator.attribution.all %}
+                {% if attribution %}
+                    {% include "comicsdb/attribution.html" with object=attribution %}
+                {% endif %}
+            {% endwith %}
+        </div>
+        {# Metadata Sidebar #}
+        <div class="column is-one-fifth">
+            <div class="box">
+                <h2 class="title is-6">Creator Details</h2>
+                <dl>
+                    {% if creator.birth %}
+                        <dt class="has-text-weight-bold">Birth:</dt>
+                        <dd class="mb-3">
+                            <time datetime="{{ creator.birth|date:'Y-m-d' }}">{{ creator.birth|date:"SHORT_DATE_FORMAT" }}</time>
+                        </dd>
+                    {% endif %}
+                    {% if creator.death %}
+                        <dt class="has-text-weight-bold">Death:</dt>
+                        <dd class="mb-3">
+                            <time datetime="{{ creator.death|date:'Y-m-d' }}">{{ creator.death|date:"SHORT_DATE_FORMAT" }}</time>
+                        </dd>
+                    {% endif %}
+                    <dt class="has-text-weight-bold">Number of Issues:</dt>
+                    <dd class="mb-3">
+                        {{ creator.issue_count|intcomma }}
+                    </dd>
+                    {% if creator.alias %}
+                        <dt class="has-text-weight-bold">Alias{{ creator.alias|pluralize:"es" }}:</dt>
+                        <dd class="mb-3">
+                            {{ creator.alias|join:", " }}
+                        </dd>
+                    {% endif %}
+                </dl>
+                {# IDs #}
+                <h3 class="title is-6 mt-4">Identification Numbers</h3>
+                <dl>
+                    <dt class="has-text-weight-bold">Metron:</dt>
+                    <dd class="mb-2">
+                        {{ creator.id }}
+                    </dd>
+                    {% if creator.cv_id %}
+                        <dt class="has-text-weight-bold">Comic Vine:</dt>
+                        <dd class="mb-2">
+                            {{ creator.cv_id }}
+                        </dd>
+                    {% endif %}
+                    {% if creator.gcd_id %}
+                        <dt class="has-text-weight-bold">GCD:</dt>
+                        <dd>
+                            {{ creator.gcd_id }}
+                        </dd>
+                    {% endif %}
+                </dl>
+            </div>
+        </div>
+    </div>
+{% endblock %}
