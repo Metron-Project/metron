@@ -1,17 +1,84 @@
-{% extends "base.html" %}
+{% extends parent_template|default:"base.html" %}
+{% load static %}
+{% block title %}
+    Page Not Found - Metron
+{% endblock title %}
 {% block content %}
-    <section>
-        <div class="container">
-            <div class="columns is-centered">
-                <div class="column has-text-centered">
-                    <div class="box">
-                        <h1 class="title">500 - Internal Server Error</h1>
-                        <p class="subtitle">
-                            Something went wrong at our end. Please try again shortly, or if the problem persists, please let us know
-                            on <a href="https://matrix.to/#/#metrondb:matrix.org">Matrix</a>.
-                        </p>
-                        <a class="button is-rounded is-primary" href="{% url 'home' %}">Home</a>
-                        <br />
+    <section class="hero is-medium">
+        <div class="hero-body">
+            <div class="container has-text-centered">
+                {# Error Icon and Code #}
+                <div class="mb-5">
+                    <span class="icon is-large has-text-warning">
+                        <i class="fas fa-exclamation-triangle fa-5x"></i>
+                    </span>
+                    <h1 class="title is-1 mt-4 has-text-grey-dark">404</h1>
+                    <h2 class="subtitle is-3 has-text-grey">Page Not Found</h2>
+                </div>
+                {# Error Message #}
+                <div class="columns is-centered">
+                    <div class="column is-half">
+                        <div class="box">
+                            <div class="content">
+                                <p class="is-size-5 mb-4">
+                                    Sorry, we couldn't find the page you're looking for. It might have been moved, deleted, or never existed.
+                                </p>
+                                {# Helpful Actions #}
+                                <div class="buttons is-centered mt-5">
+                                    <a class="button is-primary is-medium" href="{% url 'home' %}">
+                                        <span class="icon">
+                                            <i class="fas fa-home"></i>
+                                        </span>
+                                        <span>Go to Home</span>
+                                    </a>
+                                    <button class="button is-light is-medium" onclick="history.back()">
+                                        <span class="icon">
+                                            <i class="fas fa-arrow-left"></i>
+                                        </span>
+                                        <span>Go Back</span>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                        {# Suggestions #}
+                        <div class="notification is-info is-light">
+                            <p class="has-text-weight-bold mb-3">You might want to:</p>
+                            <div class="content">
+                                <ul class="has-text-left">
+                                    <li>Check the URL for typos</li>
+                                    <li>Use the search feature to find what you're looking for</li>
+                                    <li>
+                                        Browse our <a href="{% url 'issue:list' %}">issues</a>, <a href="{% url 'series:list' %}">series</a>, or <a href="{% url 'character:list' %}">characters</a>
+                                    </li>
+                                    <li>
+                                        Return to the <a href="{% url 'home' %}">homepage</a>
+                                    </li>
+                                </ul>
+                            </div>
+                        </div>
+                        {# Contact Section #}
+                        <div class="box">
+                            <p class="has-text-weight-bold mb-2">Still need help?</p>
+                            <p class="mb-3">If you believe this is an error, please let us know:</p>
+                            <div class="buttons is-centered">
+                                <a class="button is-link is-outlined is-small"
+                                   href="https://github.com/Metron-Project/metron/issues/new/choose"
+                                   target="_blank"
+                                   rel="noopener noreferrer">
+                                    <span class="icon">
+                                        <i class="fas fa-bug"></i>
+                                    </span>
+                                    <span>Report Issue</span>
+                                </a>
+                                <a class="button is-link is-outlined is-small"
+                                   href="mailto:bpepple@metron.cloud">
+                                    <span class="icon">
+                                        <i class="fas fa-envelope"></i>
+                                    </span>
+                                    <span>Contact Us</span>
+                                </a>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
