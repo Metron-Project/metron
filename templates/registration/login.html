@@ -1,34 +1,84 @@
 {% extends "base.html" %}
 {% load bulma_tags %}
-{% block page-title %}
-    Login Form
-{% endblock page-title %}
+{% load static %}
+{% block title %}
+    Login - Metron
+{% endblock title %}
 {% block content %}
-    <div class="container">
-        <h1 class="title">Login</h1>
-        <form method="post">
-            {% csrf_token %}
-            {% for field in form.visible_fields %}
-                <div class="field" data-field-name="{{ field.name }}">
-                    <label class="label{% if field.field.required %} {{ form.required_css_class }}{% endif %}"
-                           for="{{ field.id_for_label }}">{{ field.label }}</label>
-                    <div class="control">
-                        {{ field|add_field_class:'input' }}
-                        {% for error in field.errors %}<span class="help is-danger {{ form.error_css_class }}">{{ error }}</span>{% endfor %}
-                        {% if field.help_text %}<p class="help">{{ field.help_text|safe }}</p>{% endif %}
+    {# Page Header #}
+    <header class="block has-text-centered mt-5">
+        <span class="icon is-large has-text-link">
+            <i class="fas fa-sign-in-alt fa-3x"></i>
+        </span>
+        <h1 class="title is-3 mt-4">Login to Metron</h1>
+        <p class="subtitle has-text-grey">Access your account to contribute to the database</p>
+    </header>
+    {# Login Form #}
+    <div class="columns is-centered">
+        <div class="column is-one-third">
+            <div class="box">
+                <form method="post">
+                    {% csrf_token %}
+                    {# Form Errors #}
+                    {% if form.non_field_errors %}
+                        <div class="notification is-danger is-light">
+                            <button class="delete" aria-label="close"></button>
+                            {% for error in form.non_field_errors %}<p>{{ error }}</p>{% endfor %}
+                        </div>
+                    {% endif %}
+                    {# Username Field #}
+                    {% for field in form.visible_fields %}
+                        <div class="field" data-field-name="{{ field.name }}">
+                            <label class="label{% if field.field.required %} {{ form.required_css_class }}{% endif %}"
+                                   for="{{ field.id_for_label }}">{{ field.label }}</label>
+                            <div class="control has-icons-left">
+                                {{ field|add_field_class:'input' }}
+                                <span class="icon is-small is-left">
+                                    {% if field.name == 'username' %}
+                                        <i class="fas fa-user"></i>
+                                    {% elif field.name == 'password' %}
+                                        <i class="fas fa-lock"></i>
+                                    {% endif %}
+                                </span>
+                            </div>
+                            {% for error in field.errors %}<p class="help is-danger {{ form.error_css_class }}">{{ error }}</p>{% endfor %}
+                            {% if field.help_text %}<p class="help">{{ field.help_text|safe }}</p>{% endif %}
+                        </div>
+                    {% endfor %}
+                    {# Submit Button #}
+                    <div class="field mt-5">
+                        <div class="control">
+                            <button class="button is-link is-fullwidth" type="submit">
+                                <span class="icon">
+                                    <i class="fas fa-sign-in-alt"></i>
+                                </span>
+                                <span>Login</span>
+                            </button>
+                        </div>
                     </div>
-                </div>
-            {% endfor %}
-            <div class="field">
-                <div class="control">
-                    <button class="button is-rounded is-link" type="submit">Login</button>
-                </div>
+                    {# Additional Links #}
+                    <div class="field mt-4">
+                        <p class="has-text-centered">
+                            <a href="{% url 'password_reset' %}" class="has-text-link">
+                                <span class="icon is-small">
+                                    <i class="fas fa-question-circle"></i>
+                                </span>
+                                <span>Forgot your password?</span>
+                            </a>
+                        </p>
+                    </div>
+                </form>
             </div>
-            <div class="field">
+            {# Sign Up Prompt #}
+            <div class="notification is-info is-light has-text-centered">
                 <p>
-                    <a href="{% url 'password_reset' %}">Lost password?</a>
+                    Don't have an account?
+                    <a href="{% url 'signup' %}" class="has-text-weight-bold">Sign up here</a>
                 </p>
             </div>
-        </form>
+        </div>
     </div>
+{% endblock %}
+{% block js %}
+    <script src="{% static 'site/js/bulma-notifications.js' %}"></script>
 {% endblock %}
