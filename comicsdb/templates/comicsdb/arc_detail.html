@@ -5,105 +5,70 @@
     {{ arc.name }}
 {% endblock title %}
 {% block content %}
-    <!-- arc title -->
-    <nav class="level">
+    {# Page Header #}
+    <header class="block">
+        <h1 class="title">{{ arc }}</h1>
+    </header>
+    {# Navigation Bar #}
+    <nav class="level mb-5" aria-label="Story arc navigation">
         <div class="level-left">
-            <div class="level-item">
-                <p class="title">{{ arc }}</p>
-            </div>
+            {% if navigation.previous_arc %}
+                <a class="button is-rounded is-link"
+                   href="{% url 'arc:detail' navigation.previous_arc.slug %}"
+                   aria-label="Go to {{ navigation.previous_arc }}">
+                    <span class="icon is-small"><i class="fas fa-arrow-left" aria-hidden="true"></i></span>
+                    <span>Previous Arc</span>
+                </a>
+            {% else %}
+                <button class="button is-rounded" disabled aria-disabled="true">
+                    <span class="icon is-small"><i class="fas fa-arrow-left" aria-hidden="true"></i></span>
+                    <span>Previous Arc</span>
+                </button>
+            {% endif %}
+            {% if navigation.next_arc %}
+                <a class="button is-rounded is-link ml-2"
+                   href="{% url 'arc:detail' navigation.next_arc.slug %}"
+                   aria-label="Go to {{ navigation.next_arc }}">
+                    <span>Next Arc</span>
+                    <span class="icon is-small"><i class="fas fa-arrow-right" aria-hidden="true"></i></span>
+                </a>
+            {% else %}
+                <button class="button is-rounded ml-2" disabled aria-disabled="true">
+                    <span>Next Arc</span>
+                    <span class="icon is-small"><i class="fas fa-arrow-right" aria-hidden="true"></i></span>
+                </button>
+            {% endif %}
         </div>
-    </nav>
-    <!--  end arc title -->
-    <!-- arc nav -->
-    <nav class="level">
-        <div class="level-left">
-            <div class="level-item">
-                {% if navigation.previous_arc %}
-                    <a class="button is-rounded is-link"
-                       href="{% url 'arc:detail' navigation.previous_arc.slug %}">
-                        <span class="icon is-small">
-                            <i class="fas fa-arrow-left"></i>
-                        </span>
-                        <span>Previous Arc</span>
-                    </a>
-                {% else %}
-                    <a class="button is-rounded" disabled>
-                        <span class="icon is-small">
-                            <i class="fas fa-arrow-left"></i>
-                        </span>
-                        <span>Previous Arc</span>
-                    </a>
-                {% endif %}
-            </div>
-            <div class="level-item">
-                {% if navigation.next_arc %}
-                    <a class="button is-rounded is-link"
-                       href="{% url 'arc:detail' navigation.next_arc.slug %}">
-                        <span>Next Arc</span>
-                        <span class="icon is-small">
-                            <i class="fas fa-arrow-right"></i>
-                        </span>
-                    </a>
-                {% else %}
-                    <a class="button is-rounded" disabled>
-                        <span>Next Issue</span>
-                        <span class="icon is-small">
-                            <i class="fas fa-arrow-right"></i>
-                        </span>
-                    </a>
-                {% endif %}
-            </div>
-        </div>
-        <div class="level-right">
-            {% if user.is_authenticated %}
-                <p class="level-item">
+        {% if user.is_authenticated %}
+            <div class="level-right">
+                <div class="buttons">
                     <a class="button is-rounded is-primary"
                        href="{% url 'arc:create' %}"
                        title="Add a new story arc">
-                        <span class="icon is-small">
-                            <i class="fas fa-plus"></i>
-                        </span>
+                        <span class="icon is-small"><i class="fas fa-plus" aria-hidden="true"></i></span>
                         <span>New</span>
                     </a>
-                </p>
-                <p class="level-item">
                     <a class="button is-rounded is-info"
                        href="{% url 'arc:update' arc.slug %}"
-                       title="Edit arc">
-                        <span class="icon is-small">
-                            <i class="fas fa-edit"></i>
-                        </span>
+                       title="Edit this story arc">
+                        <span class="icon is-small"><i class="fas fa-edit" aria-hidden="true"></i></span>
                         <span>Edit</span>
                     </a>
-                </p>
-                {% if perms.comicsdb.delete_arc %}
-                    <p class="level-item">
+                    {% if perms.comicsdb.delete_arc %}
                         <a class="button is-rounded is-danger"
                            href="{% url 'arc:delete' arc.slug %}"
-                           title="Delete arc">
-                            <span class="icon is-small">
-                                <i class="fas fa-trash"></i>
-                            </span>
+                           title="Delete this story arc">
+                            <span class="icon is-small"><i class="fas fa-trash" aria-hidden="true"></i></span>
                             <span>Delete</span>
                         </a>
-                    </p>
-                {% else %}
-                    <p class="level-item">
-                        <a class="button is-rounded is-danger" title="Delete arc" disabled>
-                            <span class="icon is-small">
-                                <i class="fas fa-trash"></i>
-                            </span>
-                            <span>Delete</span>
-                        </a>
-                    </p>
-                {% endif %}
-            {% endif %}
-        </div>
+                    {% endif %}
+                </div>
+            </div>
+        {% endif %}
     </nav>
-    <!-- end of arc nav -->
-    <!-- main page content -->
+    {# Main Content #}
     <div class="columns">
-        <!-- arc logo -->
+        {# Arc Image #}
         <div class="column is-one-fifth">
             <div class="box">
                 <figure class="image is-2by3">
@@ -112,40 +77,43 @@
                             <img src="{{ im.url }}"
                                  width="{{ im.width }}"
                                  height="{{ im.height }}"
-                                 alt="{{ arc.name }}">
+                                 alt="{{ arc.name }}"
+                                 loading="lazy">
                         {% endthumbnail %}
                     {% else %}
                         <img src="{% static 'site/img/image-not-found.webp' %}"
-                             alt="No image for {{ arc.name }}">
+                             alt="No image for {{ arc.name }}"
+                             loading="lazy">
                     {% endif %}
                 </figure>
             </div>
         </div>
-        <!-- end of arc logo -->
-        <!-- arc summary -->
+        {# Arc Information #}
         <div class="column">
+            {# Summary #}
             <div class="box">
-                <h1 class="title is-5">Summary</h1>
+                <h2 class="title is-5">Summary</h2>
                 {% if arc.desc %}
-                    <p>{{ arc.desc|linebreaksbr }}</p>
+                    <div class="content">{{ arc.desc|linebreaksbr }}</div>
                 {% else %}
-                    <p>No information available.</p>
+                    <p class="has-text-grey">No information available.</p>
                 {% endif %}
-                <br />
-                <div class="content is-small is-italic">
-                    Last edited on {{ arc.modified }} by
+                <footer class="content is-small is-italic mt-4">
+                    Last edited on <time datetime="{{ arc.modified|date:'c' }}">{{ arc.modified }}</time> by
                     <a href="{% url 'user-detail' arc.edited_by.id %}">{{ arc.edited_by.username }}</a>
-                </div>
+                </footer>
             </div>
+            {# Issues List #}
             {% with issues=arc.issues.all %}
                 {% if issues %}
                     <div class="box">
-                        <h1 class="title is-5">List of Issues</h1>
+                        <h2 class="title is-5">Issues ({{ issues.count }})</h2>
                         <div class="content">
                             <ul>
                                 {% for issue in issues %}
                                     <li>
                                         <a href="{% url 'issue:detail' issue.slug %}">{{ issue }}</a>
+                                        <span class="has-text-grey-light">— {{ issue.cover_date|date:"M Y" }}</span>
                                     </li>
                                 {% endfor %}
                             </ul>
@@ -153,39 +121,40 @@
                     </div>
                 {% endif %}
             {% endwith %}
-            <!-- attribution -->
+            {# Attribution #}
             {% with attribution=arc.attribution.all %}
-                {% if attribution|length > 0 %}
+                {% if attribution %}
                     {% include "comicsdb/attribution.html" with object=attribution %}
                 {% endif %}
             {% endwith %}
-            <!-- end attribution-->
         </div>
-        <!-- end of arc summary -->
-        <!-- misc info -->
+        {# Metadata Sidebar #}
         <div class="column is-one-fifth">
             <div class="box">
-                <h1 class="title is-6">Story Arc Details</h1>
-                <p>
-                    <b>Number of Issue:</b> {{ arc.issue_count }}
-                </p>
-                <br />
-                <p>
-                    <b>Metron ID:</b> {{ arc.id }}
-                </p>
-                {% if arc.cv_id %}
-                    <p>
-                        <b>Comic Vine ID:</b> {{ arc.cv_id }}
-                    </p>
-                {% endif %}
-                {% if arc.gcd_id %}
-                    <p>
-                        <b>GCD ID:</b> {{ arc.gcd_id }}
-                    </p>
-                {% endif %}
+                <h2 class="title is-6">Story Arc Details</h2>
+                <dl>
+                    <dt class="has-text-weight-bold">Number of Issues:</dt>
+                    <dd class="mb-3">
+                        {{ arc.issue_count }}
+                    </dd>
+                    <dt class="has-text-weight-bold">Metron ID:</dt>
+                    <dd class="mb-3">
+                        {{ arc.id }}
+                    </dd>
+                    {% if arc.cv_id %}
+                        <dt class="has-text-weight-bold">Comic Vine ID:</dt>
+                        <dd class="mb-3">
+                            {{ arc.cv_id }}
+                        </dd>
+                    {% endif %}
+                    {% if arc.gcd_id %}
+                        <dt class="has-text-weight-bold">GCD ID:</dt>
+                        <dd>
+                            {{ arc.gcd_id }}
+                        </dd>
+                    {% endif %}
+                </dl>
             </div>
         </div>
-        <!-- end misc info -->
     </div>
-    <!-- end of main page content -->
 {% endblock %}

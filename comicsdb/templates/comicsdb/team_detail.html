@@ -6,89 +6,70 @@
     {{ team.name }}
 {% endblock title %}
 {% block content %}
-    <!-- team title -->
-    <nav class="level">
+    {# Page Header #}
+    <header class="block">
+        <h1 class="title">{{ team }}</h1>
+    </header>
+    {# Navigation Bar #}
+    <nav class="level mb-5" aria-label="Team navigation">
         <div class="level-left">
-            <div class="level-item">
-                <p class="title">{{ team }}</p>
-            </div>
+            {% if navigation.previous_team %}
+                <a class="button is-rounded is-link"
+                   href="{% url 'team:detail' navigation.previous_team.slug %}"
+                   aria-label="Go to {{ navigation.previous_team }}">
+                    <span class="icon is-small"><i class="fas fa-arrow-left" aria-hidden="true"></i></span>
+                    <span>Previous Team</span>
+                </a>
+            {% else %}
+                <button class="button is-rounded" disabled aria-disabled="true">
+                    <span class="icon is-small"><i class="fas fa-arrow-left" aria-hidden="true"></i></span>
+                    <span>Previous Team</span>
+                </button>
+            {% endif %}
+            {% if navigation.next_team %}
+                <a class="button is-rounded is-link ml-2"
+                   href="{% url 'team:detail' navigation.next_team.slug %}"
+                   aria-label="Go to {{ navigation.next_team }}">
+                    <span>Next Team</span>
+                    <span class="icon is-small"><i class="fas fa-arrow-right" aria-hidden="true"></i></span>
+                </a>
+            {% else %}
+                <button class="button is-rounded ml-2" disabled aria-disabled="true">
+                    <span>Next Team</span>
+                    <span class="icon is-small"><i class="fas fa-arrow-right" aria-hidden="true"></i></span>
+                </button>
+            {% endif %}
         </div>
-    </nav>
-    <!--  end team title -->
-    <!-- team nav -->
-    <nav class="level">
-        <div class="level-left">
-            <div class="level-item">
-                {% if navigation.previous_team %}
-                    <a class="button is-rounded is-link"
-                       href="{% url 'team:detail' navigation.previous_team.slug %}">
-                        <span class="icon is-small"><i class="fas fa-arrow-left"></i></span>
-                        <span>Previous Team</span>
-                    </a>
-                {% else %}
-                    <a class="button is-rounded" disabled>
-                        <span class="icon is-small"><i class="fas fa-arrow-left"></i></span>
-                        <span>Previous Team</span>
-                    </a>
-                {% endif %}
-            </div>
-            <div class="level-item">
-                {% if navigation.next_team %}
-                    <a class="button is-rounded is-link"
-                       href="{% url 'team:detail' navigation.next_team.slug %}">
-                        <span class="icon is-small"><i class="fas fa-arrow-right"></i></span>
-                        <span>Next Team</span>
-                    </a>
-                {% else %}
-                    <a class="button is-rounded" disabled>
-                        <span class="icon is-small"><i class="fas fa-arrow-right"></i></span>
-                        <span>Next Team</span>
-                    </a>
-                {% endif %}
-            </div>
-        </div>
-        <div class="level-right">
-            {% if user.is_authenticated %}
-                <p class="level-item">
+        {% if user.is_authenticated %}
+            <div class="level-right">
+                <div class="buttons">
                     <a class="button is-rounded is-primary"
                        href="{% url 'team:create' %}"
                        title="Add a new team">
-                        <span class="icon is-small"><i class="fas fa-plus"></i></span>
+                        <span class="icon is-small"><i class="fas fa-plus" aria-hidden="true"></i></span>
                         <span>New</span>
                     </a>
-                </p>
-                <p class="level-item">
                     <a class="button is-rounded is-info"
                        href="{% url 'team:update' team.slug %}"
-                       title="Edit team">
-                        <span class="icon is-small"><i class="fas fa-edit"></i></span>
+                       title="Edit this team">
+                        <span class="icon is-small"><i class="fas fa-edit" aria-hidden="true"></i></span>
                         <span>Edit</span>
                     </a>
-                </p>
-                {% if perms.comicsdb.delete_team %}
-                    <p class="level-item">
+                    {% if perms.comicsdb.delete_team %}
                         <a class="button is-rounded is-danger"
                            href="{% url 'team:delete' team.slug %}"
-                           title="Delete team">
-                            <span class="icon is-small"><i class="fas fa-trash"></i></span>
+                           title="Delete this team">
+                            <span class="icon is-small"><i class="fas fa-trash" aria-hidden="true"></i></span>
                             <span>Delete</span>
                         </a>
-                    </p>
-                {% else %}
-                    <p class="level-item">
-                        <a class="button is-rounded is-danger" title="Delete team" disabled>
-                            <span class="icon is-small"><i class="fas fa-trash"></i></span>
-                            <span>Delete</span>
-                        </a>
-                    </p>
-                {% endif %}
-            {% endif %}
-        </div>
+                    {% endif %}
+                </div>
+            </div>
+        {% endif %}
     </nav>
-    <!-- end of team nav -->
-    <!-- main page content -->
+    {# Main Content #}
     <div class="columns">
-        <!-- left column -->
+        {# Team Image #}
         <div class="column is-one-fifth">
             <div class="box">
                 <figure class="image is-2by3">
@@ -97,142 +78,134 @@
                             <img src="{{ im.url }}"
                                  width="{{ im.width }}"
                                  height="{{ im.height }}"
-                                 alt="{{ team.name }}">
+                                 alt="{{ team.name }}"
+                                 loading="lazy">
                         {% endthumbnail %}
                     {% else %}
                         <img src="{% static 'site/img/image-not-found.webp' %}"
-                             alt="No image for {{ team.name }}">
+                             alt="No image for {{ team.name }}"
+                             loading="lazy">
                     {% endif %}
                 </figure>
             </div>
         </div>
-        <!-- end of left column -->
-        <!-- middle column -->
+        {# Team Information #}
         <div class="column">
-            <!-- summary -->
+            {# Summary #}
             <div class="box">
-                <h1 class="title is-5">Summary</h1>
+                <h2 class="title is-5">Summary</h2>
                 {% if team.desc %}
-                    <p>{{ team.desc|linebreaksbr }}</p>
-                    <br />
+                    <div class="content">{{ team.desc|linebreaksbr }}</div>
                 {% else %}
-                    <p>No information available.</p>
-                    <br />
+                    <p class="has-text-grey">No information available.</p>
                 {% endif %}
-                <div class="content is-small is-italic">
-                    Last edited on {{ team.modified }} by
+                <footer class="content is-small is-italic mt-4">
+                    Last edited on <time datetime="{{ team.modified|date:'c' }}">{{ team.modified }}</time> by
                     <a href="{% url 'user-detail' team.edited_by.id %}">{{ team.edited_by.username }}</a>
-                </div>
+                </footer>
             </div>
-            <!-- end summary -->
-            <!-- members -->
+            {# Members #}
             {% with characters=team.characters.all %}
                 {% if characters %}
                     <div class="box">
-                        <div class="columns">
-                            <div class="column">
-                                <h1 class="title is-5">Member{{ characters|pluralize }}</h1>
-                                <div class="columns is-multiline">
-                                    {% for character in characters %}
-                                        <div class="column is-4">
-                                            <article class="media">
-                                                <div class="media-left">
-                                                    <figure class="image is-64x64">
-                                                        {% if character.image %}
-                                                            {% thumbnail character.image "64x64" crop="center" format="WEBP" as im %}
-                                                                <img class="is-rounded" src="{{ im.url }}" alt="{{ character }}">
-                                                            {% endthumbnail %}
-                                                        {% else %}
-                                                            <img class="is-rounded"
-                                                                 src="{% static 'site/img/creator-not-found.webp' %}"
-                                                                 alt="No image for {{ character }}">
-                                                        {% endif %}
-                                                    </figure>
-                                                </div>
-                                                <div class="media-content">
-                                                    <div class="content">
-                                                        <p>
-                                                            <a href="{% url 'character:detail' character.slug %}">{{ character }}</a>
-                                                        </p>
-                                                    </div>
-                                                </div>
-                                            </article>
+                        <h2 class="title is-5">Member{{ characters|pluralize }} ({{ characters.count }})</h2>
+                        <div class="columns is-multiline">
+                            {% for character in characters %}
+                                <div class="column is-4">
+                                    <article class="media">
+                                        <figure class="media-left">
+                                            <div class="image is-64x64">
+                                                {% if character.image %}
+                                                    {% thumbnail character.image "64x64" crop="center" format="WEBP" as im %}
+                                                        <img class="is-rounded"
+                                                             src="{{ im.url }}"
+                                                             width="{{ im.width }}"
+                                                             height="{{ im.height }}"
+                                                             alt="{{ character }}"
+                                                             loading="lazy">
+                                                    {% endthumbnail %}
+                                                {% else %}
+                                                    <img class="is-rounded"
+                                                         src="{% static 'site/img/creator-not-found.webp' %}"
+                                                         alt="No image for {{ character }}"
+                                                         loading="lazy">
+                                                {% endif %}
+                                            </div>
+                                        </figure>
+                                        <div class="media-content">
+                                            <a href="{% url 'character:detail' character.slug %}">{{ character }}</a>
                                         </div>
-                                    {% endfor %}
+                                    </article>
                                 </div>
-                            </div>
+                            {% endfor %}
                         </div>
                     </div>
                 {% endif %}
             {% endwith %}
-            <!-- end members -->
-            <!-- attribution -->
+            {# Attribution #}
             {% with attribution=team.attribution.all %}
-                {% if attribution|length > 0 %}
+                {% if attribution %}
                     {% include "comicsdb/attribution.html" with object=attribution %}
                 {% endif %}
             {% endwith %}
-            <!-- end attribution-->
         </div>
-        <!-- end middle column -->
-        <!-- right column -->
+        {# Metadata Sidebar #}
         <div class="column is-one-fifth">
-            <!-- misc info -->
             <div class="box">
-                <h1 class="title is-6">Team Details</h1>
-                <p>
-                    <b>Number of Issues:</b> {{ team.issue_count|intcomma }}
-                </p>
-                <br />
+                <h2 class="title is-6">Team Details</h2>
+                <dl>
+                    <dt class="has-text-weight-bold">Number of Issues:</dt>
+                    <dd class="mb-3">
+                        {{ team.issue_count|intcomma }}
+                    </dd>
+                </dl>
+                {# Creators #}
                 {% with creators=team.creators.all %}
                     {% if creators %}
-                        <p>
-                            <b>Creator{{ creators|pluralize }}</b>
-                        </p>
-                        <div class="content">
-                            <ul>
-                                {% for creator in creators %}
-                                    <li>
-                                        <a href="{% url 'creator:detail' creator.slug %}">{{ creator }}</a>
-                                    </li>
-                                {% endfor %}
-                            </ul>
-                        </div>
+                        <h3 class="title is-6 mt-4">Creator{{ creators|pluralize }}</h3>
+                        <ul class="menu-list">
+                            {% for creator in creators %}
+                                <li>
+                                    <a href="{% url 'creator:detail' creator.slug %}">{{ creator }}</a>
+                                </li>
+                            {% endfor %}
+                        </ul>
                     {% endif %}
                 {% endwith %}
+                {# Universes #}
                 {% with universes=team.universes.all %}
                     {% if universes %}
-                        <p>
-                            <b>Universe{{ universes|pluralize }}</b>
-                        </p>
-                        <div class="content">
-                            <ul>
-                                {% for universe in universes %}
-                                    <li>
-                                        <a href="{% url 'universe:detail' universe.slug %}">{{ universe }}</a>
-                                    </li>
-                                {% endfor %}
-                            </ul>
-                        </div>
+                        <h3 class="title is-6 mt-4">Universe{{ universes|pluralize }}</h3>
+                        <ul class="menu-list">
+                            {% for universe in universes %}
+                                <li>
+                                    <a href="{% url 'universe:detail' universe.slug %}">{{ universe }}</a>
+                                </li>
+                            {% endfor %}
+                        </ul>
                     {% endif %}
                 {% endwith %}
-                <p>
-                    <b>Metron ID:</b> {{ team.id }}
-                </p>
-                {% if team.cv_id %}
-                    <p>
-                        <b>Comic Vine ID:</b> {{ team.cv_id }}
-                    </p>
-                {% endif %}
-                {% if team.gcd_id %}
-                    <p>
-                        <b>GCD ID:</b> {{ team.gcd_id }}
-                    </p>
-                {% endif %}
+                {# IDs #}
+                <h3 class="title is-6 mt-4">Identification Numbers</h3>
+                <dl>
+                    <dt class="has-text-weight-bold">Metron:</dt>
+                    <dd class="mb-2">
+                        {{ team.id }}
+                    </dd>
+                    {% if team.cv_id %}
+                        <dt class="has-text-weight-bold">Comic Vine:</dt>
+                        <dd class="mb-2">
+                            {{ team.cv_id }}
+                        </dd>
+                    {% endif %}
+                    {% if team.gcd_id %}
+                        <dt class="has-text-weight-bold">GCD:</dt>
+                        <dd>
+                            {{ team.gcd_id }}
+                        </dd>
+                    {% endif %}
+                </dl>
             </div>
-            <!-- end misc info -->
         </div>
-        <!-- end right column -->
     </div>
-    <!-- end of main page content -->
 {% endblock %}

@@ -6,96 +6,76 @@
     {{ imprint.name }}
 {% endblock title %}
 {% block content %}
-    <!-- imprint title -->
-    <nav class="level">
+    {# Page Header #}
+    <header class="block">
+        <h1 class="title">{{ imprint }}</h1>
+    </header>
+    {# Navigation Bar #}
+    <nav class="level mb-5" aria-label="Imprint navigation">
         <div class="level-left">
-            <div class="level-item">
-                <div>
-                    <p class="title">{{ imprint }}</p>
-                </div>
-            </div>
-        </div>
-    </nav>
-    <!--  end imprint title -->
-    <!-- imprint nav -->
-    <nav class="level">
-        <div class="level-left">
-            <div class="level-item">
-                {% if navigation.previous_imprint %}
-                    <a class="button is-rounded is-link"
-                       href="{% url 'imprint:detail' navigation.previous_imprint.slug %}">
-                        <span class="icon is-small"><i class="fas fa-arrow-left"></i></span>
-                        <span>Previous Imprint</span>
-                    </a>
-                {% else %}
-                    <a class="button is-rounded" disabled>
-                        <span class="icon is-small"><i class="fas fa-arrow-left"></i></span>
-                        <span>Previous Imprint</span>
-                    </a>
-                {% endif %}
-            </div>
-            <div class="level-item">
-                {% if navigation.next_imprint %}
-                    <a class="button is-rounded is-link"
-                       href="{% url 'imprint:detail' navigation.next_imprint.slug %}">
-                        <span>Next Imprint</span>
-                        <span class="icon is-small"><i class="fas fa-arrow-right"></i></span>
-                    </a>
-                {% else %}
-                    <a class="button is-rounded" disabled>
-                        <span>Next Imprint</span>
-                        <span class="icon is-small"><i class="fas fa-arrow-right"></i></span>
-                    </a>
-                {% endif %}
-            </div>
+            {% if navigation.previous_imprint %}
+                <a class="button is-rounded is-link"
+                   href="{% url 'imprint:detail' navigation.previous_imprint.slug %}"
+                   aria-label="Go to {{ navigation.previous_imprint }}">
+                    <span class="icon is-small"><i class="fas fa-arrow-left" aria-hidden="true"></i></span>
+                    <span>Previous Imprint</span>
+                </a>
+            {% else %}
+                <button class="button is-rounded" disabled aria-disabled="true">
+                    <span class="icon is-small"><i class="fas fa-arrow-left" aria-hidden="true"></i></span>
+                    <span>Previous Imprint</span>
+                </button>
+            {% endif %}
+            {% if navigation.next_imprint %}
+                <a class="button is-rounded is-link ml-2"
+                   href="{% url 'imprint:detail' navigation.next_imprint.slug %}"
+                   aria-label="Go to {{ navigation.next_imprint }}">
+                    <span>Next Imprint</span>
+                    <span class="icon is-small"><i class="fas fa-arrow-right" aria-hidden="true"></i></span>
+                </a>
+            {% else %}
+                <button class="button is-rounded ml-2" disabled aria-disabled="true">
+                    <span>Next Imprint</span>
+                    <span class="icon is-small"><i class="fas fa-arrow-right" aria-hidden="true"></i></span>
+                </button>
+            {% endif %}
         </div>
         <div class="level-right">
-            <div class="level-item">
+            <div class="buttons">
                 <a class="button is-rounded is-link"
                    href="{% url 'imprint:series' imprint.slug %}"
-                   title="Open series list for imprint">
-                    <span class="icon is-small"><i class="fas fa-list"></i></span>
+                   title="View series list for this imprint">
+                    <span class="icon is-small"><i class="fas fa-list" aria-hidden="true"></i></span>
                     <span>Series List</span>
                 </a>
-            </div>
-            {% if user.is_authenticated %}
-                <p class="level-item">
+                {% if user.is_authenticated %}
                     <a class="button is-rounded is-primary"
                        href="{% url 'imprint:create' %}"
                        title="Add a new imprint">
-                        <span class="icon is-small"><i class="fas fa-plus"></i></span>
+                        <span class="icon is-small"><i class="fas fa-plus" aria-hidden="true"></i></span>
                         <span>New</span>
                     </a>
-                </p>
-                <p class="level-item">
                     <a class="button is-rounded is-info"
                        href="{% url 'imprint:update' imprint.slug %}"
-                       title="Edit imprint">
-                        <span class="icon is-small"><i class="fas fa-edit"></i></span>
+                       title="Edit this imprint">
+                        <span class="icon is-small"><i class="fas fa-edit" aria-hidden="true"></i></span>
                         <span>Edit</span>
                     </a>
-                </p>
-                {% if perms.comicsdb.delete_imprint %}
-                    <p class="level-item">
+                    {% if perms.comicsdb.delete_imprint %}
                         <a class="button is-rounded is-danger"
                            href="{% url 'imprint:delete' imprint.slug %}"
-                           title="Delete imprint">
-                            <span class="icon is-small"><i class="fas fa-trash"></i></span>
+                           title="Delete this imprint">
+                            <span class="icon is-small"><i class="fas fa-trash" aria-hidden="true"></i></span>
                             <span>Delete</span>
                         </a>
-                    </p>
-                {% else %}
-                    <p class="level-item">
-                        <a class="button is-rounded is-danger" title="Delete Imprint" disabled>Delete</a>
-                    </p>
+                    {% endif %}
                 {% endif %}
-            {% endif %}
+            </div>
         </div>
     </nav>
-    <!-- end of imprint nav -->
-    <!-- main page content -->
+    {# Main Content #}
     <div class="columns">
-        <!-- imprint logo -->
+        {# Imprint Logo #}
         <div class="column is-one-fifth">
             <div class="box">
                 <figure class="image is-2by3">
@@ -104,79 +84,82 @@
                             <img src="{{ im.url }}"
                                  width="{{ im.width }}"
                                  height="{{ im.height }}"
-                                 alt="{{ imprint.name }}">
+                                 alt="{{ imprint.name }}"
+                                 loading="lazy">
                         {% endthumbnail %}
                     {% else %}
                         <img src="{% static 'site/img/image-not-found.webp' %}"
-                             alt="No image for {{ imprint.name }}">
+                             alt="No image for {{ imprint.name }}"
+                             loading="lazy">
                     {% endif %}
                 </figure>
             </div>
         </div>
-        <!-- end of imprint logo -->
-        <!-- Center Column -->
+        {# Imprint Information #}
         <div class="column">
-            <!-- Summary -->
+            {# Summary #}
             <div class="box">
-                <h1 class="title is-5">Summary</h1>
+                <h2 class="title is-5">Summary</h2>
                 {% if imprint.desc %}
-                    <p>{{ imprint.desc|linebreaksbr }}</p>
-                    <br />
+                    <div class="content">{{ imprint.desc|linebreaksbr }}</div>
                 {% else %}
-                    <p>No information available.</p>
-                    <br />
+                    <p class="has-text-grey">No information available.</p>
                 {% endif %}
-                <div class="content is-small is-italic">
-                    Last edited on {{ imprint.modified }} by
+                <footer class="content is-small is-italic mt-4">
+                    Last edited on <time datetime="{{ imprint.modified|date:'c' }}">{{ imprint.modified }}</time> by
                     <a href="{% url 'user-detail' imprint.edited_by.id %}">{{ imprint.edited_by.username }}</a>
-                </div>
+                </footer>
             </div>
-            <!-- end of summary -->
-            <!-- attribution -->
+            {# Attribution #}
             {% with attribution=imprint.attribution.all %}
-                {% if attribution|length > 0 %}
+                {% if attribution %}
                     {% include "comicsdb/attribution.html" with object=attribution %}
                 {% endif %}
             {% endwith %}
-            <!-- end attribution-->
         </div>
-        <!-- end of center column -->
-        <!-- misc info -->
-        {#    {% if imprint.series_count > 0 or imprint.founded %}#}
+        {# Metadata Sidebar #}
         <div class="column is-one-fifth">
             <div class="box">
-                <h1 class="title is-6">Imprint Details</h1>
-                <p>
-                    <b>Publisher:</b> <a href="{% url 'publisher:detail' imprint.publisher.slug %}">{{ imprint.publisher }}</a>
-                </p>
-                {% if imprint.founded %}
-                    <p>
-                        <b>Found:</b> {{ imprint.founded }}
-                    </p>
-                {% endif %}
-                {% if imprint.series_count > 0 %}
-                    <p>
-                        <b>Number of Series:</b> {{ imprint.series_count|intcomma }}
-                    </p>
-                {% endif %}
-                <br />
-                <p>
-                    <b>Metron ID:</b> {{ imprint.id }}
-                </p>
-                {% if imprint.cv_id %}
-                    <p>
-                        <b>Comic Vine ID:</b> {{ imprint.cv_id }}
-                    </p>
-                {% endif %}
-                {% if imprint.gcd_id %}
-                    <p>
-                        <b>GCD ID:</b> {{ imprint.gcd_id }}
-                    </p>
-                {% endif %}
+                <h2 class="title is-6">Imprint Details</h2>
+                <dl>
+                    <dt class="has-text-weight-bold">Publisher:</dt>
+                    <dd class="mb-3">
+                        <a href="{% url 'publisher:detail' imprint.publisher.slug %}">{{ imprint.publisher }}</a>
+                    </dd>
+                    {% if imprint.founded %}
+                        <dt class="has-text-weight-bold">Founded:</dt>
+                        <dd class="mb-3">
+                            {{ imprint.founded }}
+                        </dd>
+                    {% endif %}
+                    {% if imprint.series_count > 0 %}
+                        <dt class="has-text-weight-bold">Number of Series:</dt>
+                        <dd class="mb-3">
+                            {{ imprint.series_count|intcomma }}
+                        </dd>
+                    {% endif %}
+                </dl>
+                {# IDs #}
+                <h3 class="title is-6 mt-4">Identification Numbers</h3>
+                <dl>
+                    <dt class="has-text-weight-bold">Metron:</dt>
+                    <dd class="mb-2">
+                        {{ imprint.id }}
+                    </dd>
+                    {% if imprint.cv_id %}
+                        <dt class="has-text-weight-bold">Comic Vine:</dt>
+                        <dd class="mb-2">
+                            {{ imprint.cv_id }}
+                        </dd>
+                    {% endif %}
+                    {% if imprint.gcd_id %}
+                        <dt class="has-text-weight-bold">GCD:</dt>
+                        <dd>
+                            {{ imprint.gcd_id }}
+                        </dd>
+                    {% endif %}
+                </dl>
             </div>
         </div>
-        {#    {% endif %}#}
-        <!-- end misc info -->
     </div>
-    <!-- end of main page content -->
 {% endblock %}

@@ -6,89 +6,70 @@
     {{ character.name }}
 {% endblock title %}
 {% block content %}
-    <!-- character title -->
-    <nav class="level">
+    {# Page Header #}
+    <header class="block">
+        <h1 class="title">{{ character }}</h1>
+    </header>
+    {# Navigation Bar #}
+    <nav class="level mb-5" aria-label="Character navigation">
         <div class="level-left">
-            <div class="level-item">
-                <p class="title">{{ character }}</p>
-            </div>
+            {% if navigation.previous_character %}
+                <a class="button is-rounded is-link"
+                   href="{% url 'character:detail' navigation.previous_character.slug %}"
+                   aria-label="Go to {{ navigation.previous_character }}">
+                    <span class="icon is-small"><i class="fas fa-arrow-left" aria-hidden="true"></i></span>
+                    <span>Previous Character</span>
+                </a>
+            {% else %}
+                <button class="button is-rounded" disabled aria-disabled="true">
+                    <span class="icon is-small"><i class="fas fa-arrow-left" aria-hidden="true"></i></span>
+                    <span>Previous Character</span>
+                </button>
+            {% endif %}
+            {% if navigation.next_character %}
+                <a class="button is-rounded is-link ml-2"
+                   href="{% url 'character:detail' navigation.next_character.slug %}"
+                   aria-label="Go to {{ navigation.next_character }}">
+                    <span>Next Character</span>
+                    <span class="icon is-small"><i class="fas fa-arrow-right" aria-hidden="true"></i></span>
+                </a>
+            {% else %}
+                <button class="button is-rounded ml-2" disabled aria-disabled="true">
+                    <span>Next Character</span>
+                    <span class="icon is-small"><i class="fas fa-arrow-right" aria-hidden="true"></i></span>
+                </button>
+            {% endif %}
         </div>
-    </nav>
-    <!--  end character title -->
-    <!-- character nav -->
-    <nav class="level">
-        <div class="level-left">
-            <div class="level-item">
-                {% if navigation.previous_character %}
-                    <a class="button is-rounded is-link"
-                       href="{% url 'character:detail' navigation.previous_character.slug %}">
-                        <span class="icon is-small"><i class="fas fa-arrow-left"></i></span>
-                        <span>Previous Character</span>
-                    </a>
-                {% else %}
-                    <a class="button is-rounded" disabled>
-                        <span class="icon is-small"><i class="fas fa-arrow-left"></i></span>
-                        <span>Previous Character</span>
-                    </a>
-                {% endif %}
-            </div>
-            <div class="level-item">
-                {% if navigation.next_character %}
-                    <a class="button is-rounded is-link"
-                       href="{% url 'character:detail' navigation.next_character.slug %}">
-                        <span class="icon is-small"><i class="fas fa-arrow-right"></i></span>
-                        <span>Next Character</span>
-                    </a>
-                {% else %}
-                    <a class="button is-rounded" disabled>
-                        <span class="icon is-small"><i class="fas fa-arrow-right"></i></span>
-                        <span>Next Character</span>
-                    </a>
-                {% endif %}
-            </div>
-        </div>
-        <div class="level-right">
-            {% if user.is_authenticated %}
-                <p class="level-item">
+        {% if user.is_authenticated %}
+            <div class="level-right">
+                <div class="buttons">
                     <a class="button is-rounded is-primary"
                        href="{% url 'character:create' %}"
                        title="Add a new character">
-                        <span class="icon is-small"><i class="fas fa-plus"></i></span>
+                        <span class="icon is-small"><i class="fas fa-plus" aria-hidden="true"></i></span>
                         <span>New</span>
                     </a>
-                </p>
-                <p class="level-item">
                     <a class="button is-rounded is-info"
                        href="{% url 'character:update' character.slug %}"
-                       title="Edit character">
-                        <span class="icon is-small"><i class="fas fa-edit"></i></span>
+                       title="Edit this character">
+                        <span class="icon is-small"><i class="fas fa-edit" aria-hidden="true"></i></span>
                         <span>Edit</span>
                     </a>
-                </p>
-                {% if perms.comicsdb.delete_character %}
-                    <p class="level-item">
+                    {% if perms.comicsdb.delete_character %}
                         <a class="button is-rounded is-danger"
                            href="{% url 'character:delete' character.slug %}"
-                           title="Delete character">
-                            <span class="icon is-small"><i class="fas fa-trash"></i></span>
+                           title="Delete this character">
+                            <span class="icon is-small"><i class="fas fa-trash" aria-hidden="true"></i></span>
                             <span>Delete</span>
                         </a>
-                    </p>
-                {% else %}
-                    <p class="level-item">
-                        <a class="button is-rounded is-danger" title="Delete character" disabled>
-                            <span class="icon is-small"><i class="fas fa-trash"></i></span>
-                            <span>Delete</span>
-                        </a>
-                    </p>
-                {% endif %}
-            {% endif %}
-        </div>
+                    {% endif %}
+                </div>
+            </div>
+        {% endif %}
     </nav>
-    <!-- end of character nav -->
-    <!-- main page content -->
+    {# Main Content #}
     <div class="columns">
-        <!-- character image -->
+        {# Character Image #}
         <div class="column is-one-fifth">
             <div class="box">
                 <figure class="image is-2by3">
@@ -97,164 +78,153 @@
                             <img src="{{ im.url }}"
                                  width="{{ im.width }}"
                                  height="{{ im.height }}"
-                                 alt="{{ character.name }}">
+                                 alt="{{ character.name }}"
+                                 loading="lazy">
                         {% endthumbnail %}
                     {% else %}
                         <img src="{% static 'site/img/image-not-found.webp' %}"
-                             alt="No image for {{ character.name }}">
+                             alt="No image for {{ character.name }}"
+                             loading="lazy">
                     {% endif %}
                 </figure>
             </div>
         </div>
-        <!-- end of character image -->
-        <!-- center column -->
+        {# Character Information #}
         <div class="column">
-            <!-- desc -->
+            {# Summary #}
             <div class="box">
-                <h1 class="title is-5">Summary</h1>
+                <h2 class="title is-5">Summary</h2>
                 {% if character.desc %}
-                    <p>{{ character.desc|linebreaksbr }}</p>
-                    <br />
+                    <div class="content">{{ character.desc|linebreaksbr }}</div>
                 {% else %}
-                    <p>No information available.</p>
-                    <br />
+                    <p class="has-text-grey">No information available.</p>
                 {% endif %}
-                <div class="content is-small is-italic">
-                    Last edited on {{ character.modified }} by
+                <footer class="content is-small is-italic mt-4">
+                    Last edited on <time datetime="{{ character.modified|date:'c' }}">{{ character.modified }}</time> by
                     <a href="{% url 'user-detail' character.edited_by.id %}">{{ character.edited_by.username }}</a>
-                </div>
+                </footer>
             </div>
-            <!-- end desc -->
-            <!-- series -->
-            {% with series=appearances %}
-                {% if series %}
-                    <div class="box">
-                        <h1 class="title is-5">Series Appearances</h1>
-                        <div class="content">
-                            <ul>
-                                {% for i in series %}
-                                    <li>
-                                        <a href="{% url 'series:detail' slug=i.issues__series__slug %}">
-                                            {{ i.issues__series__name }}
-                                            {% if i.issues__series__series_type == 10 %}
-                                                TPB
-                                            {% elif i.issues__series__series_type == 9 %}
-                                                GN
-                                            {% elif i.issues__series__series_type == 8 %}
-                                                HC
-                                            {% elif i.issues__series__series_type == 12 %}
-                                                Digital
-                                            {% endif %}
-                                            ({{ i.issues__series__year_began }})
-                                        </a>:
-                                        <a href="{% url 'character:series' character=character.slug series=i.issues__series__slug %}">
-                                            {{ i.issues__count }} issue{{ i.issues__count|pluralize }}
-                                        </a>
-                                    </li>
-                                {% endfor %}
-                            </ul>
-                        </div>
+            {# Series Appearances #}
+            {% if appearances %}
+                <div class="box">
+                    <h2 class="title is-5">Series Appearances</h2>
+                    <div class="content">
+                        <ul>
+                            {% for series in appearances %}
+                                <li>
+                                    <a href="{% url 'series:detail' slug=series.issues__series__slug %}">
+                                        {{ series.issues__series__name }}
+                                        {% if series.issues__series__series_type == 10 %}
+                                            TPB
+                                        {% elif series.issues__series__series_type == 9 %}
+                                            GN
+                                        {% elif series.issues__series__series_type == 8 %}
+                                            HC
+                                        {% elif series.issues__series__series_type == 12 %}
+                                            Digital
+                                        {% endif %}
+                                        ({{ series.issues__series__year_began }})
+                                    </a>:
+                                    <a href="{% url 'character:series' character=character.slug series=series.issues__series__slug %}">
+                                        {{ series.issues__count }} issue{{ series.issues__count|pluralize }}
+                                    </a>
+                                </li>
+                            {% endfor %}
+                        </ul>
                     </div>
-                {% endif %}
-            {% endwith %}
-            <!-- end series -->
-            <!-- attribution -->
+                </div>
+            {% endif %}
+            {# Attribution #}
             {% with attribution=character.attribution.all %}
-                {% if attribution|length > 0 %}
+                {% if attribution %}
                     {% include "comicsdb/attribution.html" with object=attribution %}
                 {% endif %}
             {% endwith %}
-            <!-- end attribution-->
         </div>
-        <!-- end of center column -->
-        <!-- misc info -->
+        {# Metadata Sidebar #}
         <div class="column is-one-fifth">
             <div class="box">
-                <h1 class="title is-6">Character Details</h1>
-                <p>
-                    <b>Number of Issue:</b> {{ character.issue_count|intcomma }}
-                </p>
-                {% if character.issue_count > 0 %}
-                    {% with first=character.first_appearance %}
-                        <p>
-                            <b>First Appearance:</b> <a href="{% url 'issue:detail' first.slug %}">{{ first }}</a>
-                        </p>
-                    {% endwith %}
-                {% endif %}
-                {% if character.alias %}
-                    {% with aliases=character.alias %}
-                        <p>
-                            <b>Alias{{ aliases|pluralize:"es" }}:</b>
-                            {{ aliases|join:", " }}
-                        </p>
-                    {% endwith %}
-                {% endif %}
+                <h2 class="title is-6">Character Details</h2>
+                <dl>
+                    <dt class="has-text-weight-bold">Number of Issues:</dt>
+                    <dd class="mb-3">
+                        {{ character.issue_count|intcomma }}
+                    </dd>
+                    {% if character.issue_count > 0 %}
+                        {% with first=character.first_appearance %}
+                            <dt class="has-text-weight-bold">First Appearance:</dt>
+                            <dd class="mb-3">
+                                <a href="{% url 'issue:detail' first.slug %}">{{ first }}</a>
+                            </dd>
+                        {% endwith %}
+                    {% endif %}
+                    {% if character.alias %}
+                        <dt class="has-text-weight-bold">Alias{{ character.alias|pluralize:"es" }}:</dt>
+                        <dd class="mb-3">
+                            {{ character.alias|join:", " }}
+                        </dd>
+                    {% endif %}
+                </dl>
+                {# Creators #}
                 {% with creators=character.creators.all %}
                     {% if creators %}
-                        <br>
-                        <p>
-                            <b>Creator{{ creators|pluralize }}</b>
-                        </p>
-                        <div class="content">
-                            <ul>
-                                {% for creator in creators %}
-                                    <li>
-                                        <a href="{% url 'creator:detail' creator.slug %}">{{ creator }}</a>
-                                    </li>
-                                {% endfor %}
-                            </ul>
-                        </div>
+                        <h3 class="title is-6 mt-4">Creator{{ creators|pluralize }}</h3>
+                        <ul class="menu-list">
+                            {% for creator in creators %}
+                                <li>
+                                    <a href="{% url 'creator:detail' creator.slug %}">{{ creator }}</a>
+                                </li>
+                            {% endfor %}
+                        </ul>
                     {% endif %}
                 {% endwith %}
+                {# Teams #}
                 {% with teams=character.teams.all %}
                     {% if teams %}
-                        <p>
-                            <b>Team{{ teams|pluralize }}</b>
-                        </p>
-                        <div class="content">
-                            <ul>
-                                {% for team in teams %}
-                                    <li>
-                                        <a href="{% url 'team:detail' team.slug %}">{{ team }}</a>
-                                    </li>
-                                {% endfor %}
-                            </ul>
-                        </div>
+                        <h3 class="title is-6 mt-4">Team{{ teams|pluralize }}</h3>
+                        <ul class="menu-list">
+                            {% for team in teams %}
+                                <li>
+                                    <a href="{% url 'team:detail' team.slug %}">{{ team }}</a>
+                                </li>
+                            {% endfor %}
+                        </ul>
                     {% endif %}
                 {% endwith %}
+                {# Universes #}
                 {% with universes=character.universes.all %}
                     {% if universes %}
-                        <p>
-                            <b>Universe{{ universes|pluralize }}</b>
-                        </p>
-                        <div class="content">
-                            <ul>
-                                {% for universe in universes %}
-                                    <li>
-                                        <a href="{% url 'universe:detail' universe.slug %}">{{ universe }}</a>
-                                    </li>
-                                {% endfor %}
-                            </ul>
-                        </div>
+                        <h3 class="title is-6 mt-4">Universe{{ universes|pluralize }}</h3>
+                        <ul class="menu-list">
+                            {% for universe in universes %}
+                                <li>
+                                    <a href="{% url 'universe:detail' universe.slug %}">{{ universe }}</a>
+                                </li>
+                            {% endfor %}
+                        </ul>
                     {% endif %}
                 {% endwith %}
-                <br />
-                <p>
-                    <b>Metron ID:</b> {{ character.id }}
-                </p>
-                {% if character.cv_id %}
-                    <p>
-                        <b>Comic Vine ID:</b> {{ character.cv_id }}
-                    </p>
-                {% endif %}
-                {% if character.gcd_id %}
-                    <p>
-                        <b>GCD ID:</b> {{ character.gcd_id }}
-                    </p>
-                {% endif %}
+                {# IDs #}
+                <h3 class="title is-6 mt-4">Identification Numbers</h3>
+                <dl>
+                    <dt class="has-text-weight-bold">Metron:</dt>
+                    <dd class="mb-2">
+                        {{ character.id }}
+                    </dd>
+                    {% if character.cv_id %}
+                        <dt class="has-text-weight-bold">Comic Vine:</dt>
+                        <dd class="mb-2">
+                            {{ character.cv_id }}
+                        </dd>
+                    {% endif %}
+                    {% if character.gcd_id %}
+                        <dt class="has-text-weight-bold">GCD:</dt>
+                        <dd>
+                            {{ character.gcd_id }}
+                        </dd>
+                    {% endif %}
+                </dl>
             </div>
         </div>
-        <!-- end misc info -->
     </div>
-    <!-- end of main page content -->
 {% endblock %}

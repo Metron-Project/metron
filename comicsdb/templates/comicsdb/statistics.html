@@ -6,72 +6,114 @@
     <script src="{% static 'chartkick/chartkick.js' %}"></script>
 {% endblock %}
 {% block title %}
-    Statistics
+    Statistics - Metron
 {% endblock title %}
 {% block content %}
-    <!-- header -->
+    {# Page Header #}
     <header class="block has-text-centered">
-        <h3 class="title is-3">Metron Database Statistics</h3>
-        <h5 class="subtitle is-6">Last Updated at: {{ update_time }}</h5>
+        <h1 class="title is-3">Metron Database Statistics</h1>
+        <p class="subtitle is-6 has-text-grey">
+            Last Updated: <time datetime="{{ update_time|date:'c' }}">{{ update_time }}</time>
+        </p>
     </header>
-    <!-- end header -->
-    <!-- totals -->
-    <div class="box">
-        <header class="block has-text-centered">
-            <h2 class="subtitle">Totals</h2>
-        </header>
-        <ul>
-            <li class="tag is-size-6">
-                <span class="mr-1">Publisher{{ publishers_total|pluralize }}:</span>
-                <strong>{{ publishers_total|intcomma }}</strong>
-            </li>
-            <li class="tag is-size-6">
-                <span class="mr-1">Series:</span>
-                <strong>{{ series_total|intcomma }}</strong>
-            </li>
-            <li class="tag is-size-6">
-                <span class="mr-1">Issue{{ issues_total|pluralize }}:</span>
-                <strong>{{ issues_total|intcomma }}</strong>
-            </li>
-            <li class="tag is-size-6">
-                <span class="mr-1">Character{{ characters_total|pluralize }}:</span>
-                <strong>{{ characters_total|intcomma }}</strong>
-            </li>
-            <li class="tag is-size-6">
-                <span class="mr-1">Creator{{ creators_total|pluralize }}:</span>
-                <strong>{{ creators_total|intcomma }}</strong>
-            </li>
-            <li class="tag is-size-6">
-                <span class="mr-1">Team{{ teams_total|pluralize }}:</span>
-                <strong>{{ teams_total|intcomma }}</strong>
-            </li>
-            <li class="tag is-size-6">
-                <span class="mr-1">Story Arc{{ arcs_total|pluralize }}:</span>
-                <strong>{{ arcs_total|intcomma }}</strong>
-            </li>
-        </ul>
-    </div>
-    <!-- end totals -->
-    <!-- graphs -->
-    <section>
-        <div class="tile is-ancestor">
-            <div class="tile is-parent">{{ year_count }}</div>
-        </div>
-        <div class="tile is-ancestor">
-            <div class="tile is-parent">{{ publisher_count }}</div>
-        </div>
-        <div class="tile is-ancestor">
-            <div class="tile is-parent">{{ daily_chart }}</div>
-        </div>
-        <div class="tile is-ancestor">
-            <div class="tile is-parent">{{ monthly_chart }}</div>
-        </div>
-        <div class="tile is-ancestor">
-            <div class="tile is-parent">{{ creator_chart }}</div>
-        </div>
-        <div class="tile is-ancestor">
-            <div class="tile is-parent">{{ character_chart }}</div>
+    {# Summary Totals #}
+    <section class="section">
+        <div class="box has-background-light">
+            <h2 class="title is-4 has-text-centered mb-5">Database Totals</h2>
+            <div class="columns is-multiline">
+                <div class="column is-3">
+                    <div class="box has-text-centered">
+                        <p class="heading">Publishers</p>
+                        <p class="title is-3 has-text-primary">{{ publishers_total|intcomma }}</p>
+                    </div>
+                </div>
+                <div class="column is-3">
+                    <div class="box has-text-centered">
+                        <p class="heading">Series</p>
+                        <p class="title is-3 has-text-info">{{ series_total|intcomma }}</p>
+                    </div>
+                </div>
+                <div class="column is-3">
+                    <div class="box has-text-centered">
+                        <p class="heading">Issues</p>
+                        <p class="title is-3 has-text-link">{{ issues_total|intcomma }}</p>
+                    </div>
+                </div>
+                <div class="column is-3">
+                    <div class="box has-text-centered">
+                        <p class="heading">Characters</p>
+                        <p class="title is-3 has-text-success">{{ characters_total|intcomma }}</p>
+                    </div>
+                </div>
+                <div class="column is-3">
+                    <div class="box has-text-centered">
+                        <p class="heading">Creators</p>
+                        <p class="title is-3 has-text-warning">{{ creators_total|intcomma }}</p>
+                    </div>
+                </div>
+                <div class="column is-3">
+                    <div class="box has-text-centered">
+                        <p class="heading">Teams</p>
+                        <p class="title is-3 has-text-danger">{{ teams_total|intcomma }}</p>
+                    </div>
+                </div>
+                <div class="column is-3">
+                    <div class="box has-text-centered">
+                        <p class="heading">Story Arcs</p>
+                        <p class="title is-3 has-text-grey-dark">{{ arcs_total|intcomma }}</p>
+                    </div>
+                </div>
+            </div>
         </div>
     </section>
-    <!-- end graphs -->
+    {# Charts Section #}
+    <section class="section">
+        <h2 class="title is-4 has-text-centered mb-5">Statistical Analysis</h2>
+        {# Issues by Year #}
+        <div class="box mb-5">
+            <div class="content">{{ year_count }}</div>
+        </div>
+        {# Issues by Publisher #}
+        <div class="box mb-5">
+            <div class="content">{{ publisher_count }}</div>
+        </div>
+        {# Issue Trends #}
+        <div class="columns is-multiline mb-5">
+            <div class="column is-half">
+                <div class="box">
+                    <div class="content">{{ daily_chart }}</div>
+                </div>
+            </div>
+            <div class="column is-half">
+                <div class="box">
+                    <div class="content">{{ monthly_chart }}</div>
+                </div>
+            </div>
+        </div>
+        {# Creator and Character Trends #}
+        <div class="columns is-multiline">
+            <div class="column is-half">
+                <div class="box">
+                    <div class="content">{{ creator_chart }}</div>
+                </div>
+            </div>
+            <div class="column is-half">
+                <div class="box">
+                    <div class="content">{{ character_chart }}</div>
+                </div>
+            </div>
+        </div>
+    </section>
+    {# Information Box #}
+    <section class="section">
+        <div class="notification is-info is-light">
+            <div class="content">
+                <p class="has-text-weight-bold">About These Statistics</p>
+                <p>
+                    These statistics are automatically generated from the Metron database and are updated every 30 minutes.
+                    They represent the collective efforts of our community in building a comprehensive comic book database.
+                </p>
+            </div>
+        </div>
+    </section>
 {% endblock %}
