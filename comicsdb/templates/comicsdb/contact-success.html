@@ -1,5 +1,74 @@
 {% extends parent_template|default:"base.html" %}
 {% block title %}
-    Contact
+    Message Sent - Metron
 {% endblock title %}
-{% block content %}<div class="notification">{{ msg }}</div>{% endblock %}
+{% block content %}
+    {# Success Header #}
+    <header class="block has-text-centered mt-6">
+        <span class="icon is-large has-text-success" aria-hidden="true">
+            <i class="fas fa-check-circle fa-4x"></i>
+        </span>
+        <h1 class="title is-3 mt-4">Message Sent Successfully</h1>
+    </header>
+    {# Success Message #}
+    <div class="columns is-centered">
+        <div class="column is-half">
+            <div class="box">
+                <article class="message is-success">
+                    <div class="message-body">
+                        <div class="content">{{ msg }}</div>
+                    </div>
+                </article>
+                <div class="content has-text-centered mt-5">
+                    <p class="mb-4">Thank you for contacting us. We'll review your message and get back to you as soon as possible.</p>
+                    <div class="buttons is-centered">
+                        <a class="button is-primary is-medium" href="{% url 'home' %}">
+                            <span class="icon">
+                                <i class="fas fa-home" aria-hidden="true"></i>
+                            </span>
+                            <span>Return to Home</span>
+                        </a>
+                    </div>
+                </div>
+            </div>
+            {# Additional Information #}
+            <div class="notification is-info is-light">
+                <p class="has-text-weight-bold mb-2">What happens next?</p>
+                <ul>
+                    <li>Our team will review your message</li>
+                    <li>We typically respond within 1-2 business days</li>
+                    <li>Check your email for our response</li>
+                </ul>
+            </div>
+            {# Alternative Contact Methods #}
+            <div class="box">
+                <h2 class="title is-5 has-text-centered">Need immediate assistance?</h2>
+                <div class="content">
+                    <p class="has-text-centered mb-4">You can also reach us through:</p>
+                    <div class="buttons is-centered">
+                        <a class="button is-link is-outlined"
+                           href="https://matrix.to/#/#metrondb:matrix.org"
+                           target="_blank"
+                           rel="noopener noreferrer"
+                           title="Join our Matrix chat">
+                            <span class="icon">
+                                <i class="fas fa-comments" aria-hidden="true"></i>
+                            </span>
+                            <span>Matrix Chat</span>
+                        </a>
+                        <a class="button is-link is-outlined"
+                           href="https://github.com/Metron-Project/metron/discussions"
+                           target="_blank"
+                           rel="noopener noreferrer"
+                           title="Visit GitHub discussions">
+                            <span class="icon">
+                                <i class="fab fa-github" aria-hidden="true"></i>
+                            </span>
+                            <span>GitHub Discussions</span>
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+{% endblock %}
