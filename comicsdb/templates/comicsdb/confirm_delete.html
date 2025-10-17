@@ -1,14 +1,65 @@
 {% extends parent_template|default:"base.html" %}
+{% block title %}
+    Confirm Deletion
+{% endblock title %}
 {% block content %}
-    <form method="post">
-        {% csrf_token %}
-        <div class="field">
-            <label class="label">Are you sure you want to delete "{{ object }}"?</label>
-        </div>
-        <div class="field">
-            <div class="control">
-                <button class="button is-rounded is-danger" type="submit">Confirm</button>
+    {# Page Header #}
+    <header class="block has-text-centered">
+        <h1 class="title is-4 has-text-danger">
+            <span class="icon is-large" aria-hidden="true">
+                <i class="fas fa-exclamation-triangle fa-2x"></i>
+            </span>
+        </h1>
+        <h2 class="title is-3">Confirm Deletion</h2>
+    </header>
+    {# Confirmation Content #}
+    <div class="columns is-centered">
+        <div class="column is-half">
+            <div class="box">
+                <article class="message is-danger">
+                    <div class="message-header">
+                        <p>Warning: This action cannot be undone</p>
+                    </div>
+                    <div class="message-body">
+                        <p class="mb-4">
+                            Are you sure you want to permanently delete <strong>"{{ object }}"</strong>?
+                        </p>
+                        <p class="has-text-grey">This will remove all associated data and cannot be recovered.</p>
+                    </div>
+                </article>
+                <form method="post" class="mt-5">
+                    {% csrf_token %}
+                    <div class="field is-grouped is-grouped-centered">
+                        <div class="control">
+                            <button class="button is-danger is-medium" type="submit">
+                                <span class="icon">
+                                    <i class="fas fa-trash" aria-hidden="true"></i>
+                                </span>
+                                <span>Yes, Delete</span>
+                            </button>
+                        </div>
+                        <div class="control">
+                            <a class="button is-light is-medium"
+                               href="{{ object.get_absolute_url }}"
+                               title="Cancel and return">
+                                <span class="icon">
+                                    <i class="fas fa-times" aria-hidden="true"></i>
+                                </span>
+                                <span>Cancel</span>
+                            </a>
+                        </div>
+                    </div>
+                </form>
+            </div>
+            {# Additional Information #}
+            <div class="notification is-warning is-light">
+                <p class="has-text-weight-bold mb-2">Before you delete:</p>
+                <ul>
+                    <li>Make sure this is the correct item to delete</li>
+                    <li>Consider if other records depend on this data</li>
+                    <li>This action is permanent and irreversible</li>
+                </ul>
             </div>
         </div>
-    </form>
+    </div>
 {% endblock %}
