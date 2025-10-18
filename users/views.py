@@ -34,7 +34,7 @@ def activate(request, uidb64, token):
         uid = force_str(urlsafe_base64_decode(uidb64))
         user = CustomUser.objects.get(pk=uid)
     except (TypeError, ValueError, OverflowError, CustomUser.DoesNotExist):
-        user = None
+        return render(request, "registration/account_activation_invalid.html")
 
     if not is_activated(user, token):
         return render(request, "registration/account_activation_invalid.html")
