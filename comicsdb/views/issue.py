@@ -16,10 +16,12 @@ from django.views.generic import DetailView, ListView, RedirectView
 from django.views.generic.edit import CreateView, DeleteView, UpdateView
 
 from comicsdb.filters.issue import IssueViewFilter
+from comicsdb.forms.attribution import AttributionFormSet
 from comicsdb.forms.credits import CreditsFormSet
 from comicsdb.forms.issue import IssueForm
 from comicsdb.forms.variant import VariantFormset
 from comicsdb.models import Creator, Credits, Issue, Role, Series
+from comicsdb.models.attribution import Attribution
 from comicsdb.models.series import SeriesType
 from comicsdb.models.variant import Variant
 
@@ -189,25 +191,30 @@ class IssueCreate(LoginRequiredMixin, CreateView):
             context["variants"] = VariantFormset(
                 self.request.POST, self.request.FILES, prefix="variants"
             )
+            context["attribution"] = AttributionFormSet(self.request.POST, prefix="attribution")
         else:
             context["credits"] = CreditsFormSet(prefix="credits")
             context["variants"] = VariantFormset(prefix="variants")
+            context["attribution"] = AttributionFormSet(prefix="attribution")
         return context
 
     def form_valid(self, form):
         context = self.get_context_data()
         credits_form = context["credits"]
         variants_form = context["variants"]
+        attribution_form = context["attribution"]
         with transaction.atomic():
             form.instance.created_by = self.request.user
             form.instance.edited_by = self.request.user
             self.object = form.save()
 
-            if credits_form.is_valid() and variants_form.is_valid():
+            if credits_form.is_valid() and variants_form.is_valid() and attribution_form.is_valid():
                 credits_form.instance = self.object
                 credits_form.save()
                 variants_form.instance = self.object
                 variants_form.save()
+                attribution_form.instance = self.object
+                attribution_form.save()
 
             LOGGER.info(
                 "Issue: %s #%s was created by %s",
@@ -238,8 +245,15 @@ class IssueUpdate(LoginRequiredMixin, UpdateView):
                 queryset=(Variant.objects.filter(issue=self.object)),
                 prefix="variants",
             )
+            context["attribution"] = AttributionFormSet(
+                self.request.POST,
+                instance=self.object,
+                queryset=(Attribution.objects.filter(issues=self.object)),
+                prefix="attribution",
+            )
             context["credits"].full_clean()
             context["variants"].full_clean()
+            context["attribution"].full_clean()
         else:
             context["credits"] = CreditsFormSet(
                 instance=self.object,
@@ -251,21 +265,29 @@ class IssueUpdate(LoginRequiredMixin, UpdateView):
                 queryset=(Variant.objects.filter(issue=self.object)),
                 prefix="variants",
             )
+            context["attribution"] = AttributionFormSet(
+                instance=self.object,
+                queryset=(Attribution.objects.filter(issues=self.object)),
+                prefix="attribution",
+            )
         return context
 
     def form_valid(self, form):
         context = self.get_context_data()
         credits_form = context["credits"]
         variants_form = context["variants"]
+        attribution_form = context["attribution"]
         with transaction.atomic():
             form.instance.edited_by = self.request.user
             self.object = form.save(commit=False)
 
-            if credits_form.is_valid() and variants_form.is_valid():
+            if credits_form.is_valid() and variants_form.is_valid() and attribution_form.is_valid():
                 credits_form.instance = self.object
                 variants_form.instance = self.object
+                attribution_form.instance = self.object
                 credits_form.save()
                 variants_form.save()
+                attribution_form.save()
             else:
                 return super().form_invalid(form)
 

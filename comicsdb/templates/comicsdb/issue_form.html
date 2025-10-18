@@ -30,6 +30,11 @@
             <h2 class="title is-5">Variant Covers</h2>
             {% include "comicsdb/partials/variants_formset.html" with formset=variants %}
         </div>
+        <!-- Attribution Section -->
+        <div class="box">
+            <h2 class="title is-5">Attribution</h2>
+            {% include "comicsdb/partials/attribution_formset.html" with formset=attribution %}
+        </div>
         <!-- Submit Button -->
         <div class="field">
             <div class="control">
@@ -75,6 +80,19 @@ $(function() {
         },
         removed: function($row) {
             console.log('Variant row removed');
+        }
+    });
+
+    // Initialize attribution formset
+    $('#issueForm #attributionTable tbody tr').formset({
+        prefix: '{{ attribution.prefix }}',
+        deleteText: 'Remove?',
+        addText: 'Add another attribution',
+        added: function($row) {
+            console.log('Attribution row added');
+        },
+        removed: function($row) {
+            console.log('Attribution row removed');
         }
     });
 });
