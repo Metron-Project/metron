@@ -115,3 +115,35 @@ def change_profile(request):
 
 class UserProfile(DetailView):
     model = CustomUser
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        user = self.get_object()
+
+        # Import models for counting
+        from comicsdb.models import (
+            Arc,
+            Character,
+            Creator,
+            Imprint,
+            Issue,
+            Publisher,
+            Series,
+            Team,
+            Universe,
+        )
+
+        # Add statistics to context
+        context["stats"] = {
+            "publishers": Publisher.objects.filter(created_by=user).count(),
+            "series": Series.objects.filter(created_by=user).count(),
+            "issues": Issue.objects.filter(created_by=user).count(),
+            "characters": Character.objects.filter(created_by=user).count(),
+            "creators": Creator.objects.filter(created_by=user).count(),
+            "teams": Team.objects.filter(created_by=user).count(),
+            "imprints": Imprint.objects.filter(created_by=user).count(),
+            "arcs": Arc.objects.filter(created_by=user).count(),
+            "universes": Universe.objects.filter(created_by=user).count(),
+        }
+
+        return context

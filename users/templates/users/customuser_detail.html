@@ -1,5 +1,6 @@
 {% extends parent_template|default:"base.html" %}
 {% load bulma_tags %}
+{% load humanize %}
 {% load thumbnail %}
 {% load static %}
 {% block title %}
@@ -170,20 +171,129 @@
     <div class="columns">
         <div class="column">
             <div class="box">
-                <h3 class="title is-5 mb-4">
+                <h3 class="title is-5 mb-2">
                     <span class="icon has-text-primary" aria-hidden="true">
                         <i class="fas fa-chart-line"></i>
                     </span>
-                    Contribution Stats
+                    Database Contributions
                 </h3>
-                <div class="notification is-light has-text-centered">
-                    <p class="has-text-grey">
-                        <span class="icon is-large" aria-hidden="true">
-                            <i class="fas fa-chart-bar fa-2x"></i>
-                        </span>
-                    </p>
-                    <p class="mt-3">Contribution statistics coming soon!</p>
-                </div>
+                <p class="subtitle is-7 has-text-grey mb-4">Items created by this user</p>
+                {% if stats %}
+                    <div class="content">
+                        <table class="table is-fullwidth is-hoverable">
+                            <tbody>
+                                <tr>
+                                    <td>
+                                        <span class="icon has-text-info" aria-hidden="true">
+                                            <i class="fas fa-building"></i>
+                                        </span>
+                                        <strong>Publishers</strong>
+                                    </td>
+                                    <td class="has-text-right">
+                                        <span class="tag is-info is-light stat-tag">{{ stats.publishers|intcomma }}</span>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td>
+                                        <span class="icon has-text-info" aria-hidden="true">
+                                            <i class="fas fa-list"></i>
+                                        </span>
+                                        <strong>Series</strong>
+                                    </td>
+                                    <td class="has-text-right">
+                                        <span class="tag is-info is-light stat-tag">{{ stats.series|intcomma }}</span>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td>
+                                        <span class="icon has-text-info" aria-hidden="true">
+                                            <i class="fas fa-book"></i>
+                                        </span>
+                                        <strong>Issues</strong>
+                                    </td>
+                                    <td class="has-text-right">
+                                        <span class="tag is-info is-light stat-tag">{{ stats.issues|intcomma }}</span>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td>
+                                        <span class="icon has-text-info" aria-hidden="true">
+                                            <i class="fas fa-mask"></i>
+                                        </span>
+                                        <strong>Characters</strong>
+                                    </td>
+                                    <td class="has-text-right">
+                                        <span class="tag is-info is-light stat-tag">{{ stats.characters|intcomma }}</span>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td>
+                                        <span class="icon has-text-info" aria-hidden="true">
+                                            <i class="fas fa-pencil-alt"></i>
+                                        </span>
+                                        <strong>Creators</strong>
+                                    </td>
+                                    <td class="has-text-right">
+                                        <span class="tag is-info is-light stat-tag">{{ stats.creators|intcomma }}</span>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td>
+                                        <span class="icon has-text-info" aria-hidden="true">
+                                            <i class="fas fa-users"></i>
+                                        </span>
+                                        <strong>Teams</strong>
+                                    </td>
+                                    <td class="has-text-right">
+                                        <span class="tag is-info is-light stat-tag">{{ stats.teams|intcomma }}</span>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td>
+                                        <span class="icon has-text-info" aria-hidden="true">
+                                            <i class="fas fa-bookmark"></i>
+                                        </span>
+                                        <strong>Imprints</strong>
+                                    </td>
+                                    <td class="has-text-right">
+                                        <span class="tag is-info is-light stat-tag">{{ stats.imprints|intcomma }}</span>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td>
+                                        <span class="icon has-text-info" aria-hidden="true">
+                                            <i class="fas fa-project-diagram"></i>
+                                        </span>
+                                        <strong>Arcs</strong>
+                                    </td>
+                                    <td class="has-text-right">
+                                        <span class="tag is-info is-light stat-tag">{{ stats.arcs|intcomma }}</span>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td>
+                                        <span class="icon has-text-info" aria-hidden="true">
+                                            <i class="fas fa-globe"></i>
+                                        </span>
+                                        <strong>Universes</strong>
+                                    </td>
+                                    <td class="has-text-right">
+                                        <span class="tag is-info is-light stat-tag">{{ stats.universes|intcomma }}</span>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                {% else %}
+                    <div class="notification is-light has-text-centered">
+                        <p class="has-text-grey">
+                            <span class="icon is-large" aria-hidden="true">
+                                <i class="fas fa-chart-bar fa-2x"></i>
+                            </span>
+                        </p>
+                        <p class="mt-3">No contribution statistics available.</p>
+                    </div>
+                {% endif %}
             </div>
         </div>
         {% if customuser.pk == request.user.pk %}

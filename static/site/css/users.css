@@ -375,22 +375,33 @@ a:focus-visible {
     .media-left .image.is-128x128 img {
         border-color: #4a4a4a;
     }
-    
+
     .media-content .level {
         background-color: #2b2b2b;
     }
-    
+
     .box.has-background-light {
         background-color: #363636 !important;
         border-left-color: #209cee;
     }
-    
+
     .stat-item {
         background-color: #363636;
     }
-    
+
     .stat-item:hover {
         background-color: #4a4a4a;
+    }
+
+    /* Improved contrast for statistic tags in dark mode */
+    .stat-tag.tag.is-info.is-light {
+        background-color: #167df0 !important;
+        color: #ffffff !important;
+        font-weight: 600;
+    }
+
+    .stat-tag.tag.is-info.is-light:hover {
+        background-color: #1370d6 !important;
     }
 }
 
