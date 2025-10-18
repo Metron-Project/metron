@@ -1,23 +1,24 @@
 /* ========================================
    User Profile & Account Styles
-   Add to: static/site/css/users.css
+   Note: Using Bulma CSS framework via django_simple_bulma
+   Custom styles extend Bulma's defaults
    ======================================== */
 
 /* Profile Image Enhancements */
 .media-left .image.is-128x128 img {
-    border: 3px solid #dbdbdb;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    border: 3px solid hsl(0, 0%, 86%); /* Bulma grey-light */
+    box-shadow: 0 2px 8px hsla(0, 0%, 0%, 0.1);
     transition: transform 0.2s ease, box-shadow 0.2s ease;
 }
 
 .media-left .image.is-128x128 img:hover {
     transform: scale(1.05);
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    box-shadow: 0 4px 12px hsla(0, 0%, 0%, 0.15);
 }
 
 /* User Stats Level */
 .media-content .level {
-    background-color: #f5f5f5;
+    background-color: hsl(0, 0%, 96%); /* Bulma whitesmoke */
     border-radius: 6px;
     padding: 1rem;
 }
@@ -31,7 +32,7 @@
     font-size: 0.75rem;
     letter-spacing: 0.5px;
     font-weight: 600;
-    color: #7a7a7a;
+    color: hsl(0, 0%, 48%); /* Bulma grey */
 }
 
 /* User Role Tags */
@@ -47,17 +48,17 @@
 
 /* Bio Box Styling */
 .box.has-background-light {
-    border-left: 4px solid #3273dc;
+    border-left: 4px solid hsl(217, 71%, 53%); /* Bulma primary */
 }
 
 /* Form Field Icons */
 .control.has-icons-left .icon {
-    color: #7a7a7a;
+    color: hsl(0, 0%, 48%); /* Bulma grey */
 }
 
 .control.has-icons-left .input:focus ~ .icon,
 .control.has-icons-left .textarea:focus ~ .icon {
-    color: #3273dc;
+    color: hsl(217, 71%, 53%); /* Bulma primary */
 }
 
 /* File Upload Styling */
@@ -71,8 +72,8 @@
 
 /* Contribution Stats Box */
 .box .notification.is-light {
-    border: 2px dashed #dbdbdb;
-    background-color: #fafafa;
+    border: 2px dashed hsl(0, 0%, 86%); /* Bulma grey-light */
+    background-color: hsl(0, 0%, 98%); /* Bulma white-ter */
 }
 
 /* Account Settings Icons */
@@ -83,7 +84,7 @@
 /* Form Divider */
 .divider {
     height: 1px;
-    background-color: #dbdbdb;
+    background-color: hsl(0, 0%, 86%); /* Bulma grey-light */
     margin: 2rem 0;
 }
 
@@ -129,29 +130,8 @@
 /* Enhanced Focus States for Accessibility */
 .button:focus-visible,
 a:focus-visible {
-    outline: 2px solid #3273dc;
+    outline: 2px solid hsl(217, 71%, 53%); /* Bulma primary */
     outline-offset: 2px;
-}
-
-/* Improved Tag Contrast */
-.tag.is-primary {
-    background-color: #3273dc;
-    color: #fff;
-}
-
-.tag.is-info {
-    background-color: #209cee;
-    color: #fff;
-}
-
-.tag.is-success {
-    background-color: #48c774;
-    color: #fff;
-}
-
-.tag.is-warning {
-    background-color: #ffdd57;
-    color: rgba(0, 0, 0, 0.7);
 }
 
 /* Loading Animation for Profile Images */
@@ -209,7 +189,7 @@ a:focus-visible {
 /* Required Field Indicator */
 .label.required::after {
     content: " *";
-    color: #f14668;
+    color: hsl(348, 100%, 61%); /* Bulma danger */
 }
 
 /* Success Message Animation */
@@ -248,17 +228,17 @@ a:focus-visible {
 
 .password-strength.weak {
     width: 33%;
-    background-color: #f14668;
+    background-color: hsl(348, 100%, 61%); /* Bulma danger */
 }
 
 .password-strength.medium {
     width: 66%;
-    background-color: #ffdd57;
+    background-color: hsl(48, 100%, 67%); /* Bulma warning */
 }
 
 .password-strength.strong {
     width: 100%;
-    background-color: #48c774;
+    background-color: hsl(141, 53%, 53%); /* Bulma success */
 }
 
 /* Empty State Styling */
@@ -279,16 +259,16 @@ a:focus-visible {
 .character-count {
     text-align: right;
     font-size: 0.75rem;
-    color: #7a7a7a;
+    color: hsl(0, 0%, 48%); /* Bulma grey */
     margin-top: 0.25rem;
 }
 
 .character-count.warning {
-    color: #ffdd57;
+    color: hsl(48, 100%, 67%); /* Bulma warning */
 }
 
 .character-count.danger {
-    color: #f14668;
+    color: hsl(348, 100%, 61%); /* Bulma danger */
 }
 
 /* Email Confirmation Badge */
@@ -309,26 +289,26 @@ a:focus-visible {
 .stat-item {
     text-align: center;
     padding: 1rem;
-    background-color: #f5f5f5;
+    background-color: hsl(0, 0%, 96%); /* Bulma whitesmoke */
     border-radius: 6px;
     transition: background-color 0.2s ease;
 }
 
 .stat-item:hover {
-    background-color: #e8e8e8;
+    background-color: hsl(0, 0%, 91%); /* Slightly darker */
 }
 
 .stat-item .stat-value {
     font-size: 2rem;
     font-weight: bold;
-    color: #3273dc;
+    color: hsl(217, 71%, 53%); /* Bulma primary */
     display: block;
     margin-bottom: 0.5rem;
 }
 
 .stat-item .stat-label {
     font-size: 0.875rem;
-    color: #7a7a7a;
+    color: hsl(0, 0%, 48%); /* Bulma grey */
     text-transform: uppercase;
     letter-spacing: 0.5px;
 }
@@ -346,7 +326,7 @@ a:focus-visible {
     top: 0;
     bottom: 0;
     width: 2px;
-    background-color: #dbdbdb;
+    background-color: hsl(0, 0%, 86%); /* Bulma grey-light */
 }
 
 .activity-item {
@@ -362,8 +342,8 @@ a:focus-visible {
     width: 10px;
     height: 10px;
     border-radius: 50%;
-    background-color: #3273dc;
-    border: 2px solid #fff;
+    background-color: hsl(217, 71%, 53%); /* Bulma primary */
+    border: 2px solid hsl(0, 0%, 100%);
 }
 
 .activity-item:last-child {
@@ -373,35 +353,35 @@ a:focus-visible {
 /* Dark Mode Support (if implemented) */
 @media (prefers-color-scheme: dark) {
     .media-left .image.is-128x128 img {
-        border-color: #4a4a4a;
+        border-color: hsl(0, 0%, 29%); /* Bulma grey-dark */
     }
 
     .media-content .level {
-        background-color: #2b2b2b;
+        background-color: hsl(0, 0%, 17%);
     }
 
     .box.has-background-light {
-        background-color: #363636 !important;
-        border-left-color: #209cee;
+        background-color: hsl(0, 0%, 21%) !important; /* Bulma grey-darker */
+        border-left-color: hsl(204, 86%, 53%); /* Bulma info */
     }
 
     .stat-item {
-        background-color: #363636;
+        background-color: hsl(0, 0%, 21%); /* Bulma grey-darker */
     }
 
     .stat-item:hover {
-        background-color: #4a4a4a;
+        background-color: hsl(0, 0%, 29%); /* Bulma grey-dark */
     }
 
     /* Improved contrast for statistic tags in dark mode */
     .stat-tag.tag.is-info.is-light {
-        background-color: #167df0 !important;
-        color: #ffffff !important;
+        background-color: hsl(206, 70%, 96%) !important;
+        color: hsl(204, 71%, 39%) !important;
         font-weight: 600;
     }
 
     .stat-tag.tag.is-info.is-light:hover {
-        background-color: #1370d6 !important;
+        background-color: hsl(206, 70%, 91%) !important;
     }
 }
 
@@ -509,7 +489,7 @@ a:focus-visible {
     right: 1rem;
     top: 50%;
     transform: translateY(-50%);
-    color: #48c774;
+    color: hsl(141, 53%, 53%); /* Bulma success */
     font-size: 1.5rem;
     font-weight: bold;
     animation: checkmarkPop 0.3s ease-out;
@@ -537,8 +517,8 @@ a:focus-visible {
 .help-tooltip .tooltip-text {
     visibility: hidden;
     width: 200px;
-    background-color: #363636;
-    color: #fff;
+    background-color: hsl(0, 0%, 21%); /* Bulma grey-darker */
+    color: hsl(0, 0%, 100%); /* Bulma white */
     text-align: center;
     border-radius: 6px;
     padding: 0.5rem;
@@ -567,16 +547,16 @@ a:focus-visible {
     max-width: 200px;
     max-height: 200px;
     border-radius: 50%;
-    border: 3px solid #dbdbdb;
+    border: 3px solid hsl(0, 0%, 86%); /* Bulma grey-light */
 }
 
 /* Form Section Headers */
 .form-section-header {
-    border-bottom: 2px solid #3273dc;
+    border-bottom: 2px solid hsl(217, 71%, 53%); /* Bulma primary */
     padding-bottom: 0.5rem;
     margin: 2rem 0 1rem 0;
     font-weight: 600;
-    color: #363636;
+    color: hsl(0, 0%, 21%); /* Bulma grey-darker */
 }
 
 /* Inline Form Feedback */
@@ -589,11 +569,11 @@ a:focus-visible {
 }
 
 .field-feedback.is-success {
-    color: #48c774;
+    color: hsl(141, 53%, 53%); /* Bulma success */
 }
 
 .field-feedback.is-danger {
-    color: #f14668;
+    color: hsl(348, 100%, 61%); /* Bulma danger */
 }
 
 .field-feedback .icon {
