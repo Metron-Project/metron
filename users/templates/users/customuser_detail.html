@@ -142,13 +142,13 @@
                     {# Bio Section #}
                     {% if customuser.bio %}
                         <div class="box has-background-light">
-                            <p class="has-text-weight-bold mb-2">
+                            <p class="has-text-weight-bold has-text-dark mb-2">
                                 <span class="icon has-text-info" aria-hidden="true">
                                     <i class="fas fa-user"></i>
                                 </span>
                                 About
                             </p>
-                            <p>{{ customuser.bio }}</p>
+                            <p class="has-text-dark">{{ customuser.bio }}</p>
                         </div>
                     {% else %}
                         {% if customuser.pk == request.user.pk %}
