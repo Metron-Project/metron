@@ -89,9 +89,7 @@ def _create_character_dict() -> dict[str, int]:
         )
         cache.set("characters", characters, CACHE_TTL)
 
-    return {
-        character["month"].strftime("%b"): character["c"] for character in characters[::-1]
-    }
+    return {character["month"].strftime("%b"): character["c"] for character in characters[::-1]}
 
 
 def statistics(request):
@@ -141,17 +139,22 @@ def statistics(request):
         _create_year_count_dict(), title="Number of Issues Added per Year", thousands=","
     )
     daily_chart = ColumnChart(
-        _create_daily_issue_dict(), title="Number of Issues for the last 30 days"
+        _create_daily_issue_dict(),
+        title="Number of Issues for the last 30 days",
+        thousands=",",
     )
     monthly_chart = ColumnChart(
         _create_monthly_issue_dict(), title="Number of Issues Added by Month", thousands=","
     )
     creator_chart = ColumnChart(
-        _create_creator_dict(), title="Number of Creators Added by Month"
+        _create_creator_dict(),
+        title="Number of Creators Added by Month",
+        thousands=",",
     )
     character_chart = ColumnChart(
         _create_character_dict(),
         title="Number of Characters Added by Month",
+        thousands=",",
     )
 
     return render(
