@@ -150,15 +150,6 @@ a:focus-visible {
 }
 
 /* Logo backgrounds with better contrast */
-#pycharm-logo {
-    padding-bottom: 2px;
-    background: url(https://resources.jetbrains.com/storage/products/company/brand/logos/PyCharm.png) no-repeat center;
-    filter: invert(1);
-    background-size: 68px 25.5px;
-    background-position: -1px -2px;
-    color: transparent;
-}
-
 #django-logo {
     padding-bottom: 2px;
     background: url(https://static.djangoproject.com/img/logos/django-logo-negative.png) no-repeat center;
