@@ -25,6 +25,29 @@ class TeamList(ListView):
     paginate_by = PAGINATE
     queryset = Team.objects.prefetch_related("issues")
 
+    def get_template_names(self):
+        # If this is an HTMX request, return only the partial content
+        if self.request.headers.get("HX-Request"):
+            return ["comicsdb/partials/generic_list_content.html"]
+        return ["comicsdb/team_list.html"]
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        # Add required context for generic template
+        context["list_items"] = context["team_list"]
+        context["list_name"] = "team"
+        context["list_title"] = "Team"
+        context["search_url"] = "team:search"
+        context["search_placeholder"] = "Find a team"
+        context["create_url"] = "team:create"
+        context["create_title"] = "Add a new team"
+        context["detail_url_name"] = "team:detail"
+        context["image_ratio"] = "is-2by3"
+        context["default_image"] = "site/img/image-not-found.webp"
+        context["count_url_name"] = "team:issue"
+        context["count_label"] = "Issue"
+        return context
+
 
 class TeamIssueList(ListView):
     paginate_by = PAGINATE

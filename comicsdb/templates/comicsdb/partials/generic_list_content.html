@@ -1,0 +1,36 @@
+{% load static %}
+{% load humanize %}
+{% comment %}
+    Generic list content partial - used for both full page loads and HTMX requests
+    This partial contains the dynamic content that gets updated via HTMX during pagination/search
+
+    Required context variables:
+    - list_items: The list of items to display
+    - list_name: Name for the list (e.g., "character", "creator", "team")
+    - list_title: Display title (e.g., "Character", "Creator", "Team")
+    - search_url: URL name for search
+    - search_placeholder: Placeholder text for search
+    - create_url: URL name for create action
+    - create_title: Title for create button
+    - detail_url_name: URL name for detail view
+    - image_ratio: Image aspect ratio (e.g., "is-2by3", "is-square")
+    - default_image: Path to default image
+    - count_url_name: URL name for count view (optional)
+    - count_label: Label for count (optional)
+    - count_type: Type of count - "issue" or "series" (optional, default: "issue")
+{% endcomment %}
+<div id="{{ list_name }}-list-content">
+    {% if list_items %}
+        {# List Header #}
+        {% include "comicsdb/partials/list_header.html" with title=list_title count=page_obj.paginator.count search_url=search_url search_placeholder=search_placeholder create_url=create_url create_title=create_title htmx_target=list_name|add:"-list-content" %}
+        {# Card Grid #}
+        {% include "comicsdb/partials/card_grid.html" with items=list_items detail_url_name=detail_url_name image_ratio=image_ratio default_image=default_image count_url_name=count_url_name count_label=count_label count_type=count_type %}
+        {# Pagination with HTMX #}
+        {% if is_paginated %}
+            {% load pagination_tags %}
+            {% include "comicsdb/partials/pagination_htmx.html" with target_id=list_name|add:"-list-content" %}
+        {% endif %}
+    {% else %}
+        {% include "comicsdb/partials/empty_state.html" with item_type=list_title create_url=create_url create_title=create_title %}
+    {% endif %}
+</div>

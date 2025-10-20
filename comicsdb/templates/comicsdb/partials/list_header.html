@@ -25,7 +25,8 @@
                   method="get"
                   accept-charset="utf-8"
                   role="search"
-                  aria-label="Search {{ title|lower }}s">
+                  aria-label="Search {{ title|lower }}s"
+                  {% if htmx_target %} hx-get="{% url search_url %}" hx-target="#{{ htmx_target }}" hx-swap="outerHTML" hx-push-url="true" {% endif %}>
                 <div class="field has-addons">
                     <div class="control">
                         <label for="search-input-{{ title|lower }}" class="is-sr-only">Search {{ title }}s</label>
@@ -34,7 +35,8 @@
                                name="q"
                                type="search"
                                placeholder="{{ search_placeholder }}"
-                               aria-label="{{ search_placeholder }}">
+                               aria-label="{{ search_placeholder }}"
+                               value="{{ request.GET.q|default:'' }}">
                     </div>
                     <div class="control">
                         <button class="button is-rounded" type="submit" aria-label="Search">
