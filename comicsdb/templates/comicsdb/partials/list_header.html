@@ -26,7 +26,7 @@
                   accept-charset="utf-8"
                   role="search"
                   aria-label="Search {{ title|lower }}s"
-                  {% if htmx_target %} hx-get="{% url search_url %}" hx-target="#{{ htmx_target }}" hx-swap="outerHTML" hx-push-url="true" {% endif %}>
+                  {% if htmx_target %} hx-get="{% url search_url %}" hx-target="#{{ htmx_target }}" hx-swap="outerHTML show:top" hx-push-url="true" {% endif %}>
                 <div class="field has-addons">
                     <div class="control">
                         <label for="search-input-{{ title|lower }}" class="is-sr-only">Search {{ title }}s</label>

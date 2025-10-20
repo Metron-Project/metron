@@ -19,7 +19,7 @@
             <a class="pagination-previous"
                hx-get="?{% url_replace page=page_obj.previous_page_number %}"
                hx-target="#{{ target_id }}"
-               hx-swap="outerHTML"
+               hx-swap="outerHTML show:top"
                hx-push-url="true"
                aria-label="Go to previous page">Previous</a>
         {% else %}
@@ -33,7 +33,7 @@
             <a class="pagination-next"
                hx-get="?{% url_replace page=page_obj.next_page_number %}"
                hx-target="#{{ target_id }}"
-               hx-swap="outerHTML"
+               hx-swap="outerHTML show:top"
                hx-push-url="true"
                aria-label="Go to next page">Next page</a>
         {% else %}
@@ -55,7 +55,7 @@
                         <a class="pagination-link is-current"
                            hx-get="?{% url_replace page=page_num %}"
                            hx-target="#{{ target_id }}"
-                           hx-swap="outerHTML"
+                           hx-swap="outerHTML show:top"
                            hx-push-url="true"
                            aria-label="Page {{ page_num }}"
                            aria-current="page">{{ page_num }}</a>
@@ -65,7 +65,7 @@
                         <a class="pagination-link"
                            hx-get="?{% url_replace page=page_num %}"
                            hx-target="#{{ target_id }}"
-                           hx-swap="outerHTML"
+                           hx-swap="outerHTML show:top"
                            hx-push-url="true"
                            aria-label="Go to page {{ page_num }}">{{ page_num }}</a>
                     </li>
