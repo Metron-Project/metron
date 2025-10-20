@@ -14,12 +14,18 @@
                 <span class="icon is-large has-text-grey-light" aria-hidden="true">
                     <i class="fas fa-inbox fa-3x"></i>
                 </span>
-                <h2 class="title is-4">No {{ item_type }}s Available</h2>
+                <h2 class="title is-4">
+                    No {{ item_type }}
+                    {% if item_type|lower != "series" %}s{% endif %}
+                    Available
+                </h2>
                 <p class="subtitle is-6 has-text-grey">
                     {% if user.is_authenticated and create_url %}
                         Get started by creating your first {{ item_type|lower }}.
                     {% else %}
-                        No {{ item_type|lower }}s have been added yet.
+                        No {{ item_type|lower }}
+                        {% if item_type|lower != "series" %}s{% endif %}
+                        have been added yet.
                     {% endif %}
                 </p>
                 {% if user.is_authenticated and create_url %}
