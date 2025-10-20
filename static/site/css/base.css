@@ -294,3 +294,44 @@ a:focus-visible {
 .section + .section {
     padding-top: 3rem;
 }
+
+/* ========================================
+   HTMX Enhancements
+   ======================================== */
+
+/* Hide HTMX loading indicators by default */
+.htmx-indicator {
+    display: none;
+}
+
+/* Show loading indicators during HTMX requests */
+.htmx-request .htmx-indicator,
+.htmx-request.htmx-indicator {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+}
+
+/* Smooth fade transition for HTMX swaps */
+.htmx-swapping {
+    opacity: 0;
+    transition: opacity 200ms ease-out;
+}
+
+.htmx-settling {
+    opacity: 1;
+    transition: opacity 200ms ease-in;
+}
+
+/* Loading spinner color */
+.htmx-indicator .fa-sync {
+    color: hsl(0, 0%, 60%);
+}
+
+/* Respect reduced motion preferences */
+@media (prefers-reduced-motion: reduce) {
+    .htmx-swapping,
+    .htmx-settling {
+        transition: none;
+    }
+}
