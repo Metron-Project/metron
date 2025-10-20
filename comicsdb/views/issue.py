@@ -66,6 +66,12 @@ class IssueList(ListView):
     # TODO: Let's look into limiting fields returned since we don't use most of them.
     queryset = Issue.objects.select_related("series", "series__series_type")
 
+    def get_template_names(self):
+        # If this is an HTMX request, return only the partial content
+        if self.request.headers.get("HX-Request"):
+            return ["comicsdb/partials/issue_list_content.html"]
+        return ["comicsdb/issue_list.html"]
+
     def get_context_data(self, **kwargs: Any) -> dict[str, Any]:
         context = super().get_context_data(**kwargs)
         context["series_type"] = SeriesType.objects.values("id", "name")

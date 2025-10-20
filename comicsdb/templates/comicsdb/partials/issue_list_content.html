@@ -1,0 +1,56 @@
+{% load humanize %}
+{% comment %}
+    Issue list content partial - used for both full page loads and HTMX requests
+    This partial contains the dynamic content that gets updated via HTMX during pagination/search
+{% endcomment %}
+<div id="issue-list-content">
+    {% if issue_list %}
+        <div class="columns">
+            {# Main Column #}
+            <div class="column">
+                {# Navigation Bar #}
+                <nav class="level" aria-label="Issue list navigation">
+                    <div class="level-left">
+                        <div class="level-item">
+                            <p class="subtitle is-5">
+                                {% if page_obj.paginator %}
+                                    <strong>{{ page_obj.paginator.count|intcomma }}</strong> Issue{{ page_obj.paginator.count|pluralize }}
+                                {% else %}
+                                    <strong>{{ issue_list.count|intcomma }}</strong> Issue{{ issue_list.count|pluralize }}
+                                {% endif %}
+                            </p>
+                        </div>
+                    </div>
+                    {% if user.is_authenticated %}
+                        <div class="level-right">
+                            <div class="level-item">
+                                <a class="button is-rounded is-primary"
+                                   href="{% url 'issue:create' %}"
+                                   title="Add a new issue"
+                                   aria-label="Add a new issue">
+                                    <span class="icon is-small" aria-hidden="true">
+                                        <i class="fas fa-plus"></i>
+                                    </span>
+                                    <span>New</span>
+                                </a>
+                            </div>
+                        </div>
+                    {% endif %}
+                </nav>
+                {# Issue Cards #}
+                {% include "comicsdb/partials/issue_card_grid.html" with items=issue_list %}
+                {# Pagination with HTMX #}
+                {% if is_paginated %}
+                    {% load pagination_tags %}
+                    {% include "comicsdb/partials/pagination_htmx.html" with target_id="issue-list-content" %}
+                {% endif %}
+            </div>
+            {# Search Sidebar #}
+            <div class="column is-one-fifth">
+                {% include "comicsdb/partials/issue_search_box.html" with series_type=series_type htmx_target="issue-list-content" %}
+            </div>
+        </div>
+    {% else %}
+        {% include "comicsdb/partials/empty_state.html" with item_type="Issue" create_url="issue:create" create_title="Add a new issue" %}
+    {% endif %}
+</div>
