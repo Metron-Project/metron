@@ -1,0 +1,49 @@
+{% comment %}
+    Statistics charts section partial
+    Usage: {% include "comicsdb/partials/statistics_charts.html" %}
+{% endcomment %}
+{# Charts Section #}
+<section class="section">
+    <h2 class="title is-4 has-text-centered mb-5">
+        Statistical Analysis
+        <span id="charts-refresh-indicator" class="htmx-indicator ml-2">
+            <span class="icon is-small">
+                <i class="fas fa-sync fa-spin"></i>
+            </span>
+        </span>
+    </h2>
+    {# Issues by Year #}
+    <div class="box mb-5">
+        <div class="content">{{ year_count }}</div>
+    </div>
+    {# Issues by Publisher #}
+    <div class="box mb-5">
+        <div class="content">{{ publisher_count }}</div>
+    </div>
+    {# Issue Trends #}
+    <div class="columns is-multiline mb-5">
+        <div class="column is-half">
+            <div class="box">
+                <div class="content">{{ daily_chart }}</div>
+            </div>
+        </div>
+        <div class="column is-half">
+            <div class="box">
+                <div class="content">{{ monthly_chart }}</div>
+            </div>
+        </div>
+    </div>
+    {# Creator and Character Trends #}
+    <div class="columns is-multiline">
+        <div class="column is-half">
+            <div class="box">
+                <div class="content">{{ creator_chart }}</div>
+            </div>
+        </div>
+        <div class="column is-half">
+            <div class="box">
+                <div class="content">{{ character_chart }}</div>
+            </div>
+        </div>
+    </div>
+</section>
