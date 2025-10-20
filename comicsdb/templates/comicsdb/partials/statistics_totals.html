@@ -1,0 +1,66 @@
+{% comment %}
+    Statistics totals section partial
+    Usage: {% include "comicsdb/partials/statistics_totals.html" %}
+{% endcomment %}
+{% load humanize %}
+<header class="block has-text-centered">
+    <h1 class="title is-3">Metron Database Statistics</h1>
+    <p class="subtitle is-6 has-text-grey">
+        Last Updated: <time datetime="{{ update_time|date:'c' }}">{{ update_time }}</time>
+        <span id="totals-refresh-indicator" class="htmx-indicator ml-2">
+            <span class="icon is-small">
+                <i class="fas fa-sync fa-spin"></i>
+            </span>
+        </span>
+    </p>
+</header>
+{# Summary Totals #}
+<section class="section">
+    <div class="box has-background-light">
+        <h2 class="title is-4 has-text-centered has-text-dark mb-5">Database Totals</h2>
+        <div class="columns is-multiline">
+            <div class="column is-3">
+                <div class="box has-text-centered">
+                    <p class="heading">Publishers</p>
+                    <p class="title is-3 has-text-primary">{{ publishers_total|intcomma }}</p>
+                </div>
+            </div>
+            <div class="column is-3">
+                <div class="box has-text-centered">
+                    <p class="heading">Series</p>
+                    <p class="title is-3 has-text-info">{{ series_total|intcomma }}</p>
+                </div>
+            </div>
+            <div class="column is-3">
+                <div class="box has-text-centered">
+                    <p class="heading">Issues</p>
+                    <p class="title is-3 has-text-link">{{ issues_total|intcomma }}</p>
+                </div>
+            </div>
+            <div class="column is-3">
+                <div class="box has-text-centered">
+                    <p class="heading">Characters</p>
+                    <p class="title is-3 has-text-success">{{ characters_total|intcomma }}</p>
+                </div>
+            </div>
+            <div class="column is-3">
+                <div class="box has-text-centered">
+                    <p class="heading">Creators</p>
+                    <p class="title is-3 has-text-warning">{{ creators_total|intcomma }}</p>
+                </div>
+            </div>
+            <div class="column is-3">
+                <div class="box has-text-centered">
+                    <p class="heading">Teams</p>
+                    <p class="title is-3 has-text-danger">{{ teams_total|intcomma }}</p>
+                </div>
+            </div>
+            <div class="column is-3">
+                <div class="box has-text-centered">
+                    <p class="heading">Story Arcs</p>
+                    <p class="title is-3 has-text-grey-dark">{{ arcs_total|intcomma }}</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
