@@ -1,0 +1,21 @@
+{% load static %}
+{% load humanize %}
+{% comment %}
+    Arc list content partial - used for both full page loads and HTMX requests
+    This partial contains the dynamic content that gets updated via HTMX during pagination/search
+{% endcomment %}
+<div id="arc-list-content">
+    {% if arc_list %}
+        {# List Header #}
+        {% include "comicsdb/partials/list_header.html" with title="Story Arc" count=page_obj.paginator.count search_url="arc:search" search_placeholder="Find an arc" create_url="arc:create" create_title="Add a new story arc" htmx_target="arc-list-content" %}
+        {# Card Grid #}
+        {% include "comicsdb/partials/card_grid.html" with items=arc_list detail_url_name="arc:detail" image_ratio="is-2by3" default_image="site/img/image-not-found.webp" count_url_name="arc:issue" count_label="Issue" %}
+        {# Pagination with HTMX #}
+        {% if is_paginated %}
+            {% load pagination_tags %}
+            {% include "comicsdb/partials/pagination_htmx.html" with target_id="arc-list-content" %}
+        {% endif %}
+    {% else %}
+        {% include "comicsdb/partials/empty_state.html" with item_type="Story Arc" create_url="arc:create" create_title="Add a new story arc" %}
+    {% endif %}
+</div>

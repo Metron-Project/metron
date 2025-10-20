@@ -1,0 +1,21 @@
+{% load static %}
+{% load humanize %}
+{% comment %}
+    Series list content partial - used for both full page loads and HTMX requests
+    This partial contains the dynamic content that gets updated via HTMX during pagination/search
+{% endcomment %}
+<div id="series-list-content">
+    {% if series_list %}
+        {# List Header #}
+        {% include "comicsdb/partials/list_header.html" with title="Series" count=page_obj.paginator.count|default:series_list.count search_url="series:search" search_placeholder="Find a series" create_url="series:create" create_title="Add a new series" htmx_target="series-list-content" %}
+        {# Card Grid - Series uses custom template for first_issue_cover #}
+        {% include "comicsdb/partials/series_card_grid.html" with items=series_list %}
+        {# Pagination with HTMX #}
+        {% if is_paginated %}
+            {% load pagination_tags %}
+            {% include "comicsdb/partials/pagination_htmx.html" with target_id="series-list-content" %}
+        {% endif %}
+    {% else %}
+        {% include "comicsdb/partials/empty_state.html" with item_type="Series" create_url="series:create" create_title="Add a new series" %}
+    {% endif %}
+</div>

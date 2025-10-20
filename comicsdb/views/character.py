@@ -38,6 +38,30 @@ class CharacterList(ListView):
     paginate_by = PAGINATE
     queryset = Character.objects.prefetch_related("issues")
 
+    def get_template_names(self):
+        # If this is an HTMX request, return only the partial content
+        if self.request.headers.get("HX-Request"):
+            return ["comicsdb/partials/generic_list_content.html"]
+        return ["comicsdb/character_list.html"]
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        # Add required context for generic template
+        context["list_items"] = context["character_list"]
+        context["list_name"] = "character"
+        context["list_title"] = "Character"
+        context["search_url"] = "character:search"
+        context["search_placeholder"] = "Find a character"
+        context["create_url"] = "character:create"
+        context["create_title"] = "Add a new character"
+        context["detail_url_name"] = "character:detail"
+        context["image_ratio"] = "is-2by3"
+        context["default_image"] = "site/img/image-not-found.webp"
+        context["count_type"] = "issue"
+        context["count_url_name"] = "character:issue"
+        context["count_label"] = "Issue"
+        return context
+
 
 class CharacterIssueList(ListView):
     paginate_by = PAGINATE
@@ -119,10 +143,7 @@ class SearchCharacterList(CharacterList):
                 reduce(
                     operator.and_,
                     # Unaccent lookup won't work on alias array field.
-                    (
-                        Q(name__unaccent__icontains=q) | Q(alias__icontains=q)
-                        for q in query_list
-                    ),
+                    (Q(name__unaccent__icontains=q) | Q(alias__icontains=q) for q in query_list),
                 )
             )
 
@@ -156,9 +177,7 @@ class CharacterCreate(LoginRequiredMixin, CreateView):
             else:
                 return super().form_invalid(form)
 
-            LOGGER.info(
-                "Character: %s was created by %s", form.instance.name, self.request.user
-            )
+            LOGGER.info("Character: %s was created by %s", form.instance.name, self.request.user)
         return super().form_valid(form)
 
 
@@ -198,9 +217,7 @@ class CharacterUpdate(LoginRequiredMixin, UpdateView):
             else:
                 return super().form_invalid(form)
 
-            LOGGER.info(
-                "Character: %s was updated by %s", form.instance.name, self.request.user
-            )
+            LOGGER.info("Character: %s was updated by %s", form.instance.name, self.request.user)
         return super().form_valid(form)
 
 

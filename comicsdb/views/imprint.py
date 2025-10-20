@@ -30,6 +30,30 @@ class ImprintList(ListView):
     paginate_by = PAGINATE
     queryset = Imprint.objects.prefetch_related("series")
 
+    def get_template_names(self):
+        # If this is an HTMX request, return only the partial content
+        if self.request.headers.get("HX-Request"):
+            return ["comicsdb/partials/generic_list_content.html"]
+        return ["comicsdb/imprint_list.html"]
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        # Add required context for generic template
+        context["list_items"] = context["imprint_list"]
+        context["list_name"] = "imprint"
+        context["list_title"] = "Imprint"
+        context["search_url"] = "imprint:search"
+        context["search_placeholder"] = "Find an imprint"
+        context["create_url"] = "imprint:create"
+        context["create_title"] = "Add a new imprint"
+        context["detail_url_name"] = "imprint:detail"
+        context["image_ratio"] = "is-2by3"
+        context["default_image"] = "site/img/image-not-found.webp"
+        context["count_type"] = "series"
+        context["count_url_name"] = "imprint:series"
+        context["count_label"] = "Series"
+        return context
+
 
 class ImprintSeriesList(ListView):
     template_name = "comicsdb/series_list.html"
@@ -61,16 +85,12 @@ class ImprintDetail(DetailView):
         context = super().get_context_data(**kwargs)
         imprint = self.get_object()
         try:
-            next_imprint = (
-                Imprint.objects.order_by("name").filter(name__gt=imprint.name).first()
-            )
+            next_imprint = Imprint.objects.order_by("name").filter(name__gt=imprint.name).first()
         except ObjectDoesNotExist:
             next_imprint = None
 
         try:
-            previous_imprint = (
-                Imprint.objects.order_by("name").filter(name__lt=imprint.name).last()
-            )
+            previous_imprint = Imprint.objects.order_by("name").filter(name__lt=imprint.name).last()
         except ObjectDoesNotExist:
             previous_imprint = None
 
