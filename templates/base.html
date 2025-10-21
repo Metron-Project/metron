@@ -1,5 +1,4 @@
 {% load static %}
-{% load compress %}
 <!DOCTYPE html>
 <html lang="en">
     <head>
@@ -35,10 +34,8 @@
         {% load django_simple_bulma %}
         {% bulma %}
         {% font_awesome %}
-        {% compress css %}
-            <link rel="stylesheet" href="{% static 'site/css/base.css' %}">
-            {% block headcss %}{% endblock %}
-        {% endcompress %}
+        <link rel="stylesheet" href="{% static 'site/css/base.css' %}">
+        {% block headcss %}{% endblock %}
         {# Head Scripts #}
         {% block headscripts %}{% endblock %}
     </head>
@@ -67,10 +64,8 @@
         {# Footer #}
         {% include "partials/footer.html" %}
         {# Scripts #}
-        {% compress js %}
-            {% block js %}{% endblock %}
-            <script src="{% static 'site/js/bulma-navbar-burger.js' %}"></script>
-        {% endcompress %}
+        {% block js %}{% endblock %}
+        <script src="{% static 'site/js/bulma-navbar-burger.js' %}"></script>
         {# Analytics or other tracking scripts can go here #}
         {% block analytics %}{% endblock %}
     </body>

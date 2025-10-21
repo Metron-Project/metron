@@ -23,7 +23,6 @@ imagehash = "*"
 isbnlib = "*"
 django-countries = "*"
 psycopg = {extras = ["pool"], version = "*"}
-django-compressor = "*"
 
 [dev-packages]
 django-debug-toolbar = "*"
