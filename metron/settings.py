@@ -59,6 +59,7 @@ INSTALLED_APPS = [
     "django_select2",
     "sorl.thumbnail",
     "django_simple_bulma",
+    "compressor",
     "chartkick.django",
     "django_countries",
     "api",
@@ -273,6 +274,8 @@ STATICFILES_FINDERS = [
     "django.contrib.staticfiles.finders.AppDirectoriesFinder",
     # Now add our custom SimpleBulma one.
     "django_simple_bulma.finders.SimpleBulmaFinder",
+    # Add compressor finder
+    "compressor.finders.CompressorFinder",
 ]
 
 # Custom settings for django-simple-bulma
@@ -281,6 +284,10 @@ BULMA_SETTINGS = {
     "variables": {"navbar-height": "4.75rem", "footer-padding": "1rem 1.5rem 1rem"},
     "output_style": "compressed",
 }
+
+# django-compressor settings
+COMPRESS_ENABLED = not DEBUG
+COMPRESS_OFFLINE = not DEBUG
 
 HCAPTCHA_SECRET_KEY = config("HCAPTCHA_SECRET_KEY")
 RAPID_API_KEY = config("RAPID_API_KEY")
