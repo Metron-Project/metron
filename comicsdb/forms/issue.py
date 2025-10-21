@@ -1,6 +1,7 @@
 from dal import autocomplete
 from django.forms import (
     ClearableFileInput,
+    DateInput,
     ModelChoiceField,
     ModelForm,
     ValidationError,
@@ -72,6 +73,9 @@ class IssueForm(ModelForm):
             "image",
         )
         widgets = {
+            "cover_date": DateInput(attrs={"type": "date", "data-bulma-calendar": "on"}),
+            "store_date": DateInput(attrs={"type": "date", "data-bulma-calendar": "on"}),
+            "foc_date": DateInput(attrs={"type": "date", "data-bulma-calendar": "on"}),
             "arcs": ArcsWidget(attrs={"class": "input"}),
             "characters": CharactersWidget(attrs={"class": "input"}),
             "teams": TeamsWidget(attrs={"class": "input"}),
@@ -144,9 +148,7 @@ class IssueForm(ModelForm):
         if collection_title:
             series: Series = self.cleaned_data["series"]
             if not series.collection:
-                raise ValidationError(
-                    "Collection Title field is not allowed for this series.."
-                )
+                raise ValidationError("Collection Title field is not allowed for this series..")
         return collection_title
 
     def clean_arcs(self):
