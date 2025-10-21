@@ -51,29 +51,6 @@ class CreatorList(ListView):
     paginate_by = PAGINATE
     queryset = Creator.objects.prefetch_related("credits_set")
 
-    def get_template_names(self):
-        # If this is an HTMX request, return only the partial content
-        if self.request.headers.get("HX-Request"):
-            return ["comicsdb/partials/generic_list_content.html"]
-        return ["comicsdb/creator_list.html"]
-
-    def get_context_data(self, **kwargs):
-        context = super().get_context_data(**kwargs)
-        # Add required context for generic template
-        context["list_items"] = context["creator_list"]
-        context["list_name"] = "creator"
-        context["list_title"] = "Creator"
-        context["search_url"] = "creator:search"
-        context["search_placeholder"] = "Find a creator"
-        context["create_url"] = "creator:create"
-        context["create_title"] = "Add a new creator"
-        context["detail_url_name"] = "creator:detail"
-        context["image_ratio"] = "is-square"
-        context["default_image"] = "site/img/creator-not-found.webp"
-        context["count_url_name"] = "creator:issue"
-        context["count_label"] = "Issue"
-        return context
-
 
 class CreatorDetail(DetailView):
     model = Creator

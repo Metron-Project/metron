@@ -5,7 +5,16 @@
     <header class="block has-text-centered">
         <h1 class="title">Creators List</h1>
     </header>
-    <section>
-        {% include "comicsdb/partials/generic_list_content.html" with list_items=creator_list list_name="creator" list_title="Creator" search_url="creator:search" search_placeholder="Find a creator" create_url="creator:create" create_title="Add a new creator" detail_url_name="creator:detail" image_ratio="is-square" default_image="site/img/creator-not-found.webp" count_url_name="creator:issue" count_label="Issue" %}
-    </section>
+    {% if creator_list %}
+        <section>
+            {% include "comicsdb/partials/list_header.html" with title="Creator" count=page_obj.paginator.count search_url="creator:search" search_placeholder="Find a creator" create_url="creator:create" create_title="Add a new creator" %}
+            {% include "comicsdb/partials/card_grid.html" with items=creator_list detail_url_name="creator:detail" image_ratio="is-square" default_image="site/img/creator-not-found.webp" count_url_name="creator:issue" count_label="Issue" %}
+        </section>
+    {% else %}
+        {% include "comicsdb/partials/empty_state.html" with item_type="Creator" create_url="creator:create" create_title="Add a new creator" %}
+    {% endif %}
+{% endblock %}
+{% block pagination %}
+    {% load pagination_tags %}
+    {% include "comicsdb/partials/pagination.html" %}
 {% endblock %}

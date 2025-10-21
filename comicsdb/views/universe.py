@@ -46,29 +46,6 @@ class UniverseList(ListView):
     paginate_by = PAGINATE
     queryset = Universe.objects.prefetch_related("issues")
 
-    def get_template_names(self):
-        # If this is an HTMX request, return only the partial content
-        if self.request.headers.get("HX-Request"):
-            return ["comicsdb/partials/generic_list_content.html"]
-        return ["comicsdb/universe_list.html"]
-
-    def get_context_data(self, **kwargs):
-        context = super().get_context_data(**kwargs)
-        # Add required context for generic template
-        context["list_items"] = context["universe_list"]
-        context["list_name"] = "universe"
-        context["list_title"] = "Universe"
-        context["search_url"] = "universe:search"
-        context["search_placeholder"] = "Find a universe"
-        context["create_url"] = "universe:create"
-        context["create_title"] = "Add a new universe"
-        context["detail_url_name"] = "universe:detail"
-        context["image_ratio"] = "is-2by3"
-        context["default_image"] = "site/img/image-not-found.webp"
-        context["count_url_name"] = "universe:issue"
-        context["count_label"] = "Issue"
-        return context
-
 
 class UniverseIssueList(ListView):
     paginate_by = PAGINATE
@@ -99,7 +76,9 @@ class UniverseDetail(DetailView):
         context = super().get_context_data(**kwargs)
         universe = self.get_object()
         try:
-            next_universe = Universe.objects.order_by("name").filter(name__gt=universe.name).first()
+            next_universe = (
+                Universe.objects.order_by("name").filter(name__gt=universe.name).first()
+            )
         except ObjectDoesNotExist:
             next_universe = None
 
@@ -185,7 +164,9 @@ class UniverseCreate(LoginRequiredMixin, CreateView):
             else:
                 return super().form_invalid(form)
 
-            LOGGER.info("Universe: %s was created by %s", form.instance.name, self.request.user)
+            LOGGER.info(
+                "Universe: %s was created by %s", form.instance.name, self.request.user
+            )
         return super().form_valid(form)
 
 
@@ -225,7 +206,9 @@ class UniverseUpdate(LoginRequiredMixin, UpdateView):
             else:
                 return super().form_invalid(form)
 
-            LOGGER.info("Universe: %s was updated by %s", form.instance.name, self.request.user)
+            LOGGER.info(
+                "Universe: %s was updated by %s", form.instance.name, self.request.user
+            )
         return super().form_valid(form)
 
 

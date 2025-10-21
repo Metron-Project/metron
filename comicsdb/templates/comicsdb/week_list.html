@@ -55,9 +55,7 @@
                     {% include "comicsdb/partials/issue_card_grid.html" with items=issue_list %}
                 </div>
                 {# Search Sidebar #}
-                <div class="column is-one-fifth">
-                    {% include "comicsdb/partials/issue_search_box.html" with series_type=series_type %}
-                </div>
+                <div class="column is-one-fifth">{% include "comicsdb/issue_search_box.html" with objects=series_type %}</div>
             </div>
         </section>
     {% else %}

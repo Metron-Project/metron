@@ -26,12 +26,6 @@ class ArcList(ListView):
     paginate_by = PAGINATE
     queryset = Arc.objects.prefetch_related("issues")
 
-    def get_template_names(self):
-        # If this is an HTMX request, return only the partial content
-        if self.request.headers.get("HX-Request"):
-            return ["comicsdb/partials/arc_list_content.html"]
-        return ["comicsdb/arc_list.html"]
-
 
 class ArcIssueList(ListView):
     template_name = "comicsdb/issue_list.html"

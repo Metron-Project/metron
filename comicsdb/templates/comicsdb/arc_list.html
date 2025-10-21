@@ -5,7 +5,16 @@
     <header class="block has-text-centered">
         <h1 class="title">Story Arcs List</h1>
     </header>
-    <section>
-        {% include "comicsdb/partials/arc_list_content.html" %}
-    </section>
+    {% if arc_list %}
+        <section>
+            {% include "comicsdb/partials/list_header.html" with title="Story Arc" count=page_obj.paginator.count search_url="arc:search" search_placeholder="Find an arc" create_url="arc:create" create_title="Add a new story arc" %}
+            {% include "comicsdb/partials/card_grid.html" with items=arc_list detail_url_name="arc:detail" image_ratio="is-2by3" default_image="site/img/image-not-found.webp" count_url_name="arc:issue" count_label="Issue" %}
+        </section>
+    {% else %}
+        {% include "comicsdb/partials/empty_state.html" with item_type="Story Arc" create_url="arc:create" create_title="Add a new story arc" %}
+    {% endif %}
+{% endblock %}
+{% block pagination %}
+    {% load pagination_tags %}
+    {% include "comicsdb/partials/pagination.html" %}
 {% endblock %}

@@ -1,11 +1,4 @@
 {% load range_tags %}
-{% comment %}
-    Issue search/filter box - supports both traditional and HTMX requests
-
-    Parameters:
-    - series_type: QuerySet of series types for the dropdown
-    - htmx_target: (optional) ID of element to swap content into for HTMX requests
-{% endcomment %}
 <div class="box">
     <h2 class="title is-5">
         <span class="icon-text">
@@ -15,10 +8,7 @@
             <span>Filter Issues</span>
         </span>
     </h2>
-    <form action="{% url 'issue:search' %}"
-          method="get"
-          accept-charset="utf-8"
-          {% if htmx_target %} hx-get="{% url 'issue:search' %}" hx-target="#{{ htmx_target }}" hx-swap="outerHTML show:top" hx-push-url="true" {% endif %}>
+    <form action="{% url 'issue:search' %}" method="get" accept-charset="utf-8">
         {# Series Name #}
         <div class="field">
             <label class="label" for="series_name">Series Name</label>
@@ -27,7 +17,6 @@
                        type="text"
                        id="series_name"
                        name="series_name"
-                       value="{{ request.GET.series_name|default:'' }}"
                        placeholder="e.g., Amazing Spider-Man"
                        aria-label="Filter by series name">
                 <span class="icon is-small is-left">
@@ -43,7 +32,6 @@
                        type="text"
                        id="series_volume"
                        name="series_volume"
-                       value="{{ request.GET.series_volume|default:'' }}"
                        placeholder="e.g., 1"
                        aria-label="Filter by series volume number">
                 <span class="icon is-small is-left">
@@ -60,12 +48,7 @@
                             name="series_type"
                             aria-label="Filter by series type">
                         <option value="">All Types</option>
-                        {% for type in series_type %}
-                            <option value="{{ type.id }}"
-                                    {% if request.GET.series_type == type.id|stringformat:"s" %}selected{% endif %}>
-                                {{ type.name }}
-                            </option>
-                        {% endfor %}
+                        {% for type in series_type %}<option value="{{ type.id }}">{{ type.name }}</option>{% endfor %}
                     </select>
                 </div>
                 <span class="icon is-small is-left">
@@ -82,7 +65,6 @@
                        type="text"
                        id="number"
                        name="number"
-                       value="{{ request.GET.number|default:'' }}"
                        placeholder="e.g., 1"
                        aria-label="Filter by issue number">
                 <span class="icon is-small is-left">
@@ -98,7 +80,6 @@
                        type="text"
                        id="alt_number"
                        name="alt_number"
-                       value="{{ request.GET.alt_number|default:'' }}"
                        placeholder="e.g., 616"
                        aria-label="Filter by alternative number">
                 <span class="icon is-small is-left">
@@ -117,19 +98,9 @@
                         {% now "m" as current_month %}
                         {% now "Y" as current_year %}
                         {% if current_month >= '10' %}
-                            {% with next_year=current_year|add:"1" %}
-                                <option value="{{ next_year }}"
-                                        {% if request.GET.cover_year == next_year|stringformat:"s" %}selected{% endif %}>
-                                    {{ next_year }}
-                                </option>
-                            {% endwith %}
+                            {% with next_year=current_year|add:"1" %}<option value="{{ next_year }}">{{ next_year }}</option>{% endwith %}
                         {% endif %}
-                        {% for year in 1939|cover_year_range:current_year %}
-                            <option value="{{ year }}"
-                                    {% if request.GET.cover_year == year|stringformat:"s" %}selected{% endif %}>
-                                {{ year }}
-                            </option>
-                        {% endfor %}
+                        {% for year in 1939|cover_year_range:current_year %}<option value="{{ year }}">{{ year }}</option>{% endfor %}
                     </select>
                 </div>
                 <span class="icon is-small is-left">
@@ -146,21 +117,18 @@
                             name="cover_month"
                             aria-label="Filter by cover month">
                         <option value="">All Months</option>
-                        <option value="1" {% if request.GET.cover_month == "1" %}selected{% endif %}>January</option>
-                        <option value="2" {% if request.GET.cover_month == "2" %}selected{% endif %}>February</option>
-                        <option value="3" {% if request.GET.cover_month == "3" %}selected{% endif %}>March</option>
-                        <option value="4" {% if request.GET.cover_month == "4" %}selected{% endif %}>April</option>
-                        <option value="5" {% if request.GET.cover_month == "5" %}selected{% endif %}>May</option>
-                        <option value="6" {% if request.GET.cover_month == "6" %}selected{% endif %}>June</option>
-                        <option value="7" {% if request.GET.cover_month == "7" %}selected{% endif %}>July</option>
-                        <option value="8" {% if request.GET.cover_month == "8" %}selected{% endif %}>August</option>
-                        <option value="9" {% if request.GET.cover_month == "9" %}selected{% endif %}>September</option>
-                        <option value="10"
-                                {% if request.GET.cover_month == "10" %}selected{% endif %}>October</option>
-                        <option value="11"
-                                {% if request.GET.cover_month == "11" %}selected{% endif %}>November</option>
-                        <option value="12"
-                                {% if request.GET.cover_month == "12" %}selected{% endif %}>December</option>
+                        <option value="1">January</option>
+                        <option value="2">February</option>
+                        <option value="3">March</option>
+                        <option value="4">April</option>
+                        <option value="5">May</option>
+                        <option value="6">June</option>
+                        <option value="7">July</option>
+                        <option value="8">August</option>
+                        <option value="9">September</option>
+                        <option value="10">October</option>
+                        <option value="11">November</option>
+                        <option value="12">December</option>
                     </select>
                 </div>
                 <span class="icon is-small is-left">
@@ -177,7 +145,6 @@
                        type="text"
                        id="cv_id"
                        name="cv_id"
-                       value="{{ request.GET.cv_id|default:'' }}"
                        placeholder="e.g., 12345"
                        aria-label="Filter by Comic Vine ID">
                 <span class="icon is-small is-left">
@@ -195,7 +162,6 @@
                        type="text"
                        id="gcd_id"
                        name="gcd_id"
-                       value="{{ request.GET.gcd_id|default:'' }}"
                        placeholder="e.g., 67890"
                        aria-label="Filter by GCD ID">
                 <span class="icon is-small is-left">
@@ -219,7 +185,6 @@
             <div class="control">
                 <a class="button is-light is-fullwidth"
                    href="{% url 'issue:list' %}"
-                   {% if htmx_target %} hx-get="{% url 'issue:list' %}" hx-target="#{{ htmx_target }}" hx-swap="outerHTML show:top" hx-push-url="true" {% endif %}
                    title="Clear all filters and show all issues">
                     <span class="icon">
                         <i class="fas fa-times"></i>

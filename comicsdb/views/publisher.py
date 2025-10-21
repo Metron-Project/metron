@@ -26,30 +26,6 @@ class PublisherList(ListView):
     paginate_by = PAGINATE
     queryset = Publisher.objects.prefetch_related("series")
 
-    def get_template_names(self):
-        # If this is an HTMX request, return only the partial content
-        if self.request.headers.get("HX-Request"):
-            return ["comicsdb/partials/generic_list_content.html"]
-        return ["comicsdb/publisher_list.html"]
-
-    def get_context_data(self, **kwargs):
-        context = super().get_context_data(**kwargs)
-        # Add required context for generic template
-        context["list_items"] = context["publisher_list"]
-        context["list_name"] = "publisher"
-        context["list_title"] = "Publisher"
-        context["search_url"] = "publisher:search"
-        context["search_placeholder"] = "Find a publisher"
-        context["create_url"] = "publisher:create"
-        context["create_title"] = "Add a new publisher"
-        context["detail_url_name"] = "publisher:detail"
-        context["image_ratio"] = "is-2by3"
-        context["default_image"] = "site/img/image-not-found.webp"
-        context["count_type"] = "series"
-        context["count_url_name"] = "publisher:series"
-        context["count_label"] = "Series"
-        return context
-
 
 class PublisherSeriesList(ListView):
     template_name = "comicsdb/series_list.html"
@@ -184,7 +160,9 @@ class PublisherUpdate(LoginRequiredMixin, UpdateView):
             else:
                 return super().form_invalid(form)
 
-            LOGGER.info("Publisher: %s was updated by %s", form.instance.name, self.request.user)
+            LOGGER.info(
+                "Publisher: %s was updated by %s", form.instance.name, self.request.user
+            )
         return super().form_valid(form)
 
 

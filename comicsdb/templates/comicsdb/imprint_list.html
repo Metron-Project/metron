@@ -5,7 +5,16 @@
     <header class="block has-text-centered">
         <h1 class="title">Imprints List</h1>
     </header>
-    <section>
-        {% include "comicsdb/partials/generic_list_content.html" with list_items=imprint_list list_name="imprint" list_title="Imprint" search_url="imprint:search" search_placeholder="Find an imprint" create_url="imprint:create" create_title="Add a new imprint" detail_url_name="imprint:detail" image_ratio="is-2by3" default_image="site/img/image-not-found.webp" count_type="series" count_url_name="imprint:series" count_label="Series" %}
-    </section>
+    {% if imprint_list %}
+        <section>
+            {% include "comicsdb/partials/list_header.html" with title="Imprint" count=page_obj.paginator.count search_url="imprint:search" search_placeholder="Find an imprint" create_url="imprint:create" create_title="Add a new imprint" %}
+            {% include "comicsdb/partials/card_grid.html" with items=imprint_list detail_url_name="imprint:detail" image_ratio="is-2by3" default_image="site/img/image-not-found.webp" count_type="series" count_url_name="imprint:series" count_label="Series" %}
+        </section>
+    {% else %}
+        {% include "comicsdb/partials/empty_state.html" with item_type="Imprint" create_url="imprint:create" create_title="Add a new imprint" %}
+    {% endif %}
+{% endblock %}
+{% block pagination %}
+    {% load pagination_tags %}
+    {% include "comicsdb/partials/pagination.html" %}
 {% endblock %}

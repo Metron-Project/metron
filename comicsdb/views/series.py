@@ -25,12 +25,6 @@ class SeriesList(ListView):
     paginate_by = PAGINATE
     queryset = Series.objects.select_related("series_type").prefetch_related("issues")
 
-    def get_template_names(self):
-        # If this is an HTMX request, return only the partial content
-        if self.request.headers.get("HX-Request"):
-            return ["comicsdb/partials/series_list_content.html"]
-        return ["comicsdb/series_list.html"]
-
 
 class SeriesIssueList(ListView):
     template_name = "comicsdb/issue_list.html"
