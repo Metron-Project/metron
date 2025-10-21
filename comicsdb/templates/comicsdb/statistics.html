@@ -9,23 +9,108 @@
     Statistics - Metron
 {% endblock title %}
 {% block content %}
-    {# Database Totals Section with HTMX auto-refresh #}
-    <div hx-get="{% url 'statistics-totals' %}"
-         hx-trigger="load, every 30s"
-         hx-swap="outerHTML"
-         hx-indicator="#totals-refresh-indicator">{% include "comicsdb/partials/statistics_totals.html" %}</div>
-    {# Charts Section with HTMX auto-refresh #}
-    <div hx-get="{% url 'statistics-charts' %}"
-         hx-trigger="load, every 30s"
-         hx-swap="outerHTML"
-         hx-indicator="#charts-refresh-indicator">{% include "comicsdb/partials/statistics_charts.html" %}</div>
+    {# Page Header #}
+    <header class="block has-text-centered">
+        <h1 class="title is-3">Metron Database Statistics</h1>
+        <p class="subtitle is-6 has-text-grey">
+            Last Updated: <time datetime="{{ update_time|date:'c' }}">{{ update_time }}</time>
+        </p>
+    </header>
+    {# Summary Totals #}
+    <section class="section">
+        <div class="box has-background-light">
+            <h2 class="title is-4 has-text-centered has-text-dark mb-5">Database Totals</h2>
+            <div class="columns is-multiline">
+                <div class="column is-3">
+                    <div class="box has-text-centered">
+                        <p class="heading">Publishers</p>
+                        <p class="title is-3 has-text-primary">{{ publishers_total|intcomma }}</p>
+                    </div>
+                </div>
+                <div class="column is-3">
+                    <div class="box has-text-centered">
+                        <p class="heading">Series</p>
+                        <p class="title is-3 has-text-info">{{ series_total|intcomma }}</p>
+                    </div>
+                </div>
+                <div class="column is-3">
+                    <div class="box has-text-centered">
+                        <p class="heading">Issues</p>
+                        <p class="title is-3 has-text-link">{{ issues_total|intcomma }}</p>
+                    </div>
+                </div>
+                <div class="column is-3">
+                    <div class="box has-text-centered">
+                        <p class="heading">Characters</p>
+                        <p class="title is-3 has-text-success">{{ characters_total|intcomma }}</p>
+                    </div>
+                </div>
+                <div class="column is-3">
+                    <div class="box has-text-centered">
+                        <p class="heading">Creators</p>
+                        <p class="title is-3 has-text-warning">{{ creators_total|intcomma }}</p>
+                    </div>
+                </div>
+                <div class="column is-3">
+                    <div class="box has-text-centered">
+                        <p class="heading">Teams</p>
+                        <p class="title is-3 has-text-danger">{{ teams_total|intcomma }}</p>
+                    </div>
+                </div>
+                <div class="column is-3">
+                    <div class="box has-text-centered">
+                        <p class="heading">Story Arcs</p>
+                        <p class="title is-3 has-text-grey-dark">{{ arcs_total|intcomma }}</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+    {# Charts Section #}
+    <section class="section">
+        <h2 class="title is-4 has-text-centered mb-5">Statistical Analysis</h2>
+        {# Issues by Year #}
+        <div class="box mb-5">
+            <div class="content">{{ year_count }}</div>
+        </div>
+        {# Issues by Publisher #}
+        <div class="box mb-5">
+            <div class="content">{{ publisher_count }}</div>
+        </div>
+        {# Issue Trends #}
+        <div class="columns is-multiline mb-5">
+            <div class="column is-half">
+                <div class="box">
+                    <div class="content">{{ daily_chart }}</div>
+                </div>
+            </div>
+            <div class="column is-half">
+                <div class="box">
+                    <div class="content">{{ monthly_chart }}</div>
+                </div>
+            </div>
+        </div>
+        {# Creator and Character Trends #}
+        <div class="columns is-multiline">
+            <div class="column is-half">
+                <div class="box">
+                    <div class="content">{{ creator_chart }}</div>
+                </div>
+            </div>
+            <div class="column is-half">
+                <div class="box">
+                    <div class="content">{{ character_chart }}</div>
+                </div>
+            </div>
+        </div>
+    </section>
     {# Information Box #}
     <section class="section">
         <div class="notification is-info is-light">
             <div class="content">
                 <p class="has-text-weight-bold">About These Statistics</p>
                 <p>
-                    These statistics are automatically generated from the Metron database and update live every 30 seconds.
+                    These statistics are automatically generated from the Metron database and are updated every 30 minutes.
                     They represent the collective efforts of our community in building a comprehensive comic book database.
                 </p>
             </div>
