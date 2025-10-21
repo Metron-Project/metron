@@ -209,11 +209,18 @@
 {% if recently_edited %}
     <section class="section">
         <div class="container">
-            <div class="box"
-                 hx-get="{% url 'recently-edited' %}"
-                 hx-trigger="every 120s"
-                 hx-swap="innerHTML"
-                 hx-indicator="#refresh-indicator">{% include "comicsdb/partials/recently_edited_section.html" %}</div>
+            <div class="box">
+                <header class="block">
+                    <h2 class="title is-4">Recently Edited Issues</h2>
+                    <p class="subtitle is-7">
+                        <time datetime="{{ updated|date:'c' }}">
+                            Last updated: {{ updated }}
+                        </time>
+                    </p>
+                </header>
+                {# Use the reusable issue card grid partial #}
+                {% include "comicsdb/partials/issue_card_grid.html" with items=recently_edited %}
+            </div>
         </div>
     </section>
 {% endif %}
