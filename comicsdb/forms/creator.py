@@ -1,4 +1,4 @@
-from django.forms import ClearableFileInput, ModelForm
+from django.forms import ClearableFileInput, DateInput, ModelForm
 from django_select2 import forms as s2forms
 
 from comicsdb.models import Creator
@@ -25,6 +25,8 @@ class CreatorForm(ModelForm):
             "image",
         )
         widgets = {
+            "birth": DateInput(attrs={"type": "date", "data-bulma-calendar": "on"}),
+            "death": DateInput(attrs={"type": "date", "data-bulma-calendar": "on"}),
             "image": ClearableFileInput(),
         }
         help_texts = {

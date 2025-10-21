@@ -53,10 +53,27 @@
     {{ form.media.js }}
     <script src="{% static 'site/js/jquery.formset.js' %}"></script>
     <script src="{% static 'site/js/bulma-fileupload.js' %}"></script>
+    <script src="{% static 'site/js/bulma-calendar.min.js' %}"></script>
     <script>
 $(function() {
     'use strict';
-    
+
+    // Initialize bulma-calendar for date inputs
+    var dateInputs = document.querySelectorAll('input[data-bulma-calendar="on"]');
+    dateInputs.forEach(function(input) {
+        bulmaCalendar.attach(input, {
+            type: 'date',
+            dateFormat: 'yyyy-MM-dd',
+            displayMode: 'default',
+            showHeader: true,
+            closeOnSelect: true,
+            clearButton: false,
+            todayButton: true,
+            showFooter: true,
+            weekStart: 0
+        });
+    });
+
     // Initialize credits formset
     $('#issueForm #creditsTable tbody tr').formset({
         prefix: '{{ credits.prefix }}',
@@ -69,7 +86,7 @@ $(function() {
             console.log('Credit row removed');
         }
     });
-    
+
     // Initialize variants formset
     $('#issueForm #variantsTable tbody tr').formset({
         prefix: '{{ variants.prefix }}',
