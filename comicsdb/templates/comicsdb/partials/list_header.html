@@ -16,7 +16,8 @@
         {# Item Count #}
         <div class="level-item">
             <p class="subtitle is-5">
-                <strong>{{ count|intcomma }}</strong> {{ title }}{{ count|pluralize }}
+                <strong>{{ count|intcomma }}</strong> {{ title }}
+                {% if title != "Series" %}{{ count|pluralize }}{% endif %}
             </p>
         </div>
         {# Search Form #}
