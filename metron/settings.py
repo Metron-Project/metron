@@ -61,6 +61,7 @@ INSTALLED_APPS = [
     "django_simple_bulma",
     "chartkick.django",
     "django_countries",
+    "djmoney",
     "api",
     "comicsdb",
     "users",
@@ -134,6 +135,11 @@ DATABASES = {
         },
     }
 }
+
+# django-money settings
+CURRENCIES = ("USD",)  # Add other currencies as needed: ('USD', 'GBP', 'EUR')
+DEFAULT_CURRENCY = "USD"
+
 
 ALLOWED_HOSTS = config("ALLOWED_HOSTS", cast=Csv())
 

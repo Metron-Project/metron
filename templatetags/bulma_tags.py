@@ -10,8 +10,8 @@ def add_field_class(field, css_class):
         # automatically add .is-danger to fields with invalid values
         css_class += " is-danger"
 
-    if isinstance(field.field.widget, forms.SplitDateTimeWidget):
-        # I personally prefer using SplitDateTimeWidget for datetime
+    if isinstance(field.field.widget, forms.SplitDateTimeWidget | forms.MultiWidget):
+        # Handle SplitDateTimeWidget and MultiWidget (e.g., MoneyWidget)
         for subfield in field.field.widget.widgets:
             if subfield.attrs.get("class"):
                 subfield.attrs["class"] += f" {css_class}"
@@ -56,10 +56,7 @@ def is_field_type(field, field_type):  # NOQA: PLR0911
         case "any_datetime":
             return isinstance(
                 field.field.widget,
-                forms.DateInput
-                | forms.TimeInput
-                | forms.DateTimeInput
-                | forms.SplitDateTimeWidget,
+                forms.DateInput | forms.TimeInput | forms.DateTimeInput | forms.SplitDateTimeWidget,
             )  # there is also forms.SplitHiddenDateTimeWidget, but we'll skip it
         case _:
             raise ValueError(f"Unsupported field_type on |is_field_type:'{field_type}'")

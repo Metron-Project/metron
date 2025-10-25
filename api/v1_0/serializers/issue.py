@@ -1,3 +1,6 @@
+from decimal import Decimal
+
+from djmoney.money import Money
 from rest_framework import serializers
 
 from api.v1_0.serializers import CreditReadSerializer
@@ -11,6 +14,68 @@ from api.v1_0.serializers.series import SeriesTypeSerializer
 from api.v1_0.serializers.team import TeamListSerializer
 from api.v1_0.serializers.universe import UniverseListSerializer
 from comicsdb.models import Issue, Series, Variant
+
+
+class PriceField(serializers.Field):
+    """
+    Custom field for backward-compatible price serialization.
+
+    For READ operations:
+    - Returns decimal amount only (e.g., "3.99") for backward compatibility
+    - Clients can optionally use price_currency field for currency info
+
+    For WRITE operations:
+    - Accepts decimal value (e.g., 3.99) and defaults to USD
+    - Can also accept {"amount": 3.99, "currency": "USD"} for multi-currency
+    """
+
+    def to_representation(self, value):
+        """
+        Serialize MoneyField to decimal string for backward compatibility.
+        Returns: "3.99" (just the amount, no currency)
+        """
+        if value is None:
+            return None
+        if isinstance(value, Money):
+            return str(value.amount)
+        return str(value)
+
+    def to_internal_value(self, data):
+        """
+        Deserialize input to Money object.
+        Accepts:
+        - None or empty string: returns None (blank price)
+        - Decimal/float/string: "3.99" (defaults to USD)
+        - Dict: {"amount": 3.99, "currency": "USD"}
+        """
+        # Handle None, empty string, or empty dict
+        if data in (None, "", {}):
+            return None
+
+        # Handle dict format for multi-currency support
+        if isinstance(data, dict):
+            amount = data.get("amount")
+            currency = data.get("currency", "USD")
+
+            # Allow empty/null amount in dict format
+            if amount in (None, ""):
+                return None
+
+            try:
+                return Money(Decimal(str(amount)), currency)
+            except (ValueError, TypeError) as e:
+                raise serializers.ValidationError(f"Invalid price format: {e}") from e
+
+        # Handle simple decimal/string format (backward compatible)
+        # Convert to string and strip whitespace
+        data_str = str(data).strip()
+        if not data_str:
+            return None
+
+        try:
+            return Money(Decimal(data_str), "USD")
+        except (ValueError, TypeError) as e:
+            raise serializers.ValidationError(f"Invalid price format: {e}") from e
 
 
 class VariantsIssueSerializer(serializers.ModelSerializer):
@@ -64,6 +129,7 @@ class ReprintSerializer(serializers.ModelSerializer):
 # TODO: Refactor this so reuse Issue serializer for read-only also.
 #       Need to handle variants & credits sets.
 class IssueSerializer(serializers.ModelSerializer):
+    price = PriceField(required=False, allow_null=True)
     resource_url = serializers.SerializerMethodField("get_resource_url")
 
     def get_resource_url(self, obj: Issue) -> str:
@@ -160,6 +226,8 @@ class IssueSerializer(serializers.ModelSerializer):
 
 
 class IssueReadSerializer(serializers.ModelSerializer):
+    price = PriceField(read_only=True)
+    price_currency = serializers.SerializerMethodField()
     variants = VariantsIssueSerializer("variants", many=True, read_only=True)
     credits = CreditReadSerializer(source="credits_set", many=True, read_only=True)
     arcs = ArcListSerializer(many=True, read_only=True)
@@ -176,6 +244,12 @@ class IssueReadSerializer(serializers.ModelSerializer):
     def get_resource_url(self, obj: Issue) -> str:
         return self.context["request"].build_absolute_uri(obj.get_absolute_url())
 
+    def get_price_currency(self, obj: Issue) -> str | None:
+        """Return the currency code for the price field."""
+        if obj.price and isinstance(obj.price, Money):
+            return str(obj.price.currency)
+        return None
+
     class Meta:
         model = Issue
         fields = (
@@ -191,6 +265,7 @@ class IssueReadSerializer(serializers.ModelSerializer):
             "store_date",
             "foc_date",
             "price",
+            "price_currency",
             "rating",
             "sku",
             "isbn",

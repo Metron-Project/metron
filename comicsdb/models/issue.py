@@ -11,6 +11,7 @@ from django.db import models
 from django.db.models.signals import pre_save
 from django.urls import reverse
 from django.utils.text import slugify
+from djmoney.models.fields import MoneyField
 from PIL import Image
 from sorl.thumbnail import ImageField
 
@@ -40,18 +41,14 @@ class TradePaperbackManager(models.Manager):
 
 class Issue(CommonInfo):
     series = models.ForeignKey(Series, on_delete=models.CASCADE, related_name="issues")
-    name = ArrayField(
-        models.CharField("Story Title", max_length=150), blank=True, default=list
-    )
+    name = ArrayField(models.CharField("Story Title", max_length=150), blank=True, default=list)
     title = models.CharField("Collection Title", max_length=255, blank=True)
     number = models.CharField(max_length=25)
     alt_number = models.CharField("Alternative Number", max_length=25, blank=True)
     cover_date = models.DateField("Cover Date")
     store_date = models.DateField("In Store Date", null=True, blank=True)
     foc_date = models.DateField("Final Order Cutoff Date", null=True, blank=True)
-    price = models.DecimalField(
-        "Cover Price", max_digits=5, decimal_places=2, null=True, blank=True
-    )
+    price = MoneyField("Cover Price", max_digits=5, decimal_places=2, blank=True, null=True)
     rating = models.ForeignKey(Rating, default=1, on_delete=models.SET_DEFAULT)
     sku = models.CharField("Distributor SKU", max_length=12, blank=True)
     isbn = models.CharField("ISBN", max_length=13, blank=True)
@@ -60,9 +57,7 @@ class Issue(CommonInfo):
     image = ImageField("Cover", upload_to="issue/%Y/%m/%d/", blank=True)
     cover_hash = models.CharField("Cover Hash", max_length=16, blank=True)
     arcs = models.ManyToManyField(Arc, blank=True, related_name="issues")
-    creators = models.ManyToManyField(
-        Creator, through="Credits", blank=True, related_name="issues"
-    )
+    creators = models.ManyToManyField(Creator, through="Credits", blank=True, related_name="issues")
     characters = models.ManyToManyField(Character, blank=True, related_name="issues")
     teams = models.ManyToManyField(Team, blank=True, related_name="issues")
     universes = models.ManyToManyField(Universe, blank=True, related_name="issues")
@@ -164,9 +159,7 @@ def pre_save_cover_hash(sender, instance: Issue, *args, **kwargs) -> None:
         return
 
     if instance.cover_hash:
-        LOGGER.info(
-            "Updating cover hash from '%s' to '' for %s", instance.cover_hash, instance
-        )
+        LOGGER.info("Updating cover hash from '%s' to '' for %s", instance.cover_hash, instance)
         instance.cover_hash = ""
         return
 
