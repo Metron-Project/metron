@@ -244,11 +244,11 @@ class IssueReadSerializer(serializers.ModelSerializer):
     def get_resource_url(self, obj: Issue) -> str:
         return self.context["request"].build_absolute_uri(obj.get_absolute_url())
 
-    def get_price_currency(self, obj: Issue) -> str | None:
+    def get_price_currency(self, obj: Issue) -> str:
         """Return the currency code for the price field."""
         if obj.price and isinstance(obj.price, Money):
             return str(obj.price.currency)
-        return None
+        return ""
 
     class Meta:
         model = Issue
