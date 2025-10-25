@@ -1,0 +1,17 @@
+{% comment %}
+Custom template for MultiWidget (MoneyWidget) with Bulma styling.
+This template renders the amount input and currency select in a horizontal field group.
+{% endcomment %}
+<div class="field has-addons">
+    {% for widget in widget.subwidgets %}
+        <div class="control{% if forloop.first %} is-expanded{% endif %}">
+            {% if forloop.last %}
+                {# Currency select dropdown #}
+                <div class="select{% if widget.errors %} is-danger{% endif %}">{% include widget.template_name %}</div>
+            {% else %}
+                {# Amount input field #}
+                {% include widget.template_name %}
+            {% endif %}
+        </div>
+    {% endfor %}
+</div>

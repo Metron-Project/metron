@@ -11,6 +11,7 @@ from isbnlib import canonical, is_isbn10, is_isbn13
 
 from comicsdb.forms.team import TeamsWidget
 from comicsdb.forms.universe import UniversesWidget
+from comicsdb.forms.widgets import BulmaMoneyWidget
 from comicsdb.models import Issue, Rating, Series
 
 MINIMUM_YEAR = 1900
@@ -76,6 +77,7 @@ class IssueForm(ModelForm):
             "cover_date": DateInput(attrs={"type": "date", "data-bulma-calendar": "on"}),
             "store_date": DateInput(attrs={"type": "date", "data-bulma-calendar": "on"}),
             "foc_date": DateInput(attrs={"type": "date", "data-bulma-calendar": "on"}),
+            "price": BulmaMoneyWidget(),
             "arcs": ArcsWidget(attrs={"class": "input"}),
             "characters": CharactersWidget(attrs={"class": "input"}),
             "teams": TeamsWidget(attrs={"class": "input"}),
