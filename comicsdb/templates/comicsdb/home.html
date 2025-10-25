@@ -31,8 +31,8 @@
         <div class="container has-text-centered">
             <h1 class="title is-1">Metron</h1>
             <p class="subtitle is-3">Comic Book Database</p>
-            <div class="level is-mobile mt-5">
-                <div class="level-item has-text-centered">
+            <div class="columns is-mobile mt-5">
+                <div class="column has-text-centered">
                     <div>
                         <span class="icon is-large" aria-hidden="true">
                             <i class="fas fa-database fa-2x"></i>
@@ -40,7 +40,7 @@
                         <p class="heading">Database</p>
                     </div>
                 </div>
-                <div class="level-item has-text-centered">
+                <div class="column has-text-centered">
                     <div>
                         <span class="icon is-large" aria-hidden="true">
                             <i class="fas fa-satellite-dish fa-2x"></i>
@@ -48,7 +48,7 @@
                         <p class="heading">REST API</p>
                     </div>
                 </div>
-                <div class="level-item has-text-centered">
+                <div class="column has-text-centered">
                     <div>
                         <span class="icon is-large" aria-hidden="true">
                             <i class="fas fa-users fa-2x"></i>
@@ -208,15 +208,16 @@
 {# Recently Edited Issues #}
 {% if recently_edited %}
     <section class="section">
-        <div class="box">
-            <header class="block">
-                <h2 class="title is-4">Recently Edited Issues</h2>
-                <p class="subtitle is-7">
+        <div class="container">
+            <header class="block mb-4">
+                <h2 class="title is-3">Recently Edited Issues</h2>
+                <p class="subtitle is-6 has-text-grey">
                     <time datetime="{{ updated|date:'c' }}">
                         Last updated: {{ updated }}
                     </time>
                 </p>
             </header>
+            <hr class="mb-5">
             {# Use the reusable issue card grid partial #}
             {% include "comicsdb/partials/issue_card_grid.html" with items=recently_edited %}
         </div>
