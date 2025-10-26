@@ -1,4 +1,5 @@
 from django.contrib import admin
+from simple_history.admin import SimpleHistoryAdmin
 from sorl.thumbnail.admin.current import AdminImageMixin
 
 from comicsdb.admin.util import AttributionInline
@@ -6,7 +7,7 @@ from comicsdb.models import Creator
 
 
 @admin.register(Creator)
-class CreatorAdmin(AdminImageMixin, admin.ModelAdmin):
+class CreatorAdmin(AdminImageMixin, SimpleHistoryAdmin):
     search_fields = ("name", "alias")
     prepopulated_fields = {"slug": ("name",)}
     list_filter = ("created_on", "modified")

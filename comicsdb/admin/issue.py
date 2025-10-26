@@ -4,6 +4,7 @@ from typing import Any
 from django.contrib import admin, messages
 from django.db.models.query import QuerySet
 from django.utils.translation import ngettext
+from simple_history.admin import SimpleHistoryAdmin
 from sorl.thumbnail.admin.current import AdminImageMixin
 
 from comicsdb.admin.util import AttributionInline, CreatedOnDateListFilter
@@ -45,7 +46,7 @@ class VariantInline(admin.TabularInline):
 
 
 @admin.register(Issue)
-class IssueAdmin(AdminImageMixin, admin.ModelAdmin):
+class IssueAdmin(AdminImageMixin, SimpleHistoryAdmin):
     search_fields = ("series__name", "number", "alt_number")
     list_display = ("__str__", "cover_date", "store_date", "created_on")
     list_filter = (
