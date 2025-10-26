@@ -1,4 +1,5 @@
 from django.contrib import admin
+from simple_history.admin import SimpleHistoryAdmin
 from sorl.thumbnail.admin import AdminImageMixin
 
 from comicsdb.admin.util import AttributionInline
@@ -6,7 +7,7 @@ from comicsdb.models import Universe
 
 
 @admin.register(Universe)
-class UniverseAdmin(AdminImageMixin, admin.ModelAdmin):
+class UniverseAdmin(AdminImageMixin, SimpleHistoryAdmin):
     search_fields = ["name"]
     prepopulated_fields = {"slug": ("name",)}
     list_filter = ["publisher"]

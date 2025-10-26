@@ -5,6 +5,7 @@ from django.db import models
 from django.db.models.signals import pre_save
 from django.urls import reverse
 from django.utils.text import slugify
+from simple_history.models import HistoricalRecords
 
 from comicsdb.models.attribution import Attribution
 from comicsdb.models.common import CommonInfo
@@ -58,6 +59,7 @@ class Series(CommonInfo):
     edited_by = models.ForeignKey(
         CustomUser, default=1, on_delete=models.SET_DEFAULT, related_name="series_edited"
     )
+    history = HistoricalRecords(m2m_fields=[genres, associated])
 
     def get_absolute_url(self):
         return reverse("series:detail", args=[self.slug])

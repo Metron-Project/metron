@@ -13,6 +13,7 @@ from django.urls import reverse
 from django.utils.text import slugify
 from djmoney.models.fields import MoneyField
 from PIL import Image
+from simple_history.models import HistoricalRecords
 from sorl.thumbnail import ImageField
 
 from comicsdb.models.arc import Arc
@@ -69,6 +70,7 @@ class Issue(CommonInfo):
     edited_by = models.ForeignKey(
         CustomUser, default=1, on_delete=models.SET_DEFAULT, related_name="issues_edited"
     )
+    history = HistoricalRecords(m2m_fields=[arcs, characters, teams, universes, reprints])
 
     objects = models.Manager()
     graphic_novels = GraphicNovelManager()

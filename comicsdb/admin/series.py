@@ -1,12 +1,13 @@
 from django.contrib import admin, messages
 from django.utils.translation import ngettext
+from simple_history.admin import SimpleHistoryAdmin
 
 from comicsdb.admin.util import CreatedOnDateListFilter
 from comicsdb.models import Issue, Series, SeriesType
 
 
 @admin.register(Series)
-class SeriesAdmin(admin.ModelAdmin):
+class SeriesAdmin(SimpleHistoryAdmin):
     search_fields = ("name",)
     list_display = ("name", "year_began", "created_by")
     list_filter = (CreatedOnDateListFilter, "modified", "series_type", "status", "publisher")
