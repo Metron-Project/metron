@@ -172,8 +172,10 @@
                                 <p class="is-size-6">
                                     <strong>{{ variant.name }}</strong>
                                 </p>
-                                {% if variant.sku or variant.upc %}
+                                {% if variant.price or variant.sku or variant.upc %}
                                     <p class="is-size-7 has-text-grey mt-1">
+                                        {% if variant.price %}Price: {{ variant.price }}{% endif %}
+                                        {% if variant.price and variant.sku %}<br>{% endif %}
                                         {% if variant.sku %}SKU: {{ variant.sku }}{% endif %}
                                         {% if variant.sku and variant.upc %}<br>{% endif %}
                                         {% if variant.upc %}UPC: {{ variant.upc }}{% endif %}
