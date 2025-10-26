@@ -1,6 +1,7 @@
 from decimal import Decimal
 
 from djmoney.money import Money
+from drf_spectacular.utils import extend_schema_field
 from rest_framework import serializers
 
 from api.v1_0.serializers import CreditReadSerializer
@@ -16,6 +17,19 @@ from api.v1_0.serializers.universe import UniverseListSerializer
 from comicsdb.models import Issue, Series, Variant
 
 
+@extend_schema_field(
+    {
+        "type": "string",
+        "format": "decimal",
+        "pattern": r"^\d+\.\d{2}$",
+        "example": "3.99",
+        "description": (
+            "Price amount as decimal string (e.g., '3.99'). "
+            "Currency information available in price_currency field."
+        ),
+        "nullable": True,
+    }
+)
 class PriceField(serializers.Field):
     """
     Custom field for backward-compatible price serialization.
@@ -79,9 +93,11 @@ class PriceField(serializers.Field):
 
 
 class VariantsIssueSerializer(serializers.ModelSerializer):
+    price = PriceField(read_only=True)
+
     class Meta:
         model = Variant
-        fields = ("name", "sku", "upc", "image")
+        fields = ("name", "price", "sku", "upc", "image")
 
 
 class IssueSeriesSerializer(serializers.ModelSerializer):

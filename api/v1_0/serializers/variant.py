@@ -17,6 +17,7 @@ class VariantSerializer(serializers.ModelSerializer):
         instance.issue = validated_data.get("issue", instance.issue)
         instance.image = validated_data.get("image", instance.image)
         instance.name = validated_data.get("name", instance.name)
+        instance.price = validated_data.get("price", instance.price)
         instance.sku = validated_data.get("sku", instance.sku)
         instance.upc = validated_data.get("upc", instance.upc)
         instance.save()
