@@ -7,6 +7,7 @@ from django.core.exceptions import ObjectDoesNotExist
 from django.db import models
 from django.db.models.signals import pre_save
 from django.urls import reverse
+from simple_history.models import HistoricalRecords
 from sorl.thumbnail import ImageField
 
 from comicsdb.models.attribution import Attribution
@@ -32,6 +33,7 @@ class Character(CommonInfo):
     edited_by = models.ForeignKey(
         CustomUser, default=1, on_delete=models.SET_DEFAULT, related_name="characters_edited"
     )
+    history = HistoricalRecords(m2m_fields=[creators, teams, universes])
 
     def save(self, *args, **kwargs) -> None:
         # Let's delete the original image if we're replacing it by uploading a new one.

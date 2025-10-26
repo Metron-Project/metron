@@ -6,6 +6,7 @@ from django.core.exceptions import ObjectDoesNotExist
 from django.db import models
 from django.db.models.signals import pre_save
 from django.urls import reverse
+from simple_history.models import HistoricalRecords
 from sorl.thumbnail import ImageField
 
 from comicsdb.models.attribution import Attribution
@@ -17,9 +18,7 @@ LOGGER = logging.getLogger(__name__)
 
 
 class Universe(CommonInfo):
-    publisher = models.ForeignKey(
-        Publisher, on_delete=models.CASCADE, related_name="universes"
-    )
+    publisher = models.ForeignKey(Publisher, on_delete=models.CASCADE, related_name="universes")
     image = ImageField(upload_to="universe/%Y/%m/%d/", blank=True)
     designation = models.CharField(max_length=255, blank=True)
     attribution = GenericRelation(Attribution, related_query_name="universes")
@@ -29,6 +28,7 @@ class Universe(CommonInfo):
     edited_by = models.ForeignKey(
         CustomUser, default=1, on_delete=models.SET_DEFAULT, related_name="universes_edited"
     )
+    history = HistoricalRecords()
 
     def save(self, *args, **kwargs) -> None:
         # Let's delete the original image if we're replacing it by uploading a new one.

@@ -7,6 +7,7 @@ from django.db import models
 from django.db.models.signals import pre_save
 from django.urls import reverse
 from django_countries.fields import CountryField
+from simple_history.models import HistoricalRecords
 from sorl.thumbnail import ImageField
 
 from comicsdb.models.attribution import Attribution
@@ -27,6 +28,7 @@ class Publisher(CommonInfo):
     edited_by = models.ForeignKey(
         CustomUser, default=1, on_delete=models.SET_DEFAULT, related_name="publishers_edited"
     )
+    history = HistoricalRecords()
 
     def save(self, *args, **kwargs) -> None:
         # Let's delete the original image if we're replacing it by uploading a new one.
