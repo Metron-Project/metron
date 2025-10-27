@@ -13,38 +13,31 @@
 {% block content %}
     {# Action Buttons #}
     {% if customuser.pk == request.user.pk %}
-        <nav class="level mb-5">
-            <div class="level-left"></div>
-            <div class="level-right">
-                <div class="level-item">
-                    <div class="buttons">
-                        <a class="button is-primary"
-                           href="{% url 'change_profile' %}"
-                           title="Edit your profile">
-                            <span class="icon">
-                                <i class="fas fa-edit"></i>
-                            </span>
-                            <span>Edit Profile</span>
-                        </a>
-                        <a class="button is-light"
-                           href="{% url 'change_password' %}"
-                           title="Change your password">
-                            <span class="icon">
-                                <i class="fas fa-lock"></i>
-                            </span>
-                            <span>Change Password</span>
-                        </a>
-                    </div>
-                </div>
-            </div>
-        </nav>
+        <div class="buttons is-right mb-5">
+            <a class="button is-primary"
+               href="{% url 'change_profile' %}"
+               title="Edit your profile">
+                <span class="icon">
+                    <i class="fas fa-edit"></i>
+                </span>
+                <span>Edit Profile</span>
+            </a>
+            <a class="button is-light"
+               href="{% url 'change_password' %}"
+               title="Change your password">
+                <span class="icon">
+                    <i class="fas fa-lock"></i>
+                </span>
+                <span>Change Password</span>
+            </a>
+        </div>
     {% endif %}
     {# User Profile Card #}
     <div class="box">
-        <article class="media">
+        <article class="media is-block-mobile">
             {# Profile Image #}
-            <div class="media-left">
-                <figure class="image is-128x128">
+            <div class="media-left has-text-centered-mobile mb-4-mobile">
+                <figure class="image is-128x128 is-inline-block">
                     {% if customuser.image %}
                         {% thumbnail customuser.image "128x128" crop="center" format="WEBP" as im %}
                             <img class="is-rounded"
@@ -63,77 +56,83 @@
                 </figure>
             </div>
             {# User Details #}
-            <div class="media-content">
+            <div class="media-content has-text-centered-mobile">
                 <div class="content">
                     {# Username / Full Name #}
                     {% if customuser.get_full_name %}
-                        <h1 class="title is-3 mb-2">
-                            {{ customuser.get_full_name }}
-                            {% if customuser.is_superuser %}
-                                <span class="tag is-primary" title="Site Administrator">
-                                    <span class="icon is-small">
-                                        <i class="fas fa-crown"></i>
-                                    </span>
-                                    <span>Admin</span>
-                                </span>
-                            {% endif %}
-                            {% for group in customuser.groups.all %}
-                                {% if group.name == "Editors" %}
-                                    <span class="tag is-info" title="Database Editor">
+                        <h1 class="title is-3 is-size-4-mobile mb-2">
+                            <span class="is-block-mobile">{{ customuser.get_full_name }}</span>
+                            <span class="is-block-mobile mt-2-mobile">
+                                {% if customuser.is_superuser %}
+                                    <span class="tag is-primary" title="Site Administrator">
                                         <span class="icon is-small">
-                                            <i class="fas fa-pen"></i>
+                                            <i class="fas fa-crown"></i>
                                         </span>
-                                        <span>Editor</span>
+                                        <span>Admin</span>
                                     </span>
                                 {% endif %}
-                            {% endfor %}
+                                {% for group in customuser.groups.all %}
+                                    {% if group.name == "Editors" %}
+                                        <span class="tag is-info" title="Database Editor">
+                                            <span class="icon is-small">
+                                                <i class="fas fa-pen"></i>
+                                            </span>
+                                            <span>Editor</span>
+                                        </span>
+                                    {% endif %}
+                                {% endfor %}
+                            </span>
                         </h1>
-                        <h2 class="subtitle is-5 has-text-grey">@{{ customuser.username }}</h2>
+                        <h2 class="subtitle is-5 is-size-6-mobile has-text-grey">@{{ customuser.username }}</h2>
                     {% else %}
-                        <h1 class="title is-3 mb-2">
-                            {{ customuser.username }}
-                            {% if customuser.is_superuser %}
-                                <span class="tag is-primary" title="Site Administrator">
-                                    <span class="icon is-small">
-                                        <i class="fas fa-crown"></i>
-                                    </span>
-                                    <span>Admin</span>
-                                </span>
-                            {% endif %}
-                            {% for group in customuser.groups.all %}
-                                {% if group.name == "Editors" %}
-                                    <span class="tag is-info" title="Database Editor">
+                        <h1 class="title is-3 is-size-4-mobile mb-2">
+                            <span class="is-block-mobile">{{ customuser.username }}</span>
+                            <span class="is-block-mobile mt-2-mobile">
+                                {% if customuser.is_superuser %}
+                                    <span class="tag is-primary" title="Site Administrator">
                                         <span class="icon is-small">
-                                            <i class="fas fa-pen"></i>
+                                            <i class="fas fa-crown"></i>
                                         </span>
-                                        <span>Editor</span>
+                                        <span>Admin</span>
                                     </span>
                                 {% endif %}
-                            {% endfor %}
+                                {% for group in customuser.groups.all %}
+                                    {% if group.name == "Editors" %}
+                                        <span class="tag is-info" title="Database Editor">
+                                            <span class="icon is-small">
+                                                <i class="fas fa-pen"></i>
+                                            </span>
+                                            <span>Editor</span>
+                                        </span>
+                                    {% endif %}
+                                {% endfor %}
+                            </span>
                         </h1>
                     {% endif %}
                     {# User Stats #}
                     <div class="level is-mobile mb-4">
                         <div class="level-item has-text-centered">
                             <div>
-                                <p class="heading">Member Since</p>
-                                <p class="title is-6">
-                                    <span class="icon has-text-grey" aria-hidden="true">
+                                <p class="heading is-size-7-mobile">Member Since</p>
+                                <p class="title is-6 is-size-7-mobile">
+                                    <span class="icon has-text-grey is-small" aria-hidden="true">
                                         <i class="fas fa-calendar-alt"></i>
                                     </span>
-                                    {{ customuser.date_joined|date:"M Y" }}
+                                    <span class="is-hidden-mobile">{{ customuser.date_joined|date:"M Y" }}</span>
+                                    <span class="is-hidden-tablet">{{ customuser.date_joined|date:"m/y" }}</span>
                                 </p>
                             </div>
                         </div>
                         {% if customuser.last_login %}
                             <div class="level-item has-text-centered">
                                 <div>
-                                    <p class="heading">Last Active</p>
-                                    <p class="title is-6">
-                                        <span class="icon has-text-grey" aria-hidden="true">
+                                    <p class="heading is-size-7-mobile">Last Active</p>
+                                    <p class="title is-6 is-size-7-mobile">
+                                        <span class="icon has-text-grey is-small" aria-hidden="true">
                                             <i class="fas fa-clock"></i>
                                         </span>
-                                        {{ customuser.last_login|date:"M d, Y" }}
+                                        <span class="is-hidden-mobile">{{ customuser.last_login|date:"M d, Y" }}</span>
+                                        <span class="is-hidden-tablet">{{ customuser.last_login|date:"m/d/y" }}</span>
                                     </p>
                                 </div>
                             </div>
@@ -168,10 +167,10 @@
         </article>
     </div>
     {# Additional Information Sections #}
-    <div class="columns">
-        <div class="column">
+    <div class="columns is-variable is-8-desktop is-4-tablet">
+        <div class="column is-full-mobile">
             <div class="box">
-                <h3 class="title is-5 mb-2">
+                <h3 class="title is-5 is-size-6-mobile mb-2">
                     <span class="icon has-text-primary" aria-hidden="true">
                         <i class="fas fa-chart-line"></i>
                     </span>
@@ -180,7 +179,7 @@
                 <p class="subtitle is-7 has-text-grey mb-4">Items created by this user</p>
                 {% if stats %}
                     <div class="content">
-                        <table class="table is-fullwidth is-hoverable">
+                        <table class="table is-fullwidth is-hoverable is-narrow-mobile">
                             <tbody>
                                 <tr>
                                     <td>
@@ -297,9 +296,9 @@
             </div>
         </div>
         {% if customuser.pk == request.user.pk %}
-            <div class="column">
+            <div class="column is-full-mobile">
                 <div class="box">
-                    <h3 class="title is-5 mb-4">
+                    <h3 class="title is-5 is-size-6-mobile mb-4">
                         <span class="icon has-text-info" aria-hidden="true">
                             <i class="fas fa-cog"></i>
                         </span>
