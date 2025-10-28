@@ -1,3 +1,4 @@
+from collections import defaultdict
 from dataclasses import replace
 
 from django.contrib.auth.mixins import LoginRequiredMixin
@@ -23,13 +24,83 @@ class HistoryListView(LoginRequiredMixin, ListView):
         # Use select_related to avoid N+1 queries on history_user
         return self.obj.history.select_related("history_user").all()
 
-    def _resolve_m2m_value(self, field_name, value):  # noqa: PLR0911, PLR0912
+    def _extract_m2m_ids(self, field_name, value):
         """
-        Convert many-to-many field IDs to their string representations.
+        Extract IDs from M2M field value.
 
         Args:
             field_name: The name of the field
             value: The value (could be a list of dicts with IDs, or other formats)
+
+        Returns:
+            List of IDs or None if not applicable
+        """
+        if not value or not isinstance(value, list):
+            return None
+
+        ids = []
+        for item in value:
+            if isinstance(item, dict):
+                # Find the key that corresponds to the related model's ID
+                related_field_name = field_name.rstrip("s")  # Simple pluralization removal
+                if related_field_name in item:
+                    ids.append(item[related_field_name])
+            elif isinstance(item, int):
+                ids.append(item)
+
+        return ids if ids else None
+
+    def _prefetch_m2m_names(self, history_list):
+        """
+        Prefetch all M2M object names in a single query per model to avoid N+1 queries.
+
+        Args:
+            history_list: List of history records with delta information
+
+        Returns:
+            Dict mapping (model_class, field_name) -> {id: name}
+        """
+        # Collect all M2M field IDs that need to be resolved
+        m2m_ids_by_field = defaultdict(set)
+
+        for record in history_list:
+            if not record.delta or not record.delta.changes:
+                continue
+
+            for change in record.delta.changes:
+                try:
+                    field = self.model._meta.get_field(change.field)
+                except Exception:  # noqa: BLE001 S112
+                    continue
+
+                if not isinstance(field, models.ManyToManyField):
+                    continue
+
+                # Extract IDs from old and new values
+                for value in [change.old, change.new]:
+                    ids = self._extract_m2m_ids(change.field, value)
+                    if ids:
+                        m2m_ids_by_field[(field.related_model, change.field)].update(ids)
+
+        # Batch fetch all related objects
+        m2m_cache = {}
+        for (related_model, field_name), ids in m2m_ids_by_field.items():
+            try:
+                objects = related_model.objects.filter(id__in=ids)
+                m2m_cache[(related_model, field_name)] = {obj.id: str(obj) for obj in objects}
+            except Exception:  # noqa: BLE001
+                m2m_cache[(related_model, field_name)] = {}
+
+        return m2m_cache
+
+    def _resolve_m2m_value(self, field_name, value, m2m_cache):  # noqa: PLR0911
+        """
+        Convert many-to-many field IDs to their string representations using cache.
+
+        Args:
+            field_name: The name of the field
+            value: The value (could be a list of dicts with IDs, or other formats)
+            m2m_cache: Prefetched cache of M2M object names
 
         Returns:
             A formatted string with object names instead of IDs
@@ -41,7 +112,6 @@ class HistoryListView(LoginRequiredMixin, ListView):
         try:
             field = self.model._meta.get_field(field_name)
         except Exception:  # noqa: BLE001
-            # If we can't get the field, return the original value
             return value
 
         # Check if it's a ManyToManyField
@@ -52,44 +122,23 @@ class HistoryListView(LoginRequiredMixin, ListView):
         if not value:
             return value
 
-        # Extract IDs from the M2M value
-        # django-simple-history stores M2M as list of dicts like [{'field1': id1, 'field2': id2}]
-        ids = []
-        if isinstance(value, list):
-            for item in value:
-                if isinstance(item, dict):
-                    # Find the key that corresponds to the related model's ID
-                    # It's usually the field name without the '_id' suffix
-                    related_field_name = field_name.rstrip("s")  # Simple pluralization removal
-                    if related_field_name in item:
-                        ids.append(item[related_field_name])
-                elif isinstance(item, int):
-                    # Sometimes it might just be a list of IDs
-                    ids.append(item)
-        elif isinstance(value, str):
-            # Handle string representations
-            return value
-        else:
-            return value
-
+        # Extract IDs
+        ids = self._extract_m2m_ids(field_name, value)
         if not ids:
+            if isinstance(value, str):
+                return value
             return value
 
-        # Get the related model and fetch the objects
+        # Get the cached names
         related_model = field.related_model
+        cache_key = (related_model, field_name)
+        id_to_name = m2m_cache.get(cache_key, {})
 
-        try:
-            objects = related_model.objects.filter(id__in=ids)
-            # Create a mapping of ID to name for proper ordering
-            id_to_name = {obj.id: str(obj) for obj in objects}
-            # Maintain the order from the original IDs list
-            names = [id_to_name.get(id_, f"ID:{id_}") for id_ in ids if id_ in id_to_name]
-            return ", ".join(names) if names else value
-        except Exception:  # noqa: BLE001
-            # If anything goes wrong, return the original value
-            return value
+        # Maintain the order from the original IDs list
+        names = [id_to_name.get(id_, f"ID:{id_}") for id_ in ids if id_ in id_to_name]
+        return ", ".join(names) if names else value
 
-    def get_context_data(self, **kwargs):
+    def get_context_data(self, **kwargs):  # noqa: PLR0912
         """
         Add the object and delta information to the context.
         Computing deltas only for the current page is more efficient.
@@ -106,10 +155,14 @@ class HistoryListView(LoginRequiredMixin, ListView):
         if page_obj and page_obj.has_next() and history_list:
             try:
                 # Get one more record after the page for delta calculation
+                # Use list slicing to avoid expensive count() query
                 queryset = self.get_queryset()
                 last_index = page_obj.number * self.paginate_by
-                next_record = queryset[last_index] if last_index < queryset.count() else None
-            except (IndexError, AttributeError):
+                try:
+                    next_record = queryset[last_index]
+                except IndexError:
+                    next_record = None
+            except AttributeError:
                 next_record = None
         else:
             next_record = None
@@ -125,14 +178,17 @@ class HistoryListView(LoginRequiredMixin, ListView):
             else:
                 record.delta = None
 
-            # Process delta to convert M2M IDs to names
-            # Since the change objects are frozen dataclasses, we need to replace them
+        # Prefetch all M2M names in batch to avoid N+1 queries
+        m2m_cache = self._prefetch_m2m_names(history_list)
+
+        # Process delta to convert M2M IDs to names
+        for record in history_list:
             if record.delta and record.delta.changes:
                 new_changes = []
                 for change in record.delta.changes:
-                    # Resolve old and new values for M2M fields
-                    resolved_old = self._resolve_m2m_value(change.field, change.old)
-                    resolved_new = self._resolve_m2m_value(change.field, change.new)
+                    # Resolve old and new values for M2M fields using cache
+                    resolved_old = self._resolve_m2m_value(change.field, change.old, m2m_cache)
+                    resolved_new = self._resolve_m2m_value(change.field, change.new, m2m_cache)
 
                     # Only create a new change if values were modified
                     if resolved_old != change.old or resolved_new != change.new:
