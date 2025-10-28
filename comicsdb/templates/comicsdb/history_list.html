@@ -1,0 +1,109 @@
+{% extends parent_template|default:"base.html" %}
+{% load static %}
+{% block title %}
+    Edit History - {{ object }}
+{% endblock title %}
+{% block content %}
+    {# Page Header #}
+    <header class="block">
+        <h1 class="title">Edit History</h1>
+        <h2 class="subtitle">
+            <a href="{{ object.get_absolute_url }}">{{ object }}</a>
+        </h2>
+    </header>
+    {# History List #}
+    {% if history_list %}
+        <div class="box">
+            <div class="table-container">
+                <table class="table is-fullwidth is-hoverable">
+                    <thead>
+                        <tr>
+                            <th>Date</th>
+                            <th>User</th>
+                            <th>Change Type</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for history in history_list %}
+                            <tr>
+                                <td>
+                                    <time datetime="{{ history.history_date|date:'c' }}">{{ history.history_date }}</time>
+                                </td>
+                                <td>
+                                    {% if history.history_user %}
+                                        <a href="{% url 'user-detail' history.history_user.id %}">{{ history.history_user.username }}</a>
+                                    {% else %}
+                                        <span class="has-text-grey-light">Unknown</span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    {% if history.history_type == "+" %}
+                                        <span class="tag is-success">Created</span>
+                                    {% elif history.history_type == "~" %}
+                                        <span class="tag is-info">Updated</span>
+                                    {% elif history.history_type == "-" %}
+                                        <span class="tag is-danger">Deleted</span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    {% if history.delta %}
+                                        <a href="javascript:void(0);"
+                                           class="button is-small is-light"
+                                           onclick="showChanges('{{ history.history_id }}')">View Changes</a>
+                                    {% endif %}
+                                </td>
+                            </tr>
+                            {% if history.delta %}
+                                <tr id="changes-{{ history.history_id }}" style="display: none;">
+                                    <td colspan="4">
+                                        <div class="content">
+                                            <h4 class="title is-6">Changed Fields:</h4>
+                                            <ul>
+                                                {% for change in history.delta.changes %}
+                                                    <li>
+                                                        <strong>{{ change.field }}:</strong>
+                                                        <span class="has-text-danger">{{ change.old|default:"<empty>" }}</span>
+                                                        →
+                                                        <span class="has-text-success">{{ change.new|default:"<empty>" }}</span>
+                                                    </li>
+                                                {% endfor %}
+                                            </ul>
+                                        </div>
+                                    </td>
+                                </tr>
+                            {% endif %}
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    {% else %}
+        <div class="notification is-info">
+            <p>No edit history available for this {{ model_name }}.</p>
+        </div>
+    {% endif %}
+    {# Back Button #}
+    <div class="buttons">
+        <a class="button is-link" href="{{ object.get_absolute_url }}">
+            <span class="icon is-small"><i class="fas fa-arrow-left" aria-hidden="true"></i></span>
+            <span>Back to {{ model_name }}</span>
+        </a>
+    </div>
+{% endblock %}
+{% block pagination %}
+    {% load pagination_tags %}
+    {% include "comicsdb/partials/pagination.html" %}
+{% endblock %}
+{% block js %}
+    <script>
+        function showChanges(historyId) {
+            const row = document.getElementById('changes-' + historyId);
+            if (row.style.display === 'none') {
+                row.style.display = 'table-row';
+            } else {
+                row.style.display = 'none';
+            }
+        }
+    </script>
+{% endblock %}
