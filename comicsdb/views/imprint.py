@@ -20,6 +20,7 @@ from django.views.generic import (
 from comicsdb.forms.attribution import AttributionFormSet
 from comicsdb.forms.imprint import ImprintForm
 from comicsdb.models import Attribution, Imprint, Series
+from comicsdb.views.history import HistoryListView
 
 PAGINATE = 28
 LOGGER = logging.getLogger(__name__)
@@ -61,16 +62,12 @@ class ImprintDetail(DetailView):
         context = super().get_context_data(**kwargs)
         imprint = self.get_object()
         try:
-            next_imprint = (
-                Imprint.objects.order_by("name").filter(name__gt=imprint.name).first()
-            )
+            next_imprint = Imprint.objects.order_by("name").filter(name__gt=imprint.name).first()
         except ObjectDoesNotExist:
             next_imprint = None
 
         try:
-            previous_imprint = (
-                Imprint.objects.order_by("name").filter(name__lt=imprint.name).last()
-            )
+            previous_imprint = Imprint.objects.order_by("name").filter(name__lt=imprint.name).last()
         except ObjectDoesNotExist:
             previous_imprint = None
 
@@ -175,3 +172,7 @@ class ImprintDelete(PermissionRequiredMixin, DeleteView):
     template_name = "comicsdb/confirm_delete.html"
     permission_required = "comicsdb.delete_imprint"
     success_url = reverse_lazy("imprint:list")
+
+
+class ImprintHistory(HistoryListView):
+    model = Imprint

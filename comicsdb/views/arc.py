@@ -16,6 +16,7 @@ from comicsdb.forms.attribution import AttributionFormSet
 from comicsdb.models.arc import Arc
 from comicsdb.models.attribution import Attribution
 from comicsdb.models.issue import Issue
+from comicsdb.views.history import HistoryListView
 
 PAGINATE = 28
 LOGGER = logging.getLogger(__name__)
@@ -163,3 +164,7 @@ class ArcDelete(PermissionRequiredMixin, DeleteView):
     template_name = "comicsdb/confirm_delete.html"
     permission_required = "comicsdb.delete_arc"
     success_url = reverse_lazy("arc:list")
+
+
+class ArcHistory(HistoryListView):
+    model = Arc

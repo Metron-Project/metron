@@ -16,6 +16,7 @@ from comicsdb.forms.publisher import PublisherForm
 from comicsdb.models.attribution import Attribution
 from comicsdb.models.publisher import Publisher
 from comicsdb.models.series import Series
+from comicsdb.views.history import HistoryListView
 
 PAGINATE = 28
 LOGGER = logging.getLogger(__name__)
@@ -160,9 +161,7 @@ class PublisherUpdate(LoginRequiredMixin, UpdateView):
             else:
                 return super().form_invalid(form)
 
-            LOGGER.info(
-                "Publisher: %s was updated by %s", form.instance.name, self.request.user
-            )
+            LOGGER.info("Publisher: %s was updated by %s", form.instance.name, self.request.user)
         return super().form_valid(form)
 
 
@@ -171,3 +170,7 @@ class PublisherDelete(PermissionRequiredMixin, DeleteView):
     template_name = "comicsdb/confirm_delete.html"
     permission_required = "comicsdb.delete_publisher"
     success_url = reverse_lazy("publisher:list")
+
+
+class PublisherHistory(HistoryListView):
+    model = Publisher

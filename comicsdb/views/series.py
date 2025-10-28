@@ -15,6 +15,7 @@ from comicsdb.forms.attribution import AttributionFormSet
 from comicsdb.forms.series import SeriesForm
 from comicsdb.models import Series
 from comicsdb.models.attribution import Attribution
+from comicsdb.views.history import HistoryListView
 
 PAGINATE = 28
 LOGGER = logging.getLogger(__name__)
@@ -210,3 +211,7 @@ class SeriesDelete(PermissionRequiredMixin, DeleteView):
     template_name = "comicsdb/confirm_delete.html"
     permission_required = "comicsdb.delete_series"
     success_url = reverse_lazy("series:list")
+
+
+class SeriesHistory(HistoryListView):
+    model = Series

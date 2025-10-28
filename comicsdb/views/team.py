@@ -15,6 +15,7 @@ from comicsdb.forms.attribution import AttributionFormSet
 from comicsdb.forms.team import TeamForm
 from comicsdb.models.attribution import Attribution
 from comicsdb.models.team import Team
+from comicsdb.views.history import HistoryListView
 
 PAGINATE = 28
 LOGGER = logging.getLogger(__name__)
@@ -155,3 +156,7 @@ class TeamDelete(PermissionRequiredMixin, DeleteView):
     template_name = "comicsdb/confirm_delete.html"
     permission_required = "comicsdb.delete_team"
     success_url = reverse_lazy("team:list")
+
+
+class TeamHistory(HistoryListView):
+    model = Team

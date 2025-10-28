@@ -15,6 +15,7 @@ from comicsdb.forms.attribution import AttributionFormSet
 from comicsdb.forms.character import CharacterForm
 from comicsdb.models import Character, Issue, Series
 from comicsdb.models.attribution import Attribution
+from comicsdb.views.history import HistoryListView
 
 PAGINATE = 28
 LOGGER = logging.getLogger(__name__)
@@ -119,10 +120,7 @@ class SearchCharacterList(CharacterList):
                 reduce(
                     operator.and_,
                     # Unaccent lookup won't work on alias array field.
-                    (
-                        Q(name__unaccent__icontains=q) | Q(alias__icontains=q)
-                        for q in query_list
-                    ),
+                    (Q(name__unaccent__icontains=q) | Q(alias__icontains=q) for q in query_list),
                 )
             )
 
@@ -156,9 +154,7 @@ class CharacterCreate(LoginRequiredMixin, CreateView):
             else:
                 return super().form_invalid(form)
 
-            LOGGER.info(
-                "Character: %s was created by %s", form.instance.name, self.request.user
-            )
+            LOGGER.info("Character: %s was created by %s", form.instance.name, self.request.user)
         return super().form_valid(form)
 
 
@@ -198,9 +194,7 @@ class CharacterUpdate(LoginRequiredMixin, UpdateView):
             else:
                 return super().form_invalid(form)
 
-            LOGGER.info(
-                "Character: %s was updated by %s", form.instance.name, self.request.user
-            )
+            LOGGER.info("Character: %s was updated by %s", form.instance.name, self.request.user)
         return super().form_valid(form)
 
 
@@ -209,3 +203,7 @@ class CharacterDelete(PermissionRequiredMixin, DeleteView):
     template_name = "comicsdb/confirm_delete.html"
     permission_required = "comicsdb.delete_character"
     success_url = reverse_lazy("character:list")
+
+
+class CharacterHistory(HistoryListView):
+    model = Character
