@@ -157,3 +157,45 @@ def test_creator_list_lists_second_page(auto_login_user, list_of_creators):
     assert "is_paginated" in resp.context
     assert resp.context["is_paginated"] is True
     assert len(resp.context["creator_list"]) == PAGINATE_DIFF_VAL
+
+
+# Creator History Views
+def test_creator_history_view_requires_login(client, john_byrne):
+    """Test that history view requires authentication."""
+    resp = client.get(reverse("creator:history", kwargs={"slug": john_byrne.slug}))
+    assert resp.status_code == HTML_REDIRECT_CODE
+
+
+def test_creator_history_view_accessible(auto_login_user, john_byrne):
+    """Test that history view is accessible by name."""
+    client, _ = auto_login_user()
+    resp = client.get(reverse("creator:history", kwargs={"slug": john_byrne.slug}))
+    assert resp.status_code == HTML_OK_CODE
+
+
+def test_creator_history_uses_correct_template(auto_login_user, john_byrne):
+    """Test that history view uses the correct template."""
+    client, _ = auto_login_user()
+    resp = client.get(reverse("creator:history", kwargs={"slug": john_byrne.slug}))
+    assert resp.status_code == HTML_OK_CODE
+    assertTemplateUsed(resp, "comicsdb/history_list.html")
+
+
+def test_creator_history_shows_creation(auto_login_user, john_byrne):
+    """Test that history shows the initial creation record."""
+    client, _ = auto_login_user()
+    resp = client.get(reverse("creator:history", kwargs={"slug": john_byrne.slug}))
+    assert resp.status_code == HTML_OK_CODE
+    assert "history_list" in resp.context
+    assert len(resp.context["history_list"]) >= 1
+
+
+def test_creator_history_context(auto_login_user, john_byrne):
+    """Test that history view context includes object and model name."""
+    client, _ = auto_login_user()
+    resp = client.get(reverse("creator:history", kwargs={"slug": john_byrne.slug}))
+    assert resp.status_code == HTML_OK_CODE
+    assert "object" in resp.context
+    assert resp.context["object"] == john_byrne
+    assert "model_name" in resp.context
+    assert resp.context["model_name"] == "creator"

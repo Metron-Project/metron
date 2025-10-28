@@ -162,3 +162,45 @@ def test_team_update_view(auto_login_user, teen_titans):
 #     tt = Team.objects.get(slug="teen-titans")
 #     tt.desc == "The sidekicks"
 #     # assert Attribution.objects.count() == 1
+
+
+# Team History Views
+def test_team_history_view_requires_login(client, teen_titans):
+    """Test that history view requires authentication."""
+    resp = client.get(reverse("team:history", kwargs={"slug": teen_titans.slug}))
+    assert resp.status_code == HTML_REDIRECT_CODE
+
+
+def test_team_history_view_accessible(auto_login_user, teen_titans):
+    """Test that history view is accessible by name."""
+    client, _ = auto_login_user()
+    resp = client.get(reverse("team:history", kwargs={"slug": teen_titans.slug}))
+    assert resp.status_code == HTML_OK_CODE
+
+
+def test_team_history_uses_correct_template(auto_login_user, teen_titans):
+    """Test that history view uses the correct template."""
+    client, _ = auto_login_user()
+    resp = client.get(reverse("team:history", kwargs={"slug": teen_titans.slug}))
+    assert resp.status_code == HTML_OK_CODE
+    assertTemplateUsed(resp, "comicsdb/history_list.html")
+
+
+def test_team_history_shows_creation(auto_login_user, teen_titans):
+    """Test that history shows the initial creation record."""
+    client, _ = auto_login_user()
+    resp = client.get(reverse("team:history", kwargs={"slug": teen_titans.slug}))
+    assert resp.status_code == HTML_OK_CODE
+    assert "history_list" in resp.context
+    assert len(resp.context["history_list"]) >= 1
+
+
+def test_team_history_context(auto_login_user, teen_titans):
+    """Test that history view context includes object and model name."""
+    client, _ = auto_login_user()
+    resp = client.get(reverse("team:history", kwargs={"slug": teen_titans.slug}))
+    assert resp.status_code == HTML_OK_CODE
+    assert "object" in resp.context
+    assert resp.context["object"] == teen_titans
+    assert "model_name" in resp.context
+    assert resp.context["model_name"] == "team"
