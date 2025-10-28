@@ -54,6 +54,12 @@
                         <span class="icon is-small"><i class="fas fa-edit" aria-hidden="true"></i></span>
                         <span>Edit</span>
                     </a>
+                    <a class="button is-rounded is-link"
+                       href="{% url 'arc:history' arc.slug %}"
+                       title="View edit history">
+                        <span class="icon is-small"><i class="fas fa-history" aria-hidden="true"></i></span>
+                        <span>History</span>
+                    </a>
                     {% if perms.comicsdb.delete_arc %}
                         <a class="button is-rounded is-danger"
                            href="{% url 'arc:delete' arc.slug %}"

@@ -6,6 +6,7 @@ from comicsdb.views.series import (
     SeriesDelete,
     SeriesDetail,
     SeriesDetailRedirect,
+    SeriesHistory,
     SeriesIssueList,
     SeriesList,
     SeriesUpdate,
@@ -20,5 +21,6 @@ urlpatterns = [
     path("<slug:slug>/issue_list/", SeriesIssueList.as_view(), name="issue"),
     path("<slug:slug>/update/", SeriesUpdate.as_view(), name="update"),
     path("<slug:slug>/delete/", SeriesDelete.as_view(), name="delete"),
+    path("<slug:slug>/history/", SeriesHistory.as_view(), name="history"),
     re_path(r"^search/?$", SearchSeriesList.as_view(), name="search"),
 ]

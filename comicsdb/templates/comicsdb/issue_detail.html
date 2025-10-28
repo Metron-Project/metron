@@ -80,6 +80,12 @@
                         <span class="icon is-small"><i class="fas fa-edit" aria-hidden="true"></i></span>
                         <span>Edit</span>
                     </a>
+                    <a class="button is-rounded is-link"
+                       href="{% url 'issue:history' issue.slug %}"
+                       title="View edit history">
+                        <span class="icon is-small"><i class="fas fa-history" aria-hidden="true"></i></span>
+                        <span>History</span>
+                    </a>
                     {% if issue.series.series_type.name == "Trade Paperback" or issue.series.series_type.name == "Omnibus" or issue.series.series_type.name == "Hardcover" %}
                         {% if issue.reprints.exists and not issue.characters.exists and not issue.teams.exists and not issue.name|length > 0 %}
                             <form method="post"

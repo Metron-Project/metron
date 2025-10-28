@@ -5,6 +5,7 @@ from comicsdb.views.imprint import (
     ImprintDelete,
     ImprintDetail,
     ImprintDetailRedirect,
+    ImprintHistory,
     ImprintList,
     ImprintSeriesList,
     ImprintUpdate,
@@ -20,5 +21,6 @@ urlpatterns = [
     path("<slug:slug>/series_list/", ImprintSeriesList.as_view(), name="series"),
     path("<slug:slug>/update/", ImprintUpdate.as_view(), name="update"),
     path("<slug:slug>/delete/", ImprintDelete.as_view(), name="delete"),
+    path("<slug:slug>/history/", ImprintHistory.as_view(), name="history"),
     re_path(r"^search/?$", SearchImprintList.as_view(), name="search"),
 ]
