@@ -15,8 +15,7 @@
                     <i class="fas fa-inbox fa-3x"></i>
                 </span>
                 <h2 class="title is-4">
-                    No {{ item_type }}
-                    {% if item_type|lower != "series" %}s{% endif %}
+                    No {{ item_type }}{% if item_type|lower != "series" %}s{% endif %}
                     Available
                 </h2>
                 <p class="subtitle is-6 has-text-grey">
