@@ -250,3 +250,49 @@ def test_character_history_context(auto_login_user, superman):
     assert resp.context["object"] == superman
     assert "model_name" in resp.context
     assert resp.context["model_name"] == "character"
+
+
+def test_character_history_m2m_shows_names(
+    auto_login_user, create_user, john_byrne, walter_simonson
+):
+    """Test that M2M field changes show object names instead of IDs."""
+    user = create_user()
+    character = Character.objects.create(
+        name="Test Hero",
+        slug="test-hero",
+        created_by=user,
+        edited_by=user,
+    )
+
+    # Add a creator to trigger M2M history
+    character.creators.add(john_byrne)
+
+    # Add another creator
+    character.creators.add(walter_simonson)
+
+    client, _ = auto_login_user()
+    resp = client.get(reverse("character:history", kwargs={"slug": character.slug}))
+    assert resp.status_code == HTML_OK_CODE
+
+    # Check that the history list has delta information
+    history_list = resp.context["history_list"]
+    assert len(history_list) >= 2
+
+    # Find a record with delta changes for creators
+    found_creator_change = False
+    for history_record in history_list:
+        if history_record.delta:
+            for change in history_record.delta.changes:
+                if change.field == "creators":
+                    found_creator_change = True
+                    # Verify that the change shows names, not just IDs
+                    # The values should contain the creator names
+                    if change.new:
+                        assert "John Byrne" in str(change.new) or "Walter Simonson" in str(
+                            change.new
+                        )
+                    break
+        if found_creator_change:
+            break
+
+    assert found_creator_change, "Should have found at least one creator change in history"
