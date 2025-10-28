@@ -448,3 +448,45 @@ def test_sync_reprints_success_message_includes_stories(
     assert "Successfully added" in message_text
     assert "character(s)" in message_text
     assert "story title(s)" in message_text
+
+
+# Issue History Views
+def test_issue_history_view_requires_login(client, basic_issue):
+    """Test that history view requires authentication."""
+    resp = client.get(reverse("issue:history", kwargs={"slug": basic_issue.slug}))
+    assert resp.status_code == HTML_REDIRECT_CODE
+
+
+def test_issue_history_view_accessible(auto_login_user, basic_issue):
+    """Test that history view is accessible by name."""
+    client, _ = auto_login_user()
+    resp = client.get(reverse("issue:history", kwargs={"slug": basic_issue.slug}))
+    assert resp.status_code == HTML_OK_CODE
+
+
+def test_issue_history_uses_correct_template(auto_login_user, basic_issue):
+    """Test that history view uses the correct template."""
+    client, _ = auto_login_user()
+    resp = client.get(reverse("issue:history", kwargs={"slug": basic_issue.slug}))
+    assert resp.status_code == HTML_OK_CODE
+    assertTemplateUsed(resp, "comicsdb/history_list.html")
+
+
+def test_issue_history_shows_creation(auto_login_user, basic_issue):
+    """Test that history shows the initial creation record."""
+    client, _ = auto_login_user()
+    resp = client.get(reverse("issue:history", kwargs={"slug": basic_issue.slug}))
+    assert resp.status_code == HTML_OK_CODE
+    assert "history_list" in resp.context
+    assert len(resp.context["history_list"]) >= 1
+
+
+def test_issue_history_context(auto_login_user, basic_issue):
+    """Test that history view context includes object and model name."""
+    client, _ = auto_login_user()
+    resp = client.get(reverse("issue:history", kwargs={"slug": basic_issue.slug}))
+    assert resp.status_code == HTML_OK_CODE
+    assert "object" in resp.context
+    assert resp.context["object"] == basic_issue
+    assert "model_name" in resp.context
+    assert resp.context["model_name"] == "issue"

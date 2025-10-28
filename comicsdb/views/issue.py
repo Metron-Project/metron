@@ -24,6 +24,7 @@ from comicsdb.models import Creator, Credits, Issue, Role, Series
 from comicsdb.models.attribution import Attribution
 from comicsdb.models.series import SeriesType
 from comicsdb.models.variant import Variant
+from comicsdb.views.history import HistoryListView
 
 PAGINATE = 28
 TOTAL_WEEKS_YEAR = 52
@@ -451,6 +452,10 @@ class IssueDelete(PermissionRequiredMixin, DeleteView):
     template_name = "comicsdb/confirm_delete.html"
     permission_required = "comicsdb.delete_issue"
     success_url = reverse_lazy("issue:list")
+
+
+class IssueHistory(HistoryListView):
+    model = Issue
 
 
 class WeekList(ListView):

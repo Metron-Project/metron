@@ -193,3 +193,144 @@ def test_arc_update_view(auto_login_user, wwh_arc):
 #       not.
 #     assert resp.status_code == 302
 #     assert Arc.objects.count() == arc_count
+
+
+# Arc History Views
+def test_arc_history_view_requires_login(client, wwh_arc):
+    """Test that history view requires authentication."""
+    resp = client.get(reverse("arc:history", kwargs={"slug": wwh_arc.slug}))
+    assert resp.status_code == HTML_REDIRECT
+
+
+def test_arc_history_view_url_accessible_by_name(auto_login_user, wwh_arc):
+    """Test that history view is accessible by name."""
+    client, _ = auto_login_user()
+    resp = client.get(reverse("arc:history", kwargs={"slug": wwh_arc.slug}))
+    assert resp.status_code == HTML_OK_CODE
+
+
+def test_arc_history_view_uses_correct_template(auto_login_user, wwh_arc):
+    """Test that history view uses the correct template."""
+    client, _ = auto_login_user()
+    resp = client.get(reverse("arc:history", kwargs={"slug": wwh_arc.slug}))
+    assert resp.status_code == HTML_OK_CODE
+    assertTemplateUsed(resp, "comicsdb/history_list.html")
+
+
+def test_arc_history_shows_initial_creation(auto_login_user, create_user):
+    """Test that history shows the initial creation record."""
+    user = create_user()
+    arc = Arc.objects.create(name="Test Arc", slug="test-arc", edited_by=user, created_by=user)
+    client, _ = auto_login_user()
+    resp = client.get(reverse("arc:history", kwargs={"slug": arc.slug}))
+    assert resp.status_code == HTML_OK_CODE
+    assert "history_list" in resp.context
+    assert len(resp.context["history_list"]) == 1
+    assert resp.context["history_list"][0].history_type == "+"
+
+
+def test_arc_history_shows_updates(auto_login_user, create_user):
+    """Test that history shows update records."""
+    user = create_user()
+    arc = Arc.objects.create(name="Test Arc", slug="test-arc", edited_by=user, created_by=user)
+    # Update the arc
+    arc.name = "Updated Arc"
+    arc.save()
+
+    client, _ = auto_login_user()
+    resp = client.get(reverse("arc:history", kwargs={"slug": arc.slug}))
+    assert resp.status_code == HTML_OK_CODE
+    assert len(resp.context["history_list"]) == 2
+    # History is ordered newest first
+    assert resp.context["history_list"][0].history_type == "~"
+    assert resp.context["history_list"][1].history_type == "+"
+
+
+def test_arc_history_has_delta_information(auto_login_user, create_user):
+    """Test that history records have delta information for changes."""
+    user = create_user()
+    arc = Arc.objects.create(
+        name="Test Arc", slug="test-arc", desc="Original", edited_by=user, created_by=user
+    )
+    # Update the arc
+    arc.desc = "Updated description"
+    arc.save()
+
+    client, _ = auto_login_user()
+    resp = client.get(reverse("arc:history", kwargs={"slug": arc.slug}))
+    assert resp.status_code == HTML_OK_CODE
+    history_list = resp.context["history_list"]
+    # The most recent record should have a delta
+    assert hasattr(history_list[0], "delta")
+    assert history_list[0].delta is not None
+    # Check that the delta contains the changed field
+    changes = list(history_list[0].delta.changes)
+    assert len(changes) > 0
+    field_names = [change.field for change in changes]
+    assert "desc" in field_names
+
+
+def test_arc_history_pagination(auto_login_user, create_user):
+    """Test that history view is paginated correctly."""
+    user = create_user()
+    arc = Arc.objects.create(name="Test Arc", slug="test-arc", edited_by=user, created_by=user)
+    # Create 30 updates to trigger pagination
+    for i in range(30):
+        arc.desc = f"Update {i}"
+        arc.save()
+
+    client, _ = auto_login_user()
+    resp = client.get(reverse("arc:history", kwargs={"slug": arc.slug}))
+    assert resp.status_code == HTML_OK_CODE
+    assert "is_paginated" in resp.context
+    assert resp.context["is_paginated"] is True
+    assert len(resp.context["history_list"]) == 25
+
+
+def test_arc_history_second_page(auto_login_user, create_user):
+    """Test that second page of history works correctly."""
+    user = create_user()
+    arc = Arc.objects.create(name="Test Arc", slug="test-arc", edited_by=user, created_by=user)
+    # Create 30 updates to trigger pagination
+    for i in range(30):
+        arc.desc = f"Update {i}"
+        arc.save()
+
+    client, _ = auto_login_user()
+    resp = client.get(reverse("arc:history", kwargs={"slug": arc.slug}) + "?page=2")
+    assert resp.status_code == HTML_OK_CODE
+    assert len(resp.context["history_list"]) == 6  # 31 total - 25 on first page
+
+
+def test_arc_history_handles_none_user(auto_login_user, create_user):
+    """Test that history view handles records with no user (created programmatically)."""
+    user = create_user()
+    arc = Arc.objects.create(name="Test Arc", slug="test-arc", edited_by=user, created_by=user)
+
+    client, _ = auto_login_user()
+    resp = client.get(reverse("arc:history", kwargs={"slug": arc.slug}))
+    assert resp.status_code == HTML_OK_CODE
+    history_record = resp.context["history_list"][0]
+    # Records created directly (not through views) have no history_user
+    # The template should handle this gracefully
+    assert history_record.history_user is None or isinstance(
+        history_record.history_user, type(user)
+    )
+
+
+def test_arc_history_context_has_object(auto_login_user, wwh_arc):
+    """Test that history view context includes the object."""
+    client, _ = auto_login_user()
+    resp = client.get(reverse("arc:history", kwargs={"slug": wwh_arc.slug}))
+    assert resp.status_code == HTML_OK_CODE
+    assert "object" in resp.context
+    assert resp.context["object"] == wwh_arc
+
+
+def test_arc_history_context_has_model_name(auto_login_user, wwh_arc):
+    """Test that history view context includes the model name."""
+    client, _ = auto_login_user()
+    resp = client.get(reverse("arc:history", kwargs={"slug": wwh_arc.slug}))
+    assert resp.status_code == HTML_OK_CODE
+    assert "model_name" in resp.context
+    assert resp.context["model_name"] == "arc"

@@ -23,6 +23,7 @@ from comicsdb.models.attribution import Attribution
 from comicsdb.models.issue import Issue
 from comicsdb.models.series import Series
 from comicsdb.models.universe import Universe
+from comicsdb.views.history import HistoryListView
 
 PAGINATE = 28
 LOGGER = logging.getLogger(__name__)
@@ -76,9 +77,7 @@ class UniverseDetail(DetailView):
         context = super().get_context_data(**kwargs)
         universe = self.get_object()
         try:
-            next_universe = (
-                Universe.objects.order_by("name").filter(name__gt=universe.name).first()
-            )
+            next_universe = Universe.objects.order_by("name").filter(name__gt=universe.name).first()
         except ObjectDoesNotExist:
             next_universe = None
 
@@ -164,9 +163,7 @@ class UniverseCreate(LoginRequiredMixin, CreateView):
             else:
                 return super().form_invalid(form)
 
-            LOGGER.info(
-                "Universe: %s was created by %s", form.instance.name, self.request.user
-            )
+            LOGGER.info("Universe: %s was created by %s", form.instance.name, self.request.user)
         return super().form_valid(form)
 
 
@@ -206,9 +203,7 @@ class UniverseUpdate(LoginRequiredMixin, UpdateView):
             else:
                 return super().form_invalid(form)
 
-            LOGGER.info(
-                "Universe: %s was updated by %s", form.instance.name, self.request.user
-            )
+            LOGGER.info("Universe: %s was updated by %s", form.instance.name, self.request.user)
         return super().form_valid(form)
 
 
@@ -217,3 +212,7 @@ class UniverseDelete(PermissionRequiredMixin, DeleteView):
     template_name = "comicsdb/confirm_delete.html"
     permission_required = "comicsdb.delete_universe"
     success_url = reverse_lazy("universe:list")
+
+
+class UniverseHistory(HistoryListView):
+    model = Universe

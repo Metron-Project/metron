@@ -15,6 +15,7 @@ from comicsdb.forms.attribution import AttributionFormSet
 from comicsdb.forms.creator import CreatorForm
 from comicsdb.models import Creator, Credits, Issue, Series
 from comicsdb.models.attribution import Attribution
+from comicsdb.views.history import HistoryListView
 
 PAGINATE = 28
 LOGGER = logging.getLogger(__name__)
@@ -191,3 +192,7 @@ class CreatorDelete(PermissionRequiredMixin, DeleteView):
     template_name = "comicsdb/confirm_delete.html"
     permission_required = "comicsdb.delete_creator"
     success_url = reverse_lazy("creator:list")
+
+
+class CreatorHistory(HistoryListView):
+    model = Creator
