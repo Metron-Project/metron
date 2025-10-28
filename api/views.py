@@ -1,5 +1,6 @@
 from django.db.models import Prefetch
 from django.http import Http404
+from drf_spectacular.utils import extend_schema
 from rest_framework import mixins, status, viewsets
 from rest_framework.decorators import action
 from rest_framework.parsers import FormParser, MultiPartParser
@@ -145,6 +146,7 @@ class CharacterViewSet(
         serializer.save(edited_by=self.request.user)
         return super().perform_update(serializer)
 
+    @extend_schema(responses={200: IssueListSerializer(many=True)})
     @action(detail=True)
     def issue_list(self, request, pk=None):
         """
@@ -359,6 +361,7 @@ class PublisherViewSet(
         serializer.save(edited_by=self.request.user)
         return super().perform_update(serializer)
 
+    @extend_schema(responses={200: SeriesListSerializer(many=True)})
     @action(detail=True)
     def series_list(self, request, pk=None):
         """
@@ -440,6 +443,7 @@ class SeriesViewSet(
         serializer.save(edited_by=self.request.user)
         return super().perform_update(serializer)
 
+    @extend_schema(responses={200: IssueListSerializer(many=True)})
     @action(detail=True)
     def issue_list(self, request, pk=None):
         """
@@ -503,6 +507,7 @@ class TeamViewSet(
         serializer.save(edited_by=self.request.user)
         return super().perform_update(serializer)
 
+    @extend_schema(responses={200: IssueListSerializer(many=True)})
     @action(detail=True)
     def issue_list(self, request, pk=None):
         """
