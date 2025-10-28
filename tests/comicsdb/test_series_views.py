@@ -270,3 +270,55 @@ def test_series_history_context(auto_login_user, fc_series):
     assert resp.context["object"] == fc_series
     assert "model_name" in resp.context
     assert resp.context["model_name"] == "series"
+
+
+def test_series_history_m2m_shows_names(auto_login_user, create_user, dc_comics, single_issue_type):
+    """Test that M2M field changes show object names instead of IDs."""
+    from comicsdb.models import Genre
+
+    user = create_user()
+    genre1 = Genre.objects.create(name="Action")
+    genre2 = Genre.objects.create(name="Adventure")
+
+    series = Series.objects.create(
+        name="Test Series",
+        slug="test-series",
+        sort_name="Test Series",
+        volume=1,
+        year_began=2024,
+        series_type=single_issue_type,
+        publisher=dc_comics,
+        created_by=user,
+        edited_by=user,
+    )
+
+    # Add a genre to trigger M2M history
+    series.genres.add(genre1)
+
+    # Add another genre
+    series.genres.add(genre2)
+
+    client, _ = auto_login_user()
+    resp = client.get(reverse("series:history", kwargs={"slug": series.slug}))
+    assert resp.status_code == HTML_OK_CODE
+
+    # Check that the history list has delta information
+    history_list = resp.context["history_list"]
+    assert len(history_list) >= 2
+
+    # Find a record with delta changes for genres
+    found_genre_change = False
+    for history_record in history_list:
+        if history_record.delta:
+            for change in history_record.delta.changes:
+                if change.field == "genres":
+                    found_genre_change = True
+                    # Verify that the change shows names, not just IDs
+                    # The values should contain the genre names
+                    if change.new:
+                        assert "Action" in str(change.new) or "Adventure" in str(change.new)
+                    break
+        if found_genre_change:
+            break
+
+    assert found_genre_change, "Should have found at least one genre change in history"

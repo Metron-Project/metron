@@ -490,3 +490,55 @@ def test_issue_history_context(auto_login_user, basic_issue):
     assert resp.context["object"] == basic_issue
     assert "model_name" in resp.context
     assert resp.context["model_name"] == "issue"
+
+
+def test_issue_history_m2m_shows_names(auto_login_user, fc_series, fc_arc, superman, teen_titans):
+    """Test that M2M field changes show object names instead of IDs."""
+    issue = Issue.objects.create(
+        series=fc_series,
+        number="1",
+        slug=f"{fc_series.slug}-1",
+        cover_date="2024-01-01",
+        created_by=fc_series.created_by,
+        edited_by=fc_series.edited_by,
+    )
+
+    # Add an arc to trigger M2M history
+    issue.arcs.add(fc_arc)
+
+    # Add a character
+    issue.characters.add(superman)
+
+    # Add a team
+    issue.teams.add(teen_titans)
+
+    client, _ = auto_login_user()
+    resp = client.get(reverse("issue:history", kwargs={"slug": issue.slug}))
+    assert resp.status_code == HTML_OK_CODE
+
+    # Check that the history list has delta information
+    history_list = resp.context["history_list"]
+    assert len(history_list) >= 3
+
+    # Find records with delta changes for M2M fields
+    found_arc_change = False
+    found_character_change = False
+    found_team_change = False
+
+    for history_record in history_list:
+        if history_record.delta:
+            for change in history_record.delta.changes:
+                if change.field == "arcs" and change.new:
+                    found_arc_change = True
+                    assert fc_arc.name in str(change.new)
+                elif change.field == "characters" and change.new:
+                    found_character_change = True
+                    assert "Superman" in str(change.new)
+                elif change.field == "teams" and change.new:
+                    found_team_change = True
+                    assert "Teen Titans" in str(change.new)
+
+    # We should find at least some M2M changes showing names
+    assert (
+        found_arc_change or found_character_change or found_team_change
+    ), "Should have found at least one M2M change with object names"
