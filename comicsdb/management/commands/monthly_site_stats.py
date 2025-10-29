@@ -32,9 +32,7 @@ class Command(BaseCommand):
         results.extend(
             {
                 "model": mod,
-                "count": mod.objects.filter(
-                    created_on__month=month, created_on__year=year
-                ).count(),
+                "count": mod.objects.filter(created_on__month=month, created_on__year=year).count(),
             }
             for mod in models
         )

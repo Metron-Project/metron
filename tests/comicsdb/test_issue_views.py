@@ -539,6 +539,6 @@ def test_issue_history_m2m_shows_names(auto_login_user, fc_series, fc_arc, super
                     assert "Teen Titans" in str(change.new)
 
     # We should find at least some M2M changes showing names
-    assert (
-        found_arc_change or found_character_change or found_team_change
-    ), "Should have found at least one M2M change with object names"
+    assert found_arc_change or found_character_change or found_team_change, (
+        "Should have found at least one M2M change with object names"
+    )

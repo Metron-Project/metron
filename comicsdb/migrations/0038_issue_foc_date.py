@@ -12,8 +12,6 @@ class Migration(migrations.Migration):
         migrations.AddField(
             model_name="issue",
             name="foc_date",
-            field=models.DateField(
-                blank=True, null=True, verbose_name="Final Order Cutoff Date"
-            ),
+            field=models.DateField(blank=True, null=True, verbose_name="Final Order Cutoff Date"),
         ),
     ]

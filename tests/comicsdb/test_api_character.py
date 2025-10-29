@@ -93,9 +93,7 @@ def test_get_valid_single_character(api_client_with_credentials, batman):
 
 
 def test_get_invalid_single_character(api_client_with_credentials):
-    response = api_client_with_credentials.get(
-        reverse("api:character-detail", kwargs={"pk": "10"})
-    )
+    response = api_client_with_credentials.get(reverse("api:character-detail", kwargs={"pk": "10"}))
     assert response.status_code == status.HTTP_404_NOT_FOUND
 
 

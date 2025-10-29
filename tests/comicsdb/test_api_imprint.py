@@ -24,9 +24,7 @@ def test_user_post_url(api_client_with_credentials, create_put_data):
 
 
 def test_group_user_post_url(db, api_client_with_staff_credentials, create_put_data):
-    resp = api_client_with_staff_credentials.post(
-        reverse("api:imprint-list"), data=create_put_data
-    )
+    resp = api_client_with_staff_credentials.post(reverse("api:imprint-list"), data=create_put_data)
     assert resp.status_code == status.HTTP_201_CREATED
     # TODO: Fix test to compare data. Specifically the KeyError: 'request' for the
     #       get_resource_url()
@@ -61,9 +59,7 @@ def test_get_valid_single_imprint(api_client_with_credentials, vertigo_imprint):
 
 
 def test_get_invalid_single_imprint(api_client_with_credentials):
-    response = api_client_with_credentials.get(
-        reverse("api:imprint-detail", kwargs={"pk": "10"})
-    )
+    response = api_client_with_credentials.get(reverse("api:imprint-detail", kwargs={"pk": "10"}))
     assert response.status_code == status.HTTP_404_NOT_FOUND
 
 

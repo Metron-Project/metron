@@ -27,9 +27,7 @@ def test_unauthorized_post_url(db, api_client, create_creator_data):
 
 
 def test_user_post_url(api_client_with_credentials, create_creator_data):
-    resp = api_client_with_credentials.post(
-        reverse("api:creator-list"), data=create_creator_data
-    )
+    resp = api_client_with_credentials.post(reverse("api:creator-list"), data=create_creator_data)
     assert resp.status_code == status.HTTP_403_FORBIDDEN
 
 
@@ -81,9 +79,7 @@ def test_get_valid_single_creator(api_client_with_credentials, john_byrne):
 
 
 def test_get_invalid_single_creator(api_client_with_credentials):
-    response = api_client_with_credentials.get(
-        reverse("api:creator-detail", kwargs={"pk": "10"})
-    )
+    response = api_client_with_credentials.get(reverse("api:creator-detail", kwargs={"pk": "10"}))
     assert response.status_code == status.HTTP_404_NOT_FOUND
 
 

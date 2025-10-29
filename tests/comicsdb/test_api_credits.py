@@ -36,7 +36,5 @@ def test_user_post_url(api_client_with_credentials, create_data):
 
 
 def test_group_user_post_url(db, api_client_with_staff_credentials, create_data):
-    resp = api_client_with_staff_credentials.post(
-        reverse("api:credits-list"), data=create_data
-    )
+    resp = api_client_with_staff_credentials.post(reverse("api:credits-list"), data=create_data)
     assert resp.status_code == status.HTTP_201_CREATED

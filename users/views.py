@@ -121,7 +121,7 @@ class UserProfile(DetailView):
         user = self.get_object()
 
         # Import models for counting
-        from comicsdb.models import (
+        from comicsdb.models import (  # noqa: PLC0415
             Arc,
             Character,
             Creator,

@@ -13,9 +13,7 @@ class ComicsdbConfig(AppConfig):
         pre_delete.connect(pre_delete_image, sender=arc, dispatch_uid="pre_delete_arc")
 
         character = self.get_model("Character")
-        pre_delete.connect(
-            pre_delete_image, sender=character, dispatch_uid="pre_delete_character"
-        )
+        pre_delete.connect(pre_delete_image, sender=character, dispatch_uid="pre_delete_character")
 
         creator = self.get_model("Creator")
         pre_delete.connect(pre_delete_image, sender=creator, dispatch_uid="pre_delete_creator")
@@ -24,9 +22,7 @@ class ComicsdbConfig(AppConfig):
         pre_delete.connect(pre_delete_image, sender=issue, dispatch_uid="pre_delete_issue")
 
         publisher = self.get_model("Publisher")
-        pre_delete.connect(
-            pre_delete_image, sender=publisher, dispatch_uid="pre_delete_publisher"
-        )
+        pre_delete.connect(pre_delete_image, sender=publisher, dispatch_uid="pre_delete_publisher")
 
         team = self.get_model("Team")
         pre_delete.connect(pre_delete_image, sender=team, dispatch_uid="pre_delete_team")
@@ -35,6 +31,4 @@ class ComicsdbConfig(AppConfig):
         pre_delete.connect(pre_delete_image, sender=variant, dispatch_uid="pre_delete_variant")
 
         credits_ = self.get_model("Credits")
-        pre_delete.connect(
-            pre_delete_credit, sender=credits_, dispatch_uid="pre_delete_credits"
-        )
+        pre_delete.connect(pre_delete_credit, sender=credits_, dispatch_uid="pre_delete_credits")
