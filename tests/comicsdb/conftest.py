@@ -179,7 +179,25 @@ def earth_2_universe(create_user, dc_comics):
 @pytest.fixture(scope="session")
 def django_db_setup(django_db_setup, django_db_blocker):
     with django_db_blocker.unblock():
+        from django.db import connection
+
         call_command("loaddata", "../../comicsdb/fixtures/series_type.yaml")
+        # Create system user with id=1 if it doesn't exist
+        if not CustomUser.objects.filter(id=1).exists():
+            user = CustomUser(
+                id=1,
+                username="system",
+                email="system@metron.com",
+                is_active=True,
+            )
+            user.set_password("system")
+            user.save()
+
+            # Reset the sequence to start from 2 so other users don't conflict
+            with connection.cursor() as cursor:
+                cursor.execute(
+                    "SELECT setval(pg_get_serial_sequence('users_customuser', 'id'), 2, false);"
+                )
 
 
 @pytest.fixture
