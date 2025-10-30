@@ -50,6 +50,48 @@ class HistoryListView(LoginRequiredMixin, ListView):
 
         return ids if ids else None
 
+    def _prefetch_fk_names(self, history_list):
+        """
+        Prefetch all ForeignKey object names in a single query per model to avoid N+1 queries.
+
+        Args:
+            history_list: List of history records with delta information
+
+        Returns:
+            Dict mapping (model_class, field_name) -> {id: name}
+        """
+        # Collect all FK field IDs that need to be resolved
+        fk_ids_by_field = defaultdict(set)
+
+        for record in history_list:
+            if not record.delta or not record.delta.changes:
+                continue
+
+            for change in record.delta.changes:
+                try:
+                    field = self.model._meta.get_field(change.field)
+                except Exception:  # noqa: BLE001 S112
+                    continue
+
+                if not isinstance(field, models.ForeignKey):
+                    continue
+
+                # Collect IDs from old and new values
+                for value in [change.old, change.new]:
+                    if value is not None and isinstance(value, int):
+                        fk_ids_by_field[(field.related_model, change.field)].add(value)
+
+        # Batch fetch all related objects
+        fk_cache = {}
+        for (related_model, field_name), ids in fk_ids_by_field.items():
+            try:
+                objects = related_model.objects.filter(id__in=ids)
+                fk_cache[(related_model, field_name)] = {obj.id: str(obj) for obj in objects}
+            except Exception:  # noqa: BLE001
+                fk_cache[(related_model, field_name)] = {}
+
+        return fk_cache
+
     def _prefetch_m2m_names(self, history_list):
         """
         Prefetch all M2M object names in a single query per model to avoid N+1 queries.
@@ -138,6 +180,43 @@ class HistoryListView(LoginRequiredMixin, ListView):
         names = [id_to_name.get(id_, f"ID:{id_}") for id_ in ids if id_ in id_to_name]
         return ", ".join(names) if names else value
 
+    def _resolve_fk_value(self, field_name, value, fk_cache):
+        """
+        Convert foreign key field ID to its string representation using cache.
+
+        Args:
+            field_name: The name of the field
+            value: The value (should be an integer ID)
+            fk_cache: Prefetched cache of FK object names
+
+        Returns:
+            The object name string or the original value if not resolvable
+        """
+        # Get the field from the model
+        if not self.model:
+            return value
+
+        try:
+            field = self.model._meta.get_field(field_name)
+        except Exception:  # noqa: BLE001
+            return value
+
+        # Check if it's a ForeignKey
+        if not isinstance(field, models.ForeignKey):
+            return value
+
+        # If the value is None or not an integer, return as-is
+        if value is None or not isinstance(value, int):
+            return value
+
+        # Get the cached name
+        related_model = field.related_model
+        cache_key = (related_model, field_name)
+        id_to_name = fk_cache.get(cache_key, {})
+
+        # Return the name if found, otherwise return the original value
+        return id_to_name.get(value, value)
+
     def get_context_data(self, **kwargs):  # noqa: PLR0912
         """
         Add the object and delta information to the context.
@@ -178,17 +257,22 @@ class HistoryListView(LoginRequiredMixin, ListView):
             else:
                 record.delta = None
 
-        # Prefetch all M2M names in batch to avoid N+1 queries
+        # Prefetch all FK and M2M names in batch to avoid N+1 queries
+        fk_cache = self._prefetch_fk_names(history_list)
         m2m_cache = self._prefetch_m2m_names(history_list)
 
-        # Process delta to convert M2M IDs to names
+        # Process delta to convert FK and M2M IDs to names
         for record in history_list:
             if record.delta and record.delta.changes:
                 new_changes = []
                 for change in record.delta.changes:
+                    # Resolve old and new values for FK fields using cache
+                    resolved_old = self._resolve_fk_value(change.field, change.old, fk_cache)
+                    resolved_new = self._resolve_fk_value(change.field, change.new, fk_cache)
+
                     # Resolve old and new values for M2M fields using cache
-                    resolved_old = self._resolve_m2m_value(change.field, change.old, m2m_cache)
-                    resolved_new = self._resolve_m2m_value(change.field, change.new, m2m_cache)
+                    resolved_old = self._resolve_m2m_value(change.field, resolved_old, m2m_cache)
+                    resolved_new = self._resolve_m2m_value(change.field, resolved_new, m2m_cache)
 
                     # Only create a new change if values were modified
                     if resolved_old != change.old or resolved_new != change.new:
