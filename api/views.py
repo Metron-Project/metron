@@ -427,9 +427,7 @@ class SeriesViewSet(
         serializer_class = self.get_serializer_class()
         kwargs["context"] = self.get_serializer_context()
 
-        if self.request.method in {"POST", "PUT", "PATCH"} and not self.request.data.get(
-            "imprint"
-        ):
+        if self.request.method in {"POST", "PUT", "PATCH"} and not self.request.data.get("imprint"):
             series_request_data = self.request.data.copy()
             series_request_data["imprint"] = None
             kwargs["data"] = series_request_data

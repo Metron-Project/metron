@@ -26,9 +26,7 @@ class Command(BaseCommand):
             if good not in credit.role.all():
                 credit.role.add(good)
             self.stdout.write(
-                self.style.SUCCESS(
-                    f"Fixed {good} credit in {credit.issue} for {credit.creator}"
-                )
+                self.style.SUCCESS(f"Fixed {good} credit in {credit.issue} for {credit.creator}")
             )
         return fix
 

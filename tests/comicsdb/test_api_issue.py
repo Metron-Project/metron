@@ -69,9 +69,7 @@ def test_user_put_url(api_client_with_credentials, issue_with_arc, create_put_da
     assert resp.status_code == status.HTTP_403_FORBIDDEN
 
 
-def test_staff_user_put_url(
-    api_client_with_staff_credentials, issue_with_arc, create_put_data
-):
+def test_staff_user_put_url(api_client_with_staff_credentials, issue_with_arc, create_put_data):
     resp = api_client_with_staff_credentials.patch(
         reverse("api:issue-detail", kwargs={"pk": issue_with_arc.pk}), data=create_put_data
     )

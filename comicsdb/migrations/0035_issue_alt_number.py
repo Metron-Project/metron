@@ -12,8 +12,6 @@ class Migration(migrations.Migration):
         migrations.AddField(
             model_name="issue",
             name="alt_number",
-            field=models.CharField(
-                blank=True, max_length=25, verbose_name="Alternative Number"
-            ),
+            field=models.CharField(blank=True, max_length=25, verbose_name="Alternative Number"),
         ),
     ]

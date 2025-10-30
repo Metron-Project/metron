@@ -35,9 +35,7 @@ class Command(BaseCommand):
             if pub.id in all_series_by_publisher:
                 for i in all_series_by_publisher[pub.id]:
                     self.stdout.write(
-                        self.style.ERROR(
-                            f"{i['name']} | {i['volume_count']} Duplicates | {pub} "
-                        )
+                        self.style.ERROR(f"{i['name']} | {i['volume_count']} Duplicates | {pub} ")
                     )
 
         # Pre-fetch all series data for excluded types

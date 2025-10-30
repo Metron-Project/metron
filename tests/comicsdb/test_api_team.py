@@ -30,9 +30,7 @@ def test_user_post_url(api_client_with_credentials, create_team_data):
 
 
 def test_group_user_post_url(db, api_client_with_staff_credentials, create_team_data):
-    resp = api_client_with_staff_credentials.post(
-        reverse("api:team-list"), data=create_team_data
-    )
+    resp = api_client_with_staff_credentials.post(reverse("api:team-list"), data=create_team_data)
     assert resp.status_code == status.HTTP_201_CREATED
     assert resp.data["name"] == create_team_data["name"]
     assert resp.data["desc"] == create_team_data["desc"]
@@ -74,9 +72,7 @@ def test_unauthorized_view_url(api_client, avengers, teen_titans):
 
 
 def test_get_valid_single_team(api_client_with_credentials, avengers):
-    resp = api_client_with_credentials.get(
-        reverse("api:team-detail", kwargs={"pk": avengers.pk})
-    )
+    resp = api_client_with_credentials.get(reverse("api:team-detail", kwargs={"pk": avengers.pk}))
     assert resp.status_code == status.HTTP_200_OK
 
 

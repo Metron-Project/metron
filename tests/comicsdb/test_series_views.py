@@ -274,7 +274,7 @@ def test_series_history_context(auto_login_user, fc_series):
 
 def test_series_history_m2m_shows_names(auto_login_user, create_user, dc_comics, single_issue_type):
     """Test that M2M field changes show object names instead of IDs."""
-    from comicsdb.models import Genre
+    from comicsdb.models import Genre  # noqa: PLC0415
 
     user = create_user()
     genre1 = Genre.objects.create(name="Action")

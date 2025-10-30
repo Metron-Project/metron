@@ -31,9 +31,7 @@ def test_user_post_url(api_client_with_credentials, create_arc_data):
 
 
 def test_group_user_post_url(db, api_client_with_staff_credentials, create_arc_data):
-    resp = api_client_with_staff_credentials.post(
-        reverse("api:arc-list"), data=create_arc_data
-    )
+    resp = api_client_with_staff_credentials.post(reverse("api:arc-list"), data=create_arc_data)
     assert resp.status_code == status.HTTP_201_CREATED
 
 
@@ -71,9 +69,7 @@ def test_unauthorized_view_url(api_client, fc_arc, wwh_arc):
 
 
 def test_get_valid_single_arc(api_client_with_credentials, wwh_arc):
-    resp = api_client_with_credentials.get(
-        reverse("api:arc-detail", kwargs={"pk": wwh_arc.pk})
-    )
+    resp = api_client_with_credentials.get(reverse("api:arc-detail", kwargs={"pk": wwh_arc.pk}))
     assert resp.status_code == status.HTTP_200_OK
 
 
@@ -93,9 +89,7 @@ def test_unauthorized_detail_view_url(api_client, wwh_arc):
 
 
 def test_arc_issue_list_view(api_client_with_credentials, fc_arc, issue_with_arc):
-    resp = api_client_with_credentials.get(
-        reverse("api:arc-issue-list", kwargs={"pk": fc_arc.pk})
-    )
+    resp = api_client_with_credentials.get(reverse("api:arc-issue-list", kwargs={"pk": fc_arc.pk}))
     serializer = IssueListSerializer(issue_with_arc)
     assert resp.data["count"] == 1
     assert resp.data["next"] is None

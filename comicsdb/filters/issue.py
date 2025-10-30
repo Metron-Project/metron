@@ -12,9 +12,7 @@ class IssueSeriesName(df.rest_framework.CharFilter):
         if value:
             query_list = value.split()
             return qs.filter(
-                reduce(
-                    operator.and_, (Q(series__name__unaccent__icontains=q) for q in query_list)
-                )
+                reduce(operator.and_, (Q(series__name__unaccent__icontains=q) for q in query_list))
             )
         return super().filter(qs, value)
 
@@ -67,9 +65,7 @@ class IssueFilter(df.rest_framework.FilterSet):
     sku = df.rest_framework.CharFilter(
         label="Distributor SKU", field_name="sku", lookup_expr="iexact"
     )
-    upc = df.rest_framework.CharFilter(
-        label="UPC Code", field_name="upc", lookup_expr="iexact"
-    )
+    upc = df.rest_framework.CharFilter(label="UPC Code", field_name="upc", lookup_expr="iexact")
     cv_id = df.rest_framework.NumberFilter(
         label="Comic Vine ID", field_name="cv_id", lookup_expr="exact"
     )
@@ -88,12 +84,8 @@ class IssueFilter(df.rest_framework.FilterSet):
 
 
 class IssueViewFilter(df.FilterSet):
-    cover_year = df.NumberFilter(
-        label="Cover Year", field_name="cover_date", lookup_expr="year"
-    )
-    cover_month = df.NumberFilter(
-        label="Cover Month", field_name="cover_date", lookup_expr="month"
-    )
+    cover_year = df.NumberFilter(label="Cover Year", field_name="cover_date", lookup_expr="year")
+    cover_month = df.NumberFilter(label="Cover Month", field_name="cover_date", lookup_expr="month")
     number = df.rest_framework.CharFilter(
         label="Issue Number", field_name="number", lookup_expr="iexact"
     )

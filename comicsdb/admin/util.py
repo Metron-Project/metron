@@ -38,9 +38,7 @@ class CreatedOnDateListFilter(admin.SimpleListFilter):
             case "7day":
                 return queryset.filter(created_on__date__gte=last_week.date())
             case "thisMonth":
-                return queryset.filter(
-                    created_on__year=today.year, created_on__month=today.month
-                )
+                return queryset.filter(created_on__year=today.year, created_on__month=today.month)
             case "thisYear":
                 return queryset.filter(created_on__year=today.year)
             case _:

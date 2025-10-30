@@ -29,9 +29,7 @@ def merge_cancelled_series(apps, schema_editor):
     single, _ = series_type_model.objects.get_or_create(name="Single Issue")
 
     series_model = apps.get_model("comicsdb", "Series")
-    series_model.objects.filter(series_type=cancelled).update(
-        series_type=single, status=CANCELLED
-    )
+    series_model.objects.filter(series_type=cancelled).update(series_type=single, status=CANCELLED)
 
 
 def merge_ongoing_series(apps, schema_editor):
@@ -99,15 +97,11 @@ def add_ratings(apps, schema_editor):
     ratings = [
         rating_model(name="Unknown"),
         rating_model(name="Everyone", short_description="Appropriate for readers of all ages"),
-        rating_model(
-            name="Teen", short_description="Appropriate for readers age 12 and older"
-        ),
+        rating_model(name="Teen", short_description="Appropriate for readers age 12 and older"),
         rating_model(
             name="Teen Plus", short_description="Appropriate for readers age 15 and older"
         ),
-        rating_model(
-            name="Mature", short_description="Appropriate for readers age 17 and older"
-        ),
+        rating_model(name="Mature", short_description="Appropriate for readers age 17 and older"),
     ]
     rating_model.objects.bulk_create(ratings)
 
@@ -225,15 +219,11 @@ class Migration(migrations.Migration):
                 ("created_on", models.DateTimeField(auto_now_add=True)),
                 (
                     "wikipedia",
-                    models.CharField(
-                        blank=True, max_length=255, verbose_name="Wikipedia Slug"
-                    ),
+                    models.CharField(blank=True, max_length=255, verbose_name="Wikipedia Slug"),
                 ),
                 (
                     "image",
-                    sorl.thumbnail.fields.ImageField(
-                        blank=True, upload_to="character/%Y/%m/%d/"
-                    ),
+                    sorl.thumbnail.fields.ImageField(blank=True, upload_to="character/%Y/%m/%d/"),
                 ),
                 (
                     "alias",
@@ -266,9 +256,7 @@ class Migration(migrations.Migration):
                 ("created_on", models.DateTimeField(auto_now_add=True)),
                 (
                     "wikipedia",
-                    models.CharField(
-                        blank=True, max_length=255, verbose_name="Wikipedia Slug"
-                    ),
+                    models.CharField(blank=True, max_length=255, verbose_name="Wikipedia Slug"),
                 ),
                 (
                     "birth",
@@ -280,9 +268,7 @@ class Migration(migrations.Migration):
                 ),
                 (
                     "image",
-                    sorl.thumbnail.fields.ImageField(
-                        blank=True, upload_to="creator/%Y/%m/%d/"
-                    ),
+                    sorl.thumbnail.fields.ImageField(blank=True, upload_to="creator/%Y/%m/%d/"),
                 ),
                 (
                     "alias",
@@ -345,9 +331,7 @@ class Migration(migrations.Migration):
                 (
                     "name",
                     django.contrib.postgres.fields.ArrayField(
-                        base_field=models.CharField(
-                            max_length=150, verbose_name="Story Title"
-                        ),
+                        base_field=models.CharField(max_length=150, verbose_name="Story Title"),
                         blank=True,
                         null=True,
                         size=None,
@@ -438,9 +422,7 @@ class Migration(migrations.Migration):
                 ),
                 (
                     "wikipedia",
-                    models.CharField(
-                        blank=True, max_length=255, verbose_name="Wikipedia Slug"
-                    ),
+                    models.CharField(blank=True, max_length=255, verbose_name="Wikipedia Slug"),
                 ),
                 (
                     "image",
@@ -545,9 +527,7 @@ class Migration(migrations.Migration):
                 ("created_on", models.DateTimeField(auto_now_add=True)),
                 (
                     "wikipedia",
-                    models.CharField(
-                        blank=True, max_length=255, verbose_name="Wikipedia Slug"
-                    ),
+                    models.CharField(blank=True, max_length=255, verbose_name="Wikipedia Slug"),
                 ),
                 (
                     "image",
@@ -851,9 +831,7 @@ class Migration(migrations.Migration):
         migrations.AddField(
             model_name="issue",
             name="title",
-            field=models.CharField(
-                blank=True, max_length=255, verbose_name="Collection Title"
-            ),
+            field=models.CharField(blank=True, max_length=255, verbose_name="Collection Title"),
         ),
         migrations.AddField(
             model_name="issue",
@@ -891,51 +869,37 @@ class Migration(migrations.Migration):
         migrations.AddField(
             model_name="arc",
             name="cv_id",
-            field=models.PositiveIntegerField(
-                blank=True, null=True, verbose_name="Comic Vine ID"
-            ),
+            field=models.PositiveIntegerField(blank=True, null=True, verbose_name="Comic Vine ID"),
         ),
         migrations.AddField(
             model_name="character",
             name="cv_id",
-            field=models.PositiveIntegerField(
-                blank=True, null=True, verbose_name="Comic Vine ID"
-            ),
+            field=models.PositiveIntegerField(blank=True, null=True, verbose_name="Comic Vine ID"),
         ),
         migrations.AddField(
             model_name="creator",
             name="cv_id",
-            field=models.PositiveIntegerField(
-                blank=True, null=True, verbose_name="Comic Vine ID"
-            ),
+            field=models.PositiveIntegerField(blank=True, null=True, verbose_name="Comic Vine ID"),
         ),
         migrations.AddField(
             model_name="issue",
             name="cv_id",
-            field=models.PositiveIntegerField(
-                blank=True, null=True, verbose_name="Comic Vine ID"
-            ),
+            field=models.PositiveIntegerField(blank=True, null=True, verbose_name="Comic Vine ID"),
         ),
         migrations.AddField(
             model_name="publisher",
             name="cv_id",
-            field=models.PositiveIntegerField(
-                blank=True, null=True, verbose_name="Comic Vine ID"
-            ),
+            field=models.PositiveIntegerField(blank=True, null=True, verbose_name="Comic Vine ID"),
         ),
         migrations.AddField(
             model_name="series",
             name="cv_id",
-            field=models.PositiveIntegerField(
-                blank=True, null=True, verbose_name="Comic Vine ID"
-            ),
+            field=models.PositiveIntegerField(blank=True, null=True, verbose_name="Comic Vine ID"),
         ),
         migrations.AddField(
             model_name="team",
             name="cv_id",
-            field=models.PositiveIntegerField(
-                blank=True, null=True, verbose_name="Comic Vine ID"
-            ),
+            field=models.PositiveIntegerField(blank=True, null=True, verbose_name="Comic Vine ID"),
         ),
         migrations.AddField(
             model_name="issue",
@@ -1002,9 +966,7 @@ class Migration(migrations.Migration):
                 ),
                 (
                     "image",
-                    sorl.thumbnail.fields.ImageField(
-                        blank=True, upload_to="universe/%Y/%m/%d/"
-                    ),
+                    sorl.thumbnail.fields.ImageField(blank=True, upload_to="universe/%Y/%m/%d/"),
                 ),
                 ("designation", models.CharField(blank=True, max_length=255)),
                 (
@@ -1041,9 +1003,7 @@ class Migration(migrations.Migration):
         migrations.AddField(
             model_name="team",
             name="universes",
-            field=models.ManyToManyField(
-                blank=True, related_name="teams", to="comicsdb.universe"
-            ),
+            field=models.ManyToManyField(blank=True, related_name="teams", to="comicsdb.universe"),
         ),
         migrations.AddField(
             model_name="series",
@@ -1078,16 +1038,12 @@ class Migration(migrations.Migration):
         migrations.AlterField(
             model_name="issue",
             name="teams",
-            field=models.ManyToManyField(
-                blank=True, related_name="issues", to="comicsdb.team"
-            ),
+            field=models.ManyToManyField(blank=True, related_name="issues", to="comicsdb.team"),
         ),
         migrations.AddField(
             model_name="issue",
             name="universes",
-            field=models.ManyToManyField(
-                blank=True, related_name="issues", to="comicsdb.universe"
-            ),
+            field=models.ManyToManyField(blank=True, related_name="issues", to="comicsdb.universe"),
         ),
         migrations.AlterField(
             model_name="issue",
@@ -1109,23 +1065,17 @@ class Migration(migrations.Migration):
         migrations.AlterField(
             model_name="character",
             name="teams",
-            field=models.ManyToManyField(
-                blank=True, related_name="characters", to="comicsdb.team"
-            ),
+            field=models.ManyToManyField(blank=True, related_name="characters", to="comicsdb.team"),
         ),
         migrations.AlterField(
             model_name="team",
             name="creators",
-            field=models.ManyToManyField(
-                blank=True, related_name="teams", to="comicsdb.creator"
-            ),
+            field=models.ManyToManyField(blank=True, related_name="teams", to="comicsdb.creator"),
         ),
         migrations.AlterField(
             model_name="series",
             name="genres",
-            field=models.ManyToManyField(
-                blank=True, related_name="series", to="comicsdb.genre"
-            ),
+            field=models.ManyToManyField(blank=True, related_name="series", to="comicsdb.genre"),
         ),
         migrations.AlterField(
             model_name="series",

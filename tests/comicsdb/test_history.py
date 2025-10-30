@@ -1,3 +1,4 @@
+# ruff: noqa: PLC0415
 """Tests for django-simple-history integration."""
 
 from django.contrib.auth import get_user_model

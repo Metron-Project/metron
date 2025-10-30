@@ -91,8 +91,7 @@ class IssueForm(ModelForm):
             "title": "Only used with Collected Editions like a Trade Paperback.",
             "price": "In United States currency",
             "reprints": (
-                "Add any issues that are reprinted. Do not add a '#' "
-                "in front of any issue number."
+                "Add any issues that are reprinted. Do not add a '#' in front of any issue number."
             ),
             "foc_date": "This date should be earlier than the store date",
         }

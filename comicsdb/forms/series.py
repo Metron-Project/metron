@@ -119,7 +119,5 @@ class SeriesForm(ModelForm):
             # If adding an associated series and self.series_type is a TPB, OMNI, or HC
             # raise a validation error.
             if series_type.id in [HC, OMNI, TPB]:
-                raise ValidationError(
-                    "Collections are not allowed to have an associated series."
-                )
+                raise ValidationError("Collections are not allowed to have an associated series.")
         return assoc

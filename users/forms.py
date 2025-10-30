@@ -15,8 +15,7 @@ class CustomUserCreationForm(UserCreationForm):
     email = EmailField(
         max_length=254,
         help_text=(
-            "Required. Enter a valid email address. "
-            "Temporary email addresses are not allowed."
+            "Required. Enter a valid email address. Temporary email addresses are not allowed."
         ),
         required=True,
     )
@@ -50,9 +49,7 @@ class CustomUserCreationForm(UserCreationForm):
         if domain not in whitelist:
             resp = check_email_domain(email)
             if resp is None:
-                raise ValidationError(
-                    "Error creating account. Contact the site administrator."
-                )
+                raise ValidationError("Error creating account. Contact the site administrator.")
             if resp["block"] is True:
                 if resp["disposable"] is True:
                     LOGGER.warning("'%s' is a temporary email address.", email)

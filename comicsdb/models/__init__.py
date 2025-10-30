@@ -15,8 +15,8 @@ from comicsdb.models.variant import Variant
 from comicsdb.models.imprint import Imprint  # This need to be *after* Publisher model.
 
 __all__ = [
-    "Arc",
     "Announcement",
+    "Arc",
     "Attribution",
     "Character",
     "Creator",

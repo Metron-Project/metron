@@ -25,9 +25,7 @@ def test_unauthorized_post_url(db, api_client, create_universe_data):
 
 
 def test_user_post_url(api_client_with_credentials, create_universe_data):
-    resp = api_client_with_credentials.post(
-        reverse("api:universe-list"), data=create_universe_data
-    )
+    resp = api_client_with_credentials.post(reverse("api:universe-list"), data=create_universe_data)
     assert resp.status_code == status.HTTP_403_FORBIDDEN
 
 
@@ -55,9 +53,7 @@ def test_user_put_url(api_client_with_credentials, earth_2_universe, create_put_
     assert resp.status_code == status.HTTP_403_FORBIDDEN
 
 
-def test_group_user_put_url(
-    api_client_with_staff_credentials, earth_2_universe, create_put_data
-):
+def test_group_user_put_url(api_client_with_staff_credentials, earth_2_universe, create_put_data):
     resp = api_client_with_staff_credentials.patch(
         reverse("api:universe-detail", kwargs={"pk": earth_2_universe.pk}),
         data=create_put_data,

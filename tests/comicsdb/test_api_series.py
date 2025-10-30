@@ -42,9 +42,7 @@ def test_unauthorized_post_url(db, api_client, create_series_data):
 
 
 def test_user_post_url(api_client_with_credentials, create_series_data):
-    resp = api_client_with_credentials.post(
-        reverse("api:series-list"), data=create_series_data
-    )
+    resp = api_client_with_credentials.post(reverse("api:series-list"), data=create_series_data)
     assert resp.status_code == status.HTTP_403_FORBIDDEN
 
 

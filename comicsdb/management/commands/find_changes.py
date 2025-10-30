@@ -39,6 +39,4 @@ class Command(BaseCommand):
             self.stdout.write(self.style.SUCCESS(f"\n{item['model'].__name__}:"))
             for obj in item["qs"]:
                 user_str = obj.edited_by or obj.created_by
-                self.stdout.write(
-                    self.style.WARNING(f"\t'{obj}' created/changed by '{user_str}'")
-                )
+                self.stdout.write(self.style.WARNING(f"\t'{obj}' created/changed by '{user_str}'"))

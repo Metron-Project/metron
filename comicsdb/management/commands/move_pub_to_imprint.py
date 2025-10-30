@@ -48,9 +48,7 @@ class Command(BaseCommand):
 
         res = Attribution.objects.bulk_update(orig_attributions, ["content_type", "object_id"])
         self.stdout.write(
-            self.style.SUCCESS(
-                f"Moved {res} attribution records from the publisher to imprint"
-            )
+            self.style.SUCCESS(f"Moved {res} attribution records from the publisher to imprint")
         )
 
     def _create_imprint(self, original: Publisher, parent: Publisher) -> Imprint:
