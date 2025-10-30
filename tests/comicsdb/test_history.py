@@ -629,3 +629,315 @@ def test_bulk_m2m_addition(create_user, john_byrne, walter_simonson):
 
     # Should create history for the M2M change
     assert character.history.count() == 2
+
+
+# ForeignKey History Tracking Tests
+
+
+def test_universe_publisher_fk_tracked(create_user, dc_comics, marvel):
+    """Test that changing a Universe's publisher ForeignKey is tracked in history."""
+    user = create_user()
+    universe = Universe.objects.create(
+        name="Test Universe",
+        slug="test-universe",
+        publisher=dc_comics,
+        created_by=user,
+        edited_by=user,
+    )
+
+    # Change the publisher
+    universe.publisher = marvel
+    universe.save()
+
+    assert universe.history.count() == 2
+    latest_history = universe.history.first()
+    assert latest_history.history_type == "~"
+
+
+def test_imprint_publisher_fk_tracked(create_user, dc_comics, marvel):
+    """Test that changing an Imprint's publisher ForeignKey is tracked in history."""
+    user = create_user()
+    imprint = Imprint.objects.create(
+        name="Test Imprint",
+        slug="test-imprint",
+        publisher=dc_comics,
+        created_by=user,
+        edited_by=user,
+    )
+
+    # Change the publisher
+    imprint.publisher = marvel
+    imprint.save()
+
+    assert imprint.history.count() == 2
+    latest_history = imprint.history.first()
+    assert latest_history.history_type == "~"
+
+
+def test_issue_series_fk_tracked(create_user, fc_series, single_issue_type, dc_comics):
+    """Test that changing an Issue's series ForeignKey is tracked in history."""
+    user = create_user()
+    issue = Issue.objects.create(
+        series=fc_series,
+        number="1",
+        slug=f"{fc_series.slug}-1",
+        cover_date="2024-01-01",
+        created_by=user,
+        edited_by=user,
+    )
+
+    # Create another series and change to it
+    new_series = Series.objects.create(
+        name="New Series",
+        slug="new-series",
+        sort_name="New Series",
+        volume=1,
+        year_began=2024,
+        series_type=single_issue_type,
+        publisher=dc_comics,
+        created_by=user,
+        edited_by=user,
+    )
+
+    issue.series = new_series
+    issue.save()
+
+    assert issue.history.count() == 2
+    latest_history = issue.history.first()
+    assert latest_history.history_type == "~"
+
+
+def test_issue_rating_fk_tracked(create_user, fc_series):
+    """Test that changing an Issue's rating ForeignKey is tracked in history."""
+    from comicsdb.models.rating import Rating
+
+    user = create_user()
+    issue = Issue.objects.create(
+        series=fc_series,
+        number="1",
+        slug=f"{fc_series.slug}-1",
+        cover_date="2024-01-01",
+        created_by=user,
+        edited_by=user,
+    )
+
+    # Create a new rating and change to it
+    new_rating = Rating.objects.create(name="Mature")
+
+    initial_count = issue.history.count()
+    issue.rating = new_rating
+    issue.save()
+
+    assert issue.history.count() == initial_count + 1
+
+
+# ForeignKey History View Resolution Tests
+
+
+def test_history_view_resolves_fk_names(create_user, dc_comics, marvel):
+    """Test that HistoryListView resolves ForeignKey IDs to names."""
+    from django.test import RequestFactory
+
+    from comicsdb.views.universe import UniverseHistory
+
+    user = create_user()
+    universe = Universe.objects.create(
+        name="Test Universe",
+        slug="test-universe",
+        publisher=dc_comics,
+        created_by=user,
+        edited_by=user,
+    )
+
+    # Change the publisher
+    universe.publisher = marvel
+    universe.save()
+
+    # Create a view instance and get context
+    factory = RequestFactory()
+    request = factory.get(f"/universe/{universe.slug}/history/")
+    request.user = user
+
+    view = UniverseHistory()
+    view.model = Universe
+    view.request = request
+    view.kwargs = {"slug": universe.slug}
+    view.setup(request, slug=universe.slug)
+
+    # Get the context data
+    context = view.get_context_data(object_list=view.get_queryset())
+
+    # Check that we have history records
+    history_list = context["history_list"]
+    assert len(history_list) >= 2
+
+    # Get the latest history record (which has the change)
+    latest_record = history_list[0]
+    assert latest_record.delta is not None
+
+    # Find the publisher change in the delta
+    publisher_changes = [c for c in latest_record.delta.changes if c.field == "publisher"]
+    assert len(publisher_changes) == 1
+
+    change = publisher_changes[0]
+    # The values should be resolved to names (strings), not IDs (integers)
+    assert isinstance(change.old, str)
+    assert isinstance(change.new, str)
+    assert change.old == str(dc_comics)
+    assert change.new == str(marvel)
+
+
+def test_history_view_prefetch_fk_names(create_user, dc_comics, marvel):
+    """Test that _prefetch_fk_names correctly batches queries."""
+    from django.test import RequestFactory
+
+    from comicsdb.views.universe import UniverseHistory
+
+    user = create_user()
+
+    # Create multiple universes with publisher changes
+    universes = []
+    for i in range(3):
+        universe = Universe.objects.create(
+            name=f"Test Universe {i}",
+            slug=f"test-universe-{i}",
+            publisher=dc_comics,
+            created_by=user,
+            edited_by=user,
+        )
+        universe.publisher = marvel
+        universe.save()
+        universes.append(universe)
+
+    # Use the first universe for testing
+    universe = universes[0]
+
+    factory = RequestFactory()
+    request = factory.get(f"/universe/{universe.slug}/history/")
+    request.user = user
+
+    view = UniverseHistory()
+    view.model = Universe
+    view.request = request
+    view.kwargs = {"slug": universe.slug}
+    view.setup(request, slug=universe.slug)
+
+    # Get queryset and compute deltas
+    history_list = list(view.get_queryset())
+    for i, record in enumerate(history_list):
+        if i < len(history_list) - 1:
+            record.delta = record.diff_against(history_list[i + 1])
+        else:
+            record.delta = None
+
+    # Test the _prefetch_fk_names method
+    fk_cache = view._prefetch_fk_names(history_list)
+
+    # Verify that the cache contains the expected publishers
+    from comicsdb.models.publisher import Publisher
+
+    cache_key = (Publisher, "publisher")
+    assert cache_key in fk_cache
+    assert dc_comics.id in fk_cache[cache_key]
+    assert marvel.id in fk_cache[cache_key]
+    assert fk_cache[cache_key][dc_comics.id] == str(dc_comics)
+    assert fk_cache[cache_key][marvel.id] == str(marvel)
+
+
+def test_history_view_resolve_fk_value(create_user, dc_comics):
+    """Test that _resolve_fk_value correctly resolves ForeignKey IDs."""
+    from django.test import RequestFactory
+
+    from comicsdb.views.universe import UniverseHistory
+
+    user = create_user()
+    universe = Universe.objects.create(
+        name="Test Universe",
+        slug="test-universe",
+        publisher=dc_comics,
+        created_by=user,
+        edited_by=user,
+    )
+
+    factory = RequestFactory()
+    request = factory.get(f"/universe/{universe.slug}/history/")
+    request.user = user
+
+    view = UniverseHistory()
+    view.model = Universe
+    view.request = request
+    view.kwargs = {"slug": universe.slug}
+    view.setup(request, slug=universe.slug)
+
+    # Create a mock FK cache
+    from comicsdb.models.publisher import Publisher
+
+    fk_cache = {(Publisher, "publisher"): {dc_comics.id: str(dc_comics)}}
+
+    # Test resolving a valid FK ID
+    resolved = view._resolve_fk_value("publisher", dc_comics.id, fk_cache)
+    assert resolved == str(dc_comics)
+
+    # Test resolving None
+    resolved = view._resolve_fk_value("publisher", None, fk_cache)
+    assert resolved is None
+
+    # Test resolving a non-existent ID
+    resolved = view._resolve_fk_value("publisher", 99999, fk_cache)
+    assert resolved == 99999  # Should return original value if not found
+
+    # Test resolving a non-FK field
+    resolved = view._resolve_fk_value("name", "Test", fk_cache)
+    assert resolved == "Test"  # Should return as-is for non-FK fields
+
+
+def test_multiple_fk_changes_in_one_update(create_user, dc_comics, marvel):
+    """Test that multiple ForeignKey changes in one update are all tracked."""
+    user1 = create_user()
+    user2 = create_user()
+
+    universe = Universe.objects.create(
+        name="Test Universe",
+        slug="test-universe",
+        publisher=dc_comics,
+        created_by=user1,
+        edited_by=user1,
+    )
+
+    # Change both publisher and edited_by in one save
+    universe.publisher = marvel
+    universe.edited_by = user2
+    universe.save()
+
+    assert universe.history.count() == 2
+    latest_history = universe.history.first()
+
+    # Get the delta
+    previous_history = universe.history.all()[1]
+    delta = latest_history.diff_against(previous_history)
+
+    # Should have changes for both FK fields
+    field_names = {change.field for change in delta.changes}
+    assert "publisher" in field_names
+    assert "edited_by" in field_names
+
+
+def test_fk_and_m2m_changes_together(create_user, john_byrne):
+    """Test that ForeignKey and M2M changes in the same history are both resolved."""
+    user = create_user()
+    character = Character.objects.create(
+        name="Test Character",
+        slug="test-character",
+        created_by=user,
+        edited_by=user,
+    )
+
+    # Add a creator (M2M change)
+    character.creators.add(john_byrne)
+
+    # Change edited_by (FK change)
+    user2 = create_user()
+    character.edited_by = user2
+    character.save()
+
+    assert character.history.count() == 3  # Create + M2M + FK change
