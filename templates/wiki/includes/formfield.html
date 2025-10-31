@@ -1,0 +1,114 @@
+{% load bulma_tags %}
+{% if field.is_hidden %}
+  {{ field }}
+{% else %}
+
+<div id="div_{{ field.auto_id }}" class="field" data-field-name="{{ field.name }}">
+  {% if field|is_field_type:'checkbox' %}
+    <div class="control">
+      <label class="checkbox{% if field.field.required %} is-required{% endif %}">
+        {{ field }} {{ field.label }}
+      </label>
+      {% for error in field.errors %}<p class="help is-danger">{{ error }}</p>{% endfor %}
+      {% if field.help_text %}<p class="help">{{ field.help_text|safe }}</p>{% endif %}
+    </div>
+  {% elif field|is_field_type:'radio' %}
+    {% if field.auto_id %}
+      <label class="label{% if field.field.required %} is-required{% endif %}">{{ field.label }}</label>
+    {% endif %}
+    <div class="control">
+      {% for choice in field %}
+        <label class="radio">
+          {{ choice.tag }}
+          {{ choice.choice_label }}
+        </label>
+      {% endfor %}
+      {% for error in field.errors %}<p class="help is-danger">{{ error }}</p>{% endfor %}
+      {% if field.help_text %}<p class="help">{{ field.help_text|safe }}</p>{% endif %}
+    </div>
+  {% elif field|is_field_type:"select" %}
+    <label class="label{% if field.field.required %} is-required{% endif %}" for="{{ field.id_for_label }}">
+      {{ field.label|safe }}
+    </label>
+    <div class="control">
+      <span class="select{% if field|is_multiple %} is-multiple{% endif %}{% if field.errors %} is-danger{% endif %} is-fullwidth">
+        {{ field }}
+      </span>
+      {% for error in field.errors %}<p class="help is-danger">{{ error }}</p>{% endfor %}
+      {% if field.help_text %}<p class="help">{{ field.help_text|safe }}</p>{% endif %}
+    </div>
+  {% elif field|is_field_type:"textarea" %}
+    <label class="label{% if field.field.required %} is-required{% endif %}" for="{{ field.id_for_label }}">
+      {{ field.label|safe }}
+    </label>
+    <div class="control">
+      {{ field|add_field_class:'textarea' }}
+      {% for error in field.errors %}<p class="help is-danger">{{ error }}</p>{% endfor %}
+      {% if field.help_text %}<p class="help">{{ field.help_text|safe }}</p>{% endif %}
+    </div>
+  {% elif field|is_field_type:'input' %}
+    <label class="label{% if field.field.required %} is-required{% endif %}" for="{{ field.id_for_label }}">
+      {{ field.label|safe }}
+    </label>
+    <div class="control">
+      {% if field|is_field_type:'split_dt' or field|is_field_type:'any_datetime' %}
+        {{ field|set_input_type|add_field_class:'input' }}
+      {% else %}
+        {{ field|add_field_class:'input' }}
+      {% endif %}
+      {% for error in field.errors %}<p class="help is-danger">{{ error }}</p>{% endfor %}
+      {% if field.help_text %}<p class="help">{{ field.help_text|safe }}</p>{% endif %}
+    </div>
+  {% elif field|is_field_type:'file' %}
+    <label class="label{% if field.field.required %} is-required{% endif %}" for="{{ field.id_for_label }}">
+      {{ field.label|safe }}
+    </label>
+    <div class="control">
+      <div class="file has-name is-fullwidth">
+        <label class="file-label">
+          <input type="file" class="file-input" name="{{ field.name }}" id="{{ field.auto_id }}"{% if field.field.required %} required{% endif %}>
+          <span class="file-cta">
+            <span class="file-icon">
+              <i class="fa fa-upload"></i>
+            </span>
+            <span class="file-label">
+              Choose a file…
+            </span>
+          </span>
+          <span class="file-name" id="filename_{{ field.auto_id }}">
+            No file chosen
+          </span>
+        </label>
+      </div>
+      <script>
+        (function() {
+          var fileInput = document.getElementById('{{ field.auto_id }}');
+          var fileName = document.getElementById('filename_{{ field.auto_id }}');
+          if (fileInput && fileName) {
+            fileInput.addEventListener('change', function(e) {
+              if (e.target.files.length > 0) {
+                fileName.textContent = e.target.files[0].name;
+              } else {
+                fileName.textContent = 'No file chosen';
+              }
+            });
+          }
+        })();
+      </script>
+      {% for error in field.errors %}<p class="help is-danger">{{ error }}</p>{% endfor %}
+      {% if field.help_text %}<p class="help">{{ field.help_text|safe }}</p>{% endif %}
+    </div>
+  {% else %}
+    {% if field.auto_id %}
+      <label class="label{% if field.field.required %} is-required{% endif %}" for="{{ field.auto_id }}">
+        {{ field.label|safe }}
+      </label>
+    {% endif %}
+    <div class="control{% if field|is_multiple %} multiple-checkbox{% endif %}">
+      {{ field }}
+      {% for error in field.errors %}<p class="help is-danger">{{ error }}</p>{% endfor %}
+      {% if field.help_text %}<p class="help">{{ field.help_text|safe }}</p>{% endif %}
+    </div>
+  {% endif %}
+</div>
+{% endif %}

@@ -1,0 +1,76 @@
+{% load sekizai_tags i18n wiki_tags static django_simple_bulma %}<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>{% block wiki_pagetitle %}{% endblock %}{% block wiki_site_title %} - Metron Wiki{% endblock %}</title>
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="description" content="">
+    <meta name="author" content="">
+
+    {# Favicon #}
+    <link rel="shortcut icon" type="image/x-icon" href="{% static 'site/img/favicon.ico' %}">
+    <link rel="icon" type="image/x-icon" href="{% static 'site/img/favicon.ico' %}">
+
+    {# Bulma CSS from django-simple-bulma #}
+    {% bulma %}
+    {% font_awesome %}
+    <link rel="stylesheet" href="{% static 'site/css/base.css' %}">
+
+    {# Wiki-specific styles #}
+    <style>
+      .wiki-article {
+        padding: 2rem 0;
+      }
+      .wiki-toc {
+        background-color: #f5f5f5;
+        padding: 1rem;
+        border-radius: 4px;
+        margin-bottom: 1rem;
+      }
+      .wiki-messages {
+        margin-bottom: 1rem;
+      }
+    </style>
+
+    {% render_block "css" %}
+  </head>
+
+  <body class="has-navbar-fixed-top">
+
+    {% block wiki_body %}
+
+    {# Include the main site navbar #}
+    {% include "partials/navbar.html" %}
+
+    <main id="main-content" class="section is-flex-grow-1">
+      <div class="container">
+
+        {# Wiki messages #}
+        <div class="wiki-messages">
+          {% wiki_messages %}
+        </div>
+
+        {# Breadcrumbs #}
+        {% block wiki_breadcrumbs %}{% endblock %}
+
+        {# Main wiki contents #}
+        {% block wiki_contents %}{% endblock %}
+
+      </div>
+    </main>
+
+    {# Include the main site footer #}
+    {% include "partials/footer.html" %}
+
+    {% endblock %}
+
+    {# Scripts #}
+    <script src="{% static "wiki/js/jquery-3.6.0.min.js" %}"></script>
+    <script src="{% static "wiki/js/core.js" %}"></script>
+    <script src="{% static 'site/js/bulma-navbar-burger.js' %}"></script>
+
+    {% render_block "js" %}
+
+  </body>
+</html>

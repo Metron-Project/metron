@@ -1,0 +1,55 @@
+{% extends "wiki/base.html" %}
+{% load wiki_tags i18n sekizai_tags %}
+
+
+{% block wiki_pagetitle %}{{ article.current_revision.title }}{% endblock %}
+
+{% block wiki_breadcrumbs %}
+<nav class="breadcrumb" aria-label="breadcrumbs">
+  {% include "wiki/includes/breadcrumbs.html" %}
+</nav>
+{% endblock %}
+
+{% block wiki_contents %}
+
+  <div id="article-container">
+    <div class="level">
+      <div class="level-left">
+        <div class="level-item">
+          <div>
+            <h1 class="title is-2" id="article-title">
+              {{ article.current_revision.title }}
+            </h1>
+            {% if urlpath.parent or article.current_revision.locked %}
+            <p class="subtitle is-6">
+              {% if urlpath.parent %}
+                <a href="{% url 'wiki:get' path=urlpath.path %}"><span class="icon"><i class="fa fa-bookmark"></i></span> {{ urlpath.slug }}</a>
+              {% endif %}
+              {% if article.current_revision.locked %}
+                <span class="tag is-warning"><span class="icon"><i class="fa fa-lock"></i></span> <span>{% trans "locked" %}</span></span>
+              {% endif %}
+            </p>
+            {% endif %}
+          </div>
+        </div>
+      </div>
+      <div class="level-right">
+        <div class="level-item">
+          <div class="buttons">
+            {% include "wiki/includes/article_menu.html" %}
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="content wiki-article">
+      {% block wiki_contents_tab %}
+      {% endblock %}
+    </div>
+
+    <div class="has-text-grey is-size-7" style="margin-top: 2rem;">
+      <em>{% trans "This article was last modified:" %} {{ article.current_revision.modified }}</em>
+    </div>
+  </div>
+
+{% endblock %}

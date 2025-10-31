@@ -1,0 +1,28 @@
+{% extends "wiki/article.html" %}
+{% load wiki_tags i18n %}
+
+
+{% block wiki_pagetitle %}{% trans "Settings" %}: {{ article.current_revision.title }}{% endblock %}
+
+{% block wiki_contents_tab %}
+
+  {% for form in forms %}
+  <div class="box{% if not forloop.last %} mb-5{% endif %}">
+    <form method="POST" class="settings-form" action="?f={{form.action}}">
+      <h3 class="title is-4 mb-4">{{ form.settings_form_headline }}</h3>
+      {% wiki_form form %}
+      <div class="field is-grouped mt-5">
+        <div class="control">
+          <button type="submit" name="save" value="1" class="button is-rounded is-link">
+            <span class="icon">
+              <i class="fa fa-check"></i>
+            </span>
+            <span>{% trans "Save changes" %}</span>
+          </button>
+        </div>
+      </div>
+    </form>
+  </div>
+  {% endfor %}
+
+{% endblock %}

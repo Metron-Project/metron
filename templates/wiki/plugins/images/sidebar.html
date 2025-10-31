@@ -1,0 +1,225 @@
+{% load i18n wiki_tags wiki_images_tags humanize wiki_thumbnails sekizai_tags %}
+
+
+{% addtoblock "js" %}
+<script type="text/javascript">
+var current_image_id = null;
+
+function insert_image(data) {
+    if (typeof data == "number") {
+        current_image_id = data;
+        $("#img_title").text("{% trans "Insert Image" %} " + data);
+        $("#img_modal").addClass("is-active");
+        $("#img_caption").focus();
+   } else {
+        var align = data.img_align.options[data.img_align.selectedIndex].text;
+        var size = data.img_size.options[data.img_size.selectedIndex].text;
+        var caption = data.img_caption.value;
+
+        data.img_align.selectedIndex = 0;
+        data.img_size.selectedIndex = 0;
+        data.img_caption.value = "";
+
+        var tag = '\n[image:' + current_image_id;
+        if (align != "center") tag = tag + ' align:' + align;
+        if (size != "default") tag = tag + ' size:' + size;
+
+        if (caption == '')
+            $('#id_content').insertAtCaret(tag + ']\n\n');
+        else
+            $('#id_content').insertAtCaret(tag + ']\n    ' + caption + '\n\n');
+
+        $("#img_modal").removeClass("is-active");
+    }
+}
+
+function add_image(form) {
+    $(form).submit();
+}
+
+function closeImageModal() {
+    $("#img_modal").removeClass("is-active");
+    $("#img_align")[0].selectedIndex = 0;
+    $("#img_size")[0].selectedIndex = 0;
+    $("#img_caption").val("");
+}
+
+$(document).ready(function() {
+    $("#img_modal .modal-background, #img_modal_close, #img_modal_cancel").on("click", closeImageModal);
+});
+</script>
+{% endaddtoblock %}
+
+{% with article|images_for_article as images %}
+<style type="text/css">
+  #image-list .card:first-child {border-top:0;}
+</style>
+<div style="max-height: 300px; overflow: auto;">
+  {% for image in images %}
+    {% with image.current_revision.imagerevision as revision %}
+    {% thumbnail revision.image "50x50" crop="center" as thumb %}
+    <div class="card mb-2">
+      <div class="card-content p-3">
+        <div class="media">
+          <div class="media-left">
+            <figure class="image is-48x48">
+              <img src="{{ thumb.url }}" alt="{{ revision.get_filename }}" />
+            </figure>
+          </div>
+          <div class="media-content">
+            <p class="is-size-7 has-text-grey-dark mb-1">{% trans "Image id" %}: {{ image.id }}</p>
+            <div class="buttons are-small">
+              <a href="javascript:void(insert_image({{ image.id }}))" class="button is-small is-rounded is-link">
+                <span class="icon is-small">
+                  <i class="fa fa-edit"></i>
+                </span>
+                <span>{% trans "Insert" %}</span>
+              </a>
+              {% if image|can_write:user %}
+              <a href="{% url 'wiki:images_add_revision' path=urlpath.path article_id=article.id image_id=image.id %}" class="button is-small is-rounded">
+                <span class="icon is-small">
+                  <i class="fa fa-upload"></i>
+                </span>
+                <span>{% trans "Replace" %}</span>
+              </a>
+              {% endif %}
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    {% endthumbnail %}
+    {% endwith %}
+  {% empty %}
+  <div class="content">
+    <p><em>{% trans "No images found for this article" %}</em></p>
+  </div>
+  {% endfor %}
+</div>
+
+<p class="mt-3">
+  <a href="{% url 'wiki:images_index' path=urlpath.path article_id=article.id %}">
+    {% trans "Manage images" %} &raquo;
+  </a>
+</p>
+<hr />
+
+<h5 class="title is-6">{% trans "Add new image" %}</h5>
+
+{% if article|images_can_add:user %}
+  {% if form.non_field_errors %}
+    {% if form_error_title %}<h6 class="title is-6">{{ form_error_title }}</h6>{% endif %}
+    {% for error_message in form.non_field_errors %}
+      <div class="notification is-danger">
+        {{ error_message }}
+      </div>
+    {% endfor %}
+  {% endif %}
+
+  {# Include the hidden fields #}
+  {% for hidden in form.hidden_fields %}
+    {{ hidden }}
+  {% endfor %}
+
+  {% for field in form.visible_fields %}
+    <div id="div_{{ field.auto_id }}" class="field{% if field.errors %} has-error{% endif %}">
+      {{ field }}
+      {% if field.errors %}
+      <div id="error_{{ forloop.counter }}_{{ field.auto_id }}" class="help is-danger">
+        {% for error in field.errors %}
+        <div>{{ error }}</div>
+        {% endfor %}
+      </div>
+      {% endif %}
+      {% if field.help_text %}
+        <p id="hint_{{ field.auto_id }}" class="help">{{ field.help_text|safe }}</p>
+      {% endif %}
+    </div>
+  {% endfor %}
+
+  <div class="field mt-3">
+    <div class="control">
+      <button type="button" onClick="add_image(this.form)" name="{{ plugin.slug }}_save" value="1" class="button is-rounded is-link is-small">
+        <span class="icon is-small">
+          <i class="fa fa-upload"></i>
+        </span>
+        <span>{% trans "Add image" %}</span>
+      </button>
+    </div>
+  </div>
+{% else %}
+
+  {% if user.is_anonymous %}
+    {% include "wiki/includes/anonymous_blocked.html" %}
+  {% else %}
+    <p><em>{% trans "You do not have permissions to add images." %}</em></p>
+  {% endif %}
+{% endif %}
+
+<hr />
+
+<h5 class="title is-6">
+  {% trans "How to use images" %}
+</h5>
+
+<div class="content is-size-7">
+  <p>{% trans "After uploading an image, it is attached to this particular article and can be used only here. Other users may replace the image, but older versions are kept. To show the image press the Insert button and select the options you want to use. You can use Markdown in the caption. The Markdown code syntax for images looks like this" %}</p>
+  <pre>[image:id align:right size:orig]
+    caption indented by 4 spaces</pre>
+  <p>{% trans "Possible values for align are" %}: <code>left | right</code></p>
+  <p>{% trans "Possible values for size are" %}: <code>small | medium | large | orig | default</code></p>
+</div>
+{% endwith %}
+
+<div class="modal" id="img_modal">
+  <div class="modal-background"></div>
+  <div class="modal-card">
+    <header class="modal-card-head">
+      <p class="modal-card-title" id="img_title">{% trans "Insert Image" %}</p>
+      <button class="delete" aria-label="close" id="img_modal_close"></button>
+    </header>
+    <section class="modal-card-body">
+      <div class="field">
+        <label class="label" for="img_align">{% trans "Alignment" %}</label>
+        <div class="control">
+          <div class="select is-fullwidth">
+            <select id="img_align">
+              <option>center</option>
+              <option>left</option>
+              <option>right</option>
+            </select>
+          </div>
+        </div>
+      </div>
+      <div class="field">
+        <label class="label" for="img_size">{% trans "Size" %}</label>
+        <div class="control">
+          <div class="select is-fullwidth">
+            <select id="img_size">
+              <option>default</option>
+              <option>small</option>
+              <option>medium</option>
+              <option>large</option>
+              <option>orig</option>
+            </select>
+          </div>
+        </div>
+      </div>
+      <div class="field">
+        <label class="label" for="img_caption">{% trans "Caption" %}</label>
+        <div class="control">
+          <input type="text" class="input" id="img_caption" placeholder="{% trans "Enter caption" %}">
+        </div>
+      </div>
+    </section>
+    <footer class="modal-card-foot">
+      <button class="button is-success" onClick="insert_image(this.form)">
+        <span class="icon">
+          <i class="fa fa-check"></i>
+        </span>
+        <span>{% trans "Insert image" %}</span>
+      </button>
+      <button class="button" id="img_modal_cancel">{% trans "Cancel" %}</button>
+    </footer>
+  </div>
+</div>

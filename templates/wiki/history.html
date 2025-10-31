@@ -1,0 +1,236 @@
+{% extends "wiki/article.html" %}
+{% load wiki_tags i18n sekizai_tags static %}
+
+
+{% block wiki_pagetitle %}{% trans "History" %}: {{ article.current_revision.title }}{% endblock %}
+
+{% block wiki_contents_tab %}
+
+{% include "wiki/includes/modals.html" %}
+
+{% addtoblock "js" %}
+<script type="text/javascript" src="{% static "wiki/js/diffview.js" %}"></script>
+<script type="text/javascript" src="{% static "wiki/js/diff.js" %}"></script>
+{% endaddtoblock %}
+{% addtoblock "css" %}
+<style type="text/css">
+  td.linenumber {
+    width: 20px;
+  }
+  tr.insert td {
+    background-color: #DFC;
+  }
+  tr.delete td {
+    background-color: #FDC;
+  }
+  tr.equal td {
+    background-color: #F2F2F2;
+  }
+
+  .diff-container td {
+    white-space: pre; font-family: monospace;
+  }
+  .diff-container td,
+  .diff-container th {
+    padding: 2px 7px;
+    border-right: 1px solid #DDD;
+  }
+  .diff-container td:last-child,
+  .diff-container th:last-child {
+    border-right: none;
+  }
+  .diff-container table {
+    border-top: 1px solid #DDD;
+  }
+</style>
+{% endaddtoblock %}
+
+<div class="content">
+  <p>
+    {% trans "Click each revision to see a list of edited lines. Click the Preview button to see how the article looked at this stage. At the bottom of this page, you can change to a particular revision or merge an old revision with the current one." %}
+  </p>
+</div>
+
+<form method="GET">
+  <div class="tab-content" style="overflow: visible;">
+    {% for revision in revisions %}
+      <div class="" id="accordion{{ revision.revision_number }}">
+        <div class="box">
+          <div class="level">
+            <div class="level-left">
+              <div class="level-item">
+                <a class="wiki-card-toggle" data-revision="{{ revision.revision_number }}" data-json-url="{% url 'wiki:diff' revision.id %}" href="#collapse{{ revision.revision_number }}">
+                  <span class="icon">
+                    {% if revision == article.current_revision %}
+                      <i class="fa fa-flag"></i>
+                    {% else %}
+                      <i class="fa fa-plus"></i>
+                    {% endif %}
+                  </span>
+                  {% include "wiki/includes/revision_info.html" with current_revision=article.current_revision %}
+                  <div class="has-text-grey">
+                    <small>
+                    {% if revision.user_message %}
+                      {{ revision.user_message }}
+                    {% elif revision.automatic_log %}
+                      {{ revision.automatic_log }}
+                    {% else %}
+                      ({% trans "no log message" %})
+                    {% endif %}
+                    </small>
+                  </div>
+                </a>
+              </div>
+            </div>
+            <div class="level-right">
+              <div class="level-item">
+                <div class="field is-grouped">
+                  {% if revision == article.current_revision %}
+                  <div class="control">
+                    <button class="button is-rounded" disabled>
+                      <span class="icon">
+                        <i class="fa fa-lock"></i>
+                      </span>
+                      <span>{% trans "Preview this revision" %}</span>
+                    </button>
+                  </div>
+                  {% else %}
+                  <div class="control">
+                    <button type="submit" class="button is-rounded" onclick="$('#previewModal').addClass('is-active'); this.form.target='previewWindow'; this.form.r.value='{{ revision.id }}'; this.form.action='{% url 'wiki:preview_revision' article.id %}'; $('#previewModal .switch-to-revision').attr('href', '{% url 'wiki:change_revision' path=urlpath.path article_id=article.id revision_id=revision.id %}'); setTimeout(function() { if (typeof resizeBulmaModalIframe === 'function') resizeBulmaModalIframe(); }, 150);">
+                      <span class="icon">
+                        <i class="fa fa-eye"></i>
+                      </span>
+                      <span>{% trans "Preview this revision" %}</span>
+                    </button>
+                  </div>
+                  {% endif %}
+
+                  {% if article|can_write:user and not article.current_revision.locked %}
+                  <div class="control">
+                    <input type="radio"{% if revision == article.current_revision %} disabled="true"{% endif %} value="{{ revision.id }}" name="revision_id" switch-button-href="{% url 'wiki:change_revision' path=urlpath.path revision_id=revision.id %}" merge-button-href="{% url 'wiki:merge_revision_preview' article_id=article.id revision_id=revision.id %}" merge-button-commit-href="{% url 'wiki:merge_revision' path=urlpath.path article_id=article.id revision_id=revision.id %}" />
+                  </div>
+                  {% endif %}
+                </div>
+              </div>
+            </div>
+          </div>
+          <div id="collapse{{ revision.revision_number }}" class="collapse">
+            <div class="content diff-container">
+              <dl>
+                <dt>{% trans "Auto log:" %}</dt>
+                <dd>{{ revision.automatic_log|default:"-"|linebreaksbr }}</dd>
+              </dl>
+              <table class="table is-narrow" style="margin: 0; border-collapse: collapse;">
+                <thead>
+                  <tr>
+                    <th class="linenumber">{% if revision.previous_revision %}#{{revision.previous_revision.revision_number}}{% endif %}</th>
+                    <th class="linenumber">#{{revision.revision_number}}</th>
+                    <th>{% trans "Change" %}</th>
+                  </tr>
+                </thead>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>
+    {% endfor %}
+
+    {% include "wiki/includes/pagination.html" %}
+
+    {% if revisions.count > 1 and article|can_write:user and not article.current_revision.locked %}
+
+    <div class="field is-grouped is-grouped-right">
+      <div class="control">
+        <button type="submit" name="preview" value="1" class="button is-rounded" onclick="$('#mergeModal').addClass('is-active'); this.form.target='mergeWindow'; this.form.action=$('input[type=radio]:checked').attr('merge-button-href'); $('.merge-revision-commit').attr('href', $('input[type=radio]:checked').attr('merge-button-commit-href')); setTimeout(function() { if (typeof resizeBulmaModalIframe === 'function') resizeBulmaModalIframe(); }, 150);">
+          <span class="icon">
+            <i class="fa fa-random"></i>
+          </span>
+          <span>{% trans "Merge selected with current..." %}</span>
+        </button>
+      </div>
+      <div class="control">
+        <button type="submit" name="save" value="1" class="button is-rounded is-link" onclick="this.form.target='_self'; this.form.action=$('input[type=radio]:checked').attr('switch-button-href')">
+          <span class="icon">
+            <i class="fa fa-flag"></i>
+          </span>
+          <span>{% trans "Switch to selected version" %}</span>
+        </button>
+      </div>
+    </div>
+
+    {% endif %}
+
+  </div>
+  <input type="hidden" name="r" value="" />
+  <div class="modal" id="previewModal">
+    <div class="modal-background"></div>
+    <div class="modal-card">
+      <section class="modal-card-body">
+        <iframe name="previewWindow" frameborder="0" style="width: 100%; min-height: 400px;"></iframe>
+      </section>
+      <footer class="modal-card-foot">
+        <button class="button is-rounded" onclick="$('#previewModal').removeClass('is-active')">
+          <span class="icon">
+            <i class="fa fa-arrow-circle-left"></i>
+          </span>
+          <span>{% trans "Back to history view" %}</span>
+        </button>
+        {% if article|can_write:user %}
+        <a href="#" class="button is-rounded is-link switch-to-revision">
+          <span class="icon">
+            <i class="fa fa-flag"></i>
+          </span>
+          <span>{% trans "Switch to this version" %}</span>
+        </a>
+        {% else %}
+        <button class="button is-rounded" disabled>
+          <span class="icon">
+            <i class="fa fa-lock"></i>
+          </span>
+          <span>{% trans "Switch to this version" %}</span>
+        </button>
+        {% endif %}
+      </footer>
+    </div>
+  </div>
+
+  <div class="modal" id="mergeModal">
+    <div class="modal-background"></div>
+    <div class="modal-card">
+      <header class="modal-card-head">
+        <p class="modal-card-title">{% trans "Merge with current" %}</p>
+      </header>
+      <section class="modal-card-body">
+        <div class="content">
+          <p><span class="icon"><i class="fa fa-info-circle"></i></span> {% trans "When you merge a revision with the current, all data will be retained from both versions and merged at its approximate location from each revision." %} <strong>{% trans "After this, it's important to do a manual review." %}</strong></p>
+        </div>
+        <iframe name="mergeWindow" frameborder="0" style="width: 100%; min-height: 200px;"></iframe>
+      </section>
+      <footer class="modal-card-foot">
+        <button class="button is-rounded" onclick="$('#mergeModal').removeClass('is-active')">
+          <span class="icon">
+            <i class="fa fa-arrow-circle-left"></i>
+          </span>
+          <span>{% trans "Back to history view" %}</span>
+        </button>
+        {% if article|can_write:user %}
+        <a href="#" class="button is-rounded is-link merge-revision-commit">
+          <span class="icon">
+            <i class="fa fa-file"></i>
+          </span>
+          <span>{% trans "Create new merged version" %}</span>
+        </a>
+        {% else %}
+        <button class="button is-rounded" disabled>
+          <span class="icon">
+            <i class="fa fa-lock"></i>
+          </span>
+          <span>{% trans "Create new merged version" %}</span>
+        </button>
+        {% endif %}
+      </footer>
+    </div>
+  </div>
+</form>
+
+{% endblock %}
