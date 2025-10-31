@@ -24,11 +24,11 @@
 
       <div class="field is-grouped is-grouped-multiline">
         <div class="control">
-          <button class="button is-rounded" type="submit" name="preview" value="1" id="id_preview"
+          <button class="button is-rounded is-primary" type="submit" name="preview" value="1" id="id_preview"
                   formaction="{% url 'wiki:preview' path=urlpath.path article_id=article.id %}"
                   formtarget="previewWindow">
             <span class="icon">
-              <i class="fa fa-eye"></i>
+              <i class="fas fa-eye"></i>
             </span>
             <span>{% trans "Preview" %}</span>
           </button>
@@ -36,7 +36,7 @@
         <div class="control">
           <button class="button is-rounded is-link" type="submit" name="save" value="1" id="id_save">
             <span class="icon">
-              <i class="fa fa-check"></i>
+              <i class="fas fa-check"></i>
             </span>
             <span>{% trans "Save changes" %}</span>
           </button>
@@ -45,7 +45,7 @@
         <div class="control">
           <a href="{% url 'wiki:move' path=urlpath.path article_id=article.id %}" class="button is-rounded is-warning">
             <span class="icon">
-              <i class="fa fa-random"></i>
+              <i class="fas fa-random"></i>
             </span>
             <span>{% trans "Move article" %}</span>
           </a>
