@@ -284,8 +284,18 @@ class IssueViewSet(
     """
 
     queryset = Issue.objects.select_related(
-        "series", "series__series_type", "rating"
+        "series",
+        "series__series_type",
+        "series__publisher",
+        "series__imprint",
+        "rating",
     ).prefetch_related(
+        "series__genres",
+        "arcs",
+        "characters",
+        "teams",
+        "universes",
+        "variants",
         Prefetch(
             "credits_set",
             queryset=Credits.objects.order_by("creator__name")
