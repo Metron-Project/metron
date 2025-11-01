@@ -160,8 +160,6 @@ class IssueSerializer(serializers.ModelSerializer):
         teams_data = validated_data.pop("teams", None)
         universes_data = validated_data.pop("universes", None)
         reprints_data = validated_data.pop("reprints", None)
-        if "image" in validated_data and validated_data["image"] is not None:
-            validated_data["image"] = validated_data["image"]
         issue: Issue = Issue.objects.create(**validated_data)
         if arcs_data:
             issue.arcs.add(*arcs_data)
@@ -179,34 +177,29 @@ class IssueSerializer(serializers.ModelSerializer):
         """
         Update and return an existing `Issue` instance, given the validated data.
         """
-        instance.series = validated_data.get("series", instance.series)
-        instance.number = validated_data.get("number", instance.number)
-        instance.alt_number = validated_data.get("alt_number", instance.alt_number)
-        instance.title = validated_data.get("title", instance.title)
-        instance.name = validated_data.get("name", instance.name)
-        instance.cover_date = validated_data.get("cover_date", instance.cover_date)
-        instance.store_date = validated_data.get("store_date", instance.store_date)
-        instance.foc_date = validated_data.get("foc_date", instance.foc_date)
-        instance.price = validated_data.get("price", instance.price)
-        instance.rating = validated_data.get("rating", instance.rating)
-        instance.sku = validated_data.get("sku", instance.sku)
-        instance.isbn = validated_data.get("isbn", instance.isbn)
-        instance.upc = validated_data.get("upc", instance.upc)
-        instance.page = validated_data.get("page", instance.page)
-        instance.desc = validated_data.get("desc", instance.desc)
-        instance.image = validated_data.get("image", instance.image)
-        instance.cv_id = validated_data.get("cv_id", instance.cv_id)
-        instance.gcd_id = validated_data.get("gcd_id", instance.gcd_id)
-        if arcs_data := validated_data.pop("arcs", None):
+        # Extract M2M fields before updating
+        arcs_data = validated_data.pop("arcs", None)
+        characters_data = validated_data.pop("characters", None)
+        teams_data = validated_data.pop("teams", None)
+        universes_data = validated_data.pop("universes", None)
+        reprints_data = validated_data.pop("reprints", None)
+
+        # Update all regular fields at once
+        for attr, value in validated_data.items():
+            setattr(instance, attr, value)
+
+        # Update M2M relationships
+        if arcs_data is not None:
             instance.arcs.add(*arcs_data)
-        if characters_data := validated_data.pop("characters", None):
+        if characters_data is not None:
             instance.characters.add(*characters_data)
-        if teams_data := validated_data.pop("teams", None):
+        if teams_data is not None:
             instance.teams.add(*teams_data)
-        if universes_data := validated_data.pop("universes", None):
+        if universes_data is not None:
             instance.universes.add(*universes_data)
-        if reprints_data := validated_data.pop("reprints", None):
+        if reprints_data is not None:
             instance.reprints.add(*reprints_data)
+
         instance.save()
         return instance
 
