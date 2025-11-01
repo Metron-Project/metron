@@ -162,15 +162,15 @@ class IssueSerializer(serializers.ModelSerializer):
         reprints_data = validated_data.pop("reprints", None)
         issue: Issue = Issue.objects.create(**validated_data)
         if arcs_data:
-            issue.arcs.add(*arcs_data)
+            issue.arcs.set(arcs_data)
         if characters_data:
-            issue.characters.add(*characters_data)
+            issue.characters.set(characters_data)
         if teams_data:
-            issue.teams.add(*teams_data)
+            issue.teams.set(teams_data)
         if universes_data:
-            issue.universes.add(*universes_data)
+            issue.universes.set(universes_data)
         if reprints_data:
-            issue.reprints.add(*reprints_data)
+            issue.reprints.set(reprints_data)
         return issue
 
     def update(self, instance: Issue, validated_data):
@@ -188,17 +188,17 @@ class IssueSerializer(serializers.ModelSerializer):
         for attr, value in validated_data.items():
             setattr(instance, attr, value)
 
-        # Update M2M relationships
+        # Update M2M relationships (replace existing)
         if arcs_data is not None:
-            instance.arcs.add(*arcs_data)
+            instance.arcs.set(arcs_data)
         if characters_data is not None:
-            instance.characters.add(*characters_data)
+            instance.characters.set(characters_data)
         if teams_data is not None:
-            instance.teams.add(*teams_data)
+            instance.teams.set(teams_data)
         if universes_data is not None:
-            instance.universes.add(*universes_data)
+            instance.universes.set(universes_data)
         if reprints_data is not None:
-            instance.reprints.add(*reprints_data)
+            instance.reprints.set(reprints_data)
 
         instance.save()
         return instance
