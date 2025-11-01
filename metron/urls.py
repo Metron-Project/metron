@@ -51,6 +51,8 @@ urlpatterns = [
     path("universe/", include(universe_urls)),
     path("accounts/", include("users.urls")),
     path("accounts/", include("django.contrib.auth.urls")),
+    path("notifications/", include("django_nyt.urls")),
+    path("wiki/", include("wiki.urls")),
 ]
 
 if settings.DEBUG:

@@ -25,6 +25,7 @@ django-countries = "*"
 psycopg = {extras = ["pool"], version = "*"}
 django-money = "*"
 django-simple-history = "*"
+wiki = "*"
 
 [dev-packages]
 django-debug-toolbar = "*"
