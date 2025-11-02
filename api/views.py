@@ -66,8 +66,31 @@ class UserTrackingMixin:
         serializer.save(edited_by=self.request.user)
 
 
+class IssueListMixin:
+    """Mixin to provide a standard issue_list action for related models."""
+
+    def get_issue_queryset(self, obj):
+        """Override to customize the issue queryset for a specific viewset."""
+        return obj.issues.select_related("series", "series__series_type").order_by(
+            "cover_date", "series", "number"
+        )
+
+    @extend_schema(responses={200: IssueListSerializer(many=True)})
+    @action(detail=True)
+    def issue_list(self, request, pk=None):
+        """Returns a list of issues for this object."""
+        obj = self.get_object()
+        queryset = self.get_issue_queryset(obj)
+        page = self.paginate_queryset(queryset)
+        if page is not None:
+            serializer = IssueListSerializer(page, many=True, context={"request": request})
+            return self.get_paginated_response(serializer.data)
+        raise Http404
+
+
 class ArcViewSet(
     UserTrackingMixin,
+    IssueListMixin,
     mixins.CreateModelMixin,
     mixins.RetrieveModelMixin,
     mixins.ListModelMixin,
@@ -95,24 +118,10 @@ class ArcViewSet(
             case _:
                 return ArcSerializer
 
-    @action(detail=True)
-    def issue_list(self, request, pk=None):
-        """
-        Returns a list of issues for a story arc.
-        """
-        arc = self.get_object()
-        queryset = arc.issues.select_related("series", "series__series_type").order_by(
-            "cover_date", "series", "number"
-        )
-        page = self.paginate_queryset(queryset)
-        if page is not None:
-            serializer = IssueListSerializer(page, many=True, context={"request": request})
-            return self.get_paginated_response(serializer.data)
-        raise Http404
-
 
 class CharacterViewSet(
     UserTrackingMixin,
+    IssueListMixin,
     mixins.CreateModelMixin,
     mixins.RetrieveModelMixin,
     mixins.ListModelMixin,
@@ -147,22 +156,6 @@ class CharacterViewSet(
                 return CharacterReadSerializer
             case _:
                 return CharacterSerializer
-
-    @extend_schema(responses={200: IssueListSerializer(many=True)})
-    @action(detail=True)
-    def issue_list(self, request, pk=None):
-        """
-        Returns a list of issues for a character.
-        """
-        character = self.get_object()
-        queryset = character.issues.select_related("series", "series__series_type").order_by(
-            "cover_date", "series", "number"
-        )
-        page = self.paginate_queryset(queryset)
-        if page is not None:
-            serializer = IssueListSerializer(page, many=True, context={"request": request})
-            return self.get_paginated_response(serializer.data)
-        raise Http404
 
 
 class CreatorViewSet(
@@ -377,6 +370,7 @@ class RoleViewset(mixins.ListModelMixin, viewsets.GenericViewSet):
 
 class SeriesViewSet(
     UserTrackingMixin,
+    IssueListMixin,
     mixins.CreateModelMixin,
     mixins.RetrieveModelMixin,
     mixins.ListModelMixin,
@@ -427,19 +421,9 @@ class SeriesViewSet(
             kwargs["data"] = series_request_data
         return serializer_class(*args, **kwargs)
 
-    @extend_schema(responses={200: IssueListSerializer(many=True)})
-    @action(detail=True)
-    def issue_list(self, request, pk=None):
-        """
-        Returns a list of issues for a series.
-        """
-        series = self.get_object()
-        queryset = series.issues.all()
-        page = self.paginate_queryset(queryset)
-        if page is not None:
-            serializer = IssueListSerializer(page, many=True, context={"request": request})
-            return self.get_paginated_response(serializer.data)
-        raise Http404
+    def get_issue_queryset(self, obj):
+        """Series issues don't need extra optimization - already optimized at queryset level."""
+        return obj.issues.all()
 
 
 class SeriesTypeViewSet(mixins.ListModelMixin, viewsets.GenericViewSet):
@@ -455,6 +439,7 @@ class SeriesTypeViewSet(mixins.ListModelMixin, viewsets.GenericViewSet):
 
 class TeamViewSet(
     UserTrackingMixin,
+    IssueListMixin,
     mixins.CreateModelMixin,
     mixins.RetrieveModelMixin,
     mixins.ListModelMixin,
@@ -489,22 +474,6 @@ class TeamViewSet(
                 return TeamReadSerializer
             case _:
                 return TeamSerializer
-
-    @extend_schema(responses={200: IssueListSerializer(many=True)})
-    @action(detail=True)
-    def issue_list(self, request, pk=None):
-        """
-        Returns a list of issues for a team.
-        """
-        team = self.get_object()
-        queryset = team.issues.select_related("series", "series__series_type").order_by(
-            "cover_date", "series", "number"
-        )
-        page = self.paginate_queryset(queryset)
-        if page is not None:
-            serializer = IssueListSerializer(page, many=True, context={"request": request})
-            return self.get_paginated_response(serializer.data)
-        raise Http404
 
 
 class UniverseViewSet(
