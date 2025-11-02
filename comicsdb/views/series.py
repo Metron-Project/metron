@@ -57,7 +57,7 @@ class SeriesDetail(DetailView):
         previous_series = None
 
         # Create the base queryset with all the series.
-        qs = Series.objects.all().order_by("sort_name", "year_began")
+        qs = Series.objects.order_by("sort_name", "year_began")
 
         # Determine if there is more than 1 series with the same name
         series_count = qs.filter(sort_name__gte=series.sort_name).count()

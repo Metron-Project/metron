@@ -1,12 +1,14 @@
 import logging
 
 from django.contrib.auth.mixins import LoginRequiredMixin, PermissionRequiredMixin
+from django.db.models import Prefetch
 from django.shortcuts import get_object_or_404
 from django.urls import reverse_lazy
 from django.views.generic import DetailView, ListView
 from django.views.generic.edit import CreateView, DeleteView, UpdateView
 
 from comicsdb.forms.team import TeamForm
+from comicsdb.models.issue import Issue
 from comicsdb.models.team import Team
 from comicsdb.views.constants import PAGINATE_BY
 from comicsdb.views.history import HistoryListView
@@ -43,7 +45,14 @@ class TeamIssueList(ListView):
 
 class TeamDetail(NavigationMixin, DetailView):
     model = Team
-    queryset = Team.objects.select_related("edited_by")
+    queryset = Team.objects.select_related("edited_by").prefetch_related(
+        Prefetch(
+            "issues",
+            queryset=Issue.objects.order_by(
+                "series__sort_name", "cover_date", "number"
+            ).select_related("series", "series__series_type"),
+        )
+    )
 
 
 class TeamDetailRedirect(SlugRedirectView):

@@ -71,22 +71,30 @@ class UniverseDetail(NavigationMixin, DetailView):
         context = super().get_context_data(**kwargs)
         universe = self.get_object()
 
-        # TODO: Look into improving this queryset
-        #
         # Run this context queryset if the issue count is greater than 0.
         if universe.issue_count:
             series_issues = (
-                Universe.objects.filter(id=universe.id)
+                Issue.objects.filter(universes=universe)
                 .values(
-                    "issues__series__name",
-                    "issues__series__year_began",
-                    "issues__series__slug",
-                    "issues__series__series_type",
+                    "series__name",
+                    "series__year_began",
+                    "series__slug",
+                    "series__series_type",
                 )
-                .annotate(Count("issues"))
-                .order_by("issues__series__sort_name", "issues__series__year_began")
+                .annotate(issues__count=Count("id"))
+                .order_by("series__sort_name", "series__year_began")
             )
-            context["appearances"] = series_issues
+            # Rename fields to match template expectations
+            context["appearances"] = [
+                {
+                    "issues__series__name": item["series__name"],
+                    "issues__series__year_began": item["series__year_began"],
+                    "issues__series__slug": item["series__slug"],
+                    "issues__series__series_type": item["series__series_type"],
+                    "issues__count": item["issues__count"],
+                }
+                for item in series_issues
+            ]
         else:
             context["appearances"] = ""
 
