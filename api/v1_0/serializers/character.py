@@ -25,8 +25,6 @@ class CharacterSerializer(serializers.ModelSerializer):
         creators_data = validated_data.pop("creators", None)
         teams_data = validated_data.pop("teams", None)
         universes_data = validated_data.pop("universes", None)
-        if "image" in validated_data and validated_data["image"] is not None:
-            validated_data["image"] = validated_data["image"]
         character = Character.objects.create(**validated_data)
         if creators_data:
             character.creators.add(*creators_data)
@@ -40,18 +38,20 @@ class CharacterSerializer(serializers.ModelSerializer):
         """
         Update and return an existing `Character` instance, given the validated data.
         """
-        instance.name = validated_data.get("name", instance.name)
-        instance.desc = validated_data.get("desc", instance.desc)
-        instance.image = validated_data.get("image", instance.image)
-        instance.alias = validated_data.get("alias", instance.alias)
-        instance.cv_id = validated_data.get("cv_id", instance.cv_id)
-        instance.gcd_id = validated_data.get("gcd_id", instance.gcd_id)
-        if creators_data := validated_data.get("creators", None):
-            instance.creators.add(*creators_data)
-        if teams_data := validated_data.get("teams", None):
-            instance.teams.add(*teams_data)
-        if universes_data := validated_data.get("universes", None):
-            instance.universes.add(*universes_data)
+        creators_data = validated_data.pop("creators", None)
+        teams_data = validated_data.pop("teams", None)
+        universes_data = validated_data.pop("universes", None)
+
+        for attr, value in validated_data.items():
+            setattr(instance, attr, value)
+
+        if creators_data is not None:
+            instance.creators.set(creators_data)
+        if teams_data is not None:
+            instance.teams.set(teams_data)
+        if universes_data is not None:
+            instance.universes.set(universes_data)
+
         instance.save()
         return instance
 

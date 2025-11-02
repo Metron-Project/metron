@@ -15,26 +15,12 @@ class CreatorSerializer(serializers.ModelSerializer):
     def get_resource_url(self, obj: Creator) -> str:
         return self.context["request"].build_absolute_uri(obj.get_absolute_url())
 
-    def create(self, validated_data):
-        """
-        Create and return a new `Creator` instance, given the validated data.
-        """
-        if "image" in validated_data and validated_data["image"] is not None:
-            validated_data["image"] = validated_data["image"]
-        return Creator.objects.create(**validated_data)
-
     def update(self, instance: Creator, validated_data):
         """
-        Update and return an existing `Character` instance, given the validated data.
+        Update and return an existing `Creator` instance, given the validated data.
         """
-        instance.name = validated_data.get("name", instance.name)
-        instance.desc = validated_data.get("desc", instance.desc)
-        instance.image = validated_data.get("image", instance.image)
-        instance.alias = validated_data.get("alias", instance.alias)
-        instance.birth = validated_data.get("birth", instance.birth)
-        instance.death = validated_data.get("death", instance.death)
-        instance.cv_id = validated_data.get("cv_id", instance.cv_id)
-        instance.gcd_id = validated_data.get("gcd_id", instance.gcd_id)
+        for attr, value in validated_data.items():
+            setattr(instance, attr, value)
         instance.save()
         return instance
 
@@ -76,10 +62,14 @@ class CreditSerializer(serializers.ModelSerializer):
         """
         Update and return an existing `Credits` instance, given the validated data.
         """
-        instance.issue = validated_data.get("issue", instance.issue)
-        instance.creator = validated_data.get("creator", instance.creator)
-        if roles_data := validated_data.pop("role", None):
-            instance.role.add(*roles_data)
+        roles_data = validated_data.pop("role", None)
+
+        for attr, value in validated_data.items():
+            setattr(instance, attr, value)
+
+        if roles_data is not None:
+            instance.role.set(roles_data)
+
         instance.save()
         return instance
 
