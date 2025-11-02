@@ -12,7 +12,7 @@ from django.http import HttpResponseRedirect
 from django.shortcuts import get_object_or_404
 from django.urls import reverse, reverse_lazy
 from django.views import View
-from django.views.generic import DetailView, ListView, RedirectView
+from django.views.generic import DetailView, ListView
 from django.views.generic.edit import CreateView, DeleteView, UpdateView
 
 from comicsdb.filters.issue import IssueViewFilter
@@ -24,9 +24,10 @@ from comicsdb.models import Creator, Credits, Issue, Role, Series
 from comicsdb.models.attribution import Attribution
 from comicsdb.models.series import SeriesType
 from comicsdb.models.variant import Variant
+from comicsdb.views.constants import PAGINATE_BY
 from comicsdb.views.history import HistoryListView
+from comicsdb.views.mixins import SlugRedirectView
 
-PAGINATE = 28
 TOTAL_WEEKS_YEAR = 52
 
 LOGGER = logging.getLogger(__name__)
@@ -63,7 +64,7 @@ class CreatorAutocomplete(autocomplete.Select2QuerySetView):
 
 class IssueList(ListView):
     model = Issue
-    paginate_by = PAGINATE
+    paginate_by = PAGINATE_BY
     # TODO: Let's look into limiting fields returned since we don't use most of them.
     queryset = Issue.objects.select_related("series", "series__series_type")
 
@@ -167,10 +168,9 @@ class IssueDetail(DetailView):
         return context
 
 
-class IssueDetailRedirect(RedirectView):
-    def get_redirect_url(self, pk):
-        issue = Issue.objects.get(pk=pk)
-        return reverse("issue:detail", kwargs={"slug": issue.slug})
+class IssueDetailRedirect(SlugRedirectView):
+    model = Issue
+    url_name = "issue:detail"
 
 
 class SearchIssueList(IssueList):
@@ -462,7 +462,7 @@ class WeekList(ListView):
     year, week, _ = date.today().isocalendar()
 
     model = Issue
-    paginate_by = PAGINATE
+    paginate_by = PAGINATE_BY
     template_name = "comicsdb/week_list.html"
     queryset = (
         Issue.objects.filter(store_date__week=week)
@@ -490,7 +490,7 @@ class NextWeekList(ListView):
         week = 1
 
     model = Issue
-    paginate_by = PAGINATE
+    paginate_by = PAGINATE_BY
     template_name = "comicsdb/week_list.html"
     queryset = (
         Issue.objects.filter(store_date__week=week)
@@ -519,7 +519,7 @@ class FutureList(ListView):
         week = 1
 
     model = Issue
-    paginate_by = PAGINATE
+    paginate_by = PAGINATE_BY
     template_name = "comicsdb/week_list.html"
     queryset = (
         Issue.objects.filter(store_date__year__gte=year)
