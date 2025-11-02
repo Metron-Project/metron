@@ -1,35 +1,36 @@
 import logging
-import operator
-from functools import reduce
 
 from django.contrib.auth.mixins import LoginRequiredMixin, PermissionRequiredMixin
 from django.core.exceptions import ObjectDoesNotExist
-from django.db import transaction
-from django.db.models import Count, Q
+from django.db.models import Count
 from django.shortcuts import get_object_or_404
-from django.urls import reverse, reverse_lazy
-from django.views.generic import DetailView, ListView, RedirectView
+from django.urls import reverse_lazy
+from django.views.generic import DetailView, ListView
 from django.views.generic.edit import CreateView, DeleteView, UpdateView
 
-from comicsdb.forms.attribution import AttributionFormSet
 from comicsdb.forms.series import SeriesForm
 from comicsdb.models import Series
-from comicsdb.models.attribution import Attribution
+from comicsdb.views.constants import PAGINATE_BY
 from comicsdb.views.history import HistoryListView
+from comicsdb.views.mixins import (
+    AttributionCreateMixin,
+    AttributionUpdateMixin,
+    SearchMixin,
+    SlugRedirectView,
+)
 
-PAGINATE = 28
 LOGGER = logging.getLogger(__name__)
 
 
 class SeriesList(ListView):
     model = Series
-    paginate_by = PAGINATE
+    paginate_by = PAGINATE_BY
     queryset = Series.objects.select_related("series_type").prefetch_related("issues")
 
 
 class SeriesIssueList(ListView):
     template_name = "comicsdb/issue_list.html"
-    paginate_by = PAGINATE
+    paginate_by = PAGINATE_BY
 
     def get_queryset(self):
         self.series = get_object_or_404(Series, slug=self.kwargs["slug"])
@@ -117,93 +118,28 @@ class SeriesDetail(DetailView):
         return context
 
 
-class SeriesDetailRedirect(RedirectView):
-    def get_redirect_url(self, pk):
-        series = Series.objects.get(pk=pk)
-        return reverse("series:detail", kwargs={"slug": series.slug})
+class SeriesDetailRedirect(SlugRedirectView):
+    model = Series
+    url_name = "series:detail"
 
 
-class SearchSeriesList(SeriesList):
-    def get_queryset(self):
-        result = super().get_queryset()
-        if query := self.request.GET.get("q"):
-            query_list = query.split()
-            result = result.filter(
-                reduce(operator.and_, (Q(name__unaccent__icontains=q) for q in query_list))
-            )
-
-        return result
+class SearchSeriesList(SearchMixin, SeriesList):
+    def get_search_fields(self):
+        return ["name__unaccent__icontains"]
 
 
-class SeriesCreate(LoginRequiredMixin, CreateView):
+class SeriesCreate(AttributionCreateMixin, LoginRequiredMixin, CreateView):
     model = Series
     form_class = SeriesForm
     template_name = "comicsdb/model_with_attribution_form.html"
-
-    def get_context_data(self, **kwargs):
-        context = super().get_context_data(**kwargs)
-        context["title"] = "Add Series"
-        if self.request.POST:
-            context["attribution"] = AttributionFormSet(self.request.POST)
-        else:
-            context["attribution"] = AttributionFormSet()
-        return context
-
-    def form_valid(self, form):
-        context = self.get_context_data()
-        attribution_form = context["attribution"]
-        with transaction.atomic():
-            form.instance.created_by = self.request.user
-            form.instance.edited_by = self.request.user
-            if attribution_form.is_valid():
-                self.object = form.save()
-                attribution_form.instance = self.object
-                attribution_form.save()
-            else:
-                return super().form_invalid(form)
-
-        LOGGER.info("Series: %s was created by %s", form.instance.name, self.request.user)
-        return super().form_valid(form)
+    title = "Add Series"
 
 
-class SeriesUpdate(LoginRequiredMixin, UpdateView):
+class SeriesUpdate(AttributionUpdateMixin, LoginRequiredMixin, UpdateView):
     model = Series
     form_class = SeriesForm
     template_name = "comicsdb/model_with_attribution_form.html"
-
-    def get_context_data(self, **kwargs):
-        context = super().get_context_data(**kwargs)
-        context["title"] = f"Edit information for {context['series']}"
-        if self.request.POST:
-            context["attribution"] = AttributionFormSet(
-                self.request.POST,
-                instance=self.object,
-                queryset=(Attribution.objects.filter(series=self.object)),
-                prefix="attribution",
-            )
-            context["attribution"].full_clean()
-        else:
-            context["attribution"] = AttributionFormSet(
-                instance=self.object,
-                queryset=(Attribution.objects.filter(series=self.object)),
-                prefix="attribution",
-            )
-        return context
-
-    def form_valid(self, form):
-        context = self.get_context_data()
-        attribution_form = context["attribution"]
-        with transaction.atomic():
-            form.instance.edited_by = self.request.user
-            if attribution_form.is_valid():
-                self.object = form.save(commit=False)
-                attribution_form.instance = self.object
-                attribution_form.save()
-            else:
-                return super().form_invalid(form)
-
-        LOGGER.info("Series: %s was updated by %s", form.instance.name, self.request.user)
-        return super().form_valid(form)
+    attribution_field = "series"
 
 
 class SeriesDelete(PermissionRequiredMixin, DeleteView):
