@@ -1,28 +1,29 @@
 import logging
-import operator
-from functools import reduce
 
 from django.contrib.auth.mixins import LoginRequiredMixin, PermissionRequiredMixin
-from django.core.exceptions import ObjectDoesNotExist
-from django.db import transaction
-from django.db.models import Count, Q
+from django.db.models import Count
 from django.shortcuts import get_object_or_404
-from django.urls import reverse, reverse_lazy
-from django.views.generic import DetailView, ListView, RedirectView
+from django.urls import reverse_lazy
+from django.views.generic import DetailView, ListView
 from django.views.generic.edit import CreateView, DeleteView, UpdateView
 
-from comicsdb.forms.attribution import AttributionFormSet
 from comicsdb.forms.creator import CreatorForm
 from comicsdb.models import Creator, Credits, Issue, Series
-from comicsdb.models.attribution import Attribution
+from comicsdb.views.constants import PAGINATE_BY
 from comicsdb.views.history import HistoryListView
+from comicsdb.views.mixins import (
+    AttributionCreateMixin,
+    AttributionUpdateMixin,
+    NavigationMixin,
+    SearchMixin,
+    SlugRedirectView,
+)
 
-PAGINATE = 28
 LOGGER = logging.getLogger(__name__)
 
 
 class CreatorSeriesList(ListView):
-    paginate_by = PAGINATE
+    paginate_by = PAGINATE_BY
     template_name = "comicsdb/issue_list.html"
 
     def get_queryset(self):
@@ -34,7 +35,7 @@ class CreatorSeriesList(ListView):
 
 
 class CreatorIssueList(ListView):
-    paginate_by = PAGINATE
+    paginate_by = PAGINATE_BY
     template_name = "comicsdb/issue_list.html"
 
     def get_queryset(self):
@@ -49,32 +50,17 @@ class CreatorIssueList(ListView):
 
 class CreatorList(ListView):
     model = Creator
-    paginate_by = PAGINATE
+    paginate_by = PAGINATE_BY
     queryset = Creator.objects.prefetch_related("credits_set")
 
 
-class CreatorDetail(DetailView):
+class CreatorDetail(NavigationMixin, DetailView):
     model = Creator
     queryset = Creator.objects.select_related("edited_by")
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         creator = self.get_object()
-        qs = Creator.objects.order_by("name")
-        try:
-            next_creator = qs.filter(name__gt=creator.name).first()
-        except ObjectDoesNotExist:
-            next_creator = None
-
-        try:
-            previous_creator = qs.filter(name__lt=creator.name).last()
-        except ObjectDoesNotExist:
-            previous_creator = None
-
-        context["navigation"] = {
-            "next_creator": next_creator,
-            "previous_creator": previous_creator,
-        }
 
         series_issues = (
             Credits.objects.filter(creator=creator)
@@ -92,99 +78,31 @@ class CreatorDetail(DetailView):
         return context
 
 
-class CreatorDetailRedirect(RedirectView):
-    def get_redirect_url(self, pk):
-        creator = Creator.objects.get(pk=pk)
-        return reverse("creator:detail", kwargs={"slug": creator.slug})
+class CreatorDetailRedirect(SlugRedirectView):
+    model = Creator
+    url_name = "creator:detail"
 
 
-class SearchCreatorList(CreatorList):
-    def get_queryset(self):
-        result = super().get_queryset()
-        if query := self.request.GET.get("q"):
-            query_list = query.split()
-            result = result.filter(
-                reduce(
-                    operator.and_,
-                    (
-                        # Unaccent lookup won't work on alias array field.
-                        Q(name__unaccent__icontains=q) | Q(alias__icontains=q)
-                        for q in query_list
-                    ),
-                )
-            )
-
-        return result
+class SearchCreatorList(SearchMixin, CreatorList):
+    def get_search_fields(self):
+        # Unaccent lookup won't work on alias array field.
+        return ["name__unaccent__icontains", "alias__icontains"]
 
 
-class CreatorCreate(LoginRequiredMixin, CreateView):
+class CreatorCreate(AttributionCreateMixin, LoginRequiredMixin, CreateView):
     model = Creator
     form_class = CreatorForm
     template_name = "comicsdb/model_with_attribution_form.html"
 
-    def get_context_data(self, **kwargs):
-        context = super().get_context_data(**kwargs)
-        if self.request.POST:
-            context["attribution"] = AttributionFormSet(self.request.POST)
-        else:
-            context["attribution"] = AttributionFormSet()
-        return context
 
-    def form_valid(self, form):
-        context = self.get_context_data()
-        attribution_form = context["attribution"]
-        with transaction.atomic():
-            form.instance.created_by = self.request.user
-            form.instance.edited_by = self.request.user
-            if attribution_form.is_valid():
-                self.object = form.save()
-                attribution_form.instance = self.object
-                attribution_form.save()
-            else:
-                return super().form_invalid(form)
-
-        LOGGER.info("Creator: %s was created by %s", form.instance.name, self.request.user)
-        return super().form_valid(form)
-
-
-class CreatorUpdate(LoginRequiredMixin, UpdateView):
+class CreatorUpdate(AttributionUpdateMixin, LoginRequiredMixin, UpdateView):
     model = Creator
     form_class = CreatorForm
     template_name = "comicsdb/model_with_attribution_form.html"
+    attribution_field = "creators"
 
-    def get_context_data(self, **kwargs):
-        context = super().get_context_data(**kwargs)
-        context["title"] = "Edit Creator Information"
-        if self.request.POST:
-            context["attribution"] = AttributionFormSet(
-                self.request.POST,
-                instance=self.object,
-                queryset=(Attribution.objects.filter(creators=self.object)),
-                prefix="attribution",
-            )
-            context["attribution"].full_clean()
-        else:
-            context["attribution"] = AttributionFormSet(
-                instance=self.object,
-                queryset=(Attribution.objects.filter(creators=self.object)),
-                prefix="attribution",
-            )
-        return context
-
-    def form_valid(self, form):
-        context = self.get_context_data()
-        attribution_form = context["attribution"]
-        with transaction.atomic():
-            form.instance.edited_by = self.request.user
-            if attribution_form.is_valid():
-                self.object = form.save(commit=False)
-                attribution_form.instance = self.object
-                attribution_form.save()
-            else:
-                return super().form_invalid(form)
-
-            LOGGER.info("Creator: %s was updated by %s", form.instance.name, self.request.user)
-        return super().form_valid(form)
+    def get_title(self):
+        return "Edit Creator Information"
 
 
 class CreatorDelete(PermissionRequiredMixin, DeleteView):
