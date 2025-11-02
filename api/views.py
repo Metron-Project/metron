@@ -56,7 +56,18 @@ from comicsdb.models.series import SeriesType
 from comicsdb.models.variant import Variant
 
 
+class UserTrackingMixin:
+    """Mixin to automatically track user edits in create and update operations."""
+
+    def perform_create(self, serializer):
+        serializer.save(edited_by=self.request.user, created_by=self.request.user)
+
+    def perform_update(self, serializer):
+        serializer.save(edited_by=self.request.user)
+
+
 class ArcViewSet(
+    UserTrackingMixin,
     mixins.CreateModelMixin,
     mixins.RetrieveModelMixin,
     mixins.ListModelMixin,
@@ -84,14 +95,6 @@ class ArcViewSet(
             case _:
                 return ArcSerializer
 
-    def perform_create(self, serializer: ArcSerializer) -> None:
-        serializer.save(edited_by=self.request.user, created_by=self.request.user)
-        return super().perform_create(serializer)
-
-    def perform_update(self, serializer: ArcSerializer) -> None:
-        serializer.save(edited_by=self.request.user)
-        return super().perform_update(serializer)
-
     @action(detail=True)
     def issue_list(self, request, pk=None):
         """
@@ -109,6 +112,7 @@ class ArcViewSet(
 
 
 class CharacterViewSet(
+    UserTrackingMixin,
     mixins.CreateModelMixin,
     mixins.RetrieveModelMixin,
     mixins.ListModelMixin,
@@ -138,14 +142,6 @@ class CharacterViewSet(
             case _:
                 return CharacterSerializer
 
-    def perform_create(self, serializer: CharacterSerializer) -> None:
-        serializer.save(edited_by=self.request.user, created_by=self.request.user)
-        return super().perform_create(serializer)
-
-    def perform_update(self, serializer: CharacterSerializer) -> None:
-        serializer.save(edited_by=self.request.user)
-        return super().perform_update(serializer)
-
     @extend_schema(responses={200: IssueListSerializer(many=True)})
     @action(detail=True)
     def issue_list(self, request, pk=None):
@@ -164,6 +160,7 @@ class CharacterViewSet(
 
 
 class CreatorViewSet(
+    UserTrackingMixin,
     mixins.CreateModelMixin,
     mixins.RetrieveModelMixin,
     mixins.ListModelMixin,
@@ -189,14 +186,6 @@ class CreatorViewSet(
             case _:
                 return CreatorSerializer
 
-    def perform_create(self, serializer: CreatorSerializer) -> None:
-        serializer.save(edited_by=self.request.user, created_by=self.request.user)
-        return super().perform_create(serializer)
-
-    def perform_update(self, serializer: CreatorSerializer) -> None:
-        serializer.save(edited_by=self.request.user)
-        return super().perform_update(serializer)
-
 
 class CreditViewset(
     mixins.CreateModelMixin,
@@ -210,9 +199,7 @@ class CreditViewset(
     Update a Credit's data."""
 
     queryset = Credits.objects.all()
-
-    def get_serializer_class(self):
-        return CreditSerializer
+    serializer_class = CreditSerializer
 
     def create(self, request, *args, **kwargs) -> Response:
         serializer: CreditSerializer = self.get_serializer(data=request.data, many=True)
@@ -223,6 +210,7 @@ class CreditViewset(
 
 
 class ImprintViewSet(
+    UserTrackingMixin,
     mixins.CreateModelMixin,
     mixins.RetrieveModelMixin,
     mixins.ListModelMixin,
@@ -256,16 +244,9 @@ class ImprintViewSet(
             case _:
                 return ImprintSerializer
 
-    def perform_create(self, serializer: ImprintSerializer) -> None:
-        serializer.save(edited_by=self.request.user, created_by=self.request.user)
-        return super().perform_create(serializer)
-
-    def perform_update(self, serializer: ImprintSerializer) -> None:
-        serializer.save(edited_by=self.request.user)
-        return super().perform_update(serializer)
-
 
 class IssueViewSet(
+    UserTrackingMixin,
     mixins.CreateModelMixin,
     mixins.RetrieveModelMixin,
     mixins.ListModelMixin,
@@ -320,16 +301,9 @@ class IssueViewSet(
             case _:
                 return IssueSerializer
 
-    def perform_create(self, serializer: IssueSerializer) -> None:
-        serializer.save(edited_by=self.request.user, created_by=self.request.user)
-        return super().perform_create(serializer)
-
-    def perform_update(self, serializer: IssueSerializer) -> None:
-        serializer.save(edited_by=self.request.user)
-        return super().perform_update(serializer)
-
 
 class PublisherViewSet(
+    UserTrackingMixin,
     mixins.CreateModelMixin,
     mixins.RetrieveModelMixin,
     mixins.ListModelMixin,
@@ -363,14 +337,6 @@ class PublisherViewSet(
             case _:
                 return PublisherSerializer
 
-    def perform_create(self, serializer: PublisherSerializer) -> None:
-        serializer.save(edited_by=self.request.user, created_by=self.request.user)
-        return super().perform_create(serializer)
-
-    def perform_update(self, serializer: PublisherSerializer) -> None:
-        serializer.save(edited_by=self.request.user)
-        return super().perform_update(serializer)
-
     @extend_schema(responses={200: SeriesListSerializer(many=True)})
     @action(detail=True)
     def series_list(self, request, pk=None):
@@ -398,6 +364,7 @@ class RoleViewset(mixins.ListModelMixin, viewsets.GenericViewSet):
 
 
 class SeriesViewSet(
+    UserTrackingMixin,
     mixins.CreateModelMixin,
     mixins.RetrieveModelMixin,
     mixins.ListModelMixin,
@@ -419,7 +386,6 @@ class SeriesViewSet(
     """
 
     queryset = Series.objects.select_related("series_type", "publisher")
-    serializer_class = SeriesSerializer
     filterset_class = SeriesFilter
 
     def get_serializer_class(self):
@@ -442,14 +408,6 @@ class SeriesViewSet(
             series_request_data["imprint"] = None
             kwargs["data"] = series_request_data
         return serializer_class(*args, **kwargs)
-
-    def perform_create(self, serializer: SeriesSerializer) -> None:
-        serializer.save(edited_by=self.request.user, created_by=self.request.user)
-        return super().perform_create(serializer)
-
-    def perform_update(self, serializer: SeriesSerializer) -> None:
-        serializer.save(edited_by=self.request.user)
-        return super().perform_update(serializer)
 
     @extend_schema(responses={200: IssueListSerializer(many=True)})
     @action(detail=True)
@@ -478,6 +436,7 @@ class SeriesTypeViewSet(mixins.ListModelMixin, viewsets.GenericViewSet):
 
 
 class TeamViewSet(
+    UserTrackingMixin,
     mixins.CreateModelMixin,
     mixins.RetrieveModelMixin,
     mixins.ListModelMixin,
@@ -507,19 +466,11 @@ class TeamViewSet(
             case _:
                 return TeamSerializer
 
-    def perform_create(self, serializer: TeamSerializer) -> None:
-        serializer.save(edited_by=self.request.user, created_by=self.request.user)
-        return super().perform_create(serializer)
-
-    def perform_update(self, serializer: TeamSerializer) -> None:
-        serializer.save(edited_by=self.request.user)
-        return super().perform_update(serializer)
-
     @extend_schema(responses={200: IssueListSerializer(many=True)})
     @action(detail=True)
     def issue_list(self, request, pk=None):
         """
-        Returns a list of issues for a character.
+        Returns a list of issues for a team.
         """
         team = self.get_object()
         queryset = team.issues.select_related("series", "series__series_type").order_by(
@@ -533,6 +484,7 @@ class TeamViewSet(
 
 
 class UniverseViewSet(
+    UserTrackingMixin,
     mixins.CreateModelMixin,
     mixins.RetrieveModelMixin,
     mixins.ListModelMixin,
@@ -560,14 +512,6 @@ class UniverseViewSet(
             case _:
                 return UniverseSerializer
 
-    def perform_create(self, serializer: UniverseSerializer) -> None:
-        serializer.save(edited_by=self.request.user, created_by=self.request.user)
-        return super().perform_create(serializer)
-
-    def perform_update(self, serializer: UniverseSerializer) -> None:
-        serializer.save(edited_by=self.request.user)
-        return super().perform_update(serializer)
-
 
 class VariantViewset(
     mixins.CreateModelMixin,
@@ -582,6 +526,4 @@ class VariantViewset(
     Update a Variant Cover's information."""
 
     queryset = Variant.objects.all()
-
-    def get_serializer_class(self):
-        return VariantSerializer
+    serializer_class = VariantSerializer
