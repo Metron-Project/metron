@@ -23,8 +23,6 @@ class TeamSerializer(serializers.ModelSerializer):
         """
         creators_data = validated_data.pop("creators", None)
         universes_data = validated_data.pop("universes", None)
-        if "image" in validated_data and validated_data["image"] is not None:
-            validated_data["image"] = validated_data["image"]
         team = Team.objects.create(**validated_data)
         if creators_data:
             team.creators.add(*creators_data)
@@ -36,15 +34,17 @@ class TeamSerializer(serializers.ModelSerializer):
         """
         Update and return an existing `Team` instance, given the validated data.
         """
-        instance.name = validated_data.get("name", instance.name)
-        instance.desc = validated_data.get("desc", instance.desc)
-        instance.image = validated_data.get("image", instance.image)
-        instance.cv_id = validated_data.get("cv_id", instance.cv_id)
-        instance.gcd_id = validated_data.get("gcd_id", instance.gcd_id)
-        if creators_data := validated_data.pop("creators", None):
-            instance.creators.add(*creators_data)
-        if universes_data := validated_data.pop("universes", None):
-            instance.universes.add(*universes_data)
+        creators_data = validated_data.pop("creators", None)
+        universes_data = validated_data.pop("universes", None)
+
+        for attr, value in validated_data.items():
+            setattr(instance, attr, value)
+
+        if creators_data is not None:
+            instance.creators.set(creators_data)
+        if universes_data is not None:
+            instance.universes.set(universes_data)
+
         instance.save()
         return instance
 

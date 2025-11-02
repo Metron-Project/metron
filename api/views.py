@@ -56,7 +56,41 @@ from comicsdb.models.series import SeriesType
 from comicsdb.models.variant import Variant
 
 
+class UserTrackingMixin:
+    """Mixin to automatically track user edits in create and update operations."""
+
+    def perform_create(self, serializer):
+        serializer.save(edited_by=self.request.user, created_by=self.request.user)
+
+    def perform_update(self, serializer):
+        serializer.save(edited_by=self.request.user)
+
+
+class IssueListMixin:
+    """Mixin to provide a standard issue_list action for related models."""
+
+    def get_issue_queryset(self, obj):
+        """Override to customize the issue queryset for a specific viewset."""
+        return obj.issues.select_related("series", "series__series_type").order_by(
+            "cover_date", "series", "number"
+        )
+
+    @extend_schema(responses={200: IssueListSerializer(many=True)})
+    @action(detail=True)
+    def issue_list(self, request, pk=None):
+        """Returns a list of issues for this object."""
+        obj = self.get_object()
+        queryset = self.get_issue_queryset(obj)
+        page = self.paginate_queryset(queryset)
+        if page is not None:
+            serializer = IssueListSerializer(page, many=True, context={"request": request})
+            return self.get_paginated_response(serializer.data)
+        raise Http404
+
+
 class ArcViewSet(
+    UserTrackingMixin,
+    IssueListMixin,
     mixins.CreateModelMixin,
     mixins.RetrieveModelMixin,
     mixins.ListModelMixin,
@@ -84,31 +118,10 @@ class ArcViewSet(
             case _:
                 return ArcSerializer
 
-    def perform_create(self, serializer: ArcSerializer) -> None:
-        serializer.save(edited_by=self.request.user, created_by=self.request.user)
-        return super().perform_create(serializer)
-
-    def perform_update(self, serializer: ArcSerializer) -> None:
-        serializer.save(edited_by=self.request.user)
-        return super().perform_update(serializer)
-
-    @action(detail=True)
-    def issue_list(self, request, pk=None):
-        """
-        Returns a list of issues for a story arc.
-        """
-        arc = self.get_object()
-        queryset = arc.issues.select_related("series", "series__series_type").order_by(
-            "cover_date", "series", "number"
-        )
-        page = self.paginate_queryset(queryset)
-        if page is not None:
-            serializer = IssueListSerializer(page, many=True, context={"request": request})
-            return self.get_paginated_response(serializer.data)
-        raise Http404
-
 
 class CharacterViewSet(
+    UserTrackingMixin,
+    IssueListMixin,
     mixins.CreateModelMixin,
     mixins.RetrieveModelMixin,
     mixins.ListModelMixin,
@@ -127,6 +140,12 @@ class CharacterViewSet(
     filterset_class = ComicVineFilter
     parser_classes = (MultiPartParser, FormParser)
 
+    def get_queryset(self):
+        queryset = super().get_queryset()
+        if self.action == "retrieve":
+            queryset = queryset.prefetch_related("creators", "teams", "universes")
+        return queryset
+
     def get_serializer_class(self):
         match self.action:
             case "list":
@@ -138,32 +157,9 @@ class CharacterViewSet(
             case _:
                 return CharacterSerializer
 
-    def perform_create(self, serializer: CharacterSerializer) -> None:
-        serializer.save(edited_by=self.request.user, created_by=self.request.user)
-        return super().perform_create(serializer)
-
-    def perform_update(self, serializer: CharacterSerializer) -> None:
-        serializer.save(edited_by=self.request.user)
-        return super().perform_update(serializer)
-
-    @extend_schema(responses={200: IssueListSerializer(many=True)})
-    @action(detail=True)
-    def issue_list(self, request, pk=None):
-        """
-        Returns a list of issues for a character.
-        """
-        character = self.get_object()
-        queryset = character.issues.select_related("series", "series__series_type").order_by(
-            "cover_date", "series", "number"
-        )
-        page = self.paginate_queryset(queryset)
-        if page is not None:
-            serializer = IssueListSerializer(page, many=True, context={"request": request})
-            return self.get_paginated_response(serializer.data)
-        raise Http404
-
 
 class CreatorViewSet(
+    UserTrackingMixin,
     mixins.CreateModelMixin,
     mixins.RetrieveModelMixin,
     mixins.ListModelMixin,
@@ -189,14 +185,6 @@ class CreatorViewSet(
             case _:
                 return CreatorSerializer
 
-    def perform_create(self, serializer: CreatorSerializer) -> None:
-        serializer.save(edited_by=self.request.user, created_by=self.request.user)
-        return super().perform_create(serializer)
-
-    def perform_update(self, serializer: CreatorSerializer) -> None:
-        serializer.save(edited_by=self.request.user)
-        return super().perform_update(serializer)
-
 
 class CreditViewset(
     mixins.CreateModelMixin,
@@ -210,9 +198,7 @@ class CreditViewset(
     Update a Credit's data."""
 
     queryset = Credits.objects.all()
-
-    def get_serializer_class(self):
-        return CreditSerializer
+    serializer_class = CreditSerializer
 
     def create(self, request, *args, **kwargs) -> Response:
         serializer: CreditSerializer = self.get_serializer(data=request.data, many=True)
@@ -223,6 +209,7 @@ class CreditViewset(
 
 
 class ImprintViewSet(
+    UserTrackingMixin,
     mixins.CreateModelMixin,
     mixins.RetrieveModelMixin,
     mixins.ListModelMixin,
@@ -247,6 +234,12 @@ class ImprintViewSet(
     filterset_class = ComicVineFilter
     parser_classes = (MultiPartParser, FormParser)
 
+    def get_queryset(self):
+        queryset = super().get_queryset()
+        if self.action == "retrieve":
+            queryset = queryset.select_related("publisher")
+        return queryset
+
     def get_serializer_class(self):
         match self.action:
             case "list":
@@ -256,16 +249,9 @@ class ImprintViewSet(
             case _:
                 return ImprintSerializer
 
-    def perform_create(self, serializer: ImprintSerializer) -> None:
-        serializer.save(edited_by=self.request.user, created_by=self.request.user)
-        return super().perform_create(serializer)
-
-    def perform_update(self, serializer: ImprintSerializer) -> None:
-        serializer.save(edited_by=self.request.user)
-        return super().perform_update(serializer)
-
 
 class IssueViewSet(
+    UserTrackingMixin,
     mixins.CreateModelMixin,
     mixins.RetrieveModelMixin,
     mixins.ListModelMixin,
@@ -320,16 +306,9 @@ class IssueViewSet(
             case _:
                 return IssueSerializer
 
-    def perform_create(self, serializer: IssueSerializer) -> None:
-        serializer.save(edited_by=self.request.user, created_by=self.request.user)
-        return super().perform_create(serializer)
-
-    def perform_update(self, serializer: IssueSerializer) -> None:
-        serializer.save(edited_by=self.request.user)
-        return super().perform_update(serializer)
-
 
 class PublisherViewSet(
+    UserTrackingMixin,
     mixins.CreateModelMixin,
     mixins.RetrieveModelMixin,
     mixins.ListModelMixin,
@@ -363,14 +342,6 @@ class PublisherViewSet(
             case _:
                 return PublisherSerializer
 
-    def perform_create(self, serializer: PublisherSerializer) -> None:
-        serializer.save(edited_by=self.request.user, created_by=self.request.user)
-        return super().perform_create(serializer)
-
-    def perform_update(self, serializer: PublisherSerializer) -> None:
-        serializer.save(edited_by=self.request.user)
-        return super().perform_update(serializer)
-
     @extend_schema(responses={200: SeriesListSerializer(many=True)})
     @action(detail=True)
     def series_list(self, request, pk=None):
@@ -398,6 +369,8 @@ class RoleViewset(mixins.ListModelMixin, viewsets.GenericViewSet):
 
 
 class SeriesViewSet(
+    UserTrackingMixin,
+    IssueListMixin,
     mixins.CreateModelMixin,
     mixins.RetrieveModelMixin,
     mixins.ListModelMixin,
@@ -419,8 +392,13 @@ class SeriesViewSet(
     """
 
     queryset = Series.objects.select_related("series_type", "publisher")
-    serializer_class = SeriesSerializer
     filterset_class = SeriesFilter
+
+    def get_queryset(self):
+        queryset = super().get_queryset()
+        if self.action == "retrieve":
+            queryset = queryset.select_related("imprint").prefetch_related("genres", "associated")
+        return queryset
 
     def get_serializer_class(self):
         match self.action:
@@ -443,27 +421,9 @@ class SeriesViewSet(
             kwargs["data"] = series_request_data
         return serializer_class(*args, **kwargs)
 
-    def perform_create(self, serializer: SeriesSerializer) -> None:
-        serializer.save(edited_by=self.request.user, created_by=self.request.user)
-        return super().perform_create(serializer)
-
-    def perform_update(self, serializer: SeriesSerializer) -> None:
-        serializer.save(edited_by=self.request.user)
-        return super().perform_update(serializer)
-
-    @extend_schema(responses={200: IssueListSerializer(many=True)})
-    @action(detail=True)
-    def issue_list(self, request, pk=None):
-        """
-        Returns a list of issues for a series.
-        """
-        series = self.get_object()
-        queryset = series.issues.all()
-        page = self.paginate_queryset(queryset)
-        if page is not None:
-            serializer = IssueListSerializer(page, many=True, context={"request": request})
-            return self.get_paginated_response(serializer.data)
-        raise Http404
+    def get_issue_queryset(self, obj):
+        """Series issues don't need extra optimization - already optimized at queryset level."""
+        return obj.issues.all()
 
 
 class SeriesTypeViewSet(mixins.ListModelMixin, viewsets.GenericViewSet):
@@ -478,6 +438,8 @@ class SeriesTypeViewSet(mixins.ListModelMixin, viewsets.GenericViewSet):
 
 
 class TeamViewSet(
+    UserTrackingMixin,
+    IssueListMixin,
     mixins.CreateModelMixin,
     mixins.RetrieveModelMixin,
     mixins.ListModelMixin,
@@ -496,6 +458,12 @@ class TeamViewSet(
     filterset_class = ComicVineFilter
     parser_classes = (MultiPartParser, FormParser)
 
+    def get_queryset(self):
+        queryset = super().get_queryset()
+        if self.action == "retrieve":
+            queryset = queryset.prefetch_related("creators", "universes")
+        return queryset
+
     def get_serializer_class(self):
         match self.action:
             case "list":
@@ -507,32 +475,9 @@ class TeamViewSet(
             case _:
                 return TeamSerializer
 
-    def perform_create(self, serializer: TeamSerializer) -> None:
-        serializer.save(edited_by=self.request.user, created_by=self.request.user)
-        return super().perform_create(serializer)
-
-    def perform_update(self, serializer: TeamSerializer) -> None:
-        serializer.save(edited_by=self.request.user)
-        return super().perform_update(serializer)
-
-    @extend_schema(responses={200: IssueListSerializer(many=True)})
-    @action(detail=True)
-    def issue_list(self, request, pk=None):
-        """
-        Returns a list of issues for a character.
-        """
-        team = self.get_object()
-        queryset = team.issues.select_related("series", "series__series_type").order_by(
-            "cover_date", "series", "number"
-        )
-        page = self.paginate_queryset(queryset)
-        if page is not None:
-            serializer = IssueListSerializer(page, many=True, context={"request": request})
-            return self.get_paginated_response(serializer.data)
-        raise Http404
-
 
 class UniverseViewSet(
+    UserTrackingMixin,
     mixins.CreateModelMixin,
     mixins.RetrieveModelMixin,
     mixins.ListModelMixin,
@@ -551,6 +496,12 @@ class UniverseViewSet(
     filterset_class = UniverseFilter
     parser_classes = (MultiPartParser, FormParser)
 
+    def get_queryset(self):
+        queryset = super().get_queryset()
+        if self.action == "retrieve":
+            queryset = queryset.select_related("publisher")
+        return queryset
+
     def get_serializer_class(self):
         match self.action:
             case "list":
@@ -559,14 +510,6 @@ class UniverseViewSet(
                 return UniverseReadSerializer
             case _:
                 return UniverseSerializer
-
-    def perform_create(self, serializer: UniverseSerializer) -> None:
-        serializer.save(edited_by=self.request.user, created_by=self.request.user)
-        return super().perform_create(serializer)
-
-    def perform_update(self, serializer: UniverseSerializer) -> None:
-        serializer.save(edited_by=self.request.user)
-        return super().perform_update(serializer)
 
 
 class VariantViewset(
@@ -582,6 +525,4 @@ class VariantViewset(
     Update a Variant Cover's information."""
 
     queryset = Variant.objects.all()
-
-    def get_serializer_class(self):
-        return VariantSerializer
+    serializer_class = VariantSerializer
