@@ -40,8 +40,8 @@ class Arc(CommonInfo):
         return super().save(*args, **kwargs)
 
     @property
-    def issue_count(self):
-        return self.issues.all().count()
+    def issue_count(self) -> int:
+        return self.issues.count()
 
     def get_absolute_url(self):
         return reverse("arc:detail", args=[self.slug])

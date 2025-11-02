@@ -44,12 +44,12 @@ class Creator(CommonInfo):
         return super().save(*args, **kwargs)
 
     @property
-    def issue_count(self):
-        return self.credits_set.all().count()
+    def issue_count(self) -> int:
+        return self.credits_set.count()
 
     @property
     def recent_issues(self):
-        return self.credits_set.order_by("-issue__cover_date").all()[:5]
+        return self.credits_set.order_by("-issue__cover_date")[:5]
 
     @property
     def wikipedia(self):

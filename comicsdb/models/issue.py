@@ -32,12 +32,22 @@ LOGGER = logging.getLogger(__name__)
 
 class GraphicNovelManager(models.Manager):
     def get_queryset(self):
-        return super().get_queryset().filter(series__series_type__name="Graphic Novel")
+        return (
+            super()
+            .get_queryset()
+            .filter(series__series_type__name="Graphic Novel")
+            .select_related("series", "series__series_type")
+        )
 
 
 class TradePaperbackManager(models.Manager):
     def get_queryset(self):
-        return super().get_queryset().filter(series__series_type__name="Trade Paperback")
+        return (
+            super()
+            .get_queryset()
+            .filter(series__series_type__name="Trade Paperback")
+            .select_related("series", "series__series_type")
+        )
 
 
 class Issue(CommonInfo):
@@ -88,8 +98,8 @@ class Issue(CommonInfo):
         return self.attribution.filter(source=Attribution.Source.MARVEL)
 
     @property
-    def is_foc_past_due(self):
-        return date.today() > self.foc_date
+    def is_foc_past_due(self) -> bool:
+        return self.foc_date is not None and date.today() > self.foc_date
 
     def save(self, *args, **kwargs) -> None:
         # Let's delete the original image if we're replacing it by uploading a new one.
@@ -123,13 +133,23 @@ class Issue(CommonInfo):
 
 
 def generate_issue_slug(instance: Issue):
-    slug_candidate = slug_original = slugify(f"{instance.series.slug}-{instance.number}")
-    for i in itertools.count(1):
-        if not Issue.objects.filter(slug=slug_candidate).exists():
-            break
-        slug_candidate = f"{slug_original}-{i}"
+    base_slug = slugify(f"{instance.series.slug}-{instance.number}")
 
-    return slug_candidate
+    # Fetch all matching slugs at once to avoid multiple database queries
+    existing_slugs = set(
+        Issue.objects.filter(slug__startswith=base_slug).values_list("slug", flat=True)
+    )
+
+    if base_slug not in existing_slugs:
+        return base_slug
+
+    for i in itertools.count(1):
+        slug_candidate = f"{base_slug}-{i}"
+        if slug_candidate not in existing_slugs:
+            return slug_candidate
+
+    # This should never be reached due to itertools.count() being infinite
+    return base_slug  # pragma: no cover
 
 
 def pre_save_issue_slug(sender, instance: Issue, *args, **kwargs) -> None:
@@ -138,13 +158,12 @@ def pre_save_issue_slug(sender, instance: Issue, *args, **kwargs) -> None:
 
 
 def generate_cover_hash(instance: Issue) -> str:
-    with Image.open(instance.image) as img:
-        try:
-            cover_hash = str(imagehash.phash(img))
-        except OSError as e:
-            cover_hash = ""
-            LOGGER.error("Unable to generate cover hash for '%s': %s", instance, e)
-    return cover_hash
+    try:
+        with Image.open(instance.image) as img:
+            return str(imagehash.phash(img))
+    except OSError as e:
+        LOGGER.error("Unable to generate cover hash for '%s': %s", instance, e)
+        return ""
 
 
 def pre_save_cover_hash(sender, instance: Issue, *args, **kwargs) -> None:

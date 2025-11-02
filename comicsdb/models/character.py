@@ -51,16 +51,16 @@ class Character(CommonInfo):
         return reverse("character:detail", args=[self.slug])
 
     @property
-    def issue_count(self):
-        return self.issues.all().count()
+    def issue_count(self) -> int:
+        return self.issues.count()
 
     @property
     def first_appearance(self):
-        return self.issues.order_by("cover_date").all().first
+        return self.issues.order_by("cover_date").first()
 
     @property
     def recent_appearances(self):
-        return self.issues.order_by("-cover_date").all()[:5]
+        return self.issues.order_by("-cover_date")[:5]
 
     @property
     def wikipedia(self):
