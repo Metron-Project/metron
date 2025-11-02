@@ -1,6 +1,7 @@
 import logging
 
 from django.contrib.auth.mixins import LoginRequiredMixin, PermissionRequiredMixin
+from django.db.models import Prefetch
 from django.shortcuts import get_object_or_404
 from django.urls import reverse_lazy
 from django.views.generic import DetailView, ListView
@@ -49,7 +50,8 @@ class PublisherSeriesList(ListView):
 class PublisherDetail(NavigationMixin, DetailView):
     model = Publisher
     queryset = Publisher.objects.select_related("edited_by").prefetch_related(
-        "series", "universes__issues", "imprints__series"
+        Prefetch("series", queryset=Series.objects.select_related("series_type")),
+        Prefetch("imprints__series", queryset=Series.objects.select_related("series_type")),
     )
 
 

@@ -65,7 +65,6 @@ class CreatorAutocomplete(autocomplete.Select2QuerySetView):
 class IssueList(ListView):
     model = Issue
     paginate_by = PAGINATE_BY
-    # TODO: Let's look into limiting fields returned since we don't use most of them.
     queryset = Issue.objects.select_related("series", "series__series_type")
 
     def get_context_data(self, **kwargs: Any) -> dict[str, Any]:
@@ -467,7 +466,7 @@ class WeekList(ListView):
     queryset = (
         Issue.objects.filter(store_date__week=week)
         .filter(store_date__year=year)
-        .prefetch_related("series", "series__series_type")
+        .select_related("series", "series__series_type")
     )
 
     def get_context_data(self, **kwargs):
@@ -495,7 +494,7 @@ class NextWeekList(ListView):
     queryset = (
         Issue.objects.filter(store_date__week=week)
         .filter(store_date__year=year)
-        .prefetch_related("series", "series__series_type")
+        .select_related("series", "series__series_type")
     )
 
     def get_context_data(self, **kwargs):
@@ -524,7 +523,7 @@ class FutureList(ListView):
     queryset = (
         Issue.objects.filter(store_date__year__gte=year)
         .exclude(store_date__week__lte=week, store_date__year=year)
-        .prefetch_related("series", "series__series_type")
+        .select_related("series", "series__series_type")
     )
 
     def get_context_data(self, **kwargs):
