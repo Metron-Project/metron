@@ -46,8 +46,8 @@ class Publisher(CommonInfo):
         return reverse("publisher:detail", args=[self.slug])
 
     @property
-    def series_count(self):
-        return self.series.all().count()
+    def series_count(self) -> int:
+        return self.series.count()
 
     @property
     def wikipedia(self):

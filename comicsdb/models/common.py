@@ -6,16 +6,26 @@ from django.utils.text import slugify
 
 
 def generate_slug_from_name(instance):
-    slug_candidate = slug_original = (
+    base_slug = (
         slugify(f"{instance.name}-slug") if instance.name.isdigit() else slugify(instance.name)
     )
     klass = instance.__class__
-    for i in itertools.count(1):
-        if not klass.objects.filter(slug=slug_candidate).exists():
-            break
-        slug_candidate = f"{slug_original}-{i}"
 
-    return slug_candidate
+    # Fetch all matching slugs at once to avoid multiple database queries
+    existing_slugs = set(
+        klass.objects.filter(slug__startswith=base_slug).values_list("slug", flat=True)
+    )
+
+    if base_slug not in existing_slugs:
+        return base_slug
+
+    for i in itertools.count(1):
+        slug_candidate = f"{base_slug}-{i}"
+        if slug_candidate not in existing_slugs:
+            return slug_candidate
+
+    # This should never be reached due to itertools.count() being infinite
+    return base_slug  # pragma: no cover
 
 
 def pre_save_slug(sender, instance, **kwargs):

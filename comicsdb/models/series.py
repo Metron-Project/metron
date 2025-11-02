@@ -1,4 +1,5 @@
 import itertools
+from typing import TYPE_CHECKING
 
 from django.contrib.contenttypes.fields import GenericRelation
 from django.db import models
@@ -13,6 +14,9 @@ from comicsdb.models.genre import Genre
 from comicsdb.models.imprint import Imprint
 from comicsdb.models.publisher import Publisher
 from users.models import CustomUser
+
+if TYPE_CHECKING:
+    from sorl.thumbnail import ImageField
 
 
 class SeriesType(models.Model):
@@ -77,15 +81,15 @@ class Series(CommonInfo):
             case _:
                 return f"{self.name} ({self.year_began})"
 
-    def first_issue_cover(self):
+    def first_issue_cover(self) -> "ImageField | None":
         try:
-            return self.issues.all().first().image
+            return self.issues.first().image
         except AttributeError:
             return None
 
     @property
     def issue_count(self) -> int:
-        return self.issues.all().count()
+        return self.issues.count()
 
     class Meta:
         indexes = [
@@ -98,14 +102,24 @@ class Series(CommonInfo):
 
 
 def generate_series_slug(instance):
-    slug_candidate = slug_original = slugify(f"{instance.name}-{instance.year_began}")
+    base_slug = slugify(f"{instance.name}-{instance.year_began}")
     klass = instance.__class__
-    for i in itertools.count(1):
-        if not klass.objects.filter(slug=slug_candidate).exists():
-            break
-        slug_candidate = f"{slug_original}-{i}"
 
-    return slug_candidate
+    # Fetch all matching slugs at once to avoid multiple database queries
+    existing_slugs = set(
+        klass.objects.filter(slug__startswith=base_slug).values_list("slug", flat=True)
+    )
+
+    if base_slug not in existing_slugs:
+        return base_slug
+
+    for i in itertools.count(1):
+        slug_candidate = f"{base_slug}-{i}"
+        if slug_candidate not in existing_slugs:
+            return slug_candidate
+
+    # This should never be reached due to itertools.count() being infinite
+    return base_slug  # pragma: no cover
 
 
 def pre_save_series_slug(sender, instance, **kwargs):
