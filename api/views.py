@@ -131,6 +131,12 @@ class CharacterViewSet(
     filterset_class = ComicVineFilter
     parser_classes = (MultiPartParser, FormParser)
 
+    def get_queryset(self):
+        queryset = super().get_queryset()
+        if self.action == "retrieve":
+            queryset = queryset.prefetch_related("creators", "teams", "universes")
+        return queryset
+
     def get_serializer_class(self):
         match self.action:
             case "list":
@@ -234,6 +240,12 @@ class ImprintViewSet(
     queryset = Imprint.objects.prefetch_related("series", "series__series_type")
     filterset_class = ComicVineFilter
     parser_classes = (MultiPartParser, FormParser)
+
+    def get_queryset(self):
+        queryset = super().get_queryset()
+        if self.action == "retrieve":
+            queryset = queryset.select_related("publisher")
+        return queryset
 
     def get_serializer_class(self):
         match self.action:
@@ -388,6 +400,12 @@ class SeriesViewSet(
     queryset = Series.objects.select_related("series_type", "publisher")
     filterset_class = SeriesFilter
 
+    def get_queryset(self):
+        queryset = super().get_queryset()
+        if self.action == "retrieve":
+            queryset = queryset.select_related("imprint").prefetch_related("genres", "associated")
+        return queryset
+
     def get_serializer_class(self):
         match self.action:
             case "list":
@@ -455,6 +473,12 @@ class TeamViewSet(
     filterset_class = ComicVineFilter
     parser_classes = (MultiPartParser, FormParser)
 
+    def get_queryset(self):
+        queryset = super().get_queryset()
+        if self.action == "retrieve":
+            queryset = queryset.prefetch_related("creators", "universes")
+        return queryset
+
     def get_serializer_class(self):
         match self.action:
             case "list":
@@ -502,6 +526,12 @@ class UniverseViewSet(
     queryset = Universe.objects.all()
     filterset_class = UniverseFilter
     parser_classes = (MultiPartParser, FormParser)
+
+    def get_queryset(self):
+        queryset = super().get_queryset()
+        if self.action == "retrieve":
+            queryset = queryset.select_related("publisher")
+        return queryset
 
     def get_serializer_class(self):
         match self.action:
