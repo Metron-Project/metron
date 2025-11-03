@@ -51,7 +51,6 @@ INSTALLED_APPS = [
     "django.contrib.postgres",
     "django.contrib.staticfiles",
     "django.contrib.sites",
-    "django.contrib.flatpages",
     "django.contrib.humanize",
     "django.forms",
     "rest_framework",
@@ -86,7 +85,6 @@ MIDDLEWARE = [
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
     "simple_history.middleware.HistoryRequestMiddleware",
-    "django.contrib.flatpages.middleware.FlatpageFallbackMiddleware",
 ]
 
 ROOT_URLCONF = "metron.urls"
