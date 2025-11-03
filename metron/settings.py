@@ -38,7 +38,8 @@ DEBUG = config("DEBUG", default=False, cast=bool)
 SECRET_KEY = config("SECRET_KEY")
 
 # Application definition
-
+# NOTE: it is important to maintain the order, due to database relational constraints
+#       for django-wiki
 INSTALLED_APPS = [
     "dal",
     "dal_select2",
@@ -151,6 +152,8 @@ DATABASES = {
 CURRENCIES = ("USD",)  # Add other currencies as needed: ('USD', 'GBP', 'EUR')
 DEFAULT_CURRENCY = "USD"
 
+# django-wiki'
+WIKI_ACCOUNT_HANDLING = False
 
 ALLOWED_HOSTS = config("ALLOWED_HOSTS", cast=Csv())
 
