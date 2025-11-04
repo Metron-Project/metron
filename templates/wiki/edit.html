@@ -75,57 +75,138 @@
 <div class="modal" id="previewModal">
   <div class="modal-background"></div>
   <div class="modal-card is-large">
-    <header class="modal-card-head">
-      <p class="modal-card-title">
-        <span class="icon">
-          <i class="fa fa-eye"></i>
+    <header class="modal-card-head has-background-link">
+      <p class="modal-card-title has-text-white">
+        <span class="icon has-text-white">
+          <i class="fas fa-eye"></i>
         </span>
         <span>{% trans "Preview" %}</span>
       </p>
       <button class="delete" aria-label="close" id="closePreviewModal"></button>
     </header>
     <section class="modal-card-body" id="previewModalBody">
-      <iframe name="previewWindow" class="preview-iframe"></iframe>
+      <div class="box has-background-white-bis p-1">
+        <iframe name="previewWindow" class="preview-iframe"></iframe>
+      </div>
     </section>
-    <footer class="modal-card-foot is-justify-content-space-between">
-      <button class="button is-rounded" id="closePreviewModalBtn">
-        <span class="icon">
-          <i class="fa fa-arrow-circle-left"></i>
-        </span>
-        <span>{% trans "Back to editor" %}</span>
-      </button>
-      <button class="button is-rounded is-link" id="id_preview_save_changes">
-        <span class="icon">
-          <i class="fa fa-check"></i>
-        </span>
-        <span>{% trans "Save changes" %}</span>
-      </button>
+    <footer class="modal-card-foot has-background-light">
+      <div class="buttons is-flex is-justify-content-space-between" style="width: 100%;">
+        <button class="button is-rounded is-light" id="closePreviewModalBtn">
+          <span class="icon">
+            <i class="fas fa-arrow-left"></i>
+          </span>
+          <span>{% trans "Back to editor" %}</span>
+        </button>
+        <button class="button is-rounded is-link" id="id_preview_save_changes">
+          <span class="icon">
+            <i class="fas fa-check"></i>
+          </span>
+          <span>{% trans "Save changes" %}</span>
+        </button>
+      </div>
     </footer>
   </div>
 </div>
 
 {% addtoblock "css" %}
 <style>
+  /* Enhanced modal styling with dark mode support */
   .modal-card.is-large {
     width: 90vw;
     max-width: 1200px;
+    box-shadow: 0 0.5em 1em -0.125em rgba(10, 10, 10, 0.3), 0 0px 0 1px rgba(10, 10, 10, 0.05);
   }
 
+  /* Modal header enhancements */
+  .modal-card-head.has-background-link {
+    border-bottom: 2px solid hsl(217, 71%, 45%);
+  }
+
+  /* Modal body with better padding and overflow handling */
   #previewModalBody {
-    padding: 0;
-    overflow: hidden;
+    padding: 1rem;
+    overflow: auto;
+    background-color: hsl(0, 0%, 96%);
   }
 
+  #previewModalBody .box {
+    box-shadow: 0 2px 3px rgba(10, 10, 10, 0.1);
+    overflow: hidden;
+    background-color: hsl(0, 0%, 100%);
+  }
+
+  /* Iframe styling for preview - seamless display */
   .preview-iframe {
     width: 100%;
     min-height: 60vh;
     height: calc(90vh - 200px);
     border: none;
-    background: #fff;
+    background: transparent;
+    border-radius: 4px;
+    display: block;
   }
 
-  .modal-card-foot.is-justify-content-space-between {
-    justify-content: space-between;
+  /* Footer button layout */
+  .modal-card-foot.has-background-light {
+    padding: 1.25rem;
+    border-top: 2px solid hsl(0, 0%, 86%);
+  }
+
+  /* Improve button spacing in footer */
+  .modal-card-foot .buttons {
+    margin-bottom: 0;
+  }
+
+  /* Dark mode support for modal */
+  @media (prefers-color-scheme: dark) {
+    .modal-card.is-large {
+      box-shadow: 0 0.5em 1em -0.125em rgba(0, 0, 0, 0.5), 0 0px 0 1px rgba(0, 0, 0, 0.2);
+    }
+
+    #previewModalBody {
+      background-color: hsl(0, 0%, 21%);
+    }
+
+    #previewModalBody .box {
+      background-color: hsl(0, 0%, 14%);
+      box-shadow: 0 2px 3px rgba(0, 0, 0, 0.3);
+    }
+
+    .modal-card-head.has-background-link {
+      background-color: hsl(217, 71%, 35%) !important;
+      border-bottom-color: hsl(217, 71%, 30%);
+    }
+
+    .modal-card-foot.has-background-light {
+      background-color: hsl(0, 0%, 17%) !important;
+      border-top-color: hsl(0, 0%, 29%);
+    }
+
+    .modal-background {
+      background-color: rgba(0, 0, 0, 0.7);
+    }
+  }
+
+  /* High contrast mode support */
+  @media (prefers-contrast: high) {
+    .modal-card.is-large {
+      border: 3px solid currentColor;
+    }
+
+    .modal-card-head.has-background-link {
+      border-bottom-width: 3px;
+    }
+
+    .modal-card-foot.has-background-light {
+      border-top-width: 3px;
+    }
+  }
+
+  /* Reduced motion support */
+  @media (prefers-reduced-motion: reduce) {
+    .modal-card.is-large {
+      animation: none;
+    }
   }
 </style>
 {% endaddtoblock %}
