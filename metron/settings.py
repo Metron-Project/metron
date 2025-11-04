@@ -38,7 +38,8 @@ DEBUG = config("DEBUG", default=False, cast=bool)
 SECRET_KEY = config("SECRET_KEY")
 
 # Application definition
-
+# NOTE: it is important to maintain the order, due to database relational constraints
+#       for django-wiki
 INSTALLED_APPS = [
     "dal",
     "dal_select2",
@@ -50,19 +51,26 @@ INSTALLED_APPS = [
     "django.contrib.postgres",
     "django.contrib.staticfiles",
     "django.contrib.sites",
-    "django.contrib.flatpages",
     "django.contrib.humanize",
     "django.forms",
     "rest_framework",
     "drf_spectacular",
     "django_filters",
     "django_select2",
-    "sorl.thumbnail",
     "django_simple_bulma",
     "chartkick.django",
     "django_countries",
     "djmoney",
     "simple_history",
+    "django_nyt.apps.DjangoNytConfig",
+    "mptt",
+    "sekizai",
+    "sorl.thumbnail",
+    "wiki.apps.WikiConfig",
+    "wiki.plugins.attachments.apps.AttachmentsConfig",
+    "wiki.plugins.notifications.apps.NotificationsConfig",
+    "wiki.plugins.images.apps.ImagesConfig",
+    "wiki.plugins.macros.apps.MacrosConfig",
     "api",
     "comicsdb",
     "users",
@@ -77,7 +85,6 @@ MIDDLEWARE = [
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
     "simple_history.middleware.HistoryRequestMiddleware",
-    "django.contrib.flatpages.middleware.FlatpageFallbackMiddleware",
 ]
 
 ROOT_URLCONF = "metron.urls"
@@ -94,6 +101,7 @@ TEMPLATES = [
                 "django.contrib.auth.context_processors.auth",
                 "django.contrib.messages.context_processors.messages",
                 "comicsdb.context_processors.announcement_context_processor",
+                "sekizai.context_processors.sekizai",
             ],
             # Bulma templatetags for project.
             "libraries": {
@@ -142,6 +150,8 @@ DATABASES = {
 CURRENCIES = ("USD",)  # Add other currencies as needed: ('USD', 'GBP', 'EUR')
 DEFAULT_CURRENCY = "USD"
 
+# django-wiki'
+WIKI_ACCOUNT_HANDLING = False
 
 ALLOWED_HOSTS = config("ALLOWED_HOSTS", cast=Csv())
 

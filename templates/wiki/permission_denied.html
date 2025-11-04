@@ -1,0 +1,39 @@
+{% extends "wiki/base.html" %}
+{% load wiki_tags i18n %}
+{% block wiki_pagetitle %}Permission Denied{% endblock %}
+{% block wiki_contents %}
+    <h1 class="title is-2">{% trans "Permission Denied" %}</h1>
+    <div class="notification is-danger is-light">
+        <span class="icon">
+            <i class="fas fa-minus-circle"></i>
+        </span>
+        <span>{% trans "Sorry, you don't have permission to access this page." %}</span>
+    </div>
+    {% if article.current_revision.locked %}
+        <div class="notification is-warning is-light">
+            <span class="icon">
+                <i class="fas fa-lock"></i>
+            </span>
+            <span>{% trans "This article is locked for editing." %}</span>
+        </div>
+    {% endif %}
+    <div class="buttons">
+        {% if not read_denied %}
+            <a href="{% url 'wiki:get' article_id=article.id path=urlpath.path %}"
+               class="button is-rounded is-link">
+                <span class="icon">
+                    <i class="fas fa-arrow-left"></i>
+                </span>
+                <span>{% trans "Back to article" %}</span>
+            </a>
+        {% elif urlpath.parent %}
+            <a href="{% url 'wiki:get' path=urlpath.parent.path %}"
+               class="button is-rounded is-link">
+                <span class="icon">
+                    <i class="fas fa-arrow-left"></i>
+                </span>
+                <span>{% trans "Back to article" %}</span>
+            </a>
+        {% endif %}
+    </div>
+{% endblock %}

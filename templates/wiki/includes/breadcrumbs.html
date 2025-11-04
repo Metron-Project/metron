@@ -1,0 +1,77 @@
+{% load i18n %}
+{% if urlpath %}
+    <nav class="breadcrumb" aria-label="breadcrumbs">
+        <ul>
+            {% for ancestor in urlpath.cached_ancestors %}
+                <li>
+                    <a href="{% url 'wiki:get' path=ancestor.path %}">{{ ancestor.article.current_revision.title|truncatechars:25 }}</a>
+                </li>
+            {% endfor %}
+            <li class="is-active">
+                <a href="#" aria-current="page">{{ article.current_revision.title|truncatechars:25 }}</a>
+            </li>
+        </ul>
+    </nav>
+    <div class="buttons">
+        <div class="dropdown is-hoverable">
+            <div class="dropdown-trigger">
+                <button class="button is-rounded is-link"
+                        aria-haspopup="true"
+                        aria-controls="dropdown-menu-sub"
+                        title="{% trans "Sub-articles for" %} {{ article.current_revision.title }}">
+                    <span class="icon">
+                        <i class="fa fa-sitemap" aria-hidden="true"></i>
+                    </span>
+                    <span class="icon">
+                        <i class="fa fa-angle-down" aria-hidden="true"></i>
+                    </span>
+                </button>
+            </div>
+            <div class="dropdown-menu" id="dropdown-menu-sub" role="menu">
+                <div class="dropdown-content">
+                    {% for child in children_slice %}
+                        <a href="{% url 'wiki:get' path=child.path %}" class="dropdown-item">{{ child.article.current_revision.title }}</a>
+                    {% empty %}
+                        <a href="#" class="dropdown-item"><em>{% trans "No sub-articles" %}</em></a>
+                    {% endfor %}
+                    {% if children_slice_more %}
+                        <a href="#" class="dropdown-item"><em>{% trans "...and more" %}</em></a>
+                    {% endif %}
+                    <hr class="dropdown-divider">
+                    <a href="{% url 'wiki:dir' path=urlpath.path %}" class="dropdown-item">{% trans "Browse articles in this level" %} &raquo;</a>
+                </div>
+            </div>
+        </div>
+        <div class="dropdown is-hoverable">
+            <div class="dropdown-trigger">
+                <button class="button is-rounded is-link"
+                        aria-haspopup="true"
+                        aria-controls="dropdown-menu-new"
+                        title="{% trans "Create new article" %}">
+                    <span class="icon">
+                        <i class="fa fa-file" aria-hidden="true"></i>
+                    </span>
+                    <span class="icon">
+                        <i class="fa fa-angle-down" aria-hidden="true"></i>
+                    </span>
+                </button>
+            </div>
+            <div class="dropdown-menu" id="dropdown-menu-new" role="menu">
+                <div class="dropdown-content">
+                    {% if urlpath.parent %}
+                        <a href="{% url 'wiki:create' path=urlpath.parent.path %}"
+                           class="dropdown-item">
+                            <span class="icon"><i class="fa fa-arrow-right"></i></span>
+                            {% blocktrans with article.current_revision.title as title %}New article next to {{ title }}{% endblocktrans %}
+                        </a>
+                    {% endif %}
+                    <a href="{% url 'wiki:create' path=urlpath.path %}"
+                       class="dropdown-item">
+                        <span class="icon"><i class="fa fa-arrow-down"></i></span>
+                        {% blocktrans with article.current_revision.title as title %}New article below {{ title }}{% endblocktrans %}
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+{% endif %}

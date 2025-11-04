@@ -1,0 +1,60 @@
+{% extends "wiki/base.html" %}
+{% load wiki_tags i18n sekizai_tags %}
+{% block wiki_pagetitle %}
+    {% trans "Article deleted" %}
+{% endblock %}
+{% block wiki_contents %}
+    {% addtoblock "css" %}
+    <style type="text/css">
+    label[for=id_confirm] {
+      margin-right: 10px;
+    }
+    </style>
+{% endaddtoblock %}
+<h1 class="title is-2">{% trans "Article deleted" %}</h1>
+<p class="subtitle is-4">{% trans "The article you were looking for has been deleted." %}</p>
+<div class="columns">
+    {% if not article.current_revision.locked or article|can_delete:user %}
+        <div class="column is-one-third">
+            <div class="box has-background-info-light">
+                <h2 class="title is-4">{% trans "Restore" %}</h2>
+                <div class="content">
+                    <p>{% trans "You may restore this article and its children by clicking restore." %}</p>
+                    <a href="?restore=1" class="button is-rounded is-success">
+                        <span class="icon">
+                            <i class="fas fa-redo"></i>
+                        </span>
+                        <span>{% trans "Restore" %}</span>
+                    </a>
+                </div>
+            </div>
+        </div>
+    {% endif %}
+    {% if article|can_moderate:user %}
+        <div class="column is-two-thirds">
+            <div class="box has-background-danger-light">
+                <h2 class="title is-4">{% trans "Purge deletion" %}</h2>
+                <div class="content">
+                    <p>
+                        {% trans "You may remove this article and any children permanently and free their slugs by clicking the below button. This action cannot be undone." %}
+                    </p>
+                    <form method="POST" class="form">
+                        {% csrf_token %}
+                        {% wiki_form purge_form %}
+                        <div class="field">
+                            <div class="control">
+                                <button class="button is-rounded is-danger">
+                                    <span class="icon">
+                                        <i class="fas fa-times"></i>
+                                    </span>
+                                    <span>{% trans "Purge" %}</span>
+                                </button>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    {% endif %}
+</div>
+{% endblock %}

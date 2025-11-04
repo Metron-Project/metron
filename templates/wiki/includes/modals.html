@@ -1,0 +1,34 @@
+{% load sekizai_tags static %}
+{% addtoblock "js" %}
+<script type="text/javascript">
+  // Bulma modal helper function for responsive iframe sizing
+  function resizeBulmaModalIframe() {
+    // Target Bulma modals with iframes
+    $('.modal.is-active .modal-card-body iframe').each(function() {
+      var $iframe = $(this);
+      var $modalCard = $iframe.closest('.modal-card');
+      var $modalBody = $iframe.closest('.modal-card-body');
+
+      // Calculate available height
+      var windowHeight = $(window).height();
+      var modalHeader = $modalCard.find('.modal-card-head').outerHeight() || 0;
+      var modalFooter = $modalCard.find('.modal-card-foot').outerHeight() || 0;
+      var availableHeight = windowHeight * 0.9 - modalHeader - modalFooter - 40; // 40px for padding/margin
+
+      $iframe.css('height', availableHeight + 'px');
+    });
+  }
+
+  $(document).ready(function() {
+    // Resize on modal open
+    $(document).on('click', '[data-target^="#"]', function() {
+      setTimeout(resizeBulmaModalIframe, 100);
+    });
+
+    // Resize on window resize
+    $(window).resize(function() {
+      resizeBulmaModalIframe();
+    });
+  });
+</script>
+{% endaddtoblock %}

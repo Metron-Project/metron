@@ -1,0 +1,55 @@
+{% load i18n sekizai_tags %}
+{% addtoblock "js" %}
+<script type="text/javascript">
+  $(document).ready( function() {
+    $('.sidebar-form').each(function () {
+      $(this).submit( function() {
+        this.unsaved_article_title.value = $('#id_title').val();
+        this.unsaved_article_content.value = $('#id_content').val();
+      });
+    });
+
+    // Toggle collapse functionality for Bulma
+    $('.card-toggle').on('click', function(e) {
+      e.preventDefault();
+      var target = $(this).attr('href');
+      $(target).toggleClass('is-hidden');
+      $(this).find('.fa-angle-down, .fa-angle-up').toggleClass('fa-angle-down fa-angle-up');
+    });
+  });
+</script>
+{% endaddtoblock %}
+{% for plugin, plugin_form in sidebar %}
+    <div class="box">
+        <div class="is-flex is-justify-content-space-between is-align-items-center mb-3">
+            <a class="card-toggle has-text-weight-semibold"
+               href="#collapse_{{ plugin.slug }}">
+                <span class="icon-text">
+                    <span class="icon">
+                        <i class="fa {{ plugin.sidebar.icon_class }}"></i>
+                    </span>
+                    <span>{{ plugin.sidebar.headline }}</span>
+                    <span class="icon">
+                        <i class="fa fa-angle-down"></i>
+                    </span>
+                </span>
+            </a>
+        </div>
+        <div id="collapse_{{ plugin.slug }}"
+             class="{% if not plugin_form.errors %}is-hidden{% endif %}">
+            <div class="content">
+                {% if plugin.sidebar.template %}
+                    {% with plugin_form as form and plugin as plugin %}
+                        <form method="POST"
+                              class="sidebar-form"
+                              action="?f={{ plugin_form.form_id }}"
+                              enctype="multipart/form-data">
+                            {% csrf_token %}
+                            {% include plugin.sidebar.template %}
+                        </form>
+                    {% endwith %}
+                {% endif %}
+            </div>
+        </div>
+    </div>
+{% endfor %}

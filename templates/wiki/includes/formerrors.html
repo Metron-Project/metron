@@ -1,0 +1,6 @@
+{% if form.non_field_errors %}
+    {% if form_error_title %}<h4 class="title is-5">{{ form_error_title }}</h4>{% endif %}
+    {% for error_message in form.non_field_errors %}
+        <div class="notification is-danger">{{ error_message }}</div>
+    {% endfor %}
+{% endif %}

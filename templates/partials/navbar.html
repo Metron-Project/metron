@@ -120,17 +120,11 @@
             <div class="navbar-item has-dropdown is-hoverable">
                 <a class="navbar-link" aria-haspopup="true" aria-expanded="false">More</a>
                 <div class="navbar-dropdown">
-                    <a class="navbar-item" href="{% url 'flatpage:editing-guidelines' %}">
+                    <a class="navbar-item" href="{% url 'wiki:root' %}">
                         <span class="icon" aria-hidden="true">
-                            <i class="fas fa-edit"></i>
+                            <i class="fas fa-book-open"></i>
                         </span>
-                        <span>Editing Guidelines</span>
-                    </a>
-                    <a class="navbar-item" href="{% url 'flatpage:api-guidelines' %}">
-                        <span class="icon" aria-hidden="true">
-                            <i class="fas fa-satellite"></i>
-                        </span>
-                        <span>API Guidelines</span>
+                        <span>Wiki</span>
                     </a>
                     {% if user.is_authenticated %}
                         <a class="navbar-item" href="/docs/">
@@ -140,12 +134,6 @@
                             <span>API Docs</span>
                         </a>
                     {% endif %}
-                    <a class="navbar-item" href="{% url 'flatpage:privacy' %}">
-                        <span class="icon" aria-hidden="true">
-                            <i class="fas fa-user-secret"></i>
-                        </span>
-                        <span>Privacy Policy</span>
-                    </a>
                     <a class="navbar-item" href="{% url 'statistics' %}">
                         <span class="icon" aria-hidden="true">
                             <i class="fas fa-chart-bar"></i>

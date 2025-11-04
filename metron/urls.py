@@ -14,7 +14,6 @@ from comicsdb.urls import (
     arc as arc_urls,
     character as character_urls,
     creator as creator_urls,
-    flatpage as flatpage_urls,
     home as home_urls,
     imprint as imprint_urls,
     issue as issue_urls,
@@ -43,7 +42,6 @@ urlpatterns = [
     path("imprint/", include(imprint_urls)),
     path("issue/", include(issue_urls)),
     path("jsi18n/", JavaScriptCatalog.as_view(), name="javascript-catalog"),
-    path("pages/", include(flatpage_urls)),
     path("publisher/", include(publisher_urls)),
     path("select2/", include("django_select2.urls")),
     path("series/", include(series_urls)),
@@ -51,6 +49,8 @@ urlpatterns = [
     path("universe/", include(universe_urls)),
     path("accounts/", include("users.urls")),
     path("accounts/", include("django.contrib.auth.urls")),
+    path("notifications/", include("django_nyt.urls")),
+    path("wiki/", include("wiki.urls")),
 ]
 
 if settings.DEBUG:
