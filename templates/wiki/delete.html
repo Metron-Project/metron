@@ -1,74 +1,68 @@
 {% extends "wiki/base.html" %}
 {% load wiki_tags i18n sekizai_tags %}
-
-
-{% block wiki_pagetitle %}{% trans "Delete article" %}{% endblock %}
-
+{% block wiki_pagetitle %}
+    {% trans "Delete article" %}
+{% endblock %}
 {% block wiki_contents %}
-  <h1 class="title is-2">{% trans "Delete" %} "{{ article.current_revision.title }}"</h1>
-
-  {% if cannot_delete_root %}
-    <p class="subtitle is-4">{% trans "You cannot delete a root article." %}</p>
-    <p><a href="{% url 'wiki:get' path=urlpath.path article_id=article.id %}" class="button is-rounded is-link">{% trans "Go back" %}</a></p>
-  {% else %}
-
-    {% if cannot_delete_children %}
-
-      <div class="notification is-danger">
-        <strong>{% trans "You cannot delete this article because you do not have permission to delete articles with children. Try to remove the children manually one-by-one." %}</strong>
-      </div>
-
-    {% endif %}
-
-    {% if delete_children %}
-
-      <p class="subtitle is-5">{% trans "You are deleting an article. This means that its children will be deleted as well. If you choose to purge, children will also be purged!" %}</p>
-
-      <h2 class="title is-4">{% trans "Articles that will be deleted" %}</h2>
-
-      <ul>
-        {% for child in delete_children %}
-        <li><a href="{% url 'wiki:get' article_id=child.article.id %}" target="_blank">{{ child.article }}</a></li>
-        {% if delete_children_more %}
-        <li><em>{% trans "...and more!" %}</em></li>
+    <h1 class="title is-2">{% trans "Delete" %} "{{ article.current_revision.title }}"</h1>
+    {% if cannot_delete_root %}
+        <p class="subtitle is-4">{% trans "You cannot delete a root article." %}</p>
+        <p>
+            <a href="{% url 'wiki:get' path=urlpath.path article_id=article.id %}"
+               class="button is-rounded is-link">{% trans "Go back" %}</a>
+        </p>
+    {% else %}
+        {% if cannot_delete_children %}
+            <div class="notification is-danger">
+                <strong>{% trans "You cannot delete this article because you do not have permission to delete articles with children. Try to remove the children manually one-by-one." %}</strong>
+            </div>
         {% endif %}
-        {% endfor %}
-      </ul>
-
+        {% if delete_children %}
+            <p class="subtitle is-5">
+                {% trans "You are deleting an article. This means that its children will be deleted as well. If you choose to purge, children will also be purged!" %}
+            </p>
+            <h2 class="title is-4">{% trans "Articles that will be deleted" %}</h2>
+            <ul>
+                {% for child in delete_children %}
+                    <li>
+                        <a href="{% url 'wiki:get' article_id=child.article.id %}"
+                           target="_blank">{{ child.article }}</a>
+                    </li>
+                    {% if delete_children_more %}
+                        <li>
+                            <em>{% trans "...and more!" %}</em>
+                        </li>
+                    {% endif %}
+                {% endfor %}
+            </ul>
+        {% endif %}
+        {% if not cannot_delete_children %}
+            <p class="subtitle is-5">{% trans "You are deleting an article. Please confirm." %}</p>
+            <form method="POST">
+                {% wiki_form delete_form %}
+                <div class="field is-grouped">
+                    <div class="control">
+                        <a href="{% url 'wiki:get' path=urlpath.path article_id=article.id %}"
+                           class="button is-rounded">
+                            <span class="icon">
+                                <i class="fa fa-arrow-left"></i>
+                            </span>
+                            <span>{% trans "Go back" %}</span>
+                        </a>
+                    </div>
+                    <div class="control">
+                        <button type="submit" name="save_changes" class="button is-rounded is-danger">
+                            <span class="icon">
+                                <i class="fa fa-trash-o"></i>
+                            </span>
+                            <span>{% trans "Delete article" %}</span>
+                        </button>
+                    </div>
+                </div>
+            </form>
+        {% endif %}
     {% endif %}
-
-    {% if not cannot_delete_children %}
-    <p class="subtitle is-5">{% trans "You are deleting an article. Please confirm." %}</p>
-
-    <form method="POST">
-      {% wiki_form delete_form %}
-      <div class="field is-grouped">
-        <div class="control">
-          <a href="{% url 'wiki:get' path=urlpath.path article_id=article.id %}" class="button is-rounded">
-            <span class="icon">
-              <i class="fa fa-arrow-left"></i>
-            </span>
-            <span>{% trans "Go back" %}</span>
-          </a>
-        </div>
-        <div class="control">
-          <button type="submit" name="save_changes" class="button is-rounded is-danger">
-            <span class="icon">
-              <i class="fa fa-trash-o"></i>
-            </span>
-            <span>{% trans "Delete article" %}</span>
-          </button>
-        </div>
-      </div>
-    </form>
-    {% endif %}
-
-  {% endif %}
-
-{% addtoblock "js" %}
-<script type="text/javascript">
-  $('#id_revision').val('{{ article.current_revision.id|safe }}');
-</script>
+    {% addtoblock "js" %}
+    <script type="text/javascript">$('#id_revision').val('{{ article.current_revision.id|safe }}');</script>
 {% endaddtoblock %}
-
 {% endblock %}

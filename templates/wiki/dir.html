@@ -1,130 +1,123 @@
 {% extends "wiki/article.html" %}
 {% load wiki_tags i18n humanize %}
-
-
-{% block wiki_pagetitle %}{% trans "Listing articles in" %} {{ article.current_revision.title }}{% endblock %}
-
-{% block wiki_contents_tab %}
-
-{% url 'wiki:dir' urlpath.path as self_url %}
-
-  <div class="box">
-    <form method="get" action="{{ self_url }}">
-      <div class="level is-mobile">
-        <div class="level-left">
-          <div class="level-item">
-            <div class="buttons">
-              {% if urlpath.parent %}
-              <a href="{% url 'wiki:dir' path=urlpath.parent.path %}" class="button is-rounded is-link">
-                <span class="icon">
-                  <i class="fas fa-arrow-up"></i>
-                </span>
-                <span>{% trans "Up one level" %}</span>
-              </a>
-              {% endif %}
-              <a href="{% url 'wiki:create' path=urlpath.path %}" class="button is-rounded is-success">
-                <span class="icon">
-                  <i class="fas fa-plus"></i>
-                </span>
-                <span>{% trans "Add article" %}</span>
-              </a>
-            </div>
-          </div>
-        </div>
-        <div class="level-right">
-          <div class="level-item">
-            <div class="field has-addons">
-              <div class="control has-icons-left">
-                <input type="text"
-                       name="{{ filter_form.query.name }}"
-                       value="{{ filter_form.query.value|default:'' }}"
-                       placeholder="{% trans 'Filter...' %}"
-                       class="input is-rounded">
-                <span class="icon is-left">
-                  <i class="fas fa-search"></i>
-                </span>
-              </div>
-              <div class="control">
-                <button type="submit" class="button is-rounded is-link">
-                  <span class="icon">
-                    <i class="fas fa-filter"></i>
-                  </span>
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      {% if filter_query %}
-        <div class="has-text-centered mt-3">
-          <a href="{{ self_url }}" class="button is-small is-light">
-            <span class="icon">
-              <i class="fas fa-times"></i>
-            </span>
-            <span>{% trans "clear" %}</span>
-          </a>
-        </div>
-      {% endif %}
-    </form>
-  </div>
-
-<div class="content">
-  {% with paginator.object_list.count as cnt %}
-    {% blocktrans with urlpath.path as path and cnt|pluralize:_("article,articles") as articles_plur and cnt|pluralize:_("is,are") as articles_plur_verb trimmed %}
-      Browsing <strong><a href="{{ self_url }}">/{{ path }}</a></strong>. There {{ articles_plur_verb }} <strong>{{ cnt }} {{ articles_plur }}</strong> in this level.
-    {% endblocktrans %}
-  {% endwith %}
-</div>
-
-<div class="table-container">
-  <table class="table is-fullwidth is-striped is-hoverable">
-    <thead>
-      <tr>
-        <th>{% trans "Title" %}</th>
-        <th>{% trans "Slug" %}</th>
-        <th>{% trans "Last modified" %}</th>
-      </tr>
-    </thead>
-    <tbody>
-      {% for urlpath in directory %}
-        <tr>
-          <td>
-            <a href="{% url 'wiki:get' path=urlpath.path %}"> {{ urlpath.article.current_revision.title }} </a>
-            <a href="{% url 'wiki:dir' path=urlpath.path %}" class="has-text-grey"> › </a>
-            {% if urlpath.article.current_revision.deleted %}
-              <span class="icon has-text-danger">
-                <i class="fas fa-trash"></i>
-              </span>
-            {% endif %}
-            {% if urlpath.article.current_revision.locked %}
-              <span class="icon has-text-warning">
-                <i class="fas fa-lock"></i>
-              </span>
-            {% endif %}
-          </td>
-          <td>
-            <span class="tag is-info is-light wiki-slug-tag">{{ urlpath.slug }}</span>
-          </td>
-          <td>
-            <span class="has-text-grey">{{ urlpath.article.current_revision.created|naturaltime }}</span>
-          </td>
-        </tr>
-        {% empty%}
-        <tr>
-          <td colspan="3">
-            <em class="has-text-grey">{% trans "There are no articles in this level" %}</em>
-          </td>
-        </tr>
-      {% endfor %}
-    </tbody>
-  </table>
-</div>
-
-{% include "wiki/includes/pagination.html" %}
-
+{% block wiki_pagetitle %}
+    {% trans "Listing articles in" %} {{ article.current_revision.title }}
 {% endblock %}
-
+{% block wiki_contents_tab %}
+    {% url 'wiki:dir' urlpath.path as self_url %}
+    <div class="box">
+        <form method="get" action="{{ self_url }}">
+            <div class="level is-mobile">
+                <div class="level-left">
+                    <div class="level-item">
+                        <div class="buttons">
+                            {% if urlpath.parent %}
+                                <a href="{% url 'wiki:dir' path=urlpath.parent.path %}"
+                                   class="button is-rounded is-link">
+                                    <span class="icon">
+                                        <i class="fas fa-arrow-up"></i>
+                                    </span>
+                                    <span>{% trans "Up one level" %}</span>
+                                </a>
+                            {% endif %}
+                            <a href="{% url 'wiki:create' path=urlpath.path %}"
+                               class="button is-rounded is-success">
+                                <span class="icon">
+                                    <i class="fas fa-plus"></i>
+                                </span>
+                                <span>{% trans "Add article" %}</span>
+                            </a>
+                        </div>
+                    </div>
+                </div>
+                <div class="level-right">
+                    <div class="level-item">
+                        <div class="field has-addons">
+                            <div class="control has-icons-left">
+                                <input type="text"
+                                       name="{{ filter_form.query.name }}"
+                                       value="{{ filter_form.query.value|default:'' }}"
+                                       placeholder="{% trans 'Filter...' %}"
+                                       class="input is-rounded">
+                                <span class="icon is-left">
+                                    <i class="fas fa-search"></i>
+                                </span>
+                            </div>
+                            <div class="control">
+                                <button type="submit" class="button is-rounded is-link">
+                                    <span class="icon">
+                                        <i class="fas fa-filter"></i>
+                                    </span>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            {% if filter_query %}
+                <div class="has-text-centered mt-3">
+                    <a href="{{ self_url }}" class="button is-small is-light">
+                        <span class="icon">
+                            <i class="fas fa-times"></i>
+                        </span>
+                        <span>{% trans "clear" %}</span>
+                    </a>
+                </div>
+            {% endif %}
+        </form>
+    </div>
+    <div class="content">
+        {% with paginator.object_list.count as cnt %}
+            {% blocktrans with urlpath.path as path and cnt|pluralize:_("article,articles") as articles_plur and cnt|pluralize:_("is,are") as articles_plur_verb trimmed %}
+                Browsing <strong><a href="{{ self_url }}">/{{ path }}</a></strong>. There {{ articles_plur_verb }} <strong>{{ cnt }} {{ articles_plur }}</strong> in this level.
+            {% endblocktrans %}
+        {% endwith %}
+    </div>
+    <div class="table-container">
+        <table class="table is-fullwidth is-striped is-hoverable">
+            <thead>
+                <tr>
+                    <th>{% trans "Title" %}</th>
+                    <th>{% trans "Slug" %}</th>
+                    <th>{% trans "Last modified" %}</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for urlpath in directory %}
+                    <tr>
+                        <td>
+                            <a href="{% url 'wiki:get' path=urlpath.path %}">{{ urlpath.article.current_revision.title }}</a>
+                            <a href="{% url 'wiki:dir' path=urlpath.path %}" class="has-text-grey">›</a>
+                            {% if urlpath.article.current_revision.deleted %}
+                                <span class="icon has-text-danger">
+                                    <i class="fas fa-trash"></i>
+                                </span>
+                            {% endif %}
+                            {% if urlpath.article.current_revision.locked %}
+                                <span class="icon has-text-warning">
+                                    <i class="fas fa-lock"></i>
+                                </span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            <span class="tag is-info is-light wiki-slug-tag">{{ urlpath.slug }}</span>
+                        </td>
+                        <td>
+                            <span class="has-text-grey">{{ urlpath.article.current_revision.created|naturaltime }}</span>
+                        </td>
+                    </tr>
+                {% empty %}
+                    <tr>
+                        <td colspan="3">
+                            <em class="has-text-grey">{% trans "There are no articles in this level" %}</em>
+                        </td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% include "wiki/includes/pagination.html" %}
+{% endblock %}
 {% load sekizai_tags %}
 {% addtoblock "css" %}
 <style>

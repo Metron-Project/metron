@@ -1,177 +1,176 @@
 {% extends "wiki/article.html" %}
 {% load wiki_tags i18n humanize %}
-
-
-{% block wiki_pagetitle %}{% trans "Attachments" %}: {{ article.current_revision.title }}{% endblock %}
-
+{% block wiki_pagetitle %}
+    {% trans "Attachments" %}: {{ article.current_revision.title }}
+{% endblock %}
 {% block wiki_contents_tab %}
-<div class="columns">
-  <div class="column is-two-thirds">
-    <div class="content">
-      <p>{% trans "The following files are available for this article. Copy the markdown tag to directly refer to a file from the article text." %}</p>
-      <p> {% blocktrans trimmed %}
-        Complete markdown code syntax: <code>[attachment:id title:"text" size]</code><br>
-        &nbsp;&nbsp;title: Link text replacement for the file name.
-        size: Show file size after the title.
-      {% endblocktrans %} </p>
-    </div>
-
-    {% for attachment in attachments %}
-    <div class="box">
-      <div class="level">
-        <div class="level-left">
-          <div class="level-item">
-            <div>
-              <h4 class="title is-5">
-                <a href="{% url 'wiki:attachments_download' path=urlpath.path article_id=article.id attachment_id=attachment.id %}">{{ attachment.current_revision.get_filename }}</a>
-                <span class="tag is-dark ml-2">{{ attachment.current_revision.created|naturaltime }}</span>
-                {% if attachment.current_revision.deleted %}
-                <span class="tag is-danger ml-2">{% trans "deleted" %}</span>
-                {% endif %}
-              </h4>
-              <p>{{ attachment.current_revision.description }}</p>
+    <div class="columns">
+        <div class="column is-two-thirds">
+            <div class="content">
+                <p>
+                    {% trans "The following files are available for this article. Copy the markdown tag to directly refer to a file from the article text." %}
+                </p>
+                <p>
+                    {% blocktrans trimmed %}
+                        Complete markdown code syntax: <code>[attachment:id title:"text" size]</code>
+                        <br>
+                        &nbsp;&nbsp;title: Link text replacement for the file name.
+                        size: Show file size after the title.
+                    {% endblocktrans %}
+                </p>
             </div>
-          </div>
+            {% for attachment in attachments %}
+                <div class="box">
+                    <div class="level">
+                        <div class="level-left">
+                            <div class="level-item">
+                                <div>
+                                    <h4 class="title is-5">
+                                        <a href="{% url 'wiki:attachments_download' path=urlpath.path article_id=article.id attachment_id=attachment.id %}">{{ attachment.current_revision.get_filename }}</a>
+                                        <span class="tag is-dark ml-2">{{ attachment.current_revision.created|naturaltime }}</span>
+                                        {% if attachment.current_revision.deleted %}
+                                            <span class="tag is-danger ml-2">{% trans "deleted" %}</span>
+                                        {% endif %}
+                                    </h4>
+                                    <p>{{ attachment.current_revision.description }}</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <table class="table is-fullwidth">
+                        <thead>
+                            <tr>
+                                <th style="width: 25%">{% trans "Markdown tag" %}</th>
+                                <th style="width: 25%">{% trans "Uploaded by" %}</th>
+                                <th style="width: 25%">{% trans "Size" %}</th>
+                                <th style="width: 25%">{% trans "Actions" %}</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>
+                                    <code>[attachment:{{ attachment.id }}]</code>
+                                </td>
+                                <td>
+                                    {% include "wiki/includes/revision_info.html" with revision=attachment.current_revision hidedate=1 hidenumber=1 %}
+                                </td>
+                                <td>{{ attachment.current_revision.get_size|filesizeformat }}</td>
+                                <td>
+                                    {% if attachment|can_write:user %}
+                                        {% if not attachment.current_revision.deleted %}
+                                            <div class="buttons are-small">
+                                                <a href="{% url 'wiki:attachments_replace' path=urlpath.path article_id=article.id attachment_id=attachment.id %}"
+                                                   class="button is-small is-rounded">{% trans "Replace" %}</a>
+                                                {% if attachment.article == article %}
+                                                    <a href="{% url 'wiki:attachments_delete' path=urlpath.path article_id=article.id attachment_id=attachment.id %}"
+                                                       class="button is-small is-rounded is-danger">{% trans "Delete" %}</a>
+                                                {% else %}
+                                                    <a href="{% url 'wiki:attachments_delete' path=urlpath.path article_id=article.id attachment_id=attachment.id %}"
+                                                       class="button is-small is-rounded">{% trans "Detach" %}</a>
+                                                {% endif %}
+                                            </div>
+                                        {% else %}
+                                            <span class="tag is-danger">Deleted</span>
+                                        {% endif %}
+                                    {% endif %}
+                                    <div class="mt-2">
+                                        <a href="{% url 'wiki:attachments_history' path=urlpath.path article_id=article.id attachment_id=attachment.id %}">
+                                            <span class="icon is-small"><i class="fa fa-clock"></i></span>
+                                            <span>{% trans "File history" %} ({{ attachment.attachmentrevision_set.all.count }} {% trans "revisions" %})</span>
+                                        </a>
+                                    </div>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            {% empty %}
+                <p class="content">
+                    <em>{% trans "There are no attachments for this article." %}</em>
+                </p>
+            {% endfor %}
         </div>
-      </div>
-
-      <table class="table is-fullwidth">
-        <thead>
-          <tr>
-            <th style="width: 25%">{% trans "Markdown tag" %}</th>
-            <th style="width: 25%">{% trans "Uploaded by" %}</th>
-            <th style="width: 25%">{% trans "Size" %}</th>
-            <th style="width: 25%">{% trans "Actions" %}</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr>
-            <td><code>[attachment:{{ attachment.id }}]</code></td>
-            <td>
-              {% include "wiki/includes/revision_info.html" with revision=attachment.current_revision hidedate=1 hidenumber=1 %}
-            </td>
-            <td>{{ attachment.current_revision.get_size|filesizeformat }}</td>
-            <td>
-              {% if attachment|can_write:user %}
-                {% if not attachment.current_revision.deleted %}
-                  <div class="buttons are-small">
-                    <a href="{% url 'wiki:attachments_replace' path=urlpath.path article_id=article.id attachment_id=attachment.id %}" class="button is-small is-rounded">{% trans "Replace" %}</a>
-                    {% if attachment.article == article %}
-                      <a href="{% url 'wiki:attachments_delete' path=urlpath.path article_id=article.id attachment_id=attachment.id %}" class="button is-small is-rounded is-danger">{% trans "Delete" %}</a>
+        <div class="column is-one-third">
+            {% if article|can_write:user and not article|is_locked %}
+                <div class="box">
+                    <h4 class="title is-5">
+                        <span class="icon"><i class="fa fa-upload"></i></span>
+                        <span>{% trans "Upload new file" %}</span>
+                    </h4>
+                    {% if anonymous_disallowed %}
+                        {% include "wiki/includes/anonymous_blocked.html" %}
                     {% else %}
-                      <a href="{% url 'wiki:attachments_delete' path=urlpath.path article_id=article.id attachment_id=attachment.id %}" class="button is-small is-rounded">{% trans "Detach" %}</a>
+                        <form method="POST" id="attachment_form" enctype="multipart/form-data">
+                            {% wiki_form form %}
+                            <div class="field">
+                                <div class="control">
+                                    <button type="submit" name="save" value="1" class="button is-rounded is-link">{% trans "Upload file" %}</button>
+                                </div>
+                            </div>
+                        </form>
                     {% endif %}
-                  </div>
-                {% else %}
-                  <span class="tag is-danger">Deleted</span>
+                </div>
+                <div class="box">
+                    <h4 class="title is-5">
+                        <span class="icon"><i class="fa fa-plus-circle"></i></span>
+                        <span>{% trans "Search and add file" %}</span>
+                    </h4>
+                    <div class="content">
+                        <p>
+                            {% trans "You can reuse files from other articles. These files are subject to updates on other articles which may or may not be a good thing." %}
+                        </p>
+                    </div>
+                    <form method="GET"
+                          action="{% url 'wiki:attachments_search' path=urlpath.path article_id=article.id %}">
+                        <div class="field has-addons">
+                            <div class="control is-expanded">{{ search_form.query }}</div>
+                            <div class="control">
+                                <button class="button is-rounded is-link" type="submit">
+                                    <span class="icon"><i class="fa fa-search"></i></span>
+                                </button>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+                {% if article|can_write:user %}
+                    <div class="box">
+                        <h4 class="title is-5">
+                            <span class="icon"><i class="fa fa-trash"></i></span>
+                            <span>{% trans "Restore attachments" %}</span>
+                        </h4>
+                        {% for attachment in deleted_attachments %}
+                            <div class="field has-addons mb-2">
+                                <div class="control is-expanded">
+                                    <input class="input is-static"
+                                           type="text"
+                                           value="{{ attachment.current_revision.get_filename }}"
+                                           readonly>
+                                </div>
+                                {% if attachment.current_revision.previous_revision.id %}
+                                    <div class="control">
+                                        <form method="POST"
+                                              action="{% url 'wiki:attachments_revision_change' path=urlpath.path article_id=article.id attachment_id=attachment.id revision_id=attachment.current_revision.previous_revision.id %}">
+                                            {% csrf_token %}
+                                            <button class="button is-rounded is-link">{% trans "Restore" %}</button>
+                                        </form>
+                                    </div>
+                                {% endif %}
+                            </div>
+                        {% empty %}
+                            <p class="content">
+                                <em>{% trans "Nothing to restore" %}</em>
+                            </p>
+                        {% endfor %}
+                    </div>
                 {% endif %}
-              {% endif %}
-              <div class="mt-2">
-                <a href="{% url 'wiki:attachments_history' path=urlpath.path article_id=article.id attachment_id=attachment.id %}">
-                  <span class="icon is-small"><i class="fa fa-clock"></i></span>
-                  <span>{% trans "File history" %} ({{ attachment.attachmentrevision_set.all.count }} {% trans "revisions" %})</span>
-                </a>
-              </div>
-            </td>
-          </tr>
-        </tbody>
-      </table>
-    </div>
-    {% empty %}
-
-      <p class="content"><em>{% trans "There are no attachments for this article." %}</em></p>
-
-    {% endfor %}
-  </div>
-
-  <div class="column is-one-third">
-  {% if article|can_write:user and not article|is_locked %}
-      <div class="box">
-        <h4 class="title is-5">
-          <span class="icon"><i class="fa fa-upload"></i></span>
-          <span>{% trans "Upload new file" %}</span>
-        </h4>
-        {% if anonymous_disallowed %}
-          {% include "wiki/includes/anonymous_blocked.html" %}
-        {% else %}
-        <form method="POST" id="attachment_form" enctype="multipart/form-data">
-          {% wiki_form form %}
-          <div class="field">
-            <div class="control">
-              <button type="submit" name="save" value="1" class="button is-rounded is-link">
-                {% trans "Upload file" %}
-              </button>
-            </div>
-          </div>
-        </form>
-        {% endif %}
-      </div>
-
-      <div class="box">
-        <h4 class="title is-5">
-          <span class="icon"><i class="fa fa-plus-circle"></i></span>
-          <span>{% trans "Search and add file" %}</span>
-        </h4>
-        <div class="content">
-          <p>{% trans "You can reuse files from other articles. These files are subject to updates on other articles which may or may not be a good thing." %}</p>
-        </div>
-        <form method="GET" action="{% url 'wiki:attachments_search' path=urlpath.path article_id=article.id %}">
-          <div class="field has-addons">
-            <div class="control is-expanded">
-              {{ search_form.query }}
-            </div>
-            <div class="control">
-              <button class="button is-rounded is-link" type="submit">
-                <span class="icon"><i class="fa fa-search"></i></span>
-              </button>
-            </div>
-          </div>
-        </form>
-      </div>
-
-      {% if article|can_write:user %}
-        <div class="box">
-          <h4 class="title is-5">
-            <span class="icon"><i class="fa fa-trash"></i></span>
-            <span>{% trans "Restore attachments" %}</span>
-          </h4>
-
-          {% for attachment in deleted_attachments %}
-          <div class="field has-addons mb-2">
-            <div class="control is-expanded">
-              <input class="input is-static" type="text" value="{{ attachment.current_revision.get_filename }}" readonly>
-            </div>
-            {% if attachment.current_revision.previous_revision.id %}
-            <div class="control">
-              <form method="POST" action="{% url 'wiki:attachments_revision_change' path=urlpath.path article_id=article.id attachment_id=attachment.id revision_id=attachment.current_revision.previous_revision.id %}">
-                {% csrf_token %}
-                <button class="button is-rounded is-link">
-                  {% trans "Restore" %}
-                </button>
-              </form>
-            </div>
+            {% else %}
+                {% if article|is_locked %}
+                    <div class="notification is-warning">
+                        <span class="icon"><i class="fa fa-lock"></i></span>
+                        {% trans "The article is currently locked for editing, and therefore no new attachments can be added." %}
+                    </div>
+                {% endif %}
             {% endif %}
-          </div>
-          {% empty %}
-
-          <p class="content"><em>{% trans "Nothing to restore" %}</em></p>
-
-          {% endfor %}
         </div>
-      {% endif %}
-
-  {% else %}
-
-    {% if article|is_locked %}
-    <div class="notification is-warning">
-      <span class="icon"><i class="fa fa-lock"></i></span>
-      {% trans "The article is currently locked for editing, and therefore no new attachments can be added." %}
     </div>
-    {% endif %}
-
-  {% endif %}
-  </div>
-
-</div>
-
 {% endblock %}

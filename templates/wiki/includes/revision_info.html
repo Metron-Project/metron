@@ -4,36 +4,36 @@
   BaseRevision. Using Bulma CSS tags instead of Bootstrap badges.
 
 {% endcomment %}
-
-
 {% load wiki_tags i18n %}
-{% if not hidedate %}<span class="has-text-grey-dark">{{ revision.created }}</span> {% endif %}
-{% if not hidenumber %}<span class="tag is-light is-rounded">#{{ revision.revision_number }}</span> {% trans "by" %}{% endif %}
+{% if not hidedate %}<span class="has-text-grey-dark">{{ revision.created }}</span>{% endif %}
+{% if not hidenumber %}
+    <span class="tag is-light is-rounded">#{{ revision.revision_number }}</span> {% trans "by" %}
+{% endif %}
 {% if revision.user %}
-  <span class="has-text-weight-semibold has-text-link">{{ revision.user }}</span>
+    <span class="has-text-weight-semibold has-text-link">{{ revision.user }}</span>
 {% else %}
-  {% if not revision.ip_address %}
-    <span class="has-text-grey">{% trans "anonymous (IP not logged)" %}</span>
-  {% else %}
-    {% if article|can_moderate:user %}
-      <span class="has-text-grey">{{ revision.ip_address }}</span>
+    {% if not revision.ip_address %}
+        <span class="has-text-grey">{% trans "anonymous (IP not logged)" %}</span>
     {% else %}
-      <span class="has-text-grey">{% trans "anonymous (IP logged)" %}</span>
+        {% if article|can_moderate:user %}
+            <span class="has-text-grey">{{ revision.ip_address }}</span>
+        {% else %}
+            <span class="has-text-grey">{% trans "anonymous (IP logged)" %}</span>
+        {% endif %}
     {% endif %}
-  {% endif %}
 {% endif %}
 {% if revision == current_revision %}
-  <span class="tag is-info is-light is-rounded ml-2">{% trans "current" %}</span>
+    <span class="tag is-info is-light is-rounded ml-2">{% trans "current" %}</span>
 {% endif %}
 {% if revision.deleted %}
-<span class="tag is-danger is-light is-rounded ml-2">{% trans "deleted" %}</span>
+    <span class="tag is-danger is-light is-rounded ml-2">{% trans "deleted" %}</span>
 {% endif %}
 {% if revision.previous_revision.deleted and not revision.deleted %}
-<span class="tag is-success is-light is-rounded ml-2">{% trans "restored" %}</span>
+    <span class="tag is-success is-light is-rounded ml-2">{% trans "restored" %}</span>
 {% endif %}
 {% if revision.locked %}
-<span class="tag is-dark is-light is-rounded ml-2">{% trans "locked" %}</span>
+    <span class="tag is-dark is-light is-rounded ml-2">{% trans "locked" %}</span>
 {% endif %}
 {% if revision.previous_revision.locked and not revision.locked %}
-<span class="tag is-warning is-light is-rounded ml-2">{% trans "unlocked" %}</span>
+    <span class="tag is-warning is-light is-rounded ml-2">{% trans "unlocked" %}</span>
 {% endif %}

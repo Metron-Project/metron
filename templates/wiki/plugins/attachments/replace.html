@@ -1,59 +1,56 @@
 {% extends "wiki/article.html" %}
 {% load wiki_tags i18n humanize %}
-
-
-{% block wiki_pagetitle %}{% trans "Replace" %} "{{ attachment.current_revision.get_filename }}"{% endblock %}
-
+{% block wiki_pagetitle %}
+    {% trans "Replace" %} "{{ attachment.current_revision.get_filename }}"
+{% endblock %}
 {% block wiki_contents_tab %}
-
-<h2 class="title is-3">{% trans "Replace" %} "{{ attachment.current_revision.get_filename }}"</h2>
-{% if attachment.articles.count > 1 %}
-<div class="content">
-  <p>
-    {% blocktrans with attachment.original_filename as filename trimmed %}
-    Replacing an attachment means adding a new file that will be used in its place. All references to the file will be replaced by the one you upload and the file will be downloaded as <strong>{{ filename }}</strong>. Please note that this attachment is in use on other articles, you may distort contents. However, do not hestitate to take advantage of this and make replacements for the listed articles where necessary. This way of working is more efficient....
-    {% endblocktrans %}
-  </p>
-</div>
-<h3 class="title is-4">
-  {% blocktrans with attachment.current_revision.get_filename as filename trimmed %}
-  Articles using {{ filename }}
-  {% endblocktrans %}
-</h3>
-<ul>
-  {% for a in attachment.articles.all %}<li>{{ a.current_revision.title }}</li>{% endfor %}
-</ul>
-<hr />
-{% else %}
-<div class="content">
-  <p>
-    {% blocktrans with attachment.original_filename as filename trimmed %}
-    Replacing an attachment means adding a new file that will be used in its place. All references to the file will be replaced by the one you upload and the file will be downloaded as <strong>{{ filename }}</strong>.
-    {% endblocktrans %}
-  </p>
-</div>
-{% endif %}
-
-<form method="POST" id="attachment_form" enctype="multipart/form-data">
-  {% wiki_form form %}
-  <div class="field is-grouped">
-    <div class="control">
-      <a href="{% url 'wiki:attachments_index' path=urlpath.path article_id=article.id %}" class="button is-rounded">
-        <span class="icon">
-          <i class="fa fa-arrow-left"></i>
-        </span>
-        <span>{% trans "Go back" %}</span>
-      </a>
-    </div>
-    <div class="control">
-      <button class="button is-rounded is-link">
-        <span class="icon">
-          <i class="fa fa-upload"></i>
-        </span>
-        <span>{% trans "Upload replacement" %}</span>
-      </button>
-    </div>
-  </div>
-</form>
-
+    <h2 class="title is-3">{% trans "Replace" %} "{{ attachment.current_revision.get_filename }}"</h2>
+    {% if attachment.articles.count > 1 %}
+        <div class="content">
+            <p>
+                {% blocktrans with attachment.original_filename as filename trimmed %}
+                    Replacing an attachment means adding a new file that will be used in its place. All references to the file will be replaced by the one you upload and the file will be downloaded as <strong>{{ filename }}</strong>. Please note that this attachment is in use on other articles, you may distort contents. However, do not hestitate to take advantage of this and make replacements for the listed articles where necessary. This way of working is more efficient....
+                {% endblocktrans %}
+            </p>
+        </div>
+        <h3 class="title is-4">
+            {% blocktrans with attachment.current_revision.get_filename as filename trimmed %}
+                Articles using {{ filename }}
+            {% endblocktrans %}
+        </h3>
+        <ul>
+            {% for a in attachment.articles.all %}<li>{{ a.current_revision.title }}</li>{% endfor %}
+        </ul>
+        <hr />
+    {% else %}
+        <div class="content">
+            <p>
+                {% blocktrans with attachment.original_filename as filename trimmed %}
+                    Replacing an attachment means adding a new file that will be used in its place. All references to the file will be replaced by the one you upload and the file will be downloaded as <strong>{{ filename }}</strong>.
+                {% endblocktrans %}
+            </p>
+        </div>
+    {% endif %}
+    <form method="POST" id="attachment_form" enctype="multipart/form-data">
+        {% wiki_form form %}
+        <div class="field is-grouped">
+            <div class="control">
+                <a href="{% url 'wiki:attachments_index' path=urlpath.path article_id=article.id %}"
+                   class="button is-rounded">
+                    <span class="icon">
+                        <i class="fa fa-arrow-left"></i>
+                    </span>
+                    <span>{% trans "Go back" %}</span>
+                </a>
+            </div>
+            <div class="control">
+                <button class="button is-rounded is-link">
+                    <span class="icon">
+                        <i class="fa fa-upload"></i>
+                    </span>
+                    <span>{% trans "Upload replacement" %}</span>
+                </button>
+            </div>
+        </div>
+    </form>
 {% endblock %}

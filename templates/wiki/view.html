@@ -1,11 +1,5 @@
 {% extends "wiki/article.html" %}
 {% load wiki_tags i18n sekizai_tags %}
-
-
 {% block wiki_contents_tab %}
-
-  <div class="content">
-    {% wiki_render article %}
-  </div>
-
+    <div class="content">{% wiki_render article %}</div>
 {% endblock %}

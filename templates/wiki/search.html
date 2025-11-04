@@ -1,73 +1,70 @@
 {% extends "wiki/base.html" %}
 {% load wiki_tags i18n humanize %}
-
-
-{% block wiki_pagetitle %}{% trans "Search results for:" %} {{ search_query }}{% endblock %}
-
+{% block wiki_pagetitle %}
+    {% trans "Search results for:" %} {{ search_query }}
+{% endblock %}
 {% block wiki_contents %}
-
-<h1 class="title is-2">{% trans "Search results for:" %} {{ search_query }}</h1>
-
-<div class="level">
-  <div class="level-left">
-    <div class="level-item">
-      <p>
-        {% blocktrans with paginator.object_list.count as cnt %}Your search returned <strong>{{ cnt }}</strong> results.{% endblocktrans %}
-      </p>
-    </div>
-  </div>
-  <div class="level-right">
-    <div class="level-item">
-      <form method="GET">
-        <div class="field has-addons">
-          <div class="control">
-            <input type="search" class="input" name="q" value="{{ search_query }}" placeholder="{% trans "Search..." %}" />
-          </div>
-          <div class="control">
-            <button class="button is-info" type="submit">
-              <span class="icon">
-                <i class="fa fa-search"></i>
-              </span>
-            </button>
-          </div>
+    <h1 class="title is-2">{% trans "Search results for:" %} {{ search_query }}</h1>
+    <div class="level">
+        <div class="level-left">
+            <div class="level-item">
+                <p>
+                    {% blocktrans with paginator.object_list.count as cnt %}Your search returned <strong>{{ cnt }}</strong> results.{% endblocktrans %}
+                </p>
+            </div>
         </div>
-      </form>
+        <div class="level-right">
+            <div class="level-item">
+                <form method="GET">
+                    <div class="field has-addons">
+                        <div class="control">
+                            <input type="search"
+                                   class="input"
+                                   name="q"
+                                   value="{{ search_query }}"
+                                   placeholder="{% trans "Search..." %}" />
+                        </div>
+                        <div class="control">
+                            <button class="button is-info" type="submit">
+                                <span class="icon">
+                                    <i class="fa fa-search"></i>
+                                </span>
+                            </button>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
     </div>
-  </div>
-</div>
-
-<div class="box">
-  <p class="mb-2">
-    {% if urlpath %}
-      {% trans "Searching in" %} <strong>{{ urlpath.article }}</strong>
-    {% else %}
-      {% trans "Searching whole wiki" %}
-    {% endif %}
-  </p>
-</div>
-
-<table class="table is-fullwidth is-striped">
-  <thead>
-    <tr>
-      <th style="width: 75%">{% trans "Title" %}</th>
-      <th>{% trans "Last modified" %}</th>
-    </tr>
-  </thead>
-  <tbody>
-    {% for article in articles %}
-      {% block wiki_search_loop %}
-      {% include "wiki/includes/searchresult.html" %}
-      {% endblock %}
-      {% empty %}
-      <tr>
-        <td colspan="2">
-          <em>{% trans "There are no articles in this level" %}</em>
-        </td>
-      </tr>
-    {% endfor %}
-  </tbody>
-</table>
-
-{% include "wiki/includes/pagination.html" %}
-
+    <div class="box">
+        <p class="mb-2">
+            {% if urlpath %}
+                {% trans "Searching in" %} <strong>{{ urlpath.article }}</strong>
+            {% else %}
+                {% trans "Searching whole wiki" %}
+            {% endif %}
+        </p>
+    </div>
+    <table class="table is-fullwidth is-striped">
+        <thead>
+            <tr>
+                <th style="width: 75%">{% trans "Title" %}</th>
+                <th>{% trans "Last modified" %}</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for article in articles %}
+                {% block wiki_search_loop %}
+                    {% include "wiki/includes/searchresult.html" %}
+                {% endblock %}
+            {% empty %}
+                <tr>
+                    <td colspan="2">
+                        <em>{% trans "There are no articles in this level" %}</em>
+                    </td>
+                </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    {% include "wiki/includes/pagination.html" %}
 {% endblock %}

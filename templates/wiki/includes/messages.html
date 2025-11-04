@@ -1,12 +1,12 @@
 {% if messages %}
-  <!-- Messages for this instance -->
-  {% for message in messages %}
-    <div class="notification {{ message.css_class }}">
-      <button class="delete" aria-label="delete"></button>
-      {{ message }}
-    </div>
-  {% endfor %}
-  <script>
+    <!-- Messages for this instance -->
+    {% for message in messages %}
+        <div class="notification {{ message.css_class }}">
+            <button class="delete" aria-label="delete"></button>
+            {{ message }}
+        </div>
+    {% endfor %}
+    <script>
     document.addEventListener('DOMContentLoaded', () => {
       (document.querySelectorAll('.notification .delete') || []).forEach(($delete) => {
         const $notification = $delete.parentNode;
@@ -15,5 +15,5 @@
         });
       });
     });
-  </script>
+    </script>
 {% endif %}

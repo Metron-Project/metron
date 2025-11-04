@@ -1,115 +1,116 @@
 {% extends "wiki/article.html" %}
 {% load wiki_tags i18n sekizai_tags %}
-
-
-{% block wiki_pagetitle %}{% trans "Edit" %}: {{ article.current_revision.title }}{% endblock %}
-
+{% block wiki_pagetitle %}
+    {% trans "Edit" %}: {{ article.current_revision.title }}
+{% endblock %}
 {% block wiki_contents_tab %}
-
-{% if not user.is_authenticated %}
-<div class="notification is-warning">
-  <p>
-    <strong>{% trans "Warning:" %}</strong> {% trans "You are not logged in. Your IP address will be logged." %}
-    <a href="{% url 'wiki:login' %}?next={% url 'wiki:edit' article_id=article.id path=urlpath.path %}">{% trans "Click here to log in" %} &raquo;</a>
-  </p>
-</div>
-{% endif %}
-
-<div class="columns">
-  <div class="column is-two-thirds">
-    <form method="POST" id="article_edit_form">
-      {% with edit_form as form %}
-        {% include "wiki/includes/editor.html" %}
-      {% endwith %}
-
-      <div class="field is-grouped is-grouped-multiline">
-        <div class="control">
-          <button class="button is-rounded is-primary" type="submit" name="preview" value="1" id="id_preview"
-                  formaction="{% url 'wiki:preview' path=urlpath.path article_id=article.id %}"
-                  formtarget="previewWindow">
-            <span class="icon">
-              <i class="fas fa-eye"></i>
-            </span>
-            <span>{% trans "Preview" %}</span>
-          </button>
+    {% if not user.is_authenticated %}
+        <div class="notification is-warning">
+            <p>
+                <strong>{% trans "Warning:" %}</strong> {% trans "You are not logged in. Your IP address will be logged." %}
+                <a href="{% url 'wiki:login' %}?next={% url 'wiki:edit' article_id=article.id path=urlpath.path %}">{% trans "Click here to log in" %} &raquo;</a>
+            </p>
         </div>
-        <div class="control">
-          <button class="button is-rounded is-link" type="submit" name="save" value="1" id="id_save">
-            <span class="icon">
-              <i class="fas fa-check"></i>
-            </span>
-            <span>{% trans "Save changes" %}</span>
-          </button>
+    {% endif %}
+    <div class="columns">
+        <div class="column is-two-thirds">
+            <form method="POST" id="article_edit_form">
+                {% with edit_form as form %}
+                    {% include "wiki/includes/editor.html" %}
+                {% endwith %}
+                <div class="field is-grouped is-grouped-multiline">
+                    <div class="control">
+                        <button class="button is-rounded is-primary"
+                                type="submit"
+                                name="preview"
+                                value="1"
+                                id="id_preview"
+                                formaction="{% url 'wiki:preview' path=urlpath.path article_id=article.id %}"
+                                formtarget="previewWindow">
+                            <span class="icon">
+                                <i class="fas fa-eye"></i>
+                            </span>
+                            <span>{% trans "Preview" %}</span>
+                        </button>
+                    </div>
+                    <div class="control">
+                        <button class="button is-rounded is-link"
+                                type="submit"
+                                name="save"
+                                value="1"
+                                id="id_save">
+                            <span class="icon">
+                                <i class="fas fa-check"></i>
+                            </span>
+                            <span>{% trans "Save changes" %}</span>
+                        </button>
+                    </div>
+                    {% if user.is_authenticated and urlpath.path %}
+                        <div class="control">
+                            <a href="{% url 'wiki:move' path=urlpath.path article_id=article.id %}"
+                               class="button is-rounded is-warning">
+                                <span class="icon">
+                                    <i class="fas fa-random"></i>
+                                </span>
+                                <span>{% trans "Move article" %}</span>
+                            </a>
+                        </div>
+                    {% endif %}
+                    {% if article|can_delete:user %}
+                        <div class="control">
+                            <a href="{% url 'wiki:delete' path=urlpath.path article_id=article.id %}"
+                               class="button is-rounded is-danger">
+                                <span class="icon">
+                                    <i class="fas fa-trash"></i>
+                                </span>
+                                <span>{% trans "Delete article" %}</span>
+                            </a>
+                        </div>
+                    {% endif %}
+                </div>
+            </form>
         </div>
-        {% if user.is_authenticated and urlpath.path %}
-        <div class="control">
-          <a href="{% url 'wiki:move' path=urlpath.path article_id=article.id %}" class="button is-rounded is-warning">
-            <span class="icon">
-              <i class="fas fa-random"></i>
-            </span>
-            <span>{% trans "Move article" %}</span>
-          </a>
+        <div class="column is-one-third" id="wiki-edit-sidebar">{% include "wiki/includes/editor_sidebar.html" %}</div>
+    </div>
+    {% include "wiki/includes/modals.html" %}
+    <div class="modal" id="previewModal">
+        <div class="modal-background"></div>
+        <div class="modal-card is-large">
+            <header class="modal-card-head has-background-link">
+                <p class="modal-card-title has-text-white">
+                    <span class="icon has-text-white">
+                        <i class="fas fa-eye"></i>
+                    </span>
+                    <span>{% trans "Preview" %}</span>
+                </p>
+                <button class="delete" aria-label="close" id="closePreviewModal"></button>
+            </header>
+            <section class="modal-card-body" id="previewModalBody">
+                <div class="box has-background-white-bis p-1">
+                    <iframe name="previewWindow" class="preview-iframe"></iframe>
+                </div>
+            </section>
+            <footer class="modal-card-foot has-background-light">
+                <div class="buttons is-flex is-justify-content-space-between"
+                     style="width: 100%">
+                    <button class="button is-rounded is-light" id="closePreviewModalBtn">
+                        <span class="icon">
+                            <i class="fas fa-arrow-left"></i>
+                        </span>
+                        <span>{% trans "Back to editor" %}</span>
+                    </button>
+                    <button class="button is-rounded is-link" id="id_preview_save_changes">
+                        <span class="icon">
+                            <i class="fas fa-check"></i>
+                        </span>
+                        <span>{% trans "Save changes" %}</span>
+                    </button>
+                </div>
+            </footer>
         </div>
-        {% endif %}
-        {% if article|can_delete:user %}
-        <div class="control">
-          <a href="{% url 'wiki:delete' path=urlpath.path article_id=article.id %}" class="button is-rounded is-danger">
-            <span class="icon">
-              <i class="fas fa-trash"></i>
-            </span>
-            <span>{% trans "Delete article" %}</span>
-          </a>
-        </div>
-        {% endif %}
-      </div>
-    </form>
-  </div>
-
-  <div class="column is-one-third" id="wiki-edit-sidebar">
-    {% include "wiki/includes/editor_sidebar.html" %}
-  </div>
-</div>
-
-{% include "wiki/includes/modals.html" %}
-
-<div class="modal" id="previewModal">
-  <div class="modal-background"></div>
-  <div class="modal-card is-large">
-    <header class="modal-card-head has-background-link">
-      <p class="modal-card-title has-text-white">
-        <span class="icon has-text-white">
-          <i class="fas fa-eye"></i>
-        </span>
-        <span>{% trans "Preview" %}</span>
-      </p>
-      <button class="delete" aria-label="close" id="closePreviewModal"></button>
-    </header>
-    <section class="modal-card-body" id="previewModalBody">
-      <div class="box has-background-white-bis p-1">
-        <iframe name="previewWindow" class="preview-iframe"></iframe>
-      </div>
-    </section>
-    <footer class="modal-card-foot has-background-light">
-      <div class="buttons is-flex is-justify-content-space-between" style="width: 100%;">
-        <button class="button is-rounded is-light" id="closePreviewModalBtn">
-          <span class="icon">
-            <i class="fas fa-arrow-left"></i>
-          </span>
-          <span>{% trans "Back to editor" %}</span>
-        </button>
-        <button class="button is-rounded is-link" id="id_preview_save_changes">
-          <span class="icon">
-            <i class="fas fa-check"></i>
-          </span>
-          <span>{% trans "Save changes" %}</span>
-        </button>
-      </div>
-    </footer>
-  </div>
-</div>
-
-{% addtoblock "css" %}
-<style>
+    </div>
+    {% addtoblock "css" %}
+    <style>
   /* Enhanced modal styling with dark mode support */
   .modal-card.is-large {
     width: 90vw;
@@ -208,9 +209,8 @@
       animation: none;
     }
   }
-</style>
+    </style>
 {% endaddtoblock %}
-
 {% addtoblock "js" %}
 <script language="javascript">
   $(document).ready(function() {
@@ -278,5 +278,4 @@ var confirmOnPageExit = function (e) {
 };
 </script>
 {% endaddtoblock %}
-
 {% endblock %}

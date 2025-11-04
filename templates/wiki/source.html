@@ -1,22 +1,22 @@
 {% extends "wiki/article.html" %}
 {% load wiki_tags i18n humanize %}
-
-
-{% block wiki_pagetitle %}{% trans "Source of" %} {{ article.current_revision.title }}{% endblock %}
-
+{% block wiki_pagetitle %}
+    {% trans "Source of" %} {{ article.current_revision.title }}
+{% endblock %}
 {% block wiki_contents_tab %}
-
-{% if article.current_revision.locked %}
-<div class="notification is-warning is-light">
-  <span class="icon">
-    <i class="fas fa-lock"></i>
-  </span>
-  <span>{% trans "This article is currently locked for editing." %}</span>
-</div>
-{% endif %}
-
-<div class="box">
-  <pre class="has-background-light" style="max-height: 600px; overflow-y: auto; padding: 1rem; border-radius: 6px;"><code>{{ article.current_revision.content }}</code></pre>
-</div>
-
+    {% if article.current_revision.locked %}
+        <div class="notification is-warning is-light">
+            <span class="icon">
+                <i class="fas fa-lock"></i>
+            </span>
+            <span>{% trans "This article is currently locked for editing." %}</span>
+        </div>
+    {% endif %}
+    <div class="box">
+        <pre class="has-background-light"
+             style="max-height: 600px;
+                    overflow-y: auto;
+                    padding: 1rem;
+                    border-radius: 6px"><code>{{ article.current_revision.content }}</code></pre>
+    </div>
 {% endblock %}
