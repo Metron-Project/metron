@@ -7,6 +7,7 @@ from comicsdb.views.issue import (
     IssueDelete,
     IssueDetail,
     IssueDetailRedirect,
+    IssueDuplicateCreditsView,
     IssueHistory,
     IssueList,
     IssueReprintSyncView,
@@ -29,6 +30,11 @@ urlpatterns = [
     path("thisweek", WeekList.as_view(), name="thisweek"),
     path("nextweek", NextWeekList.as_view(), name="nextweek"),
     path("future", FutureList.as_view(), name="future"),
+    path(
+        "<slug:slug>/duplicate-credits/",
+        IssueDuplicateCreditsView.as_view(),
+        name="duplicate-credits",
+    ),
     path("<slug:slug>/sync-reprints/", IssueReprintSyncView.as_view(), name="sync-reprints"),
     re_path(
         r"^creator-autocomplete/?$",
