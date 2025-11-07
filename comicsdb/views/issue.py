@@ -300,6 +300,127 @@ class IssueUpdate(LoginRequiredMixin, UpdateView):
         return super().form_valid(form)
 
 
+class IssueDuplicateCreditsView(LoginRequiredMixin, View):
+    """
+    View to duplicate credits from the previous issue in the same series.
+    """
+
+    def post(self, request, slug):
+        """
+        Copy all credits (creators and their roles) from the previous issue
+        to the current issue. Only works if the current issue has no existing credits.
+
+        Args:
+            request: HTTP request object
+            slug: Issue slug identifier
+
+        Returns:
+            HttpResponseRedirect to the issue detail page
+        """
+        issue = get_object_or_404(
+            Issue.objects.select_related("series", "series__publisher").prefetch_related(
+                "credits_set"
+            ),
+            slug=slug,
+        )
+
+        # Check if publisher is DC Comics or Marvel (not allowed for credit duplication)
+        excluded_publishers = ["DC Comics", "Marvel"]
+        if issue.series.publisher.name in excluded_publishers:
+            messages.error(
+                request,
+                f"Credit duplication is not allowed for {issue.series.publisher.name} issues.",
+            )
+            return HttpResponseRedirect(reverse("issue:detail", args=[slug]))
+
+        # Check if issue already has credits
+        if issue.credits_set.exists():
+            messages.info(
+                request,
+                f"{issue} already has credits assigned. "
+                "Duplicate operation cancelled to preserve existing data.",
+            )
+            return HttpResponseRedirect(reverse("issue:detail", args=[slug]))
+
+        # Try to get the previous issue by cover_date
+        try:
+            previous_issue = issue.get_previous_by_cover_date(series=issue.series)
+        except ObjectDoesNotExist:
+            messages.warning(request, f"No previous issue found for {issue}.")
+            return HttpResponseRedirect(reverse("issue:detail", args=[slug]))
+
+        # Get all credits from the previous issue
+        previous_credits = Credits.objects.filter(issue=previous_issue).prefetch_related("role")
+
+        if not previous_credits.exists():
+            messages.info(request, f"No credits found in {previous_issue} to duplicate.")
+            return HttpResponseRedirect(reverse("issue:detail", args=[slug]))
+
+        # Get the Cover role to check for variant cover credits
+        try:
+            cover_role = Role.objects.get(name="Cover")
+        except Role.DoesNotExist:
+            cover_role = None
+
+        # Duplicate the credits
+        credits_count = 0
+        skipped_count = 0
+        max_roles_for_cover_skip = 2
+
+        with transaction.atomic():
+            for credit in previous_credits:
+                roles = credit.role.all()
+
+                # Skip credits that are likely variant cover credits
+                # (credits with only one role and that role is "Cover")
+                if cover_role and len(roles) < max_roles_for_cover_skip and cover_role in roles:
+                    skipped_count += 1
+                    LOGGER.info(
+                        "Skipping possible variant cover credit for '%s' when duplicating to %s",
+                        credit.creator,
+                        issue,
+                    )
+                    continue
+
+                # Create new credit for current issue
+                new_credit = Credits.objects.create(issue=issue, creator=credit.creator)
+                # Copy the roles (many-to-many relationship)
+                new_credit.role.set(roles)
+                credits_count += 1
+
+            # Update edited_by field
+            issue.edited_by = request.user
+            issue.save(update_fields=["edited_by", "modified"])
+
+            LOGGER.info(
+                "Duplicated %d credit(s) from %s to %s by %s (skipped %d cover credit(s))",
+                credits_count,
+                previous_issue,
+                issue,
+                request.user,
+                skipped_count,
+            )
+
+        # Provide appropriate feedback based on what was duplicated
+        if credits_count > 0:
+            message = f"Successfully duplicated {credits_count} credit(s) from {previous_issue}."
+            if skipped_count > 0:
+                message += f" Skipped {skipped_count} variant cover credit(s)."
+            messages.success(request, message)
+        elif skipped_count > 0:
+            messages.info(
+                request,
+                (
+                    f"No credits were duplicated. Skipped {skipped_count} variant cover credit(s)"
+                    f" from {previous_issue}."
+                ),
+            )
+        else:
+            messages.info(request, f"No credits found in {previous_issue} to duplicate.")
+
+        return HttpResponseRedirect(reverse("issue:detail", args=[slug]))
+
+
 class IssueReprintSyncView(LoginRequiredMixin, View):
     """
     View to synchronize characters and teams from reprinted issues
