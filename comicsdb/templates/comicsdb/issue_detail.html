@@ -86,6 +86,29 @@
                         <span class="icon is-small"><i class="fas fa-history" aria-hidden="true"></i></span>
                         <span>History</span>
                     </a>
+                    {% if issue.series.series_type.name != "Trade Paperback" and issue.series.series_type.name != "Omnibus" and issue.series.series_type.name != "Hardcover" and issue.series.publisher.name != "DC Comics" and issue.series.publisher.name != "Marvel" %}
+                        {% if navigation.previous_issue and not issue.credits_set.exists %}
+                            <form method="post"
+                                  action="{% url 'issue:duplicate-credits' slug=issue.slug %}"
+                                  class="is-inline">
+                                {% csrf_token %}
+                                <button class="button is-rounded is-link"
+                                        type="submit"
+                                        title="Duplicate credits from previous issue">
+                                    <span class="icon is-small"><i class="fas fa-clone" aria-hidden="true"></i></span>
+                                    <span>Duplicate Credits</span>
+                                </button>
+                            </form>
+                        {% else %}
+                            <button class="button is-rounded is-link"
+                                    disabled
+                                    aria-disabled="true"
+                                    title="No previous issue or credits already exist">
+                                <span class="icon is-small"><i class="fas fa-clone" aria-hidden="true"></i></span>
+                                <span>Duplicate Credits</span>
+                            </button>
+                        {% endif %}
+                    {% endif %}
                     {% if issue.series.series_type.name == "Trade Paperback" or issue.series.series_type.name == "Omnibus" or issue.series.series_type.name == "Hardcover" %}
                         {% if issue.reprints.exists and not issue.characters.exists and not issue.teams.exists and not issue.name|length > 0 %}
                             <form method="post"
