@@ -1,14 +1,12 @@
 import logging
 
 from django.contrib.auth.mixins import LoginRequiredMixin, PermissionRequiredMixin
-from django.db.models import Prefetch
-from django.shortcuts import get_object_or_404
+from django.shortcuts import get_object_or_404, render
 from django.urls import reverse_lazy
-from django.views.generic import DetailView, ListView
+from django.views.generic import DetailView, ListView, View
 from django.views.generic.edit import CreateView, DeleteView, UpdateView
 
 from comicsdb.forms.team import TeamForm
-from comicsdb.models.issue import Issue
 from comicsdb.models.team import Team
 from comicsdb.views.constants import PAGINATE_BY
 from comicsdb.views.history import HistoryListView
@@ -45,14 +43,22 @@ class TeamIssueList(ListView):
 
 class TeamDetail(NavigationMixin, DetailView):
     model = Team
-    queryset = Team.objects.select_related("edited_by").prefetch_related(
-        Prefetch(
-            "issues",
-            queryset=Issue.objects.order_by(
-                "series__sort_name", "cover_date", "number"
-            ).select_related("series", "series__series_type"),
-        )
-    )
+    # Don't prefetch issues - only need member count
+    queryset = Team.objects.select_related("edited_by")
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        team = context["object"]
+
+        # Get member count and paginate
+        member_count = team.characters.count()
+        context["member_count"] = member_count
+
+        # Only load first 30 members
+        if member_count > 0:
+            context["members"] = team.characters.all()[:30]
+
+        return context
 
 
 class TeamDetailRedirect(SlugRedirectView):
@@ -87,3 +93,23 @@ class TeamDelete(PermissionRequiredMixin, DeleteView):
 
 class TeamHistory(HistoryListView):
     model = Team
+
+
+class TeamMembersLoadMore(View):
+    """HTMX endpoint for lazy loading more team members."""
+
+    def get(self, request, slug):
+        team = get_object_or_404(Team, slug=slug)
+        offset = int(request.GET.get("offset", 0))
+        limit = 30  # Load 30 items at a time
+
+        members = team.characters.all()[offset : offset + limit]
+        has_more = team.characters.count() > offset + limit
+
+        context = {
+            "members": members,
+            "has_more": has_more,
+            "next_offset": offset + limit,
+            "team_slug": slug,
+        }
+        return render(request, "comicsdb/partials/team_member_items.html", context)

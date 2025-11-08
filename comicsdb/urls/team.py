@@ -9,6 +9,7 @@ from comicsdb.views.team import (
     TeamHistory,
     TeamIssueList,
     TeamList,
+    TeamMembersLoadMore,
     TeamUpdate,
 )
 
@@ -22,5 +23,10 @@ urlpatterns = [
     path("<slug:slug>/delete/", TeamDelete.as_view(), name="delete"),
     path("<slug:slug>/history/", TeamHistory.as_view(), name="history"),
     path("<slug:slug>/issue_list/", TeamIssueList.as_view(), name="issue"),
+    path(
+        "<slug:slug>/members/load-more/",
+        TeamMembersLoadMore.as_view(),
+        name="members-load-more",
+    ),
     re_path(r"^search/?$", SearchTeamList.as_view(), name="search"),
 ]
