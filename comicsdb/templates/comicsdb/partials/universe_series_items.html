@@ -1,0 +1,36 @@
+{% for series in appearances %}
+    <li>
+        <a href="{% url 'series:detail' slug=series.issues__series__slug %}">
+            {{ series.issues__series__name }}
+            {% if series.issues__series__series_type == 10 %}
+                TPB
+            {% elif series.issues__series__series_type == 9 %}
+                GN
+            {% elif series.issues__series__series_type == 8 %}
+                HC
+            {% elif series.issues__series__series_type == 12 %}
+                Digital
+            {% endif %}
+            ({{ series.issues__series__year_began }})
+        </a>:
+        <a href="{% url 'universe:series' universe=universe_slug series=series.issues__series__slug %}">
+            {{ series.issues__count }} issue{{ series.issues__count|pluralize }}
+        </a>
+    </li>
+{% endfor %}
+<div id="series-load-more-wrapper"
+     class="has-text-centered mt-4"
+     hx-swap-oob="true">
+    {% if has_more %}
+        <button class="button is-link"
+                hx-get="{% url 'universe:series-load-more' universe_slug %}?offset={{ next_offset }}"
+                hx-target="#series-list"
+                hx-swap="beforeend"
+                hx-indicator="#series-spinner">
+            <span>Load More Series</span>
+        </button>
+        <span id="series-spinner" class="htmx-indicator ml-2">
+            <i class="fas fa-spinner fa-spin"></i>
+        </span>
+    {% endif %}
+</div>

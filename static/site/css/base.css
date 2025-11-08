@@ -294,3 +294,29 @@ a:focus-visible {
 .section + .section {
     padding-top: 3rem;
 }
+
+/* ========================================
+   HTMX Loading Indicators
+   ======================================== */
+
+/* Hide HTMX indicators by default */
+.htmx-indicator {
+    display: none;
+}
+
+/* Show HTMX indicators when HTMX is making a request */
+.htmx-request .htmx-indicator,
+.htmx-request.htmx-indicator {
+    display: inline-block;
+}
+
+/* Smooth fade-in for new content */
+[hx-get]:not(.htmx-request) {
+    transition: opacity 0.2s ease-in;
+}
+
+/* Optional: Add a subtle loading state to buttons */
+button[hx-get].htmx-request {
+    opacity: 0.7;
+    cursor: wait;
+}
