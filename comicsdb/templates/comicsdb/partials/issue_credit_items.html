@@ -1,0 +1,56 @@
+{% load thumbnail %}
+{% load static %}
+{% for credit in credits %}
+    <div class="column is-4">
+        <article class="media">
+            <figure class="media-left">
+                <div class="image is-64x64">
+                    {% if credit.creator.image %}
+                        {% thumbnail credit.creator.image "64x64" crop="top" format="WEBP" as im %}
+                            <img class="is-rounded"
+                                 src="{{ im.url }}"
+                                 width="{{ im.width }}"
+                                 height="{{ im.height }}"
+                                 alt="{{ credit.creator }}"
+                                 loading="lazy">
+                        {% endthumbnail %}
+                    {% else %}
+                        <img class="is-rounded"
+                             src="{% static 'site/img/creator-not-found.webp' %}"
+                             alt="No image for {{ credit.creator }}"
+                             loading="lazy">
+                    {% endif %}
+                </div>
+            </figure>
+            <div class="media-content">
+                <div class="content">
+                    <p>
+                        <a href="{% url 'creator:detail' credit.creator.slug %}">{{ credit.creator }}</a>
+                        {% with roles=credit.role.all %}
+                            {% if roles %}
+                                <br>
+                                <small class="has-text-grey-dark">{{ roles|join:", " }}</small>
+                            {% endif %}
+                        {% endwith %}
+                    </p>
+                </div>
+            </div>
+        </article>
+    </div>
+{% endfor %}
+<div id="credits-load-more-wrapper"
+     class="has-text-centered mt-4"
+     hx-swap-oob="true">
+    {% if has_more %}
+        <button class="button is-link"
+                hx-get="{% url 'issue:credits-load-more' issue_slug %}?offset={{ next_offset }}"
+                hx-target="#credits-container"
+                hx-swap="beforeend"
+                hx-indicator="#credits-spinner">
+            <span>Load More Credits</span>
+        </button>
+        <span id="credits-spinner" class="htmx-indicator ml-2">
+            <i class="fas fa-spinner fa-spin"></i>
+        </span>
+    {% endif %}
+</div>

@@ -1,20 +1,19 @@
 import logging
 
 from django.contrib.auth.mixins import LoginRequiredMixin, PermissionRequiredMixin
-from django.db.models import Prefetch
 from django.shortcuts import get_object_or_404
 from django.urls import reverse_lazy
 from django.views.generic import DetailView, ListView
 from django.views.generic.edit import CreateView, DeleteView, UpdateView
 
 from comicsdb.forms.team import TeamForm
-from comicsdb.models.issue import Issue
 from comicsdb.models.team import Team
-from comicsdb.views.constants import PAGINATE_BY
+from comicsdb.views.constants import DETAIL_PAGINATE_BY, PAGINATE_BY
 from comicsdb.views.history import HistoryListView
 from comicsdb.views.mixins import (
     AttributionCreateMixin,
     AttributionUpdateMixin,
+    LazyLoadMixin,
     NavigationMixin,
     SearchMixin,
     SlugRedirectView,
@@ -45,14 +44,22 @@ class TeamIssueList(ListView):
 
 class TeamDetail(NavigationMixin, DetailView):
     model = Team
-    queryset = Team.objects.select_related("edited_by").prefetch_related(
-        Prefetch(
-            "issues",
-            queryset=Issue.objects.order_by(
-                "series__sort_name", "cover_date", "number"
-            ).select_related("series", "series__series_type"),
-        )
-    )
+    # Don't prefetch issues - only need member count
+    queryset = Team.objects.select_related("edited_by")
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        team = context["object"]
+
+        # Get member count and paginate
+        member_count = team.characters.count()
+        context["member_count"] = member_count
+
+        # Only load first batch of members
+        if member_count > 0:
+            context["members"] = team.characters.all()[:DETAIL_PAGINATE_BY]
+
+        return context
 
 
 class TeamDetailRedirect(SlugRedirectView):
@@ -87,3 +94,13 @@ class TeamDelete(PermissionRequiredMixin, DeleteView):
 
 class TeamHistory(HistoryListView):
     model = Team
+
+
+class TeamMembersLoadMore(LazyLoadMixin):
+    """HTMX endpoint for lazy loading more team members."""
+
+    model = Team
+    relation_name = "characters"
+    template_name = "comicsdb/partials/team_member_items.html"
+    context_object_name = "members"
+    slug_context_name = "team_slug"

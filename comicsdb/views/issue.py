@@ -24,9 +24,9 @@ from comicsdb.models import Creator, Credits, Issue, Role, Series
 from comicsdb.models.attribution import Attribution
 from comicsdb.models.series import SeriesType
 from comicsdb.models.variant import Variant
-from comicsdb.views.constants import PAGINATE_BY
+from comicsdb.views.constants import DETAIL_PAGINATE_BY, PAGINATE_BY
 from comicsdb.views.history import HistoryListView
-from comicsdb.views.mixins import SlugRedirectView
+from comicsdb.views.mixins import LazyLoadMixin, SlugRedirectView
 
 TOTAL_WEEKS_YEAR = 52
 
@@ -94,25 +94,6 @@ class IssueDetail(DetailView):
         )
         .prefetch_related(
             Prefetch(
-                "credits_set",
-                queryset=Credits.objects.select_related("creator")
-                .defer(
-                    "modified",
-                    "creator__desc",
-                    "creator__cv_id",
-                    "creator__modified",
-                    "creator__created_on",
-                    "creator__birth",
-                    "creator__death",
-                    "creator__alias",
-                )
-                .order_by("creator__name")
-                .distinct("creator__name")
-                .prefetch_related(
-                    Prefetch("role", queryset=Role.objects.defer("order", "notes", "modified"))
-                ),
-            ),
-            Prefetch(
                 "reprints",
                 queryset=Issue.objects.select_related("series", "series__series_type")
                 .defer(
@@ -149,7 +130,8 @@ class IssueDetail(DetailView):
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        issue = self.get_object()
+        issue = context["object"]
+
         try:
             next_issue = issue.get_next_by_cover_date(series=issue.series)
         except ObjectDoesNotExist:
@@ -164,6 +146,47 @@ class IssueDetail(DetailView):
             "next_issue": next_issue,
             "previous_issue": previous_issue,
         }
+
+        # Get counts for pagination
+        credits_qs = (
+            Credits.objects.filter(issue=issue)
+            .select_related("creator")
+            .defer(
+                "modified",
+                "creator__desc",
+                "creator__cv_id",
+                "creator__modified",
+                "creator__created_on",
+                "creator__birth",
+                "creator__death",
+                "creator__alias",
+            )
+            .order_by("creator__name")
+            .distinct("creator__name")
+            .prefetch_related(
+                Prefetch("role", queryset=Role.objects.defer("order", "notes", "modified"))
+            )
+        )
+        credits_count = credits_qs.count()
+        context["credits_count"] = credits_count
+        if credits_count > 0:
+            context["credits"] = credits_qs[:DETAIL_PAGINATE_BY]
+
+        characters_count = issue.characters.count()
+        context["characters_count"] = characters_count
+        if characters_count > 0:
+            context["characters"] = issue.characters.all()[:DETAIL_PAGINATE_BY]
+
+        teams_count = issue.teams.count()
+        context["teams_count"] = teams_count
+        if teams_count > 0:
+            context["teams"] = issue.teams.all()[:DETAIL_PAGINATE_BY]
+
+        universes_count = issue.universes.count()
+        context["universes_count"] = universes_count
+        if universes_count > 0:
+            context["universes"] = issue.universes.all()[:DETAIL_PAGINATE_BY]
+
         return context
 
 
@@ -655,3 +678,75 @@ class FutureList(ListView):
         context["future"] = True
         context["series_type"] = SeriesType.objects.values("id", "name")
         return context
+
+
+class IssueCreditsLoadMore(LazyLoadMixin):
+    """HTMX endpoint for lazy loading more issue credits."""
+
+    model = Issue
+    relation_name = None  # Custom query with optimizations
+    template_name = "comicsdb/partials/issue_credit_items.html"
+    context_object_name = "credits"
+    slug_context_name = "issue_slug"
+
+    def get_queryset(self, parent_object, offset, limit):
+        """Custom query with select_related, defer, and prefetch optimizations."""
+        credits_qs = (
+            Credits.objects.filter(issue=parent_object)
+            .select_related("creator")
+            .defer(
+                "modified",
+                "creator__desc",
+                "creator__cv_id",
+                "creator__modified",
+                "creator__created_on",
+                "creator__birth",
+                "creator__death",
+                "creator__alias",
+            )
+            .order_by("creator__name")
+            .distinct("creator__name")
+            .prefetch_related(
+                Prefetch("role", queryset=Role.objects.defer("order", "notes", "modified"))
+            )
+        )
+        return credits_qs[offset : offset + limit]
+
+    def get_total_count(self, parent_object):
+        """Get total count of credits."""
+        return (
+            Credits.objects.filter(issue=parent_object)
+            .order_by("creator__name")
+            .distinct("creator__name")
+            .count()
+        )
+
+
+class IssueCharactersLoadMore(LazyLoadMixin):
+    """HTMX endpoint for lazy loading more issue characters."""
+
+    model = Issue
+    relation_name = "characters"
+    template_name = "comicsdb/partials/issue_character_items.html"
+    context_object_name = "characters"
+    slug_context_name = "issue_slug"
+
+
+class IssueTeamsLoadMore(LazyLoadMixin):
+    """HTMX endpoint for lazy loading more issue teams."""
+
+    model = Issue
+    relation_name = "teams"
+    template_name = "comicsdb/partials/issue_team_items.html"
+    context_object_name = "teams"
+    slug_context_name = "issue_slug"
+
+
+class IssueUniversesLoadMore(LazyLoadMixin):
+    """HTMX endpoint for lazy loading more issue universes."""
+
+    model = Issue
+    relation_name = "universes"
+    template_name = "comicsdb/partials/issue_universe_items.html"
+    context_object_name = "universes"
+    slug_context_name = "issue_slug"

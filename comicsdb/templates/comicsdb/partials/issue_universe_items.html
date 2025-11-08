@@ -1,0 +1,46 @@
+{% load thumbnail %}
+{% load static %}
+{% for universe in universes %}
+    <div class="column is-4">
+        <article class="media">
+            <figure class="media-left">
+                <div class="image is-64x64">
+                    {% if universe.image %}
+                        {% thumbnail universe.image "64x64" crop="center" format="WEBP" as im %}
+                            <img class="is-rounded"
+                                 src="{{ im.url }}"
+                                 width="{{ im.width }}"
+                                 height="{{ im.height }}"
+                                 alt="{{ universe }}"
+                                 loading="lazy">
+                        {% endthumbnail %}
+                    {% else %}
+                        <img class="is-rounded"
+                             src="{% static 'site/img/creator-not-found.webp' %}"
+                             alt="No image for {{ universe }}"
+                             loading="lazy">
+                    {% endif %}
+                </div>
+            </figure>
+            <div class="media-content">
+                <a href="{% url 'universe:detail' universe.slug %}">{{ universe }}</a>
+            </div>
+        </article>
+    </div>
+{% endfor %}
+<div id="universes-load-more-wrapper"
+     class="has-text-centered mt-4"
+     hx-swap-oob="true">
+    {% if has_more %}
+        <button class="button is-link"
+                hx-get="{% url 'issue:universes-load-more' issue_slug %}?offset={{ next_offset }}"
+                hx-target="#universes-container"
+                hx-swap="beforeend"
+                hx-indicator="#universes-spinner">
+            <span>Load More Universes</span>
+        </button>
+        <span id="universes-spinner" class="htmx-indicator ml-2">
+            <i class="fas fa-spinner fa-spin"></i>
+        </span>
+    {% endif %}
+</div>

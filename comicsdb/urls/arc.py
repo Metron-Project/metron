@@ -7,6 +7,7 @@ from comicsdb.views.arc import (
     ArcDetailRedirect,
     ArcHistory,
     ArcIssueList,
+    ArcIssuesLoadMore,
     ArcList,
     ArcUpdate,
     SearchArcList,
@@ -22,5 +23,10 @@ urlpatterns = [
     path("<slug:slug>/update/", ArcUpdate.as_view(), name="update"),
     path("<slug:slug>/delete/", ArcDelete.as_view(), name="delete"),
     path("<slug:slug>/history/", ArcHistory.as_view(), name="history"),
+    path(
+        "<slug:slug>/issues/load-more/",
+        ArcIssuesLoadMore.as_view(),
+        name="issues-load-more",
+    ),
     re_path(r"^search/?$", SearchArcList.as_view(), name="search"),
 ]

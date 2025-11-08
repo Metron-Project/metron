@@ -1,7 +1,6 @@
 import logging
 
 from django.contrib.auth.mixins import LoginRequiredMixin, PermissionRequiredMixin
-from django.db.models import Prefetch
 from django.shortcuts import get_object_or_404
 from django.urls import reverse_lazy
 from django.views.generic import DetailView, ListView
@@ -10,11 +9,12 @@ from django.views.generic.edit import CreateView, DeleteView, UpdateView
 from comicsdb.forms.publisher import PublisherForm
 from comicsdb.models.publisher import Publisher
 from comicsdb.models.series import Series
-from comicsdb.views.constants import PAGINATE_BY
+from comicsdb.views.constants import DETAIL_PAGINATE_BY, PAGINATE_BY
 from comicsdb.views.history import HistoryListView
 from comicsdb.views.mixins import (
     AttributionCreateMixin,
     AttributionUpdateMixin,
+    LazyLoadMixin,
     NavigationMixin,
     SearchMixin,
     SlugRedirectView,
@@ -49,10 +49,29 @@ class PublisherSeriesList(ListView):
 
 class PublisherDetail(NavigationMixin, DetailView):
     model = Publisher
-    queryset = Publisher.objects.select_related("edited_by").prefetch_related(
-        Prefetch("series", queryset=Series.objects.select_related("series_type")),
-        Prefetch("imprints__series", queryset=Series.objects.select_related("series_type")),
-    )
+    # Don't prefetch - we'll paginate imprints and universes
+    queryset = Publisher.objects.select_related("edited_by")
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        publisher = context["object"]
+
+        # Get counts for imprints and universes
+        imprint_count = publisher.imprints.count()
+        universe_count = publisher.universes.count()
+
+        context["imprint_count"] = imprint_count
+        context["universe_count"] = universe_count
+
+        # Paginate imprints - only load first batch
+        if imprint_count > 0:
+            context["imprints"] = publisher.imprints.all()[:DETAIL_PAGINATE_BY]
+
+        # Paginate universes - only load first batch
+        if universe_count > 0:
+            context["universes"] = publisher.universes.all()[:DETAIL_PAGINATE_BY]
+
+        return context
 
 
 class PublisherDetailRedirect(SlugRedirectView):
@@ -87,3 +106,23 @@ class PublisherDelete(PermissionRequiredMixin, DeleteView):
 
 class PublisherHistory(HistoryListView):
     model = Publisher
+
+
+class PublisherImprintsLoadMore(LazyLoadMixin):
+    """HTMX endpoint for lazy loading more imprints."""
+
+    model = Publisher
+    relation_name = "imprints"
+    template_name = "comicsdb/partials/publisher_imprint_items.html"
+    context_object_name = "imprints"
+    slug_context_name = "publisher_slug"
+
+
+class PublisherUniversesLoadMore(LazyLoadMixin):
+    """HTMX endpoint for lazy loading more universes."""
+
+    model = Publisher
+    relation_name = "universes"
+    template_name = "comicsdb/partials/publisher_universe_items.html"
+    context_object_name = "universes"
+    slug_context_name = "publisher_slug"

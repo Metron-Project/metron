@@ -1,7 +1,7 @@
 import logging
 
 from django.contrib.auth.mixins import LoginRequiredMixin, PermissionRequiredMixin
-from django.db.models import Count, Prefetch
+from django.db.models import Count
 from django.shortcuts import get_object_or_404
 from django.urls import reverse_lazy
 from django.views.generic import DetailView, ListView
@@ -9,11 +9,12 @@ from django.views.generic.edit import CreateView, DeleteView, UpdateView
 
 from comicsdb.forms.character import CharacterForm
 from comicsdb.models import Character, Issue, Series
-from comicsdb.views.constants import PAGINATE_BY
+from comicsdb.views.constants import DETAIL_PAGINATE_BY, PAGINATE_BY
 from comicsdb.views.history import HistoryListView
 from comicsdb.views.mixins import (
     AttributionCreateMixin,
     AttributionUpdateMixin,
+    LazyLoadMixin,
     NavigationMixin,
     SearchMixin,
     SlugRedirectView,
@@ -57,18 +58,12 @@ class CharacterIssueList(ListView):
 
 class CharacterDetail(NavigationMixin, DetailView):
     model = Character
-    queryset = Character.objects.select_related("edited_by").prefetch_related(
-        Prefetch(
-            "issues",
-            queryset=Issue.objects.order_by(
-                "series__sort_name", "cover_date", "number"
-            ).select_related("series", "series__series_type"),
-        )
-    )
+    # Don't prefetch issues - we only need series aggregates, not all issue objects
+    queryset = Character.objects.select_related("edited_by")
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        character = self.get_object()
+        character = context["object"]  # Use the object from context, not get_object()
 
         # Run this context queryset if the issue count is greater than 0.
         if character.issue_count:
@@ -79,10 +74,19 @@ class CharacterDetail(NavigationMixin, DetailView):
                     "series__year_began",
                     "series__slug",
                     "series__series_type",
+                    "series__sort_name",  # Include for ordering
                 )
                 .annotate(issues__count=Count("id"))
                 .order_by("series__sort_name", "series__year_began")
             )
+
+            # Get total count for pagination
+            total_series_count = series_issues.count()
+            context["series_count"] = total_series_count
+
+            # Only get first batch for initial load
+            paginated_series = series_issues[:DETAIL_PAGINATE_BY]
+
             # Rename fields to match template expectations
             context["appearances"] = [
                 {
@@ -92,10 +96,11 @@ class CharacterDetail(NavigationMixin, DetailView):
                     "issues__series__series_type": item["series__series_type"],
                     "issues__count": item["issues__count"],
                 }
-                for item in series_issues
+                for item in paginated_series
             ]
         else:
             context["appearances"] = ""
+            context["series_count"] = 0
 
         return context
 
@@ -134,3 +139,51 @@ class CharacterDelete(PermissionRequiredMixin, DeleteView):
 
 class CharacterHistory(HistoryListView):
     model = Character
+
+
+class CharacterSeriesLoadMore(LazyLoadMixin):
+    """HTMX endpoint for lazy loading more series appearances."""
+
+    model = Character
+    relation_name = None  # Custom query, not a direct relation
+    template_name = "comicsdb/partials/character_series_items.html"
+    context_object_name = "appearances"
+    slug_context_name = "character_slug"
+
+    def get_queryset(self, parent_object, offset, limit):
+        """Custom query with annotations and field renaming."""
+        series_issues = (
+            Issue.objects.filter(characters=parent_object)
+            .values(
+                "series__name",
+                "series__year_began",
+                "series__slug",
+                "series__series_type",
+                "series__sort_name",  # Include for ordering
+            )
+            .annotate(issues__count=Count("id"))
+            .order_by("series__sort_name", "series__year_began")
+        )
+
+        paginated_series = series_issues[offset : offset + limit]
+
+        # Rename fields to match template expectations
+        return [
+            {
+                "issues__series__name": item["series__name"],
+                "issues__series__year_began": item["series__year_began"],
+                "issues__series__slug": item["series__slug"],
+                "issues__series__series_type": item["series__series_type"],
+                "issues__count": item["issues__count"],
+            }
+            for item in paginated_series
+        ]
+
+    def get_total_count(self, parent_object):
+        """Get count of series (not issues)."""
+        return (
+            Issue.objects.filter(characters=parent_object)
+            .values("series__name", "series__year_began", "series__slug", "series__series_type")
+            .annotate(issues__count=Count("id"))
+            .count()
+        )

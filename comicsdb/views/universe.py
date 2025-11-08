@@ -1,7 +1,7 @@
 import logging
 
 from django.contrib.auth.mixins import LoginRequiredMixin, PermissionRequiredMixin
-from django.db.models import Count, Prefetch
+from django.db.models import Count
 from django.shortcuts import get_object_or_404
 from django.urls import reverse_lazy
 from django.views.generic import CreateView, DeleteView, DetailView, ListView, UpdateView
@@ -10,11 +10,12 @@ from comicsdb.forms.universe import UniverseForm
 from comicsdb.models.issue import Issue
 from comicsdb.models.series import Series
 from comicsdb.models.universe import Universe
-from comicsdb.views.constants import PAGINATE_BY
+from comicsdb.views.constants import DETAIL_PAGINATE_BY, PAGINATE_BY
 from comicsdb.views.history import HistoryListView
 from comicsdb.views.mixins import (
     AttributionCreateMixin,
     AttributionUpdateMixin,
+    LazyLoadMixin,
     NavigationMixin,
     SearchMixin,
     SlugRedirectView,
@@ -58,21 +59,31 @@ class UniverseIssueList(ListView):
 
 class UniverseDetail(NavigationMixin, DetailView):
     model = Universe
-    queryset = Universe.objects.select_related("edited_by").prefetch_related(
-        Prefetch(
-            "issues",
-            queryset=Issue.objects.order_by(
-                "series__sort_name", "cover_date", "number"
-            ).select_related("series", "series__series_type"),
-        )
-    )
+    # Don't use expensive COUNT DISTINCT in queryset - calculate in get_context_data instead
+    queryset = Universe.objects.select_related("edited_by", "publisher")
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        universe = self.get_object()
+        universe = context["object"]  # Use the object from context, not get_object()
+
+        # Get counts with simple, fast queries instead of expensive COUNT DISTINCT
+        # These are much faster than annotating on the queryset
+        character_count = universe.characters.count()
+        team_count = universe.teams.count()
+        total_issue_count = universe.issues.count()
+
+        # Add counts to context
+        context["character_count"] = character_count
+        context["team_count"] = team_count
+        context["total_issue_count"] = total_issue_count
+
+        # Also add to object for template compatibility
+        universe.character_count = character_count
+        universe.team_count = team_count
+        universe.total_issue_count = total_issue_count
 
         # Run this context queryset if the issue count is greater than 0.
-        if universe.issue_count:
+        if total_issue_count:
             series_issues = (
                 Issue.objects.filter(universes=universe)
                 .values(
@@ -80,10 +91,19 @@ class UniverseDetail(NavigationMixin, DetailView):
                     "series__year_began",
                     "series__slug",
                     "series__series_type",
+                    "series__sort_name",  # Include for ordering
                 )
                 .annotate(issues__count=Count("id"))
                 .order_by("series__sort_name", "series__year_began")
             )
+
+            # Get total count for pagination
+            total_series_count = series_issues.count()
+            context["series_count"] = total_series_count
+
+            # Only get first batch for initial load
+            paginated_series = series_issues[:DETAIL_PAGINATE_BY]
+
             # Rename fields to match template expectations
             context["appearances"] = [
                 {
@@ -93,10 +113,11 @@ class UniverseDetail(NavigationMixin, DetailView):
                     "issues__series__series_type": item["series__series_type"],
                     "issues__count": item["issues__count"],
                 }
-                for item in series_issues
+                for item in paginated_series
             ]
         else:
             context["appearances"] = ""
+            context["series_count"] = 0
 
         return context
 
@@ -135,3 +156,70 @@ class UniverseDelete(PermissionRequiredMixin, DeleteView):
 
 class UniverseHistory(HistoryListView):
     model = Universe
+
+
+class UniverseCharactersLoadMore(LazyLoadMixin):
+    """HTMX endpoint for lazy loading more characters."""
+
+    model = Universe
+    relation_name = "characters"
+    template_name = "comicsdb/partials/universe_character_items.html"
+    context_object_name = "characters"
+    slug_context_name = "universe_slug"
+
+
+class UniverseTeamsLoadMore(LazyLoadMixin):
+    """HTMX endpoint for lazy loading more teams."""
+
+    model = Universe
+    relation_name = "teams"
+    template_name = "comicsdb/partials/universe_team_items.html"
+    context_object_name = "teams"
+    slug_context_name = "universe_slug"
+
+
+class UniverseSeriesLoadMore(LazyLoadMixin):
+    """HTMX endpoint for lazy loading more series appearances."""
+
+    model = Universe
+    relation_name = None  # Custom query, not a direct relation
+    template_name = "comicsdb/partials/universe_series_items.html"
+    context_object_name = "appearances"
+    slug_context_name = "universe_slug"
+
+    def get_queryset(self, parent_object, offset, limit):
+        """Custom query with annotations and field renaming."""
+        series_issues = (
+            Issue.objects.filter(universes=parent_object)
+            .values(
+                "series__name",
+                "series__year_began",
+                "series__slug",
+                "series__series_type",
+            )
+            .annotate(issues__count=Count("id"))
+            .order_by("series__sort_name", "series__year_began")
+        )
+
+        paginated_series = series_issues[offset : offset + limit]
+
+        # Rename fields to match template expectations
+        return [
+            {
+                "issues__series__name": item["series__name"],
+                "issues__series__year_began": item["series__year_began"],
+                "issues__series__slug": item["series__slug"],
+                "issues__series__series_type": item["series__series_type"],
+                "issues__count": item["issues__count"],
+            }
+            for item in paginated_series
+        ]
+
+    def get_total_count(self, parent_object):
+        """Get count of series (not issues)."""
+        return (
+            Issue.objects.filter(universes=parent_object)
+            .values("series__name", "series__year_began", "series__slug", "series__series_type")
+            .annotate(issues__count=Count("id"))
+            .count()
+        )

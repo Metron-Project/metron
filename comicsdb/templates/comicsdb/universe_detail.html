@@ -2,9 +2,13 @@
 {% load thumbnail %}
 {% load static %}
 {% load humanize %}
+{% load django_htmx %}
 {% block title %}
     {{ universe.name }}
 {% endblock title %}
+{% block js %}
+    {% htmx_script %}
+{% endblock js %}
 {% block content %}
     {# Page Header #}
     <header class="block">
@@ -111,87 +115,113 @@
                 </footer>
             </div>
             {# Characters #}
-            {% with characters=universe.characters.all %}
-                {% if characters %}
-                    <div class="box">
-                        <h2 class="title is-5">Character{{ characters|pluralize }} ({{ characters.count }})</h2>
-                        <div class="columns is-multiline">
-                            {% for character in characters %}
-                                <div class="column is-4">
-                                    <article class="media">
-                                        <figure class="media-left">
-                                            <div class="image is-64x64">
-                                                {% if character.image %}
-                                                    {% thumbnail character.image "64x64" crop="center" format="WEBP" as im %}
-                                                        <img class="is-rounded"
-                                                             src="{{ im.url }}"
-                                                             width="{{ im.width }}"
-                                                             height="{{ im.height }}"
-                                                             alt="{{ character }}"
-                                                             loading="lazy">
-                                                    {% endthumbnail %}
-                                                {% else %}
+            {% if universe.character_count > 0 %}
+                <div class="box">
+                    <h2 class="title is-5">Character{{ universe.character_count|pluralize }} ({{ universe.character_count }})</h2>
+                    <div class="columns is-multiline" id="characters-container">
+                        {% for character in universe.characters.all|slice:":30" %}
+                            <div class="column is-4">
+                                <article class="media">
+                                    <figure class="media-left">
+                                        <div class="image is-64x64">
+                                            {% if character.image %}
+                                                {% thumbnail character.image "64x64" crop="center" format="WEBP" as im %}
                                                     <img class="is-rounded"
-                                                         src="{% static 'site/img/creator-not-found.webp' %}"
-                                                         alt="No image for {{ character }}"
+                                                         src="{{ im.url }}"
+                                                         width="{{ im.width }}"
+                                                         height="{{ im.height }}"
+                                                         alt="{{ character }}"
                                                          loading="lazy">
-                                                {% endif %}
-                                            </div>
-                                        </figure>
-                                        <div class="media-content">
-                                            <a href="{% url 'character:detail' character.slug %}">{{ character }}</a>
+                                                {% endthumbnail %}
+                                            {% else %}
+                                                <img class="is-rounded"
+                                                     src="{% static 'site/img/creator-not-found.webp' %}"
+                                                     alt="No image for {{ character }}"
+                                                     loading="lazy">
+                                            {% endif %}
                                         </div>
-                                    </article>
-                                </div>
-                            {% endfor %}
-                        </div>
+                                    </figure>
+                                    <div class="media-content">
+                                        <a href="{% url 'character:detail' character.slug %}">{{ character }}</a>
+                                    </div>
+                                </article>
+                            </div>
+                        {% endfor %}
                     </div>
-                {% endif %}
-            {% endwith %}
+                    {% if universe.character_count > 30 %}
+                        <div id="characters-load-more-wrapper"
+                             class="column is-12 has-text-centered mt-4">
+                            <button class="button is-link"
+                                    hx-get="{% url 'universe:characters-load-more' universe.slug %}?offset=30"
+                                    hx-target="#characters-container"
+                                    hx-swap="beforeend"
+                                    hx-indicator="#characters-spinner">
+                                <span>Load More Characters</span>
+                            </button>
+                            <span id="characters-spinner" class="htmx-indicator ml-2">
+                                <i class="fas fa-spinner fa-spin"></i>
+                            </span>
+                        </div>
+                    {% endif %}
+                </div>
+            {% endif %}
             {# Teams #}
-            {% with teams=universe.teams.all %}
-                {% if teams %}
-                    <div class="box">
-                        <h2 class="title is-5">Team{{ teams|pluralize }} ({{ teams.count }})</h2>
-                        <div class="columns is-multiline">
-                            {% for team in teams %}
-                                <div class="column is-4">
-                                    <article class="media">
-                                        <figure class="media-left">
-                                            <div class="image is-64x64">
-                                                {% if team.image %}
-                                                    {% thumbnail team.image "64x64" crop="center" format="WEBP" as im %}
-                                                        <img class="is-rounded"
-                                                             src="{{ im.url }}"
-                                                             width="{{ im.width }}"
-                                                             height="{{ im.height }}"
-                                                             alt="{{ team }}"
-                                                             loading="lazy">
-                                                    {% endthumbnail %}
-                                                {% else %}
+            {% if universe.team_count > 0 %}
+                <div class="box">
+                    <h2 class="title is-5">Team{{ universe.team_count|pluralize }} ({{ universe.team_count }})</h2>
+                    <div class="columns is-multiline" id="teams-container">
+                        {% for team in universe.teams.all|slice:":30" %}
+                            <div class="column is-4">
+                                <article class="media">
+                                    <figure class="media-left">
+                                        <div class="image is-64x64">
+                                            {% if team.image %}
+                                                {% thumbnail team.image "64x64" crop="center" format="WEBP" as im %}
                                                     <img class="is-rounded"
-                                                         src="{% static 'site/img/creator-not-found.webp' %}"
-                                                         alt="No image for {{ team }}"
+                                                         src="{{ im.url }}"
+                                                         width="{{ im.width }}"
+                                                         height="{{ im.height }}"
+                                                         alt="{{ team }}"
                                                          loading="lazy">
-                                                {% endif %}
-                                            </div>
-                                        </figure>
-                                        <div class="media-content">
-                                            <a href="{% url 'team:detail' team.slug %}">{{ team }}</a>
+                                                {% endthumbnail %}
+                                            {% else %}
+                                                <img class="is-rounded"
+                                                     src="{% static 'site/img/creator-not-found.webp' %}"
+                                                     alt="No image for {{ team }}"
+                                                     loading="lazy">
+                                            {% endif %}
                                         </div>
-                                    </article>
-                                </div>
-                            {% endfor %}
-                        </div>
+                                    </figure>
+                                    <div class="media-content">
+                                        <a href="{% url 'team:detail' team.slug %}">{{ team }}</a>
+                                    </div>
+                                </article>
+                            </div>
+                        {% endfor %}
                     </div>
-                {% endif %}
-            {% endwith %}
+                    {% if universe.team_count > 30 %}
+                        <div id="teams-load-more-wrapper"
+                             class="column is-12 has-text-centered mt-4">
+                            <button class="button is-link"
+                                    hx-get="{% url 'universe:teams-load-more' universe.slug %}?offset=30"
+                                    hx-target="#teams-container"
+                                    hx-swap="beforeend"
+                                    hx-indicator="#teams-spinner">
+                                <span>Load More Teams</span>
+                            </button>
+                            <span id="teams-spinner" class="htmx-indicator ml-2">
+                                <i class="fas fa-spinner fa-spin"></i>
+                            </span>
+                        </div>
+                    {% endif %}
+                </div>
+            {% endif %}
             {# Series Appearances #}
             {% if appearances %}
                 <div class="box">
-                    <h2 class="title is-5">Series Appearances</h2>
+                    <h2 class="title is-5">Series Appearances ({{ series_count }})</h2>
                     <div class="content">
-                        <ul>
+                        <ul id="series-list">
                             {% for series in appearances %}
                                 <li>
                                     <a href="{% url 'series:detail' slug=series.issues__series__slug %}">
@@ -213,6 +243,20 @@
                                 </li>
                             {% endfor %}
                         </ul>
+                        {% if series_count > 30 %}
+                            <div id="series-load-more-wrapper" class="has-text-centered mt-4">
+                                <button class="button is-link"
+                                        hx-get="{% url 'universe:series-load-more' universe.slug %}?offset=30"
+                                        hx-target="#series-list"
+                                        hx-swap="beforeend"
+                                        hx-indicator="#series-spinner">
+                                    <span>Load More Series</span>
+                                </button>
+                                <span id="series-spinner" class="htmx-indicator ml-2">
+                                    <i class="fas fa-spinner fa-spin"></i>
+                                </span>
+                            </div>
+                        {% endif %}
                     </div>
                 </div>
             {% endif %}
@@ -232,10 +276,10 @@
                     <dd class="mb-3">
                         <a href="{% url 'publisher:detail' universe.publisher.slug %}">{{ universe.publisher }}</a>
                     </dd>
-                    {% if universe.issue_count > 0 %}
+                    {% if universe.total_issue_count > 0 %}
                         <dt class="has-text-weight-bold">Number of Issues:</dt>
                         <dd class="mb-3">
-                            {{ universe.issue_count|intcomma }}
+                            {{ universe.total_issue_count|intcomma }}
                         </dd>
                         {% with first=universe.first_appearance %}
                             <dt class="has-text-weight-bold">First Appearance:</dt>

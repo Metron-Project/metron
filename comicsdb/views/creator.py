@@ -9,11 +9,12 @@ from django.views.generic.edit import CreateView, DeleteView, UpdateView
 
 from comicsdb.forms.creator import CreatorForm
 from comicsdb.models import Creator, Credits, Issue, Series
-from comicsdb.views.constants import PAGINATE_BY
+from comicsdb.views.constants import DETAIL_PAGINATE_BY, PAGINATE_BY
 from comicsdb.views.history import HistoryListView
 from comicsdb.views.mixins import (
     AttributionCreateMixin,
     AttributionUpdateMixin,
+    LazyLoadMixin,
     NavigationMixin,
     SearchMixin,
     SlugRedirectView,
@@ -60,7 +61,7 @@ class CreatorDetail(NavigationMixin, DetailView):
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        creator = self.get_object()
+        creator = context["object"]
 
         series_issues = (
             Credits.objects.filter(creator=creator)
@@ -69,11 +70,18 @@ class CreatorDetail(NavigationMixin, DetailView):
                 "issue__series__year_began",
                 "issue__series__slug",
                 "issue__series__series_type",
+                "issue__series__sort_name",  # Include for ordering
             )
-            .annotate(Count("issue"))
+            .annotate(issue__count=Count("issue"))
             .order_by("issue__series__sort_name", "issue__series__year_began")
         )
-        context["credits"] = series_issues
+
+        # Get total count for pagination
+        total_series_count = series_issues.count()
+        context["series_count"] = total_series_count
+
+        # Only get first batch for initial load
+        context["credits"] = series_issues[:DETAIL_PAGINATE_BY]
 
         return context
 
@@ -114,3 +122,43 @@ class CreatorDelete(PermissionRequiredMixin, DeleteView):
 
 class CreatorHistory(HistoryListView):
     model = Creator
+
+
+class CreatorSeriesLoadMore(LazyLoadMixin):
+    """HTMX endpoint for lazy loading more series credits."""
+
+    model = Creator
+    relation_name = None  # Custom query, not a direct relation
+    template_name = "comicsdb/partials/creator_series_items.html"
+    context_object_name = "credits"
+    slug_context_name = "creator_slug"
+
+    def get_queryset(self, parent_object, offset, limit):
+        """Custom query with annotations."""
+        series_issues = (
+            Credits.objects.filter(creator=parent_object)
+            .values(
+                "issue__series__name",
+                "issue__series__year_began",
+                "issue__series__slug",
+                "issue__series__series_type",
+                "issue__series__sort_name",  # Include for ordering
+            )
+            .annotate(issue__count=Count("issue"))
+            .order_by("issue__series__sort_name", "issue__series__year_began")
+        )
+        return series_issues[offset : offset + limit]
+
+    def get_total_count(self, parent_object):
+        """Get count of series credits."""
+        return (
+            Credits.objects.filter(creator=parent_object)
+            .values(
+                "issue__series__name",
+                "issue__series__year_began",
+                "issue__series__slug",
+                "issue__series__series_type",
+            )
+            .annotate(issue__count=Count("issue"))
+            .count()
+        )

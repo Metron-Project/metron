@@ -2,6 +2,7 @@
 {% load thumbnail %}
 {% load humanize %}
 {% load static %}
+{% load django_htmx %}
 {% block sitedesc %}
     <meta name="description" content="{{ issue }} Information">
 {% endblock sitedesc %}
@@ -247,167 +248,215 @@
                 </footer>
             </div>
             {# Credits #}
-            {% with credits=issue.credits_set.all %}
-                {% if credits %}
-                    <div class="box">
-                        <h2 class="title is-5">Credit{{ credits|pluralize }} ({{ credits.count }})</h2>
-                        <div class="columns is-multiline">
-                            {% for credit in credits %}
-                                <div class="column is-4">
-                                    <article class="media">
-                                        <figure class="media-left">
-                                            <div class="image is-64x64">
-                                                {% if credit.creator.image %}
-                                                    {% thumbnail credit.creator.image "64x64" crop="top" format="WEBP" as im %}
-                                                        <img class="is-rounded"
-                                                             src="{{ im.url }}"
-                                                             width="{{ im.width }}"
-                                                             height="{{ im.height }}"
-                                                             alt="{{ credit.creator }}"
-                                                             loading="lazy">
-                                                    {% endthumbnail %}
-                                                {% else %}
+            {% if credits_count > 0 %}
+                <div class="box">
+                    <h2 class="title is-5">Credit{{ credits_count|pluralize }} ({{ credits_count }})</h2>
+                    <div id="credits-container" class="columns is-multiline">
+                        {% for credit in credits %}
+                            <div class="column is-4">
+                                <article class="media">
+                                    <figure class="media-left">
+                                        <div class="image is-64x64">
+                                            {% if credit.creator.image %}
+                                                {% thumbnail credit.creator.image "64x64" crop="top" format="WEBP" as im %}
                                                     <img class="is-rounded"
-                                                         src="{% static 'site/img/creator-not-found.webp' %}"
-                                                         alt="No image for {{ credit.creator }}"
+                                                         src="{{ im.url }}"
+                                                         width="{{ im.width }}"
+                                                         height="{{ im.height }}"
+                                                         alt="{{ credit.creator }}"
                                                          loading="lazy">
-                                                {% endif %}
-                                            </div>
-                                        </figure>
-                                        <div class="media-content">
-                                            <div class="content">
-                                                <p>
-                                                    <a href="{% url 'creator:detail' credit.creator.slug %}">{{ credit.creator }}</a>
-                                                    {% with roles=credit.role.all %}
-                                                        {% if roles %}
-                                                            <br>
-                                                            <small class="has-text-grey-dark">{{ roles|join:", " }}</small>
-                                                        {% endif %}
-                                                    {% endwith %}
-                                                </p>
-                                            </div>
+                                                {% endthumbnail %}
+                                            {% else %}
+                                                <img class="is-rounded"
+                                                     src="{% static 'site/img/creator-not-found.webp' %}"
+                                                     alt="No image for {{ credit.creator }}"
+                                                     loading="lazy">
+                                            {% endif %}
                                         </div>
-                                    </article>
-                                </div>
-                            {% endfor %}
-                        </div>
+                                    </figure>
+                                    <div class="media-content">
+                                        <div class="content">
+                                            <p>
+                                                <a href="{% url 'creator:detail' credit.creator.slug %}">{{ credit.creator }}</a>
+                                                {% with roles=credit.role.all %}
+                                                    {% if roles %}
+                                                        <br>
+                                                        <small class="has-text-grey-dark">{{ roles|join:", " }}</small>
+                                                    {% endif %}
+                                                {% endwith %}
+                                            </p>
+                                        </div>
+                                    </div>
+                                </article>
+                            </div>
+                        {% endfor %}
                     </div>
-                {% endif %}
-            {% endwith %}
+                    {% if credits_count > 30 %}
+                        <div id="credits-load-more-wrapper" class="has-text-centered mt-4">
+                            <button class="button is-link"
+                                    hx-get="{% url 'issue:credits-load-more' issue.slug %}?offset=30"
+                                    hx-target="#credits-container"
+                                    hx-swap="beforeend"
+                                    hx-indicator="#credits-spinner">
+                                <span>Load More Credits</span>
+                            </button>
+                            <span id="credits-spinner" class="htmx-indicator ml-2">
+                                <i class="fas fa-spinner fa-spin"></i>
+                            </span>
+                        </div>
+                    {% endif %}
+                </div>
+            {% endif %}
             {# Characters #}
-            {% with characters=issue.characters.all %}
-                {% if characters %}
-                    <div class="box">
-                        <h2 class="title is-5">Character{{ characters|pluralize }} ({{ characters.count }})</h2>
-                        <div class="columns is-multiline">
-                            {% for character in characters %}
-                                <div class="column is-4">
-                                    <article class="media">
-                                        <figure class="media-left">
-                                            <div class="image is-64x64">
-                                                {% if character.image %}
-                                                    {% thumbnail character.image "64x64" crop="top" format="WEBP" as im %}
-                                                        <img class="is-rounded"
-                                                             src="{{ im.url }}"
-                                                             width="{{ im.width }}"
-                                                             height="{{ im.height }}"
-                                                             alt="{{ character }}"
-                                                             loading="lazy">
-                                                    {% endthumbnail %}
-                                                {% else %}
+            {% if characters_count > 0 %}
+                <div class="box">
+                    <h2 class="title is-5">Character{{ characters_count|pluralize }} ({{ characters_count }})</h2>
+                    <div id="characters-container" class="columns is-multiline">
+                        {% for character in characters %}
+                            <div class="column is-4">
+                                <article class="media">
+                                    <figure class="media-left">
+                                        <div class="image is-64x64">
+                                            {% if character.image %}
+                                                {% thumbnail character.image "64x64" crop="top" format="WEBP" as im %}
                                                     <img class="is-rounded"
-                                                         src="{% static 'site/img/creator-not-found.webp' %}"
-                                                         alt="No image for {{ character }}"
+                                                         src="{{ im.url }}"
+                                                         width="{{ im.width }}"
+                                                         height="{{ im.height }}"
+                                                         alt="{{ character }}"
                                                          loading="lazy">
-                                                {% endif %}
-                                            </div>
-                                        </figure>
-                                        <div class="media-content">
-                                            <a href="{% url 'character:detail' character.slug %}">{{ character }}</a>
+                                                {% endthumbnail %}
+                                            {% else %}
+                                                <img class="is-rounded"
+                                                     src="{% static 'site/img/creator-not-found.webp' %}"
+                                                     alt="No image for {{ character }}"
+                                                     loading="lazy">
+                                            {% endif %}
                                         </div>
-                                    </article>
-                                </div>
-                            {% endfor %}
-                        </div>
+                                    </figure>
+                                    <div class="media-content">
+                                        <a href="{% url 'character:detail' character.slug %}">{{ character }}</a>
+                                    </div>
+                                </article>
+                            </div>
+                        {% endfor %}
                     </div>
-                {% endif %}
-            {% endwith %}
+                    {% if characters_count > 30 %}
+                        <div id="characters-load-more-wrapper" class="has-text-centered mt-4">
+                            <button class="button is-link"
+                                    hx-get="{% url 'issue:characters-load-more' issue.slug %}?offset=30"
+                                    hx-target="#characters-container"
+                                    hx-swap="beforeend"
+                                    hx-indicator="#characters-spinner">
+                                <span>Load More Characters</span>
+                            </button>
+                            <span id="characters-spinner" class="htmx-indicator ml-2">
+                                <i class="fas fa-spinner fa-spin"></i>
+                            </span>
+                        </div>
+                    {% endif %}
+                </div>
+            {% endif %}
             {# Teams #}
-            {% with teams=issue.teams.all %}
-                {% if teams %}
-                    <div class="box">
-                        <h2 class="title is-5">Team{{ teams|pluralize }} ({{ teams.count }})</h2>
-                        <div class="columns is-multiline">
-                            {% for team in teams %}
-                                <div class="column is-4">
-                                    <article class="media">
-                                        <figure class="media-left">
-                                            <div class="image is-64x64">
-                                                {% if team.image %}
-                                                    {% thumbnail team.image "64x64" crop="center" format="WEBP" as im %}
-                                                        <img class="is-rounded"
-                                                             src="{{ im.url }}"
-                                                             width="{{ im.width }}"
-                                                             height="{{ im.height }}"
-                                                             alt="{{ team }}"
-                                                             loading="lazy">
-                                                    {% endthumbnail %}
-                                                {% else %}
+            {% if teams_count > 0 %}
+                <div class="box">
+                    <h2 class="title is-5">Team{{ teams_count|pluralize }} ({{ teams_count }})</h2>
+                    <div id="teams-container" class="columns is-multiline">
+                        {% for team in teams %}
+                            <div class="column is-4">
+                                <article class="media">
+                                    <figure class="media-left">
+                                        <div class="image is-64x64">
+                                            {% if team.image %}
+                                                {% thumbnail team.image "64x64" crop="center" format="WEBP" as im %}
                                                     <img class="is-rounded"
-                                                         src="{% static 'site/img/creator-not-found.webp' %}"
-                                                         alt="No image for {{ team }}"
+                                                         src="{{ im.url }}"
+                                                         width="{{ im.width }}"
+                                                         height="{{ im.height }}"
+                                                         alt="{{ team }}"
                                                          loading="lazy">
-                                                {% endif %}
-                                            </div>
-                                        </figure>
-                                        <div class="media-content">
-                                            <a href="{% url 'team:detail' team.slug %}">{{ team }}</a>
+                                                {% endthumbnail %}
+                                            {% else %}
+                                                <img class="is-rounded"
+                                                     src="{% static 'site/img/creator-not-found.webp' %}"
+                                                     alt="No image for {{ team }}"
+                                                     loading="lazy">
+                                            {% endif %}
                                         </div>
-                                    </article>
-                                </div>
-                            {% endfor %}
-                        </div>
+                                    </figure>
+                                    <div class="media-content">
+                                        <a href="{% url 'team:detail' team.slug %}">{{ team }}</a>
+                                    </div>
+                                </article>
+                            </div>
+                        {% endfor %}
                     </div>
-                {% endif %}
-            {% endwith %}
+                    {% if teams_count > 30 %}
+                        <div id="teams-load-more-wrapper" class="has-text-centered mt-4">
+                            <button class="button is-link"
+                                    hx-get="{% url 'issue:teams-load-more' issue.slug %}?offset=30"
+                                    hx-target="#teams-container"
+                                    hx-swap="beforeend"
+                                    hx-indicator="#teams-spinner">
+                                <span>Load More Teams</span>
+                            </button>
+                            <span id="teams-spinner" class="htmx-indicator ml-2">
+                                <i class="fas fa-spinner fa-spin"></i>
+                            </span>
+                        </div>
+                    {% endif %}
+                </div>
+            {% endif %}
             {# Universes #}
-            {% with universes=issue.universes.all %}
-                {% if universes %}
-                    <div class="box">
-                        <h2 class="title is-5">Universe{{ universes|pluralize }} ({{ universes.count }})</h2>
-                        <div class="columns is-multiline">
-                            {% for universe in universes %}
-                                <div class="column is-4">
-                                    <article class="media">
-                                        <figure class="media-left">
-                                            <div class="image is-64x64">
-                                                {% if universe.image %}
-                                                    {% thumbnail universe.image "64x64" crop="center" format="WEBP" as im %}
-                                                        <img class="is-rounded"
-                                                             src="{{ im.url }}"
-                                                             width="{{ im.width }}"
-                                                             height="{{ im.height }}"
-                                                             alt="{{ universe }}"
-                                                             loading="lazy">
-                                                    {% endthumbnail %}
-                                                {% else %}
+            {% if universes_count > 0 %}
+                <div class="box">
+                    <h2 class="title is-5">Universe{{ universes_count|pluralize }} ({{ universes_count }})</h2>
+                    <div id="universes-container" class="columns is-multiline">
+                        {% for universe in universes %}
+                            <div class="column is-4">
+                                <article class="media">
+                                    <figure class="media-left">
+                                        <div class="image is-64x64">
+                                            {% if universe.image %}
+                                                {% thumbnail universe.image "64x64" crop="center" format="WEBP" as im %}
                                                     <img class="is-rounded"
-                                                         src="{% static 'site/img/creator-not-found.webp' %}"
-                                                         alt="No image for {{ universe }}"
+                                                         src="{{ im.url }}"
+                                                         width="{{ im.width }}"
+                                                         height="{{ im.height }}"
+                                                         alt="{{ universe }}"
                                                          loading="lazy">
-                                                {% endif %}
-                                            </div>
-                                        </figure>
-                                        <div class="media-content">
-                                            <a href="{% url 'universe:detail' universe.slug %}">{{ universe }}</a>
+                                                {% endthumbnail %}
+                                            {% else %}
+                                                <img class="is-rounded"
+                                                     src="{% static 'site/img/creator-not-found.webp' %}"
+                                                     alt="No image for {{ universe }}"
+                                                     loading="lazy">
+                                            {% endif %}
                                         </div>
-                                    </article>
-                                </div>
-                            {% endfor %}
-                        </div>
+                                    </figure>
+                                    <div class="media-content">
+                                        <a href="{% url 'universe:detail' universe.slug %}">{{ universe }}</a>
+                                    </div>
+                                </article>
+                            </div>
+                        {% endfor %}
                     </div>
-                {% endif %}
-            {% endwith %}
+                    {% if universes_count > 30 %}
+                        <div id="universes-load-more-wrapper" class="has-text-centered mt-4">
+                            <button class="button is-link"
+                                    hx-get="{% url 'issue:universes-load-more' issue.slug %}?offset=30"
+                                    hx-target="#universes-container"
+                                    hx-swap="beforeend"
+                                    hx-indicator="#universes-spinner">
+                                <span>Load More Universes</span>
+                            </button>
+                            <span id="universes-spinner" class="htmx-indicator ml-2">
+                                <i class="fas fa-spinner fa-spin"></i>
+                            </span>
+                        </div>
+                    {% endif %}
+                </div>
+            {% endif %}
             {# Reprints #}
             {% with reprints=issue.reprints.all %}
                 {% if reprints %}
@@ -554,6 +603,7 @@
     </div>
 {% endblock content %}
 {% block js %}
+    {% htmx_script %}
     <script src="{% static 'site/js/bulma-modal.js' %}"></script>
     <script src="{% static 'site/js/bulma-notifications.js' %}"></script>
 {% endblock %}

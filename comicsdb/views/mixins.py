@@ -8,11 +8,14 @@ from functools import reduce
 
 from django.db import transaction
 from django.db.models import Q
+from django.shortcuts import get_object_or_404, render
 from django.urls import reverse
+from django.views import View
 from django.views.generic import RedirectView
 
 from comicsdb.forms.attribution import AttributionFormSet
 from comicsdb.models.attribution import Attribution
+from comicsdb.views.constants import DETAIL_PAGINATE_BY
 
 LOGGER = logging.getLogger(__name__)
 
@@ -264,3 +267,109 @@ class SlugRedirectView(RedirectView):
             raise NotImplementedError(f"{self.__class__.__name__} must define 'url_name' attribute")
         obj = self.model.objects.get(pk=pk)
         return reverse(self.url_name, kwargs={"slug": obj.slug})
+
+
+class LazyLoadMixin(View):
+    """
+    Base mixin for HTMX lazy-loading endpoints.
+
+    Handles common pagination logic for detail view load-more buttons.
+    Reduces code duplication across load-more view classes.
+
+    Required attributes:
+    - model: The parent model class (e.g., Universe, Team)
+    - relation_name: Name of the relation to paginate (e.g., "characters", "teams")
+    - template_name: Path to the partial template
+      (e.g., "comicsdb/partials/universe_character_items.html")
+    - context_object_name: Key for items in template context (e.g., "characters")
+    - slug_context_name: Key for parent slug in template context (e.g., "universe_slug")
+
+    Override methods for custom behavior:
+    - get_queryset(): Customize the queryset (useful for complex queries with annotations)
+    - get_total_count(): Customize how total count is calculated
+    - get_limit(): Change pagination size (defaults to DETAIL_PAGINATE_BY)
+
+    Example:
+        class UniverseCharactersLoadMore(LazyLoadMixin):
+            model = Universe
+            relation_name = "characters"
+            template_name = "comicsdb/partials/universe_character_items.html"
+            context_object_name = "characters"
+            slug_context_name = "universe_slug"
+    """
+
+    model = None
+    relation_name = None
+    template_name = None
+    context_object_name = None
+    slug_context_name = None
+
+    def get_limit(self):
+        """Get the pagination limit. Override to customize."""
+        return DETAIL_PAGINATE_BY
+
+    def get_queryset(self, parent_object, offset, limit):
+        """
+        Get the paginated queryset.
+        Override for complex queries (e.g., with select_related, annotations).
+        Default uses the relation name to get items.
+        """
+        if not self.relation_name:
+            raise NotImplementedError(
+                f"{self.__class__.__name__} must define 'relation_name' attribute"
+            )
+        relation = getattr(parent_object, self.relation_name)
+        return relation.all()[offset : offset + limit]
+
+    def get_total_count(self, parent_object):
+        """
+        Get total count for has_more calculation.
+        Override for custom count logic.
+        """
+        if not self.relation_name:
+            raise NotImplementedError(
+                f"{self.__class__.__name__} must define 'relation_name' attribute"
+            )
+        relation = getattr(parent_object, self.relation_name)
+        return relation.count()
+
+    def get_context_data(self, parent_object, items, has_more, next_offset, slug):
+        """
+        Build the context dict for rendering.
+        Override to add additional context variables.
+        """
+        if not self.context_object_name:
+            raise NotImplementedError(
+                f"{self.__class__.__name__} must define 'context_object_name' attribute"
+            )
+        if not self.slug_context_name:
+            raise NotImplementedError(
+                f"{self.__class__.__name__} must define 'slug_context_name' attribute"
+            )
+
+        return {
+            self.context_object_name: items,
+            "has_more": has_more,
+            "next_offset": next_offset,
+            self.slug_context_name: slug,
+        }
+
+    def get(self, request, slug):
+        """Handle GET request for lazy loading."""
+        if not self.model:
+            raise NotImplementedError(f"{self.__class__.__name__} must define 'model' attribute")
+        if not self.template_name:
+            raise NotImplementedError(
+                f"{self.__class__.__name__} must define 'template_name' attribute"
+            )
+
+        parent_object = get_object_or_404(self.model, slug=slug)
+        offset = int(request.GET.get("offset", 0))
+        limit = self.get_limit()
+
+        items = self.get_queryset(parent_object, offset, limit)
+        total_count = self.get_total_count(parent_object)
+        has_more = total_count > offset + limit
+
+        context = self.get_context_data(parent_object, items, has_more, offset + limit, slug)
+        return render(request, self.template_name, context)

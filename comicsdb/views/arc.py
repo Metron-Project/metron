@@ -1,7 +1,6 @@
 import logging
 
 from django.contrib.auth.mixins import LoginRequiredMixin, PermissionRequiredMixin
-from django.db.models import Prefetch
 from django.shortcuts import get_object_or_404
 from django.urls import reverse_lazy
 from django.views.generic import DetailView, ListView
@@ -9,12 +8,12 @@ from django.views.generic.edit import CreateView, DeleteView, UpdateView
 
 from comicsdb.forms.arc import ArcForm
 from comicsdb.models.arc import Arc
-from comicsdb.models.issue import Issue
-from comicsdb.views.constants import PAGINATE_BY
+from comicsdb.views.constants import DETAIL_PAGINATE_BY, PAGINATE_BY
 from comicsdb.views.history import HistoryListView
 from comicsdb.views.mixins import (
     AttributionCreateMixin,
     AttributionUpdateMixin,
+    LazyLoadMixin,
     NavigationMixin,
     SearchMixin,
     SlugRedirectView,
@@ -45,14 +44,24 @@ class ArcIssueList(ListView):
 
 class ArcDetail(NavigationMixin, DetailView):
     model = Arc
-    queryset = Arc.objects.select_related("edited_by").prefetch_related(
-        Prefetch(
-            "issues",
-            queryset=Issue.objects.order_by(
+    queryset = Arc.objects.select_related("edited_by")
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        arc = context["object"]
+
+        # Get issue count and paginate
+        issue_count = arc.issues.count()
+        context["issue_count"] = issue_count
+
+        # Only load first batch of issues
+        if issue_count > 0:
+            issues_qs = arc.issues.order_by(
                 "cover_date", "store_date", "series__sort_name", "number"
-            ).select_related("series", "series__series_type"),
-        )
-    )
+            ).select_related("series", "series__series_type")
+            context["issues"] = issues_qs[:DETAIL_PAGINATE_BY]
+
+        return context
 
 
 class ArcDetailRedirect(SlugRedirectView):
@@ -87,3 +96,24 @@ class ArcDelete(PermissionRequiredMixin, DeleteView):
 
 class ArcHistory(HistoryListView):
     model = Arc
+
+
+class ArcIssuesLoadMore(LazyLoadMixin):
+    """HTMX endpoint for lazy loading more arc issues."""
+
+    model = Arc
+    relation_name = None  # Custom query with ordering and select_related
+    template_name = "comicsdb/partials/arc_issue_items.html"
+    context_object_name = "issues"
+    slug_context_name = "arc_slug"
+
+    def get_queryset(self, parent_object, offset, limit):
+        """Custom query with ordering and select_related."""
+        issues_qs = parent_object.issues.order_by(
+            "cover_date", "store_date", "series__sort_name", "number"
+        ).select_related("series", "series__series_type")
+        return issues_qs[offset : offset + limit]
+
+    def get_total_count(self, parent_object):
+        """Get total count of issues."""
+        return parent_object.issues.count()

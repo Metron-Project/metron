@@ -2,9 +2,13 @@
 {% load thumbnail %}
 {% load static %}
 {% load humanize %}
+{% load django_htmx %}
 {% block title %}
     {{ creator.name }}
 {% endblock title %}
+{% block js %}
+    {% htmx_script %}
+{% endblock js %}
 {% block content %}
     {# Page Header #}
     <header class="block">
@@ -113,9 +117,9 @@
             {# Series Credits #}
             {% if credits %}
                 <div class="box">
-                    <h2 class="title is-5">Series</h2>
+                    <h2 class="title is-5">Series ({{ series_count }})</h2>
                     <div class="content">
-                        <ul>
+                        <ul id="series-list">
                             {% for series in credits %}
                                 <li>
                                     <a href="{% url 'series:detail' slug=series.issue__series__slug %}">
@@ -137,6 +141,20 @@
                                 </li>
                             {% endfor %}
                         </ul>
+                        {% if series_count > 30 %}
+                            <div id="series-load-more-wrapper" class="has-text-centered mt-4">
+                                <button class="button is-link"
+                                        hx-get="{% url 'creator:series-load-more' creator.slug %}?offset=30"
+                                        hx-target="#series-list"
+                                        hx-swap="beforeend"
+                                        hx-indicator="#series-spinner">
+                                    <span>Load More Series</span>
+                                </button>
+                                <span id="series-spinner" class="htmx-indicator ml-2">
+                                    <i class="fas fa-spinner fa-spin"></i>
+                                </span>
+                            </div>
+                        {% endif %}
                     </div>
                 </div>
             {% endif %}
