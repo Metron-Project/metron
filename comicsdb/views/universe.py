@@ -10,7 +10,7 @@ from comicsdb.forms.universe import UniverseForm
 from comicsdb.models.issue import Issue
 from comicsdb.models.series import Series
 from comicsdb.models.universe import Universe
-from comicsdb.views.constants import PAGINATE_BY
+from comicsdb.views.constants import DETAIL_PAGINATE_BY, PAGINATE_BY
 from comicsdb.views.history import HistoryListView
 from comicsdb.views.mixins import (
     AttributionCreateMixin,
@@ -100,8 +100,8 @@ class UniverseDetail(NavigationMixin, DetailView):
             total_series_count = series_issues.count()
             context["series_count"] = total_series_count
 
-            # Only get first 30 for initial load
-            paginated_series = series_issues[:30]
+            # Only get first batch for initial load
+            paginated_series = series_issues[:DETAIL_PAGINATE_BY]
 
             # Rename fields to match template expectations
             context["appearances"] = [
@@ -163,7 +163,7 @@ class UniverseCharactersLoadMore(View):
     def get(self, request, slug):
         universe = get_object_or_404(Universe, slug=slug)
         offset = int(request.GET.get("offset", 0))
-        limit = 30  # Load 30 items at a time
+        limit = DETAIL_PAGINATE_BY
 
         characters = universe.characters.all()[offset : offset + limit]
         has_more = universe.characters.count() > offset + limit
@@ -183,7 +183,7 @@ class UniverseTeamsLoadMore(View):
     def get(self, request, slug):
         universe = get_object_or_404(Universe, slug=slug)
         offset = int(request.GET.get("offset", 0))
-        limit = 30  # Load 30 items at a time
+        limit = DETAIL_PAGINATE_BY
 
         teams = universe.teams.all()[offset : offset + limit]
         has_more = universe.teams.count() > offset + limit
@@ -203,7 +203,7 @@ class UniverseSeriesLoadMore(View):
     def get(self, request, slug):
         universe = get_object_or_404(Universe, slug=slug)
         offset = int(request.GET.get("offset", 0))
-        limit = 30  # Load 30 items at a time
+        limit = DETAIL_PAGINATE_BY
 
         # Same query as in UniverseDetail.get_context_data
         series_issues = (

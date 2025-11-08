@@ -8,7 +8,7 @@ from django.views.generic.edit import CreateView, DeleteView, UpdateView
 
 from comicsdb.forms.team import TeamForm
 from comicsdb.models.team import Team
-from comicsdb.views.constants import PAGINATE_BY
+from comicsdb.views.constants import DETAIL_PAGINATE_BY, PAGINATE_BY
 from comicsdb.views.history import HistoryListView
 from comicsdb.views.mixins import (
     AttributionCreateMixin,
@@ -54,9 +54,9 @@ class TeamDetail(NavigationMixin, DetailView):
         member_count = team.characters.count()
         context["member_count"] = member_count
 
-        # Only load first 30 members
+        # Only load first batch of members
         if member_count > 0:
-            context["members"] = team.characters.all()[:30]
+            context["members"] = team.characters.all()[:DETAIL_PAGINATE_BY]
 
         return context
 
@@ -101,7 +101,7 @@ class TeamMembersLoadMore(View):
     def get(self, request, slug):
         team = get_object_or_404(Team, slug=slug)
         offset = int(request.GET.get("offset", 0))
-        limit = 30  # Load 30 items at a time
+        limit = DETAIL_PAGINATE_BY
 
         members = team.characters.all()[offset : offset + limit]
         has_more = team.characters.count() > offset + limit

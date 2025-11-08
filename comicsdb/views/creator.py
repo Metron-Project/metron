@@ -9,7 +9,7 @@ from django.views.generic.edit import CreateView, DeleteView, UpdateView
 
 from comicsdb.forms.creator import CreatorForm
 from comicsdb.models import Creator, Credits, Issue, Series
-from comicsdb.views.constants import PAGINATE_BY
+from comicsdb.views.constants import DETAIL_PAGINATE_BY, PAGINATE_BY
 from comicsdb.views.history import HistoryListView
 from comicsdb.views.mixins import (
     AttributionCreateMixin,
@@ -79,8 +79,8 @@ class CreatorDetail(NavigationMixin, DetailView):
         total_series_count = series_issues.count()
         context["series_count"] = total_series_count
 
-        # Only get first 30 for initial load
-        context["credits"] = series_issues[:30]
+        # Only get first batch for initial load
+        context["credits"] = series_issues[:DETAIL_PAGINATE_BY]
 
         return context
 
@@ -129,7 +129,7 @@ class CreatorSeriesLoadMore(View):
     def get(self, request, slug):
         creator = get_object_or_404(Creator, slug=slug)
         offset = int(request.GET.get("offset", 0))
-        limit = 30  # Load 30 items at a time
+        limit = DETAIL_PAGINATE_BY
 
         # Same query as in CreatorDetail.get_context_data
         series_issues = (

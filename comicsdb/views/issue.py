@@ -24,7 +24,7 @@ from comicsdb.models import Creator, Credits, Issue, Role, Series
 from comicsdb.models.attribution import Attribution
 from comicsdb.models.series import SeriesType
 from comicsdb.models.variant import Variant
-from comicsdb.views.constants import PAGINATE_BY
+from comicsdb.views.constants import DETAIL_PAGINATE_BY, PAGINATE_BY
 from comicsdb.views.history import HistoryListView
 from comicsdb.views.mixins import SlugRedirectView
 
@@ -170,22 +170,22 @@ class IssueDetail(DetailView):
         credits_count = credits_qs.count()
         context["credits_count"] = credits_count
         if credits_count > 0:
-            context["credits"] = credits_qs[:30]
+            context["credits"] = credits_qs[:DETAIL_PAGINATE_BY]
 
         characters_count = issue.characters.count()
         context["characters_count"] = characters_count
         if characters_count > 0:
-            context["characters"] = issue.characters.all()[:30]
+            context["characters"] = issue.characters.all()[:DETAIL_PAGINATE_BY]
 
         teams_count = issue.teams.count()
         context["teams_count"] = teams_count
         if teams_count > 0:
-            context["teams"] = issue.teams.all()[:30]
+            context["teams"] = issue.teams.all()[:DETAIL_PAGINATE_BY]
 
         universes_count = issue.universes.count()
         context["universes_count"] = universes_count
         if universes_count > 0:
-            context["universes"] = issue.universes.all()[:30]
+            context["universes"] = issue.universes.all()[:DETAIL_PAGINATE_BY]
 
         return context
 
@@ -686,7 +686,7 @@ class IssueCreditsLoadMore(View):
     def get(self, request, slug):
         issue = get_object_or_404(Issue, slug=slug)
         offset = int(request.GET.get("offset", 0))
-        limit = 30  # Load 30 items at a time
+        limit = DETAIL_PAGINATE_BY
 
         # Same query as in IssueDetail.get_context_data
         credits_qs = (
@@ -729,7 +729,7 @@ class IssueCharactersLoadMore(View):
     def get(self, request, slug):
         issue = get_object_or_404(Issue, slug=slug)
         offset = int(request.GET.get("offset", 0))
-        limit = 30  # Load 30 items at a time
+        limit = DETAIL_PAGINATE_BY
 
         characters = issue.characters.all()[offset : offset + limit]
         has_more = issue.characters.count() > offset + limit
@@ -749,7 +749,7 @@ class IssueTeamsLoadMore(View):
     def get(self, request, slug):
         issue = get_object_or_404(Issue, slug=slug)
         offset = int(request.GET.get("offset", 0))
-        limit = 30  # Load 30 items at a time
+        limit = DETAIL_PAGINATE_BY
 
         teams = issue.teams.all()[offset : offset + limit]
         has_more = issue.teams.count() > offset + limit
@@ -769,7 +769,7 @@ class IssueUniversesLoadMore(View):
     def get(self, request, slug):
         issue = get_object_or_404(Issue, slug=slug)
         offset = int(request.GET.get("offset", 0))
-        limit = 30  # Load 30 items at a time
+        limit = DETAIL_PAGINATE_BY
 
         universes = issue.universes.all()[offset : offset + limit]
         has_more = issue.universes.count() > offset + limit

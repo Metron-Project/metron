@@ -9,7 +9,7 @@ from django.views.generic.edit import CreateView, DeleteView, UpdateView
 from comicsdb.forms.publisher import PublisherForm
 from comicsdb.models.publisher import Publisher
 from comicsdb.models.series import Series
-from comicsdb.views.constants import PAGINATE_BY
+from comicsdb.views.constants import DETAIL_PAGINATE_BY, PAGINATE_BY
 from comicsdb.views.history import HistoryListView
 from comicsdb.views.mixins import (
     AttributionCreateMixin,
@@ -62,13 +62,13 @@ class PublisherDetail(NavigationMixin, DetailView):
         context["imprint_count"] = imprint_count
         context["universe_count"] = universe_count
 
-        # Paginate imprints - only load first 30
+        # Paginate imprints - only load first batch
         if imprint_count > 0:
-            context["imprints"] = publisher.imprints.all()[:30]
+            context["imprints"] = publisher.imprints.all()[:DETAIL_PAGINATE_BY]
 
-        # Paginate universes - only load first 30
+        # Paginate universes - only load first batch
         if universe_count > 0:
-            context["universes"] = publisher.universes.all()[:30]
+            context["universes"] = publisher.universes.all()[:DETAIL_PAGINATE_BY]
 
         return context
 
@@ -113,7 +113,7 @@ class PublisherImprintsLoadMore(View):
     def get(self, request, slug):
         publisher = get_object_or_404(Publisher, slug=slug)
         offset = int(request.GET.get("offset", 0))
-        limit = 30  # Load 30 items at a time
+        limit = DETAIL_PAGINATE_BY
 
         imprints = publisher.imprints.all()[offset : offset + limit]
         has_more = publisher.imprints.count() > offset + limit
@@ -133,7 +133,7 @@ class PublisherUniversesLoadMore(View):
     def get(self, request, slug):
         publisher = get_object_or_404(Publisher, slug=slug)
         offset = int(request.GET.get("offset", 0))
-        limit = 30  # Load 30 items at a time
+        limit = DETAIL_PAGINATE_BY
 
         universes = publisher.universes.all()[offset : offset + limit]
         has_more = publisher.universes.count() > offset + limit

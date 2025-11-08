@@ -9,7 +9,7 @@ from django.views.generic.edit import CreateView, DeleteView, UpdateView
 
 from comicsdb.forms.arc import ArcForm
 from comicsdb.models.arc import Arc
-from comicsdb.views.constants import PAGINATE_BY
+from comicsdb.views.constants import DETAIL_PAGINATE_BY, PAGINATE_BY
 from comicsdb.views.history import HistoryListView
 from comicsdb.views.mixins import (
     AttributionCreateMixin,
@@ -54,12 +54,12 @@ class ArcDetail(NavigationMixin, DetailView):
         issue_count = arc.issues.count()
         context["issue_count"] = issue_count
 
-        # Only load first 30 issues
+        # Only load first batch of issues
         if issue_count > 0:
             issues_qs = arc.issues.order_by(
                 "cover_date", "store_date", "series__sort_name", "number"
             ).select_related("series", "series__series_type")
-            context["issues"] = issues_qs[:30]
+            context["issues"] = issues_qs[:DETAIL_PAGINATE_BY]
 
         return context
 
@@ -104,7 +104,7 @@ class ArcIssuesLoadMore(View):
     def get(self, request, slug):
         arc = get_object_or_404(Arc, slug=slug)
         offset = int(request.GET.get("offset", 0))
-        limit = 30  # Load 30 items at a time
+        limit = DETAIL_PAGINATE_BY
 
         # Same query as in ArcDetail.get_context_data
         issues_qs = arc.issues.order_by(
