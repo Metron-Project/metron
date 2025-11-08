@@ -9,7 +9,7 @@ from django.core.exceptions import ObjectDoesNotExist
 from django.db import transaction
 from django.db.models import Prefetch, Q
 from django.http import HttpResponseRedirect
-from django.shortcuts import get_object_or_404
+from django.shortcuts import get_object_or_404, render
 from django.urls import reverse, reverse_lazy
 from django.views import View
 from django.views.generic import DetailView, ListView
@@ -94,25 +94,6 @@ class IssueDetail(DetailView):
         )
         .prefetch_related(
             Prefetch(
-                "credits_set",
-                queryset=Credits.objects.select_related("creator")
-                .defer(
-                    "modified",
-                    "creator__desc",
-                    "creator__cv_id",
-                    "creator__modified",
-                    "creator__created_on",
-                    "creator__birth",
-                    "creator__death",
-                    "creator__alias",
-                )
-                .order_by("creator__name")
-                .distinct("creator__name")
-                .prefetch_related(
-                    Prefetch("role", queryset=Role.objects.defer("order", "notes", "modified"))
-                ),
-            ),
-            Prefetch(
                 "reprints",
                 queryset=Issue.objects.select_related("series", "series__series_type")
                 .defer(
@@ -149,7 +130,8 @@ class IssueDetail(DetailView):
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        issue = self.get_object()
+        issue = context["object"]
+
         try:
             next_issue = issue.get_next_by_cover_date(series=issue.series)
         except ObjectDoesNotExist:
@@ -164,6 +146,47 @@ class IssueDetail(DetailView):
             "next_issue": next_issue,
             "previous_issue": previous_issue,
         }
+
+        # Get counts for pagination
+        credits_qs = (
+            Credits.objects.filter(issue=issue)
+            .select_related("creator")
+            .defer(
+                "modified",
+                "creator__desc",
+                "creator__cv_id",
+                "creator__modified",
+                "creator__created_on",
+                "creator__birth",
+                "creator__death",
+                "creator__alias",
+            )
+            .order_by("creator__name")
+            .distinct("creator__name")
+            .prefetch_related(
+                Prefetch("role", queryset=Role.objects.defer("order", "notes", "modified"))
+            )
+        )
+        credits_count = credits_qs.count()
+        context["credits_count"] = credits_count
+        if credits_count > 0:
+            context["credits"] = credits_qs[:30]
+
+        characters_count = issue.characters.count()
+        context["characters_count"] = characters_count
+        if characters_count > 0:
+            context["characters"] = issue.characters.all()[:30]
+
+        teams_count = issue.teams.count()
+        context["teams_count"] = teams_count
+        if teams_count > 0:
+            context["teams"] = issue.teams.all()[:30]
+
+        universes_count = issue.universes.count()
+        context["universes_count"] = universes_count
+        if universes_count > 0:
+            context["universes"] = issue.universes.all()[:30]
+
         return context
 
 
@@ -655,3 +678,106 @@ class FutureList(ListView):
         context["future"] = True
         context["series_type"] = SeriesType.objects.values("id", "name")
         return context
+
+
+class IssueCreditsLoadMore(View):
+    """HTMX endpoint for lazy loading more issue credits."""
+
+    def get(self, request, slug):
+        issue = get_object_or_404(Issue, slug=slug)
+        offset = int(request.GET.get("offset", 0))
+        limit = 30  # Load 30 items at a time
+
+        # Same query as in IssueDetail.get_context_data
+        credits_qs = (
+            Credits.objects.filter(issue=issue)
+            .select_related("creator")
+            .defer(
+                "modified",
+                "creator__desc",
+                "creator__cv_id",
+                "creator__modified",
+                "creator__created_on",
+                "creator__birth",
+                "creator__death",
+                "creator__alias",
+            )
+            .order_by("creator__name")
+            .distinct("creator__name")
+            .prefetch_related(
+                Prefetch("role", queryset=Role.objects.defer("order", "notes", "modified"))
+            )
+        )
+
+        total_count = credits_qs.count()
+        paginated_credits = credits_qs[offset : offset + limit]
+
+        has_more = total_count > offset + limit
+
+        context = {
+            "credits": paginated_credits,
+            "has_more": has_more,
+            "next_offset": offset + limit,
+            "issue_slug": slug,
+        }
+        return render(request, "comicsdb/partials/issue_credit_items.html", context)
+
+
+class IssueCharactersLoadMore(View):
+    """HTMX endpoint for lazy loading more issue characters."""
+
+    def get(self, request, slug):
+        issue = get_object_or_404(Issue, slug=slug)
+        offset = int(request.GET.get("offset", 0))
+        limit = 30  # Load 30 items at a time
+
+        characters = issue.characters.all()[offset : offset + limit]
+        has_more = issue.characters.count() > offset + limit
+
+        context = {
+            "characters": characters,
+            "has_more": has_more,
+            "next_offset": offset + limit,
+            "issue_slug": slug,
+        }
+        return render(request, "comicsdb/partials/issue_character_items.html", context)
+
+
+class IssueTeamsLoadMore(View):
+    """HTMX endpoint for lazy loading more issue teams."""
+
+    def get(self, request, slug):
+        issue = get_object_or_404(Issue, slug=slug)
+        offset = int(request.GET.get("offset", 0))
+        limit = 30  # Load 30 items at a time
+
+        teams = issue.teams.all()[offset : offset + limit]
+        has_more = issue.teams.count() > offset + limit
+
+        context = {
+            "teams": teams,
+            "has_more": has_more,
+            "next_offset": offset + limit,
+            "issue_slug": slug,
+        }
+        return render(request, "comicsdb/partials/issue_team_items.html", context)
+
+
+class IssueUniversesLoadMore(View):
+    """HTMX endpoint for lazy loading more issue universes."""
+
+    def get(self, request, slug):
+        issue = get_object_or_404(Issue, slug=slug)
+        offset = int(request.GET.get("offset", 0))
+        limit = 30  # Load 30 items at a time
+
+        universes = issue.universes.all()[offset : offset + limit]
+        has_more = issue.universes.count() > offset + limit
+
+        context = {
+            "universes": universes,
+            "has_more": has_more,
+            "next_offset": offset + limit,
+            "issue_slug": slug,
+        }
+        return render(request, "comicsdb/partials/issue_universe_items.html", context)

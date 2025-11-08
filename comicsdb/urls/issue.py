@@ -3,7 +3,9 @@ from django.urls import path, re_path
 from comicsdb.views.issue import (
     CreatorAutocomplete,
     FutureList,
+    IssueCharactersLoadMore,
     IssueCreate,
+    IssueCreditsLoadMore,
     IssueDelete,
     IssueDetail,
     IssueDetailRedirect,
@@ -11,6 +13,8 @@ from comicsdb.views.issue import (
     IssueHistory,
     IssueList,
     IssueReprintSyncView,
+    IssueTeamsLoadMore,
+    IssueUniversesLoadMore,
     IssueUpdate,
     NextWeekList,
     SearchIssueList,
@@ -36,6 +40,26 @@ urlpatterns = [
         name="duplicate-credits",
     ),
     path("<slug:slug>/sync-reprints/", IssueReprintSyncView.as_view(), name="sync-reprints"),
+    path(
+        "<slug:slug>/credits/load-more/",
+        IssueCreditsLoadMore.as_view(),
+        name="credits-load-more",
+    ),
+    path(
+        "<slug:slug>/characters/load-more/",
+        IssueCharactersLoadMore.as_view(),
+        name="characters-load-more",
+    ),
+    path(
+        "<slug:slug>/teams/load-more/",
+        IssueTeamsLoadMore.as_view(),
+        name="teams-load-more",
+    ),
+    path(
+        "<slug:slug>/universes/load-more/",
+        IssueUniversesLoadMore.as_view(),
+        name="universes-load-more",
+    ),
     re_path(
         r"^creator-autocomplete/?$",
         CreatorAutocomplete.as_view(),
