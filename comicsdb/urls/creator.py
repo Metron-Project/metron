@@ -9,6 +9,7 @@ from comicsdb.views.creator import (
     CreatorIssueList,
     CreatorList,
     CreatorSeriesList,
+    CreatorSeriesLoadMore,
     CreatorUpdate,
     SearchCreatorList,
 )
@@ -23,6 +24,11 @@ urlpatterns = [
     path("<slug:slug>/delete/", CreatorDelete.as_view(), name="delete"),
     path("<slug:slug>/history/", CreatorHistory.as_view(), name="history"),
     path("<slug:slug>/issue_list/", CreatorIssueList.as_view(), name="issue"),
+    path(
+        "<slug:slug>/series/load-more/",
+        CreatorSeriesLoadMore.as_view(),
+        name="series-load-more",
+    ),
     path("<slug:creator>/<slug:series>/", CreatorSeriesList.as_view(), name="series"),
     re_path(r"^search/?$", SearchCreatorList.as_view(), name="search"),
 ]

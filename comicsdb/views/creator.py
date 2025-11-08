@@ -2,9 +2,9 @@ import logging
 
 from django.contrib.auth.mixins import LoginRequiredMixin, PermissionRequiredMixin
 from django.db.models import Count
-from django.shortcuts import get_object_or_404
+from django.shortcuts import get_object_or_404, render
 from django.urls import reverse_lazy
-from django.views.generic import DetailView, ListView
+from django.views.generic import DetailView, ListView, View
 from django.views.generic.edit import CreateView, DeleteView, UpdateView
 
 from comicsdb.forms.creator import CreatorForm
@@ -60,7 +60,7 @@ class CreatorDetail(NavigationMixin, DetailView):
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        creator = self.get_object()
+        creator = context["object"]
 
         series_issues = (
             Credits.objects.filter(creator=creator)
@@ -69,11 +69,18 @@ class CreatorDetail(NavigationMixin, DetailView):
                 "issue__series__year_began",
                 "issue__series__slug",
                 "issue__series__series_type",
+                "issue__series__sort_name",  # Include for ordering
             )
-            .annotate(Count("issue"))
+            .annotate(issue__count=Count("issue"))
             .order_by("issue__series__sort_name", "issue__series__year_began")
         )
-        context["credits"] = series_issues
+
+        # Get total count for pagination
+        total_series_count = series_issues.count()
+        context["series_count"] = total_series_count
+
+        # Only get first 30 for initial load
+        context["credits"] = series_issues[:30]
 
         return context
 
@@ -114,3 +121,39 @@ class CreatorDelete(PermissionRequiredMixin, DeleteView):
 
 class CreatorHistory(HistoryListView):
     model = Creator
+
+
+class CreatorSeriesLoadMore(View):
+    """HTMX endpoint for lazy loading more series credits."""
+
+    def get(self, request, slug):
+        creator = get_object_or_404(Creator, slug=slug)
+        offset = int(request.GET.get("offset", 0))
+        limit = 30  # Load 30 items at a time
+
+        # Same query as in CreatorDetail.get_context_data
+        series_issues = (
+            Credits.objects.filter(creator=creator)
+            .values(
+                "issue__series__name",
+                "issue__series__year_began",
+                "issue__series__slug",
+                "issue__series__series_type",
+                "issue__series__sort_name",  # Include for ordering
+            )
+            .annotate(issue__count=Count("issue"))
+            .order_by("issue__series__sort_name", "issue__series__year_began")
+        )
+
+        total_count = series_issues.count()
+        paginated_series = series_issues[offset : offset + limit]
+
+        has_more = total_count > offset + limit
+
+        context = {
+            "credits": paginated_series,
+            "has_more": has_more,
+            "next_offset": offset + limit,
+            "creator_slug": slug,
+        }
+        return render(request, "comicsdb/partials/creator_series_items.html", context)
