@@ -2,9 +2,9 @@ import logging
 
 from django.contrib.auth.mixins import LoginRequiredMixin, PermissionRequiredMixin
 from django.db.models import Count
-from django.shortcuts import get_object_or_404, render
+from django.shortcuts import get_object_or_404
 from django.urls import reverse_lazy
-from django.views.generic import CreateView, DeleteView, DetailView, ListView, UpdateView, View
+from django.views.generic import CreateView, DeleteView, DetailView, ListView, UpdateView
 
 from comicsdb.forms.universe import UniverseForm
 from comicsdb.models.issue import Issue
@@ -15,6 +15,7 @@ from comicsdb.views.history import HistoryListView
 from comicsdb.views.mixins import (
     AttributionCreateMixin,
     AttributionUpdateMixin,
+    LazyLoadMixin,
     NavigationMixin,
     SearchMixin,
     SlugRedirectView,
@@ -157,57 +158,39 @@ class UniverseHistory(HistoryListView):
     model = Universe
 
 
-class UniverseCharactersLoadMore(View):
+class UniverseCharactersLoadMore(LazyLoadMixin):
     """HTMX endpoint for lazy loading more characters."""
 
-    def get(self, request, slug):
-        universe = get_object_or_404(Universe, slug=slug)
-        offset = int(request.GET.get("offset", 0))
-        limit = DETAIL_PAGINATE_BY
-
-        characters = universe.characters.all()[offset : offset + limit]
-        has_more = universe.characters.count() > offset + limit
-
-        context = {
-            "characters": characters,
-            "has_more": has_more,
-            "next_offset": offset + limit,
-            "universe_slug": slug,
-        }
-        return render(request, "comicsdb/partials/universe_character_items.html", context)
+    model = Universe
+    relation_name = "characters"
+    template_name = "comicsdb/partials/universe_character_items.html"
+    context_object_name = "characters"
+    slug_context_name = "universe_slug"
 
 
-class UniverseTeamsLoadMore(View):
+class UniverseTeamsLoadMore(LazyLoadMixin):
     """HTMX endpoint for lazy loading more teams."""
 
-    def get(self, request, slug):
-        universe = get_object_or_404(Universe, slug=slug)
-        offset = int(request.GET.get("offset", 0))
-        limit = DETAIL_PAGINATE_BY
-
-        teams = universe.teams.all()[offset : offset + limit]
-        has_more = universe.teams.count() > offset + limit
-
-        context = {
-            "teams": teams,
-            "has_more": has_more,
-            "next_offset": offset + limit,
-            "universe_slug": slug,
-        }
-        return render(request, "comicsdb/partials/universe_team_items.html", context)
+    model = Universe
+    relation_name = "teams"
+    template_name = "comicsdb/partials/universe_team_items.html"
+    context_object_name = "teams"
+    slug_context_name = "universe_slug"
 
 
-class UniverseSeriesLoadMore(View):
+class UniverseSeriesLoadMore(LazyLoadMixin):
     """HTMX endpoint for lazy loading more series appearances."""
 
-    def get(self, request, slug):
-        universe = get_object_or_404(Universe, slug=slug)
-        offset = int(request.GET.get("offset", 0))
-        limit = DETAIL_PAGINATE_BY
+    model = Universe
+    relation_name = None  # Custom query, not a direct relation
+    template_name = "comicsdb/partials/universe_series_items.html"
+    context_object_name = "appearances"
+    slug_context_name = "universe_slug"
 
-        # Same query as in UniverseDetail.get_context_data
+    def get_queryset(self, parent_object, offset, limit):
+        """Custom query with annotations and field renaming."""
         series_issues = (
-            Issue.objects.filter(universes=universe)
+            Issue.objects.filter(universes=parent_object)
             .values(
                 "series__name",
                 "series__year_began",
@@ -218,11 +201,10 @@ class UniverseSeriesLoadMore(View):
             .order_by("series__sort_name", "series__year_began")
         )
 
-        total_count = series_issues.count()
         paginated_series = series_issues[offset : offset + limit]
 
         # Rename fields to match template expectations
-        appearances = [
+        return [
             {
                 "issues__series__name": item["series__name"],
                 "issues__series__year_began": item["series__year_began"],
@@ -233,12 +215,11 @@ class UniverseSeriesLoadMore(View):
             for item in paginated_series
         ]
 
-        has_more = total_count > offset + limit
-
-        context = {
-            "appearances": appearances,
-            "has_more": has_more,
-            "next_offset": offset + limit,
-            "universe_slug": slug,
-        }
-        return render(request, "comicsdb/partials/universe_series_items.html", context)
+    def get_total_count(self, parent_object):
+        """Get count of series (not issues)."""
+        return (
+            Issue.objects.filter(universes=parent_object)
+            .values("series__name", "series__year_began", "series__slug", "series__series_type")
+            .annotate(issues__count=Count("id"))
+            .count()
+        )

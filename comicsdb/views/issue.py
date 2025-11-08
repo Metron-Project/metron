@@ -9,7 +9,7 @@ from django.core.exceptions import ObjectDoesNotExist
 from django.db import transaction
 from django.db.models import Prefetch, Q
 from django.http import HttpResponseRedirect
-from django.shortcuts import get_object_or_404, render
+from django.shortcuts import get_object_or_404
 from django.urls import reverse, reverse_lazy
 from django.views import View
 from django.views.generic import DetailView, ListView
@@ -26,7 +26,7 @@ from comicsdb.models.series import SeriesType
 from comicsdb.models.variant import Variant
 from comicsdb.views.constants import DETAIL_PAGINATE_BY, PAGINATE_BY
 from comicsdb.views.history import HistoryListView
-from comicsdb.views.mixins import SlugRedirectView
+from comicsdb.views.mixins import LazyLoadMixin, SlugRedirectView
 
 TOTAL_WEEKS_YEAR = 52
 
@@ -680,17 +680,19 @@ class FutureList(ListView):
         return context
 
 
-class IssueCreditsLoadMore(View):
+class IssueCreditsLoadMore(LazyLoadMixin):
     """HTMX endpoint for lazy loading more issue credits."""
 
-    def get(self, request, slug):
-        issue = get_object_or_404(Issue, slug=slug)
-        offset = int(request.GET.get("offset", 0))
-        limit = DETAIL_PAGINATE_BY
+    model = Issue
+    relation_name = None  # Custom query with optimizations
+    template_name = "comicsdb/partials/issue_credit_items.html"
+    context_object_name = "credits"
+    slug_context_name = "issue_slug"
 
-        # Same query as in IssueDetail.get_context_data
+    def get_queryset(self, parent_object, offset, limit):
+        """Custom query with select_related, defer, and prefetch optimizations."""
         credits_qs = (
-            Credits.objects.filter(issue=issue)
+            Credits.objects.filter(issue=parent_object)
             .select_related("creator")
             .defer(
                 "modified",
@@ -708,76 +710,43 @@ class IssueCreditsLoadMore(View):
                 Prefetch("role", queryset=Role.objects.defer("order", "notes", "modified"))
             )
         )
+        return credits_qs[offset : offset + limit]
 
-        total_count = credits_qs.count()
-        paginated_credits = credits_qs[offset : offset + limit]
-
-        has_more = total_count > offset + limit
-
-        context = {
-            "credits": paginated_credits,
-            "has_more": has_more,
-            "next_offset": offset + limit,
-            "issue_slug": slug,
-        }
-        return render(request, "comicsdb/partials/issue_credit_items.html", context)
+    def get_total_count(self, parent_object):
+        """Get total count of credits."""
+        return (
+            Credits.objects.filter(issue=parent_object)
+            .order_by("creator__name")
+            .distinct("creator__name")
+            .count()
+        )
 
 
-class IssueCharactersLoadMore(View):
+class IssueCharactersLoadMore(LazyLoadMixin):
     """HTMX endpoint for lazy loading more issue characters."""
 
-    def get(self, request, slug):
-        issue = get_object_or_404(Issue, slug=slug)
-        offset = int(request.GET.get("offset", 0))
-        limit = DETAIL_PAGINATE_BY
-
-        characters = issue.characters.all()[offset : offset + limit]
-        has_more = issue.characters.count() > offset + limit
-
-        context = {
-            "characters": characters,
-            "has_more": has_more,
-            "next_offset": offset + limit,
-            "issue_slug": slug,
-        }
-        return render(request, "comicsdb/partials/issue_character_items.html", context)
+    model = Issue
+    relation_name = "characters"
+    template_name = "comicsdb/partials/issue_character_items.html"
+    context_object_name = "characters"
+    slug_context_name = "issue_slug"
 
 
-class IssueTeamsLoadMore(View):
+class IssueTeamsLoadMore(LazyLoadMixin):
     """HTMX endpoint for lazy loading more issue teams."""
 
-    def get(self, request, slug):
-        issue = get_object_or_404(Issue, slug=slug)
-        offset = int(request.GET.get("offset", 0))
-        limit = DETAIL_PAGINATE_BY
-
-        teams = issue.teams.all()[offset : offset + limit]
-        has_more = issue.teams.count() > offset + limit
-
-        context = {
-            "teams": teams,
-            "has_more": has_more,
-            "next_offset": offset + limit,
-            "issue_slug": slug,
-        }
-        return render(request, "comicsdb/partials/issue_team_items.html", context)
+    model = Issue
+    relation_name = "teams"
+    template_name = "comicsdb/partials/issue_team_items.html"
+    context_object_name = "teams"
+    slug_context_name = "issue_slug"
 
 
-class IssueUniversesLoadMore(View):
+class IssueUniversesLoadMore(LazyLoadMixin):
     """HTMX endpoint for lazy loading more issue universes."""
 
-    def get(self, request, slug):
-        issue = get_object_or_404(Issue, slug=slug)
-        offset = int(request.GET.get("offset", 0))
-        limit = DETAIL_PAGINATE_BY
-
-        universes = issue.universes.all()[offset : offset + limit]
-        has_more = issue.universes.count() > offset + limit
-
-        context = {
-            "universes": universes,
-            "has_more": has_more,
-            "next_offset": offset + limit,
-            "issue_slug": slug,
-        }
-        return render(request, "comicsdb/partials/issue_universe_items.html", context)
+    model = Issue
+    relation_name = "universes"
+    template_name = "comicsdb/partials/issue_universe_items.html"
+    context_object_name = "universes"
+    slug_context_name = "issue_slug"

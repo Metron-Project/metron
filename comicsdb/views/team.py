@@ -1,9 +1,9 @@
 import logging
 
 from django.contrib.auth.mixins import LoginRequiredMixin, PermissionRequiredMixin
-from django.shortcuts import get_object_or_404, render
+from django.shortcuts import get_object_or_404
 from django.urls import reverse_lazy
-from django.views.generic import DetailView, ListView, View
+from django.views.generic import DetailView, ListView
 from django.views.generic.edit import CreateView, DeleteView, UpdateView
 
 from comicsdb.forms.team import TeamForm
@@ -13,6 +13,7 @@ from comicsdb.views.history import HistoryListView
 from comicsdb.views.mixins import (
     AttributionCreateMixin,
     AttributionUpdateMixin,
+    LazyLoadMixin,
     NavigationMixin,
     SearchMixin,
     SlugRedirectView,
@@ -95,21 +96,11 @@ class TeamHistory(HistoryListView):
     model = Team
 
 
-class TeamMembersLoadMore(View):
+class TeamMembersLoadMore(LazyLoadMixin):
     """HTMX endpoint for lazy loading more team members."""
 
-    def get(self, request, slug):
-        team = get_object_or_404(Team, slug=slug)
-        offset = int(request.GET.get("offset", 0))
-        limit = DETAIL_PAGINATE_BY
-
-        members = team.characters.all()[offset : offset + limit]
-        has_more = team.characters.count() > offset + limit
-
-        context = {
-            "members": members,
-            "has_more": has_more,
-            "next_offset": offset + limit,
-            "team_slug": slug,
-        }
-        return render(request, "comicsdb/partials/team_member_items.html", context)
+    model = Team
+    relation_name = "characters"
+    template_name = "comicsdb/partials/team_member_items.html"
+    context_object_name = "members"
+    slug_context_name = "team_slug"

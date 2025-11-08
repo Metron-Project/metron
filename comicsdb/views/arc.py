@@ -1,9 +1,8 @@
 import logging
 
 from django.contrib.auth.mixins import LoginRequiredMixin, PermissionRequiredMixin
-from django.shortcuts import get_object_or_404, render
+from django.shortcuts import get_object_or_404
 from django.urls import reverse_lazy
-from django.views import View
 from django.views.generic import DetailView, ListView
 from django.views.generic.edit import CreateView, DeleteView, UpdateView
 
@@ -14,6 +13,7 @@ from comicsdb.views.history import HistoryListView
 from comicsdb.views.mixins import (
     AttributionCreateMixin,
     AttributionUpdateMixin,
+    LazyLoadMixin,
     NavigationMixin,
     SearchMixin,
     SlugRedirectView,
@@ -98,28 +98,22 @@ class ArcHistory(HistoryListView):
     model = Arc
 
 
-class ArcIssuesLoadMore(View):
+class ArcIssuesLoadMore(LazyLoadMixin):
     """HTMX endpoint for lazy loading more arc issues."""
 
-    def get(self, request, slug):
-        arc = get_object_or_404(Arc, slug=slug)
-        offset = int(request.GET.get("offset", 0))
-        limit = DETAIL_PAGINATE_BY
+    model = Arc
+    relation_name = None  # Custom query with ordering and select_related
+    template_name = "comicsdb/partials/arc_issue_items.html"
+    context_object_name = "issues"
+    slug_context_name = "arc_slug"
 
-        # Same query as in ArcDetail.get_context_data
-        issues_qs = arc.issues.order_by(
+    def get_queryset(self, parent_object, offset, limit):
+        """Custom query with ordering and select_related."""
+        issues_qs = parent_object.issues.order_by(
             "cover_date", "store_date", "series__sort_name", "number"
         ).select_related("series", "series__series_type")
+        return issues_qs[offset : offset + limit]
 
-        total_count = issues_qs.count()
-        paginated_issues = issues_qs[offset : offset + limit]
-
-        has_more = total_count > offset + limit
-
-        context = {
-            "issues": paginated_issues,
-            "has_more": has_more,
-            "next_offset": offset + limit,
-            "arc_slug": slug,
-        }
-        return render(request, "comicsdb/partials/arc_issue_items.html", context)
+    def get_total_count(self, parent_object):
+        """Get total count of issues."""
+        return parent_object.issues.count()

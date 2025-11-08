@@ -1,9 +1,9 @@
 import logging
 
 from django.contrib.auth.mixins import LoginRequiredMixin, PermissionRequiredMixin
-from django.shortcuts import get_object_or_404, render
+from django.shortcuts import get_object_or_404
 from django.urls import reverse_lazy
-from django.views.generic import DetailView, ListView, View
+from django.views.generic import DetailView, ListView
 from django.views.generic.edit import CreateView, DeleteView, UpdateView
 
 from comicsdb.forms.publisher import PublisherForm
@@ -14,6 +14,7 @@ from comicsdb.views.history import HistoryListView
 from comicsdb.views.mixins import (
     AttributionCreateMixin,
     AttributionUpdateMixin,
+    LazyLoadMixin,
     NavigationMixin,
     SearchMixin,
     SlugRedirectView,
@@ -107,41 +108,21 @@ class PublisherHistory(HistoryListView):
     model = Publisher
 
 
-class PublisherImprintsLoadMore(View):
+class PublisherImprintsLoadMore(LazyLoadMixin):
     """HTMX endpoint for lazy loading more imprints."""
 
-    def get(self, request, slug):
-        publisher = get_object_or_404(Publisher, slug=slug)
-        offset = int(request.GET.get("offset", 0))
-        limit = DETAIL_PAGINATE_BY
-
-        imprints = publisher.imprints.all()[offset : offset + limit]
-        has_more = publisher.imprints.count() > offset + limit
-
-        context = {
-            "imprints": imprints,
-            "has_more": has_more,
-            "next_offset": offset + limit,
-            "publisher_slug": slug,
-        }
-        return render(request, "comicsdb/partials/publisher_imprint_items.html", context)
+    model = Publisher
+    relation_name = "imprints"
+    template_name = "comicsdb/partials/publisher_imprint_items.html"
+    context_object_name = "imprints"
+    slug_context_name = "publisher_slug"
 
 
-class PublisherUniversesLoadMore(View):
+class PublisherUniversesLoadMore(LazyLoadMixin):
     """HTMX endpoint for lazy loading more universes."""
 
-    def get(self, request, slug):
-        publisher = get_object_or_404(Publisher, slug=slug)
-        offset = int(request.GET.get("offset", 0))
-        limit = DETAIL_PAGINATE_BY
-
-        universes = publisher.universes.all()[offset : offset + limit]
-        has_more = publisher.universes.count() > offset + limit
-
-        context = {
-            "universes": universes,
-            "has_more": has_more,
-            "next_offset": offset + limit,
-            "publisher_slug": slug,
-        }
-        return render(request, "comicsdb/partials/publisher_universe_items.html", context)
+    model = Publisher
+    relation_name = "universes"
+    template_name = "comicsdb/partials/publisher_universe_items.html"
+    context_object_name = "universes"
+    slug_context_name = "publisher_slug"

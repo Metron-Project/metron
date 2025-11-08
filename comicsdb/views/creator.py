@@ -2,9 +2,9 @@ import logging
 
 from django.contrib.auth.mixins import LoginRequiredMixin, PermissionRequiredMixin
 from django.db.models import Count
-from django.shortcuts import get_object_or_404, render
+from django.shortcuts import get_object_or_404
 from django.urls import reverse_lazy
-from django.views.generic import DetailView, ListView, View
+from django.views.generic import DetailView, ListView
 from django.views.generic.edit import CreateView, DeleteView, UpdateView
 
 from comicsdb.forms.creator import CreatorForm
@@ -14,6 +14,7 @@ from comicsdb.views.history import HistoryListView
 from comicsdb.views.mixins import (
     AttributionCreateMixin,
     AttributionUpdateMixin,
+    LazyLoadMixin,
     NavigationMixin,
     SearchMixin,
     SlugRedirectView,
@@ -123,17 +124,19 @@ class CreatorHistory(HistoryListView):
     model = Creator
 
 
-class CreatorSeriesLoadMore(View):
+class CreatorSeriesLoadMore(LazyLoadMixin):
     """HTMX endpoint for lazy loading more series credits."""
 
-    def get(self, request, slug):
-        creator = get_object_or_404(Creator, slug=slug)
-        offset = int(request.GET.get("offset", 0))
-        limit = DETAIL_PAGINATE_BY
+    model = Creator
+    relation_name = None  # Custom query, not a direct relation
+    template_name = "comicsdb/partials/creator_series_items.html"
+    context_object_name = "credits"
+    slug_context_name = "creator_slug"
 
-        # Same query as in CreatorDetail.get_context_data
+    def get_queryset(self, parent_object, offset, limit):
+        """Custom query with annotations."""
         series_issues = (
-            Credits.objects.filter(creator=creator)
+            Credits.objects.filter(creator=parent_object)
             .values(
                 "issue__series__name",
                 "issue__series__year_began",
@@ -144,16 +147,18 @@ class CreatorSeriesLoadMore(View):
             .annotate(issue__count=Count("issue"))
             .order_by("issue__series__sort_name", "issue__series__year_began")
         )
+        return series_issues[offset : offset + limit]
 
-        total_count = series_issues.count()
-        paginated_series = series_issues[offset : offset + limit]
-
-        has_more = total_count > offset + limit
-
-        context = {
-            "credits": paginated_series,
-            "has_more": has_more,
-            "next_offset": offset + limit,
-            "creator_slug": slug,
-        }
-        return render(request, "comicsdb/partials/creator_series_items.html", context)
+    def get_total_count(self, parent_object):
+        """Get count of series credits."""
+        return (
+            Credits.objects.filter(creator=parent_object)
+            .values(
+                "issue__series__name",
+                "issue__series__year_began",
+                "issue__series__slug",
+                "issue__series__series_type",
+            )
+            .annotate(issue__count=Count("issue"))
+            .count()
+        )
