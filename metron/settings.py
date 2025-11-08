@@ -71,6 +71,7 @@ INSTALLED_APPS = [
     "wiki.plugins.notifications.apps.NotificationsConfig",
     "wiki.plugins.images.apps.ImagesConfig",
     "wiki.plugins.macros.apps.MacrosConfig",
+    "django_htmx",
     "api",
     "comicsdb",
     "users",
@@ -85,6 +86,7 @@ MIDDLEWARE = [
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
     "simple_history.middleware.HistoryRequestMiddleware",
+    "django_htmx.middleware.HtmxMiddleware",
 ]
 
 ROOT_URLCONF = "metron.urls"

@@ -26,6 +26,7 @@ psycopg = {extras = ["pool"], version = "*"}
 django-money = "*"
 django-simple-history = "*"
 wiki = "*"
+django-htmx = "*"
 
 [dev-packages]
 django-debug-toolbar = "*"
