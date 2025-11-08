@@ -1,10 +1,9 @@
 import logging
 
 from django.contrib.auth.mixins import LoginRequiredMixin, PermissionRequiredMixin
-from django.db.models import Prefetch
-from django.shortcuts import get_object_or_404
+from django.shortcuts import get_object_or_404, render
 from django.urls import reverse_lazy
-from django.views.generic import DetailView, ListView
+from django.views.generic import DetailView, ListView, View
 from django.views.generic.edit import CreateView, DeleteView, UpdateView
 
 from comicsdb.forms.publisher import PublisherForm
@@ -49,10 +48,29 @@ class PublisherSeriesList(ListView):
 
 class PublisherDetail(NavigationMixin, DetailView):
     model = Publisher
-    queryset = Publisher.objects.select_related("edited_by").prefetch_related(
-        Prefetch("series", queryset=Series.objects.select_related("series_type")),
-        Prefetch("imprints__series", queryset=Series.objects.select_related("series_type")),
-    )
+    # Don't prefetch - we'll paginate imprints and universes
+    queryset = Publisher.objects.select_related("edited_by")
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        publisher = context["object"]
+
+        # Get counts for imprints and universes
+        imprint_count = publisher.imprints.count()
+        universe_count = publisher.universes.count()
+
+        context["imprint_count"] = imprint_count
+        context["universe_count"] = universe_count
+
+        # Paginate imprints - only load first 30
+        if imprint_count > 0:
+            context["imprints"] = publisher.imprints.all()[:30]
+
+        # Paginate universes - only load first 30
+        if universe_count > 0:
+            context["universes"] = publisher.universes.all()[:30]
+
+        return context
 
 
 class PublisherDetailRedirect(SlugRedirectView):
@@ -87,3 +105,43 @@ class PublisherDelete(PermissionRequiredMixin, DeleteView):
 
 class PublisherHistory(HistoryListView):
     model = Publisher
+
+
+class PublisherImprintsLoadMore(View):
+    """HTMX endpoint for lazy loading more imprints."""
+
+    def get(self, request, slug):
+        publisher = get_object_or_404(Publisher, slug=slug)
+        offset = int(request.GET.get("offset", 0))
+        limit = 30  # Load 30 items at a time
+
+        imprints = publisher.imprints.all()[offset : offset + limit]
+        has_more = publisher.imprints.count() > offset + limit
+
+        context = {
+            "imprints": imprints,
+            "has_more": has_more,
+            "next_offset": offset + limit,
+            "publisher_slug": slug,
+        }
+        return render(request, "comicsdb/partials/publisher_imprint_items.html", context)
+
+
+class PublisherUniversesLoadMore(View):
+    """HTMX endpoint for lazy loading more universes."""
+
+    def get(self, request, slug):
+        publisher = get_object_or_404(Publisher, slug=slug)
+        offset = int(request.GET.get("offset", 0))
+        limit = 30  # Load 30 items at a time
+
+        universes = publisher.universes.all()[offset : offset + limit]
+        has_more = publisher.universes.count() > offset + limit
+
+        context = {
+            "universes": universes,
+            "has_more": has_more,
+            "next_offset": offset + limit,
+            "publisher_slug": slug,
+        }
+        return render(request, "comicsdb/partials/publisher_universe_items.html", context)

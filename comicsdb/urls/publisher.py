@@ -6,8 +6,10 @@ from comicsdb.views.publisher import (
     PublisherDetail,
     PublisherDetailRedirect,
     PublisherHistory,
+    PublisherImprintsLoadMore,
     PublisherList,
     PublisherSeriesList,
+    PublisherUniversesLoadMore,
     PublisherUpdate,
     SearchPublisherList,
 )
@@ -22,5 +24,15 @@ urlpatterns = [
     path("<slug:slug>/update/", PublisherUpdate.as_view(), name="update"),
     path("<slug:slug>/delete/", PublisherDelete.as_view(), name="delete"),
     path("<slug:slug>/history/", PublisherHistory.as_view(), name="history"),
+    path(
+        "<slug:slug>/imprints/load-more/",
+        PublisherImprintsLoadMore.as_view(),
+        name="imprints-load-more",
+    ),
+    path(
+        "<slug:slug>/universes/load-more/",
+        PublisherUniversesLoadMore.as_view(),
+        name="universes-load-more",
+    ),
     re_path(r"^search/?$", SearchPublisherList.as_view(), name="search"),
 ]

@@ -2,9 +2,13 @@
 {% load humanize %}
 {% load thumbnail %}
 {% load static %}
+{% load django_htmx %}
 {% block title %}
     {{ publisher.name }}
 {% endblock title %}
+{% block js %}
+    {% htmx_script %}
+{% endblock js %}
 {% block content %}
     {# Page Header #}
     <header class="block">
@@ -117,93 +121,119 @@
                 </footer>
             </div>
             {# Imprints #}
-            {% with imprints=publisher.imprints.all %}
-                {% if imprints %}
-                    <div class="box">
-                        <h2 class="title is-5">Imprint{{ imprints|pluralize }} ({{ imprints.count }})</h2>
-                        <div class="columns is-multiline">
-                            {% for imprint in imprints %}
-                                <div class="column is-4">
-                                    <article class="media">
-                                        <figure class="media-left">
-                                            <div class="image is-64x64">
-                                                {% if imprint.image %}
-                                                    {% thumbnail imprint.image "64x64" crop="top" format="WEBP" as im %}
-                                                        <img class="is-rounded"
-                                                             src="{{ im.url }}"
-                                                             width="{{ im.width }}"
-                                                             height="{{ im.height }}"
-                                                             alt="{{ imprint.name }}"
-                                                             loading="lazy">
-                                                    {% endthumbnail %}
-                                                {% else %}
+            {% if imprint_count > 0 %}
+                <div class="box">
+                    <h2 class="title is-5">Imprint{{ imprint_count|pluralize }} ({{ imprint_count }})</h2>
+                    <div class="columns is-multiline" id="imprints-container">
+                        {% for imprint in imprints %}
+                            <div class="column is-4">
+                                <article class="media">
+                                    <figure class="media-left">
+                                        <div class="image is-64x64">
+                                            {% if imprint.image %}
+                                                {% thumbnail imprint.image "64x64" crop="top" format="WEBP" as im %}
                                                     <img class="is-rounded"
-                                                         src="{% static 'site/img/creator-not-found.webp' %}"
-                                                         alt="No image for {{ imprint.name }}"
+                                                         src="{{ im.url }}"
+                                                         width="{{ im.width }}"
+                                                         height="{{ im.height }}"
+                                                         alt="{{ imprint.name }}"
                                                          loading="lazy">
-                                                {% endif %}
-                                            </div>
-                                        </figure>
-                                        <div class="media-content">
-                                            <div class="content">
-                                                <p>
-                                                    <a href="{% url 'imprint:detail' imprint.slug %}">{{ imprint.name }}</a>
-                                                    <br>
-                                                    <small class="has-text-grey-dark">{{ imprint.series_count|intcomma }} series</small>
-                                                </p>
-                                            </div>
+                                                {% endthumbnail %}
+                                            {% else %}
+                                                <img class="is-rounded"
+                                                     src="{% static 'site/img/creator-not-found.webp' %}"
+                                                     alt="No image for {{ imprint.name }}"
+                                                     loading="lazy">
+                                            {% endif %}
                                         </div>
-                                    </article>
-                                </div>
-                            {% endfor %}
-                        </div>
+                                    </figure>
+                                    <div class="media-content">
+                                        <div class="content">
+                                            <p>
+                                                <a href="{% url 'imprint:detail' imprint.slug %}">{{ imprint.name }}</a>
+                                                <br>
+                                                <small class="has-text-grey-dark">{{ imprint.series_count|intcomma }} series</small>
+                                            </p>
+                                        </div>
+                                    </div>
+                                </article>
+                            </div>
+                        {% endfor %}
                     </div>
-                {% endif %}
-            {% endwith %}
+                    {% if imprint_count > 30 %}
+                        <div id="imprints-load-more-wrapper"
+                             class="column is-12 has-text-centered mt-4">
+                            <button class="button is-link"
+                                    hx-get="{% url 'publisher:imprints-load-more' publisher.slug %}?offset=30"
+                                    hx-target="#imprints-container"
+                                    hx-swap="beforeend"
+                                    hx-indicator="#imprints-spinner">
+                                <span>Load More Imprints</span>
+                            </button>
+                            <span id="imprints-spinner" class="htmx-indicator ml-2">
+                                <i class="fas fa-spinner fa-spin"></i>
+                            </span>
+                        </div>
+                    {% endif %}
+                </div>
+            {% endif %}
             {# Universes #}
-            {% with universes=publisher.universes.all %}
-                {% if universes %}
-                    <div class="box">
-                        <h2 class="title is-5">Universe{{ universes|pluralize }} ({{ universes.count }})</h2>
-                        <div class="columns is-multiline">
-                            {% for universe in universes %}
-                                <div class="column is-4">
-                                    <article class="media">
-                                        <figure class="media-left">
-                                            <div class="image is-64x64">
-                                                {% if universe.image %}
-                                                    {% thumbnail universe.image "64x64" crop="top" format="WEBP" as im %}
-                                                        <img class="is-rounded"
-                                                             src="{{ im.url }}"
-                                                             width="{{ im.width }}"
-                                                             height="{{ im.height }}"
-                                                             alt="{{ universe.name }}"
-                                                             loading="lazy">
-                                                    {% endthumbnail %}
-                                                {% else %}
+            {% if universe_count > 0 %}
+                <div class="box">
+                    <h2 class="title is-5">Universe{{ universe_count|pluralize }} ({{ universe_count }})</h2>
+                    <div class="columns is-multiline" id="universes-container">
+                        {% for universe in universes %}
+                            <div class="column is-4">
+                                <article class="media">
+                                    <figure class="media-left">
+                                        <div class="image is-64x64">
+                                            {% if universe.image %}
+                                                {% thumbnail universe.image "64x64" crop="top" format="WEBP" as im %}
                                                     <img class="is-rounded"
-                                                         src="{% static 'site/img/creator-not-found.webp' %}"
-                                                         alt="No image for {{ universe.name }}"
+                                                         src="{{ im.url }}"
+                                                         width="{{ im.width }}"
+                                                         height="{{ im.height }}"
+                                                         alt="{{ universe.name }}"
                                                          loading="lazy">
-                                                {% endif %}
-                                            </div>
-                                        </figure>
-                                        <div class="media-content">
-                                            <div class="content">
-                                                <p>
-                                                    <a href="{% url 'universe:detail' universe.slug %}">{{ universe.name }}</a>
-                                                    <br>
-                                                    <small class="has-text-grey-dark">{{ universe.issue_count|intcomma }} issue{{ universe.issue_count|pluralize }}</small>
-                                                </p>
-                                            </div>
+                                                {% endthumbnail %}
+                                            {% else %}
+                                                <img class="is-rounded"
+                                                     src="{% static 'site/img/creator-not-found.webp' %}"
+                                                     alt="No image for {{ universe.name }}"
+                                                     loading="lazy">
+                                            {% endif %}
                                         </div>
-                                    </article>
-                                </div>
-                            {% endfor %}
-                        </div>
+                                    </figure>
+                                    <div class="media-content">
+                                        <div class="content">
+                                            <p>
+                                                <a href="{% url 'universe:detail' universe.slug %}">{{ universe.name }}</a>
+                                                <br>
+                                                <small class="has-text-grey-dark">{{ universe.issue_count|intcomma }} issue{{ universe.issue_count|pluralize }}</small>
+                                            </p>
+                                        </div>
+                                    </div>
+                                </article>
+                            </div>
+                        {% endfor %}
                     </div>
-                {% endif %}
-            {% endwith %}
+                    {% if universe_count > 30 %}
+                        <div id="universes-load-more-wrapper"
+                             class="column is-12 has-text-centered mt-4">
+                            <button class="button is-link"
+                                    hx-get="{% url 'publisher:universes-load-more' publisher.slug %}?offset=30"
+                                    hx-target="#universes-container"
+                                    hx-swap="beforeend"
+                                    hx-indicator="#universes-spinner">
+                                <span>Load More Universes</span>
+                            </button>
+                            <span id="universes-spinner" class="htmx-indicator ml-2">
+                                <i class="fas fa-spinner fa-spin"></i>
+                            </span>
+                        </div>
+                    {% endif %}
+                </div>
+            {% endif %}
             {# Attribution #}
             {% with attribution=publisher.attribution.all %}
                 {% if attribution %}
