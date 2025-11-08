@@ -114,7 +114,7 @@
             {% with characters=universe.characters.all %}
                 {% if characters %}
                     <div class="box">
-                        <h2 class="title is-5">Character{{ characters|pluralize }} ({{ characters.count }})</h2>
+                        <h2 class="title is-5">Character{{ characters|pluralize }} ({{ universe.character_count }})</h2>
                         <div class="columns is-multiline">
                             {% for character in characters %}
                                 <div class="column is-4">
@@ -152,7 +152,7 @@
             {% with teams=universe.teams.all %}
                 {% if teams %}
                     <div class="box">
-                        <h2 class="title is-5">Team{{ teams|pluralize }} ({{ teams.count }})</h2>
+                        <h2 class="title is-5">Team{{ teams|pluralize }} ({{ universe.team_count }})</h2>
                         <div class="columns is-multiline">
                             {% for team in teams %}
                                 <div class="column is-4">
@@ -232,10 +232,10 @@
                     <dd class="mb-3">
                         <a href="{% url 'publisher:detail' universe.publisher.slug %}">{{ universe.publisher }}</a>
                     </dd>
-                    {% if universe.issue_count > 0 %}
+                    {% if universe.total_issue_count > 0 %}
                         <dt class="has-text-weight-bold">Number of Issues:</dt>
                         <dd class="mb-3">
-                            {{ universe.issue_count|intcomma }}
+                            {{ universe.total_issue_count|intcomma }}
                         </dd>
                         {% with first=universe.first_appearance %}
                             <dt class="has-text-weight-bold">First Appearance:</dt>
