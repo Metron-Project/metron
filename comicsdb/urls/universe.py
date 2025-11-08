@@ -2,6 +2,7 @@ from django.urls import path, re_path
 
 from comicsdb.views.universe import (
     SearchUniverseList,
+    UniverseCharactersLoadMore,
     UniverseCreate,
     UniverseDelete,
     UniverseDetail,
@@ -10,6 +11,8 @@ from comicsdb.views.universe import (
     UniverseIssueList,
     UniverseList,
     UniverseSeriesList,
+    UniverseSeriesLoadMore,
+    UniverseTeamsLoadMore,
     UniverseUpdate,
 )
 
@@ -23,6 +26,21 @@ urlpatterns = [
     path("<slug:slug>/delete/", UniverseDelete.as_view(), name="delete"),
     path("<slug:slug>/history/", UniverseHistory.as_view(), name="history"),
     path("<slug:slug>/issue_list/", UniverseIssueList.as_view(), name="issue"),
+    path(
+        "<slug:slug>/characters/load-more/",
+        UniverseCharactersLoadMore.as_view(),
+        name="characters-load-more",
+    ),
+    path(
+        "<slug:slug>/teams/load-more/",
+        UniverseTeamsLoadMore.as_view(),
+        name="teams-load-more",
+    ),
+    path(
+        "<slug:slug>/series/load-more/",
+        UniverseSeriesLoadMore.as_view(),
+        name="series-load-more",
+    ),
     path("<slug:universe>/<slug:series>/", UniverseSeriesList.as_view(), name="series"),
     re_path(r"^search/?$", SearchUniverseList.as_view(), name="search"),
 ]
