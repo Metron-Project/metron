@@ -58,12 +58,22 @@ class UniverseIssueList(ListView):
 
 class UniverseDetail(NavigationMixin, DetailView):
     model = Universe
-    queryset = Universe.objects.select_related("edited_by").prefetch_related(
-        Prefetch(
-            "issues",
-            queryset=Issue.objects.order_by(
-                "series__sort_name", "cover_date", "number"
-            ).select_related("series", "series__series_type"),
+    queryset = (
+        Universe.objects.select_related("edited_by", "publisher")
+        .prefetch_related(
+            "characters",
+            "teams",
+            Prefetch(
+                "issues",
+                queryset=Issue.objects.order_by(
+                    "series__sort_name", "cover_date", "number"
+                ).select_related("series", "series__series_type"),
+            ),
+        )
+        .annotate(
+            character_count=Count("characters", distinct=True),
+            team_count=Count("teams", distinct=True),
+            total_issue_count=Count("issues", distinct=True),
         )
     )
 
@@ -72,7 +82,7 @@ class UniverseDetail(NavigationMixin, DetailView):
         universe = self.get_object()
 
         # Run this context queryset if the issue count is greater than 0.
-        if universe.issue_count:
+        if universe.total_issue_count:
             series_issues = (
                 Issue.objects.filter(universes=universe)
                 .values(
