@@ -8,8 +8,8 @@ from django.contrib.auth.mixins import LoginRequiredMixin, PermissionRequiredMix
 from django.core.exceptions import ObjectDoesNotExist
 from django.db import transaction
 from django.db.models import Prefetch, Q
-from django.http import HttpResponseRedirect
-from django.shortcuts import get_object_or_404
+from django.http import HttpResponse, HttpResponseRedirect
+from django.shortcuts import get_object_or_404, render
 from django.urls import reverse, reverse_lazy
 from django.views import View
 from django.views.generic import DetailView, ListView
@@ -325,10 +325,10 @@ class IssueUpdate(LoginRequiredMixin, UpdateView):
 
 class IssueDuplicateCreditsView(LoginRequiredMixin, View):
     """
-    View to duplicate credits from the previous issue in the same series.
+    HTMX view to duplicate credits from the previous issue in the same series.
     """
 
-    def post(self, request, slug):
+    def post(self, request, slug):  # noqa: PLR0915
         """
         Copy all credits (creators and their roles) from the previous issue
         to the current issue. Only works if the current issue has no existing credits.
@@ -338,7 +338,7 @@ class IssueDuplicateCreditsView(LoginRequiredMixin, View):
             slug: Issue slug identifier
 
         Returns:
-            HttpResponseRedirect to the issue detail page
+            Rendered template with updated credits and button state (HTMX response)
         """
         issue = get_object_or_404(
             Issue.objects.select_related("series", "series__publisher").prefetch_related(
@@ -354,7 +354,9 @@ class IssueDuplicateCreditsView(LoginRequiredMixin, View):
                 request,
                 f"Credit duplication is not allowed for {issue.series.publisher.name} issues.",
             )
-            return HttpResponseRedirect(reverse("issue:detail", args=[slug]))
+            response = HttpResponse()
+            response["HX-Redirect"] = reverse("issue:detail", args=[slug])
+            return response
 
         # Check if issue already has credits
         if issue.credits_set.exists():
@@ -363,21 +365,27 @@ class IssueDuplicateCreditsView(LoginRequiredMixin, View):
                 f"{issue} already has credits assigned. "
                 "Duplicate operation cancelled to preserve existing data.",
             )
-            return HttpResponseRedirect(reverse("issue:detail", args=[slug]))
+            response = HttpResponse()
+            response["HX-Redirect"] = reverse("issue:detail", args=[slug])
+            return response
 
         # Try to get the previous issue by cover_date
         try:
             previous_issue = issue.get_previous_by_cover_date(series=issue.series)
         except ObjectDoesNotExist:
             messages.warning(request, f"No previous issue found for {issue}.")
-            return HttpResponseRedirect(reverse("issue:detail", args=[slug]))
+            response = HttpResponse()
+            response["HX-Redirect"] = reverse("issue:detail", args=[slug])
+            return response
 
         # Get all credits from the previous issue
         previous_credits = Credits.objects.filter(issue=previous_issue).prefetch_related("role")
 
         if not previous_credits.exists():
             messages.info(request, f"No credits found in {previous_issue} to duplicate.")
-            return HttpResponseRedirect(reverse("issue:detail", args=[slug]))
+            response = HttpResponse()
+            response["HX-Redirect"] = reverse("issue:detail", args=[slug])
+            return response
 
         # Get the Cover role to check for variant cover credits
         try:
@@ -441,7 +449,37 @@ class IssueDuplicateCreditsView(LoginRequiredMixin, View):
         else:
             messages.info(request, f"No credits found in {previous_issue} to duplicate.")
 
-        return HttpResponseRedirect(reverse("issue:detail", args=[slug]))
+        # Get the updated credits to return
+        credits_qs = (
+            Credits.objects.filter(issue=issue)
+            .select_related("creator")
+            .defer(
+                "modified",
+                "creator__desc",
+                "creator__cv_id",
+                "creator__modified",
+                "creator__created_on",
+                "creator__birth",
+                "creator__death",
+                "creator__alias",
+            )
+            .order_by("creator__name")
+            .distinct("creator__name")
+            .prefetch_related(
+                Prefetch("role", queryset=Role.objects.defer("order", "notes", "modified"))
+            )
+        )
+        credits_count = credits_qs.count()
+
+        return render(
+            request,
+            "comicsdb/partials/duplicate_credits_response.html",
+            {
+                "issue": issue,
+                "credits": credits_qs[:DETAIL_PAGINATE_BY],
+                "credits_count": credits_count,
+            },
+        )
 
 
 class IssueReprintSyncView(LoginRequiredMixin, View):

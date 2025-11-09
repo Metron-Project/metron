@@ -1,0 +1,109 @@
+{% load thumbnail %}
+{% load static %}
+{% load bulma_tags %}
+{# This template handles the htmx response for duplicate credits #}
+{# OOB swap to show messages #}
+{% if messages %}
+    <div class="messages" hx-swap-oob="afterbegin:#main-content > .container">
+        {% for message in messages %}
+            <div class="notification is-{{ message.tags|bulma_message_tag }} is-light"
+                 role="alert">
+                <button class="delete" aria-label="close notification"></button>
+                <div class="media">
+                    <div class="media-left">
+                        <span class="icon is-medium" aria-hidden="true">
+                            {% if message.tags == 'success' %}
+                                <i class="fas fa-check-circle fa-lg"></i>
+                            {% elif message.tags == 'error' or message.tags == 'danger' %}
+                                <i class="fas fa-exclamation-circle fa-lg"></i>
+                            {% elif message.tags == 'warning' %}
+                                <i class="fas fa-exclamation-triangle fa-lg"></i>
+                            {% else %}
+                                <i class="fas fa-info-circle fa-lg"></i>
+                            {% endif %}
+                        </span>
+                    </div>
+                    <div class="media-content">
+                        <div class="content">
+                            <p>
+                                <strong>{{ message }}</strong>
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        {% endfor %}
+    </div>
+{% endif %}
+{# OOB swap to replace the entire credits box when credits were successfully duplicated #}
+{% if credits_count > 0 %}
+    <div id="credits-box" hx-swap-oob="true">
+        <div class="box">
+            <h2 class="title is-5">Credit{{ credits_count|pluralize }} ({{ credits_count }})</h2>
+            <div id="credits-container" class="columns is-multiline">
+            {% for credit in credits %}
+                <div class="column is-4">
+                    <article class="media">
+                        <figure class="media-left">
+                            <div class="image is-64x64">
+                                {% if credit.creator.image %}
+                                    {% thumbnail credit.creator.image "64x64" crop="top" format="WEBP" as im %}
+                                        <img class="is-rounded"
+                                             src="{{ im.url }}"
+                                             width="{{ im.width }}"
+                                             height="{{ im.height }}"
+                                             alt="{{ credit.creator }}"
+                                             loading="lazy">
+                                    {% endthumbnail %}
+                                {% else %}
+                                    <img class="is-rounded"
+                                         src="{% static 'site/img/creator-not-found.webp' %}"
+                                         alt="No image for {{ credit.creator }}"
+                                         loading="lazy">
+                                {% endif %}
+                            </div>
+                        </figure>
+                        <div class="media-content">
+                            <div class="content">
+                                <p>
+                                    <a href="{% url 'creator:detail' credit.creator.slug %}">{{ credit.creator }}</a>
+                                    {% with roles=credit.role.all %}
+                                        {% if roles %}
+                                            <br>
+                                            <small class="has-text-grey-dark">{{ roles|join:", " }}</small>
+                                        {% endif %}
+                                    {% endwith %}
+                                </p>
+                            </div>
+                        </div>
+                    </article>
+                </div>
+            {% endfor %}
+        </div>
+        {% if credits_count > 30 %}
+            <div id="credits-load-more-wrapper" class="has-text-centered mt-4">
+                <button class="button is-link"
+                        hx-get="{% url 'issue:credits-load-more' issue.slug %}?offset=30"
+                        hx-target="#credits-container"
+                        hx-swap="beforeend"
+                        hx-indicator="#credits-spinner">
+                    <span>Load More Credits</span>
+                </button>
+                <span id="credits-spinner" class="htmx-indicator ml-2">
+                    <i class="fas fa-spinner fa-spin"></i>
+                </span>
+            </div>
+        {% endif %}
+        </div>
+    </div>
+    {# OOB swap to disable the duplicate credits button after successful operation #}
+    <button id="duplicate-credits-button-wrapper"
+            hx-swap-oob="true"
+            class="button is-rounded is-link"
+            disabled
+            aria-disabled="true"
+            title="Credits have been duplicated">
+        <span class="icon is-small"><i class="fas fa-clone" aria-hidden="true"></i></span>
+        <span>Duplicate Credits</span>
+    </button>
+{% endif %}

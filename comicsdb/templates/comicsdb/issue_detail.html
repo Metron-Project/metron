@@ -89,17 +89,14 @@
                     </a>
                     {% if issue.series.series_type.name != "Trade Paperback" and issue.series.series_type.name != "Omnibus" and issue.series.series_type.name != "Hardcover" and issue.series.publisher.name != "DC Comics" and issue.series.publisher.name != "Marvel" %}
                         {% if navigation.previous_issue and not issue.credits_set.exists %}
-                            <form method="post"
-                                  action="{% url 'issue:duplicate-credits' slug=issue.slug %}"
-                                  class="is-inline">
-                                {% csrf_token %}
-                                <button class="button is-rounded is-link"
-                                        type="submit"
-                                        title="Duplicate credits from previous issue">
-                                    <span class="icon is-small"><i class="fas fa-clone" aria-hidden="true"></i></span>
-                                    <span>Duplicate Credits</span>
-                                </button>
-                            </form>
+                            <button id="duplicate-credits-button-wrapper"
+                                    class="button is-rounded is-link"
+                                    hx-post="{% url 'issue:duplicate-credits' slug=issue.slug %}"
+                                    hx-headers='{"X-CSRFToken": "{{ csrf_token }}"}'
+                                    title="Duplicate credits from previous issue">
+                                <span class="icon is-small"><i class="fas fa-clone" aria-hidden="true"></i></span>
+                                <span>Duplicate Credits</span>
+                            </button>
                         {% else %}
                             <button class="button is-rounded is-link"
                                     disabled
@@ -248,10 +245,11 @@
                 </footer>
             </div>
             {# Credits #}
-            {% if credits_count > 0 %}
-                <div class="box">
-                    <h2 class="title is-5">Credit{{ credits_count|pluralize }} ({{ credits_count }})</h2>
-                    <div id="credits-container" class="columns is-multiline">
+            <div id="credits-box">
+                {% if credits_count > 0 %}
+                    <div class="box">
+                        <h2 class="title is-5">Credit{{ credits_count|pluralize }} ({{ credits_count }})</h2>
+                        <div id="credits-container" class="columns is-multiline">
                         {% for credit in credits %}
                             <div class="column is-4">
                                 <article class="media">
@@ -305,8 +303,9 @@
                             </span>
                         </div>
                     {% endif %}
-                </div>
-            {% endif %}
+                    </div>
+                {% endif %}
+            </div>
             {# Characters #}
             {% if characters_count > 0 %}
                 <div class="box">
@@ -606,4 +605,34 @@
     {% htmx_script %}
     <script src="{% static 'site/js/bulma-modal.js' %}"></script>
     <script src="{% static 'site/js/bulma-notifications.js' %}"></script>
+    <script>
+    // Handle notifications added via htmx
+    document.body.addEventListener('htmx:afterSwap', function(event) {
+        // Find all notifications in the newly swapped content
+        const notifications = document.querySelectorAll('.notification');
+
+        notifications.forEach(function(notification) {
+            // Delete button functionality
+            const deleteBtn = notification.querySelector('.delete');
+            if (deleteBtn && !deleteBtn.hasAttribute('data-listener-added')) {
+                deleteBtn.setAttribute('data-listener-added', 'true');
+                deleteBtn.addEventListener('click', function() {
+                    notification.remove();
+                });
+            }
+
+            // Auto-dismiss after 5 seconds (except for errors)
+            if (!notification.classList.contains('is-danger') && !notification.hasAttribute('data-autodismiss-set')) {
+                notification.setAttribute('data-autodismiss-set', 'true');
+                setTimeout(function() {
+                    notification.style.transition = 'opacity 0.5s';
+                    notification.style.opacity = '0';
+                    setTimeout(function() {
+                        notification.remove();
+                    }, 500);
+                }, 5000);
+            }
+        });
+    });
+    </script>
 {% endblock %}
