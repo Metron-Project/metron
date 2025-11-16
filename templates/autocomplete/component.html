@@ -1,0 +1,146 @@
+{% load static %}
+{% load autocomplete %}
+{% comment %}
+This is the main component template that creates the basic HTML structure.
+{% endcomment %}
+<div class="phac_aspc_form_autocomplete_focus_ring {{ disabled|yesno:'disabled,' }}">
+    <div id="{{ component_id }}__container"
+         class="phac_aspc_form_autocomplete">
+        {% comment %} Hidden input elements used to maintain the component's state {% endcomment %}
+        {% comment %} and used when submitting forms {% endcomment %}
+        <div id="{{ component_id }}">{% include "./values.html" %}</div>
+        {% comment %} Data element used to store component state data {% endcomment %}
+        <span id="{{ component_id }}__data"
+              {% if not multiselect and selected_items|length == 1 %} data-phac-aspc-autocomplete="{% get_input_value selected_items %}" {% endif %}></span>
+        {% if label is not None %}<label for="{{ component_id }}__textinput" class="label">{{ label }}</label>{% endif %}
+        {% include "./ac_container.html" %}
+        <div class="results"
+             role="listbox"
+             id="{{ component_id }}__items"
+             {% if multiselect %} aria-description="{% use_string "multiselect" custom_strings %}" aria-multiselectable="true" {% endif %}>
+        </div>
+        {% comment %} This region provides contextual information for screen readers {% endcomment %}
+        <div role="region"
+             class="live_info"
+             id="{{ component_id }}__info"
+             aria-live="polite">
+            {% if selected_items|length > 0 %}
+                {% for item in selected_items %}
+                    {% with item=item.label %}
+                        {% use_string "item_selected" custom_strings %}
+                    {% endwith %}
+                {% endfor %}
+            {% else %}
+                {% use_string "nothing_selected" custom_strings %}
+            {% endif %}
+        </div>
+        {% comment %} This div provides screen readers information about selected items {% endcomment %}
+        {% if multiselect %}
+            <div class="sr_description is-sr-only"
+                 id="{{ component_id }}__sr_description"
+                 style="height:0;
+                        overflow:hidden">
+                {% if selected_items|length > 0 %}
+                    {{ selected_items|length }} {% use_string "selected" custom_strings %}
+                    {% for item in selected_items %}
+                        {% with item=item.label %}
+                            {% use_string "item_selected" custom_strings %}
+                        {% endwith %}
+                    {% endfor %}
+                    {% use_string "backspace_instruction" custom_strings %}
+                {% endif %}
+            </div>
+        {% endif %}
+    </div>
+</div>
+{% comment %} This code snippet loads the required CSS and JS if not already loaded. {% endcomment %}
+<script data-componentid="{{ component_id }}" data-css="{% static 'autocomplete/css/autocomplete.css' %}" data-js="{% static "autocomplete/js/autocomplete.js" %}" data-toggleurl="{% url 'autocomplete:toggle' route_name %}">
+    (function () {
+        const { componentid, css, js, toggleurl } = document.currentScript.dataset;
+        // Add CSS if not already added
+        const ln = document.createElement('link');
+        ln.href = css;
+        ln.rel = 'stylesheet';
+        if (!Array.from(document.querySelectorAll('link')).map(s => s.href).includes(ln.href)) {
+            document.getElementsByTagName('head')[0].appendChild(ln);
+        }
+        {% if not disabled %}
+        {% comment %} If component is disabled no JS is required {% endcomment %}
+        // Add JS if not already added
+        const sc = document.createElement('script');
+        sc.src = js;
+        if (!Array.from(document.querySelectorAll('script')).map(s => s.src).includes(sc.src)) {
+            document.body.appendChild(sc);
+        }
+        // Add click handler on container to set focus on <input> box
+        document.querySelector(`#${componentid}__container`).addEventListener(
+            'mousedown',
+            function(event) {
+                const container = event.target.closest('.phac_aspc_form_autocomplete');
+                const id = container.getAttribute('id');
+                phac_aspc_autocomplete_blur_skip[id] = true;
+            }
+        );
+        document.querySelector(`#${componentid}__container`).addEventListener(
+            'mouseup',
+            function(event) {
+                const container = event.target.closest('.phac_aspc_form_autocomplete');
+                const id = container.getAttribute('id');
+                phac_aspc_autocomplete_blur_skip[id] = false;
+            }
+        );
+        document.querySelector(`#${componentid}__container`).addEventListener(
+            'click',
+            function(event) {
+                if (
+                    event.target === this ||
+                    event.target.classList.contains('ac_container') ||
+                    event.target.classList.contains('textinput')
+                ) {
+                    return phac_aspc_autocomplete_click_handler(event);
+                }
+            }
+        );
+        document.body.addEventListener(
+            'htmx:afterSettle', (event) => {
+                if (event.detail.elt.getAttribute('id') === `${componentid}__items`) {
+                    const shown = event.detail.elt.classList.contains('show');
+                    const el = document.querySelector(`#${componentid}__textinput`);
+                    el.setAttribute('aria-expanded', shown);
+                } else if (
+                    event.detail.elt.getAttribute('id') === `${componentid}__textinput` &&
+                    event.detail.pathInfo.requestPath === toggleurl
+                ) {
+                    phac_aspc_autocomplete_trigger_change(`${componentid}__container`);
+                }
+            }
+        );
+        document.body.addEventListener(
+            'htmx:oobAfterSwap', (event) => {
+                if (event.detail.target.getAttribute('id') == `${componentid}__textinput`) {
+                    setTimeout(() => {
+                        const el = document.querySelector(`#${componentid}__textinput`);
+                        phac_aspc_autocomplete_set_initial_value(document.querySelector(`#${componentid}__container`), true);
+                        el.selectionStart = el.selectionEnd = el.value.length;
+                    }, 0)
+                }
+            }
+        );
+        document.body.addEventListener('htmx:configRequest', function(event) {
+            const container = document.querySelector(`#${componentid}__container`);
+            if (
+                container.contains(event.detail.elt) &&
+                event.detail.path.endsWith('/toggle')
+            ) {
+                // HTMX will include the entire form for non get requests, so we update
+                // it here.  If the name is being used in multiple locations in the
+                // form, without this intervention it will not work as expected.
+                event.detail.parameters = {
+                    ...event.detail.parameters,
+                    ...htmx.values(event.detail.elt, 'get'),
+                }
+            }
+        });
+        {% endif %}
+    })();
+</script>

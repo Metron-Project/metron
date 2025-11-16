@@ -1,0 +1,346 @@
+/* Bulma-styled autocomplete CSS override for django-htmx-autocomplete */
+
+:root {
+    --bulma-primary: hsl(204, 86%, 53%);
+    --dropdown-bg: hsl(0, 0%, 100%);
+    --dropdown-border: hsl(0, 0%, 86%);
+    --dropdown-item-hover: hsl(0, 0%, 96%);
+    --dropdown-item-active: hsl(204, 86%, 53%);
+    --dropdown-shadow: 0 0.5em 1em -0.125em rgba(10, 10, 10, 0.1), 0 0px 0 1px rgba(10, 10, 10, 0.02);
+    --dropdown-text: hsl(0, 0%, 29%);
+}
+
+@media (prefers-color-scheme: dark) {
+    :root {
+        --dropdown-bg: hsl(0, 0%, 18%);
+        --dropdown-border: hsl(0, 0%, 42%);
+        --dropdown-item-hover: hsl(0, 0%, 25%);
+        --dropdown-item-active: hsl(204, 86%, 53%);
+        --dropdown-shadow: 0 0.5em 1em -0.125em rgba(0, 0, 0, 0.5), 0 0px 0 1px rgba(0, 0, 0, 0.2);
+        --dropdown-text: hsl(0, 0%, 93%);
+        --input-bg: hsl(0, 0%, 15%);
+        --input-border: hsl(0, 0%, 42%);
+    }
+}
+
+.phac_aspc_form_autocomplete {
+    display: block;
+    width: 100%;
+    outline: 0px solid transparent;
+    position: relative;
+}
+
+.phac_aspc_form_autocomplete * {
+    box-sizing: border-box;
+}
+
+.phac_aspc_form_autocomplete_focus_ring {
+    cursor: pointer;
+}
+
+.phac_aspc_form_autocomplete_focus_ring.disabled {
+    cursor: inherit;
+}
+
+.phac_aspc_form_autocomplete .dropdown-item {
+    cursor: pointer;
+}
+
+.selected {
+    font-weight: bold;
+}
+
+/* Container for autocomplete input and chips */
+.phac_aspc_form_autocomplete ul.ac_container {
+    position: relative;
+    overflow: hidden;
+    margin: 0;
+    padding: 0.5rem;
+    width: 100%;
+    height: auto;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.5rem;
+    border: 1px solid var(--dropdown-border);
+    border-radius: 4px;
+    background-color: var(--dropdown-bg);
+    list-style: none;
+}
+
+@media (prefers-color-scheme: dark) {
+    .phac_aspc_form_autocomplete ul.ac_container {
+        background-color: var(--input-bg);
+        border-color: var(--input-border);
+    }
+}
+
+.phac_aspc_form_autocomplete ul.ac_container li {
+    list-style: none;
+}
+
+/* Chip styling - selected items */
+.phac_aspc_form_autocomplete ul.ac_container li.chip {
+    position: relative;
+    align-items: center;
+    justify-content: center;
+    align-content: center;
+    display: inline-flex;
+    padding: 0.5rem 0.75rem;
+    margin: 0;
+    border-radius: 4px;
+    background-color: var(--bulma-primary);
+    background-image: none;
+    border: none;
+    box-shadow: none;
+    color: white;
+    list-style: none;
+    max-width: 100%;
+}
+
+.phac_aspc_form_autocomplete_focus_ring.disabled .phac_aspc_form_autocomplete ul.ac_container li.chip {
+    padding: 0.5rem 0.75rem;
+}
+
+.phac_aspc_form_autocomplete ul.ac_container li.chip span {
+    word-wrap: break-word;
+}
+
+.phac_aspc_form_autocomplete ul.ac_container li.chip a {
+    margin-left: 0.5rem;
+    background-color: transparent;
+    border: none;
+    display: inline-block;
+}
+
+.phac_aspc_form_autocomplete ul.ac_container li.chip a svg,
+.phac_aspc_form_autocomplete ul.ac_container li.chip svg {
+    user-select: none;
+    cursor: pointer;
+    font-size: 22px;
+    margin: -2.5px 0px 0 0px;
+    top: 0;
+    width: 1em;
+    height: 1em;
+    fill: currentColor;
+    color: rgba(255, 255, 255, 0.7);
+}
+
+.phac_aspc_form_autocomplete ul.ac_container li.chip a svg:hover,
+.phac_aspc_form_autocomplete ul.ac_container li.chip svg:hover {
+    color: rgba(255, 255, 255, 0.9);
+}
+
+/* Input field styling */
+.phac_aspc_form_autocomplete ul.ac_container li.input {
+    margin: 0;
+    padding: 0;
+    min-width: 150px;
+    white-space: nowrap;
+    flex: 1;
+    display: flex;
+    flex-wrap: nowrap;
+    list-style: none;
+}
+
+.phac_aspc_form_autocomplete ul.ac_container li input.textinput {
+    margin: 0;
+    padding: 0.25rem 0.5rem;
+    outline: 0;
+    border: 0;
+    background: transparent;
+    box-shadow: none;
+    font-size: 100%;
+    line-height: normal;
+    border-radius: 0;
+    flex: 1;
+    max-width: 100%;
+    cursor: pointer;
+    display: flex;
+}
+
+@media (prefers-color-scheme: dark) {
+    .phac_aspc_form_autocomplete ul.ac_container li input.textinput {
+        color: var(--dropdown-text);
+    }
+
+    .phac_aspc_form_autocomplete ul.ac_container li input.textinput::placeholder {
+        color: hsl(0, 0%, 60%);
+    }
+}
+
+.phac_aspc_form_autocomplete .ac_required_input {
+    opacity: 0;
+    position: absolute;
+}
+
+/* HTMX indicator */
+.phac_aspc_form_autocomplete ul.ac_container li.search-indicator svg {
+    max-width: 25px;
+    max-height: 25px;
+}
+
+.phac_aspc_form_autocomplete ul.ac_container li.search-indicator svg .magnify {
+    fill: #000;
+    animation: search 1s infinite ease;
+}
+
+.phac_aspc_form_autocomplete ul.ac_container li.search-indicator svg .doc {
+    fill: #444;
+    animation: flyby 1s infinite ease;
+}
+
+@keyframes search {
+    0% {
+        transform: translate(40px, 40px) scale(.6);
+    }
+    50% {
+        transform: translate(20px, 20px) scale(.6);
+    }
+    100% {
+        transform: translate(40px, 40px) scale(.6);
+    }
+}
+
+@keyframes flyby {
+    0% {
+        transform: translate(-20px, 20px) scale(.2);
+        opacity: 0;
+    }
+    50% {
+        transform: translate(30px, 20px) scale(.5);
+        opacity: 1;
+    }
+    100% {
+        transform: translate(100px, 20px) scale(.2);
+        opacity: 0;
+    }
+}
+
+/* Dropdown results */
+.phac_aspc_form_autocomplete .results {
+    max-height: 300px;
+    max-width: 100%;
+    position: absolute;
+    overflow: auto;
+    z-index: 1000;
+    display: none;
+    min-width: 10rem;
+    padding: 0.5rem 0;
+    margin: 0;
+    font-size: 1rem;
+    text-align: left;
+    list-style: none;
+    background-color: var(--dropdown-bg);
+    background-clip: padding-box;
+    border: 1px solid var(--dropdown-border);
+    border-radius: 4px;
+    box-shadow: var(--dropdown-shadow);
+}
+
+.phac_aspc_form_autocomplete .results.show {
+    display: block;
+}
+
+.phac_aspc_form_autocomplete .results .item {
+    display: block;
+    width: 100%;
+    padding: 0.5rem 1rem;
+    clear: both;
+    font-weight: 400;
+    color: hsl(0, 0%, 29%);
+    text-align: inherit;
+    text-decoration: none;
+    white-space: nowrap;
+    background-color: transparent;
+    border: 0;
+}
+
+@media (prefers-color-scheme: dark) {
+    .phac_aspc_form_autocomplete .results .item {
+        color: var(--dropdown-text);
+    }
+}
+
+.phac_aspc_form_autocomplete .results .item .highlight {
+    font-weight: 600;
+    text-decoration: underline;
+}
+
+.phac_aspc_form_autocomplete .results .item.hasFocus,
+.phac_aspc_form_autocomplete .results .item:hover {
+    background-color: var(--dropdown-item-hover);
+}
+
+@media (prefers-color-scheme: dark) {
+    .phac_aspc_form_autocomplete .results .item:hover {
+        color: var(--dropdown-text);
+    }
+
+    .phac_aspc_form_autocomplete .results .item:focus-visible {
+        outline: 2px solid hsl(204, 86%, 53%);
+        outline-offset: -2px;
+    }
+}
+
+.phac_aspc_form_autocomplete .results .item.selected.hasFocus,
+.phac_aspc_form_autocomplete .results .item.selected:hover {
+    background-color: var(--dropdown-item-active);
+    color: white;
+}
+
+.phac_aspc_form_autocomplete .results .item.hasFocus {
+    outline: 2px solid hsl(204, 86%, 53%);
+    outline-offset: -2px;
+}
+
+.phac_aspc_form_autocomplete .results .item.selected::after {
+    content: "✓";
+    position: absolute;
+    right: 0.75rem;
+}
+
+.phac_aspc_form_autocomplete .results .item .phac_aspc_form_autocomplete__item__spaceholder {
+    display: inline-block;
+    width: 0.75rem;
+    content: " ";
+}
+
+/* More results indicator */
+.phac_aspc_form_autocomplete .more-results {
+    padding: 0.5rem 1rem;
+    font-size: 0.875rem;
+    color: hsl(0, 0%, 48%);
+    font-style: italic;
+    border-top: 1px solid var(--dropdown-border);
+}
+
+@media (prefers-color-scheme: dark) {
+    .phac_aspc_form_autocomplete .more-results {
+        color: hsl(0, 0%, 75%);
+    }
+}
+
+.phac_aspc_form_autocomplete .more-results span {
+    white-space: nowrap;
+    display: block;
+    font-size: 0.8em;
+    opacity: 0.8;
+    padding: 10px 30px 0 30px;
+}
+
+/* Accessibility */
+.phac_aspc_form_autocomplete_focus_ring .live_info {
+    border: 0;
+    clip: rect(0 0 0 0);
+    height: 1px;
+    margin: -1px;
+    overflow: hidden;
+    padding: 0;
+    position: absolute;
+    width: 1px;
+}
+
+.phac_aspc_form_autocomplete li.input.ac-active {
+    min-width: 50px;
+}

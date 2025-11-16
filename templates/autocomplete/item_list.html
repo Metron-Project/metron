@@ -1,0 +1,53 @@
+{% load autocomplete %}
+<div {% comment %}
+     class="results {{ show|yesno:'show,' }}"
+     {% endcomment %}
+     class="results show dropdown-content"
+     id="{{ component_id }}__items"
+     role="listbox"
+     {% if multiselect %} aria-description="{% use_string "multiselect" custom_strings %}" aria-multiselectable="true" {% endif %}>
+    {% for item in items %}
+        {% include "./item.html" %}
+    {% endfor %}
+    {% if query_too_short %}
+        <span class="item dropdown-item">
+            {% use_string "type_at_least_n_characters" custom_strings as str_template %}
+            {% substitute_string str_template n=minimum_search_length %}
+        </span>
+    {% elif not items %}
+        <span class="item dropdown-item">
+            {% use_string "no_results" custom_strings as no_result_str %}
+            {% if no_result_str %}
+                {{ no_result_str }}
+            {% else %}
+                {% use_string "available_results" custom_strings %}
+            {% endif %}
+        </span>
+    {% endif %}
+    {% if items|length != total_results %}
+        <div class="more-results dropdown-item">
+            <span>
+                {% use_string "more_results" custom_strings as more_results_template %}
+                {% substitute_string more_results_template page_size=items|length total=total_results %}
+            </span>
+        </div>
+    {% endif %}
+</div>
+<div hx-swap-oob="innerHTML" id="{{ component_id }}__info">
+    {% if query_too_short %}
+        {% use_string "type_at_least_n_characters" custom_strings as str_template %}
+        {% substitute_string str_template n=minimum_search_length %}
+    {% elif items|length != total_results %}
+        {% use_string "more_results" custom_strings as more_results_template %}
+        {% substitute_string more_results_template page_size=items|length total=total_results %}
+    {% elif items|length %}
+        {% use_string "available_results" custom_strings %}
+    {% else %}
+        {% use_string "no_results" custom_strings as no_result_str %}
+        {% if no_result_str %}
+            {{ no_result_str }}
+        {% else %}
+            {% use_string "available_results" custom_strings %}
+        {% endif %}
+    {% endif %}
+</div>

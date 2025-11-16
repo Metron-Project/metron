@@ -1,0 +1,235 @@
+{% if bootstrap %}
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.2.2/dist/css/bootstrap.min.css"
+          rel="stylesheet"
+          integrity="sha384-Zenh87qX5JnK2Jl0vWa8Ck2rdkQ2Bzep5IDxbcnCeuOxjzrPF/et3URy9Bv1WTRi"
+          crossorigin="anonymous">
+{% endif %}
+<style type="text/css">
+    :root {
+        --bulma-primary: hsl(204, 86%, 53%);
+        --bulma-dark: hsl(0, 0%, 21%);
+        --bulma-dark-border: hsl(0, 0%, 29%);
+        --bulma-light-text: hsl(0, 0%, 96%);
+        --bulma-grey-border: hsl(0, 0%, 86%);
+        --bulma-grey-lighter: hsl(0, 0%, 96%);
+        --chip-bg: hsla(0, 0%, 0%, 0.08);
+        --chip-icon-color: hsla(0, 0%, 0%, 0.26);
+        --chip-icon-hover: hsla(0, 0%, 0%, 0.4);
+        --dropdown-bg: hsl(0, 0%, 100%);
+        --dropdown-border: hsl(0, 0%, 86%);
+        --dropdown-item-hover: hsl(0, 0%, 96%);
+        --dropdown-item-active: hsl(204, 86%, 53%);
+        --dropdown-shadow: 0 0.5em 1em -0.125em rgba(10, 10, 10, 0.1), 0 0px 0 1px rgba(10, 10, 10, 0.02);
+    }
+
+    @media (prefers-color-scheme: dark) {
+        :root {
+            --bulma-dark: hsl(0, 0%, 96%);
+            --bulma-light-text: hsl(0, 0%, 21%);
+            --bulma-grey-border: hsl(0, 0%, 42%);
+            --chip-bg: hsla(0, 0%, 100%, 0.12);
+            --chip-icon-color: hsla(0, 0%, 100%, 0.7);
+            --chip-icon-hover: hsla(0, 0%, 100%, 0.9);
+            --dropdown-bg: hsl(0, 0%, 18%);
+            --dropdown-border: hsl(0, 0%, 42%);
+            --dropdown-item-hover: hsl(0, 0%, 25%);
+            --dropdown-item-active: hsl(204, 86%, 53%);
+            --dropdown-shadow: 0 0.5em 1em -0.125em rgba(0, 0, 0, 0.5), 0 0px 0 1px rgba(0, 0, 0, 0.2);
+            --dropdown-text: hsl(0, 0%, 93%);
+            --input-bg: hsl(0, 0%, 15%);
+            --input-border: hsl(0, 0%, 42%);
+        }
+    }
+
+    .phac_aspc_form_autocomplete {
+        outline: 0px solid transparent;
+    }
+
+    .phac_aspc_form_autocomplete .dropdown-item {
+        cursor: pointer;
+    }
+
+    .selected {
+        font-weight: bold;
+    }
+
+    .ac_container {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        gap: 0.5rem;
+        padding: 0.5rem;
+        border: 1px solid var(--dropdown-border);
+        border-radius: 4px;
+        background-color: var(--dropdown-bg);
+        list-style: none;
+        margin: 0;
+    }
+
+    .ac_container .input {
+        list-style: none;
+        flex: 1;
+        min-width: 150px;
+    }
+
+    .textinput {
+        display: flex;
+        border: none;
+        box-shadow: none;
+        padding: 0.25rem 0.5rem;
+    }
+
+    .textinput:focus {
+        border: none;
+        box-shadow: none;
+        outline: none;
+    }
+
+    .textinput .htmx-indicator {
+        position: relative;
+        left: -60px;
+        top: 5px;
+    }
+
+    .phac_aspc_form_autocomplete ul.ac_container li.chip {
+        align-items: center;
+        justify-content: center;
+        align-content: center;
+        display: inline-flex;
+        padding: 0.5rem 0.75rem;
+        margin: 0;
+        border-radius: 4px;
+        background-color: var(--bulma-primary) !important;
+        background-image: none !important;
+        border: none !important;
+        box-shadow: none !important;
+        color: white;
+        list-style: none;
+    }
+
+    .phac_aspc_form_autocomplete ul.ac_container li.chip .delete {
+        margin-left: 0.5rem;
+        background-color: transparent;
+        border: none;
+    }
+
+    .phac_aspc_form_autocomplete ul.ac_container li.chip svg,
+    .phac_aspc_form_autocomplete ul.ac_container li.chip a svg {
+        user-select: none;
+        cursor: pointer;
+        font-size: 22px;
+        margin: -2.5px 0px 0 0px;
+        top: 0;
+        width: 1em;
+        height: 1em;
+        fill: currentColor;
+        color: hsla(255, 255%, 255%, 0.7);
+    }
+
+    .phac_aspc_form_autocomplete ul.ac_container li.chip svg:hover,
+    .phac_aspc_form_autocomplete ul.ac_container li.chip a svg:hover {
+        color: hsla(255, 255%, 255%, 0.9);
+    }
+
+    .results {
+        position: absolute;
+        z-index: 1000;
+        background-color: var(--dropdown-bg);
+        border: 1px solid var(--dropdown-border);
+        border-radius: 4px;
+        box-shadow: var(--dropdown-shadow);
+        max-height: 300px;
+        overflow-y: auto;
+        display: none;
+    }
+
+    .results.show {
+        display: block;
+    }
+
+    .results .dropdown-item {
+        padding: 0.5rem 1rem;
+        color: hsl(0, 0%, 29%);
+        text-decoration: none;
+        display: block;
+        border: none;
+        background: none;
+        width: 100%;
+        text-align: left;
+    }
+
+    .results .dropdown-item:hover {
+        background-color: var(--dropdown-item-hover);
+    }
+
+    .results .dropdown-item.is-active {
+        background-color: var(--dropdown-item-active);
+        color: white;
+    }
+
+    @media (prefers-color-scheme: dark) {
+        .results .dropdown-item {
+            color: var(--dropdown-text);
+        }
+
+        .ac_container {
+            background-color: var(--input-bg);
+            border-color: var(--input-border);
+        }
+
+        .textinput {
+            color: var(--dropdown-text);
+        }
+
+        .textinput::placeholder {
+            color: hsl(0, 0%, 60%);
+        }
+    }
+
+    .is-sr-only {
+        position: absolute;
+        width: 1px;
+        height: 1px;
+        padding: 0;
+        margin: -1px;
+        overflow: hidden;
+        clip: rect(0, 0, 0, 0);
+        white-space: nowrap;
+        border-width: 0;
+    }
+
+    .live_info {
+        position: absolute;
+        width: 1px;
+        height: 1px;
+        padding: 0;
+        margin: -1px;
+        overflow: hidden;
+        clip: rect(0, 0, 0, 0);
+        white-space: nowrap;
+        border-width: 0;
+    }
+
+    .more-results {
+        padding: 0.5rem 1rem;
+        font-size: 0.875rem;
+        color: hsl(0, 0%, 48%);
+        font-style: italic;
+        border-top: 1px solid var(--dropdown-border);
+    }
+
+    @media (prefers-color-scheme: dark) {
+        .more-results {
+            color: hsl(0, 0%, 75%);
+        }
+
+        .results .dropdown-item:hover {
+            color: var(--dropdown-text);
+        }
+
+        .results .dropdown-item:focus-visible {
+            outline: 2px solid hsl(204, 86%, 53%);
+            outline-offset: -2px;
+        }
+    }
+</style>

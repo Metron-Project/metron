@@ -1,0 +1,23 @@
+{% load autocomplete %}
+{% comment %}
+This template renders a selected item or chip.
+{% endcomment %}
+<li class="chip tag is-link is-medium" aria-hidden="true">
+    <span>{% get_chip_label item %}</span>
+    {% if not disabled %}
+        <a hx-get="{% url 'autocomplete:toggle' ac_name=route_name %}"
+           hx-params="{% base_configurable_values_hx_params %},remove"
+           hx-vals='{ {% base_configurable_hx_vals %}, "remove": true, "item": "{{ item.key|escapejs }}" }'
+           hx-include="#{{ component_id }}"
+           hx-swap="delete"
+           hx-target="this"
+           tabindex="-1"
+           href="#"
+           class="delete is-small">
+            <svg focusable="false" viewBox="0 0 24 24" width="0" height="0">
+                <path d="M12 2C6.47 2 2 6.47 2 12s4.47 10 10 10 10-4.47 10-10S17.53 2 12 2zm5 13.59L15.59 17 12 13.41 8.41 17 7 15.59 10.59 12 7 8.41 8.41 7 12 10.59 15.59 7 17 8.41 13.41 12 17 15.59z">
+                </path>
+            </svg>
+        </a>
+    {% endif %}
+</li>
