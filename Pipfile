@@ -27,6 +27,7 @@ django-money = "*"
 django-simple-history = "*"
 wiki = "*"
 django-htmx = "*"
+django-htmx-autocomplete = "*"
 
 [dev-packages]
 django-debug-toolbar = "*"
