@@ -1,0 +1,42 @@
+{% extends parent_template|default:"base.html" %}
+{% load static %}
+{% block title %}Delete {{ readinglist.name }} - Metron{% endblock %}
+{% block content %}
+    <header class="block has-text-centered">
+        <h1 class="title">Delete Reading List</h1>
+    </header>
+    <section class="section">
+        <div class="container">
+            <div class="columns is-centered">
+                <div class="column is-half">
+                    <div class="box">
+                        <article class="message is-danger">
+                            <div class="message-header">
+                                <p>Warning</p>
+                            </div>
+                            <div class="message-body">
+                                <p class="mb-3">
+                                    Are you sure you want to delete the reading list
+                                    <strong>"{{ readinglist.name }}"</strong>?
+                                </p>
+                                <p>This action cannot be undone.</p>
+                            </div>
+                        </article>
+                        <form method="post">
+                            {% csrf_token %}
+                            <div class="field is-grouped is-grouped-right">
+                                <div class="control">
+                                    <a href="{% url 'reading-list:detail' readinglist.slug %}"
+                                       class="button">Cancel</a>
+                                </div>
+                                <div class="control">
+                                    <button type="submit" class="button is-danger">Delete</button>
+                                </div>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+{% endblock %}

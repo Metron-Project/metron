@@ -1,0 +1,38 @@
+{% extends parent_template|default:"base.html" %}
+{% load static %}
+{% block title %}Remove Issue - Metron{% endblock %}
+{% block content %}
+    <header class="block has-text-centered">
+        <h1 class="title">Remove Issue from Reading List</h1>
+    </header>
+    <section class="section">
+        <div class="container">
+            <div class="columns is-centered">
+                <div class="column is-half">
+                    <div class="box">
+                        <article class="message is-warning">
+                            <div class="message-body">
+                                <p>
+                                    Remove <strong>{{ readinglistitem.issue }}</strong> from
+                                    <strong>{{ readinglistitem.reading_list.name }}</strong>?
+                                </p>
+                            </div>
+                        </article>
+                        <form method="post">
+                            {% csrf_token %}
+                            <div class="field is-grouped is-grouped-right">
+                                <div class="control">
+                                    <a href="{% url 'reading-list:detail' readinglistitem.reading_list.slug %}"
+                                       class="button">Cancel</a>
+                                </div>
+                                <div class="control">
+                                    <button type="submit" class="button is-danger">Remove</button>
+                                </div>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+{% endblock %}
