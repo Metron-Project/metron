@@ -35,10 +35,7 @@
                                     Selected Issues
                                     <span class="help">Drag to reorder</span>
                                 </label>
-                                <div id="selected-issues-list"
-                                     class="box"
-                                     style="min-height: 100px;
-                                            background: #f5f5f5">
+                                <div id="selected-issues-list" class="box" style="min-height: 100px">
                                     <!-- Selected issues will appear here as draggable items -->
                                 </div>
                             </div>
@@ -197,10 +194,7 @@
                     const issueLabel = issueData[issueId] || `Issue #${issueId}`;
                     const isExisting = existingIssueIds.has(issueId);
                     const div = document.createElement('div');
-                    div.className = 'draggable-issue box mb-2 p-3';
-                    div.style.cursor = 'move';
-                    div.style.background = isExisting ? '#f0f8ff' : 'white';
-                    div.style.border = '1px solid #dbdbdb';
+                    div.className = `draggable-issue box mb-2 p-3 ${isExisting ? 'is-existing-issue' : 'is-new-issue'}`;
                     div.dataset.issueId = issueId;
 
                     const badge = isExisting ? '<span class="tag is-info is-light ml-2">Current</span>' : '<span class="tag is-success is-light ml-2">New</span>';
@@ -282,14 +276,75 @@
         });
     </script>
     <style>
-        .sortable-ghost {
-            opacity: 0.4;
-            background: #f0f0f0 !important;
+        /* Draggable issue items */
+        .draggable-issue {
+            cursor: move;
+            border: 1px solid hsl(0, 0%, 86%);
+            transition: all 0.2s ease;
         }
 
-        .draggable-issue:hover {
-            background: #f9f9f9 !important;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        .draggable-issue.is-existing-issue {
+            background-color: hsl(204, 86%, 53%);
+            color: white;
+        }
+
+        .draggable-issue.is-new-issue {
+            background-color: hsl(0, 0%, 100%);
+        }
+
+        .draggable-issue.is-existing-issue:hover {
+            background-color: hsl(204, 86%, 48%) !important;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+            transform: translateY(-1px);
+        }
+
+        .draggable-issue.is-new-issue:hover {
+            background-color: hsl(0, 0%, 98%) !important;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            transform: translateY(-1px);
+        }
+
+        .sortable-ghost {
+            opacity: 0.4;
+            background-color: hsl(0, 0%, 94%) !important;
+        }
+
+        #selected-issues-list {
+            background-color: hsl(0, 0%, 96%);
+        }
+
+        /* Dark mode styles */
+        @media (prefers-color-scheme: dark) {
+            .draggable-issue {
+                border-color: hsl(0, 0%, 29%);
+            }
+
+            .draggable-issue.is-existing-issue {
+                background-color: hsl(204, 86%, 53%);
+                color: white;
+            }
+
+            .draggable-issue.is-new-issue {
+                background-color: hsl(0, 0%, 18%);
+            }
+
+            .draggable-issue.is-existing-issue:hover {
+                background-color: hsl(204, 86%, 48%) !important;
+                box-shadow: 0 2px 4px rgba(0, 0, 0, 0.4);
+            }
+
+            .draggable-issue.is-new-issue:hover {
+                background-color: hsl(0, 0%, 25%) !important;
+                box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+            }
+
+            .sortable-ghost {
+                background-color: hsl(0, 0%, 21%) !important;
+            }
+
+            #selected-issues-list {
+                background-color: hsl(0, 0%, 14%);
+            }
         }
     </style>
 {% endblock %}
