@@ -75,6 +75,7 @@ INSTALLED_APPS = [
     "api",
     "comicsdb",
     "users",
+    "reading_lists",
 ]
 
 MIDDLEWARE = [
