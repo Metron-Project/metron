@@ -55,24 +55,6 @@
                             </div>
                         </form>
                     </div>
-                    {% if existing_items %}
-                        <div class="box mt-5">
-                            <h3 class="title is-5">
-                                Current Reading List ({{ existing_items|length }} issue{{ existing_items|length|pluralize }})
-                            </h3>
-                            <div class="content">
-                                <ol>
-                                    {% for item in existing_items %}<li>{{ item.issue }}</li>{% endfor %}
-                                </ol>
-                            </div>
-                        </div>
-                    {% else %}
-                        <div class="notification is-info mt-5">
-                            <p>
-                                <strong>This reading list is empty.</strong> Add your first issues below!
-                            </p>
-                        </div>
-                    {% endif %}
                     <div class="content mt-5">
                         <h3 class="title is-5">How to use:</h3>
                         <ul>
