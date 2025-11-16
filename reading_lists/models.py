@@ -1,7 +1,6 @@
 from django.db import models
 from django.db.models.signals import pre_save
 from django.urls import reverse
-from simple_history.models import HistoricalRecords
 
 from comicsdb.models.common import CommonInfo, pre_save_slug
 from comicsdb.models.issue import Issue
@@ -31,7 +30,6 @@ class ReadingList(CommonInfo):
         related_name="in_reading_lists",
         blank=True,
     )
-    history = HistoricalRecords()
 
     class Meta:
         ordering = ["user", "name"]
