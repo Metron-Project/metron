@@ -52,7 +52,7 @@ def is_field_type(field, field_type):  # NOQA: PLR0911
         case "textarea":
             return isinstance(field.field.widget, forms.Textarea)
         case "select":
-            return isinstance(field.field.widget, forms.Select)
+            return isinstance(field.field.widget, forms.Select | forms.SelectMultiple)
         case "any_datetime":
             return isinstance(
                 field.field.widget,
@@ -103,4 +103,44 @@ def set_input_type(field, field_type=None):
     if field_type:
         field.field.widget.input_type = field_type
 
+    return field
+
+
+@register.filter
+def add_placeholder(field, placeholder_text):
+    """
+    Adds placeholder text to a field
+    Usage: {{ form.field|add_placeholder:'Enter your email' }}
+    """
+    field.field.widget.attrs["placeholder"] = placeholder_text
+    return field
+
+
+@register.filter
+def add_attr(field, attr_string):
+    """
+    Adds an attribute to a field using 'name:value' format
+    Usage: {{ form.field|add_attr:'autocomplete:off' }}
+    Usage: {{ form.field|add_attr:'maxlength:100' }}
+    """
+    if ":" in attr_string:
+        attr_name, attr_value = attr_string.split(":", 1)
+        field.field.widget.attrs[attr_name.strip()] = attr_value.strip()
+    return field
+
+
+@register.filter
+def bulma_size(field, size):
+    """
+    Adds Bulma size class to a field
+    Usage: {{ form.field|add_field_class:'input'|bulma_size:'small' }}
+    Options: 'small', 'medium', 'large'
+    """
+    if size in ["small", "medium", "large"]:
+        size_class = f"is-{size}"
+        if field.field.widget.attrs.get("class"):
+            if size_class not in field.field.widget.attrs["class"]:
+                field.field.widget.attrs["class"] += f" {size_class}"
+        else:
+            field.field.widget.attrs["class"] = size_class
     return field
