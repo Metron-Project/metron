@@ -24,6 +24,7 @@ class ReadingListAdmin(admin.ModelAdmin):
 
     fieldsets = (
         (None, {"fields": ("name", "slug", "desc", "user", "is_private")}),
+        ("Attribution", {"fields": ("attribution_source", "attribution_url")}),
         ("Metadata", {"fields": ("cv_id", "gcd_id", "created_on", "modified")}),
     )
 

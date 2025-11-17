@@ -14,6 +14,18 @@ class ReadingList(CommonInfo):
     edit permissions for that list.
     """
 
+    class AttributionSource(models.TextChoices):
+        """Source attribution choices."""
+
+        CBRO = "CBRO", "Comic Book Reading Orders"
+        CMRO = "CMRO", "Complete Marvel Reading Orders"
+        CBH = "CBH", "Comic Book Herald"
+        CBT = "CBT", "Comic Book Treasury"
+        MG = "MG", "Marvel Guides"
+        HTLC = "HTLC", "How To Love Comics"
+        LOCG = "LOCG", "League of ComicGeeks"
+        OTHER = "OTHER", "Other"
+
     user = models.ForeignKey(
         CustomUser,
         on_delete=models.CASCADE,
@@ -23,6 +35,16 @@ class ReadingList(CommonInfo):
     is_private = models.BooleanField(
         default=False,
         help_text="Whether this list is private (only visible to the owner)",
+    )
+    attribution_source = models.CharField(
+        max_length=10,
+        choices=AttributionSource.choices,
+        blank=True,
+        help_text="Source where this reading list information was obtained",
+    )
+    attribution_url = models.URLField(
+        blank=True,
+        help_text="URL of the specific page where this reading list was obtained",
     )
     issues = models.ManyToManyField(
         Issue,

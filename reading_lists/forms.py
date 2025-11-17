@@ -11,15 +11,19 @@ class ReadingListForm(forms.ModelForm):
 
     class Meta:
         model = ReadingList
-        fields = ("name", "desc", "is_private")
+        fields = ("name", "desc", "is_private", "attribution_source", "attribution_url")
         labels = {
             "desc": "Description",
             "is_private": "Private List",
+            "attribution_source": "Source",
+            "attribution_url": "Source URL",
         }
         help_texts = {
             "is_private": (
                 "Private lists are only visible to you. Public lists can be viewed by anyone."
             ),
+            "attribution_source": "Where did you get this reading list from? (optional)",
+            "attribution_url": "URL of the specific page for this reading list (optional)",
         }
 
 
