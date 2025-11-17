@@ -1,6 +1,5 @@
 {% extends parent_template|default:"base.html" %}
-{% load static %}
-{% load django_htmx %}
+{% load static django_htmx %}
 {% block title %}Add Issues to {{ reading_list.name }} - Metron{% endblock %}
 {% block js %}
     {% htmx_script %}
