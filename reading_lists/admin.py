@@ -1,5 +1,4 @@
 from django.contrib import admin
-from simple_history.admin import SimpleHistoryAdmin
 
 from reading_lists.models import ReadingList, ReadingListItem
 
@@ -15,7 +14,7 @@ class ReadingListItemInline(admin.TabularInline):
 
 
 @admin.register(ReadingList)
-class ReadingListAdmin(SimpleHistoryAdmin):
+class ReadingListAdmin(admin.ModelAdmin):
     """Admin interface for reading lists."""
 
     list_display = ("name", "user", "is_private", "issue_count", "modified", "created_on")
