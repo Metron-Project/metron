@@ -4,6 +4,7 @@ from django.urls import reverse
 
 from comicsdb.models.common import CommonInfo, pre_save_slug
 from comicsdb.models.issue import Issue
+from comicsdb.models.publisher import Publisher
 from users.models import CustomUser
 
 
@@ -78,6 +79,15 @@ class ReadingList(CommonInfo):
             self.reading_list_items.select_related("issue").order_by("-issue__cover_date").first()
         )
         return latest_issue.issue.cover_date.year if latest_issue else None
+
+    @property
+    def publishers(self):
+        """Get all unique publishers from the reading list's issues."""
+        return (
+            Publisher.objects.filter(series__issues__reading_list_items__reading_list=self)
+            .distinct()
+            .order_by("name")
+        )
 
 
 class ReadingListItem(models.Model):

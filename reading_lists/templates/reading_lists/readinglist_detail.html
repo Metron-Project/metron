@@ -113,6 +113,15 @@
                             {% endif %}
                         </dd>
                     {% endif %}
+                    {% if reading_list.publishers %}
+                        <dt class="has-text-weight-bold">Publishers:</dt>
+                        <dd class="mb-3">
+                            {% for publisher in reading_list.publishers %}
+                                <a href="{% url 'publisher:detail' publisher.slug %}">{{ publisher.name }}</a>
+                                {% if not forloop.last %},{% endif %}
+                            {% endfor %}
+                        </dd>
+                    {% endif %}
                     <dt class="has-text-weight-bold">Visibility:</dt>
                     <dd class="mb-3">
                         {% if reading_list.is_private %}
