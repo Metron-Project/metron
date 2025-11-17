@@ -17,9 +17,7 @@
                                 <div class="field">
                                     {% if field|is_field_type:'checkbox' %}
                                         <div class="control">
-                                            <label class="checkbox">
-                                                {{ field }} {{ field.help_text }}
-                                            </label>
+                                            <label class="checkbox">{{ field }} {{ field.help_text }}</label>
                                         </div>
                                     {% elif field|is_field_type:'select' %}
                                         <label class="label" for="{{ field.id_for_label }}">
@@ -27,9 +25,7 @@
                                             {% if field.field.required %}<span class="has-text-danger">*</span>{% endif %}
                                         </label>
                                         <div class="control">
-                                            <span class="select{% if field.errors %} is-danger{% endif %} is-fullwidth">
-                                                {{ field }}
-                                            </span>
+                                            <span class="select{% if field.errors %} is-danger{% endif %} is-fullwidth">{{ field }}</span>
                                         </div>
                                         {% if field.help_text %}<p class="help">{{ field.help_text }}</p>{% endif %}
                                         {% for error in field.errors %}<p class="help is-danger">{{ error }}</p>{% endfor %}
@@ -38,9 +34,7 @@
                                             {{ field.label }}
                                             {% if field.field.required %}<span class="has-text-danger">*</span>{% endif %}
                                         </label>
-                                        <div class="control">
-                                            {{ field|add_field_class:'textarea' }}
-                                        </div>
+                                        <div class="control">{{ field|add_field_class:'textarea' }}</div>
                                         {% if field.help_text %}<p class="help">{{ field.help_text }}</p>{% endif %}
                                         {% for error in field.errors %}<p class="help is-danger">{{ error }}</p>{% endfor %}
                                     {% else %}
@@ -48,9 +42,7 @@
                                             {{ field.label }}
                                             {% if field.field.required %}<span class="has-text-danger">*</span>{% endif %}
                                         </label>
-                                        <div class="control">
-                                            {{ field|add_field_class:'input' }}
-                                        </div>
+                                        <div class="control">{{ field|add_field_class:'input' }}</div>
                                         {% if field.help_text %}<p class="help">{{ field.help_text }}</p>{% endif %}
                                         {% for error in field.errors %}<p class="help is-danger">{{ error }}</p>{% endfor %}
                                     {% endif %}
