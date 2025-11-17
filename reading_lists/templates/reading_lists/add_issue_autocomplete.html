@@ -1,6 +1,6 @@
 {% extends parent_template|default:"base.html" %}
 {% load static django_htmx %}
-{% block title %}Add Issues to {{ reading_list.name }} - Metron{% endblock %}
+{% block title %}Manage Issues - {{ reading_list.name }} - Metron{% endblock %}
 {% block js %}
     {% htmx_script %}
     {{ form.media }}
@@ -8,7 +8,7 @@
 {% endblock js %}
 {% block content %}
     <header class="block has-text-centered">
-        <h1 class="title">Add Issues to Reading List</h1>
+        <h1 class="title">Manage Reading List</h1>
         <p class="subtitle">{{ reading_list.name }}</p>
     </header>
     <section class="section">
@@ -20,10 +20,7 @@
                             {% csrf_token %}
                             {% if form.non_field_errors %}<div class="notification is-danger">{{ form.non_field_errors }}</div>{% endif %}
                             <div class="field">
-                                <label class="label" for="{{ form.issues.id_for_label }}">
-                                    {{ form.issues.label }}
-                                    <span class="has-text-danger">*</span>
-                                </label>
+                                <label class="label" for="{{ form.issues.id_for_label }}">{{ form.issues.label }}</label>
                                 <div class="control">{{ form.issues }}</div>
                                 {% if form.issues.help_text %}<p class="help">{{ form.issues.help_text }}</p>{% endif %}
                                 {% if form.issues.errors %}<p class="help is-danger">{{ form.issues.errors.0 }}</p>{% endif %}
@@ -46,7 +43,7 @@
                                        class="button">Cancel</a>
                                 </div>
                                 <div class="control">
-                                    <button type="submit" class="button is-primary">Add to List</button>
+                                    <button type="submit" class="button is-primary">Save Changes</button>
                                 </div>
                             </div>
                         </form>
@@ -54,11 +51,11 @@
                     <div class="content mt-5">
                         <h3 class="title is-5">How to use:</h3>
                         <ul>
-                            <li>Start typing in the search box to find issues by series name, issue number, or story title</li>
+                            <li>To add new issues: Start typing in the search box to find issues by series name, issue number, or story title</li>
                             <li>Select multiple issues from the dropdown (they will appear as chips)</li>
-                            <li>The selected issues will appear below in a draggable list</li>
+                            <li>All issues (existing and new) will appear below in a draggable list</li>
                             <li>Drag and drop the issues to set your preferred reading order</li>
-                            <li>Click "Add to List" to add all issues in the order you've arranged them</li>
+                            <li>Click "Save Changes" to add new issues and/or save the reordered list</li>
                         </ul>
                     </div>
                 </div>

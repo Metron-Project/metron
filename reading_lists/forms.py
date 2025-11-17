@@ -48,6 +48,7 @@ class AddIssueWithSearchForm(forms.Form):
 
     issues = forms.ModelMultipleChoiceField(
         queryset=Issue.objects.select_related("series", "series__series_type").all(),
+        required=False,
         widget=widgets.AutocompleteWidget(
             ac_class=IssueAutocomplete,
             attrs={
@@ -58,8 +59,8 @@ class AddIssueWithSearchForm(forms.Form):
                 "multiselect": True,
             },
         ),
-        label="Search for Issues",
-        help_text="Search and select multiple issues, then drag to reorder them before adding",
+        label="Search for Issues (Optional)",
+        help_text="Add new issues and/or reorder existing issues by dragging",
     )
     issue_order = forms.CharField(
         required=False,
