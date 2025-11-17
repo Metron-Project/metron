@@ -12,6 +12,9 @@ class ReadingListForm(forms.ModelForm):
     class Meta:
         model = ReadingList
         fields = ("name", "desc", "is_private", "attribution_source", "attribution_url")
+        widgets = {
+            "attribution_source": forms.Select(),
+        }
         labels = {
             "desc": "Description",
             "is_private": "Private List",

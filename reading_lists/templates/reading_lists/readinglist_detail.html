@@ -111,6 +111,23 @@
                             <span class="tag is-success">Public</span>
                         {% endif %}
                     </dd>
+                    {% if reading_list.attribution_source %}
+                        <dt class="has-text-weight-bold">Source:</dt>
+                        <dd class="mb-3">
+                            {% if reading_list.attribution_url %}
+                                <a href="{{ reading_list.attribution_url }}"
+                                   target="_blank"
+                                   rel="noopener noreferrer">
+                                    {{ reading_list.get_attribution_source_display }}
+                                    <span class="icon is-small">
+                                        <i class="fas fa-external-link-alt"></i>
+                                    </span>
+                                </a>
+                            {% else %}
+                                {{ reading_list.get_attribution_source_display }}
+                            {% endif %}
+                        </dd>
+                    {% endif %}
                     <dt class="has-text-weight-bold">Created:</dt>
                     <dd class="mb-3">
                         {{ reading_list.created_on|date:"F d, Y" }}
