@@ -3,7 +3,7 @@ from django import forms
 
 from comicsdb.models.issue import Issue
 from reading_lists.autocomplete import IssueAutocomplete
-from reading_lists.models import ReadingList, ReadingListItem
+from reading_lists.models import ReadingList
 
 
 class ReadingListForm(forms.ModelForm):
@@ -13,7 +13,20 @@ class ReadingListForm(forms.ModelForm):
         model = ReadingList
         fields = ("name", "desc", "is_private", "attribution_source", "attribution_url")
         widgets = {
+            "name": forms.TextInput(attrs={"placeholder": "Enter a name for your reading list"}),
+            "desc": forms.Textarea(
+                attrs={
+                    "placeholder": "Describe the reading list (optional)",
+                    "rows": 5,
+                }
+            ),
             "attribution_source": forms.Select(),
+            "attribution_url": forms.URLInput(
+                attrs={
+                    "placeholder": "https://example.com/reading-order",
+                    "autocomplete": "url",
+                }
+            ),
         }
         labels = {
             "desc": "Description",
@@ -27,17 +40,6 @@ class ReadingListForm(forms.ModelForm):
             ),
             "attribution_source": "Where did you get this reading list from? (optional)",
             "attribution_url": "URL of the specific page for this reading list (optional)",
-        }
-
-
-class AddIssueToListForm(forms.ModelForm):
-    """Form for adding an issue to a reading list."""
-
-    class Meta:
-        model = ReadingListItem
-        fields = ("issue", "order")
-        widgets = {
-            "issue": forms.HiddenInput(),
         }
 
 

@@ -1,7 +1,6 @@
 from django.urls import path
 
 from reading_lists.views import (
-    AddIssueToReadingListView,
     AddIssueWithAutocompleteView,
     ReadingListCreateView,
     ReadingListDeleteView,
@@ -24,11 +23,6 @@ urlpatterns = [
         "<slug:slug>/add-issue/",
         AddIssueWithAutocompleteView.as_view(),
         name="add-issue",
-    ),
-    path(
-        "<slug:slug>/add-issue/<slug:issue_slug>/",
-        AddIssueToReadingListView.as_view(),
-        name="add-issue-direct",
     ),
     path(
         "<slug:slug>/remove-issue/<int:item_pk>/",

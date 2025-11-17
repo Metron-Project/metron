@@ -144,57 +144,6 @@ class ReadingListDeleteView(LoginRequiredMixin, UserPassesTestMixin, DeleteView)
         return super().form_valid(form)
 
 
-class AddIssueToReadingListView(LoginRequiredMixin, UserPassesTestMixin, CreateView):
-    """Add an issue to a reading list."""
-
-    model = ReadingListItem
-    fields = ["order"]
-    template_name = "reading_lists/add_issue.html"
-
-    def dispatch(self, request, *args, **kwargs):
-        # Get the reading list and issue
-        self.reading_list = get_object_or_404(ReadingList, slug=kwargs["slug"])
-        self.issue = get_object_or_404(Issue, slug=kwargs["issue_slug"])
-        return super().dispatch(request, *args, **kwargs)
-
-    def test_func(self):
-        """Only allow the owner to add issues."""
-        return self.reading_list.user == self.request.user
-
-    def form_valid(self, form):
-        # Check if issue is already in the list
-        if ReadingListItem.objects.filter(
-            reading_list=self.reading_list, issue=self.issue
-        ).exists():
-            messages.warning(
-                self.request,
-                f"{self.issue} is already in '{self.reading_list.name}'!",
-            )
-            return redirect(self.get_success_url())
-
-        form.instance.reading_list = self.reading_list
-        form.instance.issue = self.issue
-
-        # If no order specified, add to the end
-        if not form.instance.order:
-            max_order = ReadingListItem.objects.filter(reading_list=self.reading_list).aggregate(
-                max_order=Count("id")
-            )["max_order"]
-            form.instance.order = (max_order or 0) + 1
-
-        messages.success(self.request, f"Added {self.issue} to '{self.reading_list.name}'!")
-        return super().form_valid(form)
-
-    def get_success_url(self):
-        return reverse("reading-list:detail", kwargs={"slug": self.reading_list.slug})
-
-    def get_context_data(self, **kwargs):
-        context = super().get_context_data(**kwargs)
-        context["reading_list"] = self.reading_list
-        context["issue"] = self.issue
-        return context
-
-
 class RemoveIssueFromReadingListView(LoginRequiredMixin, UserPassesTestMixin, DeleteView):
     """Remove an issue from a reading list."""
 
