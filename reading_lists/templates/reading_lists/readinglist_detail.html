@@ -103,6 +103,16 @@
                     <dd class="mb-3">
                         {{ reading_list_items|length }}
                     </dd>
+                    {% if reading_list.start_year %}
+                        <dt class="has-text-weight-bold">Year Range:</dt>
+                        <dd class="mb-3">
+                            {% if reading_list.start_year == reading_list.end_year %}
+                                {{ reading_list.start_year }}
+                            {% else %}
+                                {{ reading_list.start_year }} - {{ reading_list.end_year }}
+                            {% endif %}
+                        </dd>
+                    {% endif %}
                     <dt class="has-text-weight-bold">Visibility:</dt>
                     <dd class="mb-3">
                         {% if reading_list.is_private %}

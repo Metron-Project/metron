@@ -63,6 +63,22 @@ class ReadingList(CommonInfo):
     def get_absolute_url(self):
         return reverse("reading-list:detail", args=[self.slug])
 
+    @property
+    def start_year(self) -> int | None:
+        """Get the earliest year from the reading list's issues."""
+        earliest_issue = (
+            self.reading_list_items.select_related("issue").order_by("issue__cover_date").first()
+        )
+        return earliest_issue.issue.cover_date.year if earliest_issue else None
+
+    @property
+    def end_year(self) -> int | None:
+        """Get the latest year from the reading list's issues."""
+        latest_issue = (
+            self.reading_list_items.select_related("issue").order_by("-issue__cover_date").first()
+        )
+        return latest_issue.issue.cover_date.year if latest_issue else None
+
 
 class ReadingListItem(models.Model):
     """Through model for ordering issues within a reading list."""
