@@ -73,7 +73,7 @@ class ReadingListDetailView(DetailView):
         # Get ordered issues
         context["reading_list_items"] = reading_list.reading_list_items.select_related(
             "issue__series__series_type"
-        ).order_by("order", "created_on")
+        ).order_by("order")
 
         # Check if user is the owner
         context["is_owner"] = (
@@ -247,7 +247,7 @@ class AddIssueWithAutocompleteView(LoginRequiredMixin, UserPassesTestMixin, Form
             issue_order = [int(pk) for pk in issue_order_str.split(",") if pk.strip()]
         else:
             # Default to existing issues + new issues
-            existing_items = self.reading_list.reading_list_items.order_by("order", "created_on")
+            existing_items = self.reading_list.reading_list_items.order_by("order")
             issue_order = [item.issue.pk for item in existing_items] + [
                 issue.pk for issue in new_issues
             ]
@@ -332,5 +332,5 @@ class AddIssueWithAutocompleteView(LoginRequiredMixin, UserPassesTestMixin, Form
         # Get existing issues in the reading list
         context["existing_items"] = self.reading_list.reading_list_items.select_related(
             "issue__series__series_type"
-        ).order_by("order", "created_on")
+        ).order_by("order")
         return context

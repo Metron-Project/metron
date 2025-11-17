@@ -59,10 +59,9 @@ class ReadingListItem(models.Model):
         default=0,
         help_text="Position of this issue in the reading list",
     )
-    created_on = models.DateTimeField(auto_now_add=True)
 
     class Meta:
-        ordering = ["reading_list", "order", "created_on"]
+        ordering = ["reading_list", "order"]
         unique_together = ["reading_list", "issue"]
         indexes = [
             models.Index(fields=["reading_list", "order"], name="reading_list_order_idx"),
