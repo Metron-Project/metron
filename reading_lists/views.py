@@ -32,7 +32,7 @@ class ReadingListListView(ListView):
             # Show only public lists
             queryset = queryset.filter(is_private=False)
 
-        return queryset.order_by("-modified")
+        return queryset
 
 
 class UserReadingListListView(LoginRequiredMixin, ListView):
@@ -44,10 +44,8 @@ class UserReadingListListView(LoginRequiredMixin, ListView):
     paginate_by = 30
 
     def get_queryset(self):
-        return (
-            ReadingList.objects.filter(user=self.request.user)
-            .annotate(issue_count=Count("issues"))
-            .order_by("-modified")
+        return ReadingList.objects.filter(user=self.request.user).annotate(
+            issue_count=Count("issues")
         )
 
 

@@ -55,11 +55,14 @@ class ReadingList(CommonInfo):
     )
 
     class Meta:
-        ordering = ["user", "name"]
+        ordering = ["name", "attribution_source", "user"]
         unique_together = ["user", "name"]
 
     def __str__(self) -> str:
-        return f"{self.user.username}: {self.name}"
+        result = f"{self.user.username}: {self.name}"
+        if self.attribution_source:
+            result += f" ({self.get_attribution_source_display()})"  # type: ignore[attr-defined]
+        return result
 
     def get_absolute_url(self):
         return reverse("reading-list:detail", args=[self.slug])

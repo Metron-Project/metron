@@ -23,6 +23,14 @@ class TestReadingListModel:
         expected = f"{public_reading_list.user.username}: {public_reading_list.name}"
         assert str(public_reading_list) == expected
 
+    def test_reading_list_str_with_attribution(self, reading_list_with_issues):
+        """Test the string representation of a reading list with attribution source."""
+        expected = (
+            f"{reading_list_with_issues.user.username}: {reading_list_with_issues.name} "
+            f"({reading_list_with_issues.get_attribution_source_display()})"
+        )
+        assert str(reading_list_with_issues) == expected
+
     def test_reading_list_absolute_url(self, client, public_reading_list):
         """Test the get_absolute_url method."""
         resp = client.get(public_reading_list.get_absolute_url())
@@ -46,7 +54,7 @@ class TestReadingListModel:
             )
 
     def test_reading_list_ordering(self, reading_list_user, other_user):
-        """Test that reading lists are ordered by user, then name."""
+        """Test that reading lists are ordered by name, attribution_source, then user."""
         list1 = ReadingList.objects.create(
             user=reading_list_user,
             name="Z List",
@@ -61,11 +69,10 @@ class TestReadingListModel:
         )
 
         lists = ReadingList.objects.all()
-        # Should be ordered by user first (alphabetically by username), then name
-        # "other_user" comes after "readinglist_user" alphabetically
-        assert lists[0] == list2  # readinglist_user: A List
-        assert lists[1] == list1  # readinglist_user: Z List
-        assert lists[2] == list3  # other_user: B List
+        # Should be ordered by name first, then attribution_source (all blank), then user
+        assert lists[0] == list2  # A List (readinglist_user)
+        assert lists[1] == list3  # B List (other_user)
+        assert lists[2] == list1  # Z List (readinglist_user)
 
     def test_reading_list_attribution_source(self, reading_list_with_issues):
         """Test attribution source field."""
