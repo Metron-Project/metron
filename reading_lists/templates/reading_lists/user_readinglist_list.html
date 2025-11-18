@@ -85,8 +85,6 @@
     {% endif %}
 {% endblock %}
 {% block pagination %}
-    {% if is_paginated %}
-        {% load pagination_tags %}
-        {% include "comicsdb/partials/pagination.html" %}
-    {% endif %}
+    {% load pagination_tags %}
+    {% include "comicsdb/partials/pagination.html" %}
 {% endblock %}
