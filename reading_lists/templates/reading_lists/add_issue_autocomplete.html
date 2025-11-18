@@ -1,0 +1,346 @@
+{% extends parent_template|default:"base.html" %}
+{% load static django_htmx %}
+{% block title %}Manage Issues - {{ reading_list.name }} - Metron{% endblock %}
+{% block js %}
+    {% htmx_script %}
+    {{ form.media }}
+    <script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.0/Sortable.min.js"></script>
+{% endblock js %}
+{% block content %}
+    <header class="block has-text-centered">
+        <h1 class="title">Manage Reading List</h1>
+        <p class="subtitle">{{ reading_list.name }}</p>
+    </header>
+    <section class="section">
+        <div class="container">
+            <div class="columns is-centered">
+                <div class="column is-two-thirds">
+                    <div class="box">
+                        <form method="post">
+                            {% csrf_token %}
+                            {% if form.non_field_errors %}<div class="notification is-danger">{{ form.non_field_errors }}</div>{% endif %}
+                            <div class="field">
+                                <label class="label" for="{{ form.issues.id_for_label }}">{{ form.issues.label }}</label>
+                                <div class="control">{{ form.issues }}</div>
+                                {% if form.issues.help_text %}<p class="help">{{ form.issues.help_text }}</p>{% endif %}
+                                {% if form.issues.errors %}<p class="help is-danger">{{ form.issues.errors.0 }}</p>{% endif %}
+                            </div>
+                            <!-- Draggable issue order area -->
+                            <div class="field" id="selected-issues-container" style="display: none;">
+                                <label class="label">
+                                    Selected Issues
+                                    <span class="help">Drag to reorder</span>
+                                </label>
+                                <div id="selected-issues-list" class="box" style="min-height: 100px">
+                                    <!-- Selected issues will appear here as draggable items -->
+                                </div>
+                            </div>
+                            <!-- Hidden field to store the order -->
+                            {{ form.issue_order }}
+                            <div class="field is-grouped is-grouped-right mt-5">
+                                <div class="control">
+                                    <a href="{% url 'reading-list:detail' reading_list.slug %}"
+                                       class="button">Cancel</a>
+                                </div>
+                                <div class="control">
+                                    <button type="submit" class="button is-primary">Save Changes</button>
+                                </div>
+                            </div>
+                        </form>
+                    </div>
+                    <div class="content mt-5">
+                        <h3 class="title is-5">How to use:</h3>
+                        <ul>
+                            <li>To add new issues: Start typing in the search box to find issues by series name, issue number, or story title</li>
+                            <li>Select multiple issues from the dropdown (they will appear as chips)</li>
+                            <li>All issues (existing and new) will appear below in a draggable list</li>
+                            <li>Drag and drop the issues to set your preferred reading order</li>
+                            <li>Click "Save Changes" to add new issues and/or save the reordered list</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const selectedIssuesList = document.getElementById('selected-issues-list');
+            const selectedIssuesContainer = document.getElementById('selected-issues-container');
+            const issueOrderField = document.querySelector('[name="issue_order"]');
+
+            // Store issue data: id -> label mapping
+            // This will be populated from the autocomplete widget's data
+            const issueData = {};
+
+            // Cache for fetched issue labels
+            const issueLabelCache = {};
+
+            // Track which issues are existing vs new
+            const existingIssueIds = new Set();
+
+            // Pre-load existing issues from the reading list
+            const existingIssues = [
+                {% for item in existing_items %}{id: '{{ item.issue.pk }}', label: '{{ item.issue|escapejs }}'},{% endfor %}
+            ];
+
+            // Populate issueData with existing issues
+            existingIssues.forEach(issue => {
+                issueData[issue.id] = issue.label;
+                issueLabelCache[issue.id] = issue.label;
+                existingIssueIds.add(issue.id);
+            });
+
+            // Find the autocomplete container
+            const autocompleteContainer = document.querySelector('.phac_aspc_form_autocomplete');
+
+            if (!autocompleteContainer) {
+                console.error('Autocomplete container not found');
+                return;
+            }
+
+            // Function to get selected issues from the autocomplete widget
+            function getSelectedIssues() {
+                // The autocomplete widget creates hidden inputs with name="issues"
+                const hiddenInputs = autocompleteContainer.querySelectorAll('input[name="issues"][type="hidden"]');
+                const issues = [];
+
+                hiddenInputs.forEach(input => {
+                    if (input.value && !input.classList.contains('ac_required_input')) {
+                        issues.push(input.value);
+                    }
+                });
+
+                return issues;
+            }
+
+            // Function to get issue labels from the autocomplete chips
+            function updateIssueDataFromChips() {
+                // The autocomplete widget shows selected items as chips
+                const chips = autocompleteContainer.querySelectorAll('li.chip');
+                chips.forEach(chip => {
+                    // Get the label from the span element (first span in the chip)
+                    const labelSpan = chip.querySelector('span');
+                    if (!labelSpan) return;
+
+                    const label = labelSpan.textContent.trim();
+
+                    // Get the issue ID from the hx-vals attribute on the anchor tag
+                    const anchor = chip.querySelector('a[hx-vals]');
+                    if (anchor) {
+                        const hxVals = anchor.getAttribute('hx-vals');
+                        // Parse the JSON-like hx-vals to extract the item ID
+                        try {
+                            // The hx-vals contains: {"remove": true, "item": "12345"}
+                            const match = hxVals.match(/"item"\s*:\s*"(\d+)"/);
+                            if (match) {
+                                const issueId = match[1];
+                                issueData[issueId] = label;
+                                issueLabelCache[issueId] = label;
+                            }
+                        } catch (e) {
+                            console.error('Error parsing hx-vals:', e);
+                        }
+                    }
+                });
+            }
+
+            // Function to update the draggable list
+            function updateSelectedIssuesList() {
+                updateIssueDataFromChips();
+                const newlySelectedIssues = getSelectedIssues();
+
+                // Combine existing issues with newly selected issues
+                const allIssueIds = new Set([...existingIssues.map(i => i.id), ...newlySelectedIssues]);
+
+                // Always show the container if there are any issues (existing or new)
+                if (allIssueIds.size === 0) {
+                    selectedIssuesContainer.style.display = 'none';
+                    selectedIssuesList.innerHTML = '';
+                    issueOrderField.value = '';
+                    return;
+                }
+
+                // Show the container
+                selectedIssuesContainer.style.display = 'block';
+
+                // Get currently displayed issue IDs to preserve order
+                const currentItems = Array.from(selectedIssuesList.querySelectorAll('.draggable-issue'));
+                const currentOrder = currentItems.map(item => item.dataset.issueId);
+
+                // Determine final order: preserve existing order, append new ones
+                const finalOrder = [];
+
+                // First, preserve the order of items already in the list
+                currentOrder.forEach(id => {
+                    if (allIssueIds.has(id)) {
+                        finalOrder.push(id);
+                    }
+                });
+
+                // Then add any new items that weren't in the current order
+                allIssueIds.forEach(id => {
+                    if (!finalOrder.includes(id)) {
+                        finalOrder.push(id);
+                    }
+                });
+
+                // Rebuild the list
+                selectedIssuesList.innerHTML = '';
+                finalOrder.forEach(issueId => {
+                    const issueLabel = issueData[issueId] || `Issue #${issueId}`;
+                    const isExisting = existingIssueIds.has(issueId);
+                    const div = document.createElement('div');
+                    div.className = `draggable-issue box mb-2 p-3 ${isExisting ? 'is-existing-issue' : 'is-new-issue'}`;
+                    div.dataset.issueId = issueId;
+
+                    const badge = isExisting ? '<span class="tag is-info is-light ml-2">Current</span>' : '<span class="tag is-success is-light ml-2">New</span>';
+
+                    div.innerHTML = `
+                        <span class="icon is-small" style="vertical-align: middle;">
+                            <i class="fas fa-grip-vertical"></i>
+                        </span>
+                        <span style="vertical-align: middle;">${issueLabel}</span>
+                        ${badge}
+                    `;
+                    selectedIssuesList.appendChild(div);
+                });
+
+                // Update hidden field
+                updateIssueOrder();
+            }
+
+            // Function to update the hidden issue_order field
+            function updateIssueOrder() {
+                const items = Array.from(selectedIssuesList.querySelectorAll('.draggable-issue'));
+                const order = items.map(item => item.dataset.issueId).join(',');
+                issueOrderField.value = order;
+            }
+
+            // Initialize Sortable on the list
+            if (selectedIssuesList) {
+                Sortable.create(selectedIssuesList, {
+                    animation: 150,
+                    ghostClass: 'sortable-ghost',
+                    onEnd: function() {
+                        updateIssueOrder();
+                    }
+                });
+            }
+
+            // Listen for HTMX events from the autocomplete widget
+            document.body.addEventListener('htmx:afterSettle', function(event) {
+                // Check if the event is from our autocomplete widget
+                if (autocompleteContainer.contains(event.target)) {
+                    updateSelectedIssuesList();
+                }
+            });
+
+            // Also use MutationObserver to watch for changes to hidden inputs
+            const observer = new MutationObserver(function(mutations) {
+                let shouldUpdate = false;
+                mutations.forEach(mutation => {
+                    if (mutation.type === 'childList') {
+                        // Check if hidden inputs were added or removed
+                        mutation.addedNodes.forEach(node => {
+                            if (node.nodeName === 'SPAN' && node.querySelector && node.querySelector('input[name="issues"]')) {
+                                shouldUpdate = true;
+                            }
+                        });
+                        mutation.removedNodes.forEach(node => {
+                            if (node.nodeName === 'SPAN' && node.querySelector && node.querySelector('input[name="issues"]')) {
+                                shouldUpdate = true;
+                            }
+                        });
+                    }
+                });
+                if (shouldUpdate) {
+                    setTimeout(updateSelectedIssuesList, 100);
+                }
+            });
+
+            // Start observing the container that holds the hidden inputs
+            const hiddenInputContainer = autocompleteContainer.querySelector('div[id]');
+            if (hiddenInputContainer) {
+                observer.observe(hiddenInputContainer, {
+                    childList: true,
+                    subtree: true
+                });
+            }
+
+            // Initial update
+            setTimeout(updateSelectedIssuesList, 500);
+        });
+    </script>
+    <style>
+        /* Draggable issue items */
+        .draggable-issue {
+            cursor: move;
+            border: 1px solid hsl(0, 0%, 86%);
+            transition: all 0.2s ease;
+        }
+
+        .draggable-issue.is-existing-issue {
+            background-color: hsl(204, 86%, 53%);
+            color: white;
+        }
+
+        .draggable-issue.is-new-issue {
+            background-color: hsl(0, 0%, 100%);
+        }
+
+        .draggable-issue.is-existing-issue:hover {
+            background-color: hsl(204, 86%, 48%) !important;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+            transform: translateY(-1px);
+        }
+
+        .draggable-issue.is-new-issue:hover {
+            background-color: hsl(0, 0%, 98%) !important;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            transform: translateY(-1px);
+        }
+
+        .sortable-ghost {
+            opacity: 0.4;
+            background-color: hsl(0, 0%, 94%) !important;
+        }
+
+        #selected-issues-list {
+            background-color: hsl(0, 0%, 96%);
+        }
+
+        /* Dark mode styles */
+        @media (prefers-color-scheme: dark) {
+            .draggable-issue {
+                border-color: hsl(0, 0%, 29%);
+            }
+
+            .draggable-issue.is-existing-issue {
+                background-color: hsl(204, 86%, 53%);
+                color: white;
+            }
+
+            .draggable-issue.is-new-issue {
+                background-color: hsl(0, 0%, 18%);
+            }
+
+            .draggable-issue.is-existing-issue:hover {
+                background-color: hsl(204, 86%, 48%) !important;
+                box-shadow: 0 2px 4px rgba(0, 0, 0, 0.4);
+            }
+
+            .draggable-issue.is-new-issue:hover {
+                background-color: hsl(0, 0%, 25%) !important;
+                box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+            }
+
+            .sortable-ghost {
+                background-color: hsl(0, 0%, 21%) !important;
+            }
+
+            #selected-issues-list {
+                background-color: hsl(0, 0%, 14%);
+            }
+        }
+    </style>
+{% endblock %}

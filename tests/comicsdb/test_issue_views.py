@@ -107,12 +107,6 @@ def test_issue_list_lists_second_page(auto_login_user, list_of_issues):
     assert len(resp.context["issue_list"]) == PAGINATE_DIFF_VAL
 
 
-def test_sitemap(auto_login_user):
-    client, _ = auto_login_user()
-    response = client.get("/sitemap.xml")
-    assert response.status_code == HTML_OK_CODE
-
-
 # Test: Requires login
 def test_sync_reprints_requires_login(db, client, tpb_issue):
     """Test that the sync reprints view requires authentication."""

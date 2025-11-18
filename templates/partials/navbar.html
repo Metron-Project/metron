@@ -114,6 +114,21 @@
                         </span>
                         <span>Universes</span>
                     </a>
+                    <hr class="navbar-divider" role="separator">
+                    <a class="navbar-item" href="{% url 'reading-list:list' %}">
+                        <span class="icon" aria-hidden="true">
+                            <i class="fas fa-book-reader"></i>
+                        </span>
+                        <span>Reading Lists</span>
+                    </a>
+                    {% if user.is_authenticated %}
+                        <a class="navbar-item" href="{% url 'reading-list:my-lists' %}">
+                            <span class="icon" aria-hidden="true">
+                                <i class="fas fa-clipboard-check"></i>
+                            </span>
+                            <span>My Reading Lists</span>
+                        </a>
+                    {% endif %}
                 </div>
             </div>
             {# More Menu #}

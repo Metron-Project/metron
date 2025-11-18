@@ -2,6 +2,7 @@
 Metron URL Configuration
 """
 
+from autocomplete import urls as autocomplete_urls
 from django.conf import settings
 from django.conf.urls.static import static
 from django.contrib import admin
@@ -22,6 +23,7 @@ from comicsdb.urls import (
     team as team_urls,
     universe as universe_urls,
 )
+from reading_lists import urls as reading_lists_urls
 
 handler404 = "metron.views.handler404"
 
@@ -29,6 +31,7 @@ urlpatterns = [
     path("admin/", admin.site.urls),
     path("api/", include(api_urls)),
     path("api-auth/", include("rest_framework.urls")),
+    path("autocomplete/", include((autocomplete_urls[0], autocomplete_urls[1]))),
     path("arc/", include(arc_urls)),
     path("character/", include(character_urls)),
     path("creator/", include(creator_urls)),
@@ -43,6 +46,7 @@ urlpatterns = [
     path("issue/", include(issue_urls)),
     path("jsi18n/", JavaScriptCatalog.as_view(), name="javascript-catalog"),
     path("publisher/", include(publisher_urls)),
+    path("reading-lists/", include(reading_lists_urls)),
     path("select2/", include("django_select2.urls")),
     path("series/", include(series_urls)),
     path("team/", include(team_urls)),

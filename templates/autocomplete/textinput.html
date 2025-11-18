@@ -1,0 +1,31 @@
+{% load autocomplete %}
+{% if not disabled or not multiselect %}
+    <input class="textinput input"
+           id="{{ component_id }}__textinput"
+           type="text"
+           autocomplete="{{ autocomplete_attr_value }}"
+           autocapitalize="none"
+           role="combobox"
+           aria-autocomplete="list"
+           aria-controls="{{ component_id }}__items"
+           aria-haspopup="listbox"
+           aria-expanded="false"
+           {% if multiselect %}aria-describedby="{{ component_id }}__sr_description"{% endif %}
+           onkeydown="return phac_aspc_autocomplete_keydown_handler(event)"
+           onkeyup="return phac_aspc_autocomplete_keyup_handler(event)"
+           onblur="return phac_aspc_autocomplete_blur_handler(event, '{{ component_id }}', {{ multiselect|yesno:'false,true' }})"
+           onfocus="return phac_aspc_autocomplete_focus_handler(event)"
+           hx-get="{% url 'autocomplete:items' ac_name=route_name %}"
+           hx-trigger="phac_aspc_autocomplete_trigger"
+           hx-include="#{{ component_id }}"
+           hx-target="#{{ component_id }}__items"
+           hx-vals='{% text_input_hx_vals %}'
+           hx-swap="outerHTML"
+           {% if indicator %}hx-indicator="#{{ component_id }}__container .htmx-indicator"{% endif %}
+           {% if swap_oob %}hx-swap-oob="outerHTML:#{{ component_id }}__textinput"{% endif %}
+           {% if placeholder and selected_items|length == 0 %}placeholder="{{ placeholder }}"{% endif %}
+           {% if not multiselect and selected_items|length == 1 %} value="{% get_input_value selected_items %}" {% endif %}
+           {% if required and selected_items|length == 0 %}required{% endif %}
+           {% if disabled %}disabled{% endif %}>
+{% endif %}
+{% if disabled %}<output id="{{ component_id }}__textinput"></output>{% endif %}

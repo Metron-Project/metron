@@ -1,0 +1,66 @@
+{% load autocomplete %}
+<a role="option"
+   tabindex="-1"
+   id="{{ component_id }}__item__{{ item.key|make_id }}"
+   class="item dropdown-item {{ item.selected|yesno:'is-active,' }}"
+   aria-selected="{{ item.selected|yesno:'true,false' }}"
+   onclick="return phac_aspc_autocomplete_item_click_handler(event)"
+   href="#"
+   hx-get="{% url 'autocomplete:toggle' route_name %}"
+   hx-params="{% base_configurable_values_hx_params %}"
+   hx-include="#{{ component_id }}"
+   hx-vals='{ {% base_configurable_hx_vals %}, "item": "{{ item.key|escapejs }}" }'
+   hx-swap="outerHTML"
+   {% if swap_oob %} hx-swap-oob="outerHTML:#{{ component_id }}__item__{{ item.key|make_id }}" {% else %} hx-target="this" {% endif %}>
+    {{ item.label|search_highlight:search }}
+    <span class="phac_aspc_form_autocomplete__item__spaceholder"
+          aria-hidden="true"></span>
+</a>
+{% if toggle is not None %}
+    <div id="{{ component_id }}" hx-swap-oob="true">{% include "./values.html" %}</div>
+    <div hx-swap-oob="innerHTML" id="{{ component_id }}__info">
+        {% if toggle|length > 0 %}
+            {% for item in toggle %}
+                {% with item=item.label %}
+                    {% use_string "item_selected" custom_strings %}
+                {% endwith %}
+            {% endfor %}
+        {% else %}
+            {% use_string "nothing_selected" custom_strings %}
+        {% endif %}
+    </div>
+    {% if multiselect %}
+        {% include "./ac_container.html" with selected_items=toggle %}
+        <div hx-swap-oob="innerHTML" id="{{ component_id }}__sr_description">
+            {% if toggle|length > 0 %}
+                {{ toggle|length }} {% use_string "selected" custom_strings %}
+                {% for item in toggle %}
+                    {% with item=item.label %}
+                        {% use_string "item_selected" custom_strings %}
+                    {% endwith %}
+                {% endfor %}
+                {% use_string "backspace_instruction" custom_strings %}
+            {% endif %}
+        </div>
+    {% else %}
+        {% if item.selected %}
+            {% include "./textinput.html" with selected_items=item_as_list swap_oob=True %}
+            <span id="{{ component_id }}__data"
+                  hx-swap-oob="outerHTML:#{{ component_id }}__data"
+                  data-phac-aspc-autocomplete="{% get_input_value item_as_list %}"></span>
+        {% else %}
+            {% include "./textinput.html" with swap_oob=True %}
+            <span id="{{ component_id }}__data"
+                  hx-swap-oob="outerHTML:#{{ component_id }}__data"
+                  data-phac-aspc-autocomplete=""></span>
+        {% endif %}
+        {% for item in toggle %}
+            {% if not item.selected %}
+                {% include "autocomplete/item.html" with toggle=None swap_oob=True %}
+            {% endif %}
+        {% endfor %}
+    {% endif %}
+    <script data-componentid="{{ component_id }}">
+        phac_aspc_autocomplete_trigger_change(document.currentScript.dataset.componentid + '__container');
+    </script>
+{% endif %}

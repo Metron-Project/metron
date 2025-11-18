@@ -1,0 +1,18 @@
+{% comment %} Hidden input elements used to maintain the component's state {% endcomment %}
+{% comment %} and used when submitting forms {% endcomment %}
+{% comment %} inputs are wrapped in spans so BS4 doesn't close them in tests {% endcomment %}
+{% for value in values %}
+    <span>
+        <input type="hidden" name="{{ field_name }}" value="{{ value }}" />
+    </span>
+{% endfor %}
+{% if required and values|length == 0 %}
+    <span>
+        <input type="hidden"
+               name="{{ field_name }}"
+               required
+               class="ac_required_input"
+               tabindex="-1"
+               aria-hidden="true" />
+    </span>
+{% endif %}

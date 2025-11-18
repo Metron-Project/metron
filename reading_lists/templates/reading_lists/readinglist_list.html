@@ -1,0 +1,81 @@
+{% extends parent_template|default:"base.html" %}
+{% load static %}
+{% block title %}Reading Lists - Metron{% endblock %}
+{% block content %}
+    <header class="block has-text-centered">
+        <h1 class="title">Reading Lists</h1>
+    </header>
+    <section class="section">
+        <div class="container">
+            {% include "comicsdb/partials/list_header.html" with title="Reading List" count=page_obj.paginator.count search_url="reading-list:search" search_placeholder="Find a reading list" create_url="reading-list:create" create_title="Create a new reading list" %}
+        </div>
+    </section>
+    {% if user.is_authenticated %}
+        <div class="block has-text-centered">
+            <div class="buttons is-centered">
+                <a href="{% url 'reading-list:my-lists' %}" class="button is-link">
+                    <span class="icon"><i class="fas fa-user"></i></span>
+                    <span>My Reading Lists</span>
+                </a>
+            </div>
+        </div>
+    {% endif %}
+    {% if reading_lists %}
+        <section class="section">
+            <div class="container">
+                <div class="columns is-multiline">
+                    {% for reading_list in reading_lists %}
+                        <div class="column is-one-third">
+                            <div class="card">
+                                <header class="card-header">
+                                    <p class="card-header-title">
+                                        <a href="{% url 'reading-list:detail' reading_list.slug %}">{{ reading_list.name }}</a>
+                                        {% if reading_list.is_private %}<span class="tag is-warning ml-2">Private</span>{% endif %}
+                                    </p>
+                                </header>
+                                <div class="card-content">
+                                    <div class="content">
+                                        <p class="is-size-7 has-text-grey">
+                                            By <strong>{{ reading_list.user.username }}</strong>
+                                        </p>
+                                        {% if reading_list.desc %}
+                                            <p>{{ reading_list.desc|truncatewords:20 }}</p>
+                                        {% else %}
+                                            <p class="has-text-grey-light">No description</p>
+                                        {% endif %}
+                                        <p class="is-size-7">
+                                            <span class="icon-text">
+                                                <span class="icon"><i class="fas fa-book"></i></span>
+                                                <span>{{ reading_list.issue_count }} issue{{ reading_list.issue_count|pluralize }}</span>
+                                            </span>
+                                        </p>
+                                        <p class="is-size-7 has-text-grey">Updated {{ reading_list.modified|timesince }} ago</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </section>
+    {% else %}
+        <section class="section">
+            <div class="container has-text-centered">
+                <p class="title is-4">No reading lists found</p>
+                {% if user.is_authenticated %}
+                    <p class="subtitle">Create your first reading list!</p>
+                    <a href="{% url 'reading-list:create' %}" class="button is-primary">
+                        <span class="icon"><i class="fas fa-plus"></i></span>
+                        <span>Create Reading List</span>
+                    </a>
+                {% else %}
+                    <p class="subtitle">Login to create your own reading lists</p>
+                {% endif %}
+            </div>
+        </section>
+    {% endif %}
+{% endblock %}
+{% block pagination %}
+    {% load pagination_tags %}
+    {% include "comicsdb/partials/pagination.html" %}
+{% endblock %}

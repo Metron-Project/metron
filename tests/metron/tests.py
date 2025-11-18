@@ -5,6 +5,7 @@ from pytest_django.asserts import assertTemplateUsed
 from users.models import CustomUser
 
 HTML_OK_CODE = 200
+HTTP_404_NOT_FOUND = 404
 
 
 @pytest.fixture
@@ -25,5 +26,5 @@ def test_api_docs_url_exists_at_desired_location(loggedin_user):
 
 def test_handler404():
     resp = Client().get("/foo-bar/")
-    assert resp.status_code == HTML_OK_CODE
+    assert resp.status_code == HTTP_404_NOT_FOUND
     assertTemplateUsed(resp, "404.html")

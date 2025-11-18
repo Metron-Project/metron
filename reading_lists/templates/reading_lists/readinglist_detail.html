@@ -1,0 +1,162 @@
+{% extends parent_template|default:"base.html" %}
+{% load static %}
+{% block title %}{{ reading_list.name }} - Metron{% endblock %}
+{% block content %}
+    <header class="block">
+        <h1 class="title">
+            {{ reading_list.name }}
+            {% if reading_list.is_private %}<span class="tag is-warning">Private</span>{% endif %}
+        </h1>
+        <p class="subtitle is-6">
+            Created by <strong>{{ reading_list.user.username }}</strong>
+        </p>
+    </header>
+    {% if is_owner %}
+        <nav class="level mb-5">
+            <div class="level-left"></div>
+            <div class="level-right">
+                <div class="buttons">
+                    <a class="button is-rounded is-primary"
+                       href="{% url 'reading-list:add-issue' reading_list.slug %}">
+                        <span class="icon is-small"><i class="fas fa-edit"></i></span>
+                        <span>Manage Issues</span>
+                    </a>
+                    <a class="button is-rounded is-info"
+                       href="{% url 'reading-list:update' reading_list.slug %}">
+                        <span class="icon is-small"><i class="fas fa-edit"></i></span>
+                        <span>Edit</span>
+                    </a>
+                    <a class="button is-rounded is-danger"
+                       href="{% url 'reading-list:delete' reading_list.slug %}">
+                        <span class="icon is-small"><i class="fas fa-trash"></i></span>
+                        <span>Delete</span>
+                    </a>
+                </div>
+            </div>
+        </nav>
+    {% endif %}
+    <div class="columns">
+        <div class="column is-three-quarters">
+            {% if reading_list.desc %}
+                <div class="box">
+                    <h2 class="title is-5">Description</h2>
+                    <div class="content">{{ reading_list.desc|linebreaksbr }}</div>
+                </div>
+            {% endif %}
+            <div class="box">
+                <h2 class="title is-5">Issues ({{ reading_list_items|length }})</h2>
+                {% if reading_list_items %}
+                    <div class="content">
+                        <ol>
+                            {% for item in reading_list_items %}
+                                <li>
+                                    <div class="level">
+                                        <div class="level-left">
+                                            <div class="level-item">
+                                                <div>
+                                                    <a href="{% url 'issue:detail' item.issue.slug %}">{{ item.issue }}</a>
+                                                    <span class="has-text-grey-light">— {{ item.issue.cover_date|date:"M Y" }}</span>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        {% if is_owner %}
+                                            <div class="level-right">
+                                                <div class="level-item">
+                                                    <a href="{% url 'reading-list:remove-issue' reading_list.slug item.pk %}"
+                                                       class="button is-small is-danger is-outlined"
+                                                       title="Remove from list">
+                                                        <span class="icon is-small">
+                                                            <i class="fas fa-times"></i>
+                                                        </span>
+                                                    </a>
+                                                </div>
+                                            </div>
+                                        {% endif %}
+                                    </div>
+                                </li>
+                            {% endfor %}
+                        </ol>
+                    </div>
+                {% else %}
+                    <p class="has-text-grey">No issues in this list yet.</p>
+                    {% if is_owner %}
+                        <p class="mt-3">
+                            <a href="{% url 'reading-list:add-issue' reading_list.slug %}"
+                               class="button is-primary">
+                                <span class="icon"><i class="fas fa-plus"></i></span>
+                                <span>Add Your First Issue</span>
+                            </a>
+                        </p>
+                    {% endif %}
+                {% endif %}
+            </div>
+        </div>
+        <div class="column">
+            <div class="box">
+                <h2 class="title is-6">List Details</h2>
+                <dl>
+                    <dt class="has-text-weight-bold">Owner:</dt>
+                    <dd class="mb-3">
+                        {{ reading_list.user.username }}
+                    </dd>
+                    <dt class="has-text-weight-bold">Issues:</dt>
+                    <dd class="mb-3">
+                        {{ reading_list_items|length }}
+                    </dd>
+                    {% if reading_list.start_year %}
+                        <dt class="has-text-weight-bold">Year Range:</dt>
+                        <dd class="mb-3">
+                            {% if reading_list.start_year == reading_list.end_year %}
+                                {{ reading_list.start_year }}
+                            {% else %}
+                                {{ reading_list.start_year }} - {{ reading_list.end_year }}
+                            {% endif %}
+                        </dd>
+                    {% endif %}
+                    {% if reading_list.publishers %}
+                        <dt class="has-text-weight-bold">Publishers:</dt>
+                        <dd class="mb-3">
+                            {% for publisher in reading_list.publishers %}
+                                <a href="{% url 'publisher:detail' publisher.slug %}">{{ publisher.name }}</a>
+                                {% if not forloop.last %},{% endif %}
+                            {% endfor %}
+                        </dd>
+                    {% endif %}
+                    <dt class="has-text-weight-bold">Visibility:</dt>
+                    <dd class="mb-3">
+                        {% if reading_list.is_private %}
+                            <span class="tag is-warning">Private</span>
+                        {% else %}
+                            <span class="tag is-success">Public</span>
+                        {% endif %}
+                    </dd>
+                    {% if reading_list.attribution_source %}
+                        <dt class="has-text-weight-bold">Source:</dt>
+                        <dd class="mb-3">
+                            {% if reading_list.attribution_url %}
+                                <a href="{{ reading_list.attribution_url }}"
+                                   target="_blank"
+                                   rel="noopener noreferrer">
+                                    {{ reading_list.get_attribution_source_display }}
+                                    <span class="icon is-small">
+                                        <i class="fas fa-external-link-alt"></i>
+                                    </span>
+                                </a>
+                            {% else %}
+                                {{ reading_list.get_attribution_source_display }}
+                            {% endif %}
+                        </dd>
+                    {% endif %}
+                    <dt class="has-text-weight-bold">Created:</dt>
+                    <dd class="mb-3">
+                        {{ reading_list.created_on|date:"F d, Y" }}
+                    </dd>
+                    <dt class="has-text-weight-bold">Last Modified:</dt>
+                    <dd>
+                        {{ reading_list.modified|date:"F d, Y" }}
+                    </dd>
+                </dl>
+            </div>
+        </div>
+    </div>
+{% endblock %}
