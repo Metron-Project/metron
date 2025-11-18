@@ -287,12 +287,16 @@ class AddIssueWithAutocompleteView(LoginRequiredMixin, UserPassesTestMixin, Form
         return context
 
 
-class ImportCBLView(LoginRequiredMixin, FormView):
+class ImportCBLView(LoginRequiredMixin, UserPassesTestMixin, FormView):
     """Import a Comic Book List (.cbl) file to create a reading list."""
 
     form_class = ImportCBLForm
     template_name = "reading_lists/import_cbl.html"
     success_url = reverse_lazy("reading-list:my-lists")
+
+    def test_func(self):
+        """Only allow admin users to import CBL files."""
+        return self.request.user.is_staff
 
     def form_valid(self, form):
         cbl_file = form.cleaned_data["cbl_file"]
@@ -387,12 +391,16 @@ class ImportCBLView(LoginRequiredMixin, FormView):
         return context
 
 
-class ImportCBLResultView(LoginRequiredMixin, FormView):
+class ImportCBLResultView(LoginRequiredMixin, UserPassesTestMixin, FormView):
     """Display the results of a CBL import."""
 
     template_name = "reading_lists/import_cbl_result.html"
     form_class = ImportCBLForm  # Allows importing another file
     success_url = reverse_lazy("reading-list:import-result")
+
+    def test_func(self):
+        """Only allow admin users to view import results."""
+        return self.request.user.is_staff
 
     def get(self, request, *args, **kwargs):
         # Get the result from the session
