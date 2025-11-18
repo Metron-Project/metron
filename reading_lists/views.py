@@ -132,6 +132,15 @@ class ReadingListCreateView(LoginRequiredMixin, CreateView):
     form_class = ReadingListForm
     template_name = "reading_lists/readinglist_form.html"
 
+    def get_form(self, form_class=None):
+        """Customize form to exclude attribution fields for non-admin users."""
+        form = super().get_form(form_class)
+        if not self.request.user.is_staff:
+            # Remove attribution fields for non-admin users
+            form.fields.pop("attribution_source", None)
+            form.fields.pop("attribution_url", None)
+        return form
+
     def form_valid(self, form):
         # Set the user to the current user
         form.instance.user = self.request.user
@@ -160,6 +169,15 @@ class ReadingListUpdateView(LoginRequiredMixin, UserPassesTestMixin, UpdateView)
             self.request.user.is_staff and reading_list.user.username == "Metron"
         )
         return is_owner or is_admin_managing_metron
+
+    def get_form(self, form_class=None):
+        """Customize form to exclude attribution fields for non-admin users."""
+        form = super().get_form(form_class)
+        if not self.request.user.is_staff:
+            # Remove attribution fields for non-admin users
+            form.fields.pop("attribution_source", None)
+            form.fields.pop("attribution_url", None)
+        return form
 
     def form_valid(self, form):
         # Update the edited_by field (via the modified timestamp)

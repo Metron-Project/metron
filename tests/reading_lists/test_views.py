@@ -503,3 +503,241 @@ class TestAddIssueWithAutocompleteView:
         }
         resp = client.post(url, data)
         assert resp.status_code == HTTP_302_FOUND
+
+
+class TestAttributionFieldRestrictions:
+    """Tests for attribution field restrictions (admin-only)."""
+
+    def test_create_view_non_admin_cannot_see_attribution_fields(
+        self, client, reading_list_user, test_password
+    ):
+        """Test that non-admin users don't see attribution fields in create form."""
+        client.login(username=reading_list_user.username, password=test_password)
+        url = reverse("reading-list:create")
+        resp = client.get(url)
+        assert resp.status_code == HTTP_200_OK
+        form = resp.context["form"]
+        # Attribution fields should not be in the form for non-admin users
+        assert "attribution_source" not in form.fields
+        assert "attribution_url" not in form.fields
+        # Regular fields should still be present
+        assert "name" in form.fields
+        assert "desc" in form.fields
+        assert "is_private" in form.fields
+
+    def test_create_view_admin_can_see_attribution_fields(self, client, admin_user, test_password):
+        """Test that admin users see attribution fields in create form."""
+        client.login(username=admin_user.username, password=test_password)
+        url = reverse("reading-list:create")
+        resp = client.get(url)
+        assert resp.status_code == HTTP_200_OK
+        form = resp.context["form"]
+        # Admin users should see all fields including attribution fields
+        assert "attribution_source" in form.fields
+        assert "attribution_url" in form.fields
+        assert "name" in form.fields
+        assert "desc" in form.fields
+        assert "is_private" in form.fields
+
+    def test_create_view_non_admin_cannot_submit_attribution_fields(
+        self, client, reading_list_user, test_password
+    ):
+        """Test that non-admin users cannot submit attribution fields."""
+        client.login(username=reading_list_user.username, password=test_password)
+        url = reverse("reading-list:create")
+        data = {
+            "name": "New Reading List",
+            "desc": "A new reading list",
+            "is_private": False,
+            "attribution_source": ReadingList.AttributionSource.CBRO,
+            "attribution_url": "https://example.com/source",
+        }
+        resp = client.post(url, data)
+        assert resp.status_code == HTTP_302_FOUND
+        # Check that the reading list was created WITHOUT attribution data
+        reading_list = ReadingList.objects.get(name="New Reading List")
+        assert reading_list.user == reading_list_user
+        assert reading_list.attribution_source == ""  # Should be empty
+        assert reading_list.attribution_url == ""  # Should be empty
+
+    def test_create_view_admin_can_submit_attribution_fields(
+        self, client, admin_user, test_password
+    ):
+        """Test that admin users can submit attribution fields."""
+        client.login(username=admin_user.username, password=test_password)
+        url = reverse("reading-list:create")
+        data = {
+            "name": "Admin Reading List",
+            "desc": "A reading list with attribution",
+            "is_private": False,
+            "attribution_source": ReadingList.AttributionSource.CBRO,
+            "attribution_url": "https://example.com/source",
+        }
+        resp = client.post(url, data)
+        assert resp.status_code == HTTP_302_FOUND
+        # Check that the reading list was created WITH attribution data
+        reading_list = ReadingList.objects.get(name="Admin Reading List")
+        assert reading_list.user == admin_user
+        assert reading_list.attribution_source == ReadingList.AttributionSource.CBRO
+        assert reading_list.attribution_url == "https://example.com/source"
+
+    def test_update_view_non_admin_cannot_see_attribution_fields(
+        self, client, reading_list_user, public_reading_list, test_password
+    ):
+        """Test that non-admin users don't see attribution fields in update form."""
+        client.login(username=reading_list_user.username, password=test_password)
+        url = reverse("reading-list:update", args=[public_reading_list.slug])
+        resp = client.get(url)
+        assert resp.status_code == HTTP_200_OK
+        form = resp.context["form"]
+        # Attribution fields should not be in the form for non-admin users
+        assert "attribution_source" not in form.fields
+        assert "attribution_url" not in form.fields
+        # Regular fields should still be present
+        assert "name" in form.fields
+        assert "desc" in form.fields
+        assert "is_private" in form.fields
+
+    def test_update_view_admin_can_see_attribution_fields(
+        self, client, admin_user, metron_reading_list, test_password
+    ):
+        """Test that admin users see attribution fields in update form."""
+        client.login(username=admin_user.username, password=test_password)
+        url = reverse("reading-list:update", args=[metron_reading_list.slug])
+        resp = client.get(url)
+        assert resp.status_code == HTTP_200_OK
+        form = resp.context["form"]
+        # Admin users should see all fields including attribution fields
+        assert "attribution_source" in form.fields
+        assert "attribution_url" in form.fields
+        assert "name" in form.fields
+        assert "desc" in form.fields
+        assert "is_private" in form.fields
+
+    def test_update_view_non_admin_cannot_modify_attribution_fields(
+        self, client, reading_list_user, test_password
+    ):
+        """Test that non-admin users cannot modify attribution fields."""
+        # Create a reading list with attribution (e.g., from a CBL import)
+        reading_list = ReadingList.objects.create(
+            user=reading_list_user,
+            name="List With Attribution",
+            desc="Original description",
+            is_private=False,
+            attribution_source=ReadingList.AttributionSource.CBRO,
+            attribution_url="https://example.com/original",
+        )
+
+        client.login(username=reading_list_user.username, password=test_password)
+        url = reverse("reading-list:update", args=[reading_list.slug])
+        data = {
+            "name": "Updated List",
+            "desc": "Updated description",
+            "is_private": True,
+            "attribution_source": ReadingList.AttributionSource.CMRO,  # Attempt to change
+            "attribution_url": "https://example.com/modified",  # Attempt to change
+        }
+        resp = client.post(url, data)
+        assert resp.status_code == HTTP_302_FOUND
+
+        # Check that regular fields were updated but attribution fields were NOT
+        reading_list.refresh_from_db()
+        assert reading_list.name == "Updated List"
+        assert reading_list.desc == "Updated description"
+        assert reading_list.is_private is True
+        # Attribution should remain unchanged
+        assert reading_list.attribution_source == ReadingList.AttributionSource.CBRO
+        assert reading_list.attribution_url == "https://example.com/original"
+
+    def test_update_view_admin_can_modify_attribution_fields(
+        self, client, admin_user, metron_reading_list, test_password
+    ):
+        """Test that admin users can modify attribution fields."""
+        client.login(username=admin_user.username, password=test_password)
+        url = reverse("reading-list:update", args=[metron_reading_list.slug])
+        data = {
+            "name": "Updated Metron List",
+            "desc": "Updated description",
+            "is_private": False,
+            "attribution_source": ReadingList.AttributionSource.CMRO,
+            "attribution_url": "https://example.com/updated",
+        }
+        resp = client.post(url, data)
+        assert resp.status_code == HTTP_302_FOUND
+
+        # Check that all fields including attribution were updated
+        metron_reading_list.refresh_from_db()
+        assert metron_reading_list.name == "Updated Metron List"
+        assert metron_reading_list.desc == "Updated description"
+        assert metron_reading_list.attribution_source == ReadingList.AttributionSource.CMRO
+        assert metron_reading_list.attribution_url == "https://example.com/updated"
+
+
+class TestReadingListPagination:
+    """Tests for reading list pagination."""
+
+    def test_list_view_pagination_page_1(self, client, reading_list_user):
+        """Test that first page of pagination works correctly."""
+        # Create 35 reading lists
+        for i in range(35):
+            ReadingList.objects.create(
+                user=reading_list_user,
+                name=f"List {i:02d}",  # Zero-padded for consistent ordering
+            )
+        url = reverse("reading-list:list")
+        resp = client.get(url)
+        assert resp.status_code == HTTP_200_OK
+        assert resp.context["is_paginated"] is True
+        assert len(resp.context["reading_lists"]) == 30  # paginate_by = 30
+        assert resp.context["page_obj"].number == 1
+        assert resp.context["page_obj"].paginator.num_pages == 2
+
+    def test_list_view_pagination_page_2(self, client, reading_list_user):
+        """Test that second page of pagination works correctly."""
+        # Create 35 reading lists
+        for i in range(35):
+            ReadingList.objects.create(
+                user=reading_list_user,
+                name=f"List {i:02d}",
+            )
+        url = reverse("reading-list:list")
+        resp = client.get(url, {"page": 2})
+        assert resp.status_code == HTTP_200_OK
+        assert resp.context["is_paginated"] is True
+        assert len(resp.context["reading_lists"]) == 5  # Remaining items
+        assert resp.context["page_obj"].number == 2
+
+    def test_user_list_view_pagination(self, client, reading_list_user, test_password):
+        """Test pagination for user's own reading lists."""
+        client.login(username=reading_list_user.username, password=test_password)
+        # Create 35 reading lists
+        for i in range(35):
+            ReadingList.objects.create(
+                user=reading_list_user,
+                name=f"My List {i:02d}",
+            )
+        url = reverse("reading-list:my-lists")
+        resp = client.get(url)
+        assert resp.status_code == HTTP_200_OK
+        assert resp.context["is_paginated"] is True
+        assert len(resp.context["reading_lists"]) == 30
+        assert resp.context["page_obj"].number == 1
+
+    def test_search_view_pagination_preserved(self, client, reading_list_user):
+        """Test that search results are paginated correctly."""
+        # Create 35 reading lists with searchable names
+        for i in range(35):
+            ReadingList.objects.create(
+                user=reading_list_user,
+                name=f"Searchable List {i:02d}",
+            )
+        url = reverse("reading-list:search")
+        resp = client.get(url, {"q": "Searchable"})
+        assert resp.status_code == HTTP_200_OK
+        assert resp.context["is_paginated"] is True
+        assert len(resp.context["reading_lists"]) == 30
+
+        # Test second page
+        resp = client.get(url, {"q": "Searchable", "page": 2})
+        assert resp.status_code == HTTP_200_OK
+        assert len(resp.context["reading_lists"]) == 5
