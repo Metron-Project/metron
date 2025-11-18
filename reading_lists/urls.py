@@ -1,4 +1,4 @@
-from django.urls import path
+from django.urls import path, re_path
 
 from reading_lists.views import (
     AddIssueWithAutocompleteView,
@@ -10,12 +10,14 @@ from reading_lists.views import (
     ReadingListListView,
     ReadingListUpdateView,
     RemoveIssueFromReadingListView,
+    SearchReadingListListView,
     UserReadingListListView,
 )
 
 app_name = "reading-list"
 urlpatterns = [
     path("", ReadingListListView.as_view(), name="list"),
+    re_path(r"^search/?$", SearchReadingListListView.as_view(), name="search"),
     path("my-lists/", UserReadingListListView.as_view(), name="my-lists"),
     path("create/", ReadingListCreateView.as_view(), name="create"),
     path("import/", ImportCBLView.as_view(), name="import"),

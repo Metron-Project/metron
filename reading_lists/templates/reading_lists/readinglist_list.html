@@ -5,16 +5,17 @@
     <header class="block has-text-centered">
         <h1 class="title">Reading Lists</h1>
     </header>
+    <section class="section">
+        <div class="container">
+            {% include "comicsdb/partials/list_header.html" with title="Reading List" count=page_obj.paginator.count search_url="reading-list:search" search_placeholder="Find a reading list" create_url="reading-list:create" create_title="Create a new reading list" %}
+        </div>
+    </section>
     {% if user.is_authenticated %}
         <div class="block has-text-centered">
             <div class="buttons is-centered">
                 <a href="{% url 'reading-list:my-lists' %}" class="button is-link">
                     <span class="icon"><i class="fas fa-user"></i></span>
                     <span>My Reading Lists</span>
-                </a>
-                <a href="{% url 'reading-list:create' %}" class="button is-primary">
-                    <span class="icon"><i class="fas fa-plus"></i></span>
-                    <span>Create New List</span>
                 </a>
             </div>
         </div>

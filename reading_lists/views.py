@@ -9,6 +9,7 @@ from django.urls import reverse, reverse_lazy
 from django.views.generic import CreateView, DeleteView, DetailView, FormView, ListView, UpdateView
 
 from comicsdb.models.issue import Issue
+from comicsdb.views.mixins import SearchMixin
 from reading_lists.cbl_importer import CBLImportError, CBLParseError, import_cbl_file
 from reading_lists.forms import AddIssueWithSearchForm, ImportCBLForm, ReadingListForm
 from reading_lists.models import ReadingList, ReadingListItem
@@ -48,6 +49,14 @@ class ReadingListListView(ListView):
             queryset = queryset.filter(is_private=False)
 
         return queryset
+
+
+class SearchReadingListListView(SearchMixin, ReadingListListView):
+    """Search reading lists by name, user, or attribution source."""
+
+    def get_search_fields(self):
+        """Search across name, username, and attribution source display text."""
+        return ["name__icontains", "user__username__icontains", "attribution_source__icontains"]
 
 
 class UserReadingListListView(LoginRequiredMixin, ListView):

@@ -58,6 +58,62 @@ class TestReadingListListView:
         assert len(resp.context["reading_lists"]) == 30  # paginate_by = 30
 
 
+class TestSearchReadingListListView:
+    """Tests for the SearchReadingListListView."""
+
+    def test_search_reading_list_by_name(self, client, public_reading_list, private_reading_list):
+        """Test searching reading lists by name."""
+        url = reverse("reading-list:search")
+        resp = client.get(url, {"q": "Public"})
+        assert resp.status_code == HTTP_200_OK
+        assert public_reading_list in resp.context["reading_lists"]
+        assert private_reading_list not in resp.context["reading_lists"]
+
+    def test_search_reading_list_by_username(
+        self, client, reading_list_user, other_user_reading_list, public_reading_list
+    ):
+        """Test searching reading lists by username."""
+        url = reverse("reading-list:search")
+        resp = client.get(url, {"q": "other_user"})
+        assert resp.status_code == HTTP_200_OK
+        assert other_user_reading_list in resp.context["reading_lists"]
+        assert public_reading_list not in resp.context["reading_lists"]
+
+    def test_search_reading_list_by_attribution_source(
+        self, client, reading_list_with_issues, public_reading_list
+    ):
+        """Test searching reading lists by attribution source."""
+        url = reverse("reading-list:search")
+        resp = client.get(url, {"q": "CBRO"})
+        assert resp.status_code == HTTP_200_OK
+        assert reading_list_with_issues in resp.context["reading_lists"]
+        assert public_reading_list not in resp.context["reading_lists"]
+
+    def test_search_reading_list_no_results(self, client, public_reading_list):
+        """Test searching with no matching results."""
+        url = reverse("reading-list:search")
+        resp = client.get(url, {"q": "nonexistent"})
+        assert resp.status_code == HTTP_200_OK
+        assert len(resp.context["reading_lists"]) == 0
+
+    def test_search_reading_list_respects_privacy(self, client, private_reading_list):
+        """Test that search respects privacy settings for anonymous users."""
+        url = reverse("reading-list:search")
+        resp = client.get(url, {"q": "Private"})
+        assert resp.status_code == HTTP_200_OK
+        assert private_reading_list not in resp.context["reading_lists"]
+
+    def test_search_reading_list_authenticated_sees_own_private(
+        self, client, reading_list_user, private_reading_list, test_password
+    ):
+        """Test that authenticated users can search their own private lists."""
+        client.login(username=reading_list_user.username, password=test_password)
+        url = reverse("reading-list:search")
+        resp = client.get(url, {"q": "Private"})
+        assert resp.status_code == HTTP_200_OK
+        assert private_reading_list in resp.context["reading_lists"]
+
+
 class TestUserReadingListListView:
     """Tests for the UserReadingListListView."""
 
