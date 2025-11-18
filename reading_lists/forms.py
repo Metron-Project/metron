@@ -67,3 +67,48 @@ class AddIssueWithSearchForm(forms.Form):
         widget=forms.HiddenInput(),
         help_text="Stores the order of selected issues after drag-and-drop",
     )
+
+
+class ImportCBLForm(forms.Form):
+    """Form for importing a Comic Book List (.cbl) file."""
+
+    cbl_file = forms.FileField(
+        label="CBL File",
+        help_text="Upload a .cbl (Comic Book List) XML file to import as a reading list",
+        widget=forms.FileInput(
+            attrs={
+                "accept": ".cbl",
+                "class": "file-input",
+            }
+        ),
+    )
+    is_private = forms.BooleanField(
+        required=False,
+        initial=False,
+        label="Private List",
+        help_text="Private lists are only visible to you. Public lists can be viewed by anyone.",
+    )
+    attribution_source = forms.ChoiceField(
+        required=False,
+        choices=[("", "-- Select Source --"), *ReadingList.AttributionSource.choices],
+        label="Source",
+        help_text="Where did you get this reading list from? (optional)",
+    )
+    attribution_url = forms.URLField(
+        required=False,
+        label="Source URL",
+        widget=forms.URLInput(
+            attrs={
+                "placeholder": "https://example.com/reading-order",
+                "autocomplete": "url",
+            }
+        ),
+        help_text="URL of the specific page for this reading list (optional)",
+    )
+
+    def clean_cbl_file(self):
+        """Validate that the uploaded file has a .cbl extension."""
+        cbl_file = self.cleaned_data.get("cbl_file")
+        if cbl_file and not cbl_file.name.lower().endswith(".cbl"):
+            raise forms.ValidationError("File must have a .cbl extension")
+        return cbl_file

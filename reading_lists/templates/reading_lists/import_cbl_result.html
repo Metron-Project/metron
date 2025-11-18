@@ -1,0 +1,163 @@
+{% extends parent_template|default:"base.html" %}
+{% load static %}
+{% block title %}Import Results - Metron{% endblock %}
+{% block content %}
+    <header class="block has-text-centered">
+        <h1 class="title">CBL Import Results</h1>
+    </header>
+    <section class="section">
+        <div class="container">
+            <div class="columns is-centered">
+                <div class="column is-two-thirds">
+                    {% if result %}
+                        <!-- Success Summary -->
+                        <div class="box">
+                            <h2 class="title is-4">
+                                <span class="icon-text">
+                                    <span class="icon has-text-success">
+                                        <i class="fas fa-check-circle fa-lg"></i>
+                                    </span>
+                                    <span>Reading List Created!</span>
+                                </span>
+                            </h2>
+                            <p class="mb-4">
+                                <strong>{{ result.reading_list_name }}</strong> has been successfully imported.
+                            </p>
+                            <div class="level">
+                                <div class="level-item has-text-centered">
+                                    <div>
+                                        <p class="heading">Issues Added</p>
+                                        <p class="title is-3 has-text-success">{{ result.issues_added }}</p>
+                                    </div>
+                                </div>
+                                {% if result.issues_not_found_count > 0 %}
+                                    <div class="level-item has-text-centered">
+                                        <div>
+                                            <p class="heading">Not Found</p>
+                                            <p class="title is-3 has-text-warning">{{ result.issues_not_found_count }}</p>
+                                        </div>
+                                    </div>
+                                {% endif %}
+                                {% if result.issues_skipped_count > 0 %}
+                                    <div class="level-item has-text-centered">
+                                        <div>
+                                            <p class="heading">Skipped</p>
+                                            <p class="title is-3 has-text-info">{{ result.issues_skipped_count }}</p>
+                                        </div>
+                                    </div>
+                                {% endif %}
+                            </div>
+                            <div class="buttons is-centered mt-4">
+                                <a href="{% url 'reading-list:detail' result.reading_list_slug %}"
+                                   class="button is-primary">
+                                    <span class="icon"><i class="fas fa-eye"></i></span>
+                                    <span>View Reading List</span>
+                                </a>
+                                <a href="{% url 'reading-list:my-lists' %}" class="button">
+                                    <span class="icon"><i class="fas fa-list"></i></span>
+                                    <span>My Lists</span>
+                                </a>
+                            </div>
+                        </div>
+                        <!-- Issues Not Found -->
+                        {% if result.issues_not_found %}
+                            <div class="box">
+                                <h3 class="title is-5">
+                                    <span class="icon-text">
+                                        <span class="icon has-text-warning">
+                                            <i class="fas fa-exclamation-triangle"></i>
+                                        </span>
+                                        <span>Issues Not Found in Database</span>
+                                    </span>
+                                </h3>
+                                <p class="mb-3">
+                                    The following issues could not be found in the Metron database.
+                                    They may need to be added before they can appear in your reading list.
+                                </p>
+                                <div class="table-container">
+                                    <table class="table is-fullwidth is-striped">
+                                        <thead>
+                                            <tr>
+                                                <th>Series</th>
+                                                <th>Issue #</th>
+                                                <th>Year</th>
+                                                <th>Database</th>
+                                                <th>Issue ID</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            {% for issue in result.issues_not_found %}
+                                                <tr>
+                                                    <td>{{ issue.series }}</td>
+                                                    <td>{{ issue.number }}</td>
+                                                    <td>{{ issue.year }}</td>
+                                                    <td>{{ issue.database }}</td>
+                                                    <td>
+                                                        <code>{{ issue.issue_id }}</code>
+                                                    </td>
+                                                </tr>
+                                            {% endfor %}
+                                        </tbody>
+                                    </table>
+                                </div>
+                                {% if result.issues_not_found_count > 20 %}
+                                    <p class="has-text-grey is-size-7 mt-2">Showing first 20 of {{ result.issues_not_found_count }} issues not found</p>
+                                {% endif %}
+                            </div>
+                        {% endif %}
+                        <!-- Issues Skipped -->
+                        {% if result.issues_skipped %}
+                            <div class="box">
+                                <h3 class="title is-5">
+                                    <span class="icon-text">
+                                        <span class="icon has-text-info">
+                                            <i class="fas fa-info-circle"></i>
+                                        </span>
+                                        <span>Issues Skipped</span>
+                                    </span>
+                                </h3>
+                                <p class="mb-3">
+                                    The following issues were skipped during import (e.g., duplicates, invalid IDs, unsupported databases).
+                                </p>
+                                <div class="table-container">
+                                    <table class="table is-fullwidth is-striped">
+                                        <thead>
+                                            <tr>
+                                                <th>Series</th>
+                                                <th>Issue #</th>
+                                                <th>Reason</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            {% for issue in result.issues_skipped %}
+                                                <tr>
+                                                    <td>{{ issue.series }}</td>
+                                                    <td>{{ issue.number }}</td>
+                                                    <td>
+                                                        <span class="tag">{{ issue.reason }}</span>
+                                                    </td>
+                                                </tr>
+                                            {% endfor %}
+                                        </tbody>
+                                    </table>
+                                </div>
+                                {% if result.issues_skipped_count > 20 %}
+                                    <p class="has-text-grey is-size-7 mt-2">Showing first 20 of {{ result.issues_skipped_count }} issues skipped</p>
+                                {% endif %}
+                            </div>
+                        {% endif %}
+                        <!-- Import Another File -->
+                        <div class="box has-background-light">
+                            <h3 class="title is-5">Import Another File</h3>
+                            <p class="mb-3">Would you like to import another CBL file?</p>
+                            <a href="{% url 'reading-list:import' %}" class="button is-info">
+                                <span class="icon"><i class="fas fa-file-import"></i></span>
+                                <span>Import Another CBL File</span>
+                            </a>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </section>
+{% endblock %}

@@ -1,3 +1,6 @@
+import tempfile
+from pathlib import Path
+
 from django.contrib import messages
 from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
 from django.db.models import Count, Q
@@ -6,7 +9,8 @@ from django.urls import reverse, reverse_lazy
 from django.views.generic import CreateView, DeleteView, DetailView, FormView, ListView, UpdateView
 
 from comicsdb.models.issue import Issue
-from reading_lists.forms import AddIssueWithSearchForm, ReadingListForm
+from reading_lists.cbl_importer import CBLImportError, CBLParseError, import_cbl_file
+from reading_lists.forms import AddIssueWithSearchForm, ImportCBLForm, ReadingListForm
 from reading_lists.models import ReadingList, ReadingListItem
 
 
@@ -282,4 +286,130 @@ class AddIssueWithAutocompleteView(LoginRequiredMixin, UserPassesTestMixin, Form
         context["existing_items"] = self.reading_list.reading_list_items.select_related(
             "issue__series__series_type"
         ).order_by("order")
+        return context
+
+
+class ImportCBLView(LoginRequiredMixin, FormView):
+    """Import a Comic Book List (.cbl) file to create a reading list."""
+
+    form_class = ImportCBLForm
+    template_name = "reading_lists/import_cbl.html"
+    success_url = reverse_lazy("reading-list:my-lists")
+
+    def form_valid(self, form):
+        cbl_file = form.cleaned_data["cbl_file"]
+        is_private = form.cleaned_data.get("is_private", False)
+        attribution_source = form.cleaned_data.get("attribution_source", "")
+        attribution_url = form.cleaned_data.get("attribution_url", "")
+
+        # Save the uploaded file to a temporary location
+        with tempfile.NamedTemporaryFile(mode="wb", suffix=".cbl", delete=False) as tmp_file:
+            for chunk in cbl_file.chunks():
+                tmp_file.write(chunk)
+            tmp_path = Path(tmp_file.name)
+
+        try:
+            # Import the CBL file
+            result = import_cbl_file(
+                file_path=tmp_path,
+                user=self.request.user,
+                is_private=is_private,
+                attribution_source=attribution_source,
+                attribution_url=attribution_url,
+            )
+
+            # Store result in session for display on success page
+            self.request.session["cbl_import_result"] = {
+                "reading_list_name": result.reading_list.name,
+                "reading_list_slug": result.reading_list.slug,
+                "issues_added": result.issues_added,
+                "issues_not_found_count": len(result.issues_not_found),
+                "issues_skipped_count": len(result.issues_skipped),
+                "issues_not_found": [
+                    {
+                        "series": book.series,
+                        "number": book.number,
+                        "year": book.year,
+                        "database": book.database_name.upper(),
+                        "issue_id": book.database_issue_id,
+                    }
+                    for book in result.issues_not_found[:20]  # Limit to first 20
+                ],
+                "issues_skipped": [
+                    {
+                        "series": book.series,
+                        "number": book.number,
+                        "reason": reason,
+                    }
+                    for book, reason in result.issues_skipped[:20]  # Limit to first 20
+                ],
+            }
+
+            # Success message
+            msg = f"Successfully imported reading list '{result.reading_list.name}'"
+            if result.issues_added > 0:
+                msg += f" with {result.issues_added} issue(s)"
+            messages.success(self.request, msg)
+
+            # Warning messages for issues not found or skipped
+            if result.issues_not_found:
+                messages.warning(
+                    self.request,
+                    f"{len(result.issues_not_found)} issue(s) not found in database",
+                )
+            if result.issues_skipped:
+                messages.info(
+                    self.request,
+                    f"{len(result.issues_skipped)} issue(s) skipped",
+                )
+
+            # Redirect to the import result page
+            return redirect("reading-list:import-result")
+
+        except CBLParseError as e:
+            messages.error(self.request, f"Failed to parse CBL file: {e}")
+            return self.form_invalid(form)
+
+        except CBLImportError as e:
+            messages.error(self.request, f"Failed to import CBL file: {e}")
+            return self.form_invalid(form)
+
+        except OSError as e:
+            messages.error(self.request, f"File operation error: {e}")
+            return self.form_invalid(form)
+
+        finally:
+            # Clean up the temporary file
+            if tmp_path.exists():
+                tmp_path.unlink()
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context["title"] = "Import Comic Book List"
+        return context
+
+
+class ImportCBLResultView(LoginRequiredMixin, FormView):
+    """Display the results of a CBL import."""
+
+    template_name = "reading_lists/import_cbl_result.html"
+    form_class = ImportCBLForm  # Allows importing another file
+    success_url = reverse_lazy("reading-list:import-result")
+
+    def get(self, request, *args, **kwargs):
+        # Get the result from the session
+        self.import_result = request.session.get("cbl_import_result")
+        if not self.import_result:
+            messages.info(request, "No import result available")
+            return redirect("reading-list:my-lists")
+        return super().get(request, *args, **kwargs)
+
+    def post(self, request, *args, **kwargs):
+        # Handle importing another file (reuse the ImportCBLView logic)
+        return ImportCBLView.as_view()(request, *args, **kwargs)
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context["result"] = self.import_result
+        context["title"] = "Import Results"
         return context
