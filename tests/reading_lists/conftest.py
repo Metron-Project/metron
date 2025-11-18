@@ -165,3 +165,71 @@ def reading_list_item(reading_list_with_issues, reading_list_issue_1):
         reading_list=reading_list_with_issues,
         issue=reading_list_issue_1,
     )
+
+
+@pytest.fixture
+def metron_user(db, create_user):
+    """Create the Metron user for CBL imports."""
+    return create_user(username="Metron")
+
+
+@pytest.fixture
+def admin_user(db, create_staff_user):
+    """Create an admin user for permission tests."""
+    return create_staff_user
+
+
+@pytest.fixture
+def metron_reading_list(metron_user):
+    """Create a reading list owned by the Metron user."""
+    return ReadingList.objects.create(
+        user=metron_user,
+        name="Metron's Reading List",
+        desc="A reading list owned by Metron",
+        is_private=False,
+        attribution_source=ReadingList.AttributionSource.CBRO,
+    )
+
+
+@pytest.fixture
+def metron_private_reading_list(metron_user):
+    """Create a private reading list owned by the Metron user."""
+    return ReadingList.objects.create(
+        user=metron_user,
+        name="Metron's Private List",
+        desc="A private reading list owned by Metron",
+        is_private=True,
+    )
+
+
+@pytest.fixture
+def metron_reading_list_with_issues(
+    metron_user,
+    reading_list_issue_1,
+    reading_list_issue_2,
+    reading_list_issue_3,
+):
+    """Create a reading list with issues owned by Metron."""
+    reading_list = ReadingList.objects.create(
+        user=metron_user,
+        name="Metron's List With Issues",
+        desc="A reading list with multiple issues owned by Metron",
+        is_private=False,
+    )
+    # Add issues in order
+    ReadingListItem.objects.create(
+        reading_list=reading_list,
+        issue=reading_list_issue_1,
+        order=1,
+    )
+    ReadingListItem.objects.create(
+        reading_list=reading_list,
+        issue=reading_list_issue_2,
+        order=2,
+    )
+    ReadingListItem.objects.create(
+        reading_list=reading_list,
+        issue=reading_list_issue_3,
+        order=3,
+    )
+    return reading_list

@@ -12,6 +12,7 @@ from comicsdb.models.issue import Issue
 from reading_lists.cbl_importer import CBLImportError, CBLParseError, import_cbl_file
 from reading_lists.forms import AddIssueWithSearchForm, ImportCBLForm, ReadingListForm
 from reading_lists.models import ReadingList, ReadingListItem
+from users.models import CustomUser
 
 
 class ReadingListListView(ListView):
@@ -26,8 +27,22 @@ class ReadingListListView(ListView):
         queryset = ReadingList.objects.select_related("user").annotate(issue_count=Count("issues"))
 
         if self.request.user.is_authenticated:
-            # Show public lists + user's own lists (including private)
-            queryset = queryset.filter(Q(is_private=False) | Q(user=self.request.user)).distinct()
+            # If admin, show public lists + user's own lists + Metron's lists
+            if self.request.user.is_staff:
+                try:
+                    metron_user = CustomUser.objects.get(username="Metron")
+                    queryset = queryset.filter(
+                        Q(is_private=False) | Q(user=self.request.user) | Q(user=metron_user)
+                    ).distinct()
+                except CustomUser.DoesNotExist:
+                    queryset = queryset.filter(
+                        Q(is_private=False) | Q(user=self.request.user)
+                    ).distinct()
+            else:
+                # Show public lists + user's own lists (including private)
+                queryset = queryset.filter(
+                    Q(is_private=False) | Q(user=self.request.user)
+                ).distinct()
         else:
             # Show only public lists
             queryset = queryset.filter(is_private=False)
@@ -65,6 +80,16 @@ class ReadingListDetailView(DetailView):
         if not self.request.user.is_authenticated:
             return queryset.filter(is_private=False)
 
+        # If admin, show public lists + user's own lists + Metron's lists
+        if self.request.user.is_staff:
+            try:
+                metron_user = CustomUser.objects.get(username="Metron")
+                return queryset.filter(
+                    Q(is_private=False) | Q(user=self.request.user) | Q(user=metron_user)
+                )
+            except CustomUser.DoesNotExist:
+                pass
+
         # If authenticated, show public lists + user's own lists
         return queryset.filter(Q(is_private=False) | Q(user=self.request.user))
 
@@ -77,10 +102,16 @@ class ReadingListDetailView(DetailView):
             "issue__series__series_type"
         ).order_by("order")
 
-        # Check if user is the owner
-        context["is_owner"] = (
+        # Check if user is the owner OR admin viewing Metron's list
+        is_actual_owner = (
             self.request.user.is_authenticated and reading_list.user == self.request.user
         )
+        is_admin_managing_metron = (
+            self.request.user.is_authenticated
+            and self.request.user.is_staff
+            and reading_list.user.username == "Metron"
+        )
+        context["is_owner"] = is_actual_owner or is_admin_managing_metron
 
         return context
 
@@ -113,9 +144,13 @@ class ReadingListUpdateView(LoginRequiredMixin, UserPassesTestMixin, UpdateView)
     template_name = "reading_lists/readinglist_form.html"
 
     def test_func(self):
-        """Only allow the owner to edit the list."""
+        """Only allow the owner to edit the list, or admins for Metron's lists."""
         reading_list = self.get_object()
-        return reading_list.user == self.request.user
+        is_owner = reading_list.user == self.request.user
+        is_admin_managing_metron = (
+            self.request.user.is_staff and reading_list.user.username == "Metron"
+        )
+        return is_owner or is_admin_managing_metron
 
     def form_valid(self, form):
         # Update the edited_by field (via the modified timestamp)
@@ -137,9 +172,13 @@ class ReadingListDeleteView(LoginRequiredMixin, UserPassesTestMixin, DeleteView)
     success_url = reverse_lazy("reading-list:my-lists")
 
     def test_func(self):
-        """Only allow the owner to delete the list."""
+        """Only allow the owner to delete the list, or admins for Metron's lists."""
         reading_list = self.get_object()
-        return reading_list.user == self.request.user
+        is_owner = reading_list.user == self.request.user
+        is_admin_managing_metron = (
+            self.request.user.is_staff and reading_list.user.username == "Metron"
+        )
+        return is_owner or is_admin_managing_metron
 
     def form_valid(self, form):
         messages.success(self.request, f"Reading list '{self.object.name}' deleted!")
@@ -157,8 +196,12 @@ class RemoveIssueFromReadingListView(LoginRequiredMixin, UserPassesTestMixin, De
         return super().dispatch(request, *args, **kwargs)
 
     def test_func(self):
-        """Only allow the owner to remove issues."""
-        return self.reading_list.user == self.request.user
+        """Only allow the owner to remove issues, or admins for Metron's lists."""
+        is_owner = self.reading_list.user == self.request.user
+        is_admin_managing_metron = (
+            self.request.user.is_staff and self.reading_list.user.username == "Metron"
+        )
+        return is_owner or is_admin_managing_metron
 
     def get_object(self):
         return get_object_or_404(
@@ -186,8 +229,12 @@ class AddIssueWithAutocompleteView(LoginRequiredMixin, UserPassesTestMixin, Form
         return super().dispatch(request, *args, **kwargs)
 
     def test_func(self):
-        """Only allow the owner to add issues."""
-        return self.reading_list.user == self.request.user
+        """Only allow the owner to add issues, or admins for Metron's lists."""
+        is_owner = self.reading_list.user == self.request.user
+        is_admin_managing_metron = (
+            self.request.user.is_staff and self.reading_list.user.username == "Metron"
+        )
+        return is_owner or is_admin_managing_metron
 
     def form_valid(self, form):  # noqa: PLR0912
         new_issues = form.cleaned_data["issues"]
@@ -304,6 +351,17 @@ class ImportCBLView(LoginRequiredMixin, UserPassesTestMixin, FormView):
         attribution_source = form.cleaned_data.get("attribution_source", "")
         attribution_url = form.cleaned_data.get("attribution_url", "")
 
+        # Get the Metron user for CBL imports
+        try:
+            metron_user = CustomUser.objects.get(username="Metron")
+        except CustomUser.DoesNotExist:
+            messages.error(
+                self.request,
+                "The 'Metron' user account does not exist. "
+                "Please create this user account before importing CBL files.",
+            )
+            return self.form_invalid(form)
+
         # Save the uploaded file to a temporary location
         with tempfile.NamedTemporaryFile(mode="wb", suffix=".cbl", delete=False) as tmp_file:
             for chunk in cbl_file.chunks():
@@ -311,10 +369,10 @@ class ImportCBLView(LoginRequiredMixin, UserPassesTestMixin, FormView):
             tmp_path = Path(tmp_file.name)
 
         try:
-            # Import the CBL file
+            # Import the CBL file (assigned to Metron user)
             result = import_cbl_file(
                 file_path=tmp_path,
-                user=self.request.user,
+                user=metron_user,
                 is_private=is_private,
                 attribution_source=attribution_source,
                 attribution_url=attribution_url,
