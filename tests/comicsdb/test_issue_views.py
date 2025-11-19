@@ -973,3 +973,113 @@ def test_duplicate_credits_redirects_to_detail(auto_login_user, create_user, joh
     resp = client.post(reverse("issue:duplicate-credits", args=[issue2.slug]))
     assert resp.status_code == HTML_REDIRECT_CODE
     assert resp.url == reverse("issue:detail", args=[issue2.slug])
+
+
+# Formset Add Row Tests
+def test_credits_add_row_requires_login(db, client):
+    """Test that credits add-row endpoint requires authentication."""
+    resp = client.get(reverse("issue:credits-add-row"))
+    assert resp.status_code == HTML_REDIRECT_CODE
+    assert "/accounts/login/" in resp.url
+
+
+def test_credits_add_row_returns_form_html(auto_login_user):
+    """Test that credits add-row endpoint returns HTML for a new form."""
+    client, _ = auto_login_user()
+    resp = client.get(reverse("issue:credits-add-row"), {"form_idx": "2"})
+    assert resp.status_code == HTML_OK_CODE
+    # Check that the response contains form fields with correct index
+    assert b"credits-2" in resp.content
+    # Should contain creator field (uses autocomplete widget)
+    assert b"credits-2-creator" in resp.content
+    # Should contain role field
+    assert b"id_credits-2-role" in resp.content
+
+
+def test_credits_add_row_uses_correct_index(auto_login_user):
+    """Test that credits add-row uses the provided form index."""
+    client, _ = auto_login_user()
+
+    # Test with index 0
+    resp = client.get(reverse("issue:credits-add-row"), {"form_idx": "0"})
+    assert resp.status_code == HTML_OK_CODE
+    assert b"credits-0" in resp.content
+    assert b"credits-0-creator" in resp.content
+    assert b"id_credits-0-role" in resp.content
+
+    # Test with index 5
+    resp = client.get(reverse("issue:credits-add-row"), {"form_idx": "5"})
+    assert resp.status_code == HTML_OK_CODE
+    assert b"credits-5" in resp.content
+    assert b"credits-5-creator" in resp.content
+    assert b"id_credits-5-role" in resp.content
+
+
+def test_credits_add_row_sequential_indices(auto_login_user):
+    """Test that sequential add-row calls use sequential indices."""
+    client, _ = auto_login_user()
+
+    # Simulate adding 3 rows in sequence
+    for idx in range(3):
+        resp = client.get(reverse("issue:credits-add-row"), {"form_idx": str(idx)})
+        assert resp.status_code == HTML_OK_CODE
+        expected_name = f"credits-{idx}".encode()
+        assert expected_name in resp.content
+
+
+def test_variants_add_row_requires_login(db, client):
+    """Test that variants add-row endpoint requires authentication."""
+    resp = client.get(reverse("issue:variants-add-row"))
+    assert resp.status_code == HTML_REDIRECT_CODE
+    assert "/accounts/login/" in resp.url
+
+
+def test_variants_add_row_returns_form_html(auto_login_user):
+    """Test that variants add-row endpoint returns HTML for a new form."""
+    client, _ = auto_login_user()
+    resp = client.get(reverse("issue:variants-add-row"), {"form_idx": "1"})
+    assert resp.status_code == HTML_OK_CODE
+    # Check that the response contains form fields
+    assert b"variants-1" in resp.content
+    # Should contain image field
+    assert b"id_variants-1-image" in resp.content
+
+
+def test_variants_add_row_uses_correct_index(auto_login_user):
+    """Test that variants add-row uses the provided form index."""
+    client, _ = auto_login_user()
+
+    resp = client.get(reverse("issue:variants-add-row"), {"form_idx": "3"})
+    assert resp.status_code == HTML_OK_CODE
+    assert b"variants-3" in resp.content
+    assert b"id_variants-3-image" in resp.content
+
+
+def test_attribution_add_row_requires_login(db, client):
+    """Test that attribution add-row endpoint requires authentication."""
+    resp = client.get(reverse("issue:attribution-add-row"))
+    assert resp.status_code == HTML_REDIRECT_CODE
+    assert "/accounts/login/" in resp.url
+
+
+def test_attribution_add_row_returns_form_html(auto_login_user):
+    """Test that attribution add-row endpoint returns HTML for a new form."""
+    client, _ = auto_login_user()
+    resp = client.get(reverse("issue:attribution-add-row"), {"form_idx": "2"})
+    assert resp.status_code == HTML_OK_CODE
+    # Check that the response contains form fields
+    assert b"attribution-2" in resp.content
+    # Should contain source field
+    assert b"id_attribution-2-source" in resp.content
+    # Should contain url field
+    assert b"id_attribution-2-url" in resp.content
+
+
+def test_attribution_add_row_uses_correct_index(auto_login_user):
+    """Test that attribution add-row uses the provided form index."""
+    client, _ = auto_login_user()
+
+    resp = client.get(reverse("issue:attribution-add-row"), {"form_idx": "4"})
+    assert resp.status_code == HTML_OK_CODE
+    assert b"attribution-4" in resp.content
+    assert b"id_attribution-4-source" in resp.content
