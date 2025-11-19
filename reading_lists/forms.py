@@ -1,8 +1,8 @@
 from autocomplete import widgets
 from django import forms
 
+from comicsdb.autocomplete import IssueAutocomplete
 from comicsdb.models.issue import Issue
-from reading_lists.autocomplete import IssueAutocomplete
 from reading_lists.models import ReadingList
 
 

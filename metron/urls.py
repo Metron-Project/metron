@@ -47,7 +47,6 @@ urlpatterns = [
     path("jsi18n/", JavaScriptCatalog.as_view(), name="javascript-catalog"),
     path("publisher/", include(publisher_urls)),
     path("reading-lists/", include(reading_lists_urls)),
-    path("select2/", include("django_select2.urls")),
     path("series/", include(series_urls)),
     path("team/", include(team_urls)),
     path("universe/", include(universe_urls)),

@@ -1,6 +1,7 @@
+from autocomplete import widgets
 from django.forms import ModelChoiceField, ModelForm, ValidationError
-from django_select2 import forms as s2forms
 
+from comicsdb.autocomplete import ImprintAutocomplete, PublisherAutocomplete, SeriesAutocomplete
 from comicsdb.models import Imprint, Publisher, Series
 
 # Series_Type objects id's
@@ -9,28 +10,28 @@ OMNI = 15
 TPB = 10
 
 
-class SeriesWidget(s2forms.ModelSelect2Widget):
-    search_fields = ["name__icontains"]
+SeriesWidget = widgets.AutocompleteWidget(
+    ac_class=SeriesAutocomplete,
+    attrs={"class": "input"},
+)
 
-
-class MultiSeriesWidget(s2forms.ModelSelect2MultipleWidget):
-    search_fields = ["name__icontains"]
+MultiSeriesWidget = widgets.AutocompleteWidget(
+    ac_class=SeriesAutocomplete,
+    attrs={"class": "input"},
+    options={"multiselect": True},
+)
 
 
 class SeriesForm(ModelForm):
     publisher = ModelChoiceField(
         queryset=Publisher.objects.all(),
         label="Publisher",
-        widget=s2forms.ModelSelect2Widget(model=Publisher, search_fields=["name__icontains"]),
+        widget=widgets.AutocompleteWidget(ac_class=PublisherAutocomplete),
     )
     imprint = ModelChoiceField(
         queryset=Imprint.objects.all(),
         label="Imprint",
-        widget=s2forms.ModelSelect2Widget(
-            model=Imprint,
-            search_fields=["name__icontains"],
-            dependent_fields={"publisher": "publisher"},
-        ),
+        widget=widgets.AutocompleteWidget(ac_class=ImprintAutocomplete),
         required=False,
     )
 
@@ -54,7 +55,7 @@ class SeriesForm(ModelForm):
             "associated",
         ]
         widgets = {
-            "associated": MultiSeriesWidget(attrs={"class": "input"}),
+            "associated": MultiSeriesWidget,
         }
         help_texts = {
             "volume": "This is <strong>not</strong> the year the series began. "

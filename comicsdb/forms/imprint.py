@@ -10,6 +10,6 @@ class ImprintForm(ModelForm):
         fields = ["name", "desc", "founded", "publisher", "cv_id", "gcd_id", "image"]
         widgets = {
             "image": ClearableFileInput(),
-            "publisher": PublisherWidget(),
+            "publisher": PublisherWidget,
         }
         field_order = ["name", "desc", "founded", "publisher", "cv_id", "gcd_id", "image"]

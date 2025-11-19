@@ -21,9 +21,9 @@ class CharacterForm(ModelForm):
             "image",
         )
         widgets = {
-            "creators": CreatorsWidget(attrs={"class": "input"}),
-            "teams": TeamsWidget(attrs={"class": "input"}),
-            "universes": UniversesWidget(attrs={"class": "input"}),
+            "creators": CreatorsWidget,
+            "teams": TeamsWidget,
+            "universes": UniversesWidget,
             "image": ClearableFileInput(),
         }
         help_texts = {

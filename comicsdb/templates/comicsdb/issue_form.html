@@ -1,6 +1,7 @@
 {% extends parent_template|default:"base.html" %}
 {% load static %}
 {% load bulma_tags %}
+{% load django_htmx %}
 {% block title %}
     Issue Form
 {% endblock title %}
@@ -53,6 +54,7 @@
     </form>
 {% endblock %}
 {% block js %}
+    {% htmx_script %}
     <script src="{% static 'admin/js/vendor/jquery/jquery.js' %}"></script>
     {{ form.media.js }}
     <script src="{% static 'site/js/jquery.formset.js' %}"></script>

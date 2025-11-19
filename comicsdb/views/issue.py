@@ -2,12 +2,11 @@ import logging
 from datetime import date, datetime
 from typing import Any
 
-from dal import autocomplete
 from django.contrib import messages
 from django.contrib.auth.mixins import LoginRequiredMixin, PermissionRequiredMixin
 from django.core.exceptions import ObjectDoesNotExist
 from django.db import transaction
-from django.db.models import Prefetch, Q
+from django.db.models import Prefetch
 from django.http import HttpResponseRedirect
 from django.shortcuts import get_object_or_404
 from django.urls import reverse, reverse_lazy
@@ -20,7 +19,7 @@ from comicsdb.forms.attribution import AttributionFormSet
 from comicsdb.forms.credits import CreditsFormSet
 from comicsdb.forms.issue import IssueForm
 from comicsdb.forms.variant import VariantFormset
-from comicsdb.models import Creator, Credits, Issue, Role, Series
+from comicsdb.models import Credits, Issue, Role
 from comicsdb.models.attribution import Attribution
 from comicsdb.models.series import SeriesType
 from comicsdb.models.variant import Variant
@@ -31,35 +30,6 @@ from comicsdb.views.mixins import LazyLoadMixin, SlugRedirectView
 TOTAL_WEEKS_YEAR = 52
 
 LOGGER = logging.getLogger(__name__)
-
-
-class SeriesAutocomplete(autocomplete.Select2QuerySetView):
-    def get_queryset(self):
-        if not self.request.user.is_authenticated:
-            return Series.objects.none()
-
-        qs = Series.objects.all()
-
-        if self.q:
-            qs = qs.filter(name__icontains=self.q)
-
-        return qs
-
-
-class CreatorAutocomplete(autocomplete.Select2QuerySetView):
-    def get_queryset(self):
-        if not self.request.user.is_authenticated:
-            return Creator.objects.none()
-
-        qs = Creator.objects.all()
-
-        if self.q:
-            qs = qs.filter(
-                # Unaccent lookup won't work on alias array field.
-                Q(name__unaccent__icontains=self.q) | Q(alias__icontains=self.q)
-            )
-
-        return qs
 
 
 class IssueList(ListView):

@@ -1,13 +1,13 @@
-"""Tests for reading_lists autocomplete functionality."""
+"""Tests for comicsdb autocomplete functionality."""
 
 from datetime import date
 
 import pytest
 
+from comicsdb.autocomplete import IssueAutocomplete
 from comicsdb.models.issue import Issue
 from comicsdb.models.publisher import Publisher
 from comicsdb.models.series import Series
-from reading_lists.autocomplete import IssueAutocomplete
 
 
 @pytest.fixture

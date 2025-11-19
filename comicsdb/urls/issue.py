@@ -1,7 +1,6 @@
 from django.urls import path, re_path
 
 from comicsdb.views.issue import (
-    CreatorAutocomplete,
     FutureList,
     IssueCharactersLoadMore,
     IssueCreate,
@@ -18,7 +17,6 @@ from comicsdb.views.issue import (
     IssueUpdate,
     NextWeekList,
     SearchIssueList,
-    SeriesAutocomplete,
     WeekList,
 )
 
@@ -59,16 +57,6 @@ urlpatterns = [
         "<slug:slug>/universes/load-more/",
         IssueUniversesLoadMore.as_view(),
         name="universes-load-more",
-    ),
-    re_path(
-        r"^creator-autocomplete/?$",
-        CreatorAutocomplete.as_view(),
-        name="creator-autocomplete",
-    ),
-    re_path(
-        r"^series-autocomplete/?$",
-        SeriesAutocomplete.as_view(),
-        name="series-autocomplete",
     ),
     re_path(r"^search/?$", SearchIssueList.as_view(), name="search"),
 ]
