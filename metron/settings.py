@@ -54,7 +54,6 @@ INSTALLED_APPS = [
     "rest_framework",
     "drf_spectacular",
     "django_filters",
-    "django_select2",
     "django_simple_bulma",
     "chartkick.django",
     "django_countries",
