@@ -45,13 +45,11 @@
 {% endblock %}
 {% block js %}
     {% htmx_script %}
-    <script src="{% static 'admin/js/vendor/jquery/jquery.js' %}"></script>
     {{ form.media.js }}
-    <script src="{% static 'site/js/jquery.formset.js' %}"></script>
     <script src="{% static 'site/js/bulma-fileupload.js' %}"></script>
     <script src="{% static 'extensions/bulma-calendar/dist/js/bulma-calendar.min.js' %}"></script>
     <script>
-$(function() {
+document.addEventListener('DOMContentLoaded', function() {
     'use strict';
 
     // Initialize bulma-calendar for date inputs
@@ -69,19 +67,54 @@ $(function() {
             weekStart: 0
         });
     });
+});
 
-    // Initialize attribution formset
-    $('#mainForm #attributionTable tbody tr').formset({
-        prefix: '{{ attribution.prefix }}',
-        deleteText: 'Remove?',
-        addText: 'Add another attribution',
-        added: function($row) {
-            console.log('Attribution row added');
-        },
-        removed: function($row) {
-            console.log('Attribution row removed');
+/**
+ * Get the next form index for a formset
+ * @param {string} prefix - The formset prefix (e.g., 'attribution')
+ * @returns {number} The next form index
+ */
+function getNextFormIndex(prefix) {
+    var totalFormsInput = document.querySelector(`#id_${prefix}-TOTAL_FORMS`);
+    return parseInt(totalFormsInput.value);
+}
+
+/**
+ * Update the formset management form after adding or removing rows
+ * @param {string} prefix - The formset prefix (e.g., 'attribution')
+ * @param {number} increment - The number to increment (1 for add, -1 for remove, or 0 to recalculate)
+ */
+function updateFormsetManagement(prefix, increment = 0) {
+    var totalFormsInput = document.querySelector(`#id_${prefix}-TOTAL_FORMS`);
+
+    if (increment !== 0) {
+        // Simple increment/decrement
+        var currentTotal = parseInt(totalFormsInput.value);
+        totalFormsInput.value = currentTotal + increment;
+    } else {
+        // Recalculate based on actual rows in the table
+        var tbody = document.querySelector(`#${prefix}TableBody`);
+        if (tbody) {
+            var rows = tbody.querySelectorAll('tr.formset-row');
+            totalFormsInput.value = rows.length;
         }
-    });
+    }
+}
+
+// Listen for htmx events to handle autocomplete widget initialization on new rows
+document.body.addEventListener('htmx:afterSwap', function(event) {
+    // Check if this was a formset row addition
+    if (event.detail.target.id && event.detail.target.id.includes('TableBody')) {
+        // Trigger any autocomplete initialization if needed
+        var newRow = event.detail.target.lastElementChild;
+        if (newRow && window.autocomplete && window.autocomplete.init) {
+            // Initialize autocomplete widgets in the new row
+            var autocompleteInputs = newRow.querySelectorAll('[data-autocomplete]');
+            autocompleteInputs.forEach(function(input) {
+                window.autocomplete.init(input);
+            });
+        }
+    }
 });
     </script>
 {% endblock %}
