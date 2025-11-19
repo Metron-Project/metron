@@ -1,0 +1,45 @@
+{% load bulma_tags %}
+<tr class="formset-row">
+    {% for field in form.visible_fields %}
+        {% if field.name != 'DELETE' %}
+            <td>
+                {# Hidden fields and non-field errors in first column only #}
+                {% if forloop.first %}
+                    {% for hidden in form.hidden_fields %}{{ hidden }}{% endfor %}
+                    {% for error in form.non_field_errors %}
+                        <p class="has-text-danger">
+                            <strong>{{ error }}</strong>
+                        </p>
+                    {% endfor %}
+                {% endif %}
+                {# Field errors #}
+                {% for error in field.errors %}
+                    <p class="has-text-danger">
+                        <strong>{{ error }}</strong>
+                    </p>
+                {% endfor %}
+                {# Field widget #}
+                <div class="field">
+                    {% if field|is_field_type:"select" %}
+                        <div class="control is-expanded">
+                            <div class="select{% if field|is_multiple %} is-multiple{% endif %}">{{ field }}</div>
+                        </div>
+                    {% else %}
+                        <div class="control">{{ field }}</div>
+                    {% endif %}
+                    {% if field.help_text %}<p class="help">{{ field.help_text|safe }}</p>{% endif %}
+                </div>
+            </td>
+        {% endif %}
+    {% endfor %}
+    <td class="has-text-centered">
+        <button type="button"
+                class="button is-small is-danger delete-row"
+                onclick="this.closest('tr').remove(); updateFormsetManagement('credits');"
+                title="Remove this row">
+            <span class="icon is-small">
+                <i class="fas fa-times"></i>
+            </span>
+        </button>
+    </td>
+</tr>

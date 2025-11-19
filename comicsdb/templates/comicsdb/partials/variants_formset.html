@@ -18,46 +18,83 @@
             <th scope="col">Price</th>
             <th scope="col">SKU</th>
             <th scope="col">UPC</th>
-            <th scope="col">Delete</th>
+            <th scope="col" class="has-text-centered" style="width: 80px;">Delete</th>
         </tr>
     </thead>
-    <tbody>
+    <tbody id="variantsTableBody">
         {% for form in formset.forms %}
-            <tr>
+            <tr class="formset-row">
                 {% for field in form.visible_fields %}
-                    <td>
-                        {% if form.instance.pk %}{{ form.DELETE }}{% endif %}
-                        {# Hidden fields and non-field errors in first column only #}
-                        {% if forloop.first %}
-                            {% for hidden in form.hidden_fields %}{{ hidden }}{% endfor %}
-                            {% for error in form.non_field_errors %}
+                    {% if field.name != 'DELETE' %}
+                        <td>
+                            {# Hidden fields and non-field errors in first column only #}
+                            {% if forloop.first %}
+                                {% for hidden in form.hidden_fields %}{{ hidden }}{% endfor %}
+                                {% for error in form.non_field_errors %}
+                                    <p class="has-text-danger">
+                                        <strong>{{ error }}</strong>
+                                    </p>
+                                {% endfor %}
+                            {% endif %}
+                            {# Field errors #}
+                            {% for error in field.errors %}
                                 <p class="has-text-danger">
                                     <strong>{{ error }}</strong>
                                 </p>
                             {% endfor %}
-                        {% endif %}
-                        {# Field errors #}
-                        {% for error in field.errors %}
-                            <p class="has-text-danger">
-                                <strong>{{ error }}</strong>
-                            </p>
-                        {% endfor %}
-                        {# Field widget #}
-                        <div class="field" data-field-name="{{ field.name }}">
-                            <div class="control is-expanded">
-                                {% if field|is_field_type:"select" %}
-                                    <span class="select{% if field.errors %} is-danger{% endif %} is-fullwidth">{{ field }}</span>
-                                {% elif field|is_field_type:'input' %}
-                                    {{ field|add_field_class:"input is-fullwidth" }}
-                                {% else %}
-                                    {{ field }}
-                                {% endif %}
+                            {# Field widget #}
+                            <div class="field" data-field-name="{{ field.name }}">
+                                <div class="control is-expanded">
+                                    {% if field|is_field_type:"select" %}
+                                        <span class="select{% if field.errors %} is-danger{% endif %} is-fullwidth">{{ field }}</span>
+                                    {% elif field|is_field_type:'input' %}
+                                        {{ field|add_field_class:"input is-fullwidth" }}
+                                    {% else %}
+                                        {{ field }}
+                                    {% endif %}
+                                </div>
+                                {% if field.help_text %}<p class="help">{{ field.help_text|safe }}</p>{% endif %}
                             </div>
-                            {% if field.help_text %}<p class="help">{{ field.help_text|safe }}</p>{% endif %}
-                        </div>
-                    </td>
+                        </td>
+                    {% endif %}
                 {% endfor %}
+                <td class="has-text-centered">
+                    {% if form.instance.pk %}
+                        {# Existing row - hide DELETE checkbox and use button to toggle it #}
+                        <div style="display: none;">{{ form.DELETE }}</div>
+                        <button type="button"
+                                class="button is-small is-danger delete-row"
+                                onclick="const checkbox = this.parentElement.querySelector('input[type=checkbox]'); checkbox.checked = !checkbox.checked; const row = this.closest('tr'); row.style.opacity = checkbox.checked ? '0.5' : '1'; row.style.textDecoration = checkbox.checked ? 'line-through' : 'none';"
+                                title="Mark for deletion">
+                            <span class="icon is-small">
+                                <i class="fas fa-times"></i>
+                            </span>
+                        </button>
+                    {% else %}
+                        {# New row - remove from DOM #}
+                        <button type="button"
+                                class="button is-small is-danger delete-row"
+                                onclick="this.closest('tr').remove(); updateFormsetManagement('variants');"
+                                title="Remove this row">
+                            <span class="icon is-small">
+                                <i class="fas fa-times"></i>
+                            </span>
+                        </button>
+                    {% endif %}
+                </td>
             </tr>
         {% endfor %}
     </tbody>
 </table>
+<button type="button"
+        class="button is-info"
+        hx-get="{% url 'issue:variants-add-row' %}"
+        hx-target="#variantsTableBody"
+        hx-swap="beforeend"
+        hx-vals='js:{form_idx: getNextFormIndex("variants")}'
+        onclick="updateFormsetManagement('variants', 1)">
+    <span class="icon">
+        <i class="fas fa-plus"></i>
+    </span>
+    <span>Add another variant cover</span>
+</button>

@@ -2,8 +2,10 @@ from django.urls import path, re_path
 
 from comicsdb.views.issue import (
     FutureList,
+    IssueAttributionAddRowView,
     IssueCharactersLoadMore,
     IssueCreate,
+    IssueCreditsAddRowView,
     IssueCreditsLoadMore,
     IssueDelete,
     IssueDetail,
@@ -15,6 +17,7 @@ from comicsdb.views.issue import (
     IssueTeamsLoadMore,
     IssueUniversesLoadMore,
     IssueUpdate,
+    IssueVariantsAddRowView,
     NextWeekList,
     SearchIssueList,
     WeekList,
@@ -57,6 +60,14 @@ urlpatterns = [
         "<slug:slug>/universes/load-more/",
         IssueUniversesLoadMore.as_view(),
         name="universes-load-more",
+    ),
+    # HTMX formset row endpoints
+    path("formset/credits/add-row/", IssueCreditsAddRowView.as_view(), name="credits-add-row"),
+    path("formset/variants/add-row/", IssueVariantsAddRowView.as_view(), name="variants-add-row"),
+    path(
+        "formset/attribution/add-row/",
+        IssueAttributionAddRowView.as_view(),
+        name="attribution-add-row",
     ),
     re_path(r"^search/?$", SearchIssueList.as_view(), name="search"),
 ]
