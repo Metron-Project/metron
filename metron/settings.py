@@ -179,7 +179,7 @@ CACHES = {
 
 # sorl-thumbnail settings
 THUMBNAIL_KVSTORE = "sorl.thumbnail.kvstores.redis_kvstore.KVStore"
-THUMBNAIL_REDIS_HOST = "localhost"  # default
+THUMBNAIL_REDIS_HOST = config("THUMBNAIL_REDIS_HOST", default="localhost")
 THUMBNAIL_REDIS_PORT = 6379  # default
 THUMBNAIL_DEBUG = DEBUG
 
