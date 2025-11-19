@@ -84,12 +84,12 @@
     </tbody>
 </table>
 <button type="button"
-        class="button is-info"
+        class="button is-rounded is-info"
         hx-get="{% url 'issue:attribution-add-row' %}"
         hx-target="#attributionTableBody"
         hx-swap="beforeend"
         hx-vals='js:{form_idx: getNextFormIndex("attribution")}'
-        onclick="updateFormsetManagement('attribution', 1)">
+        hx-on::after-request="updateFormsetManagement('attribution', 1)">
     <span class="icon">
         <i class="fas fa-plus"></i>
     </span>
