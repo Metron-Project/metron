@@ -1,11 +1,13 @@
+from autocomplete import widgets
 from django.forms import ClearableFileInput, ModelForm, ValidationError
-from django_select2 import forms as s2forms
 
+from comicsdb.autocomplete import PublisherAutocomplete
 from comicsdb.models import Publisher
 
-
-class PublisherWidget(s2forms.ModelSelect2Widget):
-    search_fields = ["name__icontains"]
+PublisherWidget = widgets.AutocompleteWidget(
+    ac_class=PublisherAutocomplete,
+    attrs={"class": "input"},
+)
 
 
 class PublisherForm(ModelForm):

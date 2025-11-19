@@ -1,4 +1,4 @@
-from dal import autocomplete
+from autocomplete import widgets
 from django.forms import (
     ClearableFileInput,
     DateInput,
@@ -6,9 +6,14 @@ from django.forms import (
     ModelForm,
     ValidationError,
 )
-from django_select2 import forms as s2forms
 from isbnlib import canonical, is_isbn10, is_isbn13
 
+from comicsdb.autocomplete import (
+    ArcAutocomplete,
+    CharacterAutocomplete,
+    IssueAutocomplete,
+    SeriesAutocomplete,
+)
 from comicsdb.forms.team import TeamsWidget
 from comicsdb.forms.universe import UniversesWidget
 from comicsdb.forms.widgets import BulmaMoneyWidget
@@ -17,28 +22,32 @@ from comicsdb.models import Issue, Rating, Series
 MINIMUM_YEAR = 1900
 
 
-class ArcsWidget(s2forms.ModelSelect2MultipleWidget):
-    search_fields = [
-        "name__icontains",
-    ]
+ArcsWidget = widgets.AutocompleteWidget(
+    ac_class=ArcAutocomplete,
+    attrs={"class": "input"},
+    options={"multiselect": True},
+)
 
+CharactersWidget = widgets.AutocompleteWidget(
+    ac_class=CharacterAutocomplete,
+    attrs={"class": "input"},
+    options={"multiselect": True},
+)
 
-class CharactersWidget(s2forms.ModelSelect2MultipleWidget):
-    search_fields = ["name__icontains", "alias__icontains"]
-
-
-class IssuesWidget(s2forms.ModelSelect2MultipleWidget):
-    search_fields = ["series__name__icontains", "number", "alt_number"]
+IssuesWidget = widgets.AutocompleteWidget(
+    ac_class=IssueAutocomplete,
+    attrs={"class": "input"},
+    options={"multiselect": True},
+)
 
 
 class IssueForm(ModelForm):
     series = ModelChoiceField(
         queryset=Series.objects.all(),
-        widget=autocomplete.ModelSelect2(
-            url="issue:series-autocomplete",
+        widget=widgets.AutocompleteWidget(
+            ac_class=SeriesAutocomplete,
             attrs={
-                "data-placeholder": "Autocomplete...",
-                "data-minimum-input-length": 3,
+                "placeholder": "Autocomplete...",
             },
         ),
     )
@@ -78,11 +87,11 @@ class IssueForm(ModelForm):
             "store_date": DateInput(attrs={"type": "date", "data-bulma-calendar": "on"}),
             "foc_date": DateInput(attrs={"type": "date", "data-bulma-calendar": "on"}),
             "price": BulmaMoneyWidget(),
-            "arcs": ArcsWidget(attrs={"class": "input"}),
-            "characters": CharactersWidget(attrs={"class": "input"}),
-            "teams": TeamsWidget(attrs={"class": "input"}),
-            "universes": UniversesWidget(attrs={"class": "input"}),
-            "reprints": IssuesWidget(attrs={"class": "input"}),
+            "arcs": ArcsWidget,
+            "characters": CharactersWidget,
+            "teams": TeamsWidget,
+            "universes": UniversesWidget,
+            "reprints": IssuesWidget,
             "image": ClearableFileInput(),
         }
         help_texts = {
@@ -90,9 +99,7 @@ class IssueForm(ModelForm):
             "name": "Separate multiple story titles by a semicolon",
             "title": "Only used with Collected Editions like a Trade Paperback.",
             "price": "In United States currency",
-            "reprints": (
-                "Add any issues that are reprinted. Do not add a '#' in front of any issue number."
-            ),
+            "reprints": "Search for and select any issues that are reprinted in this issue.",
             "foc_date": "This date should be earlier than the store date",
         }
         labels = {

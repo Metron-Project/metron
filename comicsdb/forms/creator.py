@@ -1,14 +1,14 @@
+from autocomplete import widgets
 from django.forms import ClearableFileInput, DateInput, ModelForm
-from django_select2 import forms as s2forms
 
+from comicsdb.autocomplete import CreatorAutocomplete
 from comicsdb.models import Creator
 
-
-class CreatorsWidget(s2forms.ModelSelect2MultipleWidget):
-    search_fields = [
-        "name__icontains",
-        "alias__icontains",
-    ]
+CreatorsWidget = widgets.AutocompleteWidget(
+    ac_class=CreatorAutocomplete,
+    attrs={"class": "input"},
+    options={"multiselect": True},
+)
 
 
 class CreatorForm(ModelForm):

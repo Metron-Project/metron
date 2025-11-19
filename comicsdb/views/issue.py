@@ -2,14 +2,14 @@ import logging
 from datetime import date, datetime
 from typing import Any
 
-from dal import autocomplete
 from django.contrib import messages
 from django.contrib.auth.mixins import LoginRequiredMixin, PermissionRequiredMixin
 from django.core.exceptions import ObjectDoesNotExist
 from django.db import transaction
-from django.db.models import Prefetch, Q
-from django.http import HttpResponseRedirect
+from django.db.models import Prefetch
+from django.http import HttpResponse, HttpResponseRedirect
 from django.shortcuts import get_object_or_404
+from django.template.loader import render_to_string
 from django.urls import reverse, reverse_lazy
 from django.views import View
 from django.views.generic import DetailView, ListView
@@ -20,7 +20,7 @@ from comicsdb.forms.attribution import AttributionFormSet
 from comicsdb.forms.credits import CreditsFormSet
 from comicsdb.forms.issue import IssueForm
 from comicsdb.forms.variant import VariantFormset
-from comicsdb.models import Creator, Credits, Issue, Role, Series
+from comicsdb.models import Credits, Issue, Role
 from comicsdb.models.attribution import Attribution
 from comicsdb.models.series import SeriesType
 from comicsdb.models.variant import Variant
@@ -31,35 +31,6 @@ from comicsdb.views.mixins import LazyLoadMixin, SlugRedirectView
 TOTAL_WEEKS_YEAR = 52
 
 LOGGER = logging.getLogger(__name__)
-
-
-class SeriesAutocomplete(autocomplete.Select2QuerySetView):
-    def get_queryset(self):
-        if not self.request.user.is_authenticated:
-            return Series.objects.none()
-
-        qs = Series.objects.all()
-
-        if self.q:
-            qs = qs.filter(name__icontains=self.q)
-
-        return qs
-
-
-class CreatorAutocomplete(autocomplete.Select2QuerySetView):
-    def get_queryset(self):
-        if not self.request.user.is_authenticated:
-            return Creator.objects.none()
-
-        qs = Creator.objects.all()
-
-        if self.q:
-            qs = qs.filter(
-                # Unaccent lookup won't work on alias array field.
-                Q(name__unaccent__icontains=self.q) | Q(alias__icontains=self.q)
-            )
-
-        return qs
 
 
 class IssueList(ListView):
@@ -321,6 +292,62 @@ class IssueUpdate(LoginRequiredMixin, UpdateView):
                 self.request.user,
             )
         return super().form_valid(form)
+
+
+class IssueFormsetAddRowView(LoginRequiredMixin, View):
+    """Base view for adding new formset rows via HTMX."""
+
+    formset_class = None
+    template_name = None
+    prefix = None
+
+    def get(self, request):
+        """Return a new empty form row."""
+        # Get the form index from the request
+        form_idx = int(request.GET.get("form_idx", 0))
+
+        # Create a formset with one empty form
+        formset = self.formset_class(prefix=self.prefix)
+
+        # Get the empty form and set its index
+        form = formset.empty_form
+        form_html = render_to_string(
+            self.template_name,
+            {
+                "form": form,
+                "form_idx": form_idx,
+                "prefix": self.prefix,
+            },
+        )
+
+        # Replace __prefix__ placeholder with the actual form index
+        form_html = form_html.replace(f"{self.prefix}-__prefix__", f"{self.prefix}-{form_idx}")
+
+        return HttpResponse(form_html)
+
+
+class IssueCreditsAddRowView(IssueFormsetAddRowView):
+    """HTMX endpoint for adding a new credit form row."""
+
+    formset_class = CreditsFormSet
+    template_name = "comicsdb/partials/credits_formset_row.html"
+    prefix = "credits"
+
+
+class IssueVariantsAddRowView(IssueFormsetAddRowView):
+    """HTMX endpoint for adding a new variant form row."""
+
+    formset_class = VariantFormset
+    template_name = "comicsdb/partials/variants_formset_row.html"
+    prefix = "variants"
+
+
+class IssueAttributionAddRowView(IssueFormsetAddRowView):
+    """HTMX endpoint for adding a new attribution form row."""
+
+    formset_class = AttributionFormSet
+    template_name = "comicsdb/partials/attribution_formset_row.html"
+    prefix = "attribution"
 
 
 class IssueDuplicateCreditsView(LoginRequiredMixin, View):

@@ -1,17 +1,17 @@
-from dal import autocomplete
+from autocomplete import widgets
 from django.forms import ModelChoiceField, ModelForm, SelectMultiple, inlineformset_factory
 
+from comicsdb.autocomplete import CreatorAutocomplete
 from comicsdb.models import Creator, Credits, Issue
 
 
 class CreditsForm(ModelForm):
     creator = ModelChoiceField(
         queryset=Creator.objects.all(),
-        widget=autocomplete.ModelSelect2(
-            url="issue:creator-autocomplete",
+        widget=widgets.AutocompleteWidget(
+            ac_class=CreatorAutocomplete,
             attrs={
-                "data-placeholder": "Autocomplete...",
-                "data-minimum-input-length": 3,
+                "placeholder": "Autocomplete...",
             },
         ),
     )

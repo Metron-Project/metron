@@ -1,11 +1,14 @@
+from autocomplete import widgets
 from django.forms import ClearableFileInput, ModelForm
-from django_select2 import forms as s2forms
 
+from comicsdb.autocomplete import UniverseAutocomplete
 from comicsdb.models import Universe
 
-
-class UniversesWidget(s2forms.ModelSelect2MultipleWidget):
-    search_fields = ["name__icontains", "designation__icontains"]
+UniversesWidget = widgets.AutocompleteWidget(
+    ac_class=UniverseAutocomplete,
+    attrs={"class": "input"},
+    options={"multiselect": True},
+)
 
 
 class UniverseForm(ModelForm):
