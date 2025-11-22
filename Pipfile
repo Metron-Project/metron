@@ -26,7 +26,6 @@ django-simple-history = "*"
 wiki = "*"
 django-htmx = "*"
 django-htmx-autocomplete = "*"
-defusedxml = "*"
 
 [dev-packages]
 django-debug-toolbar = "*"

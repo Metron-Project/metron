@@ -9,7 +9,6 @@ The Reading Lists feature allows you to create, manage, and share curated comic 
 - [Usage Examples](#usage-examples)
 - [Search and Autocomplete](#search-and-autocomplete)
 - [Permissions and Privacy](#permissions-and-privacy)
-- [CBL Import (Admin)](#cbl-import-admin)
 
 ## Features
 
@@ -20,7 +19,6 @@ The Reading Lists feature allows you to create, manage, and share curated comic 
 - **Drag-and-Drop Ordering**: Easily reorder issues within your lists
 - **Smart Search**: Find issues quickly using autocomplete with series and issue number filters
 - **Attribution Tracking**: Credit sources for reading orders (admin feature)
-- **CBL Import**: Import reading lists from .cbl files (admin feature)
 
 ### Automatic Information
 
@@ -163,7 +161,6 @@ Use the `#` symbol to separate series name from issue number for more precise re
 ### Admin Features
 
 Admin users have additional capabilities:
-- Can import .cbl files
 - Can set attribution sources and URLs
 - Can manage lists owned by the "Metron" user
 - Can view Metron's private lists
@@ -171,65 +168,9 @@ Admin users have additional capabilities:
 ### Metron User Lists
 
 Some reading lists are owned by a special "Metron" user account:
-- These are typically imported from external sources
 - They represent curated/official reading orders
 - Admin users can manage these lists
 - Public Metron lists are visible to everyone
-
-## CBL Import (Admin)
-
-### What is CBL?
-
-Comic Book List (.cbl) is an XML file format used to store ordered lists of comic books with database IDs. Many comic reading order websites provide CBL files for download.
-
-### Importing a CBL File
-
-**Requirements:**
-- Admin account access
-- A valid .cbl file
-- The "Metron" user account must exist
-
-**Steps:**
-
-1. Navigate to `/reading-lists/import/`
-2. Click "Choose File" and select your .cbl file
-3. Choose privacy setting (public or private)
-4. Optionally set attribution:
-   - **Source**: Where the list came from (e.g., "Comic Book Reading Orders")
-   - **Source URL**: Direct link to the reading order page
-5. Click "Import"
-6. Review the import results
-
-### Import Results
-
-After import, you'll see:
-- **Reading list name** (from the CBL file)
-- **Issues added**: Number of issues successfully matched and added
-- **Issues not found**: Issues in the file that don't exist in the database
-- **Issues skipped**: Duplicates or invalid entries
-
-**Note:** Imported lists are assigned to the "Metron" user, not your personal account.
-
-### Supported Database IDs
-
-CBL files can contain various database IDs. Metron supports:
-- **ComicVine** (cv): Matches on ComicVine ID
-- **Metron** (metron): Matches on Metron ID
-
-Issues with other database types (e.g., GCD) will be skipped unless they also have a supported ID.
-
-### Common Issues
-
-**"Reading list already exists"**
-- A list with that name already exists for the Metron user
-- Delete or rename the existing list first
-
-**"Issues not found"**
-- The issues in the CBL file aren't in the Metron database yet
-- You may need to add those issues first
-
-**"Metron user does not exist"**
-- Create a user account named "Metron" before importing
 
 ## URLs Quick Reference
 
@@ -243,7 +184,6 @@ Issues with other database types (e.g., GCD) will be skipped unless they also ha
 | `/reading-lists/<slug>/update/` | Edit your list | Yes |
 | `/reading-lists/<slug>/delete/` | Delete your list | Yes |
 | `/reading-lists/<slug>/add-issue/` | Add issues to list | Yes |
-| `/reading-lists/import/` | Import CBL file | Admin |
 
 *Unauthenticated users can only view public lists.
 

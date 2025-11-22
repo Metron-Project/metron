@@ -618,7 +618,7 @@ class TestAttributionFieldRestrictions:
         self, client, reading_list_user, test_password
     ):
         """Test that non-admin users cannot modify attribution fields."""
-        # Create a reading list with attribution (e.g., from a CBL import)
+        # Create a reading list with attribution
         reading_list = ReadingList.objects.create(
             user=reading_list_user,
             name="List With Attribution",

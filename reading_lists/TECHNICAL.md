@@ -9,12 +9,10 @@ Developer documentation for the `reading_lists` Django app.
 - [Views and URLs](#views-and-urls)
 - [Forms](#forms)
 - [Permissions](#permissions)
-- [CBL Import System](#cbl-import-system)
 - [Autocomplete](#autocomplete)
 - [Templates](#templates)
 - [Database Optimization](#database-optimization)
 - [API Integration](#api-integration)
-- [Logging](#logging)
 - [Testing](#testing)
 - [Future Enhancements](#future-enhancements)
 
@@ -26,12 +24,10 @@ The reading_lists app follows Django's MTV (Model-Template-View) pattern with:
 - **Views**: Class-based views (CBVs) for all operations
 - **Forms**: Django forms with autocomplete integration
 - **Permissions**: Mixin-based permission checks
-- **CBL Import**: Standalone importer module with XML parsing
 
 **Key Dependencies:**
 - Django's class-based views
 - `autocomplete` package for issue search
-- `defusedxml` for safe XML parsing
 - `comicsdb` app for Issue and Publisher models
 - `users` app for CustomUser model
 
@@ -268,36 +264,6 @@ class RemoveIssueFromReadingListView(LoginRequiredMixin, UserPassesTestMixin, De
 
 **URL:** `/reading-lists/<slug>/remove-issue/<item_pk>/`
 
-### Admin Views
-
-#### ImportCBLView
-```python
-class ImportCBLView(LoginRequiredMixin, UserPassesTestMixin, FormView):
-    form_class = ImportCBLForm
-    template_name = "reading_lists/import_cbl.html"
-
-    def test_func(self):
-        return self.request.user.is_staff
-```
-
-**Process:**
-1. Saves uploaded file to temporary location
-2. Calls `import_cbl_file()` with Metron user
-3. Stores result in session
-4. Redirects to result view
-
-**URL:** `/reading-lists/import/`
-
-#### ImportCBLResultView
-```python
-class ImportCBLResultView(LoginRequiredMixin, UserPassesTestMixin, FormView):
-    template_name = "reading_lists/import_cbl_result.html"
-```
-
-Retrieves import result from session and displays.
-
-**URL:** `/reading-lists/import/result/`
-
 ### URL Configuration
 
 **File:** `reading_lists/urls.py`
@@ -309,8 +275,6 @@ urlpatterns = [
     re_path(r"^search/?$", SearchReadingListListView.as_view(), name="search"),
     path("my-lists/", UserReadingListListView.as_view(), name="my-lists"),
     path("create/", ReadingListCreateView.as_view(), name="create"),
-    path("import/", ImportCBLView.as_view(), name="import"),
-    path("import/result/", ImportCBLResultView.as_view(), name="import-result"),
     path("<slug:slug>/", ReadingListDetailView.as_view(), name="detail"),
     path("<slug:slug>/update/", ReadingListUpdateView.as_view(), name="update"),
     path("<slug:slug>/delete/", ReadingListDeleteView.as_view(), name="delete"),
@@ -352,22 +316,6 @@ class AddIssueWithSearchForm(forms.Form):
 **Hidden Field:**
 `issue_order` stores comma-separated issue IDs after drag-and-drop reordering.
 
-### ImportCBLForm
-
-```python
-class ImportCBLForm(forms.Form):
-    cbl_file = forms.FileField(widget=forms.FileInput(attrs={"accept": ".cbl"}))
-    is_private = forms.BooleanField(required=False)
-    attribution_source = forms.ChoiceField(choices=ReadingList.AttributionSource.choices)
-    attribution_url = forms.URLField(required=False)
-
-    def clean_cbl_file(self):
-        cbl_file = self.cleaned_data.get("cbl_file")
-        if cbl_file and not cbl_file.name.lower().endswith(".cbl"):
-            raise forms.ValidationError("File must have a .cbl extension")
-        return cbl_file
-```
-
 ## Permissions
 
 ### Permission Strategy
@@ -404,7 +352,6 @@ def test_func(self):
 - All authenticated permissions
 - Can edit/delete Metron user's lists
 - Can view Metron's private lists
-- Can import CBL files
 - Can set attribution fields
 
 ### Visibility Rules
@@ -433,84 +380,6 @@ def get_queryset(self):
         Q(is_private=False) | Q(user=self.request.user)
     ).distinct()
 ```
-
-## CBL Import System
-
-**File:** `reading_lists/cbl_importer.py`
-
-### Data Classes
-
-```python
-@dataclass
-class CBLBook:
-    series: str
-    number: str
-    volume: str
-    year: str
-    database_name: str
-    database_series_id: str
-    database_issue_id: str
-    order: int
-
-@dataclass
-class CBLData:
-    name: str
-    num_issues: int
-    books: list[CBLBook]
-
-@dataclass
-class ImportResult:
-    reading_list: ReadingList
-    issues_added: int
-    issues_not_found: list[CBLBook]
-    issues_skipped: list[tuple[CBLBook, str]]
-```
-
-### parse_cbl_file()
-
-```python
-def parse_cbl_file(file_path: str | Path) -> CBLData:
-```
-
-**Process:**
-1. Uses `defusedxml.ElementTree` for safe XML parsing
-2. Handles namespaced and non-namespaced XML
-3. Extracts metadata (Name, NumIssues)
-4. Parses Book elements with attributes and Database child elements
-5. Returns structured `CBLData` object
-
-**Error Handling:**
-- Raises `CBLParseError` for invalid XML or missing required elements
-- Raises `FileNotFoundError` if file doesn't exist
-
-### import_cbl_file()
-
-```python
-def import_cbl_file(
-    file_path: str | Path,
-    user,
-    is_private: bool = False,
-    attribution_source: str = "",
-    attribution_url: str = "",
-) -> ImportResult:
-```
-
-**Process:**
-1. Parses CBL file
-2. Checks for duplicate reading list name
-3. Creates ReadingList in atomic transaction
-4. Iterates through books:
-   - Matches by ComicVine ID (cv_id) or Metron ID (pk)
-   - Creates ReadingListItem if issue found
-   - Tracks not found and skipped issues
-5. Returns `ImportResult` with statistics
-
-**Supported Database IDs:**
-- `cv`: ComicVine (matches `Issue.cv_id`)
-- `metron`: Metron (matches `Issue.id`)
-
-**Atomic Transaction:**
-Entire import wrapped in `transaction.atomic()` for data integrity.
 
 ## Autocomplete
 
@@ -567,8 +436,6 @@ def get_query_filtered_queryset(cls, search, context):
 | `readinglist_confirm_delete.html` | Delete confirmation | Issue count warning |
 | `add_issue_autocomplete.html` | Add issues interface | Autocomplete, drag-drop, preview |
 | `remove_issue_confirm.html` | Remove issue confirmation | Issue details |
-| `import_cbl.html` | CBL import form | File upload, attribution fields |
-| `import_cbl_result.html` | Import results | Statistics, not found/skipped lists |
 
 ### Template Context
 
@@ -663,64 +530,6 @@ from autocomplete import ModelAutocomplete, register, widgets
 ```
 Provides autocomplete functionality for issue search.
 
-**defusedxml:**
-```python
-from defusedxml import ElementTree
-```
-Safe XML parsing for CBL imports.
-
-## Logging
-
-**Logger Name:** `reading_lists.cbl_importer`
-
-**Configuration:**
-```python
-import logging
-LOGGER = logging.getLogger(__name__)
-```
-
-### Log Levels
-
-**INFO:**
-- Issue successfully added to reading list
-- Import completion summary
-
-```python
-LOGGER.info(
-    "Added issue %s to reading list '%s' at position %s",
-    issue, reading_list.name, book.order
-)
-```
-
-**WARNING:**
-- Issue not found in database
-- Duplicate issue skipped
-- Invalid database IDs
-
-```python
-LOGGER.warning(
-    "Issue not found in database: %s #%s (%s ID: %s)",
-    book.series, book.number, book.database_name, book.database_issue_id
-)
-```
-
-**ERROR:**
-Handled via exceptions rather than direct logging.
-
-### Usage Example
-
-```python
-# In Django settings
-LOGGING = {
-    'loggers': {
-        'reading_lists.cbl_importer': {
-            'level': 'INFO',
-            'handlers': ['console', 'file'],
-        },
-    },
-}
-```
-
 ## Testing
 
 ### Test File
@@ -740,13 +549,6 @@ LOGGING = {
 - Queryset filtering (public, private, Metron)
 - Form validation
 - Issue ordering logic
-
-**CBL Import Tests:**
-- Valid CBL file parsing
-- Invalid XML handling
-- Database ID matching (ComicVine, Metron)
-- Duplicate detection
-- Transaction rollback on error
 
 **Autocomplete Tests:**
 - Basic search
@@ -782,12 +584,7 @@ class ReadingListModelTest(TestCase):
 
 ### Planned Features
 
-1. **CBL Export**
-   - Export reading lists to .cbl format
-   - Support for multiple database ID exports
-   - Batch export for multiple lists
-
-2. **List Collaboration**
+1. **List Collaboration**
    - Share lists with specific users
    - Collaborative editing permissions
    - Fork/clone existing lists
@@ -820,8 +617,7 @@ class ReadingListModelTest(TestCase):
    - Template fragment caching
 
 2. **Async Operations**
-   - Background CBL imports
-   - Celery task queue
+   - Celery task queue for long-running operations
    - Progress notifications
 
 3. **Search Enhancements**

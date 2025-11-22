@@ -169,7 +169,7 @@ def reading_list_item(reading_list_with_issues, reading_list_issue_1):
 
 @pytest.fixture
 def metron_user(db, create_user):
-    """Create the Metron user for CBL imports."""
+    """Create the Metron user."""
     return create_user(username="Metron")
 
 

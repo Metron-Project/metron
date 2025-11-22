@@ -15,12 +15,6 @@
                 <span class="icon"><i class="fas fa-plus"></i></span>
                 <span>Create New List</span>
             </a>
-            {% if user.is_staff %}
-                <a href="{% url 'reading-list:import' %}" class="button is-info">
-                    <span class="icon"><i class="fas fa-file-import"></i></span>
-                    <span>Import CBL File</span>
-                </a>
-            {% endif %}
         </div>
     </div>
     {% if reading_lists %}
