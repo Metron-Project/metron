@@ -47,6 +47,12 @@ from api.v1_0.serializers.imprint import (
     ImprintListSerializer,
     ImprintReadSerializer,
 )
+from api.v1_0.serializers.reading_list import (
+    ReadingListItemSerializer,
+    ReadingListListSerializer,
+    ReadingListReadSerializer,
+    ReadingListSerializer,
+)
 
 __all__ = [
     "ArcListSerializer",
@@ -73,6 +79,10 @@ __all__ = [
     "PublisherListSerializer",
     "PublisherSerializer",
     "RatingSerializer",
+    "ReadingListItemSerializer",
+    "ReadingListListSerializer",
+    "ReadingListReadSerializer",
+    "ReadingListSerializer",
     "ReprintSerializer",
     "RoleSerializer",
     "SeriesListSerializer",

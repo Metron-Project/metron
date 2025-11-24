@@ -9,6 +9,7 @@ from api.views import (
     ImprintViewSet,
     IssueViewSet,
     PublisherViewSet,
+    ReadingListViewSet,
     RoleViewset,
     SeriesTypeViewSet,
     SeriesViewSet,
@@ -25,6 +26,7 @@ ROUTER.register("credit", CreditViewset)
 ROUTER.register("imprint", ImprintViewSet)
 ROUTER.register("issue", IssueViewSet)
 ROUTER.register("publisher", PublisherViewSet)
+ROUTER.register("reading_list", ReadingListViewSet, basename="reading_list")
 ROUTER.register("role", RoleViewset)
 ROUTER.register("series", SeriesViewSet)
 ROUTER.register("series_type", SeriesTypeViewSet)
