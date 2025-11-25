@@ -1,5 +1,6 @@
 from django.contrib import messages
 from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
+from django.db import models
 from django.db.models import Count, Q
 from django.shortcuts import get_object_or_404, redirect
 from django.urls import reverse, reverse_lazy
@@ -7,7 +8,7 @@ from django.views.generic import CreateView, DeleteView, DetailView, FormView, L
 
 from comicsdb.models.issue import Issue
 from comicsdb.views.mixins import SearchMixin
-from reading_lists.forms import AddIssueWithSearchForm, ReadingListForm
+from reading_lists.forms import AddIssuesFromSeriesForm, AddIssueWithSearchForm, ReadingListForm
 from reading_lists.models import ReadingList, ReadingListItem
 from users.models import CustomUser
 
@@ -356,4 +357,151 @@ class AddIssueWithAutocompleteView(LoginRequiredMixin, UserPassesTestMixin, Form
         context["existing_items"] = self.reading_list.reading_list_items.select_related(
             "issue__series__series_type"
         ).order_by("order")
+        return context
+
+
+class AddIssuesFromSeriesView(LoginRequiredMixin, UserPassesTestMixin, FormView):
+    """Add multiple issues from a series to a reading list."""
+
+    form_class = AddIssuesFromSeriesForm
+    template_name = "reading_lists/add_issues_from_series.html"
+
+    def dispatch(self, request, *args, **kwargs):
+        self.reading_list = get_object_or_404(ReadingList, slug=kwargs["slug"])
+        return super().dispatch(request, *args, **kwargs)
+
+    def test_func(self):
+        """Only allow the owner to add issues, or admins for Metron's lists."""
+        is_owner = self.reading_list.user == self.request.user
+        is_admin_managing_metron = (
+            self.request.user.is_staff and self.reading_list.user.username == "Metron"
+        )
+        return is_owner or is_admin_managing_metron
+
+    def form_valid(self, form):  # noqa: PLR0912, PLR0915
+        series = form.cleaned_data["series"]
+        range_type = form.cleaned_data["range_type"]
+        start_number = form.cleaned_data.get("start_number")
+        end_number = form.cleaned_data.get("end_number")
+        position = form.cleaned_data["position"]
+
+        # Get all issues from the series, ordered by cover date
+        issues_queryset = Issue.objects.filter(series=series).order_by("cover_date", "number")
+
+        # Apply range filtering if specified
+        if range_type == "range":
+            # Build filter conditions based on provided numbers
+            if start_number and end_number:
+                # Filter issues between start and end numbers
+                # Since number is a CharField, we need to handle this carefully
+                # We'll get all issues and filter in Python for flexibility
+                all_issues = list(issues_queryset)
+                filtered_issues = []
+                in_range = False
+
+                for issue in all_issues:
+                    # Check if this is the start issue
+                    if issue.number == start_number:
+                        in_range = True
+
+                    # If we're in range, add the issue
+                    if in_range:
+                        filtered_issues.append(issue)
+
+                    # Check if this is the end issue
+                    if issue.number == end_number:
+                        break
+
+                issues_to_add = filtered_issues
+            elif start_number:
+                # Start from a specific issue to the end
+                all_issues = list(issues_queryset)
+                filtered_issues = []
+                found_start = False
+
+                for issue in all_issues:
+                    if issue.number == start_number:
+                        found_start = True
+                    if found_start:
+                        filtered_issues.append(issue)
+
+                issues_to_add = filtered_issues
+            elif end_number:
+                # From beginning to a specific issue
+                all_issues = list(issues_queryset)
+                filtered_issues = []
+
+                for issue in all_issues:
+                    filtered_issues.append(issue)
+                    if issue.number == end_number:
+                        break
+
+                issues_to_add = filtered_issues
+            else:
+                issues_to_add = list(issues_queryset)
+        else:
+            # Add all issues
+            issues_to_add = list(issues_queryset)
+
+        # Get existing issue IDs to avoid duplicates
+        existing_issue_ids = set(
+            self.reading_list.reading_list_items.values_list("issue_id", flat=True)
+        )
+
+        # Filter out issues already in the reading list
+        new_issues = [issue for issue in issues_to_add if issue.pk not in existing_issue_ids]
+
+        if not new_issues:
+            messages.info(
+                self.request,
+                f"No new issues to add. All issues from {series} are already in the list.",
+            )
+            return redirect(self.get_success_url())
+
+        # Determine starting order based on position
+        if position == "beginning":
+            # Insert at the beginning - need to reorder existing items
+            start_order = 1
+            # Shift existing items down
+            existing_items = self.reading_list.reading_list_items.order_by("order")
+            for idx, item in enumerate(existing_items, start=len(new_issues) + 1):
+                if item.order != idx:
+                    item.order = idx
+                    item.save()
+        else:
+            # Add at the end
+            max_order = (
+                self.reading_list.reading_list_items.aggregate(models.Max("order"))["order__max"]
+                or 0
+            )
+            start_order = max_order + 1
+
+        # Create reading list items for new issues
+        items_to_create = [
+            ReadingListItem(
+                reading_list=self.reading_list,
+                issue=issue,
+                order=start_order + idx,
+            )
+            for idx, issue in enumerate(new_issues)
+        ]
+
+        ReadingListItem.objects.bulk_create(items_to_create)
+
+        # Provide feedback
+        position_text = "at the beginning" if position == "beginning" else "at the end"
+        messages.success(
+            self.request,
+            f"Added {len(new_issues)} issue(s) from {series} {position_text} "
+            f"of '{self.reading_list.name}'!",
+        )
+
+        return redirect(self.get_success_url())
+
+    def get_success_url(self):
+        return reverse("reading-list:detail", kwargs={"slug": self.reading_list.slug})
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context["reading_list"] = self.reading_list
         return context

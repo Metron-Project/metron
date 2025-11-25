@@ -233,3 +233,35 @@ def metron_reading_list_with_issues(
         order=3,
     )
     return reading_list
+
+
+@pytest.fixture
+def series_with_multiple_issues(create_user, reading_list_publisher, single_issue_type):
+    """Create a series with 10 issues for bulk addition testing."""
+    user = create_user()
+    series = Series.objects.create(
+        name="Bulk Test Series",
+        slug="bulk-test-series",
+        publisher=reading_list_publisher,
+        volume="1",
+        year_began=2020,
+        series_type=single_issue_type,
+        status=Series.Status.ONGOING,
+        edited_by=user,
+        created_by=user,
+    )
+
+    # Create 10 issues
+    issues = []
+    for i in range(1, 11):
+        issue = Issue.objects.create(
+            series=series,
+            number=str(i),
+            slug=f"bulk-test-series-{i}",
+            cover_date=date(2020, i, 1),
+            edited_by=user,
+            created_by=user,
+        )
+        issues.append(issue)
+
+    return series, issues

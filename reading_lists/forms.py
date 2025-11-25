@@ -1,8 +1,9 @@
 from autocomplete import widgets
 from django import forms
 
-from comicsdb.autocomplete import IssueAutocomplete
+from comicsdb.autocomplete import IssueAutocomplete, SeriesAutocomplete
 from comicsdb.models.issue import Issue
+from comicsdb.models.series import Series
 from reading_lists.models import ReadingList
 
 
@@ -67,3 +68,75 @@ class AddIssueWithSearchForm(forms.Form):
         widget=forms.HiddenInput(),
         help_text="Stores the order of selected issues after drag-and-drop",
     )
+
+
+class AddIssuesFromSeriesForm(forms.Form):
+    """Form for adding multiple issues from a series to a reading list."""
+
+    RANGE_CHOICES = [
+        ("all", "All issues"),
+        ("range", "Issue range"),
+    ]
+
+    series = forms.ModelChoiceField(
+        queryset=Series.objects.select_related("series_type").all(),
+        required=True,
+        widget=widgets.AutocompleteWidget(
+            ac_class=SeriesAutocomplete,
+            attrs={
+                "placeholder": "Search for a series...",
+                "class": "input",
+            },
+        ),
+        label="Series",
+        help_text="Select the series to add issues from",
+    )
+
+    range_type = forms.ChoiceField(
+        choices=RANGE_CHOICES,
+        initial="all",
+        widget=forms.RadioSelect(),
+        label="What to add",
+        required=True,
+    )
+
+    start_number = forms.CharField(
+        max_length=25,
+        required=False,
+        widget=forms.TextInput(attrs={"placeholder": "1", "class": "input"}),
+        label="Start Issue #",
+        help_text="Leave blank to start from the first issue",
+    )
+
+    end_number = forms.CharField(
+        max_length=25,
+        required=False,
+        widget=forms.TextInput(attrs={"placeholder": "50", "class": "input"}),
+        label="End Issue #",
+        help_text="Leave blank to go to the last issue",
+    )
+
+    position = forms.ChoiceField(
+        choices=[
+            ("end", "At the end"),
+            ("beginning", "At the beginning"),
+        ],
+        initial="end",
+        widget=forms.RadioSelect(),
+        label="Add issues",
+        required=True,
+    )
+
+    def clean(self):
+        cleaned_data = super().clean()
+        range_type = cleaned_data.get("range_type")
+        start_number = cleaned_data.get("start_number")
+        end_number = cleaned_data.get("end_number")
+
+        # If range is selected, at least one of start or end must be provided
+        if range_type == "range" and not start_number and not end_number:
+            raise forms.ValidationError(
+                "Please specify at least a start or end issue number for the range."
+            )
+
+        return cleaned_data
