@@ -60,56 +60,6 @@ class ReadingListListSerializer(serializers.ModelSerializer):
         )
 
 
-class ReadingListSerializer(serializers.ModelSerializer):
-    resource_url = serializers.SerializerMethodField("get_resource_url")
-    attribution_source = serializers.ChoiceField(
-        choices=ReadingList.AttributionSource.choices,
-        required=False,
-        allow_blank=True,
-    )
-
-    def get_resource_url(self, obj: ReadingList) -> str:
-        return self.context["request"].build_absolute_uri(obj.get_absolute_url())
-
-    def create(self, validated_data):
-        """Create and return a new ReadingList instance."""
-        issues_data = validated_data.pop("issues", None)
-        reading_list = ReadingList.objects.create(**validated_data)
-        if issues_data:
-            reading_list.issues.set(issues_data)
-        return reading_list
-
-    def update(self, instance: ReadingList, validated_data):
-        """Update and return an existing ReadingList instance."""
-        issues_data = validated_data.pop("issues", None)
-
-        for attr, value in validated_data.items():
-            setattr(instance, attr, value)
-
-        if issues_data is not None:
-            instance.issues.set(issues_data)
-
-        instance.save()
-        return instance
-
-    class Meta:
-        model = ReadingList
-        fields = (
-            "id",
-            "user",
-            "name",
-            "slug",
-            "desc",
-            "is_private",
-            "attribution_source",
-            "attribution_url",
-            "issues",
-            "resource_url",
-            "modified",
-        )
-        read_only_fields = ("slug", "modified")
-
-
 class ReadingListReadSerializer(serializers.ModelSerializer):
     user = UserSerializer(read_only=True)
     attribution_source = serializers.CharField(

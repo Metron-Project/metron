@@ -3,7 +3,6 @@ from django.http import Http404
 from drf_spectacular.utils import extend_schema
 from rest_framework import mixins, status, viewsets
 from rest_framework.decorators import action
-from rest_framework.exceptions import PermissionDenied
 from rest_framework.parsers import FormParser, MultiPartParser
 from rest_framework.response import Response
 
@@ -26,7 +25,6 @@ from api.v1_0.serializers import (
     PublisherSerializer,
     ReadingListListSerializer,
     ReadingListReadSerializer,
-    ReadingListSerializer,
     RoleSerializer,
     SeriesListSerializer,
     SeriesReadSerializer,
@@ -520,12 +518,8 @@ class UniverseViewSet(
 
 
 class ReadingListViewSet(
-    UserTrackingMixin,
-    mixins.CreateModelMixin,
     mixins.RetrieveModelMixin,
     mixins.ListModelMixin,
-    mixins.UpdateModelMixin,
-    mixins.DestroyModelMixin,
     viewsets.GenericViewSet,
 ):
     """
@@ -537,15 +531,6 @@ class ReadingListViewSet(
 
     retrieve:
     Returns the information of an individual reading list.
-
-    create:
-    Create a new reading list. User will be automatically set to the authenticated user.
-
-    update:
-    Update a reading list's information. Only the owner or admin (for Metron's lists) can update.
-
-    destroy:
-    Delete a reading list. Only the owner or admin (for Metron's lists) can delete.
     """
 
     queryset = ReadingList.objects.all()
@@ -573,38 +558,9 @@ class ReadingListViewSet(
         return queryset.filter(Q(is_private=False) | Q(user=self.request.user)).distinct()
 
     def get_serializer_class(self):
-        match self.action:
-            case "list":
-                return ReadingListListSerializer
-            case "retrieve":
-                return ReadingListReadSerializer
-            case _:
-                return ReadingListSerializer
-
-    def perform_create(self, serializer):
-        """Set the user to the current authenticated user on create."""
-        serializer.save(user=self.request.user)
-
-    def check_object_permissions(self, request, obj):
-        """Check if user has permission to modify the reading list."""
-        super().check_object_permissions(request, obj)
-
-        # Allow if user is the owner
-        if obj.user == request.user:
-            return
-
-        # Allow if user is admin and managing Metron's lists
-        if request.user.is_staff:
-            try:
-                metron_user = CustomUser.objects.get(username="Metron")
-                if obj.user == metron_user:
-                    return
-            except CustomUser.DoesNotExist:
-                pass
-
-        # For update and delete actions, deny permission
-        if self.action in ["update", "partial_update", "destroy"]:
-            raise PermissionDenied("You do not have permission to modify this reading list.")
+        if self.action == "list":
+            return ReadingListListSerializer
+        return ReadingListReadSerializer
 
 
 class VariantViewset(

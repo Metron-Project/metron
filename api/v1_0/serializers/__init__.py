@@ -51,7 +51,6 @@ from api.v1_0.serializers.reading_list import (
     ReadingListItemSerializer,
     ReadingListListSerializer,
     ReadingListReadSerializer,
-    ReadingListSerializer,
 )
 
 __all__ = [
@@ -82,7 +81,6 @@ __all__ = [
     "ReadingListItemSerializer",
     "ReadingListListSerializer",
     "ReadingListReadSerializer",
-    "ReadingListSerializer",
     "ReprintSerializer",
     "RoleSerializer",
     "SeriesListSerializer",
