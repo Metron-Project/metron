@@ -28,7 +28,8 @@
                             <!-- Range Type -->
                             <div class="field">
                                 <label class="label">{{ form.range_type.label }}</label>
-                                <div class="control">
+                                <div class="control"
+                                     hx-on:change=" if (event.target.name === 'range_type') { const rangeFields = document.getElementById('range-fields'); rangeFields.style.display = event.target.value === 'range' ? 'block' : 'none'; } ">
                                     {% for radio in form.range_type %}
                                         <label class="radio">
                                             {{ radio.tag }}
@@ -112,25 +113,12 @@
         </div>
     </section>
     <script>
-        document.addEventListener('DOMContentLoaded', function() {
-            const rangeTypeRadios = document.querySelectorAll('input[name="range_type"]');
-            const rangeFields = document.getElementById('range-fields');
-
-            function updateRangeFieldsVisibility() {
-                const selectedValue = document.querySelector('input[name="range_type"]:checked').value;
-                if (selectedValue === 'range') {
-                    rangeFields.style.display = 'block';
-                } else {
-                    rangeFields.style.display = 'none';
-                }
+        // Initialize range fields visibility on page load
+        htmx.onLoad(function() {
+            const selectedRadio = document.querySelector('input[name="range_type"]:checked');
+            if (selectedRadio && selectedRadio.value === 'range') {
+                document.getElementById('range-fields').style.display = 'block';
             }
-
-            rangeTypeRadios.forEach(radio => {
-                radio.addEventListener('change', updateRangeFieldsVisibility);
-            });
-
-            // Initialize visibility on page load
-            updateRangeFieldsVisibility();
         });
     </script>
 {% endblock %}
