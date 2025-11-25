@@ -65,6 +65,10 @@ Reading lists automatically display:
 
 ### Adding Issues to Your List
 
+You have two methods to add issues to your reading list:
+
+#### Method 1: Add Individual Issues (Search & Select)
+
 1. View your reading list detail page
 2. Click "Add Issues"
 3. Search for issues using the autocomplete field (see [Search Tips](#search-and-autocomplete))
@@ -76,6 +80,28 @@ Reading lists automatically display:
 - You can add multiple issues at once
 - Drag and drop works for both new issues you're adding and existing issues in your list
 - The system will skip any duplicate issues automatically
+
+#### Method 2: Add from Series (Bulk Addition)
+
+Perfect for creating large reading lists quickly!
+
+1. View your reading list detail page
+2. Click "Add from Series"
+3. Search and select a series
+4. Choose what to add:
+   - **All issues**: Adds every issue from the series
+   - **Issue range**: Specify start and/or end issue numbers
+     - Example: Start at #1, end at #50 (adds issues 1-50)
+     - Example: Start at #10 (adds issue 10 through the end)
+     - Example: End at #25 (adds beginning through issue 25)
+5. Choose position: Add at beginning or end of your list
+6. Click "Add Issues"
+
+**Benefits:**
+- Quickly add entire series runs (100+ issues in seconds)
+- Issues added in chronological order by cover date
+- Automatically skips duplicates
+- Perfect for event reading orders spanning multiple series
 
 ### Editing a Reading List
 
@@ -183,7 +209,8 @@ Some reading lists are owned by a special "Metron" user account:
 | `/reading-lists/create/` | Create a new list | Yes |
 | `/reading-lists/<slug>/update/` | Edit your list | Yes |
 | `/reading-lists/<slug>/delete/` | Delete your list | Yes |
-| `/reading-lists/<slug>/add-issue/` | Add issues to list | Yes |
+| `/reading-lists/<slug>/add-issue/` | Add issues individually | Yes |
+| `/reading-lists/<slug>/add-from-series/` | Add issues from series (bulk) | Yes |
 
 *Unauthenticated users can only view public lists.
 
@@ -199,10 +226,18 @@ Some reading lists are owned by a special "Metron" user account:
 
 ### Managing Large Lists
 
-1. **Add issues in batches**: You can add multiple issues at once
-2. **Search efficiently**: Use the `#` separator for precise searches
-3. **Review before saving**: Check the order in the preview before submitting
-4. **Edit incrementally**: You can always add more issues later
+1. **Use "Add from Series"**: For reading lists with 100+ issues, use the bulk addition feature
+2. **Build incrementally**: Add one series at a time, then fine-tune the order
+3. **Mix both methods**: Use bulk add for series runs, individual add for one-offs
+4. **Search efficiently**: Use the `#` separator for precise searches when adding individual issues
+5. **Review before saving**: Check the order in the preview before submitting
+6. **Edit incrementally**: You can always add more issues later
+
+**Example Workflow for Large Lists:**
+1. Use "Add from Series" to add Amazing Spider-Man #1-50
+2. Use "Add from Series" to add Avengers #1-30 at the end
+3. Use "Add Issues" to insert specific tie-ins or crossovers
+4. Drag and drop to adjust the final reading order
 
 ### Contributing to the Community
 
