@@ -533,12 +533,13 @@ class ReadingListViewSet(
     """
     list:
     Returns a list of reading lists based on user permissions.
-    - Unauthenticated users: Only public lists
+    Requires authentication.
     - Authenticated users: Public lists + own lists
     - Admin users: Public lists + own lists + Metron's lists
 
     retrieve:
     Returns the information of an individual reading list.
+    Requires authentication.
     """
 
     queryset = ReadingList.objects.all()
