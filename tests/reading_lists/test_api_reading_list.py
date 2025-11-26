@@ -245,7 +245,6 @@ def test_list_response_structure(api_client_with_credentials, public_reading_lis
         assert "id" in item
         assert "name" in item
         assert "user" in item
-        assert "issue_count" in item
 
 
 def test_detail_response_structure(api_client_with_credentials, reading_list_with_issues):
@@ -262,7 +261,6 @@ def test_detail_response_structure(api_client_with_credentials, reading_list_wit
     assert "is_private" in resp.data
     assert "attribution_source" in resp.data
     assert "attribution_url" in resp.data
-    assert "issue_count" in resp.data
 
 
 def test_items_response_structure(api_client_with_credentials, reading_list_with_issues):

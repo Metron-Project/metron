@@ -42,10 +42,6 @@ class ReadingListItemSerializer(serializers.ModelSerializer):
 
 class ReadingListListSerializer(serializers.ModelSerializer):
     user = UserSerializer(read_only=True)
-    issue_count = serializers.SerializerMethodField()
-
-    def get_issue_count(self, obj: ReadingList) -> int:
-        return obj.issues.count()
 
     class Meta:
         model = ReadingList
@@ -56,7 +52,6 @@ class ReadingListListSerializer(serializers.ModelSerializer):
             "user",
             "is_private",
             "attribution_source",
-            "issue_count",
             "modified",
         )
 
@@ -68,9 +63,6 @@ class ReadingListReadSerializer(serializers.ModelSerializer):
     )
     resource_url = serializers.SerializerMethodField("get_resource_url")
     items_url = serializers.SerializerMethodField()
-    start_year = serializers.ReadOnlyField()
-    end_year = serializers.ReadOnlyField()
-    issue_count = serializers.SerializerMethodField()
 
     def get_resource_url(self, obj: ReadingList) -> str:
         return self.context["request"].build_absolute_uri(obj.get_absolute_url())
@@ -80,9 +72,6 @@ class ReadingListReadSerializer(serializers.ModelSerializer):
 
         path = reverse("api:reading_list-items", kwargs={"pk": obj.pk})
         return self.context["request"].build_absolute_uri(path)
-
-    def get_issue_count(self, obj: ReadingList) -> int:
-        return obj.issues.count()
 
     class Meta:
         model = ReadingList
@@ -95,9 +84,6 @@ class ReadingListReadSerializer(serializers.ModelSerializer):
             "is_private",
             "attribution_source",
             "attribution_url",
-            "start_year",
-            "end_year",
-            "issue_count",
             "items_url",
             "resource_url",
             "modified",
