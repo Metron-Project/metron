@@ -1,4 +1,4 @@
-from django.db.models import Count, Prefetch, Q
+from django.db.models import Prefetch, Q
 from django.http import Http404
 from drf_spectacular.utils import extend_schema
 from rest_framework import mixins, status, viewsets
@@ -548,7 +548,7 @@ class ReadingListViewSet(
 
     def get_queryset(self):
         """Filter reading lists based on user permissions and visibility rules."""
-        queryset = ReadingList.objects.select_related("user").annotate(issue_count=Count("issues"))
+        queryset = ReadingList.objects.select_related("user")
 
         # Unauthenticated users - only public lists
         if not self.request.user.is_authenticated:
