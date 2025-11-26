@@ -1,3 +1,4 @@
+from django.urls import reverse
 from rest_framework import serializers
 
 from api.v1_0.serializers.issue import IssueListSeriesSerializer
@@ -66,7 +67,7 @@ class ReadingListReadSerializer(serializers.ModelSerializer):
         source="get_attribution_source_display", read_only=True
     )
     resource_url = serializers.SerializerMethodField("get_resource_url")
-    items = serializers.SerializerMethodField()
+    items_url = serializers.SerializerMethodField()
     start_year = serializers.ReadOnlyField()
     end_year = serializers.ReadOnlyField()
     issue_count = serializers.SerializerMethodField()
@@ -74,12 +75,11 @@ class ReadingListReadSerializer(serializers.ModelSerializer):
     def get_resource_url(self, obj: ReadingList) -> str:
         return self.context["request"].build_absolute_uri(obj.get_absolute_url())
 
-    def get_items(self, obj: ReadingList) -> list:
-        """Get ordered reading list items with issue details."""
-        items = obj.reading_list_items.select_related(
-            "issue__series", "issue__series__series_type"
-        ).order_by("order")
-        return ReadingListItemSerializer(items, many=True, context=self.context).data
+    def get_items_url(self, obj: ReadingList) -> str:
+        """Get the URL to the paginated items endpoint."""
+
+        path = reverse("api:reading_list-items", kwargs={"pk": obj.pk})
+        return self.context["request"].build_absolute_uri(path)
 
     def get_issue_count(self, obj: ReadingList) -> int:
         return obj.issues.count()
@@ -98,7 +98,7 @@ class ReadingListReadSerializer(serializers.ModelSerializer):
             "start_year",
             "end_year",
             "issue_count",
-            "items",
+            "items_url",
             "resource_url",
             "modified",
         )

@@ -3,6 +3,7 @@ from django.http import Http404
 from drf_spectacular.utils import extend_schema
 from rest_framework import mixins, status, viewsets
 from rest_framework.decorators import action
+from rest_framework.pagination import PageNumberPagination
 from rest_framework.parsers import FormParser, MultiPartParser
 from rest_framework.response import Response
 
@@ -23,6 +24,7 @@ from api.v1_0.serializers import (
     IssueSerializer,
     PublisherListSerializer,
     PublisherSerializer,
+    ReadingListItemSerializer,
     ReadingListListSerializer,
     ReadingListReadSerializer,
     RoleSerializer,
@@ -59,6 +61,12 @@ from comicsdb.models.series import SeriesType
 from comicsdb.models.variant import Variant
 from reading_lists.models import ReadingList
 from users.models import CustomUser
+
+
+class ReadingListItemsPagination(PageNumberPagination):
+    """Custom pagination for reading list items with 50 items per page."""
+
+    page_size = 50
 
 
 class UserTrackingMixin:
@@ -535,6 +543,7 @@ class ReadingListViewSet(
 
     queryset = ReadingList.objects.all()
     filterset_class = ReadingListFilter
+    pagination_class = ReadingListItemsPagination
 
     def get_queryset(self):
         """Filter reading lists based on user permissions and visibility rules."""
@@ -560,7 +569,23 @@ class ReadingListViewSet(
     def get_serializer_class(self):
         if self.action == "list":
             return ReadingListListSerializer
+        if self.action == "items":
+            return ReadingListItemSerializer
         return ReadingListReadSerializer
+
+    @extend_schema(responses={200: ReadingListItemSerializer(many=True)})
+    @action(detail=True)
+    def items(self, request, pk=None):
+        """Returns a paginated list of items for this reading list."""
+        reading_list = self.get_object()
+        queryset = reading_list.reading_list_items.select_related(
+            "issue__series", "issue__series__series_type"
+        ).order_by("order")
+        page = self.paginate_queryset(queryset)
+        if page is not None:
+            serializer = ReadingListItemSerializer(page, many=True, context={"request": request})
+            return self.get_paginated_response(serializer.data)
+        raise Http404
 
 
 class VariantViewset(
