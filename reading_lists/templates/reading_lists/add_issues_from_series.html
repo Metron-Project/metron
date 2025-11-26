@@ -1,0 +1,124 @@
+{% extends parent_template|default:"base.html" %}
+{% load static django_htmx %}
+{% block title %}Add from Series - {{ reading_list.name }} - Metron{% endblock %}
+{% block js %}
+    {% htmx_script %}
+    {{ form.media }}
+{% endblock js %}
+{% block content %}
+    <header class="block has-text-centered">
+        <h1 class="title">Add Issues from Series</h1>
+        <p class="subtitle">{{ reading_list.name }}</p>
+    </header>
+    <section class="section">
+        <div class="container">
+            <div class="columns is-centered">
+                <div class="column is-two-thirds">
+                    <div class="box">
+                        <form method="post">
+                            {% csrf_token %}
+                            {% if form.non_field_errors %}<div class="notification is-danger">{{ form.non_field_errors }}</div>{% endif %}
+                            <!-- Series Selection -->
+                            <div class="field">
+                                <label class="label" for="{{ form.series.id_for_label }}">{{ form.series.label }}</label>
+                                <div class="control">{{ form.series }}</div>
+                                {% if form.series.help_text %}<p class="help">{{ form.series.help_text }}</p>{% endif %}
+                                {% if form.series.errors %}<p class="help is-danger">{{ form.series.errors.0 }}</p>{% endif %}
+                            </div>
+                            <!-- Range Type -->
+                            <div class="field">
+                                <label class="label">{{ form.range_type.label }}</label>
+                                <div class="control"
+                                     hx-on:change=" if (event.target.name === 'range_type') { const rangeFields = document.getElementById('range-fields'); rangeFields.style.display = event.target.value === 'range' ? 'block' : 'none'; } ">
+                                    {% for radio in form.range_type %}
+                                        <label class="radio">
+                                            {{ radio.tag }}
+                                            {{ radio.choice_label }}
+                                        </label>
+                                    {% endfor %}
+                                </div>
+                                {% if form.range_type.errors %}<p class="help is-danger">{{ form.range_type.errors.0 }}</p>{% endif %}
+                            </div>
+                            <!-- Issue Range Fields -->
+                            <div id="range-fields" style="display: none;">
+                                <div class="field is-horizontal">
+                                    <div class="field-body">
+                                        <div class="field">
+                                            <label class="label" for="{{ form.start_number.id_for_label }}">{{ form.start_number.label }}</label>
+                                            <div class="control">{{ form.start_number }}</div>
+                                            {% if form.start_number.help_text %}<p class="help">{{ form.start_number.help_text }}</p>{% endif %}
+                                            {% if form.start_number.errors %}<p class="help is-danger">{{ form.start_number.errors.0 }}</p>{% endif %}
+                                        </div>
+                                        <div class="field">
+                                            <label class="label" for="{{ form.end_number.id_for_label }}">{{ form.end_number.label }}</label>
+                                            <div class="control">{{ form.end_number }}</div>
+                                            {% if form.end_number.help_text %}<p class="help">{{ form.end_number.help_text }}</p>{% endif %}
+                                            {% if form.end_number.errors %}<p class="help is-danger">{{ form.end_number.errors.0 }}</p>{% endif %}
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <!-- Position -->
+                            <div class="field">
+                                <label class="label">{{ form.position.label }}</label>
+                                <div class="control">
+                                    {% for radio in form.position %}
+                                        <label class="radio">
+                                            {{ radio.tag }}
+                                            {{ radio.choice_label }}
+                                        </label>
+                                    {% endfor %}
+                                </div>
+                                {% if form.position.errors %}<p class="help is-danger">{{ form.position.errors.0 }}</p>{% endif %}
+                            </div>
+                            <div class="field is-grouped is-grouped-right mt-5">
+                                <div class="control">
+                                    <a href="{% url 'reading-list:detail' reading_list.slug %}"
+                                       class="button">Cancel</a>
+                                </div>
+                                <div class="control">
+                                    <button type="submit" class="button is-primary">Add Issues</button>
+                                </div>
+                            </div>
+                        </form>
+                    </div>
+                    <div class="content mt-5">
+                        <h3 class="title is-5">How to use:</h3>
+                        <ul>
+                            <li>
+                                <strong>Select a series:</strong> Start typing in the search box to find a series by name
+                            </li>
+                            <li>
+                                <strong>Choose what to add:</strong>
+                                <ul>
+                                    <li>
+                                        <strong>All issues:</strong> Adds every issue from the series
+                                    </li>
+                                    <li>
+                                        <strong>Issue range:</strong> Specify a start and/or end issue number (e.g., start at #1, end at #50)
+                                    </li>
+                                </ul>
+                            </li>
+                            <li>
+                                <strong>Choose position:</strong> Add issues at the beginning or end of your reading list
+                            </li>
+                            <li>Issues already in your reading list will be automatically skipped</li>
+                        </ul>
+                        <div class="notification is-info is-light mt-4">
+                            <strong>Tip:</strong> For large reading orders spanning multiple series, you can use this tool repeatedly to add different series or ranges, building your list quickly!
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+    <script>
+        // Initialize range fields visibility on page load
+        htmx.onLoad(function() {
+            const selectedRadio = document.querySelector('input[name="range_type"]:checked');
+            if (selectedRadio && selectedRadio.value === 'range') {
+                document.getElementById('range-fields').style.display = 'block';
+            }
+        });
+    </script>
+{% endblock %}

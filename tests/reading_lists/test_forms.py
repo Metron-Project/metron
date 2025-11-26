@@ -1,6 +1,6 @@
 """Tests for reading_lists forms."""
 
-from reading_lists.forms import AddIssueWithSearchForm, ReadingListForm
+from reading_lists.forms import AddIssuesFromSeriesForm, AddIssueWithSearchForm, ReadingListForm
 from reading_lists.models import ReadingList
 
 
@@ -194,3 +194,136 @@ class TestAddIssueWithSearchForm:
         form = AddIssueWithSearchForm(data=form_data)
         assert not form.is_valid()
         assert "issues" in form.errors
+
+
+class TestAddIssuesFromSeriesForm:
+    """Tests for the AddIssuesFromSeriesForm."""
+
+    def test_add_issues_from_series_form_all_issues(self, reading_list_series):
+        """Test form with 'all issues' option selected."""
+        form_data = {
+            "series": reading_list_series.pk,
+            "range_type": "all",
+            "position": "end",
+        }
+        form = AddIssuesFromSeriesForm(data=form_data)
+        assert form.is_valid()
+        assert form.cleaned_data["series"] == reading_list_series
+        assert form.cleaned_data["range_type"] == "all"
+        assert form.cleaned_data["position"] == "end"
+
+    def test_add_issues_from_series_form_with_range(self, reading_list_series):
+        """Test form with issue range specified."""
+        form_data = {
+            "series": reading_list_series.pk,
+            "range_type": "range",
+            "start_number": "1",
+            "end_number": "10",
+            "position": "beginning",
+        }
+        form = AddIssuesFromSeriesForm(data=form_data)
+        assert form.is_valid()
+        assert form.cleaned_data["series"] == reading_list_series
+        assert form.cleaned_data["range_type"] == "range"
+        assert form.cleaned_data["start_number"] == "1"
+        assert form.cleaned_data["end_number"] == "10"
+        assert form.cleaned_data["position"] == "beginning"
+
+    def test_add_issues_from_series_form_with_start_only(self, reading_list_series):
+        """Test form with only start issue number."""
+        form_data = {
+            "series": reading_list_series.pk,
+            "range_type": "range",
+            "start_number": "5",
+            "position": "end",
+        }
+        form = AddIssuesFromSeriesForm(data=form_data)
+        assert form.is_valid()
+        assert form.cleaned_data["start_number"] == "5"
+        assert form.cleaned_data["end_number"] == ""
+
+    def test_add_issues_from_series_form_with_end_only(self, reading_list_series):
+        """Test form with only end issue number."""
+        form_data = {
+            "series": reading_list_series.pk,
+            "range_type": "range",
+            "end_number": "10",
+            "position": "end",
+        }
+        form = AddIssuesFromSeriesForm(data=form_data)
+        assert form.is_valid()
+        assert form.cleaned_data["start_number"] == ""
+        assert form.cleaned_data["end_number"] == "10"
+
+    def test_add_issues_from_series_form_range_without_numbers(self, reading_list_series):
+        """Test form with range selected but no numbers provided."""
+        form_data = {
+            "series": reading_list_series.pk,
+            "range_type": "range",
+            "position": "end",
+        }
+        form = AddIssuesFromSeriesForm(data=form_data)
+        assert not form.is_valid()
+        assert "__all__" in form.errors or "start_number" in form.non_field_errors()
+
+    def test_add_issues_from_series_form_missing_series(self):
+        """Test form with missing required series field."""
+        form_data = {
+            "range_type": "all",
+            "position": "end",
+        }
+        form = AddIssuesFromSeriesForm(data=form_data)
+        assert not form.is_valid()
+        assert "series" in form.errors
+
+    def test_add_issues_from_series_form_invalid_series_id(self, db):
+        """Test form with invalid series ID."""
+        form_data = {
+            "series": 99999,  # Non-existent series ID
+            "range_type": "all",
+            "position": "end",
+        }
+        form = AddIssuesFromSeriesForm(data=form_data)
+        assert not form.is_valid()
+        assert "series" in form.errors
+
+    def test_add_issues_from_series_form_fields(self):
+        """Test that form has the correct fields."""
+        form = AddIssuesFromSeriesForm()
+        expected_fields = ["series", "range_type", "start_number", "end_number", "position"]
+        assert list(form.fields.keys()) == expected_fields
+
+    def test_add_issues_from_series_form_series_required(self):
+        """Test that series field is required."""
+        form = AddIssuesFromSeriesForm()
+        assert form.fields["series"].required
+
+    def test_add_issues_from_series_form_range_type_choices(self):
+        """Test that range_type has the correct choices."""
+        form = AddIssuesFromSeriesForm()
+        choices = [choice[0] for choice in form.fields["range_type"].choices]
+        assert "all" in choices
+        assert "range" in choices
+
+    def test_add_issues_from_series_form_position_choices(self):
+        """Test that position has the correct choices."""
+        form = AddIssuesFromSeriesForm()
+        choices = [choice[0] for choice in form.fields["position"].choices]
+        assert "end" in choices
+        assert "beginning" in choices
+
+    def test_add_issues_from_series_form_labels(self):
+        """Test that form has the correct labels."""
+        form = AddIssuesFromSeriesForm()
+        assert form.fields["series"].label == "Series"
+        assert form.fields["range_type"].label == "What to add"
+        assert form.fields["start_number"].label == "Start Issue #"
+        assert form.fields["end_number"].label == "End Issue #"
+        assert form.fields["position"].label == "Add issues"
+
+    def test_add_issues_from_series_form_help_texts(self):
+        """Test that form has the correct help texts."""
+        form = AddIssuesFromSeriesForm()
+        assert "Select the series to add issues from" in form.fields["series"].help_text
+        assert "Leave blank to start from the first issue" in form.fields["start_number"].help_text
+        assert "Leave blank to go to the last issue" in form.fields["end_number"].help_text
