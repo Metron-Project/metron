@@ -574,7 +574,10 @@ class ReadingListViewSet(
             return ReadingListItemSerializer
         return ReadingListReadSerializer
 
-    @extend_schema(responses={200: ReadingListItemSerializer(many=True)})
+    @extend_schema(
+        responses={200: ReadingListItemSerializer(many=True)},
+        filters=False,
+    )
     @action(detail=True)
     def items(self, request, pk=None):
         """Returns a paginated list of items for this reading list."""
