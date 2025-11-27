@@ -6,6 +6,7 @@ from reading_lists.views import (
     ReadingListCreateView,
     ReadingListDeleteView,
     ReadingListDetailView,
+    ReadingListItemsLoadMore,
     ReadingListListView,
     ReadingListUpdateView,
     RemoveIssueFromReadingListView,
@@ -36,5 +37,10 @@ urlpatterns = [
         "<slug:slug>/remove-issue/<int:item_pk>/",
         RemoveIssueFromReadingListView.as_view(),
         name="remove-issue",
+    ),
+    path(
+        "<slug:slug>/items-load-more/",
+        ReadingListItemsLoadMore.as_view(),
+        name="items-load-more",
     ),
 ]

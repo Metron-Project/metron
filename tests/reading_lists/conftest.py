@@ -265,3 +265,33 @@ def series_with_multiple_issues(create_user, reading_list_publisher, single_issu
         issues.append(issue)
 
     return series, issues
+
+
+@pytest.fixture
+def reading_list_with_many_issues(create_user, reading_list_user, reading_list_series):
+    """Create a reading list with 60 issues for pagination testing."""
+    user = create_user()
+    reading_list = ReadingList.objects.create(
+        user=reading_list_user,
+        name="List With Many Issues",
+        desc="A reading list with many issues for pagination testing",
+        is_private=False,
+    )
+
+    # Create 60 issues and add them to the reading list
+    for i in range(1, 61):
+        issue = Issue.objects.create(
+            series=reading_list_series,
+            number=str(i),
+            slug=f"pagination-test-issue-{i}",
+            cover_date=date(2020, (i % 12) + 1, 1),
+            edited_by=user,
+            created_by=user,
+        )
+        ReadingListItem.objects.create(
+            reading_list=reading_list,
+            issue=issue,
+            order=i,
+        )
+
+    return reading_list

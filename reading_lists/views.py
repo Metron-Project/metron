@@ -2,15 +2,19 @@ from django.contrib import messages
 from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
 from django.db import models
 from django.db.models import Count, Q
-from django.shortcuts import get_object_or_404, redirect
+from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse, reverse_lazy
+from django.views import View
 from django.views.generic import CreateView, DeleteView, DetailView, FormView, ListView, UpdateView
 
 from comicsdb.models.issue import Issue
-from comicsdb.views.mixins import SearchMixin
+from comicsdb.views.mixins import LazyLoadMixin, SearchMixin
 from reading_lists.forms import AddIssuesFromSeriesForm, AddIssueWithSearchForm, ReadingListForm
 from reading_lists.models import ReadingList, ReadingListItem
 from users.models import CustomUser
+
+# Pagination constant for reading list detail view
+READING_LIST_DETAIL_PAGINATE_BY = 50
 
 
 class ReadingListListView(ListView):
@@ -105,10 +109,16 @@ class ReadingListDetailView(DetailView):
         context = super().get_context_data(**kwargs)
         reading_list = context["reading_list"]
 
-        # Get ordered issues
-        context["reading_list_items"] = reading_list.reading_list_items.select_related(
+        # Get ordered issues with count for pagination
+        reading_list_items_qs = reading_list.reading_list_items.select_related(
             "issue__series__series_type"
         ).order_by("order")
+
+        reading_list_items_count = reading_list_items_qs.count()
+        context["reading_list_items_count"] = reading_list_items_count
+
+        if reading_list_items_count > 0:
+            context["reading_list_items"] = reading_list_items_qs[:READING_LIST_DETAIL_PAGINATE_BY]
 
         # Check if user is the owner OR admin viewing Metron's list
         is_actual_owner = (
@@ -504,4 +514,73 @@ class AddIssuesFromSeriesView(LoginRequiredMixin, UserPassesTestMixin, FormView)
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         context["reading_list"] = self.reading_list
+        return context
+
+
+class ReadingListItemsLoadMore(LazyLoadMixin, View):
+    """HTMX endpoint for lazy loading more reading list items."""
+
+    model = ReadingList
+    relation_name = "reading_list_items"
+    template_name = "reading_lists/partials/readinglist_item_list.html"
+    context_object_name = "reading_list_items"
+    slug_context_name = "reading_list_slug"
+
+    def get(self, request, slug):
+        """Handle GET request with privacy filtering."""
+        # Apply same privacy filtering as ReadingListDetailView
+        queryset = ReadingList.objects.all()
+
+        # If not authenticated, only show public lists
+        if not request.user.is_authenticated:
+            queryset = queryset.filter(is_private=False)
+        # If admin, show public lists + user's own lists + Metron's lists
+        elif request.user.is_staff:
+            try:
+                metron_user = CustomUser.objects.get(username="Metron")
+                queryset = queryset.filter(
+                    Q(is_private=False) | Q(user=request.user) | Q(user=metron_user)
+                )
+            except CustomUser.DoesNotExist:
+                queryset = queryset.filter(Q(is_private=False) | Q(user=request.user))
+        # If authenticated, show public lists + user's own lists
+        else:
+            queryset = queryset.filter(Q(is_private=False) | Q(user=request.user))
+
+        # Get the reading list with privacy filter applied
+        parent_object = get_object_or_404(queryset, slug=slug)
+
+        # Call the parent get method logic
+        offset = int(request.GET.get("offset", 0))
+        limit = self.get_limit()
+
+        items = self.get_queryset(parent_object, offset, limit)
+        total_count = self.get_total_count(parent_object)
+        has_more = total_count > offset + limit
+
+        context = self.get_context_data(parent_object, items, has_more, offset + limit, slug)
+        return render(request, self.template_name, context)
+
+    def get_queryset(self, parent_object, offset, limit):
+        """Get paginated reading list items with related data."""
+        items_qs = parent_object.reading_list_items.select_related(
+            "issue__series__series_type"
+        ).order_by("order")
+        return items_qs[offset : offset + limit]
+
+    def get_context_data(self, parent_object, items, has_more, next_offset, slug):
+        """Add is_owner context for the remove button visibility."""
+        context = super().get_context_data(parent_object, items, has_more, next_offset, slug)
+
+        # Check if user is the owner OR admin viewing Metron's list
+        is_actual_owner = (
+            self.request.user.is_authenticated and parent_object.user == self.request.user
+        )
+        is_admin_managing_metron = (
+            self.request.user.is_authenticated
+            and self.request.user.is_staff
+            and parent_object.user.username == "Metron"
+        )
+        context["is_owner"] = is_actual_owner or is_admin_managing_metron
+
         return context
