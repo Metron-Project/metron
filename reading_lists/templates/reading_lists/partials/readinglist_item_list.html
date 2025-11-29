@@ -1,0 +1,43 @@
+{% for item in reading_list_items %}
+    <li>
+        <div class="level">
+            <div class="level-left">
+                <div class="level-item">
+                    <div>
+                        <a href="{% url 'issue:detail' item.issue.slug %}">{{ item.issue }}</a>
+                        <span class="has-text-grey-light">— {{ item.issue.cover_date|date:"M Y" }}</span>
+                    </div>
+                </div>
+            </div>
+            {% if is_owner %}
+                <div class="level-right">
+                    <div class="level-item">
+                        <a href="{% url 'reading-list:remove-issue' reading_list_slug item.pk %}"
+                           class="button is-small is-danger is-outlined"
+                           title="Remove from list">
+                            <span class="icon is-small">
+                                <i class="fas fa-times"></i>
+                            </span>
+                        </a>
+                    </div>
+                </div>
+            {% endif %}
+        </div>
+    </li>
+{% endfor %}
+<div id="items-load-more-wrapper"
+     class="has-text-centered mt-4"
+     hx-swap-oob="true">
+    {% if has_more %}
+        <button class="button is-link"
+                hx-get="{% url 'reading-list:items-load-more' reading_list_slug %}?offset={{ next_offset }}"
+                hx-target="#items-container"
+                hx-swap="beforeend"
+                hx-indicator="#items-spinner">
+            <span>Load More Issues</span>
+        </button>
+        <span id="items-spinner" class="htmx-indicator ml-2">
+            <i class="fas fa-spinner fa-spin"></i>
+        </span>
+    {% endif %}
+</div>

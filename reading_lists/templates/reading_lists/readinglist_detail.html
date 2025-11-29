@@ -1,5 +1,6 @@
 {% extends parent_template|default:"base.html" %}
 {% load static %}
+{% load django_htmx %}
 {% block title %}{{ reading_list.name }} - Metron{% endblock %}
 {% block content %}
     <header class="block">
@@ -49,10 +50,10 @@
                 </div>
             {% endif %}
             <div class="box">
-                <h2 class="title is-5">Issues ({{ reading_list_items|length }})</h2>
-                {% if reading_list_items %}
+                <h2 class="title is-5">Issues ({{ reading_list_items_count }})</h2>
+                {% if reading_list_items_count > 0 %}
                     <div class="content">
-                        <ol>
+                        <ol id="items-container">
                             {% for item in reading_list_items %}
                                 <li>
                                     <div class="level">
@@ -82,6 +83,20 @@
                             {% endfor %}
                         </ol>
                     </div>
+                    {% if reading_list_items_count > 50 %}
+                        <div id="items-load-more-wrapper" class="has-text-centered mt-4">
+                            <button class="button is-link"
+                                    hx-get="{% url 'reading-list:items-load-more' reading_list.slug %}?offset=50"
+                                    hx-target="#items-container"
+                                    hx-swap="beforeend"
+                                    hx-indicator="#items-spinner">
+                                <span>Load More Issues</span>
+                            </button>
+                            <span id="items-spinner" class="htmx-indicator ml-2">
+                                <i class="fas fa-spinner fa-spin"></i>
+                            </span>
+                        </div>
+                    {% endif %}
                 {% else %}
                     <p class="has-text-grey">No issues in this list yet.</p>
                     {% if is_owner %}
@@ -111,7 +126,7 @@
                     </dd>
                     <dt class="has-text-weight-bold">Issues:</dt>
                     <dd class="mb-3">
-                        {{ reading_list_items|length }}
+                        {{ reading_list_items_count }}
                     </dd>
                     {% if reading_list.start_year %}
                         <dt class="has-text-weight-bold">Year Range:</dt>
@@ -169,4 +184,7 @@
             </div>
         </div>
     </div>
+{% endblock %}
+{% block js %}
+    {% htmx_script %}
 {% endblock %}

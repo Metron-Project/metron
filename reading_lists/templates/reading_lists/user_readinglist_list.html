@@ -26,7 +26,10 @@
                             <div class="card">
                                 <header class="card-header">
                                     <p class="card-header-title">
-                                        <a href="{% url 'reading-list:detail' reading_list.slug %}">{{ reading_list.name }}</a>
+                                        <a href="{% url 'reading-list:detail' reading_list.slug %}">
+                                            {{ reading_list.name }}
+                                            {% if reading_list.attribution_source %}({{ reading_list.attribution_source }}){% endif %}
+                                        </a>
                                         {% if reading_list.is_private %}<span class="tag is-warning ml-2">Private</span>{% endif %}
                                     </p>
                                 </header>
