@@ -8,9 +8,10 @@
         <div class="column is-four-fifths">
             <form method="POST" id="article_move_form">
                 {% wiki_form form %}
-                <div class="dropdown is-hoverable" id="dest_selector">
+                <div class="dropdown" id="dest_selector">
                     <div class="dropdown-trigger">
                         <button class="button is-rounded"
+                                type="button"
                                 aria-haspopup="true"
                                 aria-controls="dropdown-menu-dest">
                             <span class="dest_selector_title"></span>
@@ -67,6 +68,34 @@
             </form>
         </div>
     </div>
+    {% addtoblock "css" %}
+    <style>
+    #dest_selector .dropdown-content {
+        background-color: white;
+        opacity: 1;
+    }
+    #dest_selector .dropdown-item {
+        background-color: white;
+    }
+    #dest_selector .dropdown-item:hover {
+        background-color: #f5f5f5;
+    }
+
+    @media (prefers-color-scheme: dark) {
+        #dest_selector .dropdown-content {
+            background-color: #363636;
+            color: #f5f5f5;
+        }
+        #dest_selector .dropdown-item {
+            background-color: #363636;
+            color: #f5f5f5;
+        }
+        #dest_selector .dropdown-item:hover {
+            background-color: #4a4a4a;
+        }
+    }
+    </style>
+    {% endaddtoblock %}
     {% addtoblock "js" %}
     <script type="text/javascript">
     $('#id_destination').after($('#dest_selector').remove());
@@ -79,6 +108,24 @@
       if (title == "(root)") title = "";
       $('#dest_selector .dest_selector_title').html(title ? title : "&nbsp;&nbsp;/&nbsp;&nbsp;");
     }
+
+    // Toggle dropdown on button click
+    $('#dest_selector .dropdown-trigger button').on('click', function(e) {
+      e.preventDefault();
+      $('#dest_selector').toggleClass('is-active');
+    });
+
+    // Close dropdown when clicking outside
+    $(document).on('click', function(e) {
+      if (!$(e.target).closest('#dest_selector').length) {
+        $('#dest_selector').removeClass('is-active');
+      }
+    });
+
+    // Close dropdown when an item is selected
+    $('#dest_selector .dropdown-content').on('click', 'a', function() {
+      $('#dest_selector').removeClass('is-active');
+    });
     </script>
 {% endaddtoblock %}
 {% endblock %}
