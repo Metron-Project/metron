@@ -20,13 +20,13 @@ from comicsdb.views.mixins import (
 LOGGER = logging.getLogger(__name__)
 
 
-class ImprintList(ListView):
+class ImprintList(LoginRequiredMixin, ListView):
     model = Imprint
     paginate_by = PAGINATE_BY
     queryset = Imprint.objects.prefetch_related("series")
 
 
-class ImprintSeriesList(ListView):
+class ImprintSeriesList(LoginRequiredMixin, ListView):
     template_name = "comicsdb/series_list.html"
     paginate_by = PAGINATE_BY
 
@@ -48,7 +48,7 @@ class ImprintSeriesList(ListView):
         return context
 
 
-class ImprintDetail(NavigationMixin, DetailView):
+class ImprintDetail(LoginRequiredMixin, NavigationMixin, DetailView):
     model = Imprint
     queryset = Imprint.objects.select_related("edited_by").prefetch_related("series")
 

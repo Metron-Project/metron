@@ -23,7 +23,7 @@ from comicsdb.views.mixins import (
 LOGGER = logging.getLogger(__name__)
 
 
-class CreatorSeriesList(ListView):
+class CreatorSeriesList(LoginRequiredMixin, ListView):
     paginate_by = PAGINATE_BY
     template_name = "comicsdb/issue_list.html"
 
@@ -35,7 +35,7 @@ class CreatorSeriesList(ListView):
         )
 
 
-class CreatorIssueList(ListView):
+class CreatorIssueList(LoginRequiredMixin, ListView):
     paginate_by = PAGINATE_BY
     template_name = "comicsdb/issue_list.html"
 
@@ -49,13 +49,13 @@ class CreatorIssueList(ListView):
         return context
 
 
-class CreatorList(ListView):
+class CreatorList(LoginRequiredMixin, ListView):
     model = Creator
     paginate_by = PAGINATE_BY
     queryset = Creator.objects.prefetch_related("credits_set")
 
 
-class CreatorDetail(NavigationMixin, DetailView):
+class CreatorDetail(LoginRequiredMixin, NavigationMixin, DetailView):
     model = Creator
     queryset = Creator.objects.select_related("edited_by")
 
@@ -124,7 +124,7 @@ class CreatorHistory(HistoryListView):
     model = Creator
 
 
-class CreatorSeriesLoadMore(LazyLoadMixin):
+class CreatorSeriesLoadMore(LoginRequiredMixin, LazyLoadMixin):
     """HTMX endpoint for lazy loading more series credits."""
 
     model = Creator

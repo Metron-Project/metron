@@ -22,13 +22,13 @@ from comicsdb.views.mixins import (
 LOGGER = logging.getLogger(__name__)
 
 
-class ArcList(ListView):
+class ArcList(LoginRequiredMixin, ListView):
     model = Arc
     paginate_by = PAGINATE_BY
     queryset = Arc.objects.prefetch_related("issues")
 
 
-class ArcIssueList(ListView):
+class ArcIssueList(LoginRequiredMixin, ListView):
     template_name = "comicsdb/issue_list.html"
     paginate_by = PAGINATE_BY
 
@@ -42,7 +42,7 @@ class ArcIssueList(ListView):
         return context
 
 
-class ArcDetail(NavigationMixin, DetailView):
+class ArcDetail(LoginRequiredMixin, NavigationMixin, DetailView):
     model = Arc
     queryset = Arc.objects.select_related("edited_by")
 
@@ -98,7 +98,7 @@ class ArcHistory(HistoryListView):
     model = Arc
 
 
-class ArcIssuesLoadMore(LazyLoadMixin):
+class ArcIssuesLoadMore(LoginRequiredMixin, LazyLoadMixin):
     """HTMX endpoint for lazy loading more arc issues."""
 
     model = Arc

@@ -23,13 +23,13 @@ from comicsdb.views.mixins import (
 LOGGER = logging.getLogger(__name__)
 
 
-class PublisherList(ListView):
+class PublisherList(LoginRequiredMixin, ListView):
     model = Publisher
     paginate_by = PAGINATE_BY
     queryset = Publisher.objects.prefetch_related("series")
 
 
-class PublisherSeriesList(ListView):
+class PublisherSeriesList(LoginRequiredMixin, ListView):
     template_name = "comicsdb/series_list.html"
     paginate_by = PAGINATE_BY
 
@@ -47,7 +47,7 @@ class PublisherSeriesList(ListView):
         return context
 
 
-class PublisherDetail(NavigationMixin, DetailView):
+class PublisherDetail(LoginRequiredMixin, NavigationMixin, DetailView):
     model = Publisher
     # Don't prefetch - we'll paginate imprints and universes
     queryset = Publisher.objects.select_related("edited_by")
@@ -108,7 +108,7 @@ class PublisherHistory(HistoryListView):
     model = Publisher
 
 
-class PublisherImprintsLoadMore(LazyLoadMixin):
+class PublisherImprintsLoadMore(LoginRequiredMixin, LazyLoadMixin):
     """HTMX endpoint for lazy loading more imprints."""
 
     model = Publisher
@@ -118,7 +118,7 @@ class PublisherImprintsLoadMore(LazyLoadMixin):
     slug_context_name = "publisher_slug"
 
 
-class PublisherUniversesLoadMore(LazyLoadMixin):
+class PublisherUniversesLoadMore(LoginRequiredMixin, LazyLoadMixin):
     """HTMX endpoint for lazy loading more universes."""
 
     model = Publisher

@@ -30,8 +30,9 @@
     </div>
     <div id="navMenu" class="navbar-menu">
         <div class="navbar-start">
-            {# Releases Menu #}
-            <div class="navbar-item has-dropdown is-hoverable">
+            {% if user.is_authenticated %}
+                {# Releases Menu #}
+                <div class="navbar-item has-dropdown is-hoverable">
                 <a class="navbar-link" aria-haspopup="true" aria-expanded="false">Releases</a>
                 <div class="navbar-dropdown">
                     <a class="navbar-item" href="{% url 'issue:thisweek' %}">
@@ -182,6 +183,7 @@
                     </a>
                 </div>
             </div>
+            {% endif %}
         </div>
         <div class="navbar-end">
             {# Social Links #}

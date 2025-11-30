@@ -24,7 +24,7 @@ from comicsdb.views.mixins import (
 LOGGER = logging.getLogger(__name__)
 
 
-class UniverseSeriesList(ListView):
+class UniverseSeriesList(LoginRequiredMixin, ListView):
     paginate_by = PAGINATE_BY
     template_name = "comicsdb/issue_list.html"
 
@@ -37,13 +37,13 @@ class UniverseSeriesList(ListView):
         )
 
 
-class UniverseList(ListView):
+class UniverseList(LoginRequiredMixin, ListView):
     model = Universe
     paginate_by = PAGINATE_BY
     queryset = Universe.objects.prefetch_related("issues")
 
 
-class UniverseIssueList(ListView):
+class UniverseIssueList(LoginRequiredMixin, ListView):
     paginate_by = PAGINATE_BY
     template_name = "comicsdb/issue_list.html"
 
@@ -57,7 +57,7 @@ class UniverseIssueList(ListView):
         return context
 
 
-class UniverseDetail(NavigationMixin, DetailView):
+class UniverseDetail(LoginRequiredMixin, NavigationMixin, DetailView):
     model = Universe
     # Don't use expensive COUNT DISTINCT in queryset - calculate in get_context_data instead
     queryset = Universe.objects.select_related("edited_by", "publisher")
@@ -158,7 +158,7 @@ class UniverseHistory(HistoryListView):
     model = Universe
 
 
-class UniverseCharactersLoadMore(LazyLoadMixin):
+class UniverseCharactersLoadMore(LoginRequiredMixin, LazyLoadMixin):
     """HTMX endpoint for lazy loading more characters."""
 
     model = Universe
@@ -168,7 +168,7 @@ class UniverseCharactersLoadMore(LazyLoadMixin):
     slug_context_name = "universe_slug"
 
 
-class UniverseTeamsLoadMore(LazyLoadMixin):
+class UniverseTeamsLoadMore(LoginRequiredMixin, LazyLoadMixin):
     """HTMX endpoint for lazy loading more teams."""
 
     model = Universe
@@ -178,7 +178,7 @@ class UniverseTeamsLoadMore(LazyLoadMixin):
     slug_context_name = "universe_slug"
 
 
-class UniverseSeriesLoadMore(LazyLoadMixin):
+class UniverseSeriesLoadMore(LoginRequiredMixin, LazyLoadMixin):
     """HTMX endpoint for lazy loading more series appearances."""
 
     model = Universe
