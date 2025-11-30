@@ -33,6 +33,12 @@ def list_of_series(create_user, dc_comics):
         )
 
 
+def test_series_detail_requires_login(client, sandman_series):
+    """Test that detail view requires authentication."""
+    resp = client.get(reverse("series:detail", kwargs={"slug": sandman_series.slug}))
+    assert resp.status_code == HTML_REDIRECT_CODE
+
+
 def test_series_detail(sandman_series, auto_login_user):
     client, _ = auto_login_user()
     resp = client.get(f"/series/{sandman_series.slug}/")
@@ -42,6 +48,12 @@ def test_series_detail(sandman_series, auto_login_user):
 def test_series_redirect(sandman_series, auto_login_user):
     client, _ = auto_login_user()
     resp = client.get(f"/series/{sandman_series.pk}/")
+    assert resp.status_code == HTML_REDIRECT_CODE
+
+
+def test_series_search_view_requires_login(client):
+    """Test that search view requires authentication."""
+    resp = client.get(reverse("series:search"))
     assert resp.status_code == HTML_REDIRECT_CODE
 
 
@@ -81,6 +93,12 @@ def test_series_search_lists_all_series(auto_login_user, list_of_series):
     assert "is_paginated" in resp.context
     assert resp.context["is_paginated"] is True
     assert len(resp.context["series_list"]) == PAGINATE_DIFF_VAL
+
+
+def test_series_list_view_requires_login(client):
+    """Test that list view requires authentication."""
+    resp = client.get(reverse("series:list"))
+    assert resp.status_code == HTML_REDIRECT_CODE
 
 
 def test_series_listview_url_exists_at_desired_location(auto_login_user):

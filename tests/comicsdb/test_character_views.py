@@ -26,6 +26,12 @@ def list_of_characters(create_user):
         )
 
 
+def test_character_detail_requires_login(client, superman):
+    """Test that detail view requires authentication."""
+    resp = client.get(reverse("character:detail", kwargs={"slug": superman.slug}))
+    assert resp.status_code == HTML_REDIRECT
+
+
 def test_character_detail(superman, auto_login_user):
     client, _ = auto_login_user()
     resp = client.get("/character/superman/")
@@ -39,6 +45,12 @@ def test_character_redirect(superman, auto_login_user):
 
 
 # Character Search
+def test_character_search_view_requires_login(client):
+    """Test that search view requires authentication."""
+    resp = client.get(reverse("character:search"))
+    assert resp.status_code == HTML_REDIRECT
+
+
 def test_character_search_view_url_exists_at_desired_location(auto_login_user):
     client, _ = auto_login_user()
     resp = client.get("/character/search")
@@ -78,6 +90,12 @@ def test_character_search_lists_all_characters(auto_login_user, list_of_characte
 
 
 # Character List
+def test_character_list_view_requires_login(client):
+    """Test that list view requires authentication."""
+    resp = client.get(reverse("character:list"))
+    assert resp.status_code == HTML_REDIRECT
+
+
 def test_character_list_view_url_exists_at_desired_location(auto_login_user):
     client, _ = auto_login_user()
     resp = client.get("/character/")

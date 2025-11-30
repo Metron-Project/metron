@@ -23,6 +23,12 @@ def list_of_series(create_user):
         )
 
 
+def test_team_detail_requires_login(client, avengers):
+    """Test that detail view requires authentication."""
+    resp = client.get(reverse("team:detail", kwargs={"slug": avengers.slug}))
+    assert resp.status_code == HTML_REDIRECT_CODE
+
+
 def test_team_detail(avengers, auto_login_user):
     client, _ = auto_login_user()
     resp = client.get(f"/team/{avengers.slug}/")
@@ -32,6 +38,12 @@ def test_team_detail(avengers, auto_login_user):
 def test_team_redirect(avengers, auto_login_user):
     client, _ = auto_login_user()
     resp = client.get(f"/team/{avengers.pk}/")
+    assert resp.status_code == HTML_REDIRECT_CODE
+
+
+def test_team_search_view_requires_login(client):
+    """Test that search view requires authentication."""
+    resp = client.get(reverse("team:search"))
     assert resp.status_code == HTML_REDIRECT_CODE
 
 
@@ -71,6 +83,12 @@ def test_team_search_lists_all_teams(auto_login_user, list_of_series):
     assert "is_paginated" in resp.context
     assert resp.context["is_paginated"] is True
     assert len(resp.context["team_list"]) == PAGINATE_DIFF_VAL
+
+
+def test_team_list_view_requires_login(client):
+    """Test that list view requires authentication."""
+    resp = client.get(reverse("team:list"))
+    assert resp.status_code == HTML_REDIRECT_CODE
 
 
 def test_team_list_view_url_exists_at_desired_location(auto_login_user):

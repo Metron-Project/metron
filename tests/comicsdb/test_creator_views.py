@@ -26,6 +26,12 @@ def list_of_creators(create_user):
         )
 
 
+def test_creator_detail_requires_login(client, walter_simonson):
+    """Test that detail view requires authentication."""
+    resp = client.get(reverse("creator:detail", kwargs={"slug": walter_simonson.slug}))
+    assert resp.status_code == HTML_REDIRECT_CODE
+
+
 def test_creator_detail(walter_simonson, auto_login_user):
     client, _ = auto_login_user()
     resp = client.get(f"/creator/{walter_simonson.slug}/")
@@ -82,6 +88,12 @@ def test_creator_create_view(auto_login_user, walter_simonson):
 
 
 # Creator Search
+def test_creator_search_view_requires_login(client):
+    """Test that search view requires authentication."""
+    resp = client.get(reverse("creator:search"))
+    assert resp.status_code == HTML_REDIRECT_CODE
+
+
 def test_creator_search_view_url_exists_at_desired_location(auto_login_user):
     client, _ = auto_login_user()
     resp = client.get("/creator/search")
@@ -121,6 +133,12 @@ def test_creator_search_lists_all_creators(auto_login_user, list_of_creators):
 
 
 # CreatorList
+def test_creator_list_view_requires_login(client):
+    """Test that list view requires authentication."""
+    resp = client.get(reverse("creator:list"))
+    assert resp.status_code == HTML_REDIRECT_CODE
+
+
 def test_creator_list_view_url_exists_at_desired_location(auto_login_user):
     client, _ = auto_login_user()
     resp = client.get("/creator/")
