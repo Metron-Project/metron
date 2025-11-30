@@ -8,6 +8,7 @@ from django.urls import reverse
 
 from comicsdb.models.issue import Issue
 from reading_lists.models import ReadingList, ReadingListItem
+from users.models import CustomUser
 
 HTTP_200_OK = 200
 HTTP_302_FOUND = 302
@@ -21,11 +22,12 @@ class TestReadingListListView:
     def test_reading_list_list_view_anonymous(
         self, client, public_reading_list, private_reading_list
     ):
-        """Test that anonymous users only see public lists."""
+        """Test that anonymous users can view public reading lists."""
         url = reverse("reading-list:list")
         resp = client.get(url)
         assert resp.status_code == HTTP_200_OK
         assert public_reading_list in resp.context["reading_lists"]
+        # Private lists should not be visible to anonymous users
         assert private_reading_list not in resp.context["reading_lists"]
 
     def test_reading_list_list_view_authenticated(
@@ -49,8 +51,10 @@ class TestReadingListListView:
         assert resp.status_code == HTTP_200_OK
         assert private_reading_list not in resp.context["reading_lists"]
 
-    def test_reading_list_list_view_pagination(self, client, reading_list_user):
+    def test_reading_list_list_view_pagination(self, client, reading_list_user, test_password):
         """Test that pagination works correctly."""
+        # Log in first
+        client.login(username=reading_list_user.username, password=test_password)
         # Create 35 reading lists
         for i in range(35):
             ReadingList.objects.create(
@@ -66,8 +70,20 @@ class TestReadingListListView:
 class TestSearchReadingListListView:
     """Tests for the SearchReadingListListView."""
 
-    def test_search_reading_list_by_name(self, client, public_reading_list, private_reading_list):
+    def test_search_reading_list_anonymous(self, client, public_reading_list, private_reading_list):
+        """Test that anonymous users can search public reading lists."""
+        url = reverse("reading-list:search")
+        resp = client.get(url, {"q": "Public"})
+        assert resp.status_code == HTTP_200_OK
+        assert public_reading_list in resp.context["reading_lists"]
+        # Private lists should not appear in search results for anonymous users
+        assert private_reading_list not in resp.context["reading_lists"]
+
+    def test_search_reading_list_by_name(
+        self, client, reading_list_user, public_reading_list, private_reading_list, test_password
+    ):
         """Test searching reading lists by name."""
+        client.login(username=reading_list_user.username, password=test_password)
         url = reverse("reading-list:search")
         resp = client.get(url, {"q": "Public"})
         assert resp.status_code == HTTP_200_OK
@@ -75,9 +91,10 @@ class TestSearchReadingListListView:
         assert private_reading_list not in resp.context["reading_lists"]
 
     def test_search_reading_list_by_username(
-        self, client, reading_list_user, other_user_reading_list, public_reading_list
+        self, client, reading_list_user, other_user_reading_list, public_reading_list, test_password
     ):
         """Test searching reading lists by username."""
+        client.login(username=reading_list_user.username, password=test_password)
         url = reverse("reading-list:search")
         resp = client.get(url, {"q": "other_user"})
         assert resp.status_code == HTTP_200_OK
@@ -85,24 +102,41 @@ class TestSearchReadingListListView:
         assert public_reading_list not in resp.context["reading_lists"]
 
     def test_search_reading_list_by_attribution_source(
-        self, client, reading_list_with_issues, public_reading_list
+        self,
+        client,
+        reading_list_user,
+        reading_list_with_issues,
+        public_reading_list,
+        test_password,
     ):
         """Test searching reading lists by attribution source."""
+        client.login(username=reading_list_user.username, password=test_password)
         url = reverse("reading-list:search")
         resp = client.get(url, {"q": "CBRO"})
         assert resp.status_code == HTTP_200_OK
         assert reading_list_with_issues in resp.context["reading_lists"]
         assert public_reading_list not in resp.context["reading_lists"]
 
-    def test_search_reading_list_no_results(self, client, public_reading_list):
+    def test_search_reading_list_no_results(
+        self, client, reading_list_user, public_reading_list, test_password
+    ):
         """Test searching with no matching results."""
+        client.login(username=reading_list_user.username, password=test_password)
         url = reverse("reading-list:search")
         resp = client.get(url, {"q": "nonexistent"})
         assert resp.status_code == HTTP_200_OK
         assert len(resp.context["reading_lists"]) == 0
 
-    def test_search_reading_list_respects_privacy(self, client, private_reading_list):
-        """Test that search respects privacy settings for anonymous users."""
+    def test_search_reading_list_respects_privacy(
+        self, client, reading_list_user, private_reading_list, test_password
+    ):
+        """Test that search respects privacy settings for authenticated users."""
+        # Log in as a different user who shouldn't see the private list
+
+        other_user = CustomUser.objects.create_user(
+            username="different_user", email="different@example.com", password=test_password
+        )
+        client.login(username=other_user.username, password=test_password)
         url = reverse("reading-list:search")
         resp = client.get(url, {"q": "Private"})
         assert resp.status_code == HTTP_200_OK
@@ -154,18 +188,35 @@ class TestUserReadingListListView:
 class TestReadingListDetailView:
     """Tests for the ReadingListDetailView."""
 
-    def test_reading_list_detail_view_public(self, client, public_reading_list):
-        """Test viewing a public reading list."""
+    def test_reading_list_detail_view_anonymous_public(self, client, public_reading_list):
+        """Test that anonymous users can view public reading lists."""
         url = reverse("reading-list:detail", args=[public_reading_list.slug])
         resp = client.get(url)
         assert resp.status_code == HTTP_200_OK
         assert resp.context["reading_list"] == public_reading_list
+
+    def test_reading_list_detail_view_public(
+        self, client, reading_list_user, public_reading_list, test_password
+    ):
+        """Test viewing a public reading list."""
+        # Create and log in as a different user to test viewing someone else's public list
+
+        other_user = CustomUser.objects.create_user(
+            username="viewer_user", email="viewer@example.com", password=test_password
+        )
+        client.login(username=other_user.username, password=test_password)
+        url = reverse("reading-list:detail", args=[public_reading_list.slug])
+        resp = client.get(url)
+        assert resp.status_code == HTTP_200_OK
+        assert resp.context["reading_list"] == public_reading_list
+        # User is viewing someone else's public list
         assert not resp.context["is_owner"]
 
     def test_reading_list_detail_view_private_anonymous(self, client, private_reading_list):
-        """Test that anonymous users cannot view private lists."""
+        """Test that anonymous users cannot view private reading lists."""
         url = reverse("reading-list:detail", args=[private_reading_list.slug])
         resp = client.get(url)
+        # Private lists are filtered out for anonymous users, resulting in 404
         assert resp.status_code == HTTP_404_NOT_FOUND
 
     def test_reading_list_detail_view_private_owner(
@@ -188,8 +239,11 @@ class TestReadingListDetailView:
         resp = client.get(url)
         assert resp.status_code == HTTP_404_NOT_FOUND
 
-    def test_reading_list_detail_view_with_issues(self, client, reading_list_with_issues):
+    def test_reading_list_detail_view_with_issues(
+        self, client, reading_list_user, reading_list_with_issues, test_password
+    ):
         """Test viewing a reading list with issues."""
+        client.login(username=reading_list_user.username, password=test_password)
         url = reverse("reading-list:detail", args=[reading_list_with_issues.slug])
         resp = client.get(url)
         assert resp.status_code == HTTP_200_OK

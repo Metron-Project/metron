@@ -33,7 +33,7 @@ TOTAL_WEEKS_YEAR = 52
 LOGGER = logging.getLogger(__name__)
 
 
-class IssueList(ListView):
+class IssueList(LoginRequiredMixin, ListView):
     model = Issue
     paginate_by = PAGINATE_BY
     queryset = Issue.objects.select_related("series", "series__series_type")
@@ -44,7 +44,7 @@ class IssueList(ListView):
         return context
 
 
-class IssueDetail(DetailView):
+class IssueDetail(LoginRequiredMixin, DetailView):
     model = Issue
     queryset = (
         Issue.objects.select_related("series", "series__publisher", "series__series_type", "rating")
@@ -707,7 +707,7 @@ class FutureList(ListView):
         return context
 
 
-class IssueCreditsLoadMore(LazyLoadMixin):
+class IssueCreditsLoadMore(LoginRequiredMixin, LazyLoadMixin):
     """HTMX endpoint for lazy loading more issue credits."""
 
     model = Issue
@@ -749,7 +749,7 @@ class IssueCreditsLoadMore(LazyLoadMixin):
         )
 
 
-class IssueCharactersLoadMore(LazyLoadMixin):
+class IssueCharactersLoadMore(LoginRequiredMixin, LazyLoadMixin):
     """HTMX endpoint for lazy loading more issue characters."""
 
     model = Issue
@@ -759,7 +759,7 @@ class IssueCharactersLoadMore(LazyLoadMixin):
     slug_context_name = "issue_slug"
 
 
-class IssueTeamsLoadMore(LazyLoadMixin):
+class IssueTeamsLoadMore(LoginRequiredMixin, LazyLoadMixin):
     """HTMX endpoint for lazy loading more issue teams."""
 
     model = Issue
@@ -769,7 +769,7 @@ class IssueTeamsLoadMore(LazyLoadMixin):
     slug_context_name = "issue_slug"
 
 
-class IssueUniversesLoadMore(LazyLoadMixin):
+class IssueUniversesLoadMore(LoginRequiredMixin, LazyLoadMixin):
     """HTMX endpoint for lazy loading more issue universes."""
 
     model = Issue

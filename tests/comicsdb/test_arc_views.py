@@ -23,6 +23,12 @@ def list_of_arc(create_user):
         )
 
 
+def test_arc_detail_requires_login(client, wwh_arc):
+    """Test that detail view requires authentication."""
+    resp = client.get(reverse("arc:detail", kwargs={"slug": wwh_arc.slug}))
+    assert resp.status_code == HTML_REDIRECT
+
+
 def test_arc_detail(wwh_arc, auto_login_user):
     client, _ = auto_login_user()
     resp = client.get(f"/arc/{wwh_arc.slug}/")
@@ -36,6 +42,12 @@ def test_arc_redirect(wwh_arc, auto_login_user):
 
 
 # Arc Search View
+def test_arc_search_view_requires_login(client):
+    """Test that search view requires authentication."""
+    resp = client.get(reverse("arc:search"))
+    assert resp.status_code == HTML_REDIRECT
+
+
 def test_arc_search_view_url_exists_at_desired_location(auto_login_user):
     client, _ = auto_login_user()
     resp = client.get("/arc/search")
@@ -75,6 +87,12 @@ def test_arc_search_all_arcs(auto_login_user, list_of_arc):
 
 
 # Arc List Views
+def test_arc_list_view_requires_login(client):
+    """Test that list view requires authentication."""
+    resp = client.get(reverse("arc:list"))
+    assert resp.status_code == HTML_REDIRECT
+
+
 def test_arc_list_view_url_exists_at_desired_location(auto_login_user):
     client, _ = auto_login_user()
     resp = client.get("/arc/")

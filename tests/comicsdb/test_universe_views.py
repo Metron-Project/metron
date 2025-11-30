@@ -25,6 +25,12 @@ def list_of_universes(create_user, dc_comics):
         )
 
 
+def test_universe_detail_requires_login(client, earth_2_universe):
+    """Test that detail view requires authentication."""
+    resp = client.get(reverse("universe:detail", kwargs={"slug": earth_2_universe.slug}))
+    assert resp.status_code == HTML_REDIRECT_CODE
+
+
 def test_universe_detail(earth_2_universe, auto_login_user):
     client, _ = auto_login_user()
     resp = client.get(f"/universe/{earth_2_universe.slug}/")
@@ -34,6 +40,12 @@ def test_universe_detail(earth_2_universe, auto_login_user):
 def test_universe_redirect(earth_2_universe, auto_login_user):
     client, _ = auto_login_user()
     resp = client.get(f"/universe/{earth_2_universe.pk}/")
+    assert resp.status_code == HTML_REDIRECT_CODE
+
+
+def test_universe_search_view_requires_login(client):
+    """Test that search view requires authentication."""
+    resp = client.get(reverse("universe:search"))
     assert resp.status_code == HTML_REDIRECT_CODE
 
 
@@ -73,6 +85,12 @@ def test_universe_search_lists_all_universes(auto_login_user, list_of_universes)
     assert "is_paginated" in resp.context
     assert resp.context["is_paginated"] is True
     assert len(resp.context["universe_list"]) == PAGINATE_DIFF_VAL
+
+
+def test_universe_list_view_requires_login(client):
+    """Test that list view requires authentication."""
+    resp = client.get(reverse("universe:list"))
+    assert resp.status_code == HTML_REDIRECT_CODE
 
 
 def test_universe_list_view_url_exists_at_desired_location(auto_login_user):

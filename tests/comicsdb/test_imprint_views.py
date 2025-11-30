@@ -25,6 +25,12 @@ def list_of_imprints(create_user, dc_comics):
         )
 
 
+def test_imprint_detail_requires_login(client, vertigo_imprint):
+    """Test that detail view requires authentication."""
+    resp = client.get(reverse("imprint:detail", kwargs={"slug": vertigo_imprint.slug}))
+    assert resp.status_code == HTML_REDIRECT_CODE
+
+
 def test_imprint_detail(vertigo_imprint, auto_login_user):
     client, _ = auto_login_user()
     resp = client.get(f"/imprint/{vertigo_imprint.slug}/")
@@ -63,6 +69,12 @@ def test_imprint_redirect(vertigo_imprint, auto_login_user):
 #     assert atlas.name == imprint_name
 
 
+def test_imprint_search_view_requires_login(client):
+    """Test that search view requires authentication."""
+    resp = client.get(reverse("imprint:search"))
+    assert resp.status_code == HTML_REDIRECT_CODE
+
+
 def test_imprint_search_view_url_exists_at_desired_location(auto_login_user):
     client, _ = auto_login_user()
     resp = client.get("/imprint/search")
@@ -99,6 +111,12 @@ def test_imprint_search_lists_all_imprints(auto_login_user, list_of_imprints):
     assert "is_paginated" in resp.context
     assert resp.context["is_paginated"] is True
     assert len(resp.context["imprint_list"]) == PAGINATE_DIFF_VAL
+
+
+def test_imprint_list_view_requires_login(client):
+    """Test that list view requires authentication."""
+    resp = client.get(reverse("imprint:list"))
+    assert resp.status_code == HTML_REDIRECT_CODE
 
 
 def test_imprint_list_view_url_exists_at_desired_location(auto_login_user):

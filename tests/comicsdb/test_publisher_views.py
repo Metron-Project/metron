@@ -26,6 +26,12 @@ def list_of_publishers(create_user):
         )
 
 
+def test_publisher_detail_requires_login(client, dc_comics):
+    """Test that detail view requires authentication."""
+    resp = client.get(reverse("publisher:detail", kwargs={"slug": dc_comics.slug}))
+    assert resp.status_code == HTML_REDIRECT_CODE
+
+
 def test_publisher_detail(dc_comics, auto_login_user):
     client, _ = auto_login_user()
     resp = client.get(f"/publisher/{dc_comics.slug}/")
@@ -73,6 +79,12 @@ def test_publisher_create_view(auto_login_user, marvel):
     assert ahoy.name == pub_name
 
 
+def test_publisher_search_view_requires_login(client):
+    """Test that search view requires authentication."""
+    resp = client.get(reverse("publisher:search"))
+    assert resp.status_code == HTML_REDIRECT_CODE
+
+
 def test_publisher_search_view_url_exists_at_desired_location(auto_login_user):
     client, _ = auto_login_user()
     resp = client.get("/publisher/search")
@@ -109,6 +121,12 @@ def test_publisher_search_lists_all_publishers(auto_login_user, list_of_publishe
     assert "is_paginated" in resp.context
     assert resp.context["is_paginated"] is True
     assert len(resp.context["publisher_list"]) == PAGINATE_DIFF_VAL
+
+
+def test_publisher_list_view_requires_login(client):
+    """Test that list view requires authentication."""
+    resp = client.get(reverse("publisher:list"))
+    assert resp.status_code == HTML_REDIRECT_CODE
 
 
 def test_publisher_list_view_url_exists_at_desired_location(auto_login_user):

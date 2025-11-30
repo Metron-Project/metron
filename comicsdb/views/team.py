@@ -22,13 +22,13 @@ from comicsdb.views.mixins import (
 LOGGER = logging.getLogger(__name__)
 
 
-class TeamList(ListView):
+class TeamList(LoginRequiredMixin, ListView):
     model = Team
     paginate_by = PAGINATE_BY
     queryset = Team.objects.prefetch_related("issues")
 
 
-class TeamIssueList(ListView):
+class TeamIssueList(LoginRequiredMixin, ListView):
     paginate_by = PAGINATE_BY
     template_name = "comicsdb/issue_list.html"
 
@@ -42,7 +42,7 @@ class TeamIssueList(ListView):
         return context
 
 
-class TeamDetail(NavigationMixin, DetailView):
+class TeamDetail(LoginRequiredMixin, NavigationMixin, DetailView):
     model = Team
     # Don't prefetch issues - only need member count
     queryset = Team.objects.select_related("edited_by")
@@ -96,7 +96,7 @@ class TeamHistory(HistoryListView):
     model = Team
 
 
-class TeamMembersLoadMore(LazyLoadMixin):
+class TeamMembersLoadMore(LoginRequiredMixin, LazyLoadMixin):
     """HTMX endpoint for lazy loading more team members."""
 
     model = Team

@@ -17,6 +17,12 @@ PAGINATE_DEFAULT_VAL = 28
 PAGINATE_DIFF_VAL = PAGINATE_TEST_VAL - PAGINATE_DEFAULT_VAL
 
 
+def test_issue_detail_requires_login(client, basic_issue):
+    """Test that detail view requires authentication."""
+    resp = client.get(reverse("issue:detail", kwargs={"slug": basic_issue.slug}))
+    assert resp.status_code == HTML_REDIRECT_CODE
+
+
 def test_issue_detail(basic_issue, auto_login_user):
     client, _ = auto_login_user()
     resp = client.get(f"/issue/{basic_issue.slug}/")
@@ -30,6 +36,12 @@ def test_issue_redirect(basic_issue, auto_login_user):
 
 
 # Issue Search
+def test_issue_search_view_requires_login(client):
+    """Test that search view requires authentication."""
+    resp = client.get(reverse("issue:search"))
+    assert resp.status_code == HTML_REDIRECT_CODE
+
+
 def test_issue_search_view_url_exists_at_desired_location(auto_login_user):
     client, _ = auto_login_user()
     resp = client.get("/issue/search")
@@ -69,6 +81,12 @@ def test_issue_search_lists_all_issues(auto_login_user, list_of_issues):
 
 
 # Issue List
+def test_issue_list_view_requires_login(client):
+    """Test that list view requires authentication."""
+    resp = client.get(reverse("issue:list"))
+    assert resp.status_code == HTML_REDIRECT_CODE
+
+
 def test_issue_list_view_url_exists_at_desired_location(auto_login_user):
     client, _ = auto_login_user()
     resp = client.get("/issue/")
@@ -105,6 +123,25 @@ def test_issue_list_lists_second_page(auto_login_user, list_of_issues):
     assert "is_paginated" in resp.context
     assert resp.context["is_paginated"] is True
     assert len(resp.context["issue_list"]) == PAGINATE_DIFF_VAL
+
+
+# Issue Week Views
+def test_issue_week_view_anonymous_access(db, client):
+    """Test that anonymous users can access week view."""
+    resp = client.get(reverse("issue:thisweek"))
+    assert resp.status_code == HTML_OK_CODE
+
+
+def test_issue_next_week_view_anonymous_access(db, client):
+    """Test that anonymous users can access next week view."""
+    resp = client.get(reverse("issue:nextweek"))
+    assert resp.status_code == HTML_OK_CODE
+
+
+def test_issue_future_view_anonymous_access(db, client):
+    """Test that anonymous users can access future view."""
+    resp = client.get(reverse("issue:future"))
+    assert resp.status_code == HTML_OK_CODE
 
 
 # Test: Requires login

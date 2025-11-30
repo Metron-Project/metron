@@ -38,7 +38,8 @@ def test_team_verbose_name_plural(avengers):
     assert str(avengers._meta.verbose_name_plural) == "teams"
 
 
-def test_team_absolute_url(client, avengers):
+def test_team_absolute_url(auto_login_user, avengers):
+    client, _ = auto_login_user()
     resp = client.get(avengers.get_absolute_url())
     assert resp.status_code == HTTP_200_OK
 
@@ -52,7 +53,8 @@ def test_character_verbose_name_plural(batman):
     assert str(batman._meta.verbose_name_plural) == "characters"
 
 
-def test_character_absolute_url(client, batman):
+def test_character_absolute_url(auto_login_user, batman):
+    client, _ = auto_login_user()
     resp = client.get(batman.get_absolute_url())
     assert resp.status_code == HTTP_200_OK
 
@@ -66,7 +68,8 @@ def test_arc_verbose_name_plural(wwh_arc):
     assert str(wwh_arc._meta.verbose_name_plural) == "arcs"
 
 
-def test_arc_absolute_url(client, wwh_arc):
+def test_arc_absolute_url(auto_login_user, wwh_arc):
+    client, _ = auto_login_user()
     resp = client.get(wwh_arc.get_absolute_url())
     assert resp.status_code == HTTP_200_OK
 
@@ -84,7 +87,8 @@ def test_creator_verbose_name_plural(john_byrne):
     assert str(john_byrne._meta.verbose_name_plural) == "creators"
 
 
-def test_creator_absolute_url(client, john_byrne):
+def test_creator_absolute_url(auto_login_user, john_byrne):
+    client, _ = auto_login_user()
     resp = client.get(john_byrne.get_absolute_url())
     assert resp.status_code == HTTP_200_OK
 
@@ -111,7 +115,8 @@ def test_publisher_verbose_name_plural(dc_comics):
     assert str(dc_comics._meta.verbose_name_plural) == "publishers"
 
 
-def test_publisher_absolute_url(client, dc_comics):
+def test_publisher_absolute_url(auto_login_user, dc_comics):
+    client, _ = auto_login_user()
     resp = client.get(dc_comics.get_absolute_url())
     assert resp.status_code == HTTP_200_OK
 
@@ -129,7 +134,8 @@ def test_imprint_verbose_name_plural(vertigo_imprint):
     assert str(vertigo_imprint._meta.verbose_name_plural) == "imprints"
 
 
-def test_imprint_absolute_url(client, vertigo_imprint):
+def test_imprint_absolute_url(auto_login_user, vertigo_imprint):
+    client, _ = auto_login_user()
     resp = client.get(vertigo_imprint.get_absolute_url())
     assert resp.status_code == HTTP_200_OK
 
@@ -143,7 +149,8 @@ def test_series_verbose_name_plural(fc_series):
     assert str(fc_series._meta.verbose_name_plural) == "Series"
 
 
-def test_series_absolute_url(client, fc_series):
+def test_series_absolute_url(auto_login_user, fc_series):
+    client, _ = auto_login_user()
     resp = client.get(fc_series.get_absolute_url())
     assert resp.status_code == HTTP_200_OK
 
@@ -157,7 +164,8 @@ def test_issue_verbose_name_plural(issue_with_arc):
     assert str(issue_with_arc._meta.verbose_name_plural) == "issues"
 
 
-def test_issue_absolute_url(client, issue_with_arc):
+def test_issue_absolute_url(auto_login_user, issue_with_arc):
+    client, _ = auto_login_user()
     resp = client.get(issue_with_arc.get_absolute_url())
     assert resp.status_code == HTTP_200_OK
 
@@ -192,6 +200,7 @@ def test_universe_verbose_name_plural(earth_2_universe):
     assert str(earth_2_universe._meta.verbose_name_plural) == "universes"
 
 
-def test_universe_absolute_url(client, earth_2_universe):
+def test_universe_absolute_url(auto_login_user, earth_2_universe):
+    client, _ = auto_login_user()
     resp = client.get(earth_2_universe.get_absolute_url())
     assert resp.status_code == HTTP_200_OK

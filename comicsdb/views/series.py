@@ -22,13 +22,13 @@ from comicsdb.views.mixins import (
 LOGGER = logging.getLogger(__name__)
 
 
-class SeriesList(ListView):
+class SeriesList(LoginRequiredMixin, ListView):
     model = Series
     paginate_by = PAGINATE_BY
     queryset = Series.objects.select_related("series_type").prefetch_related("issues")
 
 
-class SeriesIssueList(ListView):
+class SeriesIssueList(LoginRequiredMixin, ListView):
     template_name = "comicsdb/issue_list.html"
     paginate_by = PAGINATE_BY
 
@@ -42,7 +42,7 @@ class SeriesIssueList(ListView):
         return context
 
 
-class SeriesDetail(DetailView):
+class SeriesDetail(LoginRequiredMixin, DetailView):
     model = Series
     queryset = Series.objects.select_related(
         "publisher", "imprint", "edited_by", "series_type"
