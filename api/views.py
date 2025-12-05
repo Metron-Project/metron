@@ -1,8 +1,9 @@
-from django.db.models import Prefetch
+from django.db.models import Prefetch, Q
 from django.http import Http404
 from drf_spectacular.utils import extend_schema
 from rest_framework import mixins, status, viewsets
 from rest_framework.decorators import action
+from rest_framework.pagination import PageNumberPagination
 from rest_framework.parsers import FormParser, MultiPartParser
 from rest_framework.response import Response
 
@@ -23,6 +24,9 @@ from api.v1_0.serializers import (
     IssueSerializer,
     PublisherListSerializer,
     PublisherSerializer,
+    ReadingListItemSerializer,
+    ReadingListListSerializer,
+    ReadingListReadSerializer,
     RoleSerializer,
     SeriesListSerializer,
     SeriesReadSerializer,
@@ -38,6 +42,7 @@ from api.v1_0.serializers import (
 )
 from comicsdb.filters.issue import IssueFilter
 from comicsdb.filters.name import ComicVineFilter, NameFilter, UniverseFilter
+from comicsdb.filters.reading_list import ReadingListFilter
 from comicsdb.filters.series import SeriesFilter
 from comicsdb.models import (
     Arc,
@@ -54,6 +59,14 @@ from comicsdb.models import (
 )
 from comicsdb.models.series import SeriesType
 from comicsdb.models.variant import Variant
+from reading_lists.models import ReadingList
+from users.models import CustomUser
+
+
+class ReadingListItemsPagination(PageNumberPagination):
+    """Custom pagination for reading list items with 50 items per page."""
+
+    page_size = 50
 
 
 class UserTrackingMixin:
@@ -510,6 +523,73 @@ class UniverseViewSet(
                 return UniverseReadSerializer
             case _:
                 return UniverseSerializer
+
+
+class ReadingListViewSet(
+    mixins.RetrieveModelMixin,
+    mixins.ListModelMixin,
+    viewsets.GenericViewSet,
+):
+    """
+    list:
+    Returns a list of reading lists based on user permissions.
+    Requires authentication.
+    - Authenticated users: Public lists + own lists
+    - Admin users: Public lists + own lists + Metron's lists
+
+    retrieve:
+    Returns the information of an individual reading list.
+    Requires authentication.
+    """
+
+    queryset = ReadingList.objects.all()
+    filterset_class = ReadingListFilter
+    pagination_class = ReadingListItemsPagination
+
+    def get_queryset(self):
+        """Filter reading lists based on user permissions and visibility rules."""
+        queryset = ReadingList.objects.select_related("user")
+
+        # Unauthenticated users - only public lists
+        if not self.request.user.is_authenticated:
+            return queryset.filter(is_private=False)
+
+        # Admin users - public lists + own lists + Metron's lists
+        if self.request.user.is_staff:
+            try:
+                metron_user = CustomUser.objects.get(username="Metron")
+                return queryset.filter(
+                    Q(is_private=False) | Q(user=self.request.user) | Q(user=metron_user)
+                ).distinct()
+            except CustomUser.DoesNotExist:
+                pass
+
+        # Authenticated users - public lists + own lists
+        return queryset.filter(Q(is_private=False) | Q(user=self.request.user)).distinct()
+
+    def get_serializer_class(self):
+        if self.action == "list":
+            return ReadingListListSerializer
+        if self.action == "items":
+            return ReadingListItemSerializer
+        return ReadingListReadSerializer
+
+    @extend_schema(
+        responses={200: ReadingListItemSerializer(many=True)},
+        filters=False,
+    )
+    @action(detail=True)
+    def items(self, request, pk=None):
+        """Returns a paginated list of items for this reading list."""
+        reading_list = self.get_object()
+        queryset = reading_list.reading_list_items.select_related(
+            "issue__series", "issue__series__series_type"
+        ).order_by("order")
+        page = self.paginate_queryset(queryset)
+        if page is not None:
+            serializer = ReadingListItemSerializer(page, many=True, context={"request": request})
+            return self.get_paginated_response(serializer.data)
+        raise Http404
 
 
 class VariantViewset(
