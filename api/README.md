@@ -10,16 +10,17 @@ Welcome to the Metron API documentation. This API provides programmatic access t
 - [Base URL](#base-url)
 - [Common Patterns](#common-patterns)
 - [Endpoints](#endpoints)
-  - [Arc](#arc)
-  - [Character](#character)
-  - [Creator](#creator)
-  - [Issue](#issue)
-  - [Publisher](#publisher)
-  - [Imprint](#imprint)
-  - [Series](#series)
-  - [Team](#team)
-  - [Universe](#universe)
-  - [Supporting Resources](#supporting-resources)
+    - [Arc](#arc)
+    - [Character](#character)
+    - [Creator](#creator)
+    - [Issue](#issue)
+    - [Publisher](#publisher)
+    - [Imprint](#imprint)
+    - [Series](#series)
+    - [Team](#team)
+    - [Universe](#universe)
+    - [Reading List](#reading-list)
+    - [Supporting Resources](#supporting-resources)
 - [Filtering](#filtering)
 - [Pagination](#pagination)
 - [Error Handling](#error-handling)
@@ -31,6 +32,7 @@ Welcome to the Metron API documentation. This API provides programmatic access t
 The Metron API is a RESTful API that provides access to a comprehensive database of comic book information. The API supports read operations for all authenticated users and write operations for users in the editor group or administrators.
 
 **Key Features:**
+
 - Comprehensive comic book metadata
 - Read and write operations
 - Advanced filtering and search
@@ -65,6 +67,7 @@ All API endpoints require authentication.
 ### Authentication Methods
 
 **1. Basic Authentication**
+
 - Use your username and password
 - Include in request header: `Authorization: Basic <base64-encoded-credentials>`
 - Or use `-u username:password` with curl
@@ -121,6 +124,7 @@ Story arcs that span multiple issues, often across different series.
 **Base Path:** `/api/arc/`
 
 **Actions:**
+
 - `GET /api/arc/` - List all arcs
 - `GET /api/arc/{id}/` - Retrieve arc details
 - `POST /api/arc/` - Create new arc (requires editor or admin)
@@ -128,6 +132,7 @@ Story arcs that span multiple issues, often across different series.
 - `GET /api/arc/{id}/issue_list/` - List issues in this arc
 
 **Filters:**
+
 - `name` - Arc name (case-insensitive, partial match)
 - `cv_id` - Comic Vine ID (exact match)
 - `gcd_id` - Grand Comics Database ID (exact match)
@@ -144,12 +149,13 @@ Story arcs that span multiple issues, often across different series.
 ```
 
 **Detail Response Fields:**
+
 - All list fields plus:
-- `desc` - Description
-- `image` - Cover image URL
-- `cv_id` - Comic Vine ID
-- `gcd_id` - Grand Comics Database ID
-- `resource_url` - Link to web UI
+    - `desc` - Description
+    - `image` - Cover image URL
+    - `cv_id` - Comic Vine ID
+    - `gcd_id` - Grand Comics Database ID
+    - `resource_url` - Link to web UI
 
 **Example:**
 ```bash
@@ -169,6 +175,7 @@ Comic book characters appearing in issues.
 **Base Path:** `/api/character/`
 
 **Actions:**
+
 - `GET /api/character/` - List all characters
 - `GET /api/character/{id}/` - Retrieve character details
 - `POST /api/character/` - Create new character (requires editor or admin)
@@ -176,6 +183,7 @@ Comic book characters appearing in issues.
 - `GET /api/character/{id}/issue_list/` - List issues featuring this character
 
 **Filters:**
+
 - `name` - Character name (case-insensitive, partial match)
 - `cv_id` - Comic Vine ID (exact match)
 - `gcd_id` - Grand Comics Database ID (exact match)
@@ -192,16 +200,17 @@ Comic book characters appearing in issues.
 ```
 
 **Detail Response Fields:**
+
 - All list fields plus:
-- `alias` - Character aliases
-- `desc` - Description
-- `image` - Character image URL
-- `creators` - Array of creator objects
-- `teams` - Array of team objects
-- `universes` - Array of universe objects
-- `cv_id` - Comic Vine ID
-- `gcd_id` - Grand Comics Database ID
-- `resource_url` - Link to web UI
+    - `alias` - Character aliases
+    - `desc` - Description
+    - `image` - Character image URL
+    - `creators` - Array of creator objects
+    - `teams` - Array of team objects
+    - `universes` - Array of universe objects
+    - `cv_id` - Comic Vine ID
+    - `gcd_id` - Grand Comics Database ID
+    - `resource_url` - Link to web UI
 
 **Example:**
 ```bash
@@ -221,12 +230,14 @@ Writers, artists, and other comic book creators.
 **Base Path:** `/api/creator/`
 
 **Actions:**
+
 - `GET /api/creator/` - List all creators
 - `GET /api/creator/{id}/` - Retrieve creator details
 - `POST /api/creator/` - Create new creator (requires editor or admin)
 - `PUT/PATCH /api/creator/{id}/` - Update creator (requires editor or admin)
 
 **Filters:**
+
 - `name` - Creator name (case-insensitive, partial match)
 - `cv_id` - Comic Vine ID (exact match)
 - `gcd_id` - Grand Comics Database ID (exact match)
@@ -243,14 +254,15 @@ Writers, artists, and other comic book creators.
 ```
 
 **Detail Response Fields:**
+
 - All list fields plus:
-- `desc` - Biography
-- `birth` - Birth date
-- `death` - Death date
-- `image` - Creator photo URL
-- `cv_id` - Comic Vine ID
-- `gcd_id` - Grand Comics Database ID
-- `resource_url` - Link to web UI
+    - `desc` - Biography
+    - `birth` - Birth date
+    - `death` - Death date
+    - `image` - Creator photo URL
+    - `cv_id` - Comic Vine ID
+    - `gcd_id` - Grand Comics Database ID
+    - `resource_url` - Link to web UI
 
 **Example:**
 ```bash
@@ -270,6 +282,7 @@ Individual comic book issues.
 **Base Path:** `/api/issue/`
 
 **Actions:**
+
 - `GET /api/issue/` - List all issues
 - `GET /api/issue/{id}/` - Retrieve issue details
 - `POST /api/issue/` - Create new issue (requires editor or admin)
@@ -280,6 +293,7 @@ Individual comic book issues.
 The Issue endpoint supports the most comprehensive filtering options:
 
 **Date Filters:**
+
 - `store_date` - Store date (exact match, YYYY-MM-DD)
 - `store_date_range_after` - Store date on or after
 - `store_date_range_before` - Store date on or before
@@ -290,18 +304,21 @@ The Issue endpoint supports the most comprehensive filtering options:
 - `cover_month` - Cover date month (1-12)
 
 **Series Filters:**
+
 - `series_name` - Series name (searches all words, case-insensitive)
 - `series_id` - Series Metron ID
 - `series_volume` - Series volume number
 - `series_year_began` - Series start year
 
 **Publisher/Imprint Filters:**
+
 - `publisher_name` - Publisher name (partial match)
 - `publisher_id` - Publisher Metron ID
 - `imprint_name` - Imprint name (partial match)
 - `imprint_id` - Imprint Metron ID
 
 **Issue Identification:**
+
 - `number` - Issue number (case-insensitive, exact match)
 - `alt_number` - Alternate number (case-insensitive, exact match)
 - `sku` - Distributor SKU (exact match)
@@ -313,9 +330,11 @@ The Issue endpoint supports the most comprehensive filtering options:
 - `cover_hash` - Perceptual hash for cover matching
 
 **Content Filters:**
+
 - `rating` - Content rating (exact match)
 
 **Metadata:**
+
 - `modified_gt` - Modified after datetime
 
 **List Response Fields:**
@@ -340,26 +359,27 @@ The Issue endpoint supports the most comprehensive filtering options:
 ```
 
 **Detail Response Fields:**
+
 - All list fields plus:
-- `desc` - Issue description
-- `price` - Cover price
-- `sku` - Distributor SKU
-- `isbn` - ISBN number
-- `upc` - UPC code
-- `page_count` - Number of pages
-- `rating` - Content rating object
-- `arcs` - Story arcs
-- `characters` - Characters appearing
-- `teams` - Teams appearing
-- `universes` - Universes
-- `credits` - Creator credits with roles
-- `variants` - Variant covers
-- `reprints` - Reprinted issues
-- `cv_id` - Comic Vine ID
-- `gcd_id` - Grand Comics Database ID
-- `cover_hash` - Perceptual image hash
-- `foc_date` - Final order cutoff date
-- `resource_url` - Link to web UI
+    - `desc` - Issue description
+    - `price` - Cover price
+    - `sku` - Distributor SKU
+    - `isbn` - ISBN number
+    - `upc` - UPC code
+    - `page_count` - Number of pages
+    - `rating` - Content rating object
+    - `arcs` - Story arcs
+    - `characters` - Characters appearing
+    - `teams` - Teams appearing
+    - `universes` - Universes
+    - `credits` - Creator credits with roles
+    - `variants` - Variant covers
+    - `reprints` - Reprinted issues
+    - `cv_id` - Comic Vine ID
+    - `gcd_id` - Grand Comics Database ID
+    - `cover_hash` - Perceptual image hash
+    - `foc_date` - Final order cutoff date
+    - `resource_url` - Link to web UI
 
 **Cover Hash:**
 The `cover_hash` field contains a perceptual hash generated using [ImageHash](https://github.com/JohannesBuchner/imagehash). This allows for finding similar or duplicate covers.
@@ -394,6 +414,7 @@ Comic book publishers.
 **Base Path:** `/api/publisher/`
 
 **Actions:**
+
 - `GET /api/publisher/` - List all publishers
 - `GET /api/publisher/{id}/` - Retrieve publisher details
 - `POST /api/publisher/` - Create new publisher (requires editor or admin)
@@ -401,6 +422,7 @@ Comic book publishers.
 - `GET /api/publisher/{id}/series_list/` - List series from this publisher
 
 **Filters:**
+
 - `name` - Publisher name (case-insensitive, partial match)
 - `cv_id` - Comic Vine ID (exact match)
 - `gcd_id` - Grand Comics Database ID (exact match)
@@ -418,12 +440,13 @@ Comic book publishers.
 ```
 
 **Detail Response Fields:**
+
 - All list fields plus:
-- `desc` - Description
-- `image` - Publisher logo URL
-- `cv_id` - Comic Vine ID
-- `gcd_id` - Grand Comics Database ID
-- `resource_url` - Link to web UI
+    - `desc` - Description
+    - `image` - Publisher logo URL
+    - `cv_id` - Comic Vine ID
+    - `gcd_id` - Grand Comics Database ID
+    - `resource_url` - Link to web UI
 
 **Example:**
 ```bash
@@ -443,12 +466,14 @@ Publisher imprints (e.g., Vertigo, MAX).
 **Base Path:** `/api/imprint/`
 
 **Actions:**
+
 - `GET /api/imprint/` - List all imprints
 - `GET /api/imprint/{id}/` - Retrieve imprint details
 - `POST /api/imprint/` - Create new imprint (requires editor or admin)
 - `PUT/PATCH /api/imprint/{id}/` - Update imprint (requires editor or admin)
 
 **Filters:**
+
 - `name` - Imprint name (case-insensitive, partial match)
 - `cv_id` - Comic Vine ID (exact match)
 - `gcd_id` - Grand Comics Database ID (exact match)
@@ -466,13 +491,14 @@ Publisher imprints (e.g., Vertigo, MAX).
 ```
 
 **Detail Response Fields:**
+
 - All list fields plus:
-- `publisher` - Parent publisher object
-- `desc` - Description
-- `image` - Imprint logo URL
-- `cv_id` - Comic Vine ID
-- `gcd_id` - Grand Comics Database ID
-- `resource_url` - Link to web UI
+    - `publisher` - Parent publisher object
+    - `desc` - Description
+    - `image` - Imprint logo URL
+    - `cv_id` - Comic Vine ID
+    - `gcd_id` - Grand Comics Database ID
+    - `resource_url` - Link to web UI
 
 **Example:**
 ```bash
@@ -489,6 +515,7 @@ Comic book series.
 **Base Path:** `/api/series/`
 
 **Actions:**
+
 - `GET /api/series/` - List all series
 - `GET /api/series/{id}/` - Retrieve series details
 - `POST /api/series/` - Create new series (requires editor or admin)
@@ -498,30 +525,36 @@ Comic book series.
 **Extensive Filtering:**
 
 **Basic Filters:**
+
 - `name` - Series name (searches all words, case-insensitive)
 - `volume` - Volume number
 - `year_began` - Year series started
 - `year_end` - Year series ended
 
 **Publisher/Imprint:**
+
 - `publisher_id` - Publisher Metron ID
 - `publisher_name` - Publisher name (partial match)
 - `imprint_name` - Imprint name (partial match)
 
 **Series Type:**
+
 - `series_type_id` - Series type Metron ID
 - `series_type` - Series type name (partial match)
 
 **Status:**
+
 - `status` - Series status (choices: continuing, completed, cancelled, hiatus)
 
 **External IDs:**
+
 - `cv_id` - Comic Vine ID
 - `missing_cv_id` - Boolean, series without Comic Vine ID
 - `gcd_id` - Grand Comics Database ID
 - `missing_gcd_id` - Boolean, series without GCD ID
 
 **Metadata:**
+
 - `modified_gt` - Modified after datetime
 
 **List Response Fields:**
@@ -546,17 +579,19 @@ Comic book series.
 ```
 
 **Detail Response Fields:**
+
 - All list fields plus:
-- `imprint` - Imprint object (if applicable)
-- `status` - Series status (continuing, completed, cancelled, hiatus)
-- `desc` - Description
-- `genres` - Array of genre objects
-- `associated` - Associated series
-- `cv_id` - Comic Vine ID
-- `gcd_id` - Grand Comics Database ID
-- `resource_url` - Link to web UI
+    - `imprint` - Imprint object (if applicable)
+    - `status` - Series status (continuing, completed, cancelled, hiatus)
+    - `desc` - Description
+    - `genres` - Array of genre objects
+    - `associated` - Associated series
+    - `cv_id` - Comic Vine ID
+    - `gcd_id` - Grand Comics Database ID
+    - `resource_url` - Link to web UI
 
 **Series Status Choices:**
+
 - `continuing` - Ongoing series
 - `completed` - Finished series
 - `cancelled` - Cancelled series
@@ -589,6 +624,7 @@ Superhero teams and groups.
 **Base Path:** `/api/team/`
 
 **Actions:**
+
 - `GET /api/team/` - List all teams
 - `GET /api/team/{id}/` - Retrieve team details
 - `POST /api/team/` - Create new team (requires editor or admin)
@@ -596,6 +632,7 @@ Superhero teams and groups.
 - `GET /api/team/{id}/issue_list/` - List issues featuring this team
 
 **Filters:**
+
 - `name` - Team name (case-insensitive, partial match)
 - `cv_id` - Comic Vine ID (exact match)
 - `gcd_id` - Grand Comics Database ID (exact match)
@@ -612,14 +649,15 @@ Superhero teams and groups.
 ```
 
 **Detail Response Fields:**
+
 - All list fields plus:
-- `desc` - Description
-- `image` - Team image URL
-- `creators` - Array of creator objects
-- `universes` - Array of universe objects
-- `cv_id` - Comic Vine ID
-- `gcd_id` - Grand Comics Database ID
-- `resource_url` - Link to web UI
+    - `desc` - Description
+    - `image` - Team image URL
+    - `creators` - Array of creator objects
+    - `universes` - Array of universe objects
+    - `cv_id` - Comic Vine ID
+    - `gcd_id` - Grand Comics Database ID
+    - `resource_url` - Link to web UI
 
 **Example:**
 ```bash
@@ -639,12 +677,14 @@ Comic book universes (e.g., Earth-616, Earth-1).
 **Base Path:** `/api/universe/`
 
 **Actions:**
+
 - `GET /api/universe/` - List all universes
 - `GET /api/universe/{id}/` - Retrieve universe details
 - `POST /api/universe/` - Create new universe (requires editor or admin)
 - `PUT/PATCH /api/universe/{id}/` - Update universe (requires editor or admin)
 
 **Filters:**
+
 - `name` - Universe name (case-insensitive, partial match)
 - `designation` - Universe designation (case-insensitive, partial match)
 - `modified_gt` - Modified after datetime
@@ -661,17 +701,157 @@ Comic book universes (e.g., Earth-616, Earth-1).
 ```
 
 **Detail Response Fields:**
+
 - All list fields plus:
-- `publisher` - Publisher object
-- `desc` - Description
-- `image` - Universe image URL
-- `resource_url` - Link to web UI
+    - `publisher` - Publisher object
+    - `desc` - Description
+    - `image` - Universe image URL
+    - `resource_url` - Link to web UI
 
 **Example:**
 ```bash
 # Find universes by designation
 GET /api/universe/?designation=616
 ```
+
+---
+
+### Reading List
+
+User-created reading lists that organize issues in a specific reading order.
+
+**Base Path:** `/api/reading_list/`
+
+**Actions:**
+
+- `GET /api/reading_list/` - List accessible reading lists
+- `GET /api/reading_list/{id}/` - Retrieve reading list details
+- `GET /api/reading_list/{id}/items/` - Get issues in a reading list
+
+**Read-Only API:**
+This endpoint is read-only. Create, update, and delete operations are not available via the API. Use the web interface to manage reading lists.
+
+**Filters:**
+
+- `name` - Reading list name (case-insensitive, partial match)
+- `user` - User ID (exact match)
+- `username` - Username (case-insensitive, partial match)
+- `attribution_source` - Attribution source code (exact match)
+- `is_private` - Boolean, filter by privacy status
+- `modified_gt` - Modified after datetime
+
+**Attribution Source Codes:**
+
+- `CBRO` - Comic Book Reading Orders
+- `CMRO` - Complete Marvel Reading Orders
+- `CBH` - Comic Book Herald
+- `CBT` - Comic Book Treasury
+- `MG` - Marvel Guides
+- `HTLC` - How To Love Comics
+- `LOCG` - League of ComicGeeks
+- `OTHER` - Other
+
+**List Response Fields:**
+```json
+{
+  "id": 1,
+  "name": "Secret Wars (2015)",
+  "slug": "secret-wars-2015",
+  "user": {
+    "id": 5,
+    "username": "johndoe"
+  },
+  "is_private": false,
+  "attribution_source": "CBRO",
+  "modified": "2025-01-15T10:30:00Z"
+}
+```
+
+**Detail Response Fields:**
+
+- All list fields plus:
+    - `desc` - Description
+    - `attribution_source` - Full attribution source name (e.g., "Comic Book Reading Orders")
+    - `attribution_url` - URL to source
+    - `items_url` - URL to fetch reading list items
+    - `resource_url` - Link to web UI
+
+**Items Response Fields:**
+```json
+{
+  "id": 101,
+  "issue": {
+    "id": 5432,
+    "series": {
+      "id": 789,
+      "name": "Secret Wars",
+      "volume": 1,
+      "series_type": {
+        "id": 1,
+        "name": "Mini-Series"
+      }
+    },
+    "number": "1",
+    "cover_date": "2015-07-01",
+    "store_date": "2015-05-06",
+    "cv_id": 123456,
+    "gcd_id": null,
+    "modified": "2025-01-10T14:20:00Z"
+  },
+  "order": 1
+}
+```
+
+**Permissions:**
+
+*List Endpoint:*
+- **Unauthenticated users:** Returns 401 Unauthorized
+- **Authenticated users:** Public lists + own lists (public and private)
+- **Admin users:** Public lists + own lists + Metron user's lists
+
+*Detail/Items Endpoints:*
+A user can access a reading list if:
+- The list is public (is_private=false), OR
+- The user owns the list, OR
+- The user is an admin AND the list belongs to the "Metron" user
+
+Access denied returns `404 Not Found`.
+
+**Pagination:**
+
+- Default page size: 50 items per page for lists and items
+- Items are ordered by the `order` field
+
+**Examples:**
+```bash
+# List all accessible reading lists
+GET /api/reading_list/
+
+# Find public reading lists
+GET /api/reading_list/?is_private=false
+
+# Find lists by username
+GET /api/reading_list/?username=johndoe
+
+# Find lists from Comic Book Reading Orders
+GET /api/reading_list/?attribution_source=CBRO
+
+# Get reading list details
+GET /api/reading_list/1/
+
+# Get items in a reading list
+GET /api/reading_list/1/items/
+
+# Combine multiple filters
+GET /api/reading_list/?name=secret&is_private=false
+```
+
+**Notes:**
+
+- When filtering, use attribution source codes (e.g., `CBRO`). In detail responses, the full name is returned (e.g., "Comic Book Reading Orders")
+- Items endpoint excludes `image` and `cover_hash` from issue data for performance
+- Some lists belong to a special "Metron" user account representing curated/official reading orders
+- Admin users have special access to Metron user's lists
 
 ---
 
@@ -684,9 +864,11 @@ Creator roles (e.g., Writer, Penciller, Inker).
 **Base Path:** `/api/role/`
 
 **Actions:**
+
 - `GET /api/role/` - List all roles (read-only)
 
 **Filters:**
+
 - `name` - Role name (case-insensitive, partial match)
 - `modified_gt` - Modified after datetime
 
@@ -707,9 +889,11 @@ Types of comic series (e.g., Ongoing, Mini-Series, One-Shot).
 **Base Path:** `/api/series_type/`
 
 **Actions:**
+
 - `GET /api/series_type/` - List all series types (read-only)
 
 **Filters:**
+
 - `name` - Series type name (case-insensitive, partial match)
 - `modified_gt` - Modified after datetime
 
@@ -730,6 +914,7 @@ Creator credits for issues.
 **Base Path:** `/api/credit/`
 
 **Actions:**
+
 - `POST /api/credit/` - Create new credits (requires editor or admin, bulk creation supported)
 
 **Request Format:**
@@ -744,6 +929,7 @@ Creator credits for issues.
 ```
 
 **Notes:**
+
 - Accepts arrays for bulk creation
 - `issue` - Issue ID
 - `creator` - Creator ID
@@ -758,10 +944,12 @@ Variant covers for issues.
 **Base Path:** `/api/variant/`
 
 **Actions:**
+
 - `POST /api/variant/` - Create new variant (requires editor or admin, requires image upload)
 - `PUT/PATCH /api/variant/{id}/` - Update variant (requires editor or admin)
 
 **Fields:**
+
 - `issue` - Parent issue ID
 - `name` - Variant name
 - `sku` - Distributor SKU
@@ -775,25 +963,30 @@ Variant covers for issues.
 ### Common Filter Patterns
 
 **Name Searching:**
+
 - Case-insensitive partial matching
 - Accent-insensitive (unaccent lookup)
 - Example: `?name=spider` matches "Spider-Man", "spider-woman"
 
 **Series Name Searching:**
+
 - Searches for all words in the query
 - Example: `?series_name=amazing spider-man` requires all three words
 
 **Date Filtering:**
+
 - `modified_gt` - Find items modified after a specific datetime
 - Format: ISO 8601 (YYYY-MM-DDTHH:MM:SSZ)
 - Example: `?modified_gt=2025-01-01T00:00:00Z`
 
 **Date Range Filtering:**
+
 - `{field}_range_after` - On or after date
 - `{field}_range_before` - On or before date
 - Example: `?store_date_range_after=2025-01-01&store_date_range_before=2025-01-31`
 
 **Boolean Filters:**
+
 - `missing_cv_id` - True/false for missing Comic Vine IDs
 - `missing_gcd_id` - True/false for missing GCD IDs
 - Example: `?missing_cv_id=true`
@@ -821,6 +1014,7 @@ All list endpoints return paginated responses.
 ```
 
 **Fields:**
+
 - `count` - Total number of items
 - `next` - URL to next page (null if last page)
 - `previous` - URL to previous page (null if first page)
@@ -839,6 +1033,7 @@ GET /api/issue/?series_name=spider-man&page=3
 ```
 
 **Page Size:**
+
 - Default page size varies by endpoint (typically 25-100 items)
 - Some endpoints may allow custom page size via `?page_size=N`
 
@@ -849,17 +1044,20 @@ GET /api/issue/?series_name=spider-man&page=3
 ### Common HTTP Status Codes
 
 **Success Codes:**
+
 - `200 OK` - Request succeeded
 - `201 Created` - Resource created successfully
 - `204 No Content` - Delete succeeded
 
 **Client Error Codes:**
+
 - `400 Bad Request` - Invalid request data
 - `401 Unauthorized` - Authentication required
 - `403 Forbidden` - Insufficient permissions
 - `404 Not Found` - Resource doesn't exist
 
 **Server Error Codes:**
+
 - `500 Internal Server Error` - Server error
 
 ### Error Response Format
@@ -912,9 +1110,9 @@ The API implements rate limiting to ensure fair usage. Rate limit details:
 
 - Limits are applied per user/IP address
 - Rate limit information is included in response headers:
-  - `X-RateLimit-Limit` - Requests allowed per time period
-  - `X-RateLimit-Remaining` - Requests remaining
-  - `X-RateLimit-Reset` - Time when limit resets
+    - `X-RateLimit-Limit` - Requests allowed per time period
+    - `X-RateLimit-Remaining` - Requests remaining
+    - `X-RateLimit-Reset` - Time when limit resets
 
 If you exceed the rate limit, you'll receive a `429 Too Many Requests` response.
 
