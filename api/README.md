@@ -19,6 +19,7 @@ Welcome to the Metron API documentation. This API provides programmatic access t
   - [Series](#series)
   - [Team](#team)
   - [Universe](#universe)
+  - [Reading List](#reading-list)
   - [Supporting Resources](#supporting-resources)
 - [Filtering](#filtering)
 - [Pagination](#pagination)
@@ -145,11 +146,11 @@ Story arcs that span multiple issues, often across different series.
 
 **Detail Response Fields:**
 - All list fields plus:
-- `desc` - Description
-- `image` - Cover image URL
-- `cv_id` - Comic Vine ID
-- `gcd_id` - Grand Comics Database ID
-- `resource_url` - Link to web UI
+  - `desc` - Description
+  - `image` - Cover image URL
+  - `cv_id` - Comic Vine ID
+  - `gcd_id` - Grand Comics Database ID
+  - `resource_url` - Link to web UI
 
 **Example:**
 ```bash
@@ -193,15 +194,15 @@ Comic book characters appearing in issues.
 
 **Detail Response Fields:**
 - All list fields plus:
-- `alias` - Character aliases
-- `desc` - Description
-- `image` - Character image URL
-- `creators` - Array of creator objects
-- `teams` - Array of team objects
-- `universes` - Array of universe objects
-- `cv_id` - Comic Vine ID
-- `gcd_id` - Grand Comics Database ID
-- `resource_url` - Link to web UI
+  - `alias` - Character aliases
+  - `desc` - Description
+  - `image` - Character image URL
+  - `creators` - Array of creator objects
+  - `teams` - Array of team objects
+  - `universes` - Array of universe objects
+  - `cv_id` - Comic Vine ID
+  - `gcd_id` - Grand Comics Database ID
+  - `resource_url` - Link to web UI
 
 **Example:**
 ```bash
@@ -244,13 +245,13 @@ Writers, artists, and other comic book creators.
 
 **Detail Response Fields:**
 - All list fields plus:
-- `desc` - Biography
-- `birth` - Birth date
-- `death` - Death date
-- `image` - Creator photo URL
-- `cv_id` - Comic Vine ID
-- `gcd_id` - Grand Comics Database ID
-- `resource_url` - Link to web UI
+  - `desc` - Biography
+  - `birth` - Birth date
+  - `death` - Death date
+  - `image` - Creator photo URL
+  - `cv_id` - Comic Vine ID
+  - `gcd_id` - Grand Comics Database ID
+  - `resource_url` - Link to web UI
 
 **Example:**
 ```bash
@@ -341,25 +342,25 @@ The Issue endpoint supports the most comprehensive filtering options:
 
 **Detail Response Fields:**
 - All list fields plus:
-- `desc` - Issue description
-- `price` - Cover price
-- `sku` - Distributor SKU
-- `isbn` - ISBN number
-- `upc` - UPC code
-- `page_count` - Number of pages
-- `rating` - Content rating object
-- `arcs` - Story arcs
-- `characters` - Characters appearing
-- `teams` - Teams appearing
-- `universes` - Universes
-- `credits` - Creator credits with roles
-- `variants` - Variant covers
-- `reprints` - Reprinted issues
-- `cv_id` - Comic Vine ID
-- `gcd_id` - Grand Comics Database ID
-- `cover_hash` - Perceptual image hash
-- `foc_date` - Final order cutoff date
-- `resource_url` - Link to web UI
+  - `desc` - Issue description
+  - `price` - Cover price
+  - `sku` - Distributor SKU
+  - `isbn` - ISBN number
+  - `upc` - UPC code
+  - `page_count` - Number of pages
+  - `rating` - Content rating object
+  - `arcs` - Story arcs
+  - `characters` - Characters appearing
+  - `teams` - Teams appearing
+  - `universes` - Universes
+  - `credits` - Creator credits with roles
+  - `variants` - Variant covers
+  - `reprints` - Reprinted issues
+  - `cv_id` - Comic Vine ID
+  - `gcd_id` - Grand Comics Database ID
+  - `cover_hash` - Perceptual image hash
+  - `foc_date` - Final order cutoff date
+  - `resource_url` - Link to web UI
 
 **Cover Hash:**
 The `cover_hash` field contains a perceptual hash generated using [ImageHash](https://github.com/JohannesBuchner/imagehash). This allows for finding similar or duplicate covers.
@@ -419,11 +420,11 @@ Comic book publishers.
 
 **Detail Response Fields:**
 - All list fields plus:
-- `desc` - Description
-- `image` - Publisher logo URL
-- `cv_id` - Comic Vine ID
-- `gcd_id` - Grand Comics Database ID
-- `resource_url` - Link to web UI
+  - `desc` - Description
+  - `image` - Publisher logo URL
+  - `cv_id` - Comic Vine ID
+  - `gcd_id` - Grand Comics Database ID
+  - `resource_url` - Link to web UI
 
 **Example:**
 ```bash
@@ -467,12 +468,12 @@ Publisher imprints (e.g., Vertigo, MAX).
 
 **Detail Response Fields:**
 - All list fields plus:
-- `publisher` - Parent publisher object
-- `desc` - Description
-- `image` - Imprint logo URL
-- `cv_id` - Comic Vine ID
-- `gcd_id` - Grand Comics Database ID
-- `resource_url` - Link to web UI
+  - `publisher` - Parent publisher object
+  - `desc` - Description
+  - `image` - Imprint logo URL
+  - `cv_id` - Comic Vine ID
+  - `gcd_id` - Grand Comics Database ID
+  - `resource_url` - Link to web UI
 
 **Example:**
 ```bash
@@ -547,14 +548,14 @@ Comic book series.
 
 **Detail Response Fields:**
 - All list fields plus:
-- `imprint` - Imprint object (if applicable)
-- `status` - Series status (continuing, completed, cancelled, hiatus)
-- `desc` - Description
-- `genres` - Array of genre objects
-- `associated` - Associated series
-- `cv_id` - Comic Vine ID
-- `gcd_id` - Grand Comics Database ID
-- `resource_url` - Link to web UI
+  - `imprint` - Imprint object (if applicable)
+  - `status` - Series status (continuing, completed, cancelled, hiatus)
+  - `desc` - Description
+  - `genres` - Array of genre objects
+  - `associated` - Associated series
+  - `cv_id` - Comic Vine ID
+  - `gcd_id` - Grand Comics Database ID
+  - `resource_url` - Link to web UI
 
 **Series Status Choices:**
 - `continuing` - Ongoing series
@@ -613,13 +614,13 @@ Superhero teams and groups.
 
 **Detail Response Fields:**
 - All list fields plus:
-- `desc` - Description
-- `image` - Team image URL
-- `creators` - Array of creator objects
-- `universes` - Array of universe objects
-- `cv_id` - Comic Vine ID
-- `gcd_id` - Grand Comics Database ID
-- `resource_url` - Link to web UI
+  - `desc` - Description
+  - `image` - Team image URL
+  - `creators` - Array of creator objects
+  - `universes` - Array of universe objects
+  - `cv_id` - Comic Vine ID
+  - `gcd_id` - Grand Comics Database ID
+  - `resource_url` - Link to web UI
 
 **Example:**
 ```bash
@@ -662,16 +663,149 @@ Comic book universes (e.g., Earth-616, Earth-1).
 
 **Detail Response Fields:**
 - All list fields plus:
-- `publisher` - Publisher object
-- `desc` - Description
-- `image` - Universe image URL
-- `resource_url` - Link to web UI
+  - `publisher` - Publisher object
+  - `desc` - Description
+  - `image` - Universe image URL
+  - `resource_url` - Link to web UI
 
 **Example:**
 ```bash
 # Find universes by designation
 GET /api/universe/?designation=616
 ```
+
+---
+
+### Reading List
+
+User-created reading lists that organize issues in a specific reading order.
+
+**Base Path:** `/api/reading_list/`
+
+**Actions:**
+- `GET /api/reading_list/` - List accessible reading lists
+- `GET /api/reading_list/{id}/` - Retrieve reading list details
+- `GET /api/reading_list/{id}/items/` - Get issues in a reading list
+
+**Read-Only API:**
+This endpoint is read-only. Create, update, and delete operations are not available via the API. Use the web interface to manage reading lists.
+
+**Filters:**
+- `name` - Reading list name (case-insensitive, partial match)
+- `user` - User ID (exact match)
+- `username` - Username (case-insensitive, partial match)
+- `attribution_source` - Attribution source code (exact match)
+- `is_private` - Boolean, filter by privacy status
+- `modified_gt` - Modified after datetime
+
+**Attribution Source Codes:**
+- `CBRO` - Comic Book Reading Orders
+- `CMRO` - Complete Marvel Reading Orders
+- `CBH` - Comic Book Herald
+- `CBT` - Comic Book Treasury
+- `MG` - Marvel Guides
+- `HTLC` - How To Love Comics
+- `LOCG` - League of ComicGeeks
+- `OTHER` - Other
+
+**List Response Fields:**
+```json
+{
+  "id": 1,
+  "name": "Secret Wars (2015)",
+  "slug": "secret-wars-2015",
+  "user": {
+    "id": 5,
+    "username": "johndoe"
+  },
+  "is_private": false,
+  "attribution_source": "CBRO",
+  "modified": "2025-01-15T10:30:00Z"
+}
+```
+
+**Detail Response Fields:**
+- All list fields plus:
+  - `desc` - Description
+  - `attribution_source` - Full attribution source name (e.g., "Comic Book Reading Orders")
+  - `attribution_url` - URL to source
+  - `items_url` - URL to fetch reading list items
+  - `resource_url` - Link to web UI
+
+**Items Response Fields:**
+```json
+{
+  "id": 101,
+  "issue": {
+    "id": 5432,
+    "series": {
+      "id": 789,
+      "name": "Secret Wars",
+      "volume": 1,
+      "series_type": {
+        "id": 1,
+        "name": "Mini-Series"
+      }
+    },
+    "number": "1",
+    "cover_date": "2015-07-01",
+    "store_date": "2015-05-06",
+    "cv_id": 123456,
+    "gcd_id": null,
+    "modified": "2025-01-10T14:20:00Z"
+  },
+  "order": 1
+}
+```
+
+**Permissions:**
+
+*List Endpoint:*
+- **Unauthenticated users:** Returns 401 Unauthorized
+- **Authenticated users:** Public lists + own lists (public and private)
+- **Admin users:** Public lists + own lists + Metron user's lists
+
+*Detail/Items Endpoints:*
+A user can access a reading list if:
+- The list is public (is_private=false), OR
+- The user owns the list, OR
+- The user is an admin AND the list belongs to the "Metron" user
+
+Access denied returns `404 Not Found`.
+
+**Pagination:**
+- Default page size: 50 items per page for lists and items
+- Items are ordered by the `order` field
+
+**Examples:**
+```bash
+# List all accessible reading lists
+GET /api/reading_list/
+
+# Find public reading lists
+GET /api/reading_list/?is_private=false
+
+# Find lists by username
+GET /api/reading_list/?username=johndoe
+
+# Find lists from Comic Book Reading Orders
+GET /api/reading_list/?attribution_source=CBRO
+
+# Get reading list details
+GET /api/reading_list/1/
+
+# Get items in a reading list
+GET /api/reading_list/1/items/
+
+# Combine multiple filters
+GET /api/reading_list/?name=secret&is_private=false
+```
+
+**Notes:**
+- When filtering, use attribution source codes (e.g., `CBRO`). In detail responses, the full name is returned (e.g., "Comic Book Reading Orders")
+- Items endpoint excludes `image` and `cover_hash` from issue data for performance
+- Some lists belong to a special "Metron" user account representing curated/official reading orders
+- Admin users have special access to Metron user's lists
 
 ---
 
