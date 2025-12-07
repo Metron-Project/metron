@@ -123,6 +123,88 @@ class Command(BaseCommand):
         pattern = r"^[\[\(]\d{4}(?:-\d{4})?[\]\)]\s*"
         return re.sub(pattern, "", name).strip()
 
+    @staticmethod
+    def _get_attribution_source(source: str) -> str:
+        """Map source code to attribution_source."""
+        source_mapping = {
+            "CBRO": ReadingList.AttributionSource.CBRO,
+            "CMRO": ReadingList.AttributionSource.CMRO,
+            "CBH": ReadingList.AttributionSource.CBH,
+            "CBT": ReadingList.AttributionSource.CBT,
+            "MG": ReadingList.AttributionSource.MG,
+            "HTLC": ReadingList.AttributionSource.HTLC,
+            "LoCG": ReadingList.AttributionSource.LOCG,
+            "LOCG": ReadingList.AttributionSource.LOCG,
+            "OTHER": ReadingList.AttributionSource.OTHER,
+        }
+        return source_mapping.get(source, "")
+
+    def _validate_issues(self, issue_ids: list[int], skip_missing: bool) -> set[int]:
+        """Validate that issues exist in the database.
+
+        Returns:
+            Set of existing issue IDs
+        """
+        existing_issues = Issue.objects.filter(id__in=issue_ids)
+        existing_issue_ids = set(existing_issues.values_list("id", flat=True))
+
+        missing_ids = set(issue_ids) - existing_issue_ids
+        if missing_ids:
+            if skip_missing:
+                self.stdout.write(
+                    self.style.WARNING(
+                        f"  Warning: {len(missing_ids)} issue(s) not found: {sorted(missing_ids)}"
+                    )
+                )
+            else:
+                raise CommandError(
+                    f"Issues not found in database: {sorted(missing_ids)}. "
+                    "Use --skip-missing to continue anyway."
+                )
+
+        return existing_issue_ids
+
+    def _create_reading_list_items(
+        self, reading_list: ReadingList, books: list, existing_issue_ids: set[int]
+    ) -> int:
+        """Create reading list items, skipping duplicates.
+
+        Returns:
+            Number of items created
+        """
+        seen_issue_ids = set()
+        items_to_create = []
+        duplicate_count = 0
+
+        for book in books:
+            issue_id = book["database"]["id"]
+            if issue_id not in existing_issue_ids:
+                continue
+
+            if issue_id in seen_issue_ids:
+                duplicate_count += 1
+                continue
+
+            seen_issue_ids.add(issue_id)
+            items_to_create.append(
+                ReadingListItem(
+                    reading_list=reading_list,
+                    issue_id=issue_id,
+                    order=book["index"],
+                )
+            )
+
+        ReadingListItem.objects.bulk_create(items_to_create)
+
+        if duplicate_count > 0:
+            self.stdout.write(
+                self.style.WARNING(
+                    f"  Skipped {duplicate_count} duplicate issue(s) in reading list"
+                )
+            )
+
+        return len(items_to_create)
+
     def _import_reading_list(
         self, json_file: Path, metron_user: CustomUser, dry_run: bool, skip_missing: bool
     ) -> str:
@@ -150,20 +232,7 @@ class Command(BaseCommand):
         list_name = self._sanitize_name(data["name"])
         source = data.get("source", "")
         books = data["books"]
-
-        # Map source code to attribution_source
-        source_mapping = {
-            "CBRO": ReadingList.AttributionSource.CBRO,
-            "CMRO": ReadingList.AttributionSource.CMRO,
-            "CBH": ReadingList.AttributionSource.CBH,
-            "CBT": ReadingList.AttributionSource.CBT,
-            "MG": ReadingList.AttributionSource.MG,
-            "HTLC": ReadingList.AttributionSource.HTLC,
-            "LoCG": ReadingList.AttributionSource.LOCG,
-            "LOCG": ReadingList.AttributionSource.LOCG,
-            "OTHER": ReadingList.AttributionSource.OTHER,
-        }
-        attribution_source = source_mapping.get(source, "")
+        attribution_source = self._get_attribution_source(source)
 
         # Check if reading list already exists
         if ReadingList.objects.filter(user=metron_user, name=list_name).exists():
@@ -176,22 +245,7 @@ class Command(BaseCommand):
 
         # Validate all issues exist before creating the reading list
         issue_ids = [book["database"]["id"] for book in books]
-        existing_issues = Issue.objects.filter(id__in=issue_ids)
-        existing_issue_ids = set(existing_issues.values_list("id", flat=True))
-
-        missing_ids = set(issue_ids) - existing_issue_ids
-        if missing_ids:
-            if skip_missing:
-                self.stdout.write(
-                    self.style.WARNING(
-                        f"  Warning: {len(missing_ids)} issue(s) not found: {sorted(missing_ids)}"
-                    )
-                )
-            else:
-                raise CommandError(
-                    f"Issues not found in database: {sorted(missing_ids)}. "
-                    "Use --skip-missing to continue anyway."
-                )
+        existing_issue_ids = self._validate_issues(issue_ids, skip_missing)
 
         if dry_run:
             issue_count = len([b for b in books if b["database"]["id"] in existing_issue_ids])
@@ -213,19 +267,7 @@ class Command(BaseCommand):
                 is_private=False,
             )
 
-            # Create reading list items using bulk_create for better performance
-            items_to_create = [
-                ReadingListItem(
-                    reading_list=reading_list,
-                    issue_id=book["database"]["id"],
-                    order=book["index"],
-                )
-                for book in books
-                if book["database"]["id"] in existing_issue_ids
-            ]
-
-            ReadingListItem.objects.bulk_create(items_to_create)
-            items_created = len(items_to_create)
+            items_created = self._create_reading_list_items(reading_list, books, existing_issue_ids)
 
             self.stdout.write(
                 self.style.SUCCESS(
