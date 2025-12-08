@@ -22,6 +22,24 @@ from users.models import CustomUser
 READING_LIST_DETAIL_PAGINATE_BY = 50
 
 
+def can_manage_reading_list(user, reading_list):
+    """Check if a user can manage (edit/delete) a reading list.
+
+    Users can manage a list if they are:
+    - The owner of the list
+    - Staff editing a Metron list
+    - Member of 'reading list editor' group editing a Metron list
+    """
+    is_owner = reading_list.user == user
+
+    if reading_list.user.username == "Metron":
+        is_staff = user.is_staff
+        is_editor_group = user.groups.filter(name="reading list editor").exists()
+        return is_owner or is_staff or is_editor_group
+
+    return is_owner
+
+
 class ReadingListListView(ListView):
     """Display all public reading lists, plus user's own lists if authenticated."""
 
@@ -34,8 +52,9 @@ class ReadingListListView(ListView):
         queryset = ReadingList.objects.select_related("user").annotate(issue_count=Count("issues"))
 
         if self.request.user.is_authenticated:
-            # If admin, show public lists + user's own lists + Metron's lists
-            if self.request.user.is_staff:
+            # If admin or reading list editor, show public lists + user's own lists + Metron's lists
+            is_editor = self.request.user.groups.filter(name="reading list editor").exists()
+            if self.request.user.is_staff or is_editor:
                 try:
                     metron_user = CustomUser.objects.get(username="Metron")
                     queryset = queryset.filter(
@@ -97,8 +116,9 @@ class ReadingListDetailView(DetailView):
         if not self.request.user.is_authenticated:
             return queryset.filter(is_private=False)
 
-        # If admin, show public lists + user's own lists + Metron's lists
-        if self.request.user.is_staff:
+        # If admin or reading list editor, show public lists + user's own lists + Metron's lists
+        is_editor = self.request.user.groups.filter(name="reading list editor").exists()
+        if self.request.user.is_staff or is_editor:
             try:
                 metron_user = CustomUser.objects.get(username="Metron")
                 return queryset.filter(
@@ -125,16 +145,11 @@ class ReadingListDetailView(DetailView):
         if reading_list_items_count > 0:
             context["reading_list_items"] = reading_list_items_qs[:READING_LIST_DETAIL_PAGINATE_BY]
 
-        # Check if user is the owner OR admin viewing Metron's list
-        is_actual_owner = (
-            self.request.user.is_authenticated and reading_list.user == self.request.user
-        )
-        is_admin_managing_metron = (
-            self.request.user.is_authenticated
-            and self.request.user.is_staff
-            and reading_list.user.username == "Metron"
-        )
-        context["is_owner"] = is_actual_owner or is_admin_managing_metron
+        # Check if user can manage this reading list
+        if self.request.user.is_authenticated:
+            context["is_owner"] = can_manage_reading_list(self.request.user, reading_list)
+        else:
+            context["is_owner"] = False
 
         return context
 
@@ -176,13 +191,9 @@ class ReadingListUpdateView(LoginRequiredMixin, UserPassesTestMixin, UpdateView)
     template_name = "reading_lists/readinglist_form.html"
 
     def test_func(self):
-        """Only allow the owner to edit the list, or admins for Metron's lists."""
+        """Only allow authorized users to edit the list."""
         reading_list = self.get_object()
-        is_owner = reading_list.user == self.request.user
-        is_admin_managing_metron = (
-            self.request.user.is_staff and reading_list.user.username == "Metron"
-        )
-        return is_owner or is_admin_managing_metron
+        return can_manage_reading_list(self.request.user, reading_list)
 
     def get_form(self, form_class=None):
         """Customize form to exclude attribution fields for non-admin users."""
@@ -213,13 +224,9 @@ class ReadingListDeleteView(LoginRequiredMixin, UserPassesTestMixin, DeleteView)
     success_url = reverse_lazy("reading-list:my-lists")
 
     def test_func(self):
-        """Only allow the owner to delete the list, or admins for Metron's lists."""
+        """Only allow authorized users to delete the list."""
         reading_list = self.get_object()
-        is_owner = reading_list.user == self.request.user
-        is_admin_managing_metron = (
-            self.request.user.is_staff and reading_list.user.username == "Metron"
-        )
-        return is_owner or is_admin_managing_metron
+        return can_manage_reading_list(self.request.user, reading_list)
 
     def form_valid(self, form):
         messages.success(self.request, f"Reading list '{self.object.name}' deleted!")
@@ -237,12 +244,8 @@ class RemoveIssueFromReadingListView(LoginRequiredMixin, UserPassesTestMixin, De
         return super().dispatch(request, *args, **kwargs)
 
     def test_func(self):
-        """Only allow the owner to remove issues, or admins for Metron's lists."""
-        is_owner = self.reading_list.user == self.request.user
-        is_admin_managing_metron = (
-            self.request.user.is_staff and self.reading_list.user.username == "Metron"
-        )
-        return is_owner or is_admin_managing_metron
+        """Only allow authorized users to remove issues."""
+        return can_manage_reading_list(self.request.user, self.reading_list)
 
     def get_object(self):
         return get_object_or_404(
@@ -270,12 +273,8 @@ class AddIssueWithAutocompleteView(LoginRequiredMixin, UserPassesTestMixin, Form
         return super().dispatch(request, *args, **kwargs)
 
     def test_func(self):
-        """Only allow the owner to add issues, or admins for Metron's lists."""
-        is_owner = self.reading_list.user == self.request.user
-        is_admin_managing_metron = (
-            self.request.user.is_staff and self.reading_list.user.username == "Metron"
-        )
-        return is_owner or is_admin_managing_metron
+        """Only allow authorized users to add issues."""
+        return can_manage_reading_list(self.request.user, self.reading_list)
 
     def form_valid(self, form):  # noqa: PLR0912
         new_issues = form.cleaned_data["issues"]
@@ -386,12 +385,8 @@ class AddIssuesFromSeriesView(LoginRequiredMixin, UserPassesTestMixin, FormView)
         return super().dispatch(request, *args, **kwargs)
 
     def test_func(self):
-        """Only allow the owner to add issues, or admins for Metron's lists."""
-        is_owner = self.reading_list.user == self.request.user
-        is_admin_managing_metron = (
-            self.request.user.is_staff and self.reading_list.user.username == "Metron"
-        )
-        return is_owner or is_admin_managing_metron
+        """Only allow authorized users to add issues."""
+        return can_manage_reading_list(self.request.user, self.reading_list)
 
     def form_valid(self, form):  # noqa: PLR0912, PLR0915
         series = form.cleaned_data["series"]
@@ -533,12 +528,8 @@ class AddIssuesFromArcView(LoginRequiredMixin, UserPassesTestMixin, FormView):
         return super().dispatch(request, *args, **kwargs)
 
     def test_func(self):
-        """Only allow the owner to add issues, or admins for Metron's lists."""
-        is_owner = self.reading_list.user == self.request.user
-        is_admin_managing_metron = (
-            self.request.user.is_staff and self.reading_list.user.username == "Metron"
-        )
-        return is_owner or is_admin_managing_metron
+        """Only allow authorized users to add issues."""
+        return can_manage_reading_list(self.request.user, self.reading_list)
 
     def form_valid(self, form):
         arc = form.cleaned_data["arc"]
@@ -629,8 +620,10 @@ class ReadingListItemsLoadMore(LazyLoadMixin, View):
         # If not authenticated, only show public lists
         if not request.user.is_authenticated:
             queryset = queryset.filter(is_private=False)
-        # If admin, show public lists + user's own lists + Metron's lists
-        elif request.user.is_staff:
+        # If admin or reading list editor, show public lists + user's own lists + Metron's lists
+        elif (
+            request.user.is_staff or request.user.groups.filter(name="reading list editor").exists()
+        ):
             try:
                 metron_user = CustomUser.objects.get(username="Metron")
                 queryset = queryset.filter(
@@ -667,15 +660,10 @@ class ReadingListItemsLoadMore(LazyLoadMixin, View):
         """Add is_owner context for the remove button visibility."""
         context = super().get_context_data(parent_object, items, has_more, next_offset, slug)
 
-        # Check if user is the owner OR admin viewing Metron's list
-        is_actual_owner = (
-            self.request.user.is_authenticated and parent_object.user == self.request.user
-        )
-        is_admin_managing_metron = (
-            self.request.user.is_authenticated
-            and self.request.user.is_staff
-            and parent_object.user.username == "Metron"
-        )
-        context["is_owner"] = is_actual_owner or is_admin_managing_metron
+        # Check if user can manage this reading list
+        if self.request.user.is_authenticated:
+            context["is_owner"] = can_manage_reading_list(self.request.user, parent_object)
+        else:
+            context["is_owner"] = False
 
         return context
