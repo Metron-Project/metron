@@ -4,6 +4,7 @@ from datetime import date
 
 import pytest
 
+from comicsdb.models.arc import Arc
 from comicsdb.models.issue import Issue
 from comicsdb.models.publisher import Publisher
 from comicsdb.models.series import Series
@@ -295,3 +296,74 @@ def reading_list_with_many_issues(create_user, reading_list_user, reading_list_s
         )
 
     return reading_list
+
+
+@pytest.fixture
+def reading_list_arc(create_user):
+    """Create a story arc for reading list tests."""
+    user = create_user()
+    return Arc.objects.create(
+        name="Test Story Arc",
+        slug="test-story-arc",
+        desc="A test story arc for reading list tests",
+        edited_by=user,
+        created_by=user,
+    )
+
+
+@pytest.fixture
+def arc_with_multiple_issues(create_user, reading_list_publisher, single_issue_type):
+    """Create a story arc with 8 issues from different series for bulk addition testing."""
+    user = create_user()
+
+    # Create the arc
+    arc = Arc.objects.create(
+        name="Crossover Event",
+        slug="crossover-event",
+        desc="A test crossover event spanning multiple series",
+        edited_by=user,
+        created_by=user,
+    )
+
+    # Create two series for the crossover
+    series1 = Series.objects.create(
+        name="Arc Test Series 1",
+        slug="arc-test-series-1",
+        publisher=reading_list_publisher,
+        volume="1",
+        year_began=2021,
+        series_type=single_issue_type,
+        status=Series.Status.ONGOING,
+        edited_by=user,
+        created_by=user,
+    )
+
+    series2 = Series.objects.create(
+        name="Arc Test Series 2",
+        slug="arc-test-series-2",
+        publisher=reading_list_publisher,
+        volume="1",
+        year_began=2021,
+        series_type=single_issue_type,
+        status=Series.Status.ONGOING,
+        edited_by=user,
+        created_by=user,
+    )
+
+    # Create 8 issues across both series and add them to the arc
+    issues = []
+    for i in range(1, 9):
+        # Alternate between series
+        series = series1 if i % 2 == 1 else series2
+        issue = Issue.objects.create(
+            series=series,
+            number=str((i + 1) // 2),
+            slug=f"arc-test-issue-{i}",
+            cover_date=date(2021, i, 1),
+            edited_by=user,
+            created_by=user,
+        )
+        issue.arcs.add(arc)
+        issues.append(issue)
+
+    return arc, issues

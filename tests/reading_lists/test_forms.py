@@ -1,6 +1,11 @@
 """Tests for reading_lists forms."""
 
-from reading_lists.forms import AddIssuesFromSeriesForm, AddIssueWithSearchForm, ReadingListForm
+from reading_lists.forms import (
+    AddIssuesFromArcForm,
+    AddIssuesFromSeriesForm,
+    AddIssueWithSearchForm,
+    ReadingListForm,
+)
 from reading_lists.models import ReadingList
 
 
@@ -327,3 +332,81 @@ class TestAddIssuesFromSeriesForm:
         assert "Select the series to add issues from" in form.fields["series"].help_text
         assert "Leave blank to start from the first issue" in form.fields["start_number"].help_text
         assert "Leave blank to go to the last issue" in form.fields["end_number"].help_text
+
+
+class TestAddIssuesFromArcForm:
+    """Tests for the AddIssuesFromArcForm."""
+
+    def test_add_issues_from_arc_form_valid(self, reading_list_arc):
+        """Test form with valid data."""
+        form_data = {
+            "arc": reading_list_arc.pk,
+            "position": "end",
+        }
+        form = AddIssuesFromArcForm(data=form_data)
+        assert form.is_valid()
+        assert form.cleaned_data["arc"] == reading_list_arc
+        assert form.cleaned_data["position"] == "end"
+
+    def test_add_issues_from_arc_form_position_beginning(self, reading_list_arc):
+        """Test form with 'beginning' position selected."""
+        form_data = {
+            "arc": reading_list_arc.pk,
+            "position": "beginning",
+        }
+        form = AddIssuesFromArcForm(data=form_data)
+        assert form.is_valid()
+        assert form.cleaned_data["position"] == "beginning"
+
+    def test_add_issues_from_arc_form_missing_arc(self):
+        """Test form with missing required arc field."""
+        form_data = {
+            "position": "end",
+        }
+        form = AddIssuesFromArcForm(data=form_data)
+        assert not form.is_valid()
+        assert "arc" in form.errors
+
+    def test_add_issues_from_arc_form_invalid_arc_id(self, db):
+        """Test form with invalid arc ID."""
+        form_data = {
+            "arc": 99999,  # Non-existent arc ID
+            "position": "end",
+        }
+        form = AddIssuesFromArcForm(data=form_data)
+        assert not form.is_valid()
+        assert "arc" in form.errors
+
+    def test_add_issues_from_arc_form_fields(self):
+        """Test that form has the correct fields."""
+        form = AddIssuesFromArcForm()
+        expected_fields = ["arc", "position"]
+        assert list(form.fields.keys()) == expected_fields
+
+    def test_add_issues_from_arc_form_arc_required(self):
+        """Test that arc field is required."""
+        form = AddIssuesFromArcForm()
+        assert form.fields["arc"].required
+
+    def test_add_issues_from_arc_form_position_required(self):
+        """Test that position field is required."""
+        form = AddIssuesFromArcForm()
+        assert form.fields["position"].required
+
+    def test_add_issues_from_arc_form_position_choices(self):
+        """Test that position has the correct choices."""
+        form = AddIssuesFromArcForm()
+        choices = [choice[0] for choice in form.fields["position"].choices]
+        assert "end" in choices
+        assert "beginning" in choices
+
+    def test_add_issues_from_arc_form_labels(self):
+        """Test that form has the correct labels."""
+        form = AddIssuesFromArcForm()
+        assert form.fields["arc"].label == "Story Arc"
+        assert form.fields["position"].label == "Add issues"
+
+    def test_add_issues_from_arc_form_help_texts(self):
+        """Test that form has the correct help texts."""
+        form = AddIssuesFromArcForm()
+        assert "Select the story arc to add issues from" in form.fields["arc"].help_text
