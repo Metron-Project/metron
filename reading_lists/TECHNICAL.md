@@ -26,6 +26,7 @@ The reading_lists app follows Django's MTV (Model-Template-View) pattern with:
 - **Permissions**: Mixin-based permission checks
 
 **Key Dependencies:**
+
 - Django's class-based views
 - `autocomplete` package for issue search
 - `comicsdb` app for Issue and Publisher models
@@ -49,6 +50,7 @@ class ReadingList(CommonInfo):
 ```
 
 **Inherited Fields from CommonInfo:**
+
 - `name`: CharField with max_length from CommonInfo
 - `slug`: Auto-generated from name via pre_save signal
 - `desc`: TextField for description
@@ -71,6 +73,7 @@ class AttributionSource(models.TextChoices):
 ```
 
 **Constraints:**
+
 - Unique together: `(user, name)` - prevents duplicate list names per user
 - Index: Standard indexes on ForeignKey and slug fields
 
@@ -108,6 +111,7 @@ def publishers(self):
 ```
 
 **Methods:**
+
 - `get_absolute_url()`: Returns detail view URL using slug
 - `__str__()`: Returns formatted string with username, name, and attribution
 
@@ -123,6 +127,7 @@ class ReadingListItem(models.Model):
 ```
 
 **Constraints:**
+
 - Unique together: `(reading_list, issue)` - prevents duplicate issues
 - Index: `(reading_list, order)` - optimizes ordering queries
 
@@ -152,6 +157,7 @@ class ReadingListListView(ListView):
 ```
 
 **Queryset Logic:**
+
 - Unauthenticated: Only public lists
 - Authenticated non-admin: Public lists + user's own lists
 - Admin: Public lists + user's own lists + Metron's lists
@@ -177,6 +183,7 @@ class ReadingListDetailView(DetailView):
 ```
 
 **Context Data:**
+
 - `reading_list_items`: Prefetched and ordered by `order` field
 - `is_owner`: Boolean indicating if user can edit (owner or admin managing Metron)
 
@@ -205,6 +212,7 @@ class ReadingListCreateView(LoginRequiredMixin, CreateView):
 ```
 
 **Form Customization:**
+
 - Non-admin users: Attribution fields removed from form
 - Auto-sets `user` to current user in `form_valid()`
 
@@ -247,6 +255,7 @@ class AddIssueWithAutocompleteView(LoginRequiredMixin, UserPassesTestMixin, Form
 ```
 
 **Complex Logic:**
+
 1. Parses `issue_order` (comma-separated issue IDs)
 2. Distinguishes existing vs. new issues
 3. Updates order for existing issues
@@ -265,6 +274,7 @@ class AddIssuesFromSeriesView(LoginRequiredMixin, UserPassesTestMixin, FormView)
 **Purpose:** Bulk addition of issues from a series to a reading list.
 
 **Complex Logic:**
+
 1. Fetches all issues from selected series ordered by cover date
 2. Applies optional range filtering (start/end issue numbers)
 3. Filters out duplicate issues
@@ -273,17 +283,44 @@ class AddIssuesFromSeriesView(LoginRequiredMixin, UserPassesTestMixin, FormView)
 6. Handles reordering when inserting at beginning
 
 **Range Filtering:**
+
 - **All issues**: Adds entire series
 - **Start + End**: Adds issues between specified numbers
 - **Start only**: Adds from start number to series end
 - **End only**: Adds from series beginning to end number
 
 **Performance Optimizations:**
+
 - Uses `bulk_create()` for batch insertion
 - Filters queryset before iteration
 - Single aggregate query for max order
 
 **URL:** `/reading-lists/<slug>/add-from-series/`
+
+#### AddIssuesFromArcView
+```python
+class AddIssuesFromArcView(LoginRequiredMixin, UserPassesTestMixin, FormView):
+    form_class = AddIssuesFromArcForm
+    template_name = "reading_lists/add_issues_from_arc.html"
+```
+
+**Purpose:** Bulk addition of all issues from a story arc to a reading list.
+
+**Complex Logic:**
+
+1. Fetches all issues from selected arc ordered by cover date
+2. Filters out duplicate issues
+3. Positions new issues at beginning or end
+4. Uses `bulk_create()` for efficient database operations
+5. Handles reordering when inserting at beginning
+
+**Performance Optimizations:**
+
+- Uses `bulk_create()` for batch insertion
+- Single aggregate query for max order
+- Prefetches issue relationships
+
+**URL:** `/reading-lists/<slug>/add-from-arc/`
 
 #### RemoveIssueFromReadingListView
 ```python
@@ -310,6 +347,7 @@ urlpatterns = [
     path("<slug:slug>/delete/", ReadingListDeleteView.as_view(), name="delete"),
     path("<slug:slug>/add-issue/", AddIssueWithAutocompleteView.as_view(), name="add-issue"),
     path("<slug:slug>/add-from-series/", AddIssuesFromSeriesView.as_view(), name="add-from-series"),
+    path("<slug:slug>/add-from-arc/", AddIssuesFromArcView.as_view(), name="add-from-arc"),
     path("<slug:slug>/remove-issue/<int:item_pk>/", RemoveIssueFromReadingListView.as_view(), name="remove-issue"),
 ]
 ```
@@ -368,6 +406,7 @@ class AddIssuesFromSeriesForm(forms.Form):
 ```
 
 **Features:**
+
 - **Series autocomplete**: Uses `SeriesAutocomplete` for efficient search
 - **Radio buttons**: HTMX-based UI for range type selection
 - **Flexible range**: Optional start/end numbers
@@ -385,6 +424,29 @@ def clean(self):
 **Use Case:**
 Designed for bulk operations where users need to add 10-1000+ issues from a single series efficiently.
 
+### AddIssuesFromArcForm
+
+```python
+class AddIssuesFromArcForm(forms.Form):
+    arc = forms.ModelChoiceField(
+        queryset=Arc.objects.all(),
+        widget=widgets.AutocompleteWidget(ac_class=ArcAutocomplete),
+    )
+    position = forms.ChoiceField(
+        choices=[("end", "At the end"), ("beginning", "At the beginning")],
+        widget=forms.RadioSelect(),
+    )
+```
+
+**Features:**
+
+- **Arc autocomplete**: Uses `ArcAutocomplete` for efficient search
+- **Radio buttons**: Simple UI for position selection
+- **Position control**: Add at beginning or end of list
+
+**Use Case:**
+Designed for adding complete story arcs that span multiple series (crossover events, major storylines).
+
 ## Permissions
 
 ### Permission Strategy
@@ -396,28 +458,57 @@ The app uses `UserPassesTestMixin` for permission checks rather than object-leve
 def test_func(self):
     reading_list = self.get_object()
     is_owner = reading_list.user == self.request.user
+
+    # Check if user is in Reading List Editor group
+    is_editor = self.request.user.groups.filter(name="Reading List Editor").exists()
+    can_manage_metron = is_editor and reading_list.user.username == "Metron"
+
+    # Admin can also manage Metron lists
     is_admin_managing_metron = (
         self.request.user.is_staff and
         reading_list.user.username == "Metron"
     )
-    return is_owner or is_admin_managing_metron
+
+    return is_owner or can_manage_metron or is_admin_managing_metron
 ```
+
+**Reading List Editor Group:**
+
+A Django group created via migration that provides special permissions for managing Metron user's reading lists.
+
+**Migration:** `0002_create_reading_list_editor_group.py`
+
+**Purpose:**
+
+- Allows designated curators to manage official reading orders
+- Provides elevated permissions without full admin access
+- Separates content curation from system administration
 
 ### Permission Levels
 
 **Unauthenticated Users:**
+
 - Can view public reading lists
 - Cannot create, edit, or delete lists
 - Cannot view private lists
 
 **Authenticated Users:**
+
 - All unauthenticated permissions
 - Can create reading lists
 - Can edit/delete own lists
 - Can view own private lists
 - Cannot edit others' lists
 
+**Reading List Editor Group:**
+
+- All authenticated permissions
+- Can edit/delete Metron user's lists
+- Can view Metron's private lists
+- Cannot set attribution fields (admin-only)
+
 **Admin Users (is_staff=True):**
+
 - All authenticated permissions
 - Can edit/delete Metron user's lists
 - Can view Metron's private lists
@@ -486,6 +577,7 @@ def get_query_filtered_queryset(cls, search, context):
 ```
 
 **Features:**
+
 - Basic search: OR across series name and number
 - Smart search: AND between series and number when `#` present
 - Optimized queryset with `select_related("series", "series__series_type")`
@@ -507,9 +599,27 @@ queryset = Series.objects.select_related("series_type").all()
 ```
 
 **Features:**
+
 - Simple name-based search
 - Optimized with `select_related()` for series type
 - Returns formatted results with series type information
+
+### ArcAutocomplete
+
+```python
+class ArcAutocomplete(ModelAutocomplete):
+    model = Arc
+    search_attrs = ["name"]
+```
+
+**Usage:**
+Used in `AddIssuesFromArcForm` for arc-based bulk addition feature.
+
+**Features:**
+
+- Simple name-based search
+- Returns formatted results with arc names
+- Enables quick selection of story arcs
 
 ## Templates
 
@@ -526,11 +636,13 @@ queryset = Series.objects.select_related("series_type").all()
 | `readinglist_confirm_delete.html` | Delete confirmation | Issue count warning |
 | `add_issue_autocomplete.html` | Add issues interface | Autocomplete, drag-drop, preview |
 | `add_issues_from_series.html` | Bulk add from series | Series autocomplete, HTMX range toggle, usage tips |
+| `add_issues_from_arc.html` | Bulk add from arc | Arc autocomplete, position selection, usage tips |
 | `remove_issue_confirm.html` | Remove issue confirmation | Issue details |
 
 ### Template Context
 
 **Common Context Variables:**
+
 - `reading_list`: ReadingList instance
 - `reading_list_items`: Ordered queryset of ReadingListItem
 - `is_owner`: Boolean for edit permissions
@@ -553,6 +665,7 @@ The series bulk addition template uses HTMX for client-side interactivity:
 ```
 
 **Benefits:**
+
 - Co-located event handling with UI elements
 - ~50% reduction in JavaScript code
 - Consistent with project's HTMX-first approach
@@ -585,6 +698,7 @@ queryset = ReadingList.objects.select_related("user").prefetch_related(
 ```
 
 **Benefits:**
+
 - `select_related()`: Reduces queries for ForeignKey relationships
 - `prefetch_related()`: Optimizes M2M and reverse ForeignKey queries
 - `annotate()`: Computes issue counts in database
@@ -602,6 +716,7 @@ class Meta:
 Optimizes ordering queries on `(reading_list, order)`.
 
 **Standard Indexes:**
+
 - ForeignKey fields auto-indexed
 - Unique constraints create indexes
 - Slug field indexed via CommonInfo
@@ -609,10 +724,12 @@ Optimizes ordering queries on `(reading_list, order)`.
 ### Database Constraints
 
 **Unique Constraints:**
+
 - `ReadingList`: `(user, name)`
 - `ReadingListItem`: `(reading_list, issue)`
 
 **Benefits:**
+
 - Prevents duplicate data at database level
 - Faster lookups on constrained fields
 - Data integrity enforcement
@@ -651,13 +768,85 @@ Used for user ownership and permissions.
 ```python
 from autocomplete import ModelAutocomplete, register, widgets
 ```
-Provides autocomplete functionality for issue search.
+Provides autocomplete functionality for issue and arc search.
+
+## Management Commands
+
+### import_reading_lists
+
+**File:** `reading_lists/management/commands/import_reading_lists.py`
+
+**Purpose:** Import reading lists from JSON files for bulk data import.
+
+**Usage:**
+```bash
+python manage.py import_reading_lists <json_file>
+```
+
+**JSON Format:**
+```json
+{
+  "reading_lists": [
+    {
+      "name": "Secret Wars (2015)",
+      "description": "Complete reading order for Secret Wars event",
+      "is_private": false,
+      "attribution_source": "CBRO",
+      "attribution_url": "https://example.com/reading-order",
+      "issues": [
+        {"series": "Secret Wars", "number": "1"},
+        {"series": "Amazing Spider-Man", "number": "1"}
+      ]
+    }
+  ]
+}
+```
+
+**Features:**
+
+- Batch import of multiple reading lists
+- Automatic issue matching by series name and number
+- Duplicate detection and skipping
+- Attribution source validation
+- Progress reporting
+- Error handling and validation
+
+**Use Cases:**
+
+- Migrating reading lists from other systems
+- Bulk importing curated reading orders
+- Seeding database with official Metron reading lists
+- Backing up and restoring reading lists
+
+## API Integration
+
+### REST API Endpoints
+
+The reading lists feature provides read-only REST API endpoints. Complete API documentation is available in the main [API README](/api/README.md).
+
+**Available Endpoints:**
+
+- `GET /api/reading_list/` - List reading lists
+- `GET /api/reading_list/{id}/` - Retrieve reading list details
+- `GET /api/reading_list/{id}/reading_list_item_list/` - Get reading list items
+
+**Authentication:**
+
+All reading list API endpoints require authentication.
+
+**Permissions:**
+
+- Authenticated users can access public lists and their own lists
+- Admin and Reading List Editor users can access Metron's lists
+
+For complete API documentation including filtering, pagination, and response formats, see the [main API documentation](/api/README.md#reading-list).
 
 ## Testing
 
 ### Test Files
 
 **Files:**
+
 - `tests/reading_lists/test_views.py`
 - `tests/reading_lists/test_forms.py`
 - `tests/reading_lists/test_models.py`
@@ -666,43 +855,65 @@ Provides autocomplete functionality for issue search.
 ### Current Test Coverage
 
 **Test Statistics:**
-- Total tests: 129 passing
+
+- Total tests: 140+ passing
 - Forms: 100% coverage
-- Views: 94% coverage
+- Views: 95% coverage
 - Models: 100% coverage
 
 ### Test Coverage by Feature
 
 **Model Tests:**
+
 - ReadingList creation and validation
 - Unique constraint enforcement
 - Computed properties (start_year, end_year, publishers)
 - Slug generation
 
 **View Tests:**
+
 - Permission checks (owner, admin, Metron)
 - Queryset filtering (public, private, Metron)
 - Form validation
 - Issue ordering logic
 - **Series bulk addition** (11 tests):
-  - Authentication and permissions
-  - Adding all issues from series
-  - Range filtering (start/end/both)
-  - Position handling (beginning/end)
-  - Duplicate detection
-  - Admin permissions for Metron lists
-  - Redirect and success messages
+    - Authentication and permissions
+    - Adding all issues from series
+    - Range filtering (start/end/both)
+    - Position handling (beginning/end)
+    - Duplicate detection
+    - Admin permissions for Metron lists
+    - Redirect and success messages
+- **Arc bulk addition** (10+ tests):
+    - Authentication and permissions
+    - Adding all issues from arc
+    - Position handling (beginning/end)
+    - Duplicate detection
+    - Reading List Editor group permissions
+    - Admin permissions for Metron lists
+- **Group permissions** (comprehensive test suite):
+    - Reading List Editor group creation
+    - Permission checks for Metron lists
+    - Editor permissions vs admin permissions
+    - Attribution field restrictions
 
 **Form Tests:**
+
 - **AddIssuesFromSeriesForm** (13 tests):
-  - All issues selection
-  - Range validation (with/without numbers)
-  - Start/end number combinations
-  - Missing required fields
-  - Field labels and help text
-  - Radio button choices
+    - All issues selection
+    - Range validation (with/without numbers)
+    - Start/end number combinations
+    - Missing required fields
+    - Field labels and help text
+    - Radio button choices
+- **AddIssuesFromArcForm** (5+ tests):
+    - Arc selection validation
+    - Position field validation
+    - Field labels and help text
+    - Radio button choices
 
 **Autocomplete Tests:**
+
 - Basic search
 - Smart search with `#`
 - Empty queries
@@ -711,9 +922,12 @@ Provides autocomplete functionality for issue search.
 ### Test Fixtures
 
 **Key Fixtures:**
+
 - `series_with_multiple_issues`: Creates a series with 10 sequential issues for bulk testing
+- `arc_with_multiple_issues`: Creates an arc with 5 issues across multiple series
 - `reading_list_with_issues`: Reading list pre-populated with 3 issues
 - `metron_reading_list`: Lists owned by Metron user
+- `editor_user`: User in Reading List Editor group
 - Standard user fixtures for permission testing
 
 ### Example Test
@@ -745,57 +959,74 @@ class ReadingListModelTest(TestCase):
 ### Completed Features
 
 - ✅ **Series Bulk Addition** (Implemented)
-  - Add all issues or ranges from a series
-  - Chronological ordering by cover date
-  - Position control (beginning/end)
-  - Duplicate detection
+    - Add all issues or ranges from a series
+    - Chronological ordering by cover date
+    - Position control (beginning/end)
+    - Duplicate detection
+
+- ✅ **Arc Bulk Addition** (Implemented)
+    - Add all issues from a story arc
+    - Chronological ordering by cover date
+    - Position control (beginning/end)
+    - Duplicate detection
+
+- ✅ **Group-Based Permissions** (Implemented)
+    - Reading List Editor group
+    - Manage Metron user's lists without admin access
+    - Curator role for official reading orders
+
+- ✅ **Import Management Command** (Implemented)
+    - Bulk import from JSON files
+    - Issue matching and validation
+    - Progress reporting
+
+- ✅ **REST API Endpoints** (Implemented)
+    - Read-only API access
+    - List and retrieve reading lists
+    - Access reading list items
+    - Permission-based filtering
 
 ### Planned Features
 
 1. **List Collaboration**
-   - Share lists with specific users
-   - Collaborative editing permissions
-   - Fork/clone existing lists
+    - Share lists with specific users
+    - Collaborative editing permissions
+    - Fork/clone existing lists
 
 2. **Progress Tracking**
-   - Mark issues as read/unread
-   - Reading progress percentage
-   - Completion dates
+    - Mark issues as read/unread
+    - Reading progress percentage
+    - Completion dates
 
 3. **Enhanced Statistics**
-   - Estimated reading time
-   - Publisher breakdowns
-   - Year distribution charts
+    - Estimated reading time
+    - Publisher breakdowns
+    - Year distribution charts
 
 4. **Additional Bulk Operations**
-   - Import from CSV/text list
-   - Import from CBL (Comic Book List) format
-   - Merge multiple lists
-   - Arc-based bulk addition
-
-5. **API Endpoints**
-   - REST API for reading lists
-   - JSON export/import
-   - Mobile app integration
+    - Import from CSV/text list
+    - Export to various formats (CSV, JSON, plain text)
+    - Merge multiple lists
+    - Duplicate list functionality
 
 ### Possible Technical Improvements
 
 1. **Caching**
-   - Cache computed properties
-   - Redis for list queries
-   - Template fragment caching
+    - Cache computed properties
+    - Redis for list queries
+    - Template fragment caching
 
 2. **Async Operations**
-   - Celery task queue for long-running operations
-   - Progress notifications
+    - Celery task queue for long-running operations
+    - Progress notifications
 
 3. **Search Enhancements**
-   - Full-text search with PostgreSQL
-   - Elasticsearch integration
-   - Advanced filtering
+    - Full-text search with PostgreSQL
+    - Elasticsearch integration
+    - Advanced filtering
 
 4. **Performance**
-   - Denormalize issue counts
-   - Materialized views for complex queries
-   - Query result pagination improvements
+    - Denormalize issue counts
+    - Materialized views for complex queries
+    - Query result pagination improvements
 

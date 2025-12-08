@@ -23,6 +23,7 @@ The Reading Lists feature allows you to create, manage, and share curated comic 
 ### Automatic Information
 
 Reading lists automatically display:
+
 - **Start Year**: The earliest cover date year from issues in the list
 - **End Year**: The latest cover date year from issues in the list
 - **Publishers**: All unique publishers represented in the list
@@ -59,8 +60,8 @@ Reading lists automatically display:
 2. Enter a name (required)
 3. Add a description (optional)
 4. Choose public or private:
-   - **Public**: Anyone can view your list
-   - **Private**: Only you can see it
+    - **Public**: Anyone can view your list
+    - **Private**: Only you can see it
 5. Click "Create"
 
 ### Adding Issues to Your List
@@ -77,6 +78,7 @@ You have two methods to add issues to your reading list:
 6. Click "Submit" to save your changes
 
 **Tips:**
+
 - You can add multiple issues at once
 - Drag and drop works for both new issues you're adding and existing issues in your list
 - The system will skip any duplicate issues automatically
@@ -89,19 +91,37 @@ Perfect for creating large reading lists quickly!
 2. Click "Add from Series"
 3. Search and select a series
 4. Choose what to add:
-   - **All issues**: Adds every issue from the series
-   - **Issue range**: Specify start and/or end issue numbers
-     - Example: Start at #1, end at #50 (adds issues 1-50)
-     - Example: Start at #10 (adds issue 10 through the end)
-     - Example: End at #25 (adds beginning through issue 25)
+    - **All issues**: Adds every issue from the series
+    - **Issue range**: Specify start and/or end issue numbers
+        - Example: Start at #1, end at #50 (adds issues 1-50)
+        - Example: Start at #10 (adds issue 10 through the end)
+        - Example: End at #25 (adds beginning through issue 25)
 5. Choose position: Add at beginning or end of your list
 6. Click "Add Issues"
 
 **Benefits:**
+
 - Quickly add entire series runs (100+ issues in seconds)
 - Issues added in chronological order by cover date
 - Automatically skips duplicates
 - Perfect for event reading orders spanning multiple series
+
+#### Method 3: Add from Arc (Bulk Addition)
+
+Perfect for adding all issues from a story arc at once!
+
+1. View your reading list detail page
+2. Click "Add from Arc"
+3. Search and select an arc
+4. Choose position: Add at beginning or end of your list
+5. Click "Add Issues"
+
+**Benefits:**
+
+- Quickly add entire story arcs (crossover events, multi-series storylines)
+- Issues added in chronological order by cover date
+- Automatically skips duplicates
+- Perfect for following complete story arcs across multiple series
 
 ### Editing a Reading List
 
@@ -129,11 +149,13 @@ Perfect for creating large reading lists quickly!
 ### Searching for Reading Lists
 
 The search functionality allows you to find lists by:
+
 - **List name** (case-insensitive)
 - **Username** of the list owner
 - **Attribution source** (e.g., "Comic Book Reading Orders")
 
 **Example:** Searching "marvel" would find:
+
 - Lists with "marvel" in the name
 - Lists created by user "marvelFan"
 - Lists from "Complete Marvel Reading Orders" (CMRO)
@@ -143,6 +165,7 @@ The search functionality allows you to find lists by:
 When adding issues to your reading list, you can use smart search:
 
 **Basic Search:**
+
 - Type any text to search both series names and issue numbers
 - Example: Type `"spider"` to find all Spider-Man series
 
@@ -152,6 +175,7 @@ Use the `#` symbol to separate series name from issue number for more precise re
 **Format:** `series name #issue number`
 
 **Examples:**
+
 - `"spider #1"` → Spider-Man series, issue #1
 - `"amazing #700"` → Amazing Spider-Man, issue #700
 - `"#100"` → All series, issue #100
@@ -159,6 +183,7 @@ Use the `#` symbol to separate series name from issue number for more precise re
 - `"avengers"` → All Avengers series (any issue number)
 
 **Tips:**
+
 - Search is case-insensitive
 - Partial matches work for series names
 - You can search by just series name or just issue number
@@ -168,6 +193,7 @@ Use the `#` symbol to separate series name from issue number for more precise re
 ### What You Can Do
 
 **As a Regular User:**
+
 - Create unlimited reading lists
 - Edit and delete your own lists
 - Add and remove issues from your lists
@@ -175,6 +201,7 @@ Use the `#` symbol to separate series name from issue number for more precise re
 - View your own private lists
 
 **Privacy Settings:**
+
 - **Public Lists**: Visible to everyone (logged in or not)
 - **Private Lists**: Only visible to you when logged in
 
@@ -187,13 +214,24 @@ Use the `#` symbol to separate series name from issue number for more precise re
 ### Admin Features
 
 Admin users have additional capabilities:
+
 - Can set attribution sources and URLs
 - Can manage lists owned by the "Metron" user
 - Can view Metron's private lists
 
+### Reading List Editor Group
+
+Users in the "Reading List Editor" group have special permissions:
+
+- Can manage (create, edit, delete) reading lists owned by the "Metron" user
+- Can view Metron's private lists
+- Cannot set attribution sources (admin-only feature)
+- Designed for curators who maintain official reading orders
+
 ### Metron User Lists
 
 Some reading lists are owned by a special "Metron" user account:
+
 - They represent curated/official reading orders
 - Admin users can manage these lists
 - Public Metron lists are visible to everyone
@@ -211,6 +249,7 @@ Some reading lists are owned by a special "Metron" user account:
 | `/reading-lists/<slug>/delete/` | Delete your list | Yes |
 | `/reading-lists/<slug>/add-issue/` | Add issues individually | Yes |
 | `/reading-lists/<slug>/add-from-series/` | Add issues from series (bulk) | Yes |
+| `/reading-lists/<slug>/add-from-arc/` | Add issues from arc (bulk) | Yes |
 
 *Unauthenticated users can only view public lists.
 
@@ -234,10 +273,12 @@ Some reading lists are owned by a special "Metron" user account:
 6. **Edit incrementally**: You can always add more issues later
 
 **Example Workflow for Large Lists:**
-1. Use "Add from Series" to add Amazing Spider-Man #1-50
-2. Use "Add from Series" to add Avengers #1-30 at the end
-3. Use "Add Issues" to insert specific tie-ins or crossovers
-4. Drag and drop to adjust the final reading order
+
+1. Use "Add from Arc" to add the complete "Secret Wars" storyline
+2. Use "Add from Series" to add Amazing Spider-Man #1-50 at the end
+3. Use "Add from Series" to add Avengers #1-30 at the end
+4. Use "Add Issues" to insert specific tie-ins or crossovers
+5. Drag and drop to adjust the final reading order
 
 ### Contributing to the Community
 

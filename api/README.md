@@ -805,12 +805,15 @@ This endpoint is read-only. Create, update, and delete operations are not availa
 **Permissions:**
 
 *List Endpoint:*
+
 - **Unauthenticated users:** Returns 401 Unauthorized
 - **Authenticated users:** Public lists + own lists (public and private)
 - **Admin users:** Public lists + own lists + Metron user's lists
 
 *Detail/Items Endpoints:*
+
 A user can access a reading list if:
+
 - The list is public (is_private=false), OR
 - The user owns the list, OR
 - The user is an admin AND the list belongs to the "Metron" user
