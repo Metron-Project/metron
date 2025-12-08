@@ -1,0 +1,74 @@
+{% extends parent_template|default:"base.html" %}
+{% load static django_htmx %}
+{% block title %}Add from Story Arc - {{ reading_list.name }} - Metron{% endblock %}
+{% block js %}
+    {% htmx_script %}
+    {{ form.media }}
+{% endblock js %}
+{% block content %}
+    <header class="block has-text-centered">
+        <h1 class="title">Add Issues from Story Arc</h1>
+        <p class="subtitle">{{ reading_list.name }}</p>
+    </header>
+    <section class="section">
+        <div class="container">
+            <div class="columns is-centered">
+                <div class="column is-two-thirds">
+                    <div class="box">
+                        <form method="post">
+                            {% csrf_token %}
+                            {% if form.non_field_errors %}<div class="notification is-danger">{{ form.non_field_errors }}</div>{% endif %}
+                            <!-- Arc Selection -->
+                            <div class="field">
+                                <label class="label" for="{{ form.arc.id_for_label }}">{{ form.arc.label }}</label>
+                                <div class="control">{{ form.arc }}</div>
+                                {% if form.arc.help_text %}<p class="help">{{ form.arc.help_text }}</p>{% endif %}
+                                {% if form.arc.errors %}<p class="help is-danger">{{ form.arc.errors.0 }}</p>{% endif %}
+                            </div>
+                            <!-- Position -->
+                            <div class="field">
+                                <label class="label">{{ form.position.label }}</label>
+                                <div class="control">
+                                    {% for radio in form.position %}
+                                        <label class="radio">
+                                            {{ radio.tag }}
+                                            {{ radio.choice_label }}
+                                        </label>
+                                    {% endfor %}
+                                </div>
+                                {% if form.position.errors %}<p class="help is-danger">{{ form.position.errors.0 }}</p>{% endif %}
+                            </div>
+                            <div class="field is-grouped is-grouped-right mt-5">
+                                <div class="control">
+                                    <a href="{% url 'reading-list:detail' reading_list.slug %}"
+                                       class="button">Cancel</a>
+                                </div>
+                                <div class="control">
+                                    <button type="submit" class="button is-primary">Add Issues</button>
+                                </div>
+                            </div>
+                        </form>
+                    </div>
+                    <div class="content mt-5">
+                        <h3 class="title is-5">How to use:</h3>
+                        <ul>
+                            <li>
+                                <strong>Select a story arc:</strong> Start typing in the search box to find a story arc by name
+                            </li>
+                            <li>
+                                <strong>All issues from the arc will be added:</strong> Issues are added in chronological order by cover date
+                            </li>
+                            <li>
+                                <strong>Choose position:</strong> Add issues at the beginning or end of your reading list
+                            </li>
+                            <li>Issues already in your reading list will be automatically skipped</li>
+                        </ul>
+                        <div class="notification is-info is-light mt-4">
+                            <strong>Tip:</strong> Story arcs are perfect for reading major crossover events in order! You can combine multiple arcs to build comprehensive reading orders.
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+{% endblock %}

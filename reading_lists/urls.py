@@ -1,6 +1,7 @@
 from django.urls import path, re_path
 
 from reading_lists.views import (
+    AddIssuesFromArcView,
     AddIssuesFromSeriesView,
     AddIssueWithAutocompleteView,
     ReadingListCreateView,
@@ -32,6 +33,11 @@ urlpatterns = [
         "<slug:slug>/add-from-series/",
         AddIssuesFromSeriesView.as_view(),
         name="add-from-series",
+    ),
+    path(
+        "<slug:slug>/add-from-arc/",
+        AddIssuesFromArcView.as_view(),
+        name="add-from-arc",
     ),
     path(
         "<slug:slug>/remove-issue/<int:item_pk>/",

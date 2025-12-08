@@ -1,7 +1,8 @@
 from autocomplete import widgets
 from django import forms
 
-from comicsdb.autocomplete import IssueAutocomplete, SeriesAutocomplete
+from comicsdb.autocomplete import ArcAutocomplete, IssueAutocomplete, SeriesAutocomplete
+from comicsdb.models.arc import Arc
 from comicsdb.models.issue import Issue
 from comicsdb.models.series import Series
 from reading_lists.models import ReadingList
@@ -140,3 +141,32 @@ class AddIssuesFromSeriesForm(forms.Form):
             )
 
         return cleaned_data
+
+
+class AddIssuesFromArcForm(forms.Form):
+    """Form for adding all issues from a story arc to a reading list."""
+
+    arc = forms.ModelChoiceField(
+        queryset=Arc.objects.all(),
+        required=True,
+        widget=widgets.AutocompleteWidget(
+            ac_class=ArcAutocomplete,
+            attrs={
+                "placeholder": "Search for a story arc...",
+                "class": "input",
+            },
+        ),
+        label="Story Arc",
+        help_text="Select the story arc to add issues from",
+    )
+
+    position = forms.ChoiceField(
+        choices=[
+            ("end", "At the end"),
+            ("beginning", "At the beginning"),
+        ],
+        initial="end",
+        widget=forms.RadioSelect(),
+        label="Add issues",
+        required=True,
+    )

@@ -9,7 +9,12 @@ from django.views.generic import CreateView, DeleteView, DetailView, FormView, L
 
 from comicsdb.models.issue import Issue
 from comicsdb.views.mixins import LazyLoadMixin, SearchMixin
-from reading_lists.forms import AddIssuesFromSeriesForm, AddIssueWithSearchForm, ReadingListForm
+from reading_lists.forms import (
+    AddIssuesFromArcForm,
+    AddIssuesFromSeriesForm,
+    AddIssueWithSearchForm,
+    ReadingListForm,
+)
 from reading_lists.models import ReadingList, ReadingListItem
 from users.models import CustomUser
 
@@ -503,6 +508,96 @@ class AddIssuesFromSeriesView(LoginRequiredMixin, UserPassesTestMixin, FormView)
         messages.success(
             self.request,
             f"Added {len(new_issues)} issue(s) from {series} {position_text} "
+            f"of '{self.reading_list.name}'!",
+        )
+
+        return redirect(self.get_success_url())
+
+    def get_success_url(self):
+        return reverse("reading-list:detail", kwargs={"slug": self.reading_list.slug})
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context["reading_list"] = self.reading_list
+        return context
+
+
+class AddIssuesFromArcView(LoginRequiredMixin, UserPassesTestMixin, FormView):
+    """Add all issues from a story arc to a reading list."""
+
+    form_class = AddIssuesFromArcForm
+    template_name = "reading_lists/add_issues_from_arc.html"
+
+    def dispatch(self, request, *args, **kwargs):
+        self.reading_list = get_object_or_404(ReadingList, slug=kwargs["slug"])
+        return super().dispatch(request, *args, **kwargs)
+
+    def test_func(self):
+        """Only allow the owner to add issues, or admins for Metron's lists."""
+        is_owner = self.reading_list.user == self.request.user
+        is_admin_managing_metron = (
+            self.request.user.is_staff and self.reading_list.user.username == "Metron"
+        )
+        return is_owner or is_admin_managing_metron
+
+    def form_valid(self, form):
+        arc = form.cleaned_data["arc"]
+        position = form.cleaned_data["position"]
+
+        # Get all issues from the arc, ordered by cover date
+        issues_queryset = arc.issues.order_by("cover_date", "number")
+        issues_to_add = list(issues_queryset)
+
+        # Get existing issue IDs to avoid duplicates
+        existing_issue_ids = set(
+            self.reading_list.reading_list_items.values_list("issue_id", flat=True)
+        )
+
+        # Filter out issues already in the reading list
+        new_issues = [issue for issue in issues_to_add if issue.pk not in existing_issue_ids]
+
+        if not new_issues:
+            messages.info(
+                self.request,
+                f"No new issues to add. All issues from {arc} are already in the list.",
+            )
+            return redirect(self.get_success_url())
+
+        # Determine starting order based on position
+        if position == "beginning":
+            # Insert at the beginning - need to reorder existing items
+            start_order = 1
+            # Shift existing items down
+            existing_items = self.reading_list.reading_list_items.order_by("order")
+            for idx, item in enumerate(existing_items, start=len(new_issues) + 1):
+                if item.order != idx:
+                    item.order = idx
+                    item.save()
+        else:
+            # Add at the end
+            max_order = (
+                self.reading_list.reading_list_items.aggregate(models.Max("order"))["order__max"]
+                or 0
+            )
+            start_order = max_order + 1
+
+        # Create reading list items for new issues
+        items_to_create = [
+            ReadingListItem(
+                reading_list=self.reading_list,
+                issue=issue,
+                order=start_order + idx,
+            )
+            for idx, issue in enumerate(new_issues)
+        ]
+
+        ReadingListItem.objects.bulk_create(items_to_create)
+
+        # Provide feedback
+        position_text = "at the beginning" if position == "beginning" else "at the end"
+        messages.success(
+            self.request,
+            f"Added {len(new_issues)} issue(s) from {arc} {position_text} "
             f"of '{self.reading_list.name}'!",
         )
 
