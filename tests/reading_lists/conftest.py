@@ -3,6 +3,7 @@
 from datetime import date
 
 import pytest
+from django.contrib.auth.models import Group
 
 from comicsdb.models.arc import Arc
 from comicsdb.models.issue import Issue
@@ -367,3 +368,12 @@ def arc_with_multiple_issues(create_user, reading_list_publisher, single_issue_t
         issues.append(issue)
 
     return arc, issues
+
+
+@pytest.fixture
+def reading_list_editor_user(db, create_user):
+    """Create a user in the 'reading list editor' group."""
+    user = create_user(username="reading_list_editor")
+    group, _created = Group.objects.get_or_create(name="reading list editor")
+    user.groups.add(group)
+    return user
