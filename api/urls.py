@@ -4,6 +4,7 @@ from rest_framework import routers
 from api.views import (
     ArcViewSet,
     CharacterViewSet,
+    CollectionViewSet,
     CreatorViewSet,
     CreditViewset,
     ImprintViewSet,
@@ -21,6 +22,7 @@ from api.views import (
 ROUTER = routers.DefaultRouter()
 ROUTER.register("arc", ArcViewSet)
 ROUTER.register("character", CharacterViewSet)
+ROUTER.register("collection", CollectionViewSet, basename="collection")
 ROUTER.register("creator", CreatorViewSet)
 ROUTER.register("credit", CreditViewset)
 ROUTER.register("imprint", ImprintViewSet)

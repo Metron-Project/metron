@@ -24,6 +24,7 @@ from comicsdb.urls import (
     universe as universe_urls,
 )
 from reading_lists import urls as reading_lists_urls
+from user_collection import urls as user_collection_urls
 
 handler404 = "metron.views.handler404"
 
@@ -47,6 +48,7 @@ urlpatterns = [
     path("jsi18n/", JavaScriptCatalog.as_view(), name="javascript-catalog"),
     path("publisher/", include(publisher_urls)),
     path("reading-lists/", include(reading_lists_urls)),
+    path("collection/", include(user_collection_urls)),
     path("series/", include(series_urls)),
     path("team/", include(team_urls)),
     path("universe/", include(universe_urls)),

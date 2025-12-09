@@ -1,0 +1,114 @@
+{% extends parent_template|default:"base.html" %}
+{% load static %}
+{% block title %}{{ item.issue }} - My Collection - Metron{% endblock %}
+{% block content %}
+    <header class="block">
+        <h1 class="title">Collection Item Details</h1>
+    </header>
+    <nav class="level mb-5">
+        <div class="level-left">
+            <div class="level-item">
+                <a class="button is-rounded" href="{% url 'user_collection:list' %}">
+                    <span class="icon"><i class="fas fa-arrow-left"></i></span>
+                    <span>Back to Collection</span>
+                </a>
+            </div>
+        </div>
+        <div class="level-right">
+            <div class="buttons">
+                <a class="button is-rounded is-info"
+                   href="{% url 'user_collection:update' item.pk %}">
+                    <span class="icon is-small"><i class="fas fa-edit"></i></span>
+                    <span>Edit</span>
+                </a>
+                <a class="button is-rounded is-danger"
+                   href="{% url 'user_collection:delete' item.pk %}">
+                    <span class="icon is-small"><i class="fas fa-trash"></i></span>
+                    <span>Remove</span>
+                </a>
+            </div>
+        </div>
+    </nav>
+    <div class="columns">
+        <div class="column is-two-thirds">
+            <div class="box">
+                <h2 class="title is-5">Issue Information</h2>
+                <div class="content">
+                    <dl>
+                        <dt class="has-text-weight-bold">Issue:</dt>
+                        <dd class="mb-3">
+                            <a href="{% url 'issue:detail' item.issue.slug %}">{{ item.issue }}</a>
+                        </dd>
+                        <dt class="has-text-weight-bold">Series:</dt>
+                        <dd class="mb-3">
+                            <a href="{% url 'series:detail' item.issue.series.slug %}">{{ item.issue.series.name }}</a>
+                        </dd>
+                        <dt class="has-text-weight-bold">Publisher:</dt>
+                        <dd class="mb-3">
+                            <a href="{% url 'publisher:detail' item.issue.series.publisher.slug %}">{{ item.issue.series.publisher.name }}</a>
+                        </dd>
+                        <dt class="has-text-weight-bold">Cover Date:</dt>
+                        <dd class="mb-3">
+                            {{ item.issue.cover_date|date:"F Y" }}
+                        </dd>
+                    </dl>
+                </div>
+            </div>
+            {% if item.notes %}
+                <div class="box">
+                    <h2 class="title is-5">Notes</h2>
+                    <div class="content">{{ item.notes|linebreaksbr }}</div>
+                </div>
+            {% endif %}
+        </div>
+        <div class="column">
+            <div class="box">
+                <h2 class="title is-6">Collection Details</h2>
+                <dl>
+                    <dt class="has-text-weight-bold">Format:</dt>
+                    <dd class="mb-3">
+                        <span class="tag {% if item.book_format == 'DIGITAL' %}is-info{% elif item.book_format == 'BOTH' %}is-success{% else %}is-dark{% endif %}">
+                            {{ item.get_book_format_display }}
+                        </span>
+                    </dd>
+                    <dt class="has-text-weight-bold">Quantity:</dt>
+                    <dd class="mb-3">
+                        {{ item.quantity }}
+                    </dd>
+                    {% if item.purchase_date %}
+                        <dt class="has-text-weight-bold">Purchase Date:</dt>
+                        <dd class="mb-3">
+                            {{ item.purchase_date|date:"F d, Y" }}
+                        </dd>
+                    {% endif %}
+                    {% if item.purchase_price %}
+                        <dt class="has-text-weight-bold">Price Paid:</dt>
+                        <dd class="mb-3">
+                            {{ item.purchase_price }}
+                        </dd>
+                    {% endif %}
+                    {% if item.purchase_store %}
+                        <dt class="has-text-weight-bold">Store/Vendor:</dt>
+                        <dd class="mb-3">
+                            {{ item.purchase_store }}
+                        </dd>
+                    {% endif %}
+                    {% if item.storage_location %}
+                        <dt class="has-text-weight-bold">Storage Location:</dt>
+                        <dd class="mb-3">
+                            {{ item.storage_location }}
+                        </dd>
+                    {% endif %}
+                    <dt class="has-text-weight-bold">Added to Collection:</dt>
+                    <dd class="mb-3">
+                        {{ item.created_on|date:"F d, Y" }}
+                    </dd>
+                    <dt class="has-text-weight-bold">Last Modified:</dt>
+                    <dd>
+                        {{ item.modified|date:"F d, Y" }}
+                    </dd>
+                </dl>
+            </div>
+        </div>
+    </div>
+{% endblock %}
