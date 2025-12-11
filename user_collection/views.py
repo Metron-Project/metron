@@ -28,7 +28,7 @@ class CollectionListView(LoginRequiredMixin, ListView):
     def get_queryset(self):
         return (
             CollectionItem.objects.filter(user=self.request.user)
-            .select_related("issue__series__series_type", "issue__series__publisher")
+            .select_related("issue__series__series_type")
             .order_by("issue__series__sort_name", "issue__cover_date")
         )
 

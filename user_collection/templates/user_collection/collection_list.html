@@ -47,7 +47,6 @@
                         <thead>
                             <tr>
                                 <th>Issue</th>
-                                <th>Series</th>
                                 <th>Cover Date</th>
                                 <th>Format</th>
                                 <th>Read</th>
@@ -61,9 +60,6 @@
                                 <tr>
                                     <td>
                                         <a href="{% url 'issue:detail' item.issue.slug %}">{{ item.issue }}</a>
-                                    </td>
-                                    <td>
-                                        <a href="{% url 'series:detail' item.issue.series.slug %}">{{ item.issue.series.name }}</a>
                                     </td>
                                     <td>{{ item.issue.cover_date|date:"M Y" }}</td>
                                     <td>
