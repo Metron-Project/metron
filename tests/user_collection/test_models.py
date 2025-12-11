@@ -198,3 +198,94 @@ class TestCollectionItemModel:
             quantity=5,
         )
         assert item.quantity == 5
+
+    def test_collection_item_is_read_default(self, collection_item):
+        """Test that is_read defaults to False."""
+        assert collection_item.is_read is False
+
+    def test_collection_item_date_read_default(self, collection_item):
+        """Test that date_read defaults to None."""
+        assert collection_item.date_read is None
+
+    def test_collection_item_with_is_read_true(
+        self, collection_user, collection_issue_1, create_user
+    ):
+        """Test creating a collection item marked as read."""
+        user = create_user()
+        issue = Issue.objects.create(
+            series=collection_issue_1.series,
+            number="104",
+            slug="collection-series-104",
+            cover_date=date(2024, 2, 1),
+            edited_by=user,
+            created_by=user,
+        )
+
+        item = CollectionItem.objects.create(
+            user=collection_user,
+            issue=issue,
+            is_read=True,
+        )
+        assert item.is_read is True
+
+    def test_collection_item_with_date_read(self, collection_user, collection_issue_1, create_user):
+        """Test creating a collection item with a date_read."""
+        user = create_user()
+        issue = Issue.objects.create(
+            series=collection_issue_1.series,
+            number="105",
+            slug="collection-series-105",
+            cover_date=date(2024, 3, 1),
+            edited_by=user,
+            created_by=user,
+        )
+
+        read_date = date(2024, 3, 15)
+        item = CollectionItem.objects.create(
+            user=collection_user,
+            issue=issue,
+            is_read=True,
+            date_read=read_date,
+        )
+        assert item.date_read == read_date
+        assert item.is_read is True
+
+    def test_collection_item_update_is_read(self, collection_item):
+        """Test updating is_read field."""
+        assert collection_item.is_read is False
+        collection_item.is_read = True
+        collection_item.save()
+        collection_item.refresh_from_db()
+        assert collection_item.is_read is True
+
+    def test_collection_item_update_date_read(self, collection_item):
+        """Test updating date_read field."""
+        assert collection_item.date_read is None
+        read_date = date(2024, 6, 1)
+        collection_item.date_read = read_date
+        collection_item.save()
+        collection_item.refresh_from_db()
+        assert collection_item.date_read == read_date
+
+    def test_collection_item_read_status_independent_of_date(
+        self, collection_user, collection_issue_1, create_user
+    ):
+        """Test that is_read can be True without date_read."""
+        user = create_user()
+        issue = Issue.objects.create(
+            series=collection_issue_1.series,
+            number="106",
+            slug="collection-series-106",
+            cover_date=date(2024, 4, 1),
+            edited_by=user,
+            created_by=user,
+        )
+
+        item = CollectionItem.objects.create(
+            user=collection_user,
+            issue=issue,
+            is_read=True,
+            date_read=None,
+        )
+        assert item.is_read is True
+        assert item.date_read is None

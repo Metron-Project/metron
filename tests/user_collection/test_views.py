@@ -230,6 +230,45 @@ class TestCollectionCreateView:
         expected_url = reverse("user_collection:list")
         assert resp.redirect_chain[-1][0] == expected_url
 
+    def test_collection_create_view_with_read_status(
+        self, client, collection_user, collection_issue_1, test_password
+    ):
+        """Test creating a collection item with read status."""
+        client.login(username=collection_user.username, password=test_password)
+        url = reverse("user_collection:create")
+        data = {
+            "issue": collection_issue_1.pk,
+            "quantity": 1,
+            "book_format": "PRINT",
+            "is_read": True,
+            "date_read": "2024-06-15",
+        }
+        resp = client.post(url, data)
+        assert resp.status_code == HTTP_302_FOUND
+        # Check that the item was created with read status
+        item = CollectionItem.objects.get(user=collection_user, issue=collection_issue_1)
+        assert item.is_read is True
+        assert str(item.date_read) == "2024-06-15"
+
+    def test_collection_create_view_with_is_read_without_date(
+        self, client, collection_user, collection_issue_1, test_password
+    ):
+        """Test creating a collection item marked as read without a date."""
+        client.login(username=collection_user.username, password=test_password)
+        url = reverse("user_collection:create")
+        data = {
+            "issue": collection_issue_1.pk,
+            "quantity": 1,
+            "book_format": "PRINT",
+            "is_read": True,
+        }
+        resp = client.post(url, data)
+        assert resp.status_code == HTTP_302_FOUND
+        # Check that the item was created with read status but no date
+        item = CollectionItem.objects.get(user=collection_user, issue=collection_issue_1)
+        assert item.is_read is True
+        assert item.date_read is None
+
 
 class TestCollectionUpdateView:
     """Tests for the CollectionUpdateView."""
@@ -296,6 +335,50 @@ class TestCollectionUpdateView:
         # Should redirect to detail page
         expected_url = reverse("user_collection:detail", kwargs={"pk": collection_item.pk})
         assert resp.redirect_chain[-1][0] == expected_url
+
+    def test_collection_update_view_mark_as_read(
+        self, client, collection_user, collection_item, test_password
+    ):
+        """Test updating a collection item to mark it as read."""
+        assert collection_item.is_read is False
+        client.login(username=collection_user.username, password=test_password)
+        url = reverse("user_collection:update", kwargs={"pk": collection_item.pk})
+        data = {
+            "issue": collection_item.issue.pk,
+            "quantity": collection_item.quantity,
+            "book_format": collection_item.book_format,
+            "is_read": True,
+            "date_read": "2024-07-01",
+        }
+        resp = client.post(url, data)
+        assert resp.status_code == HTTP_302_FOUND
+        # Check that the item was updated
+        collection_item.refresh_from_db()
+        assert collection_item.is_read is True
+        assert str(collection_item.date_read) == "2024-07-01"
+
+    def test_collection_update_view_unmark_as_read(
+        self, client, collection_user, collection_item, test_password
+    ):
+        """Test updating a collection item to unmark it as read."""
+        # First mark it as read
+        collection_item.is_read = True
+        collection_item.date_read = "2024-07-01"
+        collection_item.save()
+
+        client.login(username=collection_user.username, password=test_password)
+        url = reverse("user_collection:update", kwargs={"pk": collection_item.pk})
+        data = {
+            "issue": collection_item.issue.pk,
+            "quantity": collection_item.quantity,
+            "book_format": collection_item.book_format,
+            "is_read": False,
+        }
+        resp = client.post(url, data)
+        assert resp.status_code == HTTP_302_FOUND
+        # Check that the item was updated
+        collection_item.refresh_from_db()
+        assert collection_item.is_read is False
 
 
 class TestCollectionDeleteView:
@@ -372,6 +455,8 @@ class TestCollectionStatsView:
         assert "total_value" in resp.context
         assert "format_counts" in resp.context
         assert "top_series" in resp.context
+        assert "read_count" in resp.context
+        assert "unread_count" in resp.context
 
     def test_collection_stats_view_with_items(
         self, client, collection_user, collection_item, collection_item_with_details, test_password
@@ -442,6 +527,30 @@ class TestCollectionStatsView:
         # Should only count collection_user's items
         assert resp.context["total_items"] == 1
         assert resp.context["total_quantity"] == 1
+
+    def test_collection_stats_view_read_tracking(
+        self, client, collection_user, collection_issue_1, collection_issue_2, test_password
+    ):
+        """Test that stats correctly count read and unread items."""
+        # Create one read and one unread item
+        CollectionItem.objects.create(
+            user=collection_user,
+            issue=collection_issue_1,
+            is_read=True,
+        )
+        CollectionItem.objects.create(
+            user=collection_user,
+            issue=collection_issue_2,
+            is_read=False,
+        )
+
+        client.login(username=collection_user.username, password=test_password)
+        url = reverse("user_collection:stats")
+        resp = client.get(url)
+        assert resp.status_code == HTTP_200_OK
+        assert resp.context["read_count"] == 1
+        assert resp.context["unread_count"] == 1
+        assert resp.context["total_items"] == 2
 
 
 class TestCollectionPagination:
@@ -791,3 +900,79 @@ class TestAddIssuesFromSeriesView:
         # Should redirect to list page
         expected_url = reverse("user_collection:list")
         assert resp.redirect_chain[-1][0] == expected_url
+
+    def test_add_issues_with_mark_as_read(
+        self, client, collection_user, collection_issue_1, test_password
+    ):
+        """Test adding issues and marking them as read."""
+        # Create additional issues in the same series
+        series = collection_issue_1.series
+        issue2 = Issue.objects.create(
+            series=series,
+            number="2",
+            slug="test-series-mark-read-2",
+            cover_date=collection_issue_1.cover_date,
+            edited_by=collection_user,
+            created_by=collection_user,
+        )
+        issue3 = Issue.objects.create(
+            series=series,
+            number="3",
+            slug="test-series-mark-read-3",
+            cover_date=collection_issue_1.cover_date,
+            edited_by=collection_user,
+            created_by=collection_user,
+        )
+
+        client.login(username=collection_user.username, password=test_password)
+        url = reverse("user_collection:add-from-series")
+        data = {
+            "series": series.pk,
+            "range_type": "all",
+            "mark_as_read": True,
+        }
+        resp = client.post(url, data)
+        assert resp.status_code == HTTP_302_FOUND
+
+        # Check that all 3 issues were added and marked as read
+        assert CollectionItem.objects.filter(user=collection_user).count() == 3
+        for issue in [collection_issue_1, issue2, issue3]:
+            item = CollectionItem.objects.get(user=collection_user, issue=issue)
+            assert item.is_read is True
+
+    def test_add_issues_without_mark_as_read(
+        self, client, collection_user, collection_issue_1, test_password
+    ):
+        """Test adding issues without marking them as read."""
+        client.login(username=collection_user.username, password=test_password)
+        url = reverse("user_collection:add-from-series")
+        data = {
+            "series": collection_issue_1.series.pk,
+            "range_type": "all",
+            "mark_as_read": False,
+        }
+        resp = client.post(url, data)
+        assert resp.status_code == HTTP_302_FOUND
+
+        # Check that the issue was added but not marked as read
+        item = CollectionItem.objects.get(user=collection_user, issue=collection_issue_1)
+        assert item.is_read is False
+
+    def test_add_issues_mark_as_read_success_message(
+        self, client, collection_user, collection_issue_1, test_password
+    ):
+        """Test that success message indicates items were marked as read."""
+        client.login(username=collection_user.username, password=test_password)
+        url = reverse("user_collection:add-from-series")
+        data = {
+            "series": collection_issue_1.series.pk,
+            "range_type": "all",
+            "mark_as_read": True,
+        }
+        resp = client.post(url, data, follow=True)
+        assert resp.status_code == HTTP_200_OK
+
+        # Check that success message mentions "marked as read"
+        messages = list(resp.context["messages"])
+        assert len(messages) == 1
+        assert "marked as read" in str(messages[0])

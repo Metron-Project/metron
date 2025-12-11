@@ -99,6 +99,26 @@
                             {{ item.storage_location }}
                         </dd>
                     {% endif %}
+                    <dt class="has-text-weight-bold">Read Status:</dt>
+                    <dd class="mb-3">
+                        {% if item.is_read %}
+                            <span class="tag is-success">
+                                <span class="icon"><i class="fas fa-check"></i></span>
+                                <span>Read</span>
+                            </span>
+                        {% else %}
+                            <span class="tag is-warning">
+                                <span class="icon"><i class="fas fa-clock"></i></span>
+                                <span>Unread</span>
+                            </span>
+                        {% endif %}
+                    </dd>
+                    {% if item.date_read %}
+                        <dt class="has-text-weight-bold">Date Read:</dt>
+                        <dd class="mb-3">
+                            {{ item.date_read|date:"F d, Y" }}
+                        </dd>
+                    {% endif %}
                     <dt class="has-text-weight-bold">Added to Collection:</dt>
                     <dd class="mb-3">
                         {{ item.created_on|date:"F d, Y" }}

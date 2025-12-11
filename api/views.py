@@ -672,6 +672,8 @@ class CollectionViewSet(
                     "total_items": {"type": "integer"},
                     "total_quantity": {"type": "integer"},
                     "total_value": {"type": "string"},
+                    "read_count": {"type": "integer"},
+                    "unread_count": {"type": "integer"},
                     "by_format": {
                         "type": "array",
                         "items": {
@@ -698,6 +700,10 @@ class CollectionViewSet(
         total_value_result = queryset.aggregate(Sum("purchase_price"))
         total_value = total_value_result["purchase_price__sum"]
 
+        # Reading statistics
+        read_count = queryset.filter(is_read=True).count()
+        unread_count = queryset.filter(is_read=False).count()
+
         format_counts = queryset.values("book_format").annotate(count=Count("id"))
 
         return Response(
@@ -705,6 +711,8 @@ class CollectionViewSet(
                 "total_items": total_items,
                 "total_quantity": total_quantity,
                 "total_value": str(total_value) if total_value else "0.00",
+                "read_count": read_count,
+                "unread_count": unread_count,
                 "by_format": format_counts,
             }
         )

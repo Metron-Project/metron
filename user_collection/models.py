@@ -60,6 +60,10 @@ class CollectionItem(models.Model):
     )
     notes = models.TextField(blank=True, help_text="Additional notes about this collection item")
 
+    # Reading tracking
+    is_read = models.BooleanField(default=False, help_text="Whether the issue has been read")
+    date_read = models.DateField(null=True, blank=True, help_text="Date when the issue was read")
+
     # Timestamps
     created_on = models.DateTimeField(db_default=Now())
     modified = models.DateTimeField(auto_now=True)
@@ -71,6 +75,7 @@ class CollectionItem(models.Model):
             models.Index(fields=["user", "issue"], name="user_issue_idx"),
             models.Index(fields=["user", "purchase_date"], name="user_purchase_date_idx"),
             models.Index(fields=["user", "book_format"], name="user_format_idx"),
+            models.Index(fields=["user", "is_read"], name="user_is_read_idx"),
         ]
         verbose_name = "Collection Item"
         verbose_name_plural = "Collection Items"

@@ -52,6 +52,39 @@
                         </span>
                     </div>
                 </div>
+                <div class="column is-one-third">
+                    <div class="box has-text-centered">
+                        <p class="heading">Issues Read</p>
+                        <p class="title">{{ read_count }}</p>
+                        <span class="icon has-text-success">
+                            <i class="fas fa-check-circle fa-2x"></i>
+                        </span>
+                    </div>
+                </div>
+                <div class="column is-one-third">
+                    <div class="box has-text-centered">
+                        <p class="heading">Issues Unread</p>
+                        <p class="title">{{ unread_count }}</p>
+                        <span class="icon has-text-grey">
+                            <i class="far fa-circle fa-2x"></i>
+                        </span>
+                    </div>
+                </div>
+                <div class="column is-one-third">
+                    <div class="box has-text-centered">
+                        <p class="heading">Reading Progress</p>
+                        <p class="title">
+                            {% if total_items > 0 %}
+                                {{ read_count|floatformat:0 }}/{{ total_items }}
+                            {% else %}
+                                —
+                            {% endif %}
+                        </p>
+                        <span class="icon has-text-primary">
+                            <i class="fas fa-chart-line fa-2x"></i>
+                        </span>
+                    </div>
+                </div>
             </div>
             <div class="columns">
                 <div class="column is-half">

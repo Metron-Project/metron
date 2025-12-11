@@ -39,6 +39,7 @@ class CollectionListSerializer(serializers.ModelSerializer):
             "quantity",
             "book_format",
             "purchase_date",
+            "is_read",
             "modified",
         )
 
@@ -67,6 +68,8 @@ class CollectionReadSerializer(serializers.ModelSerializer):
             "purchase_store",
             "storage_location",
             "notes",
+            "is_read",
+            "date_read",
             "resource_url",
             "created_on",
             "modified",
@@ -88,6 +91,8 @@ class CollectionSerializer(serializers.ModelSerializer):
             "purchase_store",
             "storage_location",
             "notes",
+            "is_read",
+            "date_read",
         )
 
     def validate(self, data):

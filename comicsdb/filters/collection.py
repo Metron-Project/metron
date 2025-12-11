@@ -13,6 +13,12 @@ class CollectionFilter(filters.FilterSet):
     purchase_store = filters.CharFilter(lookup_expr="icontains")
     storage_location = filters.CharFilter(lookup_expr="icontains")
     issue__series = filters.NumberFilter(field_name="issue__series__id", lookup_expr="exact")
+    is_read = filters.BooleanFilter()
+    date_read = filters.DateFilter()
+    date_read_gt = filters.DateFilter(field_name="date_read", lookup_expr="gt")
+    date_read_lt = filters.DateFilter(field_name="date_read", lookup_expr="lt")
+    date_read_gte = filters.DateFilter(field_name="date_read", lookup_expr="gte")
+    date_read_lte = filters.DateFilter(field_name="date_read", lookup_expr="lte")
     modified_gt = filters.DateTimeFilter(
         label="Greater than Modified DateTime", field_name="modified", lookup_expr="gt"
     )
@@ -29,5 +35,11 @@ class CollectionFilter(filters.FilterSet):
             "purchase_store",
             "storage_location",
             "issue__series",
+            "is_read",
+            "date_read",
+            "date_read_gt",
+            "date_read_lt",
+            "date_read_gte",
+            "date_read_lte",
             "modified_gt",
         ]

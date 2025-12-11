@@ -102,3 +102,16 @@ def collection_item_with_details(collection_user, collection_issue_2):
         storage_location="Long Box 3",
         notes="First printing, signed by artist",
     )
+
+
+@pytest.fixture
+def collection_item_read(collection_user, collection_issue_1):
+    """Create a collection item that has been read."""
+    return CollectionItem.objects.create(
+        user=collection_user,
+        issue=collection_issue_1,
+        quantity=1,
+        book_format=CollectionItem.BookFormat.PRINT,
+        is_read=True,
+        date_read=date(2024, 6, 15),
+    )

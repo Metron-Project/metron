@@ -296,3 +296,96 @@ def test_filter_by_storage_location(api_client, collection_user, collection_item
     resp = api_client.get(reverse("api:collection-list"), {"storage_location": "Long Box"})
     assert resp.status_code == status.HTTP_200_OK
     assert resp.data["count"] == 1
+
+
+# Read Tracking Tests
+def test_create_with_read_status(api_client, collection_user, collection_issue_1):
+    """Test creating a collection item with read status."""
+    api_client.force_authenticate(user=collection_user)
+    data = {
+        "issue": collection_issue_1.pk,
+        "quantity": 1,
+        "book_format": "PRINT",
+        "is_read": True,
+        "date_read": "2024-06-15",
+    }
+    resp = api_client.post(reverse("api:collection-list"), data=data, format="json")
+    assert resp.status_code == status.HTTP_201_CREATED
+    assert resp.data["is_read"] is True
+    assert resp.data["date_read"] == "2024-06-15"
+
+
+def test_update_read_status(api_client, collection_item):
+    """Test updating read status via API."""
+    api_client.force_authenticate(user=collection_item.user)
+    data = {"is_read": True, "date_read": "2024-07-01"}
+    resp = api_client.patch(
+        reverse("api:collection-detail", kwargs={"pk": collection_item.pk}),
+        data=data,
+        format="json",
+    )
+    assert resp.status_code == status.HTTP_200_OK
+    assert resp.data["is_read"] is True
+    assert resp.data["date_read"] == "2024-07-01"
+
+
+def test_filter_by_is_read(api_client, collection_user, collection_issue_1, collection_issue_2):
+    """Test filtering collection by read status."""
+    api_client.force_authenticate(user=collection_user)
+
+    # Create one read and one unread item
+    CollectionItem.objects.create(user=collection_user, issue=collection_issue_1, is_read=True)
+    CollectionItem.objects.create(user=collection_user, issue=collection_issue_2, is_read=False)
+
+    # Filter for read items
+    resp = api_client.get(reverse("api:collection-list"), {"is_read": "true"})
+    assert resp.status_code == status.HTTP_200_OK
+    assert resp.data["count"] == 1
+    assert resp.data["results"][0]["is_read"] is True
+
+    # Filter for unread items
+    resp = api_client.get(reverse("api:collection-list"), {"is_read": "false"})
+    assert resp.status_code == status.HTTP_200_OK
+    assert resp.data["count"] == 1
+    assert resp.data["results"][0]["is_read"] is False
+
+
+def test_filter_by_date_read(api_client, collection_user, collection_issue_1, collection_issue_2):
+    """Test filtering collection by date read."""
+    api_client.force_authenticate(user=collection_user)
+
+    # Create items with different read dates
+    CollectionItem.objects.create(
+        user=collection_user, issue=collection_issue_1, is_read=True, date_read="2024-06-01"
+    )
+    CollectionItem.objects.create(
+        user=collection_user, issue=collection_issue_2, is_read=True, date_read="2024-07-01"
+    )
+
+    # Filter by exact date
+    resp = api_client.get(reverse("api:collection-list"), {"date_read": "2024-06-01"})
+    assert resp.status_code == status.HTTP_200_OK
+    assert resp.data["count"] == 1
+
+    # Filter by date range
+    resp = api_client.get(reverse("api:collection-list"), {"date_read_gte": "2024-06-15"})
+    assert resp.status_code == status.HTTP_200_OK
+    assert resp.data["count"] == 1
+
+
+def test_stats_includes_read_tracking(
+    api_client, collection_user, collection_issue_1, collection_issue_2
+):
+    """Test that stats endpoint includes read tracking statistics."""
+    api_client.force_authenticate(user=collection_user)
+
+    # Create one read and one unread item
+    CollectionItem.objects.create(user=collection_user, issue=collection_issue_1, is_read=True)
+    CollectionItem.objects.create(user=collection_user, issue=collection_issue_2, is_read=False)
+
+    resp = api_client.get(reverse("api:collection-stats"))
+    assert resp.status_code == status.HTTP_200_OK
+    assert "read_count" in resp.data
+    assert "unread_count" in resp.data
+    assert resp.data["read_count"] == 1
+    assert resp.data["unread_count"] == 1

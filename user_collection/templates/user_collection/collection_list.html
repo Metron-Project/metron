@@ -50,6 +50,7 @@
                                 <th>Series</th>
                                 <th>Cover Date</th>
                                 <th>Format</th>
+                                <th>Read</th>
                                 <th>Quantity</th>
                                 <th>Price Paid</th>
                                 <th>Actions</th>
@@ -69,6 +70,18 @@
                                         <span class="tag {% if item.book_format == 'DIGITAL' %}is-info{% elif item.book_format == 'BOTH' %}is-success{% else %}is-dark{% endif %}">
                                             {{ item.get_book_format_display }}
                                         </span>
+                                    </td>
+                                    <td>
+                                        {% if item.is_read %}
+                                            <span class="icon has-text-success"
+                                                  title="Read{% if item.date_read %} on {{ item.date_read|date:'M d, Y' }}{% endif %}">
+                                                <i class="fas fa-check-circle"></i>
+                                            </span>
+                                        {% else %}
+                                            <span class="icon has-text-grey-light" title="Unread">
+                                                <i class="far fa-circle"></i>
+                                            </span>
+                                        {% endif %}
                                     </td>
                                     <td>{{ item.quantity }}</td>
                                     <td>

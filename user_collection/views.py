@@ -131,6 +131,10 @@ class CollectionStatsView(LoginRequiredMixin, TemplateView):
         total_value_result = queryset.aggregate(Sum("purchase_price"))
         total_value = total_value_result["purchase_price__sum"]
 
+        # Reading statistics
+        read_count = queryset.filter(is_read=True).count()
+        unread_count = queryset.filter(is_read=False).count()
+
         # Format breakdown
         format_counts = queryset.values("book_format").annotate(count=Count("id"))
 
@@ -146,6 +150,8 @@ class CollectionStatsView(LoginRequiredMixin, TemplateView):
                 "total_items": total_items,
                 "total_quantity": total_quantity,
                 "total_value": total_value or 0,
+                "read_count": read_count,
+                "unread_count": unread_count,
                 "format_counts": format_counts,
                 "top_series": top_series,
             }
@@ -166,6 +172,7 @@ class AddIssuesFromSeriesView(LoginRequiredMixin, FormView):
         range_type = form.cleaned_data["range_type"]
         start_number = form.cleaned_data.get("start_number")
         end_number = form.cleaned_data.get("end_number")
+        mark_as_read = form.cleaned_data.get("mark_as_read", False)
 
         # Get all issues from the series, ordered by cover date
         issues_queryset = Issue.objects.filter(series=series).order_by("cover_date", "number")
@@ -240,6 +247,7 @@ class AddIssuesFromSeriesView(LoginRequiredMixin, FormView):
                         issue=issue,
                         quantity=1,
                         book_format=CollectionItem.BookFormat.PRINT,
+                        is_read=mark_as_read,
                     )
                 )
             else:
@@ -249,20 +257,21 @@ class AddIssuesFromSeriesView(LoginRequiredMixin, FormView):
         if new_items:
             CollectionItem.objects.bulk_create(new_items)
             added_count = len(new_items)
+            read_status_msg = " (marked as read)" if mark_as_read else ""
 
             if skipped_count > 0:
                 issue_word = "issue" if added_count == 1 else "issues"
                 skipped_word = "issue" if skipped_count == 1 else "issues"
                 messages.success(
                     self.request,
-                    f"Added {added_count} {issue_word} to your collection. "
+                    f"Added {added_count} {issue_word} to your collection{read_status_msg}. "
                     f"Skipped {skipped_count} {skipped_word} already in your collection.",
                 )
             else:
                 messages.success(
                     self.request,
                     f"Added {added_count} issue{'s' if added_count != 1 else ''} "
-                    "to your collection!",
+                    f"to your collection{read_status_msg}!",
                 )
         else:
             messages.info(

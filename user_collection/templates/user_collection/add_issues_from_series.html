@@ -58,6 +58,17 @@
                                     </div>
                                 </div>
                             </div>
+                            <!-- Mark as Read -->
+                            <div class="field mt-4">
+                                <div class="control">
+                                    <label class="checkbox">
+                                        {{ form.mark_as_read }}
+                                        {{ form.mark_as_read.label }}
+                                    </label>
+                                    {% if form.mark_as_read.help_text %}<p class="help">{{ form.mark_as_read.help_text }}</p>{% endif %}
+                                    {% if form.mark_as_read.errors %}<p class="help is-danger">{{ form.mark_as_read.errors.0 }}</p>{% endif %}
+                                </div>
+                            </div>
                             <div class="field is-grouped is-grouped-right mt-5">
                                 <div class="control">
                                     <a href="{% url 'user_collection:list' %}" class="button">Cancel</a>
@@ -87,7 +98,10 @@
                             </li>
                             <li>Issues already in your collection will be automatically skipped</li>
                             <li>All issues will be added with default values (Print format, quantity 1)</li>
-                            <li>You can edit individual items later to add purchase information</li>
+                            <li>
+                                <strong>Mark as read:</strong> Check this option if you've already read these issues
+                            </li>
+                            <li>You can edit individual items later to add purchase information and update read status</li>
                         </ul>
                         <div class="notification is-info is-light mt-4">
                             <strong>Tip:</strong> This is a quick way to add an entire series to your collection. After adding, you can update individual issues with purchase details, format preferences, and notes!
