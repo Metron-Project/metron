@@ -1,5 +1,6 @@
 {% extends parent_template|default:"base.html" %}
 {% load static %}
+{% load thumbnail %}
 {% block title %}{{ item.issue }} - My Collection - Metron{% endblock %}
 {% block content %}
     <header class="block">
@@ -30,7 +31,27 @@
         </div>
     </nav>
     <div class="columns">
-        <div class="column is-two-thirds">
+        <div class="column is-narrow">
+            {% if item.issue.image %}
+                <div class="box has-text-centered">
+                    <figure class="image is-inline-block">
+                        {% thumbnail item.issue.image "300x460" crop="center" as im %}
+                            <img src="{{ im.url }}"
+                                 alt="{{ item.issue }}"
+                                 width="{{ im.width }}"
+                                 height="{{ im.height }}"
+                                 loading="lazy">
+                        {% empty %}
+                            <img src="{{ item.issue.image.url }}"
+                                 alt="{{ item.issue }}"
+                                 style="max-width: 300px;"
+                                 loading="lazy">
+                        {% endthumbnail %}
+                    </figure>
+                </div>
+            {% endif %}
+        </div>
+        <div class="column">
             <div class="box">
                 <h2 class="title is-5">Issue Information</h2>
                 <div class="content">
@@ -54,6 +75,12 @@
                     </dl>
                 </div>
             </div>
+            {% if item.issue.desc %}
+                <div class="box">
+                    <h2 class="title is-5">Description</h2>
+                    <div class="content">{{ item.issue.desc|linebreaksbr }}</div>
+                </div>
+            {% endif %}
             {% if item.notes %}
                 <div class="box">
                     <h2 class="title is-5">Notes</h2>
@@ -61,7 +88,7 @@
                 </div>
             {% endif %}
         </div>
-        <div class="column">
+        <div class="column is-one-quarter">
             <div class="box">
                 <h2 class="title is-6">Collection Details</h2>
                 <dl>

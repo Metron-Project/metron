@@ -60,6 +60,14 @@ class CollectionDetailView(LoginRequiredMixin, UserPassesTestMixin, DetailView):
     template_name = "user_collection/collection_detail.html"
     context_object_name = "item"
 
+    def get_queryset(self):
+        """Optimize query to include issue details."""
+        return CollectionItem.objects.select_related(
+            "issue",
+            "issue__series",
+            "issue__series__publisher",
+        )
+
     def test_func(self):
         """Only allow the owner to view their collection item."""
         item = self.get_object()
