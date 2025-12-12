@@ -16,7 +16,6 @@ from api.v1_0.serializers import (
     CharacterSerializer,
     CollectionListSerializer,
     CollectionReadSerializer,
-    CollectionSerializer,
     CreatorListSerializer,
     CreatorSerializer,
     CreditSerializer,
@@ -615,11 +614,8 @@ class VariantViewset(
 
 
 class CollectionViewSet(
-    mixins.CreateModelMixin,
     mixins.RetrieveModelMixin,
     mixins.ListModelMixin,
-    mixins.UpdateModelMixin,
-    mixins.DestroyModelMixin,
     viewsets.GenericViewSet,
 ):
     """
@@ -629,18 +625,6 @@ class CollectionViewSet(
 
     retrieve:
     Returns details of a specific collection item (must belong to authenticated user).
-    Requires authentication.
-
-    create:
-    Add an issue to the authenticated user's collection.
-    Requires authentication.
-
-    update:
-    Update a collection item (must belong to authenticated user).
-    Requires authentication.
-
-    destroy:
-    Remove an issue from the authenticated user's collection.
     Requires authentication.
     """
 
@@ -656,13 +640,7 @@ class CollectionViewSet(
     def get_serializer_class(self):
         if self.action == "list":
             return CollectionListSerializer
-        if self.action in ["create", "update", "partial_update"]:
-            return CollectionSerializer
         return CollectionReadSerializer
-
-    def perform_create(self, serializer):
-        """Automatically set the user to the authenticated user."""
-        serializer.save(user=self.request.user)
 
     @extend_schema(
         responses={
