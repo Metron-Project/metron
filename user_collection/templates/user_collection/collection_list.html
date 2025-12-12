@@ -39,8 +39,13 @@
             </div>
         </div>
     </section>
+    <section class="section">
+        <div class="container">
+            {% include "user_collection/partials/collection_filter.html" %}
+        </div>
+    </section>
     {% if collection_items %}
-        <section class="section">
+        <section class="section pt-0">
             <div class="container">
                 <div class="table-container">
                     <table class="table is-fullwidth is-striped is-hoverable">
@@ -120,15 +125,25 @@
             </div>
         </section>
     {% else %}
-        <section class="section">
+        <section class="section pt-0">
             <div class="container has-text-centered">
-                <p class="title is-4">Your collection is empty</p>
-                <p class="subtitle">Start adding issues to track your comic collection!</p>
-                <a href="{% url 'user_collection:create' %}"
-                   class="button is-primary is-large">
-                    <span class="icon"><i class="fas fa-plus"></i></span>
-                    <span>Add Your First Issue</span>
-                </a>
+                {% if has_active_filters %}
+                    <p class="title is-4">No results found</p>
+                    <p class="subtitle">Try adjusting your search filters</p>
+                    <a href="{% url 'user_collection:list' %}"
+                       class="button is-light is-medium">
+                        <span class="icon"><i class="fas fa-times"></i></span>
+                        <span>Clear All Filters</span>
+                    </a>
+                {% else %}
+                    <p class="title is-4">Your collection is empty</p>
+                    <p class="subtitle">Start adding issues to track your comic collection!</p>
+                    <a href="{% url 'user_collection:create' %}"
+                       class="button is-primary is-large">
+                        <span class="icon"><i class="fas fa-plus"></i></span>
+                        <span>Add Your First Issue</span>
+                    </a>
+                {% endif %}
             </div>
         </section>
     {% endif %}

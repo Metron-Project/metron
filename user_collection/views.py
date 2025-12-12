@@ -12,7 +12,10 @@ from django.views.generic import (
     UpdateView,
 )
 
+from comicsdb.filters.collection import CollectionViewFilter
 from comicsdb.models.issue import Issue
+from comicsdb.models.publisher import Publisher
+from comicsdb.models.series import SeriesType
 from user_collection.forms import AddIssuesFromSeriesForm, CollectionItemForm
 from user_collection.models import CollectionItem
 
@@ -26,11 +29,28 @@ class CollectionListView(LoginRequiredMixin, ListView):
     paginate_by = 50
 
     def get_queryset(self):
-        return (
+        queryset = (
             CollectionItem.objects.filter(user=self.request.user)
-            .select_related("issue__series__series_type")
+            .select_related(
+                "issue__series__series_type",
+                "issue__series__publisher",
+                "issue__series__imprint",
+            )
             .order_by("issue__series__sort_name", "issue__cover_date")
         )
+        # Apply filters
+        filtered = CollectionViewFilter(self.request.GET, queryset=queryset)
+        return filtered.qs
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        # Add filter options for the template
+        context["series_type"] = SeriesType.objects.values("id", "name").order_by("name")
+        context["publishers"] = Publisher.objects.values("id", "name").order_by("name")
+        context["book_formats"] = CollectionItem.BookFormat.choices
+        # Check if any filters are active (excluding page parameter)
+        context["has_active_filters"] = any(key != "page" for key in self.request.GET)
+        return context
 
 
 class CollectionDetailView(LoginRequiredMixin, UserPassesTestMixin, DetailView):
