@@ -976,3 +976,190 @@ class TestAddIssuesFromSeriesView:
         messages = list(resp.context["messages"])
         assert len(messages) == 1
         assert "marked as read" in str(messages[0])
+
+
+class TestUpdateRatingView:
+    """Tests for the update_rating HTMX view."""
+
+    def test_update_rating_requires_login(self, client, collection_item):
+        """Test that the view requires login."""
+        url = reverse("user_collection:rate", kwargs={"pk": collection_item.pk})
+        resp = client.post(url, {"rating": "3"})
+        assert resp.status_code == HTTP_302_FOUND
+        assert "/accounts/login/" in resp.url
+
+    def test_update_rating_set_rating(
+        self, client, collection_user, collection_item, test_password
+    ):
+        """Test setting a rating (1-5)."""
+        client.login(username=collection_user.username, password=test_password)
+        assert collection_item.rating is None
+
+        url = reverse("user_collection:rate", kwargs={"pk": collection_item.pk})
+        resp = client.post(url, {"rating": "3"})
+        assert resp.status_code == HTTP_200_OK
+
+        # Check that the rating was updated
+        collection_item.refresh_from_db()
+        assert collection_item.rating == 3
+
+    def test_update_rating_all_valid_values(
+        self, client, collection_user, collection_item, test_password
+    ):
+        """Test all valid rating values from 1 to 5."""
+        client.login(username=collection_user.username, password=test_password)
+        url = reverse("user_collection:rate", kwargs={"pk": collection_item.pk})
+
+        for rating_value in range(1, 6):
+            resp = client.post(url, {"rating": str(rating_value)})
+            assert resp.status_code == HTTP_200_OK
+
+            collection_item.refresh_from_db()
+            assert collection_item.rating == rating_value
+
+    def test_update_rating_clear_rating(
+        self, client, collection_user, collection_item, test_password
+    ):
+        """Test clearing a rating by sending 0."""
+        # First set a rating
+        collection_item.rating = 3
+        collection_item.save()
+
+        client.login(username=collection_user.username, password=test_password)
+        url = reverse("user_collection:rate", kwargs={"pk": collection_item.pk})
+        resp = client.post(url, {"rating": "0"})
+        assert resp.status_code == HTTP_200_OK
+
+        # Check that the rating was cleared
+        collection_item.refresh_from_db()
+        assert collection_item.rating is None
+
+    def test_update_rating_invalid_high_value(
+        self, client, collection_user, collection_item, test_password
+    ):
+        """Test that ratings above 5 are rejected."""
+        collection_item.rating = 3
+        collection_item.save()
+
+        client.login(username=collection_user.username, password=test_password)
+        url = reverse("user_collection:rate", kwargs={"pk": collection_item.pk})
+        resp = client.post(url, {"rating": "6"})
+        assert resp.status_code == HTTP_200_OK
+
+        # Rating should not have changed
+        collection_item.refresh_from_db()
+        assert collection_item.rating == 3
+
+    def test_update_rating_invalid_low_value(
+        self, client, collection_user, collection_item, test_password
+    ):
+        """Test that ratings below 1 (except 0) are rejected."""
+        collection_item.rating = 3
+        collection_item.save()
+
+        client.login(username=collection_user.username, password=test_password)
+        url = reverse("user_collection:rate", kwargs={"pk": collection_item.pk})
+        resp = client.post(url, {"rating": "-1"})
+        assert resp.status_code == HTTP_200_OK
+
+        # Rating should not have changed
+        collection_item.refresh_from_db()
+        assert collection_item.rating == 3
+
+    def test_update_rating_not_owner(
+        self, client, other_collection_user, collection_item, test_password
+    ):
+        """Test that non-owners cannot rate other users' items."""
+        client.login(username=other_collection_user.username, password=test_password)
+        url = reverse("user_collection:rate", kwargs={"pk": collection_item.pk})
+        resp = client.post(url, {"rating": "4"})
+        assert resp.status_code == HTTP_404_NOT_FOUND
+
+        # Rating should not have been set
+        collection_item.refresh_from_db()
+        assert collection_item.rating is None
+
+    def test_update_rating_returns_template(
+        self, client, collection_user, collection_item, test_password
+    ):
+        """Test that the view returns the star rating template."""
+        client.login(username=collection_user.username, password=test_password)
+        url = reverse("user_collection:rate", kwargs={"pk": collection_item.pk})
+        resp = client.post(url, {"rating": "4"})
+
+        assert resp.status_code == HTTP_200_OK
+        # Check that it's returning the partial template
+        assert "star-rating" in resp.content.decode()
+
+    def test_update_rating_change_existing(
+        self, client, collection_user, collection_item, test_password
+    ):
+        """Test changing an existing rating."""
+        # Set initial rating
+        collection_item.rating = 2
+        collection_item.save()
+
+        client.login(username=collection_user.username, password=test_password)
+        url = reverse("user_collection:rate", kwargs={"pk": collection_item.pk})
+
+        # Change to 4
+        resp = client.post(url, {"rating": "4"})
+        assert resp.status_code == HTTP_200_OK
+
+        collection_item.refresh_from_db()
+        assert collection_item.rating == 4
+
+        # Change to 1
+        resp = client.post(url, {"rating": "1"})
+        assert resp.status_code == HTTP_200_OK
+
+        collection_item.refresh_from_db()
+        assert collection_item.rating == 1
+
+    def test_update_rating_invalid_string(
+        self, client, collection_user, collection_item, test_password
+    ):
+        """Test that non-numeric rating values are rejected."""
+        collection_item.rating = 3
+        collection_item.save()
+
+        client.login(username=collection_user.username, password=test_password)
+        url = reverse("user_collection:rate", kwargs={"pk": collection_item.pk})
+        resp = client.post(url, {"rating": "abc"})
+        assert resp.status_code == HTTP_200_OK
+
+        # Rating should not have changed
+        collection_item.refresh_from_db()
+        assert collection_item.rating == 3
+
+    def test_update_rating_empty_value(
+        self, client, collection_user, collection_item, test_password
+    ):
+        """Test sending empty rating value."""
+        collection_item.rating = 3
+        collection_item.save()
+
+        client.login(username=collection_user.username, password=test_password)
+        url = reverse("user_collection:rate", kwargs={"pk": collection_item.pk})
+        resp = client.post(url, {"rating": ""})
+        assert resp.status_code == HTTP_200_OK
+
+        # Rating should not have changed
+        collection_item.refresh_from_db()
+        assert collection_item.rating == 3
+
+    def test_update_rating_no_rating_parameter(
+        self, client, collection_user, collection_item, test_password
+    ):
+        """Test POST without rating parameter."""
+        collection_item.rating = 3
+        collection_item.save()
+
+        client.login(username=collection_user.username, password=test_password)
+        url = reverse("user_collection:rate", kwargs={"pk": collection_item.pk})
+        resp = client.post(url, {})
+        assert resp.status_code == HTTP_200_OK
+
+        # Rating should not have changed
+        collection_item.refresh_from_db()
+        assert collection_item.rating == 3

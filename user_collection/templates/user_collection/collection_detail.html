@@ -1,6 +1,7 @@
 {% extends parent_template|default:"base.html" %}
 {% load static %}
 {% load thumbnail %}
+{% load django_htmx %}
 {% block title %}{{ item.issue }} - My Collection - Metron{% endblock %}
 {% block content %}
     <header class="block">
@@ -140,6 +141,10 @@
                             </span>
                         {% endif %}
                     </dd>
+                    <dt class="has-text-weight-bold">Rating:</dt>
+                    <dd class="mb-3">
+                        {% include "user_collection/partials/star_rating.html" %}
+                    </dd>
                     {% if item.date_read %}
                         <dt class="has-text-weight-bold">Date Read:</dt>
                         <dd class="mb-3">
@@ -158,4 +163,12 @@
             </div>
         </div>
     </div>
+{% endblock %}
+{% block js %}
+    {% htmx_script %}
+    <script>
+        document.body.addEventListener('htmx:configRequest', (event) => {
+            event.detail.headers['X-CSRFToken'] = '{{ csrf_token }}';
+        });
+    </script>
 {% endblock %}

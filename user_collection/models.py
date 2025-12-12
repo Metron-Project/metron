@@ -63,6 +63,12 @@ class CollectionItem(models.Model):
     # Reading tracking
     is_read = models.BooleanField(default=False, help_text="Whether the issue has been read")
     date_read = models.DateField(null=True, blank=True, help_text="Date when the issue was read")
+    rating = models.PositiveSmallIntegerField(
+        null=True,
+        blank=True,
+        choices=[(i, i) for i in range(1, 6)],
+        help_text="Star rating (1-5) for this issue",
+    )
 
     # Timestamps
     created_on = models.DateTimeField(db_default=Now())

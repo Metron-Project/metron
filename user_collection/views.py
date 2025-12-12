@@ -1,7 +1,10 @@
 from django.contrib import messages
+from django.contrib.auth.decorators import login_required
 from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
 from django.db.models import Count, Sum
+from django.shortcuts import get_object_or_404, render
 from django.urls import reverse, reverse_lazy
+from django.views.decorators.http import require_POST
 from django.views.generic import (
     CreateView,
     DeleteView,
@@ -18,6 +21,10 @@ from comicsdb.models.publisher import Publisher
 from comicsdb.models.series import SeriesType
 from user_collection.forms import AddIssuesFromSeriesForm, CollectionItemForm
 from user_collection.models import CollectionItem
+
+# Rating constants
+MIN_RATING = 1
+MAX_RATING = 5
 
 
 class CollectionListView(LoginRequiredMixin, ListView):
@@ -307,3 +314,30 @@ class AddIssuesFromSeriesView(LoginRequiredMixin, FormView):
             )
 
         return super().form_valid(form)
+
+
+@login_required
+@require_POST
+def update_rating(request, pk):
+    """HTMX view to update the rating of a collection item."""
+    item = get_object_or_404(CollectionItem, pk=pk, user=request.user)
+
+    rating_value = request.POST.get("rating")
+    if rating_value:
+        try:
+            rating = int(rating_value)
+            # Allow ratings from MIN_RATING to MAX_RATING
+            if MIN_RATING <= rating <= MAX_RATING:
+                item.rating = rating
+            elif rating == 0:  # Allow clearing the rating
+                item.rating = None
+            item.save(update_fields=["rating"])
+        except ValueError:
+            pass
+
+    # Return the updated star rating partial
+    return render(
+        request,
+        "user_collection/partials/star_rating.html",
+        {"item": item},
+    )

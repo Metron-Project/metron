@@ -114,4 +114,5 @@ def collection_item_read(collection_user, collection_issue_1):
         book_format=CollectionItem.BookFormat.PRINT,
         is_read=True,
         date_read=date(2024, 6, 15),
+        rating=4,
     )
