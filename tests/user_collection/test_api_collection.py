@@ -1,5 +1,7 @@
 """Tests for the Collection API."""
 
+from decimal import Decimal
+
 from django.urls import reverse
 from rest_framework import status
 
@@ -237,3 +239,135 @@ def test_stats_includes_read_tracking(
     assert "unread_count" in resp.data
     assert resp.data["read_count"] == 1
     assert resp.data["unread_count"] == 1
+
+
+# Grading and Rating Tests
+def test_list_includes_grade_fields(
+    api_client, collection_user, collection_item_professionally_graded
+):
+    """Test that list response includes grade and grading company fields."""
+    api_client.force_authenticate(user=collection_user)
+
+    resp = api_client.get(reverse("api:collection-list"))
+    assert resp.status_code == status.HTTP_200_OK
+    assert resp.data["count"] == 1
+
+    item = resp.data["results"][0]
+    assert "grade" in item
+    assert "grading_company" in item
+    assert item["grade"] == Decimal("9.8")
+    assert item["grading_company"] == "CGC (Certified Guaranty Company)"
+
+
+def test_detail_includes_grade_fields(
+    api_client, collection_user, collection_item_professionally_graded
+):
+    """Test that detail response includes grade and grading company fields."""
+    api_client.force_authenticate(user=collection_user)
+
+    resp = api_client.get(
+        reverse("api:collection-detail", kwargs={"pk": collection_item_professionally_graded.pk})
+    )
+    assert resp.status_code == status.HTTP_200_OK
+    assert resp.data["grade"] == Decimal("9.8")
+    assert resp.data["grading_company"] == "CGC (Certified Guaranty Company)"
+
+
+def test_list_includes_rating_field(api_client, collection_user, collection_item_read):
+    """Test that list response includes rating field."""
+    api_client.force_authenticate(user=collection_user)
+
+    resp = api_client.get(reverse("api:collection-list"))
+    assert resp.status_code == status.HTTP_200_OK
+    assert resp.data["count"] == 1
+
+    item = resp.data["results"][0]
+    assert "rating" in item
+    assert item["rating"] == 4
+
+
+def test_detail_includes_rating_field(api_client, collection_user, collection_item_read):
+    """Test that detail response includes rating field."""
+    api_client.force_authenticate(user=collection_user)
+
+    resp = api_client.get(reverse("api:collection-detail", kwargs={"pk": collection_item_read.pk}))
+    assert resp.status_code == status.HTTP_200_OK
+    assert resp.data["rating"] == 4
+
+
+def test_user_graded_item_has_empty_grading_company(
+    api_client, collection_user, collection_item_user_graded
+):
+    """Test that user-assessed grades have empty grading company."""
+    api_client.force_authenticate(user=collection_user)
+
+    resp = api_client.get(
+        reverse("api:collection-detail", kwargs={"pk": collection_item_user_graded.pk})
+    )
+    assert resp.status_code == status.HTTP_200_OK
+    assert resp.data["grade"] == Decimal("8.5")
+    assert resp.data["grading_company"] == ""
+
+
+# Filter Tests for Grading and Rating
+def test_filter_by_grade(
+    api_client,
+    collection_user,
+    collection_item_professionally_graded,
+    collection_item_user_graded,
+):
+    """Test filtering collection by grade."""
+    api_client.force_authenticate(user=collection_user)
+
+    # Filter by 9.8 grade
+    resp = api_client.get(reverse("api:collection-list"), {"grade": "9.8"})
+    assert resp.status_code == status.HTTP_200_OK
+    assert resp.data["count"] == 1
+    assert resp.data["results"][0]["grade"] == Decimal("9.8")
+
+    # Filter by 8.5 grade
+    resp = api_client.get(reverse("api:collection-list"), {"grade": "8.5"})
+    assert resp.status_code == status.HTTP_200_OK
+    assert resp.data["count"] == 1
+    assert resp.data["results"][0]["grade"] == Decimal("8.5")
+
+
+def test_filter_by_grading_company(
+    api_client,
+    collection_user,
+    collection_item_professionally_graded,
+    collection_item_user_graded,
+):
+    """Test filtering collection by grading company."""
+    api_client.force_authenticate(user=collection_user)
+
+    # Filter by CGC
+    resp = api_client.get(reverse("api:collection-list"), {"grading_company": "CGC"})
+    assert resp.status_code == status.HTTP_200_OK
+    assert resp.data["count"] == 1
+    assert resp.data["results"][0]["grading_company"] == "CGC (Certified Guaranty Company)"
+
+
+def test_filter_by_rating(api_client, collection_user, collection_issue_1, collection_issue_2):
+    """Test filtering collection by rating."""
+    api_client.force_authenticate(user=collection_user)
+
+    # Create items with different ratings
+    CollectionItem.objects.create(
+        user=collection_user, issue=collection_issue_1, is_read=True, rating=5
+    )
+    CollectionItem.objects.create(
+        user=collection_user, issue=collection_issue_2, is_read=True, rating=3
+    )
+
+    # Filter by 5-star rating
+    resp = api_client.get(reverse("api:collection-list"), {"rating": "5"})
+    assert resp.status_code == status.HTTP_200_OK
+    assert resp.data["count"] == 1
+    assert resp.data["results"][0]["rating"] == 5
+
+    # Filter by 3-star rating
+    resp = api_client.get(reverse("api:collection-list"), {"rating": "3"})
+    assert resp.status_code == status.HTTP_200_OK
+    assert resp.data["count"] == 1
+    assert resp.data["results"][0]["rating"] == 3

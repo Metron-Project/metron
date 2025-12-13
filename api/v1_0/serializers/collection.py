@@ -29,6 +29,7 @@ class CollectionListSerializer(serializers.ModelSerializer):
     user = UserSerializer(read_only=True)
     issue = CollectionIssueSerializer(read_only=True)
     book_format = serializers.CharField(source="get_book_format_display", read_only=True)
+    grading_company = serializers.CharField(source="get_grading_company_display", read_only=True)
 
     class Meta:
         model = CollectionItem
@@ -38,8 +39,11 @@ class CollectionListSerializer(serializers.ModelSerializer):
             "issue",
             "quantity",
             "book_format",
+            "grade",
+            "grading_company",
             "purchase_date",
             "is_read",
+            "rating",
             "modified",
         )
 
@@ -50,6 +54,7 @@ class CollectionReadSerializer(serializers.ModelSerializer):
     user = UserSerializer(read_only=True)
     issue = CollectionIssueSerializer(read_only=True)
     book_format = serializers.CharField(source="get_book_format_display", read_only=True)
+    grading_company = serializers.CharField(source="get_grading_company_display", read_only=True)
     resource_url = serializers.SerializerMethodField("get_resource_url")
 
     def get_resource_url(self, obj: CollectionItem) -> str:
@@ -63,6 +68,8 @@ class CollectionReadSerializer(serializers.ModelSerializer):
             "issue",
             "quantity",
             "book_format",
+            "grade",
+            "grading_company",
             "purchase_date",
             "purchase_price",
             "purchase_store",
@@ -70,6 +77,7 @@ class CollectionReadSerializer(serializers.ModelSerializer):
             "notes",
             "is_read",
             "date_read",
+            "rating",
             "resource_url",
             "created_on",
             "modified",

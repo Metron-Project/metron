@@ -57,6 +57,9 @@ class CollectionFilter(filters.FilterSet):
     date_read_lt = filters.DateFilter(field_name="date_read", lookup_expr="lt")
     date_read_gte = filters.DateFilter(field_name="date_read", lookup_expr="gte")
     date_read_lte = filters.DateFilter(field_name="date_read", lookup_expr="lte")
+    grade = filters.ChoiceFilter(choices=GRADE_CHOICES)
+    grading_company = filters.ChoiceFilter(choices=CollectionItem.GradingCompany.choices)
+    rating = filters.NumberFilter()
     modified_gt = filters.DateTimeFilter(
         label="Greater than Modified DateTime", field_name="modified", lookup_expr="gt"
     )
@@ -79,6 +82,9 @@ class CollectionFilter(filters.FilterSet):
             "date_read_lt",
             "date_read_gte",
             "date_read_lte",
+            "grade",
+            "grading_company",
+            "rating",
             "modified_gt",
         ]
 
