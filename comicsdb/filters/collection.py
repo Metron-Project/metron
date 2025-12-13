@@ -5,7 +5,7 @@ import django_filters as df
 from django.db.models import Q
 from django_filters import rest_framework as filters
 
-from user_collection.models import CollectionItem
+from user_collection.models import GRADE_CHOICES, CollectionItem
 
 
 class CollectionSeriesName(df.CharFilter):
@@ -122,6 +122,15 @@ class CollectionViewFilter(df.FilterSet):
     storage_location = df.CharFilter(label="Storage Location", lookup_expr="icontains")
     purchase_store = df.CharFilter(label="Purchase Store", lookup_expr="icontains")
 
+    # Grading filters
+    grade = df.ChoiceFilter(label="Grade", choices=GRADE_CHOICES)
+    grading_company = df.ChoiceFilter(
+        label="Grading Company", choices=CollectionItem.GradingCompany.choices
+    )
+
+    # Rating filter
+    rating = df.NumberFilter(label="Rating")
+
     class Meta:
         model = CollectionItem
         fields = [
@@ -137,4 +146,7 @@ class CollectionViewFilter(df.FilterSet):
             "is_read",
             "storage_location",
             "purchase_store",
+            "grade",
+            "grading_company",
+            "rating",
         ]

@@ -20,7 +20,7 @@ from comicsdb.models.issue import Issue
 from comicsdb.models.publisher import Publisher
 from comicsdb.models.series import SeriesType
 from user_collection.forms import AddIssuesFromSeriesForm, CollectionItemForm
-from user_collection.models import CollectionItem
+from user_collection.models import GRADE_CHOICES, CollectionItem
 
 # Rating constants
 MIN_RATING = 1
@@ -55,6 +55,9 @@ class CollectionListView(LoginRequiredMixin, ListView):
         context["series_type"] = SeriesType.objects.values("id", "name").order_by("name")
         context["publishers"] = Publisher.objects.values("id", "name").order_by("name")
         context["book_formats"] = CollectionItem.BookFormat.choices
+        context["grade_choices"] = GRADE_CHOICES
+        context["grading_companies"] = CollectionItem.GradingCompany.choices
+        context["rating_choices"] = [(i, i) for i in range(1, 6)]
         # Check if any filters are active (excluding page parameter)
         context["has_active_filters"] = any(key != "page" for key in self.request.GET)
         return context

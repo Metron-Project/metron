@@ -159,6 +159,69 @@
                         </div>
                     </div>
                 </div>
+                {# Grade Filter #}
+                <div class="column is-half">
+                    <div class="field">
+                        <label class="label" for="grade">Grade</label>
+                        <div class="control has-icons-left">
+                            <div class="select is-fullwidth">
+                                <select id="grade" name="grade" aria-label="Filter by grade">
+                                    <option value="">All Grades</option>
+                                    {% for value, label in grade_choices %}
+                                        <option value="{{ value }}" {% if request.GET.grade == value|stringformat:"s" %}selected{% endif %}>
+                                            {{ label }}
+                                        </option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                            <span class="icon is-small is-left">
+                                <i class="fas fa-award"></i>
+                            </span>
+                        </div>
+                    </div>
+                </div>
+                {# Grading Company Filter #}
+                <div class="column is-half">
+                    <div class="field">
+                        <label class="label" for="grading_company">Grading Company</label>
+                        <div class="control has-icons-left">
+                            <div class="select is-fullwidth">
+                                <select id="grading_company" name="grading_company" aria-label="Filter by grading company">
+                                    <option value="">All Companies</option>
+                                    {% for value, label in grading_companies %}
+                                        <option value="{{ value }}" {% if request.GET.grading_company == value %}selected{% endif %}>
+                                            {{ label }}
+                                        </option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                            <span class="icon is-small is-left">
+                                <i class="fas fa-certificate"></i>
+                            </span>
+                        </div>
+                    </div>
+                </div>
+                {# Rating Filter #}
+                <div class="column is-half">
+                    <div class="field">
+                        <label class="label" for="rating">Rating</label>
+                        <div class="control has-icons-left">
+                            <div class="select is-fullwidth">
+                                <select id="rating" name="rating" aria-label="Filter by rating">
+                                    <option value="">All Ratings</option>
+                                    {% for value, label in rating_choices %}
+                                        <option value="{{ value }}" {% if request.GET.rating == value|stringformat:"s" %}selected{% endif %}>
+                                            {{ label }} Star{{ label|pluralize }}
+                                        </option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                            <span class="icon is-small is-left">
+                                <i class="fas fa-star"></i>
+                            </span>
+                        </div>
+                    </div>
+                </div>
             </div>
         </details>
         {# Action Buttons #}

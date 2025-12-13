@@ -1,6 +1,7 @@
 """Tests for user_collection filters."""
 
 from datetime import date
+from decimal import Decimal
 
 import pytest
 from django.urls import reverse
@@ -367,6 +368,106 @@ class TestCollectionViewFilter:
         assert filterset.qs.count() == 1
         assert filterset.qs.first().issue.series.series_type == single_issue_type
 
+    def test_filter_by_grade(self, collection_user, spider_issue_1, batman_issue_1):
+        """Test filtering by comic grade."""
+        CollectionItem.objects.create(
+            user=collection_user, issue=spider_issue_1, quantity=1, grade=Decimal("9.8")
+        )
+        CollectionItem.objects.create(
+            user=collection_user, issue=batman_issue_1, quantity=1, grade=Decimal("9.4")
+        )
+
+        queryset = CollectionItem.objects.filter(user=collection_user)
+        filterset = CollectionViewFilter({"grade": "9.8"}, queryset=queryset)
+
+        assert filterset.qs.count() == 1
+        assert filterset.qs.first().grade == Decimal("9.8")
+
+    def test_filter_by_grading_company(self, collection_user, spider_issue_1, batman_issue_1):
+        """Test filtering by grading company."""
+        CollectionItem.objects.create(
+            user=collection_user,
+            issue=spider_issue_1,
+            quantity=1,
+            grade=Decimal("9.8"),
+            grading_company=CollectionItem.GradingCompany.CGC,
+        )
+        CollectionItem.objects.create(
+            user=collection_user,
+            issue=batman_issue_1,
+            quantity=1,
+            grade=Decimal("9.6"),
+            grading_company=CollectionItem.GradingCompany.CBCS,
+        )
+
+        queryset = CollectionItem.objects.filter(user=collection_user)
+        filterset = CollectionViewFilter({"grading_company": "CGC"}, queryset=queryset)
+
+        assert filterset.qs.count() == 1
+        assert filterset.qs.first().grading_company == CollectionItem.GradingCompany.CGC
+
+    def test_filter_by_rating(self, collection_user, spider_issue_1, batman_issue_1):
+        """Test filtering by star rating."""
+        CollectionItem.objects.create(
+            user=collection_user, issue=spider_issue_1, quantity=1, rating=5
+        )
+        CollectionItem.objects.create(
+            user=collection_user, issue=batman_issue_1, quantity=1, rating=3
+        )
+
+        queryset = CollectionItem.objects.filter(user=collection_user)
+        filterset = CollectionViewFilter({"rating": "5"}, queryset=queryset)
+
+        assert filterset.qs.count() == 1
+        assert filterset.qs.first().rating == 5
+
+    def test_filter_items_without_grade(self, collection_user, spider_issue_1, batman_issue_1):
+        """Test that items without grades are excluded when filtering by grade."""
+        CollectionItem.objects.create(
+            user=collection_user, issue=spider_issue_1, quantity=1, grade=Decimal("9.8")
+        )
+        CollectionItem.objects.create(
+            user=collection_user, issue=batman_issue_1, quantity=1, grade=None
+        )
+
+        queryset = CollectionItem.objects.filter(user=collection_user)
+        filterset = CollectionViewFilter({"grade": "9.8"}, queryset=queryset)
+
+        assert filterset.qs.count() == 1
+        assert filterset.qs.first().issue == spider_issue_1
+
+    def test_combined_filters_with_grade_and_rating(
+        self, collection_user, spider_issue_1, spider_issue_100, batman_issue_1
+    ):
+        """Test combining grade and rating filters."""
+        CollectionItem.objects.create(
+            user=collection_user,
+            issue=spider_issue_1,
+            quantity=1,
+            grade=Decimal("9.8"),
+            rating=5,
+        )
+        CollectionItem.objects.create(
+            user=collection_user,
+            issue=spider_issue_100,
+            quantity=1,
+            grade=Decimal("9.8"),
+            rating=3,
+        )
+        CollectionItem.objects.create(
+            user=collection_user,
+            issue=batman_issue_1,
+            quantity=1,
+            grade=Decimal("9.4"),
+            rating=5,
+        )
+
+        queryset = CollectionItem.objects.filter(user=collection_user)
+        filterset = CollectionViewFilter({"grade": "9.8", "rating": "5"}, queryset=queryset)
+
+        assert filterset.qs.count() == 1
+        assert filterset.qs.first().issue == spider_issue_1
+
 
 class TestCollectionListViewFiltering:
     """Tests for the CollectionListView with filtering."""
@@ -430,6 +531,9 @@ class TestCollectionListViewFiltering:
         assert "series_type" in resp.context
         assert "publishers" in resp.context
         assert "book_formats" in resp.context
+        assert "grade_choices" in resp.context
+        assert "grading_companies" in resp.context
+        assert "rating_choices" in resp.context
 
     def test_list_view_has_active_filters_flag(
         self, client, collection_user, spider_issue_1, test_password
@@ -521,3 +625,97 @@ class TestCollectionListViewFiltering:
         assert resp.status_code == HTTP_200_OK
         assert len(resp.context["collection_items"]) == 0
         assert resp.context["has_active_filters"] is True
+
+    def test_list_view_with_grade_filter(
+        self, client, collection_user, spider_issue_1, batman_issue_1, test_password
+    ):
+        """Test list view filters by comic grade."""
+        CollectionItem.objects.create(
+            user=collection_user, issue=spider_issue_1, quantity=1, grade=Decimal("9.8")
+        )
+        CollectionItem.objects.create(
+            user=collection_user, issue=batman_issue_1, quantity=1, grade=Decimal("9.4")
+        )
+
+        client.login(username=collection_user.username, password=test_password)
+        url = reverse("user_collection:list")
+        resp = client.get(url, {"grade": "9.8"})
+
+        assert resp.status_code == HTTP_200_OK
+        assert len(resp.context["collection_items"]) == 1
+        assert resp.context["collection_items"][0].grade == Decimal("9.8")
+
+    def test_list_view_with_grading_company_filter(
+        self, client, collection_user, spider_issue_1, batman_issue_1, test_password
+    ):
+        """Test list view filters by grading company."""
+        CollectionItem.objects.create(
+            user=collection_user,
+            issue=spider_issue_1,
+            quantity=1,
+            grade=Decimal("9.8"),
+            grading_company=CollectionItem.GradingCompany.CGC,
+        )
+        CollectionItem.objects.create(
+            user=collection_user,
+            issue=batman_issue_1,
+            quantity=1,
+            grade=Decimal("9.6"),
+            grading_company=CollectionItem.GradingCompany.CBCS,
+        )
+
+        client.login(username=collection_user.username, password=test_password)
+        url = reverse("user_collection:list")
+        resp = client.get(url, {"grading_company": "CGC"})
+
+        assert resp.status_code == HTTP_200_OK
+        assert len(resp.context["collection_items"]) == 1
+        assert (
+            resp.context["collection_items"][0].grading_company == CollectionItem.GradingCompany.CGC
+        )
+
+    def test_list_view_with_rating_filter(
+        self, client, collection_user, spider_issue_1, batman_issue_1, test_password
+    ):
+        """Test list view filters by star rating."""
+        CollectionItem.objects.create(
+            user=collection_user, issue=spider_issue_1, quantity=1, rating=5
+        )
+        CollectionItem.objects.create(
+            user=collection_user, issue=batman_issue_1, quantity=1, rating=3
+        )
+
+        client.login(username=collection_user.username, password=test_password)
+        url = reverse("user_collection:list")
+        resp = client.get(url, {"rating": "5"})
+
+        assert resp.status_code == HTTP_200_OK
+        assert len(resp.context["collection_items"]) == 1
+        assert resp.context["collection_items"][0].rating == 5
+
+    def test_list_view_with_combined_grade_rating_filters(
+        self, client, collection_user, spider_issue_1, spider_issue_100, test_password
+    ):
+        """Test list view with both grade and rating filters."""
+        CollectionItem.objects.create(
+            user=collection_user,
+            issue=spider_issue_1,
+            quantity=1,
+            grade=Decimal("9.8"),
+            rating=5,
+        )
+        CollectionItem.objects.create(
+            user=collection_user,
+            issue=spider_issue_100,
+            quantity=1,
+            grade=Decimal("9.8"),
+            rating=3,
+        )
+
+        client.login(username=collection_user.username, password=test_password)
+        url = reverse("user_collection:list")
+        resp = client.get(url, {"grade": "9.8", "rating": "5"})
+
+        assert resp.status_code == HTTP_200_OK
+        assert len(resp.context["collection_items"]) == 1
+        assert resp.context["collection_items"][0].issue == spider_issue_1
