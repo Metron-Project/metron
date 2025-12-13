@@ -444,10 +444,10 @@ class TestCollectionItemModel:
             user=collection_user,
             issue=issue,
             grade=Decimal("7.5"),
-            grading_company=None,
+            # grading_company not specified - uses default="" for user-assessed grades
         )
         assert item.grade == Decimal("7.5")
-        assert item.grading_company is None
+        assert item.grading_company == ""
 
     def test_collection_item_company_without_grade(
         self, collection_user, collection_issue_1, create_user
