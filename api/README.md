@@ -19,6 +19,7 @@ Welcome to the Metron API documentation. This API provides programmatic access t
     - [Series](#series)
     - [Team](#team)
     - [Universe](#universe)
+    - [Collection](#collection)
     - [Reading List](#reading-list)
     - [Supporting Resources](#supporting-resources)
 - [Filtering](#filtering)
@@ -713,6 +714,227 @@ Comic book universes (e.g., Earth-616, Earth-1).
 # Find universes by designation
 GET /api/universe/?designation=616
 ```
+
+---
+
+### Collection
+
+User comic book collections with tracking for ownership, grading, reading status, and personal ratings.
+
+**Base Path:** `/api/collection/`
+
+**Actions:**
+
+- `GET /api/collection/` - List authenticated user's collection items
+- `GET /api/collection/{id}/` - Retrieve collection item details (must belong to user)
+- `GET /api/collection/stats/` - Get collection statistics
+
+**Read-Only API:**
+
+This endpoint is read-only. Create, update, and delete operations are not available via the API. Use the web interface to manage your collection.
+
+**Authentication:**
+
+- **Required:** All collection endpoints require authentication
+- **Access:** Users can only view their own collection items
+- Attempting to access another user's collection item returns `404 Not Found`
+
+**Extensive Filtering:**
+
+The Collection endpoint supports comprehensive filtering for organizing and searching your collection:
+
+**Series Filters:**
+
+- `series_name` - Series name (searches all words, case-insensitive)
+- `series_type` - Series type ID
+- `issue__series` - Series Metron ID (exact match)
+- `issue_number` - Issue number (case-insensitive, exact match)
+
+**Publisher/Imprint Filters:**
+
+- `publisher_name` - Publisher name (partial match)
+- `publisher_id` - Publisher Metron ID
+- `imprint_name` - Imprint name (partial match)
+- `imprint_id` - Imprint Metron ID
+
+**Collection Metadata:**
+
+- `book_format` - Format type (choices: PRINT, DIGITAL, BOTH)
+- `storage_location` - Storage location (partial match)
+- `purchase_store` - Purchase store (partial match)
+
+**Purchase Date Filters:**
+
+- `purchase_date` - Purchase date (exact match, YYYY-MM-DD)
+- `purchase_date_gt` - Purchased after date
+- `purchase_date_lt` - Purchased before date
+- `purchase_date_gte` - Purchased on or after date
+- `purchase_date_lte` - Purchased on or before date
+
+**Reading Status:**
+
+- `is_read` - Boolean, filter by read status
+- `date_read` - Date read (exact match, YYYY-MM-DD)
+- `date_read_gt` - Read after date
+- `date_read_lt` - Read before date
+- `date_read_gte` - Read on or after date
+- `date_read_lte` - Read on or before date
+
+**Grading:**
+
+- `grade` - Comic book grade (CGC scale: 0.5 to 10.0)
+- `grading_company` - Grading company (choices: CGC, CBCS, PGX)
+
+**Rating:**
+
+- `rating` - Personal rating (1-5 stars)
+
+**Metadata:**
+
+- `modified_gt` - Modified after datetime
+
+**List Response Fields:**
+```json
+{
+  "id": 1,
+  "user": {
+    "id": 5,
+    "username": "johndoe"
+  },
+  "issue": {
+    "id": 5432,
+    "series": {
+      "id": 789,
+      "name": "Amazing Spider-Man",
+      "volume": 1,
+      "series_type": {
+        "id": 1,
+        "name": "Ongoing Series"
+      }
+    },
+    "number": "1",
+    "cover_date": "2024-03-01",
+    "store_date": "2024-01-10",
+    "modified": "2025-01-10T14:20:00Z"
+  },
+  "quantity": 1,
+  "book_format": "Print",
+  "grade": "9.6",
+  "grading_company": "CGC (Certified Guaranty Company)",
+  "purchase_date": "2024-01-15",
+  "is_read": true,
+  "rating": 5,
+  "modified": "2025-01-15T10:30:00Z"
+}
+```
+
+**Detail Response Fields:**
+
+- All list fields plus:
+    - `purchase_price` - Purchase price
+    - `purchase_store` - Store where purchased
+    - `storage_location` - Where the item is stored
+    - `notes` - Personal notes
+    - `date_read` - Date when read
+    - `resource_url` - Link to web UI
+    - `created_on` - When item was added to collection
+
+**Stats Response Fields:**
+```json
+{
+  "total_items": 1234,
+  "total_quantity": 1350,
+  "total_value": "45678.50",
+  "read_count": 890,
+  "unread_count": 344,
+  "by_format": [
+    {
+      "book_format": "PRINT",
+      "count": 1100
+    },
+    {
+      "book_format": "DIGITAL",
+      "count": 134
+    }
+  ]
+}
+```
+
+**Book Format Choices:**
+
+- `PRINT` - Physical/Print edition
+- `DIGITAL` - Digital edition
+- `BOTH` - Both print and digital
+
+**Grading Company Choices:**
+
+- `CGC` - CGC (Certified Guaranty Company)
+- `CBCS` - CBCS (Comic Book Certification Service)
+- `PGX` - PGX (Professional Grading Experts)
+
+**Grade Scale:**
+
+Uses the standard 10-point CGC grading scale:
+- `10.0` - Gem Mint
+- `9.9` - Mint
+- `9.8` - NM/M (Near Mint/Mint)
+- `9.6` - NM+ (Near Mint+)
+- `9.4` - NM (Near Mint)
+- `9.2` - NM- (Near Mint-)
+- `9.0` - VF/NM (Very Fine/Near Mint)
+- `8.5` - VF+ (Very Fine+)
+- `8.0` - VF (Very Fine)
+- `7.5` - VF- (Very Fine-)
+- `7.0` - FN/VF (Fine/Very Fine)
+- `6.5` - FN+ (Fine+)
+- `6.0` - FN (Fine)
+- `5.5` - FN- (Fine-)
+- `5.0` - VG/FN (Very Good/Fine)
+- And continues down to `0.5` (Poor)
+
+**Examples:**
+```bash
+# Get your entire collection
+GET /api/collection/
+
+# Get collection statistics
+GET /api/collection/stats/
+
+# Find unread issues
+GET /api/collection/?is_read=false
+
+# Find graded comics
+GET /api/collection/?grading_company=CGC
+
+# Find comics rated 5 stars
+GET /api/collection/?rating=5
+
+# Find issues from a specific series
+GET /api/collection/?series_name=amazing spider-man
+
+# Find print comics in storage
+GET /api/collection/?book_format=PRINT&storage_location=longbox
+
+# Find comics purchased in a date range
+GET /api/collection/?purchase_date_gte=2024-01-01&purchase_date_lte=2024-12-31
+
+# Find high-grade comics (9.6 and above)
+GET /api/collection/?grade=9.6
+
+# Combine multiple filters
+GET /api/collection/?series_name=spider-man&is_read=true&rating=5
+
+# Get details of a specific collection item
+GET /api/collection/123/
+```
+
+**Notes:**
+
+- Collection items are private - each user can only access their own collection
+- The `grading_company` field can be empty for user-assessed grades (non-professionally graded comics)
+- The `quantity` field allows tracking multiple copies of the same issue
+- Statistics are calculated in real-time from the user's current collection
+- Format counts in stats show the raw choice value (PRINT, DIGITAL, BOTH) not the display name
 
 ---
 
