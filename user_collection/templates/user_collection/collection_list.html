@@ -55,6 +55,7 @@
                                 <th>Issue</th>
                                 <th>Cover Date</th>
                                 <th>Format</th>
+                                <th>Grade</th>
                                 <th>Read</th>
                                 <th>Rating</th>
                                 <th>Quantity</th>
@@ -73,6 +74,21 @@
                                         <span class="tag {% if item.book_format == 'DIGITAL' %}is-info{% elif item.book_format == 'BOTH' %}is-success{% else %}is-dark{% endif %}">
                                             {{ item.get_book_format_display }}
                                         </span>
+                                    </td>
+                                    <td>
+                                        {% if item.grade %}
+                                            <span class="tag is-primary is-small"
+                                                  title="{% if item.grading_company %}{{ item.get_grading_company_display }}{% else %}User-assessed{% endif %}">
+                                                {{ item.grade }}
+                                                {% if item.grading_company %}
+                                                    <span class="icon is-small ml-1">
+                                                        <i class="fas fa-certificate"></i>
+                                                    </span>
+                                                {% endif %}
+                                            </span>
+                                        {% else %}
+                                            <span class="has-text-grey-light">—</span>
+                                        {% endif %}
                                     </td>
                                     <td>
                                         {% if item.is_read %}

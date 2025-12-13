@@ -1,6 +1,7 @@
 """Tests for user_collection models."""
 
 from datetime import date
+from decimal import Decimal
 
 import pytest
 from django.db import IntegrityError
@@ -289,3 +290,185 @@ class TestCollectionItemModel:
         )
         assert item.is_read is True
         assert item.date_read is None
+
+    # Grading tests
+
+    def test_collection_item_grade_default(self, collection_item):
+        """Test that grade defaults to None."""
+        assert collection_item.grade is None
+
+    def test_collection_item_grading_company_default(self, collection_item):
+        """Test that grading_company defaults to empty string."""
+        assert collection_item.grading_company == ""
+
+    def test_collection_item_professionally_graded(self, collection_item_professionally_graded):
+        """Test creating a professionally graded collection item."""
+        item = collection_item_professionally_graded
+        assert item.grade == Decimal("9.8")
+        assert item.grading_company == CollectionItem.GradingCompany.CGC
+        assert item.get_grade_display() == "9.8 (NM/M - Near Mint/Mint)"
+        assert item.get_grading_company_display() == "CGC (Certified Guaranty Company)"
+
+    def test_collection_item_user_assessed_grade(self, collection_item_user_graded):
+        """Test creating a user-assessed graded collection item."""
+        item = collection_item_user_graded
+        assert item.grade == Decimal("8.5")
+        assert item.grading_company == ""
+        assert item.get_grade_display() == "8.5 (VF+ - Very Fine+)"
+
+    def test_collection_item_all_grading_companies(
+        self, collection_user, collection_issue_1, create_user
+    ):
+        """Test all grading company choices."""
+        user = create_user()
+
+        # Test CGC
+        issue_cgc = Issue.objects.create(
+            series=collection_issue_1.series,
+            number="301",
+            slug="collection-series-301",
+            cover_date=date(2024, 1, 1),
+            edited_by=user,
+            created_by=user,
+        )
+        item_cgc = CollectionItem.objects.create(
+            user=collection_user,
+            issue=issue_cgc,
+            grade=Decimal("9.4"),
+            grading_company=CollectionItem.GradingCompany.CGC,
+        )
+        assert item_cgc.grading_company == "CGC"
+
+        # Test CBCS
+        issue_cbcs = Issue.objects.create(
+            series=collection_issue_1.series,
+            number="302",
+            slug="collection-series-302",
+            cover_date=date(2024, 2, 1),
+            edited_by=user,
+            created_by=user,
+        )
+        item_cbcs = CollectionItem.objects.create(
+            user=collection_user,
+            issue=issue_cbcs,
+            grade=Decimal("9.2"),
+            grading_company=CollectionItem.GradingCompany.CBCS,
+        )
+        assert item_cbcs.grading_company == "CBCS"
+
+        # Test PGX
+        issue_pgx = Issue.objects.create(
+            series=collection_issue_1.series,
+            number="303",
+            slug="collection-series-303",
+            cover_date=date(2024, 3, 1),
+            edited_by=user,
+            created_by=user,
+        )
+        item_pgx = CollectionItem.objects.create(
+            user=collection_user,
+            issue=issue_pgx,
+            grade=Decimal("9.0"),
+            grading_company=CollectionItem.GradingCompany.PGX,
+        )
+        assert item_pgx.grading_company == "PGX"
+
+    def test_collection_item_grade_choices_valid(
+        self, collection_user, collection_issue_1, create_user
+    ):
+        """Test that valid grade choices are accepted."""
+        user = create_user()
+
+        # Test a few key grade values
+        test_grades = [
+            (Decimal("10.0"), "10.0 (Gem Mint)"),
+            (Decimal("9.8"), "9.8 (NM/M - Near Mint/Mint)"),
+            (Decimal("9.0"), "9.0 (VF/NM - Very Fine/Near Mint)"),
+            (Decimal("8.0"), "8.0 (VF - Very Fine)"),
+            (Decimal("5.0"), "5.0 (VG/FN - Very Good/Fine)"),
+            (Decimal("1.0"), "1.0 (FR - Fair)"),
+            (Decimal("0.5"), "0.5 (PR - Poor)"),
+        ]
+
+        for idx, (grade_value, expected_display) in enumerate(test_grades):
+            issue = Issue.objects.create(
+                series=collection_issue_1.series,
+                number=f"400{idx}",
+                slug=f"collection-series-400{idx}",
+                cover_date=date(2024, 1, idx + 1),
+                edited_by=user,
+                created_by=user,
+            )
+            item = CollectionItem.objects.create(
+                user=collection_user,
+                issue=issue,
+                grade=grade_value,
+            )
+            assert item.grade == grade_value
+            assert item.get_grade_display() == expected_display
+
+    def test_collection_item_update_grade(self, collection_item):
+        """Test updating grade field."""
+        assert collection_item.grade is None
+        collection_item.grade = Decimal("9.6")
+        collection_item.save()
+        collection_item.refresh_from_db()
+        assert collection_item.grade == Decimal("9.6")
+
+    def test_collection_item_update_grading_company(self, collection_item_user_graded):
+        """Test updating grading_company field."""
+        item = collection_item_user_graded
+        assert item.grading_company == ""
+
+        # Upgrade to professional grading
+        item.grading_company = CollectionItem.GradingCompany.CBCS
+        item.save()
+        item.refresh_from_db()
+        assert item.grading_company == "CBCS"
+
+    def test_collection_item_grade_without_company(
+        self, collection_user, collection_issue_1, create_user
+    ):
+        """Test that grade can exist without grading_company (user-assessed)."""
+        user = create_user()
+        issue = Issue.objects.create(
+            series=collection_issue_1.series,
+            number="500",
+            slug="collection-series-500",
+            cover_date=date(2024, 5, 1),
+            edited_by=user,
+            created_by=user,
+        )
+
+        item = CollectionItem.objects.create(
+            user=collection_user,
+            issue=issue,
+            grade=Decimal("7.5"),
+            grading_company=None,
+        )
+        assert item.grade == Decimal("7.5")
+        assert item.grading_company is None
+
+    def test_collection_item_company_without_grade(
+        self, collection_user, collection_issue_1, create_user
+    ):
+        """Test that grading_company can be set without grade (edge case)."""
+        user = create_user()
+        issue = Issue.objects.create(
+            series=collection_issue_1.series,
+            number="501",
+            slug="collection-series-501",
+            cover_date=date(2024, 6, 1),
+            edited_by=user,
+            created_by=user,
+        )
+
+        # This is technically allowed (no validation prevents it)
+        item = CollectionItem.objects.create(
+            user=collection_user,
+            issue=issue,
+            grade=None,
+            grading_company=CollectionItem.GradingCompany.CGC,
+        )
+        assert item.grade is None
+        assert item.grading_company == "CGC"

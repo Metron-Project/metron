@@ -1,5 +1,7 @@
 """Tests for user_collection views."""
 
+from decimal import Decimal
+
 from django.urls import reverse
 
 from comicsdb.models.issue import Issue
@@ -1163,3 +1165,201 @@ class TestUpdateRatingView:
         # Rating should not have changed
         collection_item.refresh_from_db()
         assert collection_item.rating == 3
+
+
+class TestCollectionGradingViews:
+    """Tests for collection grading functionality in views."""
+
+    def test_collection_detail_view_with_professional_grade(
+        self, client, collection_user, collection_item_professionally_graded, test_password
+    ):
+        """Test that professionally graded items display correctly."""
+        client.login(username=collection_user.username, password=test_password)
+        url = reverse(
+            "user_collection:detail", kwargs={"pk": collection_item_professionally_graded.pk}
+        )
+        resp = client.get(url)
+        assert resp.status_code == HTTP_200_OK
+
+        content = resp.content.decode()
+        # Check that grading information box is present
+        assert "Grading Information" in content
+        # Check that grade is displayed
+        assert "9.8 (NM/M - Near Mint/Mint)" in content
+        # Check that grading company is displayed
+        assert "CGC (Certified Guaranty Company)" in content
+        # Check for professional grading indicator
+        assert "Professionally graded" in content
+
+    def test_collection_detail_view_with_user_assessed_grade(
+        self, client, collection_user, collection_item_user_graded, test_password
+    ):
+        """Test that user-assessed graded items display correctly."""
+        client.login(username=collection_user.username, password=test_password)
+        url = reverse("user_collection:detail", kwargs={"pk": collection_item_user_graded.pk})
+        resp = client.get(url)
+        assert resp.status_code == HTTP_200_OK
+
+        content = resp.content.decode()
+        # Check that grading information box is present
+        assert "Grading Information" in content
+        # Check that grade is displayed
+        assert "8.5 (VF+ - Very Fine+)" in content
+        # Check for user-assessed indicator
+        assert "User-assessed grade" in content
+
+    def test_collection_detail_view_without_grade(
+        self, client, collection_user, collection_item, test_password
+    ):
+        """Test that items without grades don't show grading section."""
+        client.login(username=collection_user.username, password=test_password)
+        url = reverse("user_collection:detail", kwargs={"pk": collection_item.pk})
+        resp = client.get(url)
+        assert resp.status_code == HTTP_200_OK
+
+        content = resp.content.decode()
+        # Grading Information box should not be present
+        assert "Grading Information" not in content
+
+    def test_collection_create_view_with_professional_grade(
+        self, client, collection_user, collection_issue_2, test_password
+    ):
+        """Test creating a collection item with a professional grade."""
+        client.login(username=collection_user.username, password=test_password)
+        url = reverse("user_collection:create")
+        data = {
+            "issue": collection_issue_2.pk,
+            "quantity": 1,
+            "book_format": "PRINT",
+            "grade": str(Decimal("9.8")),
+            "grading_company": "CGC",
+        }
+        resp = client.post(url, data)
+        assert resp.status_code == HTTP_302_FOUND
+
+        # Check that the item was created with grade and company
+        item = CollectionItem.objects.get(user=collection_user, issue=collection_issue_2)
+        assert item.grade == Decimal("9.8")
+        assert item.grading_company == "CGC"
+
+    def test_collection_create_view_with_user_assessed_grade(
+        self, client, collection_user, collection_issue_2, test_password
+    ):
+        """Test creating a collection item with a user-assessed grade."""
+        client.login(username=collection_user.username, password=test_password)
+        url = reverse("user_collection:create")
+        data = {
+            "issue": collection_issue_2.pk,
+            "quantity": 1,
+            "book_format": "PRINT",
+            "grade": str(Decimal("8.0")),
+            # No grading_company = user-assessed
+        }
+        resp = client.post(url, data)
+        assert resp.status_code == HTTP_302_FOUND
+
+        # Check that the item was created with grade but no company
+        item = CollectionItem.objects.get(user=collection_user, issue=collection_issue_2)
+        assert item.grade == Decimal("8.0")
+        assert item.grading_company == ""
+
+    def test_collection_create_view_without_grade(
+        self, client, collection_user, collection_issue_2, test_password
+    ):
+        """Test creating a collection item without a grade."""
+        client.login(username=collection_user.username, password=test_password)
+        url = reverse("user_collection:create")
+        data = {
+            "issue": collection_issue_2.pk,
+            "quantity": 1,
+            "book_format": "PRINT",
+            # No grade or grading_company
+        }
+        resp = client.post(url, data)
+        assert resp.status_code == HTTP_302_FOUND
+
+        # Check that the item was created without grade
+        item = CollectionItem.objects.get(user=collection_user, issue=collection_issue_2)
+        assert item.grade is None
+        assert item.grading_company == ""
+
+    def test_collection_update_view_add_grade(
+        self, client, collection_user, collection_item, test_password
+    ):
+        """Test updating a collection item to add a grade."""
+        assert collection_item.grade is None
+        client.login(username=collection_user.username, password=test_password)
+        url = reverse("user_collection:update", kwargs={"pk": collection_item.pk})
+        data = {
+            "issue": collection_item.issue.pk,
+            "quantity": collection_item.quantity,
+            "book_format": collection_item.book_format,
+            "grade": str(Decimal("9.4")),
+            "grading_company": "CBCS",
+        }
+        resp = client.post(url, data)
+        assert resp.status_code == HTTP_302_FOUND
+
+        # Check that the grade was added
+        collection_item.refresh_from_db()
+        assert collection_item.grade == Decimal("9.4")
+        assert collection_item.grading_company == "CBCS"
+
+    def test_collection_update_view_change_grade(
+        self, client, collection_user, collection_item_professionally_graded, test_password
+    ):
+        """Test updating a graded collection item to change the grade."""
+        client.login(username=collection_user.username, password=test_password)
+        url = reverse(
+            "user_collection:update", kwargs={"pk": collection_item_professionally_graded.pk}
+        )
+        data = {
+            "issue": collection_item_professionally_graded.issue.pk,
+            "quantity": collection_item_professionally_graded.quantity,
+            "book_format": collection_item_professionally_graded.book_format,
+            "grade": str(Decimal("9.6")),  # Changed from 9.8
+            "grading_company": "PGX",  # Changed from CGC
+        }
+        resp = client.post(url, data)
+        assert resp.status_code == HTTP_302_FOUND
+
+        # Check that the grade was updated
+        collection_item_professionally_graded.refresh_from_db()
+        assert collection_item_professionally_graded.grade == Decimal("9.6")
+        assert collection_item_professionally_graded.grading_company == "PGX"
+
+    def test_collection_update_view_remove_grade(
+        self, client, collection_user, collection_item_user_graded, test_password
+    ):
+        """Test updating a collection item to remove the grade."""
+        client.login(username=collection_user.username, password=test_password)
+        url = reverse("user_collection:update", kwargs={"pk": collection_item_user_graded.pk})
+        data = {
+            "issue": collection_item_user_graded.issue.pk,
+            "quantity": collection_item_user_graded.quantity,
+            "book_format": collection_item_user_graded.book_format,
+            # No grade or grading_company = remove them
+        }
+        resp = client.post(url, data)
+        assert resp.status_code == HTTP_302_FOUND
+
+        # Check that the grade was removed
+        collection_item_user_graded.refresh_from_db()
+        assert collection_item_user_graded.grade is None
+        assert collection_item_user_graded.grading_company == ""
+
+    def test_collection_list_view_with_graded_items(
+        self, client, collection_user, collection_item_professionally_graded, test_password
+    ):
+        """Test that graded items appear in the collection list."""
+        client.login(username=collection_user.username, password=test_password)
+        url = reverse("user_collection:list")
+        resp = client.get(url)
+        assert resp.status_code == HTTP_200_OK
+
+        # Check that the graded item is in the list
+        assert collection_item_professionally_graded in resp.context["collection_items"]
+
+        content = resp.content.decode()
+        # Check that grade column shows the value
+        assert "9.8" in content

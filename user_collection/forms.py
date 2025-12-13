@@ -16,6 +16,8 @@ class CollectionItemForm(forms.ModelForm):
             "issue",
             "quantity",
             "book_format",
+            "grade",
+            "grading_company",
             "purchase_date",
             "purchase_price",
             "purchase_store",
@@ -34,6 +36,8 @@ class CollectionItemForm(forms.ModelForm):
             ),
             "quantity": forms.NumberInput(attrs={"min": 1, "placeholder": "1"}),
             "book_format": forms.Select(),
+            "grade": forms.Select(attrs={"class": "select"}),
+            "grading_company": forms.Select(attrs={"class": "select"}),
             "purchase_date": forms.DateInput(
                 attrs={
                     "type": "date",
@@ -72,6 +76,8 @@ class CollectionItemForm(forms.ModelForm):
         }
         labels = {
             "book_format": "Format",
+            "grade": "Grade",
+            "grading_company": "Grading Company",
             "purchase_date": "Date Purchased",
             "purchase_price": "Price Paid",
             "purchase_store": "Store/Vendor",
@@ -81,6 +87,8 @@ class CollectionItemForm(forms.ModelForm):
         help_texts = {
             "quantity": "Number of copies you own",
             "book_format": "Physical print, digital, or both",
+            "grade": "Comic book condition grade (CGC scale)",
+            "grading_company": "Professional grading company (leave blank if user-assessed)",
             "purchase_date": "When did you purchase this issue?",
             "purchase_price": "How much did you pay?",
             "purchase_store": "Where did you buy it?",

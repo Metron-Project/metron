@@ -1,6 +1,7 @@
 """Fixtures for user_collection app tests."""
 
 from datetime import date
+from decimal import Decimal
 
 import pytest
 from djmoney.money import Money
@@ -115,4 +116,52 @@ def collection_item_read(collection_user, collection_issue_1):
         is_read=True,
         date_read=date(2024, 6, 15),
         rating=4,
+    )
+
+
+@pytest.fixture
+def collection_item_professionally_graded(collection_user, collection_issue_2, create_user):
+    """Create a collection item with a professional CGC grade."""
+    # Need a different issue to avoid unique constraint
+    user = create_user()
+    issue = Issue.objects.create(
+        series=collection_issue_2.series,
+        number="200",
+        slug="collection-series-200",
+        cover_date=date(2023, 10, 1),
+        edited_by=user,
+        created_by=user,
+    )
+
+    return CollectionItem.objects.create(
+        user=collection_user,
+        issue=issue,
+        quantity=1,
+        book_format=CollectionItem.BookFormat.PRINT,
+        grade=Decimal("9.8"),
+        grading_company=CollectionItem.GradingCompany.CGC,
+    )
+
+
+@pytest.fixture
+def collection_item_user_graded(collection_user, collection_issue_1, create_user):
+    """Create a collection item with a user-assessed grade."""
+    # Need a different issue to avoid unique constraint
+    user = create_user()
+    issue = Issue.objects.create(
+        series=collection_issue_1.series,
+        number="201",
+        slug="collection-series-201",
+        cover_date=date(2023, 11, 1),
+        edited_by=user,
+        created_by=user,
+    )
+
+    return CollectionItem.objects.create(
+        user=collection_user,
+        issue=issue,
+        quantity=1,
+        book_format=CollectionItem.BookFormat.PRINT,
+        grade=Decimal("8.5"),
+        # grading_company not specified - uses default="" for user-assessed grades
     )

@@ -82,6 +82,36 @@
                     <div class="content">{{ item.issue.desc|linebreaksbr }}</div>
                 </div>
             {% endif %}
+            {% if item.grade %}
+                <div class="box">
+                    <h2 class="title is-5">Grading Information</h2>
+                    <dl>
+                        <dt class="has-text-weight-bold">Grade:</dt>
+                        <dd class="mb-3">
+                            <span class="tag is-primary is-medium">
+                                <span class="icon is-small">
+                                    <i class="fas fa-star"></i>
+                                </span>
+                                <span>{{ item.get_grade_display }}</span>
+                            </span>
+                        </dd>
+                        <dt class="has-text-weight-bold">Grading Type:</dt>
+                        <dd>
+                            {% if item.grading_company %}
+                                <span class="icon is-small has-text-info">
+                                    <i class="fas fa-certificate"></i>
+                                </span>
+                                <span>Professionally graded by {{ item.get_grading_company_display }}</span>
+                            {% else %}
+                                <span class="icon is-small has-text-grey">
+                                    <i class="fas fa-user"></i>
+                                </span>
+                                <span>User-assessed grade</span>
+                            {% endif %}
+                        </dd>
+                    </dl>
+                </div>
+            {% endif %}
             {% if item.notes %}
                 <div class="box">
                     <h2 class="title is-5">Notes</h2>
