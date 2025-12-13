@@ -979,6 +979,127 @@ class TestAddIssuesFromSeriesView:
         assert len(messages) == 1
         assert "marked as read" in str(messages[0])
 
+    def test_add_issues_with_digital_format(
+        self, client, collection_user, collection_issue_1, test_password
+    ):
+        """Test adding issues with DIGITAL format."""
+        client.login(username=collection_user.username, password=test_password)
+        url = reverse("user_collection:add-from-series")
+        data = {
+            "series": collection_issue_1.series.pk,
+            "range_type": "all",
+            "default_format": CollectionItem.BookFormat.DIGITAL,
+        }
+        resp = client.post(url, data)
+        assert resp.status_code == HTTP_302_FOUND
+
+        # Check that the issue was added with DIGITAL format
+        item = CollectionItem.objects.get(user=collection_user, issue=collection_issue_1)
+        assert item.quantity == 1
+        assert item.book_format == CollectionItem.BookFormat.DIGITAL
+
+    def test_add_issues_with_both_format(
+        self, client, collection_user, collection_issue_1, test_password
+    ):
+        """Test adding issues with BOTH format."""
+        client.login(username=collection_user.username, password=test_password)
+        url = reverse("user_collection:add-from-series")
+        data = {
+            "series": collection_issue_1.series.pk,
+            "range_type": "all",
+            "default_format": CollectionItem.BookFormat.BOTH,
+        }
+        resp = client.post(url, data)
+        assert resp.status_code == HTTP_302_FOUND
+
+        # Check that the issue was added with BOTH format
+        item = CollectionItem.objects.get(user=collection_user, issue=collection_issue_1)
+        assert item.quantity == 1
+        assert item.book_format == CollectionItem.BookFormat.BOTH
+
+    def test_add_issues_default_format_when_not_specified(
+        self, client, collection_user, collection_issue_1, test_password
+    ):
+        """Test that PRINT is the default format when not explicitly specified."""
+        client.login(username=collection_user.username, password=test_password)
+        url = reverse("user_collection:add-from-series")
+        data = {
+            "series": collection_issue_1.series.pk,
+            "range_type": "all",
+            # No default_format specified - should default to PRINT
+        }
+        resp = client.post(url, data)
+        assert resp.status_code == HTTP_302_FOUND
+
+        # Check that the issue was added with PRINT format (default)
+        item = CollectionItem.objects.get(user=collection_user, issue=collection_issue_1)
+        assert item.quantity == 1
+        assert item.book_format == CollectionItem.BookFormat.PRINT
+
+    def test_add_issues_with_range_and_digital_format(
+        self, client, collection_user, collection_issue_1, test_password
+    ):
+        """Test adding issues with range and DIGITAL format."""
+        # Create issues 1-3
+        series = collection_issue_1.series
+        collection_issue_1.number = "1"
+        collection_issue_1.save()
+
+        issue2 = Issue.objects.create(
+            series=series,
+            number="2",
+            slug="test-series-digital-2",
+            cover_date=collection_issue_1.cover_date,
+            edited_by=collection_user,
+            created_by=collection_user,
+        )
+        issue3 = Issue.objects.create(
+            series=series,
+            number="3",
+            slug="test-series-digital-3",
+            cover_date=collection_issue_1.cover_date,
+            edited_by=collection_user,
+            created_by=collection_user,
+        )
+
+        client.login(username=collection_user.username, password=test_password)
+        url = reverse("user_collection:add-from-series")
+        data = {
+            "series": series.pk,
+            "range_type": "range",
+            "start_number": "1",
+            "end_number": "3",
+            "default_format": CollectionItem.BookFormat.DIGITAL,
+        }
+        resp = client.post(url, data)
+        assert resp.status_code == HTTP_302_FOUND
+
+        # Check that all 3 issues were added with DIGITAL format
+        assert CollectionItem.objects.filter(user=collection_user).count() == 3
+        for issue in [collection_issue_1, issue2, issue3]:
+            item = CollectionItem.objects.get(user=collection_user, issue=issue)
+            assert item.book_format == CollectionItem.BookFormat.DIGITAL
+
+    def test_add_issues_with_format_and_mark_as_read(
+        self, client, collection_user, collection_issue_1, test_password
+    ):
+        """Test adding issues with custom format and marking them as read."""
+        client.login(username=collection_user.username, password=test_password)
+        url = reverse("user_collection:add-from-series")
+        data = {
+            "series": collection_issue_1.series.pk,
+            "range_type": "all",
+            "default_format": CollectionItem.BookFormat.BOTH,
+            "mark_as_read": True,
+        }
+        resp = client.post(url, data)
+        assert resp.status_code == HTTP_302_FOUND
+
+        # Check that the issue was added with BOTH format and marked as read
+        item = CollectionItem.objects.get(user=collection_user, issue=collection_issue_1)
+        assert item.book_format == CollectionItem.BookFormat.BOTH
+        assert item.is_read is True
+
 
 class TestUpdateRatingView:
     """Tests for the update_rating HTMX view."""

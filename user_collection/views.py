@@ -210,6 +210,7 @@ class AddIssuesFromSeriesView(LoginRequiredMixin, FormView):
         range_type = form.cleaned_data["range_type"]
         start_number = form.cleaned_data.get("start_number")
         end_number = form.cleaned_data.get("end_number")
+        default_format = form.cleaned_data.get("default_format") or CollectionItem.BookFormat.PRINT
         mark_as_read = form.cleaned_data.get("mark_as_read", False)
 
         # Get all issues from the series, ordered by cover date
@@ -284,7 +285,7 @@ class AddIssuesFromSeriesView(LoginRequiredMixin, FormView):
                         user=self.request.user,
                         issue=issue,
                         quantity=1,
-                        book_format=CollectionItem.BookFormat.PRINT,
+                        book_format=default_format,
                         is_read=mark_as_read,
                     )
                 )

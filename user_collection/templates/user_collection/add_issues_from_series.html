@@ -58,6 +58,15 @@
                                     </div>
                                 </div>
                             </div>
+                            <!-- Default Format -->
+                            <div class="field mt-4">
+                                <label class="label" for="{{ form.default_format.id_for_label }}">{{ form.default_format.label }}</label>
+                                <div class="control">
+                                    <div class="select">{{ form.default_format }}</div>
+                                </div>
+                                {% if form.default_format.help_text %}<p class="help">{{ form.default_format.help_text }}</p>{% endif %}
+                                {% if form.default_format.errors %}<p class="help is-danger">{{ form.default_format.errors.0 }}</p>{% endif %}
+                            </div>
                             <!-- Mark as Read -->
                             <div class="field mt-4">
                                 <div class="control">
@@ -97,7 +106,7 @@
                                 </ul>
                             </li>
                             <li>Issues already in your collection will be automatically skipped</li>
-                            <li>All issues will be added with default values (Print format, quantity 1)</li>
+                            <li>All issues will be added with your selected format and quantity 1</li>
                             <li>
                                 <strong>Mark as read:</strong> Check this option if you've already read these issues
                             </li>

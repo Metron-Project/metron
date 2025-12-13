@@ -175,6 +175,15 @@ class AddIssuesFromSeriesForm(forms.Form):
         help_text="Optional: Issue number to end at (leave blank to go to end)",
     )
 
+    default_format = forms.ChoiceField(
+        choices=CollectionItem.BookFormat.choices,
+        initial=CollectionItem.BookFormat.PRINT,
+        required=False,
+        widget=forms.Select(attrs={"class": "select"}),
+        label="Default Format",
+        help_text="The format to use for all added issues",
+    )
+
     mark_as_read = forms.BooleanField(
         required=False,
         initial=False,
