@@ -68,7 +68,7 @@
                                     {% endif %}
                                 </div>
                             {% endfor %}
-                            <div class="field is-grouped is-grouped-right mt-5">
+                            <div class="field is-grouped is-flex-direction-column-mobile mt-5">
                                 <div class="control">
                                     <a href="{% if object %}{% url 'user_collection:detail' object.pk %}{% else %}{% url 'user_collection:list' %}{% endif %}"
                                        class="button">Cancel</a>
