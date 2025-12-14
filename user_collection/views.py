@@ -1,3 +1,4 @@
+from chartkick.django import PieChart
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
@@ -183,6 +184,55 @@ class CollectionStatsView(LoginRequiredMixin, TemplateView):
             .order_by("-count")[:10]
         )
 
+        # Create chart data
+        # Publisher distribution
+        publisher_data = (
+            queryset.values("issue__series__publisher__name")
+            .annotate(count=Count("id"))
+            .order_by("-count")
+        )
+        publisher_dict = {
+            item["issue__series__publisher__name"] or "Unknown": item["count"]
+            for item in publisher_data
+        }
+        publisher_chart = PieChart(
+            publisher_dict,
+            title="Issues by Publisher",
+            thousands=",",
+            legend="bottom",
+        )
+
+        # Series type distribution
+        series_type_data = (
+            queryset.values("issue__series__series_type__name")
+            .annotate(count=Count("id"))
+            .order_by("-count")
+        )
+        series_type_dict = {
+            item["issue__series__series_type__name"] or "Unknown": item["count"]
+            for item in series_type_data
+        }
+        series_type_chart = PieChart(
+            series_type_dict,
+            title="Issues by Series Type",
+            thousands=",",
+            legend="bottom",
+        )
+
+        # Format distribution
+        format_dict = {}
+        for item in format_counts:
+            format_name = dict(CollectionItem.BookFormat.choices).get(
+                item["book_format"], "Unknown"
+            )
+            format_dict[format_name] = item["count"]
+        format_chart = PieChart(
+            format_dict,
+            title="Issues by Format",
+            thousands=",",
+            legend="bottom",
+        )
+
         context.update(
             {
                 "total_items": total_items,
@@ -192,6 +242,9 @@ class CollectionStatsView(LoginRequiredMixin, TemplateView):
                 "unread_count": unread_count,
                 "format_counts": format_counts,
                 "top_series": top_series,
+                "publisher_chart": publisher_chart,
+                "series_type_chart": series_type_chart,
+                "format_chart": format_chart,
             }
         )
 

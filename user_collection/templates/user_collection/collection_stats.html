@@ -1,5 +1,9 @@
 {% extends parent_template|default:"base.html" %}
 {% load static %}
+{% block headscripts %}
+    <script src="{% static 'chartkick/Chart.bundle.js' %}"></script>
+    <script src="{% static 'chartkick/chartkick.js' %}"></script>
+{% endblock %}
 {% block title %}Collection Statistics - Metron{% endblock %}
 {% block content %}
     <header class="block has-text-centered">
@@ -83,6 +87,24 @@
                         <span class="icon has-text-primary">
                             <i class="fas fa-chart-line fa-2x"></i>
                         </span>
+                    </div>
+                </div>
+            </div>
+            {# Charts Section #}
+            <div class="columns is-multiline">
+                <div class="column is-one-third">
+                    <div class="box">
+                        <div class="content">{{ publisher_chart }}</div>
+                    </div>
+                </div>
+                <div class="column is-one-third">
+                    <div class="box">
+                        <div class="content">{{ series_type_chart }}</div>
+                    </div>
+                </div>
+                <div class="column is-one-third">
+                    <div class="box">
+                        <div class="content">{{ format_chart }}</div>
                     </div>
                 </div>
             </div>
