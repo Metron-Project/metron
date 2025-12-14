@@ -1,0 +1,1210 @@
+# User Collection - Technical Documentation
+
+Developer documentation for the `user_collection` Django app.
+
+## Table of Contents
+
+- [Architecture Overview](#architecture-overview)
+- [Models](#models)
+- [Views and URLs](#views-and-urls)
+- [Forms](#forms)
+- [Filters](#filters)
+- [HTMX Integration](#htmx-integration)
+- [Autocomplete](#autocomplete)
+- [Templates](#templates)
+- [Database Optimization](#database-optimization)
+- [API Integration](#api-integration)
+- [Privacy and Security](#privacy-and-security)
+- [Testing](#testing)
+- [Future Enhancements](#future-enhancements)
+
+## Architecture Overview
+
+The user_collection app follows Django's MTV (Model-Template-View) pattern with:
+
+- **Models**: `CollectionItem` for tracking user collections
+- **Views**: Class-based views (CBVs) for all operations
+- **Forms**: Django forms with autocomplete and custom widgets
+- **Filters**: Django-filter integration for advanced filtering
+- **HTMX**: Real-time star rating updates
+
+**Key Dependencies:**
+
+- Django's class-based views
+- `autocomplete` package for issue search
+- `django-filter` for advanced filtering
+- `django-money` for currency fields
+- `comicsdb` app for Issue, Series, Publisher models
+- `users` app for CustomUser model
+- HTMX for dynamic rating updates
+
+**Privacy Model:**
+
+- Collections are strictly private - users can only access their own items
+- No public/private toggle - all collections are private by default
+- Read-only API access available for authenticated users
+
+## Models
+
+### CollectionItem
+
+The main model for tracking comic book ownership and metadata.
+
+**File:** `user_collection/models.py`
+
+```python
+class CollectionItem(models.Model):
+    # Relationships
+    user = models.ForeignKey(CustomUser, on_delete=models.CASCADE)
+    issue = models.ForeignKey(Issue, on_delete=models.CASCADE)
+
+    # Collection metadata
+    quantity = models.PositiveSmallIntegerField(default=1)
+    book_format = models.CharField(max_length=10, choices=BookFormat.choices)
+
+    # Grading
+    grade = models.DecimalField(max_digits=3, decimal_places=1, choices=GRADE_CHOICES)
+    grading_company = models.CharField(max_length=10, choices=GradingCompany.choices)
+
+    # Purchase information
+    purchase_date = models.DateField(null=True, blank=True)
+    purchase_price = MoneyField(max_digits=7, decimal_places=2)
+    purchase_store = models.CharField(max_length=255, blank=True)
+
+    # Storage and notes
+    storage_location = models.CharField(max_length=255, blank=True)
+    notes = models.TextField(blank=True)
+
+    # Reading tracking
+    is_read = models.BooleanField(default=False)
+    date_read = models.DateField(null=True, blank=True)
+    rating = models.PositiveSmallIntegerField(null=True, choices=[(i, i) for i in range(1, 6)])
+
+    # Timestamps
+    created_on = models.DateTimeField(db_default=Now())
+    modified = models.DateTimeField(auto_now=True)
+```
+
+**Choice Fields:**
+
+```python
+class BookFormat(models.TextChoices):
+    PRINT = "PRINT", "Print"
+    DIGITAL = "DIGITAL", "Digital"
+    BOTH = "BOTH", "Both"
+
+class GradingCompany(models.TextChoices):
+    CGC = "CGC", "CGC (Certified Guaranty Company)"
+    CBCS = "CBCS", "CBCS (Comic Book Certification Service)"
+    PGX = "PGX", "PGX (Professional Grading Experts)"
+```
+
+**Grade Choices:**
+
+Uses the standard CGC 10-point grading scale:
+
+```python
+GRADE_CHOICES = [
+    (Decimal("10.0"), "10.0 (Gem Mint)"),
+    (Decimal("9.9"), "9.9 (Mint)"),
+    (Decimal("9.8"), "9.8 (NM/M - Near Mint/Mint)"),
+    # ... continues down to ...
+    (Decimal("0.5"), "0.5 (PR - Poor)"),
+]
+```
+
+**Constraints:**
+
+- Unique together: `(user, issue)` - prevents duplicate issues in a user's collection
+- Indexes:
+    - `(user, issue)` - primary lookup index
+    - `(user, purchase_date)` - for purchase date filtering
+    - `(user, book_format)` - for format filtering
+    - `(user, is_read)` - for read status filtering
+    - `(user, grade)` - for grade filtering
+    - `(user, grading_company)` - for grading company filtering
+
+**Meta Options:**
+
+```python
+class Meta:
+    ordering = ["user", "issue__series__sort_name", "issue__cover_date"]
+    unique_together = ["user", "issue"]
+    verbose_name = "Collection Item"
+    verbose_name_plural = "Collection Items"
+```
+
+**Methods:**
+
+- `get_absolute_url()`: Returns detail view URL using primary key
+- `__str__()`: Returns formatted string with username, issue, and quantity
+
+**Field Details:**
+
+- `quantity`: Tracks multiple copies of the same issue
+- `book_format`: Distinguishes physical, digital, and hybrid ownership
+- `grade`: Optional grading on CGC scale (0.5 to 10.0)
+- `grading_company`: Optional - blank means user-assessed grade
+- `purchase_price`: MoneyField with currency support
+- `rating`: 1-5 star rating system for personal tracking
+- `is_read`: Boolean for reading progress tracking
+- `date_read`: Optional timestamp of when issue was read
+
+## Views and URLs
+
+All views are class-based views (CBVs) with `LoginRequiredMixin` for authentication.
+
+**File:** `user_collection/views.py`
+
+### CollectionListView
+
+```python
+class CollectionListView(LoginRequiredMixin, ListView):
+    model = CollectionItem
+    template_name = "user_collection/collection_list.html"
+    paginate_by = 50
+
+    def get_queryset(self):
+        queryset = (
+            CollectionItem.objects.filter(user=self.request.user)
+            .select_related(
+                "issue__series__series_type",
+                "issue__series__publisher",
+                "issue__series__imprint",
+            )
+            .order_by("issue__series__sort_name", "issue__cover_date")
+        )
+        filtered = CollectionViewFilter(self.request.GET, queryset=queryset)
+        return filtered.qs
+```
+
+**Features:**
+
+- User-scoped queryset (only own items)
+- Advanced filtering via `CollectionViewFilter`
+- Optimized with `select_related()` for series data
+- Pagination (50 items per page)
+- Filter context for template
+
+**URL:** `/collection/`
+
+### CollectionDetailView
+
+```python
+class CollectionDetailView(LoginRequiredMixin, UserPassesTestMixin, DetailView):
+    model = CollectionItem
+    template_name = "user_collection/collection_detail.html"
+
+    def test_func(self):
+        item = self.get_object()
+        return item.user == self.request.user
+```
+
+**Features:**
+
+- Permission check via `UserPassesTestMixin`
+- Only owner can view
+- Optimized queryset with `select_related()`
+- Shows full item details including cover image
+
+**URL:** `/collection/<pk>/`
+
+### CollectionCreateView
+
+```python
+class CollectionCreateView(LoginRequiredMixin, CreateView):
+    model = CollectionItem
+    form_class = CollectionItemForm
+    template_name = "user_collection/collection_form.html"
+
+    def get_form_kwargs(self):
+        kwargs = super().get_form_kwargs()
+        kwargs["user"] = self.request.user
+        return kwargs
+
+    def form_valid(self, form):
+        form.instance.user = self.request.user
+        messages.success(self.request, "Item added to your collection!")
+        return super().form_valid(form)
+```
+
+**Features:**
+
+- Passes user to form for duplicate validation
+- Auto-sets user on save
+- Success message feedback
+- Redirects to collection list
+
+**URL:** `/collection/add/`
+
+### CollectionUpdateView
+
+```python
+class CollectionUpdateView(LoginRequiredMixin, UserPassesTestMixin, UpdateView):
+    model = CollectionItem
+    form_class = CollectionItemForm
+
+    def test_func(self):
+        item = self.get_object()
+        return item.user == self.request.user
+```
+
+**Features:**
+
+- Owner-only access via `test_func()`
+- Same form as create view
+- Passes user for validation
+- Success message on update
+
+**URL:** `/collection/<pk>/update/`
+
+### CollectionDeleteView
+
+```python
+class CollectionDeleteView(LoginRequiredMixin, UserPassesTestMixin, DeleteView):
+    model = CollectionItem
+    template_name = "user_collection/collection_confirm_delete.html"
+    success_url = reverse_lazy("user_collection:list")
+
+    def test_func(self):
+        item = self.get_object()
+        return item.user == self.request.user
+```
+
+**Features:**
+
+- Owner-only deletion
+- Confirmation template
+- Success message
+- Redirects to collection list
+
+**URL:** `/collection/<pk>/delete/`
+
+### CollectionStatsView
+
+```python
+class CollectionStatsView(LoginRequiredMixin, TemplateView):
+    template_name = "user_collection/collection_stats.html"
+
+    def get_context_data(self, **kwargs):
+        queryset = CollectionItem.objects.filter(user=self.request.user)
+
+        # Calculate statistics
+        total_items = queryset.count()
+        total_quantity = queryset.aggregate(Sum("quantity"))["quantity__sum"] or 0
+        total_value = queryset.aggregate(Sum("purchase_price"))["purchase_price__sum"]
+        read_count = queryset.filter(is_read=True).count()
+        unread_count = queryset.filter(is_read=False).count()
+        format_counts = queryset.values("book_format").annotate(count=Count("id"))
+        top_series = (
+            queryset.values("issue__series__name", "issue__series__id")
+            .annotate(count=Count("id"))
+            .order_by("-count")[:10]
+        )
+
+        context.update({
+            "total_items": total_items,
+            "total_quantity": total_quantity,
+            "total_value": total_value or 0,
+            "read_count": read_count,
+            "unread_count": unread_count,
+            "format_counts": format_counts,
+            "top_series": top_series,
+        })
+```
+
+**Statistics Provided:**
+
+- **Total Items**: Unique collection entries
+- **Total Quantity**: Sum of all copies (includes quantity field)
+- **Total Value**: Sum of all purchase prices
+- **Read Count**: Number of read issues
+- **Unread Count**: Number of unread issues
+- **Format Breakdown**: Count by print/digital/both
+- **Top 10 Series**: Most collected series by issue count
+
+**URL:** `/collection/stats/`
+
+### AddIssuesFromSeriesView
+
+```python
+class AddIssuesFromSeriesView(LoginRequiredMixin, FormView):
+    form_class = AddIssuesFromSeriesForm
+    template_name = "user_collection/add_issues_from_series.html"
+    success_url = reverse_lazy("user_collection:list")
+```
+
+**Purpose:** Bulk addition of issues from a series to a user's collection.
+
+**Complex Logic:**
+
+1. Fetches all issues from selected series ordered by cover date
+2. Applies optional range filtering (start/end issue numbers)
+3. Filters out duplicate issues already in collection
+4. Creates collection items with default format and read status
+5. Uses `bulk_create()` for efficient database operations
+6. Provides detailed feedback (added count, skipped count)
+
+**Range Filtering:**
+
+- **All issues**: Adds entire series run
+- **Start + End**: Adds issues between specified numbers (inclusive)
+- **Start only**: Adds from start number to series end
+- **End only**: Adds from series beginning to end number
+
+**Default Options:**
+
+- **Default Format**: Applied to all issues (PRINT, DIGITAL, BOTH)
+- **Mark as Read**: Optionally mark all added issues as read
+
+**Performance Optimizations:**
+
+- Uses `bulk_create()` for batch insertion
+- Single query to fetch existing issue IDs
+- List comprehension for building items
+- Ordered queryset reduces database work
+
+**Feedback:**
+
+```python
+# Example success messages:
+"Added 50 issues to your collection! Skipped 5 issues already in your collection."
+"Added 100 issues to your collection (marked as read)!"
+"All issues from this series are already in your collection."
+```
+
+**URL:** `/collection/add-from-series/`
+
+### update_rating
+
+```python
+@login_required
+@require_POST
+def update_rating(request, pk):
+    """HTMX view to update the rating of a collection item."""
+    item = get_object_or_404(CollectionItem, pk=pk, user=request.user)
+
+    rating_value = request.POST.get("rating")
+    if rating_value:
+        try:
+            rating = int(rating_value)
+            if MIN_RATING <= rating <= MAX_RATING:  # 1-5
+                item.rating = rating
+            elif rating == 0:  # Clear rating
+                item.rating = None
+            item.save(update_fields=["rating"])
+        except ValueError:
+            pass
+
+    return render(request, "user_collection/partials/star_rating.html", {"item": item})
+```
+
+**Features:**
+
+- HTMX endpoint for real-time updates
+- Function-based view for simplicity
+- Owner-only access via `get_object_or_404`
+- Rating range validation (1-5)
+- Supports clearing rating (value=0)
+- Returns partial template for swap
+- Uses `update_fields` for efficiency
+
+**URL:** `/collection/<pk>/rate/`
+
+### URL Configuration
+
+**File:** `user_collection/urls.py`
+
+```python
+app_name = "user_collection"
+urlpatterns = [
+    path("", CollectionListView.as_view(), name="list"),
+    path("add/", CollectionCreateView.as_view(), name="create"),
+    path("add-from-series/", AddIssuesFromSeriesView.as_view(), name="add-from-series"),
+    path("stats/", CollectionStatsView.as_view(), name="stats"),
+    path("<int:pk>/", CollectionDetailView.as_view(), name="detail"),
+    path("<int:pk>/update/", CollectionUpdateView.as_view(), name="update"),
+    path("<int:pk>/delete/", CollectionDeleteView.as_view(), name="delete"),
+    path("<int:pk>/rate/", update_rating, name="rate"),
+]
+```
+
+## Forms
+
+**File:** `user_collection/forms.py`
+
+### CollectionItemForm
+
+```python
+class CollectionItemForm(forms.ModelForm):
+    class Meta:
+        model = CollectionItem
+        fields = (
+            "issue", "quantity", "book_format", "grade", "grading_company",
+            "purchase_date", "purchase_price", "purchase_store",
+            "storage_location", "notes", "is_read", "date_read",
+        )
+```
+
+**Custom Widgets:**
+
+- **Issue**: `AutocompleteWidget` with `IssueAutocomplete`
+- **Purchase Date**: HTML5 date input with Bulma calendar
+- **Date Read**: HTML5 date input with Bulma calendar
+- **Purchase Price**: `BulmaMoneyWidget` for currency formatting
+- **Quantity**: Number input with min=1
+- **Notes**: Textarea with 4 rows
+
+**Custom Validation:**
+
+```python
+def clean_issue(self):
+    """Validate that the issue isn't already in the user's collection."""
+    issue = self.cleaned_data.get("issue")
+
+    # Only validate on create (not update)
+    if (not self.instance.pk and self.user and issue and
+        CollectionItem.objects.filter(user=self.user, issue=issue).exists()):
+        raise forms.ValidationError("This issue is already in your collection.")
+
+    return issue
+```
+
+**User Context:**
+
+```python
+def __init__(self, *args, **kwargs):
+    self.user = kwargs.pop("user", None)
+    super().__init__(*args, **kwargs)
+```
+
+The form requires user context for duplicate validation.
+
+**Help Text:**
+
+Extensive help text for all fields:
+- "Comic book condition grade (CGC scale)"
+- "Professional grading company (leave blank if user-assessed)"
+- "Number of copies you own"
+- "Where is it stored?"
+
+### AddIssuesFromSeriesForm
+
+```python
+class AddIssuesFromSeriesForm(forms.Form):
+    RANGE_CHOICES = [
+        ("all", "All issues"),
+        ("range", "Issue range"),
+    ]
+
+    series = forms.ModelChoiceField(
+        queryset=Series.objects.select_related("series_type").all(),
+        widget=widgets.AutocompleteWidget(ac_class=SeriesAutocomplete),
+    )
+
+    range_type = forms.ChoiceField(
+        choices=RANGE_CHOICES,
+        initial="all",
+        widget=forms.RadioSelect(),
+    )
+
+    start_number = forms.CharField(max_length=25, required=False)
+    end_number = forms.CharField(max_length=25, required=False)
+
+    default_format = forms.ChoiceField(
+        choices=CollectionItem.BookFormat.choices,
+        initial=CollectionItem.BookFormat.PRINT,
+        required=False,
+    )
+
+    mark_as_read = forms.BooleanField(required=False, initial=False)
+```
+
+**Features:**
+
+- **Series autocomplete**: Efficient series search
+- **Radio buttons**: HTMX-based toggle for range fields
+- **Flexible range**: Optional start/end issue numbers
+- **Default format**: Applied to all issues in bulk
+- **Mark as read**: Bulk reading status update
+- **Help text**: Guidance for each field
+
+**Use Case:**
+
+Designed for quickly adding entire series runs to collection:
+- Complete series (1-500+ issues)
+- Partial runs (e.g., issues 1-100)
+- From specific issue onward (e.g., 50-end)
+- Up to specific issue (e.g., 1-50)
+
+## Filters
+
+### CollectionFilter (API)
+
+**File:** `comicsdb/filters/collection.py`
+
+```python
+class CollectionFilter(filters.FilterSet):
+    book_format = filters.ChoiceFilter(choices=CollectionItem.BookFormat.choices)
+    purchase_date = filters.DateFilter()
+    purchase_date_gt = filters.DateFilter(field_name="purchase_date", lookup_expr="gt")
+    purchase_date_lt = filters.DateFilter(field_name="purchase_date", lookup_expr="lt")
+    purchase_date_gte = filters.DateFilter(field_name="purchase_date", lookup_expr="gte")
+    purchase_date_lte = filters.DateFilter(field_name="purchase_date", lookup_expr="lte")
+    purchase_store = filters.CharFilter(lookup_expr="icontains")
+    storage_location = filters.CharFilter(lookup_expr="icontains")
+    issue__series = filters.NumberFilter(field_name="issue__series__id")
+    is_read = filters.BooleanFilter()
+    date_read = filters.DateFilter()
+    date_read_gt = filters.DateFilter(field_name="date_read", lookup_expr="gt")
+    date_read_lt = filters.DateFilter(field_name="date_read", lookup_expr="lt")
+    date_read_gte = filters.DateFilter(field_name="date_read", lookup_expr="gte")
+    date_read_lte = filters.DateFilter(field_name="date_read", lookup_expr="lte")
+    grade = filters.ChoiceFilter(choices=GRADE_CHOICES)
+    grading_company = filters.ChoiceFilter(choices=CollectionItem.GradingCompany.choices)
+    rating = filters.NumberFilter()
+    modified_gt = filters.DateTimeFilter(field_name="modified", lookup_expr="gt")
+```
+
+**Usage:** REST API filtering via django-filter
+
+### CollectionViewFilter (Web UI)
+
+```python
+class CollectionViewFilter(df.FilterSet):
+    # Quick search across multiple fields
+    q = QuickSearchFilter(label="Quick Search")
+
+    # Series filters
+    series_name = CollectionSeriesName(field_name="issue__series__name")
+    series_type = df.NumberFilter(field_name="issue__series__series_type__id")
+    issue_number = df.CharFilter(field_name="issue__number", lookup_expr="iexact")
+
+    # Publisher/Imprint filters
+    publisher_name = df.CharFilter(field_name="issue__series__publisher__name", lookup_expr="icontains")
+    publisher_id = df.NumberFilter(field_name="issue__series__publisher__id")
+    imprint_name = df.CharFilter(field_name="issue__series__imprint__name", lookup_expr="icontains")
+    imprint_id = df.NumberFilter(field_name="issue__series__imprint__id")
+
+    # Collection metadata
+    book_format = df.ChoiceFilter(choices=CollectionItem.BookFormat.choices)
+    is_read = df.BooleanFilter()
+    storage_location = df.CharFilter(lookup_expr="icontains")
+    purchase_store = df.CharFilter(lookup_expr="icontains")
+
+    # Grading
+    grade = df.ChoiceFilter(choices=GRADE_CHOICES)
+    grading_company = df.ChoiceFilter(choices=CollectionItem.GradingCompany.choices)
+
+    # Rating
+    rating = df.NumberFilter()
+```
+
+**Custom Filters:**
+
+```python
+class CollectionSeriesName(df.CharFilter):
+    """Multi-word series name search (all words must match)."""
+    def filter(self, qs, value):
+        if value:
+            query_list = value.split()
+            return qs.filter(
+                reduce(operator.and_,
+                    (Q(issue__series__name__unaccent__icontains=q) for q in query_list)
+                )
+            )
+        return super().filter(qs, value)
+
+class QuickSearchFilter(df.CharFilter):
+    """Search across series names and notes."""
+    def filter(self, qs, value):
+        if value:
+            query_list = value.split()
+            return qs.filter(
+                reduce(operator.and_,
+                    (Q(issue__series__name__unaccent__icontains=q) |
+                     Q(notes__icontains=q) for q in query_list)
+                )
+            )
+        return super().filter(qs, value)
+```
+
+**Usage:** Web UI filtering with comprehensive options
+
+## HTMX Integration
+
+### Star Rating System
+
+**File:** `user_collection/templates/user_collection/partials/star_rating.html`
+
+The collection uses HTMX for real-time star rating updates without page refresh.
+
+**HTMX Attributes:**
+
+```html
+<form hx-post="{% url 'user_collection:rate' item.pk %}"
+      hx-target="#rating-{{ item.pk }}"
+      hx-swap="outerHTML">
+    {% csrf_token %}
+    <!-- Star buttons 1-5 -->
+    <button type="submit" name="rating" value="1">★</button>
+    <button type="submit" name="rating" value="2">★</button>
+    <!-- ... -->
+</form>
+```
+
+**Features:**
+
+- **Real-time updates**: Click a star, rating updates instantly
+- **No page refresh**: HTMX swaps only the star rating element
+- **Visual feedback**: Active stars highlighted
+- **Clearable**: Can remove rating by clicking same star
+- **Progressive enhancement**: Falls back to standard form submission
+
+**Flow:**
+
+1. User clicks star (1-5)
+2. HTMX sends POST to `/collection/<pk>/rate/`
+3. View updates rating in database
+4. View returns updated partial template
+5. HTMX swaps old rating HTML with new
+6. User sees updated stars immediately
+
+**Benefits:**
+
+- Improved UX with instant feedback
+- Reduced server load (partial template only)
+- Mobile-friendly single-click rating
+- Consistent with project's HTMX-first approach
+
+### Range Toggle (Add from Series)
+
+**File:** `user_collection/templates/user_collection/add_issues_from_series.html`
+
+The bulk addition form uses HTMX for showing/hiding range input fields:
+
+```html
+<div class="control"
+     hx-on:change="
+         if (event.target.name === 'range_type') {
+             const rangeFields = document.getElementById('range-fields');
+             rangeFields.style.display = event.target.value === 'range' ? 'block' : 'none';
+         }
+     ">
+```
+
+**Features:**
+
+- Co-located event handling with UI
+- Shows range fields only when "Issue range" selected
+- Hides fields when "All issues" selected
+- ~50% reduction in JavaScript vs separate file
+
+## Autocomplete
+
+**File:** `comicsdb/autocomplete.py`
+
+### IssueAutocomplete
+
+```python
+class IssueAutocomplete(ModelAutocomplete):
+    model = Issue
+    search_attrs = ["series__name", "number"]
+```
+
+Used in `CollectionItemForm` for issue selection.
+
+**Smart Search:**
+
+- Basic: OR search across series name and number
+- Smart: AND search when `#` separator used
+- Example: `"spider #1"` → series contains "spider" AND number contains "1"
+
+**Queryset Optimization:**
+
+```python
+queryset = Issue.objects.select_related("series", "series__series_type")
+```
+
+### SeriesAutocomplete
+
+```python
+class SeriesAutocomplete(ModelAutocomplete):
+    model = Series
+    search_attrs = ["name"]
+```
+
+Used in `AddIssuesFromSeriesForm` for bulk addition.
+
+**Features:**
+
+- Simple name-based search
+- Optimized with `select_related("series_type")`
+- Returns formatted results with series type
+
+## Templates
+
+**Directory:** `user_collection/templates/user_collection/`
+
+### Template Files
+
+| Template | Purpose | Key Features |
+|----------|---------|--------------|
+| `collection_list.html` | List all items | Pagination, filtering, star ratings, stats link |
+| `collection_detail.html` | Single item detail | Cover image, all metadata, edit/delete buttons |
+| `collection_form.html` | Create/edit form | Autocomplete, date pickers, help text |
+| `collection_confirm_delete.html` | Delete confirmation | Item details, warning |
+| `collection_stats.html` | Statistics dashboard | Charts, totals, top series |
+| `add_issues_from_series.html` | Bulk add from series | Series autocomplete, HTMX range toggle |
+| `partials/star_rating.html` | Star rating component | HTMX-enabled, reusable |
+| `partials/collection_filter.html` | Filter form | All filter options, clear button |
+
+### Template Context
+
+**Common Context Variables:**
+
+- `item`: CollectionItem instance (detail/update/delete)
+- `collection_items`: Queryset of items (list)
+- `form`: Form instance (create/update/bulk add)
+- `user`: Current user (from request)
+- `has_active_filters`: Boolean for showing "Clear Filters" (list)
+
+**Stats Context:**
+
+- `total_items`: Total unique items
+- `total_quantity`: Total comics including copies
+- `total_value`: Sum of purchase prices
+- `read_count`: Read items count
+- `unread_count`: Unread items count
+- `format_counts`: Breakdown by format
+- `top_series`: Top 10 series by count
+
+### Bulma CSS Framework
+
+Templates use Bulma CSS for styling:
+
+- Form fields wrapped in Bulma control classes
+- Buttons use Bulma button styles
+- Tables use Bulma table classes
+- Messages use Bulma notification styles
+- Pagination uses Bulma pagination
+
+## Database Optimization
+
+### QuerySet Optimizations
+
+**List View:**
+
+```python
+queryset = (
+    CollectionItem.objects.filter(user=request.user)
+    .select_related(
+        "issue__series__series_type",
+        "issue__series__publisher",
+        "issue__series__imprint",
+    )
+    .order_by("issue__series__sort_name", "issue__cover_date")
+)
+```
+
+**Detail View:**
+
+```python
+queryset = CollectionItem.objects.select_related(
+    "issue",
+    "issue__series",
+    "issue__series__publisher",
+)
+```
+
+**Stats View:**
+
+```python
+# Aggregate queries
+total_quantity = queryset.aggregate(Sum("quantity"))["quantity__sum"]
+total_value = queryset.aggregate(Sum("purchase_price"))["purchase_price__sum"]
+format_counts = queryset.values("book_format").annotate(count=Count("id"))
+```
+
+**Benefits:**
+
+- `select_related()`: Reduces queries for ForeignKey relationships
+- `aggregate()`: Database-level calculations
+- `annotate()`: Efficient grouping and counting
+- Ordered querysets use database sorting
+
+### Indexes
+
+```python
+class Meta:
+    indexes = [
+        models.Index(fields=["user", "issue"], name="user_issue_idx"),
+        models.Index(fields=["user", "purchase_date"], name="user_purchase_date_idx"),
+        models.Index(fields=["user", "book_format"], name="user_format_idx"),
+        models.Index(fields=["user", "is_read"], name="user_is_read_idx"),
+        models.Index(fields=["user", "grade"], name="user_grade_idx"),
+        models.Index(fields=["user", "grading_company"], name="user_grading_company_idx"),
+    ]
+```
+
+**Purpose:**
+
+All indexes include `user` as the first field because:
+- All queries filter by user (privacy requirement)
+- Composite indexes optimize common filter combinations
+- Covering indexes reduce index-only scans
+
+**Query Patterns Optimized:**
+
+- `WHERE user=X AND is_read=False` → Uses `user_is_read_idx`
+- `WHERE user=X AND grade='9.6'` → Uses `user_grade_idx`
+- `WHERE user=X AND book_format='PRINT'` → Uses `user_format_idx`
+
+### Database Constraints
+
+**Unique Constraint:**
+
+```python
+unique_together = ["user", "issue"]
+```
+
+**Benefits:**
+
+- Prevents duplicate issues in user's collection
+- Database-level enforcement (not just app-level)
+- Faster lookups on unique pairs
+- Data integrity guarantee
+
+**Validation:**
+
+The constraint is checked in the form's `clean_issue()` method before database insertion to provide user-friendly error messages.
+
+## API Integration
+
+### Internal Dependencies
+
+**comicsdb.models.Issue:**
+
+```python
+from comicsdb.models.issue import Issue
+```
+
+Used for the M2M-like relationship and autocomplete.
+
+**comicsdb.models.Series:**
+
+```python
+from comicsdb.models.series import Series
+```
+
+Used for bulk addition from series.
+
+**comicsdb.filters:**
+
+```python
+from comicsdb.filters.collection import CollectionViewFilter
+```
+
+Shared filter classes for consistency between web and API.
+
+**users.models.CustomUser:**
+
+```python
+from users.models import CustomUser
+```
+
+Used for user ownership and authentication.
+
+### External Dependencies
+
+**autocomplete package:**
+
+```python
+from autocomplete import ModelAutocomplete, register, widgets
+```
+
+Provides autocomplete functionality for issue and series search.
+
+**django-filter:**
+
+```python
+import django_filters as df
+from django_filters import rest_framework as filters
+```
+
+Advanced filtering for both web UI and API.
+
+**django-money:**
+
+```python
+from djmoney.models.fields import MoneyField
+```
+
+Currency field for purchase price tracking.
+
+### REST API Endpoints
+
+The collection feature provides read-only REST API endpoints. Complete API documentation is available in the main [API README](../api/README.md#collection).
+
+**Available Endpoints:**
+
+- `GET /api/collection/` - List user's collection items
+- `GET /api/collection/{id}/` - Retrieve collection item details
+- `GET /api/collection/stats/` - Get collection statistics
+
+**Authentication:**
+
+All collection API endpoints require authentication. Users can only access their own collection items.
+
+**Permissions:**
+
+- Authenticated users can access only their own collection
+- No admin special access (unlike reading lists)
+- Attempting to access another user's item returns 404
+
+For complete API documentation including filtering, pagination, and response formats, see the [main API documentation](../api/README.md#collection).
+
+## Privacy and Security
+
+### Privacy Model
+
+**Strictly Private:**
+
+- Collections are always private (no public/private toggle)
+- Users can only see their own collection items
+- No sharing or collaboration features
+- API access restricted to owner
+
+### Permission Checks
+
+**View-Level:**
+
+All views use `LoginRequiredMixin` for authentication.
+
+Views that access specific items use `UserPassesTestMixin`:
+
+```python
+def test_func(self):
+    item = self.get_object()
+    return item.user == self.request.user
+```
+
+**Queryset-Level:**
+
+All querysets are filtered by user:
+
+```python
+queryset = CollectionItem.objects.filter(user=self.request.user)
+```
+
+**Form-Level:**
+
+Forms validate duplicate issues only within user's collection:
+
+```python
+CollectionItem.objects.filter(user=self.user, issue=issue).exists()
+```
+
+### Security Considerations
+
+**CSRF Protection:**
+
+All forms include `{% csrf_token %}` for CSRF protection.
+
+**SQL Injection:**
+
+Django ORM prevents SQL injection via parameterized queries.
+
+**XSS Prevention:**
+
+Django templates auto-escape output by default.
+
+**Access Control:**
+
+- User ID from `request.user` (authenticated session)
+- Never trust user input for user ID
+- Permission checks on every view
+- Queryset scoping prevents data leakage
+
+## Testing
+
+### Test Coverage Areas
+
+**Models:**
+
+- CollectionItem creation and validation
+- Unique constraint enforcement (user, issue)
+- Choice field validation (BookFormat, GradingCompany, Grade)
+- MoneyField handling
+- Rating range validation (1-5)
+
+**Views:**
+
+- Authentication requirements (LoginRequiredMixin)
+- Permission checks (owner-only access)
+- Queryset filtering (user-scoped)
+- Form validation
+- Success/error messages
+- Redirection flows
+
+**Forms:**
+
+- CollectionItemForm validation
+- Duplicate issue prevention
+- User context passing
+- AddIssuesFromSeriesForm range validation
+- Field widget configuration
+
+**Filters:**
+
+- CollectionFilter field coverage
+- CollectionViewFilter custom filters
+- QuickSearchFilter multi-field search
+- Series name multi-word search
+- Date range filtering
+
+**HTMX:**
+
+- Star rating endpoint
+- Partial template rendering
+- Owner-only rating updates
+- Rating value validation (1-5)
+- Clear rating functionality (value=0)
+
+**Bulk Addition:**
+
+- Add all issues from series
+- Range filtering (start/end/both)
+- Duplicate detection
+- Default format application
+- Mark as read functionality
+- bulk_create() operations
+- Success/skip messaging
+
+### Test Fixtures
+
+**Recommended Fixtures:**
+
+- `user`: Standard user for ownership
+- `other_user`: Different user for permission testing
+- `issue`: Basic issue for collection
+- `series_with_issues`: Series with multiple sequential issues
+- `collection_item`: Pre-populated collection item
+- `collection_with_items`: User with multiple collection items
+
+### Example Test
+
+```python
+class CollectionItemModelTest(TestCase):
+    def setUp(self):
+        self.user = CustomUser.objects.create_user(username="testuser")
+        self.issue = Issue.objects.create(...)
+
+    def test_unique_constraint(self):
+        """Test that users cannot add the same issue twice."""
+        CollectionItem.objects.create(user=self.user, issue=self.issue)
+
+        with self.assertRaises(IntegrityError):
+            CollectionItem.objects.create(user=self.user, issue=self.issue)
+
+    def test_different_users_can_own_same_issue(self):
+        """Test that different users can collect the same issue."""
+        other_user = CustomUser.objects.create_user(username="other")
+
+        item1 = CollectionItem.objects.create(user=self.user, issue=self.issue)
+        item2 = CollectionItem.objects.create(user=other_user, issue=self.issue)
+
+        self.assertIsNotNone(item1.pk)
+        self.assertIsNotNone(item2.pk)
+        self.assertNotEqual(item1.pk, item2.pk)
+```
+
+## Future Enhancements
+
+### Planned Features
+
+1. **Wishlist Functionality**
+    - Separate wishlist for issues to acquire
+    - Price tracking for wishlist items
+    - Notifications for price drops
+    - Convert wishlist items to collection
+
+2. **Enhanced Statistics**
+    - Value appreciation tracking
+    - Most valuable issues
+    - Completion percentage by series
+    - Reading velocity (issues per month)
+    - Grade distribution charts
+    - Publisher/imprint breakdowns
+
+3. **Import/Export**
+    - CSV import for bulk collection entry
+    - Export to various formats (CSV, JSON, PDF)
+    - Comic collector software integration
+    - Backup and restore functionality
+
+4. **Reading Progress**
+    - Reading list integration
+    - Mark issues from reading lists as read in collection
+    - Track reading order vs collection order
+    - Reading statistics and history
+
+5. **Variant Tracking**
+    - Support for multiple variants of same issue
+    - Variant type field (cover, incentive, etc.)
+    - Artist/variant name tracking
+    - Display variants grouped by base issue
+
+6. **Collection Sharing** (Optional)
+    - Public profile option
+    - Share collection statistics
+    - Public wishlist for trades
+    - Privacy controls (what to share)
+
+7. **Mobile App**
+    - Native iOS/Android apps
+    - Barcode scanning for quick addition
+    - Offline access to collection
+    - Photo uploads for condition documentation
+
+### Possible Technical Improvements
+
+1. **Caching**
+    - Redis cache for statistics
+    - Cache frequently accessed collections
+    - Template fragment caching for lists
+    - Cache invalidation on updates
+
+2. **Async Operations**
+    - Celery tasks for bulk operations
+    - Background import/export jobs
+    - Email notifications for completed tasks
+    - Progress tracking for long operations
+
+3. **Search Enhancements**
+    - Full-text search with PostgreSQL
+    - Elasticsearch integration for large collections
+    - Advanced search with boolean operators
+    - Saved search filters
+
+4. **Performance**
+    - Denormalize series count
+    - Materialized views for statistics
+    - Query result pagination improvements
+    - Database sharding for large user base
+
+5. **Data Visualization**
+    - Chart.js integration for statistics
+    - Timeline view of purchases
+    - Grade distribution histogram
+    - Collection value over time graph
+
+6. **Integration APIs**
+    - CLZ Comics integration
+    - Comic Book Realm integration
+    - League of Comic Geeks sync
+    - Goodreads-style social features
+
+---
+
+For user documentation and usage instructions, see [README.md](README.md).

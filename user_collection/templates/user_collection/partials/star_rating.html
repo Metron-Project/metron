@@ -1,0 +1,72 @@
+<div id="rating-{{ item.pk }}" class="star-rating">
+    {% for star_num in "12345" %}
+        <button type="button"
+                class="star-button {% if item.rating and forloop.counter <= item.rating %}filled{% else %}empty{% endif %}"
+                hx-post="{% url 'user_collection:rate' item.pk %}"
+                hx-vals='{"rating": "{{ forloop.counter }}"}'
+                hx-target="#rating-{{ item.pk }}"
+                hx-swap="outerHTML"
+                title="Rate {{ forloop.counter }} star{% if forloop.counter > 1 %}s{% endif %}">
+            <i class="{% if item.rating and forloop.counter <= item.rating %}fas{% else %}far{% endif %} fa-star"></i>
+        </button>
+    {% endfor %}
+
+    {% if item.rating %}
+        <button type="button"
+                class="star-clear"
+                hx-post="{% url 'user_collection:rate' item.pk %}"
+                hx-vals='{"rating": "0"}'
+                hx-target="#rating-{{ item.pk }}"
+                hx-swap="outerHTML"
+                title="Clear rating">
+            <i class="fas fa-times-circle"></i>
+        </button>
+    {% endif %}
+</div>
+
+<style>
+    .star-rating {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.125rem;
+    }
+
+    .star-button {
+        background: none;
+        border: none;
+        cursor: pointer;
+        padding: 0;
+        font-size: 1rem;
+        line-height: 1;
+        transition: all 0.15s ease;
+    }
+
+    .star-button.filled i {
+        color: #ffd700;
+    }
+
+    .star-button.empty i {
+        color: #dbdbdb;
+    }
+
+    .star-button:hover i {
+        filter: brightness(1.4);
+        transform: scale(1.1);
+    }
+
+    .star-clear {
+        background: none;
+        border: none;
+        cursor: pointer;
+        padding: 0;
+        margin-left: 0.5rem;
+        font-size: 0.875rem;
+        color: #b5b5b5;
+        transition: all 0.2s ease;
+    }
+
+    .star-clear:hover {
+        color: #ff3860;
+        transform: scale(1.15);
+    }
+</style>

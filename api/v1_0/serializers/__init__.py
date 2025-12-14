@@ -52,6 +52,12 @@ from api.v1_0.serializers.reading_list import (
     ReadingListListSerializer,
     ReadingListReadSerializer,
 )
+from api.v1_0.serializers.collection import (
+    CollectionListSerializer,
+    CollectionReadSerializer,
+    MissingIssueSerializer,
+    MissingSeriesSerializer,
+)
 
 __all__ = [
     "ArcListSerializer",
@@ -62,6 +68,8 @@ __all__ = [
     "CharacterListSerializer",
     "CharacterReadSerializer",
     "CharacterSerializer",
+    "CollectionListSerializer",
+    "CollectionReadSerializer",
     "CreatorListSerializer",
     "CreatorSerializer",
     "CreditReadSerializer",
@@ -75,6 +83,8 @@ __all__ = [
     "IssueReadSerializer",
     "IssueSerializer",
     "IssueSeriesSerializer",
+    "MissingIssueSerializer",
+    "MissingSeriesSerializer",
     "PublisherListSerializer",
     "PublisherSerializer",
     "RatingSerializer",

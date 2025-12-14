@@ -56,7 +56,7 @@ combine-as-imports = true
 directory = "test-results/coverage"
 
 [tool.coverage.run]
-source = ["comicsdb", "metron", "reading_lists","users"]
+source = ["comicsdb", "metron", "reading_lists","users", "user_collection"]
 branch = true
 concurrency = ["multiprocessing"]
 

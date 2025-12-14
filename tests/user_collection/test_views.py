@@ -1,0 +1,1992 @@
+"""Tests for user_collection views."""
+
+from datetime import date
+from decimal import Decimal
+
+from django.urls import reverse
+
+from comicsdb.models.issue import Issue
+from comicsdb.models.series import Series
+from user_collection.models import CollectionItem
+
+HTTP_200_OK = 200
+HTTP_302_FOUND = 302
+HTTP_403_FORBIDDEN = 403
+HTTP_404_NOT_FOUND = 404
+
+
+class TestCollectionListView:
+    """Tests for the CollectionListView."""
+
+    def test_collection_list_view_requires_login(self, client):
+        """Test that the view requires login."""
+        url = reverse("user_collection:list")
+        resp = client.get(url)
+        assert resp.status_code == HTTP_302_FOUND
+        assert "/accounts/login/" in resp.url
+
+    def test_collection_list_view_authenticated(
+        self, client, collection_user, collection_item, test_password
+    ):
+        """Test that authenticated users see their own collection items."""
+        client.login(username=collection_user.username, password=test_password)
+        url = reverse("user_collection:list")
+        resp = client.get(url)
+        assert resp.status_code == HTTP_200_OK
+        assert collection_item in resp.context["collection_items"]
+
+    def test_collection_list_view_only_own_items(
+        self,
+        client,
+        collection_user,
+        other_collection_user,
+        collection_item,
+        collection_issue_2,
+        test_password,
+    ):
+        """Test that users only see their own collection items."""
+        # Create an item for other_collection_user
+        other_item = CollectionItem.objects.create(
+            user=other_collection_user,
+            issue=collection_issue_2,
+            quantity=1,
+        )
+
+        client.login(username=collection_user.username, password=test_password)
+        url = reverse("user_collection:list")
+        resp = client.get(url)
+        assert resp.status_code == HTTP_200_OK
+        assert collection_item in resp.context["collection_items"]
+        assert other_item not in resp.context["collection_items"]
+
+    def test_collection_list_view_empty(self, client, collection_user, test_password):
+        """Test that empty collection shows correctly."""
+        client.login(username=collection_user.username, password=test_password)
+        url = reverse("user_collection:list")
+        resp = client.get(url)
+        assert resp.status_code == HTTP_200_OK
+        assert len(resp.context["collection_items"]) == 0
+
+    def test_collection_list_view_pagination(
+        self, client, collection_user, collection_issue_1, test_password
+    ):
+        """Test that pagination works correctly."""
+        client.login(username=collection_user.username, password=test_password)
+
+        # Create 55 collection items
+
+        for i in range(55):
+            issue = Issue.objects.create(
+                series=collection_issue_1.series,
+                number=f"Test {i}",
+                slug=f"test-pagination-issue-{i}",
+                cover_date=collection_issue_1.cover_date,
+                edited_by=collection_user,
+                created_by=collection_user,
+            )
+            CollectionItem.objects.create(
+                user=collection_user,
+                issue=issue,
+                quantity=1,
+            )
+
+        url = reverse("user_collection:list")
+        resp = client.get(url)
+        assert resp.status_code == HTTP_200_OK
+        assert resp.context["is_paginated"] is True
+        assert len(resp.context["collection_items"]) == 50  # paginate_by = 50
+
+
+class TestCollectionDetailView:
+    """Tests for the CollectionDetailView."""
+
+    def test_collection_detail_view_requires_login(self, client, collection_item):
+        """Test that the view requires login."""
+        url = reverse("user_collection:detail", kwargs={"pk": collection_item.pk})
+        resp = client.get(url)
+        assert resp.status_code == HTTP_302_FOUND
+        assert "/accounts/login/" in resp.url
+
+    def test_collection_detail_view_owner(
+        self, client, collection_user, collection_item, test_password
+    ):
+        """Test that owners can view their collection items."""
+        client.login(username=collection_user.username, password=test_password)
+        url = reverse("user_collection:detail", kwargs={"pk": collection_item.pk})
+        resp = client.get(url)
+        assert resp.status_code == HTTP_200_OK
+        assert resp.context["item"] == collection_item
+
+    def test_collection_detail_view_not_owner(
+        self, client, other_collection_user, collection_item, test_password
+    ):
+        """Test that non-owners cannot view other users' collection items."""
+        client.login(username=other_collection_user.username, password=test_password)
+        url = reverse("user_collection:detail", kwargs={"pk": collection_item.pk})
+        resp = client.get(url)
+        assert resp.status_code == HTTP_403_FORBIDDEN
+
+    def test_collection_detail_view_with_all_fields(
+        self, client, collection_user, collection_item_with_details, test_password
+    ):
+        """Test viewing a collection item with all optional fields populated."""
+        client.login(username=collection_user.username, password=test_password)
+        url = reverse("user_collection:detail", kwargs={"pk": collection_item_with_details.pk})
+        resp = client.get(url)
+        assert resp.status_code == HTTP_200_OK
+        assert resp.context["item"] == collection_item_with_details
+
+
+class TestCollectionCreateView:
+    """Tests for the CollectionCreateView."""
+
+    def test_collection_create_view_requires_login(self, client):
+        """Test that the view requires login."""
+        url = reverse("user_collection:create")
+        resp = client.get(url)
+        assert resp.status_code == HTTP_302_FOUND
+        assert "/accounts/login/" in resp.url
+
+    def test_collection_create_view_get(self, client, collection_user, test_password):
+        """Test GET request to create view."""
+        client.login(username=collection_user.username, password=test_password)
+        url = reverse("user_collection:create")
+        resp = client.get(url)
+        assert resp.status_code == HTTP_200_OK
+        assert "form" in resp.context
+
+    def test_collection_create_view_post_minimal(
+        self, client, collection_user, collection_issue_1, test_password
+    ):
+        """Test POST request with minimal required fields."""
+        client.login(username=collection_user.username, password=test_password)
+        url = reverse("user_collection:create")
+        data = {
+            "issue": collection_issue_1.pk,
+            "quantity": 1,
+            "book_format": "PRINT",
+        }
+        resp = client.post(url, data)
+        assert resp.status_code == HTTP_302_FOUND
+        # Check that the item was created
+        item = CollectionItem.objects.get(user=collection_user, issue=collection_issue_1)
+        assert item.quantity == 1
+        assert item.book_format == CollectionItem.BookFormat.PRINT
+
+    def test_collection_create_view_post_all_fields(
+        self, client, collection_user, collection_issue_1, test_password
+    ):
+        """Test POST request with all fields."""
+        client.login(username=collection_user.username, password=test_password)
+        url = reverse("user_collection:create")
+        data = {
+            "issue": collection_issue_1.pk,
+            "quantity": 2,
+            "book_format": "DIGITAL",
+            "purchase_date": "2023-06-15",
+            "purchase_price_0": "4.99",
+            "purchase_price_1": "USD",
+            "purchase_store": "ComiXology",
+            "storage_location": "Digital Library",
+            "notes": "Sale purchase",
+        }
+        resp = client.post(url, data)
+        assert resp.status_code == HTTP_302_FOUND
+        # Check that the item was created with all fields
+        item = CollectionItem.objects.get(user=collection_user, issue=collection_issue_1)
+        assert item.quantity == 2
+        assert item.book_format == "DIGITAL"
+        assert str(item.purchase_date) == "2023-06-15"
+        assert item.purchase_store == "ComiXology"
+        assert item.storage_location == "Digital Library"
+        assert item.notes == "Sale purchase"
+
+    def test_collection_create_view_duplicate_issue(
+        self, client, collection_user, collection_item, test_password
+    ):
+        """Test that creating a duplicate issue shows validation error."""
+        client.login(username=collection_user.username, password=test_password)
+        url = reverse("user_collection:create")
+        data = {
+            "issue": collection_item.issue.pk,
+            "quantity": 1,
+            "book_format": "PRINT",
+        }
+        resp = client.post(url, data)
+        assert resp.status_code == HTTP_200_OK  # Form redisplayed with errors
+        assert "form" in resp.context
+        assert resp.context["form"].errors
+
+    def test_collection_create_view_redirects_to_list(
+        self, client, collection_user, collection_issue_1, test_password
+    ):
+        """Test that successful creation redirects to list view."""
+        client.login(username=collection_user.username, password=test_password)
+        url = reverse("user_collection:create")
+        data = {
+            "issue": collection_issue_1.pk,
+            "quantity": 1,
+            "book_format": "PRINT",
+        }
+        resp = client.post(url, data, follow=True)
+        assert resp.status_code == HTTP_200_OK
+        # Should redirect to list page
+        expected_url = reverse("user_collection:list")
+        assert resp.redirect_chain[-1][0] == expected_url
+
+    def test_collection_create_view_with_read_status(
+        self, client, collection_user, collection_issue_1, test_password
+    ):
+        """Test creating a collection item with read status."""
+        client.login(username=collection_user.username, password=test_password)
+        url = reverse("user_collection:create")
+        data = {
+            "issue": collection_issue_1.pk,
+            "quantity": 1,
+            "book_format": "PRINT",
+            "is_read": True,
+            "date_read": "2024-06-15",
+        }
+        resp = client.post(url, data)
+        assert resp.status_code == HTTP_302_FOUND
+        # Check that the item was created with read status
+        item = CollectionItem.objects.get(user=collection_user, issue=collection_issue_1)
+        assert item.is_read is True
+        assert str(item.date_read) == "2024-06-15"
+
+    def test_collection_create_view_with_is_read_without_date(
+        self, client, collection_user, collection_issue_1, test_password
+    ):
+        """Test creating a collection item marked as read without a date."""
+        client.login(username=collection_user.username, password=test_password)
+        url = reverse("user_collection:create")
+        data = {
+            "issue": collection_issue_1.pk,
+            "quantity": 1,
+            "book_format": "PRINT",
+            "is_read": True,
+        }
+        resp = client.post(url, data)
+        assert resp.status_code == HTTP_302_FOUND
+        # Check that the item was created with read status but no date
+        item = CollectionItem.objects.get(user=collection_user, issue=collection_issue_1)
+        assert item.is_read is True
+        assert item.date_read is None
+
+
+class TestCollectionUpdateView:
+    """Tests for the CollectionUpdateView."""
+
+    def test_collection_update_view_requires_login(self, client, collection_item):
+        """Test that the view requires login."""
+        url = reverse("user_collection:update", kwargs={"pk": collection_item.pk})
+        resp = client.get(url)
+        assert resp.status_code == HTTP_302_FOUND
+        assert "/accounts/login/" in resp.url
+
+    def test_collection_update_view_owner(
+        self, client, collection_user, collection_item, test_password
+    ):
+        """Test that owners can update their collection items."""
+        client.login(username=collection_user.username, password=test_password)
+        url = reverse("user_collection:update", kwargs={"pk": collection_item.pk})
+        resp = client.get(url)
+        assert resp.status_code == HTTP_200_OK
+        assert "form" in resp.context
+
+    def test_collection_update_view_not_owner(
+        self, client, other_collection_user, collection_item, test_password
+    ):
+        """Test that non-owners cannot update other users' collection items."""
+        client.login(username=other_collection_user.username, password=test_password)
+        url = reverse("user_collection:update", kwargs={"pk": collection_item.pk})
+        resp = client.get(url)
+        assert resp.status_code == HTTP_403_FORBIDDEN
+
+    def test_collection_update_view_post(
+        self, client, collection_user, collection_item, test_password
+    ):
+        """Test POST request to update a collection item."""
+        client.login(username=collection_user.username, password=test_password)
+        url = reverse("user_collection:update", kwargs={"pk": collection_item.pk})
+        data = {
+            "issue": collection_item.issue.pk,
+            "quantity": 3,
+            "book_format": "BOTH",
+            "notes": "Updated notes",
+        }
+        resp = client.post(url, data)
+        assert resp.status_code == HTTP_302_FOUND
+        # Check that the item was updated
+        collection_item.refresh_from_db()
+        assert collection_item.quantity == 3
+        assert collection_item.book_format == "BOTH"
+        assert collection_item.notes == "Updated notes"
+
+    def test_collection_update_view_redirects_to_detail(
+        self, client, collection_user, collection_item, test_password
+    ):
+        """Test that successful update redirects to detail view."""
+        client.login(username=collection_user.username, password=test_password)
+        url = reverse("user_collection:update", kwargs={"pk": collection_item.pk})
+        data = {
+            "issue": collection_item.issue.pk,
+            "quantity": 2,
+            "book_format": "PRINT",
+        }
+        resp = client.post(url, data, follow=True)
+        assert resp.status_code == HTTP_200_OK
+        # Should redirect to detail page
+        expected_url = reverse("user_collection:detail", kwargs={"pk": collection_item.pk})
+        assert resp.redirect_chain[-1][0] == expected_url
+
+    def test_collection_update_view_mark_as_read(
+        self, client, collection_user, collection_item, test_password
+    ):
+        """Test updating a collection item to mark it as read."""
+        assert collection_item.is_read is False
+        client.login(username=collection_user.username, password=test_password)
+        url = reverse("user_collection:update", kwargs={"pk": collection_item.pk})
+        data = {
+            "issue": collection_item.issue.pk,
+            "quantity": collection_item.quantity,
+            "book_format": collection_item.book_format,
+            "is_read": True,
+            "date_read": "2024-07-01",
+        }
+        resp = client.post(url, data)
+        assert resp.status_code == HTTP_302_FOUND
+        # Check that the item was updated
+        collection_item.refresh_from_db()
+        assert collection_item.is_read is True
+        assert str(collection_item.date_read) == "2024-07-01"
+
+    def test_collection_update_view_unmark_as_read(
+        self, client, collection_user, collection_item, test_password
+    ):
+        """Test updating a collection item to unmark it as read."""
+        # First mark it as read
+        collection_item.is_read = True
+        collection_item.date_read = "2024-07-01"
+        collection_item.save()
+
+        client.login(username=collection_user.username, password=test_password)
+        url = reverse("user_collection:update", kwargs={"pk": collection_item.pk})
+        data = {
+            "issue": collection_item.issue.pk,
+            "quantity": collection_item.quantity,
+            "book_format": collection_item.book_format,
+            "is_read": False,
+        }
+        resp = client.post(url, data)
+        assert resp.status_code == HTTP_302_FOUND
+        # Check that the item was updated
+        collection_item.refresh_from_db()
+        assert collection_item.is_read is False
+
+
+class TestCollectionDeleteView:
+    """Tests for the CollectionDeleteView."""
+
+    def test_collection_delete_view_requires_login(self, client, collection_item):
+        """Test that the view requires login."""
+        url = reverse("user_collection:delete", kwargs={"pk": collection_item.pk})
+        resp = client.get(url)
+        assert resp.status_code == HTTP_302_FOUND
+        assert "/accounts/login/" in resp.url
+
+    def test_collection_delete_view_owner(
+        self, client, collection_user, collection_item, test_password
+    ):
+        """Test that owners can delete their collection items."""
+        client.login(username=collection_user.username, password=test_password)
+        url = reverse("user_collection:delete", kwargs={"pk": collection_item.pk})
+        resp = client.get(url)
+        assert resp.status_code == HTTP_200_OK
+
+    def test_collection_delete_view_not_owner(
+        self, client, other_collection_user, collection_item, test_password
+    ):
+        """Test that non-owners cannot delete other users' collection items."""
+        client.login(username=other_collection_user.username, password=test_password)
+        url = reverse("user_collection:delete", kwargs={"pk": collection_item.pk})
+        resp = client.get(url)
+        assert resp.status_code == HTTP_403_FORBIDDEN
+
+    def test_collection_delete_view_post(
+        self, client, collection_user, collection_item, test_password
+    ):
+        """Test POST request to delete a collection item."""
+        client.login(username=collection_user.username, password=test_password)
+        item_pk = collection_item.pk
+        url = reverse("user_collection:delete", kwargs={"pk": item_pk})
+        resp = client.post(url)
+        assert resp.status_code == HTTP_302_FOUND
+        # Check that the item was deleted
+        assert not CollectionItem.objects.filter(pk=item_pk).exists()
+
+    def test_collection_delete_view_redirects_to_list(
+        self, client, collection_user, collection_item, test_password
+    ):
+        """Test that successful deletion redirects to list view."""
+        client.login(username=collection_user.username, password=test_password)
+        url = reverse("user_collection:delete", kwargs={"pk": collection_item.pk})
+        resp = client.post(url, follow=True)
+        assert resp.status_code == HTTP_200_OK
+        # Should redirect to list page
+        expected_url = reverse("user_collection:list")
+        assert resp.redirect_chain[-1][0] == expected_url
+
+
+class TestCollectionStatsView:
+    """Tests for the CollectionStatsView."""
+
+    def test_collection_stats_view_requires_login(self, client):
+        """Test that the view requires login."""
+        url = reverse("user_collection:stats")
+        resp = client.get(url)
+        assert resp.status_code == HTTP_302_FOUND
+        assert "/accounts/login/" in resp.url
+
+    def test_collection_stats_view_authenticated(self, client, collection_user, test_password):
+        """Test that authenticated users can view their stats."""
+        client.login(username=collection_user.username, password=test_password)
+        url = reverse("user_collection:stats")
+        resp = client.get(url)
+        assert resp.status_code == HTTP_200_OK
+        assert "total_items" in resp.context
+        assert "total_quantity" in resp.context
+        assert "total_value" in resp.context
+        assert "format_counts" in resp.context
+        assert "top_series" in resp.context
+        assert "read_count" in resp.context
+        assert "unread_count" in resp.context
+
+    def test_collection_stats_view_with_items(
+        self, client, collection_user, collection_item, collection_item_with_details, test_password
+    ):
+        """Test stats calculation with multiple items."""
+        client.login(username=collection_user.username, password=test_password)
+        url = reverse("user_collection:stats")
+        resp = client.get(url)
+        assert resp.status_code == HTTP_200_OK
+        assert resp.context["total_items"] == 2
+        assert resp.context["total_quantity"] == 3  # 1 + 2
+
+    def test_collection_stats_view_empty(self, client, collection_user, test_password):
+        """Test stats with empty collection."""
+        client.login(username=collection_user.username, password=test_password)
+        url = reverse("user_collection:stats")
+        resp = client.get(url)
+        assert resp.status_code == HTTP_200_OK
+        assert resp.context["total_items"] == 0
+        assert resp.context["total_quantity"] == 0
+
+    def test_collection_stats_view_format_breakdown(
+        self, client, collection_user, collection_item, collection_issue_2, test_password
+    ):
+        """Test format breakdown in stats."""
+        # Create items with different formats
+        CollectionItem.objects.create(
+            user=collection_user,
+            issue=collection_issue_2,
+            quantity=1,
+            book_format=CollectionItem.BookFormat.DIGITAL,
+        )
+
+        client.login(username=collection_user.username, password=test_password)
+        url = reverse("user_collection:stats")
+        resp = client.get(url)
+        assert resp.status_code == HTTP_200_OK
+
+        format_counts = resp.context["format_counts"]
+        assert len(format_counts) == 2  # PRINT and DIGITAL
+
+        # Check that format counts are present
+        formats = [fc["book_format"] for fc in format_counts]
+        assert "PRINT" in formats
+        assert "DIGITAL" in formats
+
+    def test_collection_stats_view_only_user_data(
+        self,
+        client,
+        collection_user,
+        other_collection_user,
+        collection_item,
+        collection_issue_2,
+        test_password,
+    ):
+        """Test that stats only include the authenticated user's data."""
+        # Create item for other user
+        CollectionItem.objects.create(
+            user=other_collection_user,
+            issue=collection_issue_2,
+            quantity=10,
+        )
+
+        client.login(username=collection_user.username, password=test_password)
+        url = reverse("user_collection:stats")
+        resp = client.get(url)
+        assert resp.status_code == HTTP_200_OK
+        # Should only count collection_user's items
+        assert resp.context["total_items"] == 1
+        assert resp.context["total_quantity"] == 1
+
+    def test_collection_stats_view_read_tracking(
+        self, client, collection_user, collection_issue_1, collection_issue_2, test_password
+    ):
+        """Test that stats correctly count read and unread items."""
+        # Create one read and one unread item
+        CollectionItem.objects.create(
+            user=collection_user,
+            issue=collection_issue_1,
+            is_read=True,
+        )
+        CollectionItem.objects.create(
+            user=collection_user,
+            issue=collection_issue_2,
+            is_read=False,
+        )
+
+        client.login(username=collection_user.username, password=test_password)
+        url = reverse("user_collection:stats")
+        resp = client.get(url)
+        assert resp.status_code == HTTP_200_OK
+        assert resp.context["read_count"] == 1
+        assert resp.context["unread_count"] == 1
+        assert resp.context["total_items"] == 2
+
+
+class TestCollectionPagination:
+    """Tests for collection list pagination."""
+
+    def test_list_view_pagination_page_1(
+        self, client, collection_user, collection_issue_1, test_password
+    ):
+        """Test that first page of pagination works correctly."""
+        client.login(username=collection_user.username, password=test_password)
+
+        # Create 55 collection items
+
+        for i in range(55):
+            issue = Issue.objects.create(
+                series=collection_issue_1.series,
+                number=f"Pagination {i}",
+                slug=f"pagination-test-issue-{i}",
+                cover_date=collection_issue_1.cover_date,
+                edited_by=collection_user,
+                created_by=collection_user,
+            )
+            CollectionItem.objects.create(
+                user=collection_user,
+                issue=issue,
+                quantity=1,
+            )
+
+        url = reverse("user_collection:list")
+        resp = client.get(url)
+        assert resp.status_code == HTTP_200_OK
+        assert resp.context["is_paginated"] is True
+        assert len(resp.context["collection_items"]) == 50
+        assert resp.context["page_obj"].number == 1
+        assert resp.context["page_obj"].paginator.num_pages == 2
+
+    def test_list_view_pagination_page_2(
+        self, client, collection_user, collection_issue_1, test_password
+    ):
+        """Test that second page of pagination works correctly."""
+        client.login(username=collection_user.username, password=test_password)
+
+        # Create 55 collection items
+
+        for i in range(55):
+            issue = Issue.objects.create(
+                series=collection_issue_1.series,
+                number=f"Page2 {i}",
+                slug=f"page2-test-issue-{i}",
+                cover_date=collection_issue_1.cover_date,
+                edited_by=collection_user,
+                created_by=collection_user,
+            )
+            CollectionItem.objects.create(
+                user=collection_user,
+                issue=issue,
+                quantity=1,
+            )
+
+        url = reverse("user_collection:list")
+        resp = client.get(url, {"page": 2})
+        assert resp.status_code == HTTP_200_OK
+        assert resp.context["is_paginated"] is True
+        assert len(resp.context["collection_items"]) == 5  # Remaining items
+        assert resp.context["page_obj"].number == 2
+
+
+class TestAddIssuesFromSeriesView:
+    """Tests for the AddIssuesFromSeriesView."""
+
+    def test_add_from_series_requires_login(self, client):
+        """Test that the view requires login."""
+        url = reverse("user_collection:add-from-series")
+        resp = client.get(url)
+        assert resp.status_code == HTTP_302_FOUND
+        assert "/accounts/login/" in resp.url
+
+    def test_add_from_series_get(self, client, collection_user, test_password):
+        """Test GET request shows the form."""
+        client.login(username=collection_user.username, password=test_password)
+        url = reverse("user_collection:add-from-series")
+        resp = client.get(url)
+        assert resp.status_code == HTTP_200_OK
+        assert "form" in resp.context
+
+    def test_add_all_issues_from_series(
+        self, client, collection_user, collection_issue_1, test_password
+    ):
+        """Test adding all issues from a series."""
+
+        # Create additional issues in the same series
+        series = collection_issue_1.series
+        issue2 = Issue.objects.create(
+            series=series,
+            number="2",
+            slug="test-series-2023-2",
+            cover_date=collection_issue_1.cover_date,
+            edited_by=collection_user,
+            created_by=collection_user,
+        )
+        issue3 = Issue.objects.create(
+            series=series,
+            number="3",
+            slug="test-series-2023-3",
+            cover_date=collection_issue_1.cover_date,
+            edited_by=collection_user,
+            created_by=collection_user,
+        )
+
+        client.login(username=collection_user.username, password=test_password)
+        url = reverse("user_collection:add-from-series")
+        data = {
+            "series": series.pk,
+            "range_type": "all",
+        }
+        resp = client.post(url, data)
+        assert resp.status_code == HTTP_302_FOUND
+
+        # Check that all 3 issues were added
+        assert CollectionItem.objects.filter(user=collection_user).count() == 3
+        assert CollectionItem.objects.filter(
+            user=collection_user, issue=collection_issue_1
+        ).exists()
+        assert CollectionItem.objects.filter(user=collection_user, issue=issue2).exists()
+        assert CollectionItem.objects.filter(user=collection_user, issue=issue3).exists()
+
+    def test_add_issues_with_range(
+        self, client, collection_user, collection_issue_1, test_password
+    ):
+        """Test adding issues with start and end range."""
+
+        # Create issues 1-5 in the series
+        series = collection_issue_1.series
+        collection_issue_1.number = "1"
+        collection_issue_1.save()
+
+        issues = [collection_issue_1]
+        for i in range(2, 6):
+            issue = Issue.objects.create(
+                series=series,
+                number=str(i),
+                slug=f"test-series-2023-{i}",
+                cover_date=collection_issue_1.cover_date,
+                edited_by=collection_user,
+                created_by=collection_user,
+            )
+            issues.append(issue)
+
+        client.login(username=collection_user.username, password=test_password)
+        url = reverse("user_collection:add-from-series")
+        data = {
+            "series": series.pk,
+            "range_type": "range",
+            "start_number": "2",
+            "end_number": "4",
+        }
+        resp = client.post(url, data)
+        assert resp.status_code == HTTP_302_FOUND
+
+        # Check that only issues 2-4 were added
+        assert CollectionItem.objects.filter(user=collection_user).count() == 3
+        assert not CollectionItem.objects.filter(
+            user=collection_user, issue=issues[0]
+        ).exists()  # Issue 1
+        assert CollectionItem.objects.filter(
+            user=collection_user, issue=issues[1]
+        ).exists()  # Issue 2
+        assert CollectionItem.objects.filter(
+            user=collection_user, issue=issues[2]
+        ).exists()  # Issue 3
+        assert CollectionItem.objects.filter(
+            user=collection_user, issue=issues[3]
+        ).exists()  # Issue 4
+        assert not CollectionItem.objects.filter(
+            user=collection_user, issue=issues[4]
+        ).exists()  # Issue 5
+
+    def test_add_issues_from_start_number(
+        self, client, collection_user, collection_issue_1, test_password
+    ):
+        """Test adding issues starting from a specific number."""
+
+        # Create issues 1-3
+        series = collection_issue_1.series
+        collection_issue_1.number = "1"
+        collection_issue_1.save()
+
+        issue2 = Issue.objects.create(
+            series=series,
+            number="2",
+            slug="test-series-2023-2",
+            cover_date=collection_issue_1.cover_date,
+            edited_by=collection_user,
+            created_by=collection_user,
+        )
+        issue3 = Issue.objects.create(
+            series=series,
+            number="3",
+            slug="test-series-2023-3",
+            cover_date=collection_issue_1.cover_date,
+            edited_by=collection_user,
+            created_by=collection_user,
+        )
+
+        client.login(username=collection_user.username, password=test_password)
+        url = reverse("user_collection:add-from-series")
+        data = {
+            "series": series.pk,
+            "range_type": "range",
+            "start_number": "2",
+        }
+        resp = client.post(url, data)
+        assert resp.status_code == HTTP_302_FOUND
+
+        # Check that issues 2-3 were added (not issue 1)
+        assert CollectionItem.objects.filter(user=collection_user).count() == 2
+        assert not CollectionItem.objects.filter(
+            user=collection_user, issue=collection_issue_1
+        ).exists()
+        assert CollectionItem.objects.filter(user=collection_user, issue=issue2).exists()
+        assert CollectionItem.objects.filter(user=collection_user, issue=issue3).exists()
+
+    def test_add_issues_to_end_number(
+        self, client, collection_user, collection_issue_1, test_password
+    ):
+        """Test adding issues up to a specific number."""
+
+        # Create issues 1-3
+        series = collection_issue_1.series
+        collection_issue_1.number = "1"
+        collection_issue_1.save()
+
+        issue2 = Issue.objects.create(
+            series=series,
+            number="2",
+            slug="test-series-2023-2",
+            cover_date=collection_issue_1.cover_date,
+            edited_by=collection_user,
+            created_by=collection_user,
+        )
+        issue3 = Issue.objects.create(
+            series=series,
+            number="3",
+            slug="test-series-2023-3",
+            cover_date=collection_issue_1.cover_date,
+            edited_by=collection_user,
+            created_by=collection_user,
+        )
+
+        client.login(username=collection_user.username, password=test_password)
+        url = reverse("user_collection:add-from-series")
+        data = {
+            "series": series.pk,
+            "range_type": "range",
+            "end_number": "2",
+        }
+        resp = client.post(url, data)
+        assert resp.status_code == HTTP_302_FOUND
+
+        # Check that issues 1-2 were added (not issue 3)
+        assert CollectionItem.objects.filter(user=collection_user).count() == 2
+        assert CollectionItem.objects.filter(
+            user=collection_user, issue=collection_issue_1
+        ).exists()
+        assert CollectionItem.objects.filter(user=collection_user, issue=issue2).exists()
+        assert not CollectionItem.objects.filter(user=collection_user, issue=issue3).exists()
+
+    def test_add_issues_skips_duplicates(
+        self, client, collection_user, collection_item, test_password
+    ):
+        """Test that issues already in collection are skipped."""
+
+        # collection_item already has collection_issue_1 in the collection
+        series = collection_item.issue.series
+        issue2 = Issue.objects.create(
+            series=series,
+            number="2",
+            slug="test-series-2023-2",
+            cover_date=collection_item.issue.cover_date,
+            edited_by=collection_user,
+            created_by=collection_user,
+        )
+
+        client.login(username=collection_user.username, password=test_password)
+        url = reverse("user_collection:add-from-series")
+        data = {
+            "series": series.pk,
+            "range_type": "all",
+        }
+        resp = client.post(url, data)
+        assert resp.status_code == HTTP_302_FOUND
+
+        # Should have 2 total: the existing one + the new one
+        assert CollectionItem.objects.filter(user=collection_user).count() == 2
+        assert CollectionItem.objects.filter(user=collection_user, issue=issue2).exists()
+
+    def test_add_issues_default_values(
+        self, client, collection_user, collection_issue_1, test_password
+    ):
+        """Test that added issues have default values."""
+        client.login(username=collection_user.username, password=test_password)
+        url = reverse("user_collection:add-from-series")
+        data = {
+            "series": collection_issue_1.series.pk,
+            "range_type": "all",
+        }
+        resp = client.post(url, data)
+        assert resp.status_code == HTTP_302_FOUND
+
+        # Check default values
+        item = CollectionItem.objects.get(user=collection_user, issue=collection_issue_1)
+        assert item.quantity == 1
+        assert item.book_format == CollectionItem.BookFormat.PRINT
+
+    def test_add_issues_all_duplicates_message(
+        self, client, collection_user, collection_item, test_password
+    ):
+        """Test message when all issues are already in collection."""
+        # Only one issue in the series, and it's already in collection
+        client.login(username=collection_user.username, password=test_password)
+        url = reverse("user_collection:add-from-series")
+        data = {
+            "series": collection_item.issue.series.pk,
+            "range_type": "all",
+        }
+        resp = client.post(url, data, follow=True)
+        assert resp.status_code == HTTP_200_OK
+
+        # Check that info message was shown
+        messages = list(resp.context["messages"])
+        assert len(messages) == 1
+        assert "already in your collection" in str(messages[0])
+
+    def test_add_issues_redirects_to_list(
+        self, client, collection_user, collection_issue_1, test_password
+    ):
+        """Test that successful add redirects to collection list."""
+        client.login(username=collection_user.username, password=test_password)
+        url = reverse("user_collection:add-from-series")
+        data = {
+            "series": collection_issue_1.series.pk,
+            "range_type": "all",
+        }
+        resp = client.post(url, data, follow=True)
+        assert resp.status_code == HTTP_200_OK
+
+        # Should redirect to list page
+        expected_url = reverse("user_collection:list")
+        assert resp.redirect_chain[-1][0] == expected_url
+
+    def test_add_issues_with_mark_as_read(
+        self, client, collection_user, collection_issue_1, test_password
+    ):
+        """Test adding issues and marking them as read."""
+        # Create additional issues in the same series
+        series = collection_issue_1.series
+        issue2 = Issue.objects.create(
+            series=series,
+            number="2",
+            slug="test-series-mark-read-2",
+            cover_date=collection_issue_1.cover_date,
+            edited_by=collection_user,
+            created_by=collection_user,
+        )
+        issue3 = Issue.objects.create(
+            series=series,
+            number="3",
+            slug="test-series-mark-read-3",
+            cover_date=collection_issue_1.cover_date,
+            edited_by=collection_user,
+            created_by=collection_user,
+        )
+
+        client.login(username=collection_user.username, password=test_password)
+        url = reverse("user_collection:add-from-series")
+        data = {
+            "series": series.pk,
+            "range_type": "all",
+            "mark_as_read": True,
+        }
+        resp = client.post(url, data)
+        assert resp.status_code == HTTP_302_FOUND
+
+        # Check that all 3 issues were added and marked as read
+        assert CollectionItem.objects.filter(user=collection_user).count() == 3
+        for issue in [collection_issue_1, issue2, issue3]:
+            item = CollectionItem.objects.get(user=collection_user, issue=issue)
+            assert item.is_read is True
+
+    def test_add_issues_without_mark_as_read(
+        self, client, collection_user, collection_issue_1, test_password
+    ):
+        """Test adding issues without marking them as read."""
+        client.login(username=collection_user.username, password=test_password)
+        url = reverse("user_collection:add-from-series")
+        data = {
+            "series": collection_issue_1.series.pk,
+            "range_type": "all",
+            "mark_as_read": False,
+        }
+        resp = client.post(url, data)
+        assert resp.status_code == HTTP_302_FOUND
+
+        # Check that the issue was added but not marked as read
+        item = CollectionItem.objects.get(user=collection_user, issue=collection_issue_1)
+        assert item.is_read is False
+
+    def test_add_issues_mark_as_read_success_message(
+        self, client, collection_user, collection_issue_1, test_password
+    ):
+        """Test that success message indicates items were marked as read."""
+        client.login(username=collection_user.username, password=test_password)
+        url = reverse("user_collection:add-from-series")
+        data = {
+            "series": collection_issue_1.series.pk,
+            "range_type": "all",
+            "mark_as_read": True,
+        }
+        resp = client.post(url, data, follow=True)
+        assert resp.status_code == HTTP_200_OK
+
+        # Check that success message mentions "marked as read"
+        messages = list(resp.context["messages"])
+        assert len(messages) == 1
+        assert "marked as read" in str(messages[0])
+
+    def test_add_issues_with_digital_format(
+        self, client, collection_user, collection_issue_1, test_password
+    ):
+        """Test adding issues with DIGITAL format."""
+        client.login(username=collection_user.username, password=test_password)
+        url = reverse("user_collection:add-from-series")
+        data = {
+            "series": collection_issue_1.series.pk,
+            "range_type": "all",
+            "default_format": CollectionItem.BookFormat.DIGITAL,
+        }
+        resp = client.post(url, data)
+        assert resp.status_code == HTTP_302_FOUND
+
+        # Check that the issue was added with DIGITAL format
+        item = CollectionItem.objects.get(user=collection_user, issue=collection_issue_1)
+        assert item.quantity == 1
+        assert item.book_format == CollectionItem.BookFormat.DIGITAL
+
+    def test_add_issues_with_both_format(
+        self, client, collection_user, collection_issue_1, test_password
+    ):
+        """Test adding issues with BOTH format."""
+        client.login(username=collection_user.username, password=test_password)
+        url = reverse("user_collection:add-from-series")
+        data = {
+            "series": collection_issue_1.series.pk,
+            "range_type": "all",
+            "default_format": CollectionItem.BookFormat.BOTH,
+        }
+        resp = client.post(url, data)
+        assert resp.status_code == HTTP_302_FOUND
+
+        # Check that the issue was added with BOTH format
+        item = CollectionItem.objects.get(user=collection_user, issue=collection_issue_1)
+        assert item.quantity == 1
+        assert item.book_format == CollectionItem.BookFormat.BOTH
+
+    def test_add_issues_default_format_when_not_specified(
+        self, client, collection_user, collection_issue_1, test_password
+    ):
+        """Test that PRINT is the default format when not explicitly specified."""
+        client.login(username=collection_user.username, password=test_password)
+        url = reverse("user_collection:add-from-series")
+        data = {
+            "series": collection_issue_1.series.pk,
+            "range_type": "all",
+            # No default_format specified - should default to PRINT
+        }
+        resp = client.post(url, data)
+        assert resp.status_code == HTTP_302_FOUND
+
+        # Check that the issue was added with PRINT format (default)
+        item = CollectionItem.objects.get(user=collection_user, issue=collection_issue_1)
+        assert item.quantity == 1
+        assert item.book_format == CollectionItem.BookFormat.PRINT
+
+    def test_add_issues_with_range_and_digital_format(
+        self, client, collection_user, collection_issue_1, test_password
+    ):
+        """Test adding issues with range and DIGITAL format."""
+        # Create issues 1-3
+        series = collection_issue_1.series
+        collection_issue_1.number = "1"
+        collection_issue_1.save()
+
+        issue2 = Issue.objects.create(
+            series=series,
+            number="2",
+            slug="test-series-digital-2",
+            cover_date=collection_issue_1.cover_date,
+            edited_by=collection_user,
+            created_by=collection_user,
+        )
+        issue3 = Issue.objects.create(
+            series=series,
+            number="3",
+            slug="test-series-digital-3",
+            cover_date=collection_issue_1.cover_date,
+            edited_by=collection_user,
+            created_by=collection_user,
+        )
+
+        client.login(username=collection_user.username, password=test_password)
+        url = reverse("user_collection:add-from-series")
+        data = {
+            "series": series.pk,
+            "range_type": "range",
+            "start_number": "1",
+            "end_number": "3",
+            "default_format": CollectionItem.BookFormat.DIGITAL,
+        }
+        resp = client.post(url, data)
+        assert resp.status_code == HTTP_302_FOUND
+
+        # Check that all 3 issues were added with DIGITAL format
+        assert CollectionItem.objects.filter(user=collection_user).count() == 3
+        for issue in [collection_issue_1, issue2, issue3]:
+            item = CollectionItem.objects.get(user=collection_user, issue=issue)
+            assert item.book_format == CollectionItem.BookFormat.DIGITAL
+
+    def test_add_issues_with_format_and_mark_as_read(
+        self, client, collection_user, collection_issue_1, test_password
+    ):
+        """Test adding issues with custom format and marking them as read."""
+        client.login(username=collection_user.username, password=test_password)
+        url = reverse("user_collection:add-from-series")
+        data = {
+            "series": collection_issue_1.series.pk,
+            "range_type": "all",
+            "default_format": CollectionItem.BookFormat.BOTH,
+            "mark_as_read": True,
+        }
+        resp = client.post(url, data)
+        assert resp.status_code == HTTP_302_FOUND
+
+        # Check that the issue was added with BOTH format and marked as read
+        item = CollectionItem.objects.get(user=collection_user, issue=collection_issue_1)
+        assert item.book_format == CollectionItem.BookFormat.BOTH
+        assert item.is_read is True
+
+
+class TestUpdateRatingView:
+    """Tests for the update_rating HTMX view."""
+
+    def test_update_rating_requires_login(self, client, collection_item):
+        """Test that the view requires login."""
+        url = reverse("user_collection:rate", kwargs={"pk": collection_item.pk})
+        resp = client.post(url, {"rating": "3"})
+        assert resp.status_code == HTTP_302_FOUND
+        assert "/accounts/login/" in resp.url
+
+    def test_update_rating_set_rating(
+        self, client, collection_user, collection_item, test_password
+    ):
+        """Test setting a rating (1-5)."""
+        client.login(username=collection_user.username, password=test_password)
+        assert collection_item.rating is None
+
+        url = reverse("user_collection:rate", kwargs={"pk": collection_item.pk})
+        resp = client.post(url, {"rating": "3"})
+        assert resp.status_code == HTTP_200_OK
+
+        # Check that the rating was updated
+        collection_item.refresh_from_db()
+        assert collection_item.rating == 3
+
+    def test_update_rating_all_valid_values(
+        self, client, collection_user, collection_item, test_password
+    ):
+        """Test all valid rating values from 1 to 5."""
+        client.login(username=collection_user.username, password=test_password)
+        url = reverse("user_collection:rate", kwargs={"pk": collection_item.pk})
+
+        for rating_value in range(1, 6):
+            resp = client.post(url, {"rating": str(rating_value)})
+            assert resp.status_code == HTTP_200_OK
+
+            collection_item.refresh_from_db()
+            assert collection_item.rating == rating_value
+
+    def test_update_rating_clear_rating(
+        self, client, collection_user, collection_item, test_password
+    ):
+        """Test clearing a rating by sending 0."""
+        # First set a rating
+        collection_item.rating = 3
+        collection_item.save()
+
+        client.login(username=collection_user.username, password=test_password)
+        url = reverse("user_collection:rate", kwargs={"pk": collection_item.pk})
+        resp = client.post(url, {"rating": "0"})
+        assert resp.status_code == HTTP_200_OK
+
+        # Check that the rating was cleared
+        collection_item.refresh_from_db()
+        assert collection_item.rating is None
+
+    def test_update_rating_invalid_high_value(
+        self, client, collection_user, collection_item, test_password
+    ):
+        """Test that ratings above 5 are rejected."""
+        collection_item.rating = 3
+        collection_item.save()
+
+        client.login(username=collection_user.username, password=test_password)
+        url = reverse("user_collection:rate", kwargs={"pk": collection_item.pk})
+        resp = client.post(url, {"rating": "6"})
+        assert resp.status_code == HTTP_200_OK
+
+        # Rating should not have changed
+        collection_item.refresh_from_db()
+        assert collection_item.rating == 3
+
+    def test_update_rating_invalid_low_value(
+        self, client, collection_user, collection_item, test_password
+    ):
+        """Test that ratings below 1 (except 0) are rejected."""
+        collection_item.rating = 3
+        collection_item.save()
+
+        client.login(username=collection_user.username, password=test_password)
+        url = reverse("user_collection:rate", kwargs={"pk": collection_item.pk})
+        resp = client.post(url, {"rating": "-1"})
+        assert resp.status_code == HTTP_200_OK
+
+        # Rating should not have changed
+        collection_item.refresh_from_db()
+        assert collection_item.rating == 3
+
+    def test_update_rating_not_owner(
+        self, client, other_collection_user, collection_item, test_password
+    ):
+        """Test that non-owners cannot rate other users' items."""
+        client.login(username=other_collection_user.username, password=test_password)
+        url = reverse("user_collection:rate", kwargs={"pk": collection_item.pk})
+        resp = client.post(url, {"rating": "4"})
+        assert resp.status_code == HTTP_404_NOT_FOUND
+
+        # Rating should not have been set
+        collection_item.refresh_from_db()
+        assert collection_item.rating is None
+
+    def test_update_rating_returns_template(
+        self, client, collection_user, collection_item, test_password
+    ):
+        """Test that the view returns the star rating template."""
+        client.login(username=collection_user.username, password=test_password)
+        url = reverse("user_collection:rate", kwargs={"pk": collection_item.pk})
+        resp = client.post(url, {"rating": "4"})
+
+        assert resp.status_code == HTTP_200_OK
+        # Check that it's returning the partial template
+        assert "star-rating" in resp.content.decode()
+
+    def test_update_rating_change_existing(
+        self, client, collection_user, collection_item, test_password
+    ):
+        """Test changing an existing rating."""
+        # Set initial rating
+        collection_item.rating = 2
+        collection_item.save()
+
+        client.login(username=collection_user.username, password=test_password)
+        url = reverse("user_collection:rate", kwargs={"pk": collection_item.pk})
+
+        # Change to 4
+        resp = client.post(url, {"rating": "4"})
+        assert resp.status_code == HTTP_200_OK
+
+        collection_item.refresh_from_db()
+        assert collection_item.rating == 4
+
+        # Change to 1
+        resp = client.post(url, {"rating": "1"})
+        assert resp.status_code == HTTP_200_OK
+
+        collection_item.refresh_from_db()
+        assert collection_item.rating == 1
+
+    def test_update_rating_invalid_string(
+        self, client, collection_user, collection_item, test_password
+    ):
+        """Test that non-numeric rating values are rejected."""
+        collection_item.rating = 3
+        collection_item.save()
+
+        client.login(username=collection_user.username, password=test_password)
+        url = reverse("user_collection:rate", kwargs={"pk": collection_item.pk})
+        resp = client.post(url, {"rating": "abc"})
+        assert resp.status_code == HTTP_200_OK
+
+        # Rating should not have changed
+        collection_item.refresh_from_db()
+        assert collection_item.rating == 3
+
+    def test_update_rating_empty_value(
+        self, client, collection_user, collection_item, test_password
+    ):
+        """Test sending empty rating value."""
+        collection_item.rating = 3
+        collection_item.save()
+
+        client.login(username=collection_user.username, password=test_password)
+        url = reverse("user_collection:rate", kwargs={"pk": collection_item.pk})
+        resp = client.post(url, {"rating": ""})
+        assert resp.status_code == HTTP_200_OK
+
+        # Rating should not have changed
+        collection_item.refresh_from_db()
+        assert collection_item.rating == 3
+
+    def test_update_rating_no_rating_parameter(
+        self, client, collection_user, collection_item, test_password
+    ):
+        """Test POST without rating parameter."""
+        collection_item.rating = 3
+        collection_item.save()
+
+        client.login(username=collection_user.username, password=test_password)
+        url = reverse("user_collection:rate", kwargs={"pk": collection_item.pk})
+        resp = client.post(url, {})
+        assert resp.status_code == HTTP_200_OK
+
+        # Rating should not have changed
+        collection_item.refresh_from_db()
+        assert collection_item.rating == 3
+
+
+class TestCollectionGradingViews:
+    """Tests for collection grading functionality in views."""
+
+    def test_collection_detail_view_with_professional_grade(
+        self, client, collection_user, collection_item_professionally_graded, test_password
+    ):
+        """Test that professionally graded items display correctly."""
+        client.login(username=collection_user.username, password=test_password)
+        url = reverse(
+            "user_collection:detail", kwargs={"pk": collection_item_professionally_graded.pk}
+        )
+        resp = client.get(url)
+        assert resp.status_code == HTTP_200_OK
+
+        content = resp.content.decode()
+        # Check that grading information box is present
+        assert "Grading Information" in content
+        # Check that grade is displayed
+        assert "9.8 (NM/M - Near Mint/Mint)" in content
+        # Check that grading company is displayed
+        assert "CGC (Certified Guaranty Company)" in content
+        # Check for professional grading indicator
+        assert "Professionally graded" in content
+
+    def test_collection_detail_view_with_user_assessed_grade(
+        self, client, collection_user, collection_item_user_graded, test_password
+    ):
+        """Test that user-assessed graded items display correctly."""
+        client.login(username=collection_user.username, password=test_password)
+        url = reverse("user_collection:detail", kwargs={"pk": collection_item_user_graded.pk})
+        resp = client.get(url)
+        assert resp.status_code == HTTP_200_OK
+
+        content = resp.content.decode()
+        # Check that grading information box is present
+        assert "Grading Information" in content
+        # Check that grade is displayed
+        assert "8.5 (VF+ - Very Fine+)" in content
+        # Check for user-assessed indicator
+        assert "User-assessed grade" in content
+
+    def test_collection_detail_view_without_grade(
+        self, client, collection_user, collection_item, test_password
+    ):
+        """Test that items without grades don't show grading section."""
+        client.login(username=collection_user.username, password=test_password)
+        url = reverse("user_collection:detail", kwargs={"pk": collection_item.pk})
+        resp = client.get(url)
+        assert resp.status_code == HTTP_200_OK
+
+        content = resp.content.decode()
+        # Grading Information box should not be present
+        assert "Grading Information" not in content
+
+    def test_collection_create_view_with_professional_grade(
+        self, client, collection_user, collection_issue_2, test_password
+    ):
+        """Test creating a collection item with a professional grade."""
+        client.login(username=collection_user.username, password=test_password)
+        url = reverse("user_collection:create")
+        data = {
+            "issue": collection_issue_2.pk,
+            "quantity": 1,
+            "book_format": "PRINT",
+            "grade": str(Decimal("9.8")),
+            "grading_company": "CGC",
+        }
+        resp = client.post(url, data)
+        assert resp.status_code == HTTP_302_FOUND
+
+        # Check that the item was created with grade and company
+        item = CollectionItem.objects.get(user=collection_user, issue=collection_issue_2)
+        assert item.grade == Decimal("9.8")
+        assert item.grading_company == "CGC"
+
+    def test_collection_create_view_with_user_assessed_grade(
+        self, client, collection_user, collection_issue_2, test_password
+    ):
+        """Test creating a collection item with a user-assessed grade."""
+        client.login(username=collection_user.username, password=test_password)
+        url = reverse("user_collection:create")
+        data = {
+            "issue": collection_issue_2.pk,
+            "quantity": 1,
+            "book_format": "PRINT",
+            "grade": str(Decimal("8.0")),
+            # No grading_company = user-assessed
+        }
+        resp = client.post(url, data)
+        assert resp.status_code == HTTP_302_FOUND
+
+        # Check that the item was created with grade but no company
+        item = CollectionItem.objects.get(user=collection_user, issue=collection_issue_2)
+        assert item.grade == Decimal("8.0")
+        assert item.grading_company == ""
+
+    def test_collection_create_view_without_grade(
+        self, client, collection_user, collection_issue_2, test_password
+    ):
+        """Test creating a collection item without a grade."""
+        client.login(username=collection_user.username, password=test_password)
+        url = reverse("user_collection:create")
+        data = {
+            "issue": collection_issue_2.pk,
+            "quantity": 1,
+            "book_format": "PRINT",
+            # No grade or grading_company
+        }
+        resp = client.post(url, data)
+        assert resp.status_code == HTTP_302_FOUND
+
+        # Check that the item was created without grade
+        item = CollectionItem.objects.get(user=collection_user, issue=collection_issue_2)
+        assert item.grade is None
+        assert item.grading_company == ""
+
+    def test_collection_update_view_add_grade(
+        self, client, collection_user, collection_item, test_password
+    ):
+        """Test updating a collection item to add a grade."""
+        assert collection_item.grade is None
+        client.login(username=collection_user.username, password=test_password)
+        url = reverse("user_collection:update", kwargs={"pk": collection_item.pk})
+        data = {
+            "issue": collection_item.issue.pk,
+            "quantity": collection_item.quantity,
+            "book_format": collection_item.book_format,
+            "grade": str(Decimal("9.4")),
+            "grading_company": "CBCS",
+        }
+        resp = client.post(url, data)
+        assert resp.status_code == HTTP_302_FOUND
+
+        # Check that the grade was added
+        collection_item.refresh_from_db()
+        assert collection_item.grade == Decimal("9.4")
+        assert collection_item.grading_company == "CBCS"
+
+    def test_collection_update_view_change_grade(
+        self, client, collection_user, collection_item_professionally_graded, test_password
+    ):
+        """Test updating a graded collection item to change the grade."""
+        client.login(username=collection_user.username, password=test_password)
+        url = reverse(
+            "user_collection:update", kwargs={"pk": collection_item_professionally_graded.pk}
+        )
+        data = {
+            "issue": collection_item_professionally_graded.issue.pk,
+            "quantity": collection_item_professionally_graded.quantity,
+            "book_format": collection_item_professionally_graded.book_format,
+            "grade": str(Decimal("9.6")),  # Changed from 9.8
+            "grading_company": "PGX",  # Changed from CGC
+        }
+        resp = client.post(url, data)
+        assert resp.status_code == HTTP_302_FOUND
+
+        # Check that the grade was updated
+        collection_item_professionally_graded.refresh_from_db()
+        assert collection_item_professionally_graded.grade == Decimal("9.6")
+        assert collection_item_professionally_graded.grading_company == "PGX"
+
+    def test_collection_update_view_remove_grade(
+        self, client, collection_user, collection_item_user_graded, test_password
+    ):
+        """Test updating a collection item to remove the grade."""
+        client.login(username=collection_user.username, password=test_password)
+        url = reverse("user_collection:update", kwargs={"pk": collection_item_user_graded.pk})
+        data = {
+            "issue": collection_item_user_graded.issue.pk,
+            "quantity": collection_item_user_graded.quantity,
+            "book_format": collection_item_user_graded.book_format,
+            # No grade or grading_company = remove them
+        }
+        resp = client.post(url, data)
+        assert resp.status_code == HTTP_302_FOUND
+
+        # Check that the grade was removed
+        collection_item_user_graded.refresh_from_db()
+        assert collection_item_user_graded.grade is None
+        assert collection_item_user_graded.grading_company == ""
+
+    def test_collection_list_view_with_graded_items(
+        self, client, collection_user, collection_item_professionally_graded, test_password
+    ):
+        """Test that graded items appear in the collection list."""
+        client.login(username=collection_user.username, password=test_password)
+        url = reverse("user_collection:list")
+        resp = client.get(url)
+        assert resp.status_code == HTTP_200_OK
+
+        # Check that the graded item is in the list
+        assert collection_item_professionally_graded in resp.context["collection_items"]
+
+        content = resp.content.decode()
+        # Check that grade column shows the value
+        assert "9.8" in content
+
+
+class TestMissingIssuesListView:
+    """Tests for the MissingIssuesListView."""
+
+    def test_missing_issues_list_requires_login(self, client):
+        """Test that the view requires login."""
+        url = reverse("user_collection:missing-list")
+        resp = client.get(url)
+        assert resp.status_code == HTTP_302_FOUND
+        assert "/accounts/login/" in resp.url
+
+    def test_missing_issues_list_empty(self, client, collection_user, test_password):
+        """Test missing issues list with no collection."""
+        client.login(username=collection_user.username, password=test_password)
+        url = reverse("user_collection:missing-list")
+        resp = client.get(url)
+        assert resp.status_code == HTTP_200_OK
+        assert len(resp.context["series_list"]) == 0
+
+    def test_missing_issues_list_complete_series(
+        self, client, collection_user, collection_series, test_password
+    ):
+        """Test that series with all issues owned don't appear."""
+        # Create one issue and add it to collection
+        issue = Issue.objects.create(
+            series=collection_series,
+            number="1",
+            slug="complete-series-1",
+            cover_date=date(2023, 1, 1),
+            edited_by=collection_user,
+            created_by=collection_user,
+        )
+        CollectionItem.objects.create(user=collection_user, issue=issue)
+
+        client.login(username=collection_user.username, password=test_password)
+        url = reverse("user_collection:missing-list")
+        resp = client.get(url)
+        assert resp.status_code == HTTP_200_OK
+        # Should not show the series since user has all issues
+        assert len(resp.context["series_list"]) == 0
+
+    def test_missing_issues_list_partial_series(
+        self, client, collection_user, collection_series, test_password
+    ):
+        """Test that series with missing issues appear in list."""
+        # Create 3 issues but only add 1 to collection
+        issue1 = Issue.objects.create(
+            series=collection_series,
+            number="1",
+            slug="partial-series-1",
+            cover_date=date(2023, 1, 1),
+            edited_by=collection_user,
+            created_by=collection_user,
+        )
+        Issue.objects.create(
+            series=collection_series,
+            number="2",
+            slug="partial-series-2",
+            cover_date=date(2023, 2, 1),
+            edited_by=collection_user,
+            created_by=collection_user,
+        )
+        Issue.objects.create(
+            series=collection_series,
+            number="3",
+            slug="partial-series-3",
+            cover_date=date(2023, 3, 1),
+            edited_by=collection_user,
+            created_by=collection_user,
+        )
+
+        # Only add issue 1 to collection
+        CollectionItem.objects.create(user=collection_user, issue=issue1)
+
+        client.login(username=collection_user.username, password=test_password)
+        url = reverse("user_collection:missing-list")
+        resp = client.get(url)
+        assert resp.status_code == HTTP_200_OK
+
+        series_list = resp.context["series_list"]
+        assert len(series_list) == 1
+        series = series_list[0]
+        assert series.id == collection_series.id
+        assert series.total_issues == 3
+        assert series.owned_issues == 1
+        assert series.missing_count == 2
+
+    def test_missing_issues_list_multiple_series(
+        self, client, collection_user, collection_publisher, single_issue_type, test_password
+    ):
+        """Test with multiple series having missing issues."""
+        # Create two different series
+        series1 = Series.objects.create(
+            name="Series One",
+            slug="series-one",
+            publisher=collection_publisher,
+            volume="1",
+            year_began=2023,
+            series_type=single_issue_type,
+            status=Series.Status.ONGOING,
+            edited_by=collection_user,
+            created_by=collection_user,
+        )
+        series2 = Series.objects.create(
+            name="Series Two",
+            slug="series-two",
+            publisher=collection_publisher,
+            volume="1",
+            year_began=2023,
+            series_type=single_issue_type,
+            status=Series.Status.ONGOING,
+            edited_by=collection_user,
+            created_by=collection_user,
+        )
+
+        # Series 1: 5 issues, own 2 (missing 3)
+        for i in range(1, 6):
+            issue = Issue.objects.create(
+                series=series1,
+                number=str(i),
+                slug=f"series-one-{i}",
+                cover_date=date(2023, i, 1),
+                edited_by=collection_user,
+                created_by=collection_user,
+            )
+            if i <= 2:  # Only collect first 2
+                CollectionItem.objects.create(user=collection_user, issue=issue)
+
+        # Series 2: 3 issues, own 1 (missing 2)
+        for i in range(1, 4):
+            issue = Issue.objects.create(
+                series=series2,
+                number=str(i),
+                slug=f"series-two-{i}",
+                cover_date=date(2023, i, 1),
+                edited_by=collection_user,
+                created_by=collection_user,
+            )
+            if i == 1:  # Only collect first one
+                CollectionItem.objects.create(user=collection_user, issue=issue)
+
+        client.login(username=collection_user.username, password=test_password)
+        url = reverse("user_collection:missing-list")
+        resp = client.get(url)
+        assert resp.status_code == HTTP_200_OK
+
+        series_list = list(resp.context["series_list"])
+        assert len(series_list) == 2
+
+        # Should be ordered by missing_count descending (3, then 2)
+        assert series_list[0].id == series1.id
+        assert series_list[0].missing_count == 3
+        assert series_list[1].id == series2.id
+        assert series_list[1].missing_count == 2
+
+    def test_missing_issues_list_only_own_items(
+        self,
+        client,
+        collection_user,
+        other_collection_user,
+        collection_series,
+        test_password,
+    ):
+        """Test that only the authenticated user's items are considered."""
+        # Create 2 issues
+        issue1 = Issue.objects.create(
+            series=collection_series,
+            number="1",
+            slug="ownership-test-1",
+            cover_date=date(2023, 1, 1),
+            edited_by=collection_user,
+            created_by=collection_user,
+        )
+        issue2 = Issue.objects.create(
+            series=collection_series,
+            number="2",
+            slug="ownership-test-2",
+            cover_date=date(2023, 2, 1),
+            edited_by=collection_user,
+            created_by=collection_user,
+        )
+
+        # collection_user has issue 1
+        CollectionItem.objects.create(user=collection_user, issue=issue1)
+
+        # other_collection_user has issue 2
+        CollectionItem.objects.create(user=other_collection_user, issue=issue2)
+
+        # Login as collection_user
+        client.login(username=collection_user.username, password=test_password)
+        url = reverse("user_collection:missing-list")
+        resp = client.get(url)
+        assert resp.status_code == HTTP_200_OK
+
+        series_list = resp.context["series_list"]
+        assert len(series_list) == 1
+        series = series_list[0]
+        # collection_user should see 1 owned (issue1), 1 missing (issue2)
+        assert series.owned_issues == 1
+        assert series.missing_count == 1
+
+    def test_missing_issues_list_pagination(
+        self, client, collection_user, collection_publisher, single_issue_type, test_password
+    ):
+        """Test that pagination works correctly."""
+        client.login(username=collection_user.username, password=test_password)
+
+        # Create 55 series, each with 2 issues, user owns 1
+        for i in range(55):
+            series = Series.objects.create(
+                name=f"Series {i}",
+                slug=f"series-{i}",
+                publisher=collection_publisher,
+                volume="1",
+                year_began=2023,
+                series_type=single_issue_type,
+                status=Series.Status.ONGOING,
+                edited_by=collection_user,
+                created_by=collection_user,
+            )
+            issue1 = Issue.objects.create(
+                series=series,
+                number="1",
+                slug=f"series-{i}-1",
+                cover_date=date(2023, 1, 1),
+                edited_by=collection_user,
+                created_by=collection_user,
+            )
+            Issue.objects.create(
+                series=series,
+                number="2",
+                slug=f"series-{i}-2",
+                cover_date=date(2023, 2, 1),
+                edited_by=collection_user,
+                created_by=collection_user,
+            )
+            CollectionItem.objects.create(user=collection_user, issue=issue1)
+
+        url = reverse("user_collection:missing-list")
+        resp = client.get(url)
+        assert resp.status_code == HTTP_200_OK
+        assert resp.context["is_paginated"] is True
+        assert len(resp.context["series_list"]) == 50  # paginate_by = 50
+
+
+class TestMissingIssuesDetailView:
+    """Tests for the MissingIssuesDetailView."""
+
+    def test_missing_issues_detail_requires_login(self, client, collection_series):
+        """Test that the view requires login."""
+        url = reverse("user_collection:missing-detail", kwargs={"series_id": collection_series.id})
+        resp = client.get(url)
+        assert resp.status_code == HTTP_302_FOUND
+        assert "/accounts/login/" in resp.url
+
+    def test_missing_issues_detail_no_missing(
+        self, client, collection_user, collection_series, test_password
+    ):
+        """Test detail view when user owns all issues."""
+        # Create one issue and add it to collection
+        issue = Issue.objects.create(
+            series=collection_series,
+            number="1",
+            slug="detail-complete-1",
+            cover_date=date(2023, 1, 1),
+            edited_by=collection_user,
+            created_by=collection_user,
+        )
+        CollectionItem.objects.create(user=collection_user, issue=issue)
+
+        client.login(username=collection_user.username, password=test_password)
+        url = reverse("user_collection:missing-detail", kwargs={"series_id": collection_series.id})
+        resp = client.get(url)
+        assert resp.status_code == HTTP_200_OK
+
+        # Should have no missing issues
+        assert len(resp.context["missing_issues"]) == 0
+        assert resp.context["total_issues"] == 1
+        assert resp.context["owned_issues"] == 1
+        assert resp.context["missing_count"] == 0
+        assert resp.context["completion_percentage"] == 100.0
+
+    def test_missing_issues_detail_partial_collection(
+        self, client, collection_user, collection_series, test_password
+    ):
+        """Test detail view with missing issues."""
+        # Create 5 issues, own 2
+        issue1 = Issue.objects.create(
+            series=collection_series,
+            number="1",
+            slug="detail-partial-1",
+            cover_date=date(2023, 1, 1),
+            edited_by=collection_user,
+            created_by=collection_user,
+        )
+        issue2 = Issue.objects.create(
+            series=collection_series,
+            number="2",
+            slug="detail-partial-2",
+            cover_date=date(2023, 2, 1),
+            edited_by=collection_user,
+            created_by=collection_user,
+        )
+        issue3 = Issue.objects.create(
+            series=collection_series,
+            number="3",
+            slug="detail-partial-3",
+            cover_date=date(2023, 3, 1),
+            edited_by=collection_user,
+            created_by=collection_user,
+        )
+        issue4 = Issue.objects.create(
+            series=collection_series,
+            number="4",
+            slug="detail-partial-4",
+            cover_date=date(2023, 4, 1),
+            edited_by=collection_user,
+            created_by=collection_user,
+        )
+        issue5 = Issue.objects.create(
+            series=collection_series,
+            number="5",
+            slug="detail-partial-5",
+            cover_date=date(2023, 5, 1),
+            edited_by=collection_user,
+            created_by=collection_user,
+        )
+
+        # Only collect issues 1 and 3
+        CollectionItem.objects.create(user=collection_user, issue=issue1)
+        CollectionItem.objects.create(user=collection_user, issue=issue3)
+
+        client.login(username=collection_user.username, password=test_password)
+        url = reverse("user_collection:missing-detail", kwargs={"series_id": collection_series.id})
+        resp = client.get(url)
+        assert resp.status_code == HTTP_200_OK
+
+        missing_issues = list(resp.context["missing_issues"])
+        assert len(missing_issues) == 3
+        assert resp.context["total_issues"] == 5
+        assert resp.context["owned_issues"] == 2
+        assert resp.context["missing_count"] == 3
+        assert resp.context["completion_percentage"] == 40.0
+
+        # Check that the correct issues are missing
+        missing_ids = {issue.id for issue in missing_issues}
+        assert issue2.id in missing_ids
+        assert issue4.id in missing_ids
+        assert issue5.id in missing_ids
+        assert issue1.id not in missing_ids
+        assert issue3.id not in missing_ids
+
+    def test_missing_issues_detail_invalid_series(self, client, collection_user, test_password):
+        """Test detail view with non-existent series ID."""
+        client.login(username=collection_user.username, password=test_password)
+        url = reverse("user_collection:missing-detail", kwargs={"series_id": 99999})
+        resp = client.get(url)
+        assert resp.status_code == HTTP_404_NOT_FOUND
+
+    def test_missing_issues_detail_only_user_items(
+        self,
+        client,
+        collection_user,
+        other_collection_user,
+        collection_series,
+        test_password,
+    ):
+        """Test that only the authenticated user's owned items are excluded."""
+        # Create 3 issues
+        issue1 = Issue.objects.create(
+            series=collection_series,
+            number="1",
+            slug="detail-ownership-1",
+            cover_date=date(2023, 1, 1),
+            edited_by=collection_user,
+            created_by=collection_user,
+        )
+        issue2 = Issue.objects.create(
+            series=collection_series,
+            number="2",
+            slug="detail-ownership-2",
+            cover_date=date(2023, 2, 1),
+            edited_by=collection_user,
+            created_by=collection_user,
+        )
+        issue3 = Issue.objects.create(
+            series=collection_series,
+            number="3",
+            slug="detail-ownership-3",
+            cover_date=date(2023, 3, 1),
+            edited_by=collection_user,
+            created_by=collection_user,
+        )
+
+        # collection_user owns issue 1
+        CollectionItem.objects.create(user=collection_user, issue=issue1)
+        # other_collection_user owns issue 2
+        CollectionItem.objects.create(user=other_collection_user, issue=issue2)
+
+        # Login as collection_user
+        client.login(username=collection_user.username, password=test_password)
+        url = reverse("user_collection:missing-detail", kwargs={"series_id": collection_series.id})
+        resp = client.get(url)
+        assert resp.status_code == HTTP_200_OK
+
+        missing_issues = list(resp.context["missing_issues"])
+        # Should show issues 2 and 3 as missing (even though other_user owns issue 2)
+        assert len(missing_issues) == 2
+        assert resp.context["owned_issues"] == 1
+        missing_ids = {issue.id for issue in missing_issues}
+        assert issue2.id in missing_ids
+        assert issue3.id in missing_ids
+
+    def test_missing_issues_detail_chronological_order(
+        self, client, collection_user, collection_series, test_password
+    ):
+        """Test that missing issues are ordered by cover date and number."""
+        # Create issues in non-sequential order
+        issue3 = Issue.objects.create(
+            series=collection_series,
+            number="3",
+            slug="detail-order-3",
+            cover_date=date(2023, 3, 1),
+            edited_by=collection_user,
+            created_by=collection_user,
+        )
+        issue1 = Issue.objects.create(
+            series=collection_series,
+            number="1",
+            slug="detail-order-1",
+            cover_date=date(2023, 1, 1),
+            edited_by=collection_user,
+            created_by=collection_user,
+        )
+        issue2 = Issue.objects.create(
+            series=collection_series,
+            number="2",
+            slug="detail-order-2",
+            cover_date=date(2023, 2, 1),
+            edited_by=collection_user,
+            created_by=collection_user,
+        )
+
+        # Don't collect any of them
+        client.login(username=collection_user.username, password=test_password)
+        url = reverse("user_collection:missing-detail", kwargs={"series_id": collection_series.id})
+        resp = client.get(url)
+        assert resp.status_code == HTTP_200_OK
+
+        missing_issues = list(resp.context["missing_issues"])
+        # Should be ordered chronologically
+        assert missing_issues[0].id == issue1.id
+        assert missing_issues[1].id == issue2.id
+        assert missing_issues[2].id == issue3.id
+
+    def test_missing_issues_detail_pagination(
+        self, client, collection_user, collection_series, test_password
+    ):
+        """Test that pagination works for missing issues."""
+        client.login(username=collection_user.username, password=test_password)
+
+        # Create 55 issues, don't collect any
+        for i in range(1, 56):
+            Issue.objects.create(
+                series=collection_series,
+                number=str(i),
+                slug=f"detail-pagination-{i}",
+                cover_date=date(2023, 1, i % 28 + 1) if i <= 28 else date(2023, 2, i % 28 + 1),
+                edited_by=collection_user,
+                created_by=collection_user,
+            )
+
+        url = reverse("user_collection:missing-detail", kwargs={"series_id": collection_series.id})
+        resp = client.get(url)
+        assert resp.status_code == HTTP_200_OK
+        assert resp.context["is_paginated"] is True
+        assert len(resp.context["missing_issues"]) == 50  # paginate_by = 50
+        assert resp.context["total_issues"] == 55
+        assert resp.context["missing_count"] == 55
+
+    def test_missing_issues_detail_series_info(
+        self, client, collection_user, collection_series, test_password
+    ):
+        """Test that series information is in context."""
+        # Create one issue but don't collect it
+        Issue.objects.create(
+            series=collection_series,
+            number="1",
+            slug="detail-info-1",
+            cover_date=date(2023, 1, 1),
+            edited_by=collection_user,
+            created_by=collection_user,
+        )
+
+        client.login(username=collection_user.username, password=test_password)
+        url = reverse("user_collection:missing-detail", kwargs={"series_id": collection_series.id})
+        resp = client.get(url)
+        assert resp.status_code == HTTP_200_OK
+
+        # Check series info is in context
+        assert resp.context["series"] == collection_series
+        assert resp.context["series"].name == collection_series.name
+        assert resp.context["series"].publisher == collection_series.publisher

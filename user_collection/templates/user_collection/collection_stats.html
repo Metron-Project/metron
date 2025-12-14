@@ -1,0 +1,181 @@
+{% extends parent_template|default:"base.html" %}
+{% load static %}
+{% block headscripts %}
+    <script src="{% static 'chartkick/Chart.bundle.js' %}"></script>
+    <script src="{% static 'chartkick/chartkick.js' %}"></script>
+{% endblock %}
+{% block title %}Collection Statistics - Metron{% endblock %}
+{% block content %}
+    <header class="block has-text-centered">
+        <h1 class="title">Collection Statistics</h1>
+    </header>
+    <nav class="level mb-5">
+        <div class="level-left">
+            <div class="level-item">
+                <a class="button is-rounded" href="{% url 'user_collection:list' %}">
+                    <span class="icon"><i class="fas fa-arrow-left"></i></span>
+                    <span>Back to Collection</span>
+                </a>
+            </div>
+        </div>
+        <div class="level-right"></div>
+    </nav>
+    <section class="section">
+        <div class="container">
+            <div class="columns is-multiline">
+                <div class="column is-one-third">
+                    <div class="box has-text-centered">
+                        <p class="heading">Total Items</p>
+                        <p class="title">{{ total_items }}</p>
+                        <span class="icon has-text-info">
+                            <i class="fas fa-layer-group fa-2x"></i>
+                        </span>
+                    </div>
+                </div>
+                <div class="column is-one-third">
+                    <div class="box has-text-centered">
+                        <p class="heading">Total Issues</p>
+                        <p class="title">{{ total_quantity }}</p>
+                        <span class="icon has-text-success">
+                            <i class="fas fa-book fa-2x"></i>
+                        </span>
+                    </div>
+                </div>
+                <div class="column is-one-third">
+                    <div class="box has-text-centered">
+                        <p class="heading">Total Value</p>
+                        <p class="title">
+                            {% if total_value %}
+                                ${{ total_value|floatformat:2 }}
+                            {% else %}
+                                —
+                            {% endif %}
+                        </p>
+                        <span class="icon has-text-warning">
+                            <i class="fas fa-dollar-sign fa-2x"></i>
+                        </span>
+                    </div>
+                </div>
+                <div class="column is-one-third">
+                    <div class="box has-text-centered">
+                        <p class="heading">Issues Read</p>
+                        <p class="title">{{ read_count }}</p>
+                        <span class="icon has-text-success">
+                            <i class="fas fa-check-circle fa-2x"></i>
+                        </span>
+                    </div>
+                </div>
+                <div class="column is-one-third">
+                    <div class="box has-text-centered">
+                        <p class="heading">Issues Unread</p>
+                        <p class="title">{{ unread_count }}</p>
+                        <span class="icon has-text-grey">
+                            <i class="far fa-circle fa-2x"></i>
+                        </span>
+                    </div>
+                </div>
+                <div class="column is-one-third">
+                    <div class="box has-text-centered">
+                        <p class="heading">Reading Progress</p>
+                        <p class="title">
+                            {% if total_items > 0 %}
+                                {{ read_count|floatformat:0 }}/{{ total_items }}
+                            {% else %}
+                                —
+                            {% endif %}
+                        </p>
+                        <span class="icon has-text-primary">
+                            <i class="fas fa-chart-line fa-2x"></i>
+                        </span>
+                    </div>
+                </div>
+            </div>
+            {# Charts Section #}
+            <div class="columns is-multiline">
+                <div class="column is-one-third">
+                    <div class="box">
+                        <div class="content">{{ publisher_chart }}</div>
+                    </div>
+                </div>
+                <div class="column is-one-third">
+                    <div class="box">
+                        <div class="content">{{ series_type_chart }}</div>
+                    </div>
+                </div>
+                <div class="column is-one-third">
+                    <div class="box">
+                        <div class="content">{{ format_chart }}</div>
+                    </div>
+                </div>
+            </div>
+            <div class="columns">
+                <div class="column is-half">
+                    <div class="box">
+                        <h2 class="title is-5">By Format</h2>
+                        {% if format_counts %}
+                            <table class="table is-fullwidth is-striped">
+                                <thead>
+                                    <tr>
+                                        <th>Format</th>
+                                        <th class="has-text-right">Count</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for format in format_counts %}
+                                        <tr>
+                                            <td>
+                                                <span class="tag {% if format.book_format == 'DIGITAL' %}is-info{% elif format.book_format == 'BOTH' %}is-success{% else %}is-dark{% endif %}">
+                                                    {% if format.book_format == 'PRINT' %}
+                                                        Print
+                                                    {% elif format.book_format == 'DIGITAL' %}
+                                                        Digital
+                                                    {% elif format.book_format == 'BOTH' %}
+                                                        Both
+                                                    {% endif %}
+                                                </span>
+                                            </td>
+                                            <td class="has-text-right">
+                                                <strong>{{ format.count }}</strong>
+                                            </td>
+                                        </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        {% else %}
+                            <p class="has-text-grey">No format data available</p>
+                        {% endif %}
+                    </div>
+                </div>
+                <div class="column is-half">
+                    <div class="box">
+                        <h2 class="title is-5">Top Series</h2>
+                        {% if top_series %}
+                            <table class="table is-fullwidth is-striped">
+                                <thead>
+                                    <tr>
+                                        <th>Series</th>
+                                        <th class="has-text-right">Issues</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for series in top_series %}
+                                        <tr>
+                                            <td>
+                                                <a href="{% url 'series:detail' series.issue__series__id %}">{{ series.issue__series__name }}</a>
+                                            </td>
+                                            <td class="has-text-right">
+                                                <strong>{{ series.count }}</strong>
+                                            </td>
+                                        </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        {% else %}
+                            <p class="has-text-grey">No series data available</p>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+{% endblock %}

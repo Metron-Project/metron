@@ -1,10 +1,12 @@
-from django.db.models import Prefetch, Q
+from django.db import models
+from django.db.models import Count, F, Prefetch, Q, Sum
 from django.http import Http404
-from drf_spectacular.utils import extend_schema
+from drf_spectacular.utils import OpenApiParameter, extend_schema
 from rest_framework import mixins, status, viewsets
 from rest_framework.decorators import action
 from rest_framework.pagination import PageNumberPagination
 from rest_framework.parsers import FormParser, MultiPartParser
+from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 
 from api.v1_0.serializers import (
@@ -13,6 +15,8 @@ from api.v1_0.serializers import (
     CharacterListSerializer,
     CharacterReadSerializer,
     CharacterSerializer,
+    CollectionListSerializer,
+    CollectionReadSerializer,
     CreatorListSerializer,
     CreatorSerializer,
     CreditSerializer,
@@ -22,6 +26,8 @@ from api.v1_0.serializers import (
     IssueListSerializer,
     IssueReadSerializer,
     IssueSerializer,
+    MissingIssueSerializer,
+    MissingSeriesSerializer,
     PublisherListSerializer,
     PublisherSerializer,
     ReadingListItemSerializer,
@@ -40,6 +46,7 @@ from api.v1_0.serializers import (
     UniverseSerializer,
     VariantSerializer,
 )
+from comicsdb.filters.collection import CollectionFilter
 from comicsdb.filters.issue import IssueFilter
 from comicsdb.filters.name import ComicVineFilter, NameFilter, UniverseFilter
 from comicsdb.filters.reading_list import ReadingListFilter
@@ -60,6 +67,7 @@ from comicsdb.models import (
 from comicsdb.models.series import SeriesType
 from comicsdb.models.variant import Variant
 from reading_lists.models import ReadingList
+from user_collection.models import CollectionItem
 from users.models import CustomUser
 
 
@@ -606,3 +614,153 @@ class VariantViewset(
 
     queryset = Variant.objects.all()
     serializer_class = VariantSerializer
+
+
+class CollectionViewSet(
+    mixins.RetrieveModelMixin,
+    mixins.ListModelMixin,
+    viewsets.GenericViewSet,
+):
+    """
+    list:
+    Returns authenticated user's collection items.
+    Requires authentication.
+
+    retrieve:
+    Returns details of a specific collection item (must belong to authenticated user).
+    Requires authentication.
+    """
+
+    permission_classes = [IsAuthenticated]
+    filterset_class = CollectionFilter
+
+    def get_queryset(self):
+        """Only return collection items belonging to the authenticated user."""
+        return CollectionItem.objects.filter(user=self.request.user).select_related(
+            "issue__series__series_type", "issue__series__publisher"
+        )
+
+    def get_serializer_class(self):
+        if self.action == "list":
+            return CollectionListSerializer
+        return CollectionReadSerializer
+
+    @extend_schema(
+        responses={
+            200: {
+                "type": "object",
+                "properties": {
+                    "total_items": {"type": "integer"},
+                    "total_quantity": {"type": "integer"},
+                    "total_value": {"type": "string"},
+                    "read_count": {"type": "integer"},
+                    "unread_count": {"type": "integer"},
+                    "by_format": {
+                        "type": "array",
+                        "items": {
+                            "type": "object",
+                            "properties": {
+                                "book_format": {"type": "string"},
+                                "count": {"type": "integer"},
+                            },
+                        },
+                    },
+                },
+            }
+        },
+        filters=False,
+    )
+    @action(detail=False, methods=["get"])
+    def stats(self, request):
+        """Return statistics about the user's collection."""
+        queryset = self.get_queryset()
+        total_items = queryset.count()
+        total_quantity = queryset.aggregate(Sum("quantity"))["quantity__sum"] or 0
+
+        # Calculate total value
+        total_value_result = queryset.aggregate(Sum("purchase_price"))
+        total_value = total_value_result["purchase_price__sum"]
+
+        # Reading statistics
+        read_count = queryset.filter(is_read=True).count()
+        unread_count = queryset.filter(is_read=False).count()
+
+        format_counts = queryset.values("book_format").annotate(count=Count("id"))
+
+        return Response(
+            {
+                "total_items": total_items,
+                "total_quantity": total_quantity,
+                "total_value": str(total_value) if total_value else "0.00",
+                "read_count": read_count,
+                "unread_count": unread_count,
+                "by_format": format_counts,
+            }
+        )
+
+    @extend_schema(responses={200: MissingSeriesSerializer(many=True)}, filters=False)
+    @action(detail=False, methods=["get"])
+    def missing_series(self, request):
+        """Return series where the user has some issues but is missing others."""
+        user = request.user
+
+        # Annotate all series with total and owned issue counts
+        # Then filter to only show series with missing issues
+        queryset = (
+            Series.objects.annotate(
+                total_issues=Count("issues", distinct=True),
+                owned_issues=Count(
+                    "issues", filter=models.Q(issues__in_collections__user=user), distinct=True
+                ),
+            )
+            .annotate(missing_count=F("total_issues") - F("owned_issues"))
+            .filter(owned_issues__gt=0, missing_count__gt=0)
+            .select_related("publisher", "series_type", "imprint")
+            .order_by("-missing_count", "sort_name")
+        )
+
+        page = self.paginate_queryset(queryset)
+        if page is not None:
+            serializer = MissingSeriesSerializer(page, many=True, context={"request": request})
+            return self.get_paginated_response(serializer.data)
+
+        serializer = MissingSeriesSerializer(queryset, many=True, context={"request": request})
+        return Response(serializer.data)
+
+    @extend_schema(
+        responses={200: MissingIssueSerializer(many=True)},
+        parameters=[
+            OpenApiParameter(
+                name="series_id",
+                type=int,
+                location=OpenApiParameter.PATH,
+                description="ID of the series to get missing issues for",
+            )
+        ],
+        filters=False,
+    )
+    @action(detail=False, methods=["get"], url_path="missing_issues/(?P<series_id>[^/.]+)")
+    def missing_issues(self, request, series_id=None):
+        """Return specific missing issues for a series."""
+        user = request.user
+
+        # Get user's owned issue IDs for this series
+        owned_issue_ids = CollectionItem.objects.filter(
+            user=user, issue__series_id=series_id
+        ).values_list("issue_id", flat=True)
+
+        # Get all issues from series that user doesn't own
+        queryset = (
+            Issue.objects.filter(series_id=series_id)
+            .exclude(id__in=owned_issue_ids)
+            .select_related("series", "series__publisher", "series__series_type")
+            .order_by("cover_date", "number")
+        )
+
+        page = self.paginate_queryset(queryset)
+        if page is not None:
+            serializer = MissingIssueSerializer(page, many=True, context={"request": request})
+            return self.get_paginated_response(serializer.data)
+
+        serializer = MissingIssueSerializer(queryset, many=True, context={"request": request})
+        return Response(serializer.data)

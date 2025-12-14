@@ -1,0 +1,45 @@
+{% extends parent_template|default:"base.html" %}
+{% load static %}
+{% block title %}Remove {{ item.issue }} - Metron{% endblock %}
+{% block content %}
+    <header class="block has-text-centered">
+        <h1 class="title">Remove from Collection</h1>
+    </header>
+    <section class="section">
+        <div class="container">
+            <div class="columns is-centered">
+                <div class="column is-half">
+                    <div class="box">
+                        <article class="message is-danger">
+                            <div class="message-header">
+                                <p>Warning</p>
+                            </div>
+                            <div class="message-body">
+                                <p class="mb-3">
+                                    Are you sure you want to remove
+                                    <strong>{{ item.issue }}</strong>
+                                    from your collection?
+                                </p>
+                                {% if item.purchase_price or item.purchase_date or item.notes %}
+                                    <p class="mb-3">This will also delete the associated purchase information and notes.</p>
+                                {% endif %}
+                                <p>This action cannot be undone.</p>
+                            </div>
+                        </article>
+                        <form method="post">
+                            {% csrf_token %}
+                            <div class="field is-grouped is-grouped-right">
+                                <div class="control">
+                                    <a href="{% url 'user_collection:detail' item.pk %}" class="button">Cancel</a>
+                                </div>
+                                <div class="control">
+                                    <button type="submit" class="button is-danger">Remove from Collection</button>
+                                </div>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+{% endblock %}

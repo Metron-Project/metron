@@ -1,0 +1,188 @@
+{% extends parent_template|default:"base.html" %}
+{% load static %}
+{% load django_htmx %}
+{% block title %}My Collection - Metron{% endblock %}
+{% block content %}
+    <header class="block has-text-centered">
+        <h1 class="title">My Comic Collection</h1>
+    </header>
+    <section class="section">
+        <div class="container">
+            <div class="level">
+                <div class="level-left">
+                    <div class="level-item">
+                        <p class="subtitle is-5">
+                            <strong>{{ page_obj.paginator.count }}</strong> item{{ page_obj.paginator.count|pluralize }} in your collection
+                        </p>
+                    </div>
+                </div>
+                <div class="level-right">
+                    <div class="level-item">
+                        <div class="buttons">
+                            <a href="{% url 'user_collection:stats' %}"
+                               class="button is-info is-rounded">
+                                <span class="icon"><i class="fas fa-chart-bar"></i></span>
+                                <span>View Statistics</span>
+                            </a>
+                            <a href="{% url 'user_collection:missing-list' %}"
+                               class="button is-warning is-rounded">
+                                <span class="icon"><i class="fas fa-th-list"></i></span>
+                                <span>Missing Issues</span>
+                            </a>
+                            <a href="{% url 'user_collection:add-from-series' %}"
+                               class="button is-link is-rounded">
+                                <span class="icon"><i class="fas fa-layer-group"></i></span>
+                                <span>Add from Series</span>
+                            </a>
+                            <a href="{% url 'user_collection:create' %}"
+                               class="button is-primary is-rounded">
+                                <span class="icon"><i class="fas fa-plus"></i></span>
+                                <span>Add Issue</span>
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+    <section class="section">
+        <div class="container">
+            {% include "user_collection/partials/collection_filter.html" %}
+        </div>
+    </section>
+    {% if collection_items %}
+        <section class="section pt-0">
+            <div class="container">
+                <div class="table-container">
+                    <table class="table is-fullwidth is-striped is-hoverable">
+                        <thead>
+                            <tr>
+                                <th>Issue</th>
+                                <th>Cover Date</th>
+                                <th>Format</th>
+                                <th>Grade</th>
+                                <th>Read</th>
+                                <th>Rating</th>
+                                <th>Quantity</th>
+                                <th>Price Paid</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for item in collection_items %}
+                                <tr>
+                                    <td>
+                                        <a href="{% url 'issue:detail' item.issue.slug %}">{{ item.issue }}</a>
+                                    </td>
+                                    <td>{{ item.issue.cover_date|date:"M Y" }}</td>
+                                    <td>
+                                        <span class="tag {% if item.book_format == 'DIGITAL' %}is-info{% elif item.book_format == 'BOTH' %}is-success{% else %}is-dark{% endif %}">
+                                            {{ item.get_book_format_display }}
+                                        </span>
+                                    </td>
+                                    <td>
+                                        {% if item.grade %}
+                                            <span class="tag is-primary is-small"
+                                                  title="{% if item.grading_company %}{{ item.get_grading_company_display }}{% else %}User-assessed{% endif %}">
+                                                {{ item.grade }}
+                                                {% if item.grading_company %}
+                                                    <span class="icon is-small ml-1">
+                                                        <i class="fas fa-certificate"></i>
+                                                    </span>
+                                                {% endif %}
+                                            </span>
+                                        {% else %}
+                                            <span class="has-text-grey-light">—</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        {% if item.is_read %}
+                                            <span class="icon has-text-success"
+                                                  title="Read{% if item.date_read %} on {{ item.date_read|date:'M d, Y' }}{% endif %}">
+                                                <i class="fas fa-check-circle"></i>
+                                            </span>
+                                        {% else %}
+                                            <span class="icon has-text-grey-light" title="Unread">
+                                                <i class="far fa-circle"></i>
+                                            </span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        {% include "user_collection/partials/star_rating.html" %}
+                                    </td>
+                                    <td>{{ item.quantity }}</td>
+                                    <td>
+                                        {% if item.purchase_price %}
+                                            {{ item.purchase_price }}
+                                        {% else %}
+                                            <span class="has-text-grey-light">—</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        <div class="buttons are-small">
+                                            <a href="{% url 'user_collection:detail' item.pk %}"
+                                               class="button is-info is-outlined"
+                                               title="View Details">
+                                                <span class="icon is-small">
+                                                    <i class="fas fa-eye"></i>
+                                                </span>
+                                            </a>
+                                            <a href="{% url 'user_collection:update' item.pk %}"
+                                               class="button is-primary is-outlined"
+                                               title="Edit">
+                                                <span class="icon is-small">
+                                                    <i class="fas fa-edit"></i>
+                                                </span>
+                                            </a>
+                                            <a href="{% url 'user_collection:delete' item.pk %}"
+                                               class="button is-danger is-outlined"
+                                               title="Remove">
+                                                <span class="icon is-small">
+                                                    <i class="fas fa-trash"></i>
+                                                </span>
+                                            </a>
+                                        </div>
+                                    </td>
+                                </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </section>
+    {% else %}
+        <section class="section pt-0">
+            <div class="container has-text-centered">
+                {% if has_active_filters %}
+                    <p class="title is-4">No results found</p>
+                    <p class="subtitle">Try adjusting your search filters</p>
+                    <a href="{% url 'user_collection:list' %}"
+                       class="button is-light is-medium">
+                        <span class="icon"><i class="fas fa-times"></i></span>
+                        <span>Clear All Filters</span>
+                    </a>
+                {% else %}
+                    <p class="title is-4">Your collection is empty</p>
+                    <p class="subtitle">Start adding issues to track your comic collection!</p>
+                    <a href="{% url 'user_collection:create' %}"
+                       class="button is-primary is-large">
+                        <span class="icon"><i class="fas fa-plus"></i></span>
+                        <span>Add Your First Issue</span>
+                    </a>
+                {% endif %}
+            </div>
+        </section>
+    {% endif %}
+{% endblock %}
+{% block pagination %}
+    {% load pagination_tags %}
+    {% include "comicsdb/partials/pagination.html" %}
+{% endblock %}
+{% block js %}
+    {% htmx_script %}
+    <script>
+        document.body.addEventListener('htmx:configRequest', (event) => {
+            event.detail.headers['X-CSRFToken'] = '{{ csrf_token }}';
+        });
+    </script>
+{% endblock %}

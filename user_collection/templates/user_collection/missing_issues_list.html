@@ -1,0 +1,104 @@
+{% extends parent_template|default:"base.html" %}
+{% load static %}
+{% block title %}Missing Issues - My Collection - Metron{% endblock %}
+{% block content %}
+    <header class="block has-text-centered">
+        <h1 class="title">Missing Issues by Series</h1>
+        <p class="subtitle">Find gaps in your collection</p>
+    </header>
+    <nav class="level mb-5">
+        <div class="level-left">
+            <div class="level-item">
+                <a class="button is-rounded" href="{% url 'user_collection:list' %}">
+                    <span class="icon"><i class="fas fa-arrow-left"></i></span>
+                    <span>Back to Collection</span>
+                </a>
+            </div>
+        </div>
+        <div class="level-right">
+            <div class="level-item">
+                <p class="subtitle is-5">
+                    <strong>{{ page_obj.paginator.count }}</strong> series with missing issues
+                </p>
+            </div>
+        </div>
+    </nav>
+    <section class="section">
+        <div class="container">
+            <div class="notification is-info is-light">
+                <p>
+                    This page shows series where you own at least one issue but are missing others.
+                    Use it to identify gaps in your collection.
+                </p>
+            </div>
+        </div>
+    </section>
+    {% if series_list %}
+        <section class="section pt-0">
+            <div class="container">
+                <div class="table-container">
+                    <table class="table is-fullwidth is-striped is-hoverable">
+                        <thead>
+                            <tr>
+                                <th>Series</th>
+                                <th>Publisher</th>
+                                <th>Type</th>
+                                <th class="has-text-centered">Progress</th>
+                                <th class="has-text-centered">Missing</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for series in series_list %}
+                                <tr>
+                                    <td>
+                                        <a href="{% url 'series:detail' series.slug %}">{{ series.name }} {% if series.year_began %}({{ series.year_began }}){% endif %}</a>
+                                    </td>
+                                    <td>{{ series.publisher.name }}</td>
+                                    <td>
+                                        <span class="tag is-info is-light">{{ series.series_type.name }}</span>
+                                    </td>
+                                    <td>
+                                        <div class="has-text-centered mb-2">
+                                            <small>{{ series.owned_issues }} / {{ series.total_issues }}</small>
+                                        </div>
+                                        {% widthratio series.owned_issues series.total_issues 100 as completion_pct %}
+                                        <progress class="progress {% if completion_pct < 50 %}is-danger{% elif completion_pct < 80 %}is-warning{% else %}is-success{% endif %}"
+                                                  value="{{ series.owned_issues }}"
+                                                  max="{{ series.total_issues }}">
+                                            {{ completion_pct }}%
+                                        </progress>
+                                    </td>
+                                    <td class="has-text-centered">
+                                        <span class="tag is-warning is-medium">{{ series.missing_count }}</span>
+                                    </td>
+                                    <td>
+                                        <a href="{% url 'user_collection:missing-detail' series.id %}"
+                                           class="button is-info is-small">
+                                            <span class="icon"><i class="fas fa-list"></i></span>
+                                            <span>View Missing</span>
+                                        </a>
+                                    </td>
+                                </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </section>
+    {% else %}
+        <section class="section pt-0">
+            <div class="container has-text-centered">
+                <span class="icon is-large has-text-success">
+                    <i class="fas fa-trophy fa-3x"></i>
+                </span>
+                <p class="title is-4 mt-4">No Missing Issues!</p>
+                <p class="subtitle">You have complete runs of all your series.</p>
+            </div>
+        </section>
+    {% endif %}
+{% endblock %}
+{% block pagination %}
+    {% load pagination_tags %}
+    {% include "comicsdb/partials/pagination.html" %}
+{% endblock %}
