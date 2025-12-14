@@ -10,6 +10,8 @@ The User Collection feature allows you to catalog, organize, and track your pers
 - [Grading System](#grading-system)
 - [Filtering and Search](#filtering-and-search)
 - [Collection Statistics](#collection-statistics)
+- [URLs Quick Reference](#urls-quick-reference)
+- [Tips and Best Practices](#tips-and-best-practices)
 
 ## Features
 
@@ -49,11 +51,13 @@ Your collection records can include:
 ### Viewing Your Collection
 
 **Browse Your Collection**
+
 - Visit `/collection/` to see all your collection items
 - Items are sorted by series name and cover date
 - Requires login (collections are private)
 
 **View Statistics**
+
 - Visit `/collection/stats/` to see:
     - Total items and quantity
     - Total collection value
@@ -246,6 +250,7 @@ Identify gaps in your series runs to help complete your collection!
 The collection uses the standard 10-point CGC (Certified Guaranty Company) grading scale:
 
 **Mint to Near Mint (9.0-10.0)**
+
 - `10.0` - Gem Mint
 - `9.9` - Mint
 - `9.8` - NM/M (Near Mint/Mint)
@@ -255,17 +260,20 @@ The collection uses the standard 10-point CGC (Certified Guaranty Company) gradi
 - `9.0` - VF/NM (Very Fine/Near Mint)
 
 **Very Fine (7.5-8.5)**
+
 - `8.5` - VF+ (Very Fine+)
 - `8.0` - VF (Very Fine)
 - `7.5` - VF- (Very Fine-)
 
 **Fine (5.5-7.0)**
+
 - `7.0` - FN/VF (Fine/Very Fine)
 - `6.5` - FN+ (Fine+)
 - `6.0` - FN (Fine)
 - `5.5` - FN- (Fine-)
 
 **Very Good to Good (1.8-5.0)**
+
 - `5.0` - VG/FN (Very Good/Fine)
 - `4.5` - VG+ (Very Good+)
 - `4.0` - VG (Very Good)
@@ -276,6 +284,7 @@ The collection uses the standard 10-point CGC (Certified Guaranty Company) gradi
 - `1.8` - GD- (Good-)
 
 **Fair to Poor (0.5-1.5)**
+
 - `1.5` - FR/GD (Fair/Good)
 - `1.0` - FR (Fair)
 - `0.5` - PR (Poor)
@@ -299,6 +308,7 @@ The collection supports three major grading companies:
 **User-Assessed Grades:**
 
 Leave the grading company field blank if you're assessing the grade yourself. This is common for:
+
 - Ungraded comics in your collection
 - Personal reference before professional grading
 - Comics you don't plan to professionally grade
@@ -310,30 +320,36 @@ Leave the grading company field blank if you're assessing the grade yourself. Th
 The collection list view supports extensive filtering:
 
 **Series Filters:**
+
 - **Series Name**: Search for series (case-insensitive, searches all words)
 - **Series Type**: Filter by series type (ongoing, mini-series, etc.)
 - **Issue Number**: Find specific issue numbers across all series
 
 **Publisher/Imprint:**
+
 - **Publisher Name**: Filter by publisher
 - **Publisher ID**: Exact publisher match
 - **Imprint Name**: Filter by imprint
 - **Imprint ID**: Exact imprint match
 
 **Collection Metadata:**
+
 - **Format**: Print, Digital, or Both
 - **Storage Location**: Search your storage locations
 - **Purchase Store**: Find items from specific stores
 
 **Condition:**
+
 - **Grade**: Filter by specific grade (e.g., 9.6)
 - **Grading Company**: CGC, CBCS, or PGX
 
 **Reading Status:**
+
 - **Is Read**: Show only read or unread comics
 - **Rating**: Filter by star rating (1-5)
 
 **Quick Search:**
+
 - Search across series names and your notes simultaneously
 
 ### Filter Examples
@@ -376,6 +392,7 @@ The collection list view supports extensive filtering:
 Visit `/collection/stats/` to see detailed analytics about your collection:
 
 **Overview Stats:**
+
 - **Total Items**: Number of unique collection entries
 - **Total Quantity**: Total comics including duplicates
 - **Total Value**: Sum of all purchase prices
@@ -383,28 +400,34 @@ Visit `/collection/stats/` to see detailed analytics about your collection:
 - **Unread Count**: Number of items not yet read
 
 **Format Breakdown:**
+
 - Count by format (Print, Digital, Both)
 - Visual breakdown of your collection composition
 
 **Top Series:**
+
 - Top 10 series in your collection by item count
 - Helps identify your collecting focus areas
 
 ### Using Statistics
 
 **Track Your Investment:**
+
 - Monitor total collection value over time
 - See what you've spent on comics
 
 **Reading Progress:**
+
 - Track how much of your collection you've read
 - Identify unread comics to prioritize
 
 **Collection Composition:**
+
 - Understand print vs digital balance
 - See which series dominate your collection
 
 **Planning:**
+
 - Use top series list to identify gaps in runs
 - Plan future purchases based on existing collection
 
@@ -490,12 +513,14 @@ Visit `/collection/stats/` to see detailed analytics about your collection:
 ### Common Workflows
 
 **Adding a New Purchase:**
+
 1. Add the issue to your collection
 2. Enter purchase date, price, and store
 3. Record grade and storage location
 4. Leave "is_read" unchecked until you read it
 
 **Cataloging a Longbox:**
+
 1. Identify the series in the longbox
 2. Use "Add from Series" for each complete run
 3. Add individual issues for incomplete runs
@@ -503,18 +528,21 @@ Visit `/collection/stats/` to see detailed analytics about your collection:
 5. Update grades for key issues
 
 **Tracking Reading Progress:**
+
 1. Filter for unread comics (`?is_read=false`)
 2. Pick an issue to read
 3. After reading, mark as read and add rating
 4. Add notes if you want to remember thoughts
 
 **Investment Tracking:**
+
 1. Record purchase prices for all comics
 2. Add professional grades for slabbed books
 3. Use notes to track appreciation or market changes
 4. Review statistics regularly to see total value
 
 **Completing Series Runs:**
+
 1. Visit `/collection/missing/` to see incomplete series
 2. Sort by completion percentage to find nearly-complete runs
 3. Click "View Missing" on a series you want to complete

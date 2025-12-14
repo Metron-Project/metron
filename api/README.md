@@ -877,6 +877,7 @@ The Collection endpoint supports comprehensive filtering for organizing and sear
 **Grade Scale:**
 
 Uses the standard 10-point CGC grading scale:
+
 - `10.0` - Gem Mint
 - `9.9` - Mint
 - `9.8` - NM/M (Near Mint/Mint)

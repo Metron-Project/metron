@@ -375,6 +375,120 @@ class AddIssuesFromSeriesView(LoginRequiredMixin, FormView):
 
 **URL:** `/collection/add-from-series/`
 
+### MissingIssuesListView
+
+```python
+class MissingIssuesListView(LoginRequiredMixin, ListView):
+    model = Series
+    template_name = "user_collection/missing_issues_list.html"
+    paginate_by = 50
+
+    def get_queryset(self):
+        user = self.request.user
+        return (
+            Series.objects.annotate(
+                total_issues=Count("issues", distinct=True),
+                owned_issues=Count(
+                    "issues", filter=Q(issues__in_collections__user=user), distinct=True
+                ),
+            )
+            .annotate(missing_count=F("total_issues") - F("owned_issues"))
+            .filter(owned_issues__gt=0, missing_count__gt=0)
+            .select_related("publisher", "series_type", "imprint")
+            .order_by("-missing_count", "sort_name")
+        )
+```
+
+**Purpose:** Identify gaps in user's collection by showing series where they own some issues but not all.
+
+**Complex Query Logic:**
+
+1. Annotates each series with:
+   - `total_issues`: Total number of issues in the series
+   - `owned_issues`: Number of issues the user owns from this series
+   - `missing_count`: Calculated as total - owned
+2. Filters to only show series where:
+   - User owns at least one issue (`owned_issues__gt=0`)
+   - User is missing at least one issue (`missing_count__gt=0`)
+3. Orders by missing count (descending) to prioritize nearly-complete series
+
+**Features:**
+
+- Shows only series the user has started collecting
+- Pagination (50 series per page)
+- Optimized with `select_related()` for publisher/series type data
+- Includes completion statistics for each series
+- Color-coded progress bars in template (red/yellow/green)
+
+**Use Cases:**
+
+- Identify incomplete series runs
+- Prioritize which series to complete
+- Track collection completion progress
+- Plan purchases for missing issues
+
+**URL:** `/collection/missing/`
+
+### MissingIssuesDetailView
+
+```python
+class MissingIssuesDetailView(LoginRequiredMixin, ListView):
+    model = Issue
+    template_name = "user_collection/missing_issues_detail.html"
+    paginate_by = 50
+
+    def get_queryset(self):
+        user = self.request.user
+        series_id = self.kwargs["series_id"]
+
+        # Get user's owned issue IDs for this series
+        owned_issue_ids = CollectionItem.objects.filter(
+            user=user, issue__series_id=series_id
+        ).values_list("issue_id", flat=True)
+
+        # Get all issues from series that user doesn't own
+        return (
+            Issue.objects.filter(series_id=series_id)
+            .exclude(id__in=owned_issue_ids)
+            .select_related("series", "series__publisher", "series__series_type")
+            .order_by("cover_date", "number")
+        )
+```
+
+**Purpose:** Show specific missing issues for a series to help users complete their collection.
+
+**Query Strategy:**
+
+1. First query: Get IDs of all issues the user owns from this series
+2. Second query: Get all issues from the series NOT in the owned list
+3. Orders by cover date and issue number for chronological viewing
+
+**Context Data:**
+
+- `series`: The series object
+- `total_issues`: Total issues in the series
+- `owned_issues`: Number of issues user owns
+- `missing_count`: Number of issues user doesn't own
+- `completion_percentage`: Percentage of series owned (rounded to 1 decimal)
+- `missing_issues`: Queryset of missing Issue objects
+
+**Features:**
+
+- Chronological listing of missing issues
+- Shows issue number, cover date, and title
+- Series completion statistics
+- Pagination for long series runs
+- Optimized with `select_related()` for series data
+
+**Use Cases:**
+
+- Generate shopping lists for comic stores
+- Identify specific gaps in series runs
+- Track which issues to acquire next
+- Plan purchases by cover date or issue number
+
+**URL:** `/collection/missing/<int:series_id>/`
+
 ### update_rating
 
 ```python
@@ -422,6 +536,8 @@ urlpatterns = [
     path("add/", CollectionCreateView.as_view(), name="create"),
     path("add-from-series/", AddIssuesFromSeriesView.as_view(), name="add-from-series"),
     path("stats/", CollectionStatsView.as_view(), name="stats"),
+    path("missing/", MissingIssuesListView.as_view(), name="missing-list"),
+    path("missing/<int:series_id>/", MissingIssuesDetailView.as_view(), name="missing-detail"),
     path("<int:pk>/", CollectionDetailView.as_view(), name="detail"),
     path("<int:pk>/update/", CollectionUpdateView.as_view(), name="update"),
     path("<int:pk>/delete/", CollectionDeleteView.as_view(), name="delete"),
@@ -756,6 +872,8 @@ Used in `AddIssuesFromSeriesForm` for bulk addition.
 | `collection_confirm_delete.html` | Delete confirmation | Item details, warning |
 | `collection_stats.html` | Statistics dashboard | Charts, totals, top series |
 | `add_issues_from_series.html` | Bulk add from series | Series autocomplete, HTMX range toggle |
+| `missing_issues_list.html` | Series with missing issues | Completion percentage, progress bars, pagination |
+| `missing_issues_detail.html` | Specific missing issues | Chronological list, issue details, series stats |
 | `partials/star_rating.html` | Star rating component | HTMX-enabled, reusable |
 | `partials/collection_filter.html` | Filter form | All filter options, clear button |
 
@@ -778,6 +896,22 @@ Used in `AddIssuesFromSeriesForm` for bulk addition.
 - `unread_count`: Unread items count
 - `format_counts`: Breakdown by format
 - `top_series`: Top 10 series by count
+
+**Missing Issues Context:**
+
+List View:
+
+- `series_list`: Queryset of Series with annotations (total_issues, owned_issues, missing_count)
+- `series_with_missing_count`: Total number of series with missing issues
+
+Detail View:
+
+- `series`: Series object being viewed
+- `missing_issues`: Queryset of Issue objects user doesn't own
+- `total_issues`: Total issues in the series
+- `owned_issues`: Number of issues user owns
+- `missing_count`: Number of issues user doesn't own
+- `completion_percentage`: Percentage of series owned (rounded to 1 decimal)
 
 ### Bulma CSS Framework
 
@@ -826,11 +960,48 @@ total_value = queryset.aggregate(Sum("purchase_price"))["purchase_price__sum"]
 format_counts = queryset.values("book_format").annotate(count=Count("id"))
 ```
 
+**Missing Issues List View:**
+
+```python
+queryset = (
+    Series.objects.annotate(
+        total_issues=Count("issues", distinct=True),
+        owned_issues=Count(
+            "issues", filter=Q(issues__in_collections__user=user), distinct=True
+        ),
+    )
+    .annotate(missing_count=F("total_issues") - F("owned_issues"))
+    .filter(owned_issues__gt=0, missing_count__gt=0)
+    .select_related("publisher", "series_type", "imprint")
+    .order_by("-missing_count", "sort_name")
+)
+```
+
+**Missing Issues Detail View:**
+
+```python
+# Two-query strategy for efficiency
+owned_issue_ids = CollectionItem.objects.filter(
+    user=user, issue__series_id=series_id
+).values_list("issue_id", flat=True)
+
+missing_issues = (
+    Issue.objects.filter(series_id=series_id)
+    .exclude(id__in=owned_issue_ids)
+    .select_related("series", "series__publisher", "series__series_type")
+    .order_by("cover_date", "number")
+)
+```
+
 **Benefits:**
 
 - `select_related()`: Reduces queries for ForeignKey relationships
 - `aggregate()`: Database-level calculations
 - `annotate()`: Efficient grouping and counting
+- `F()` expressions: Database-level arithmetic
+- Conditional `Count()` with filters: Efficient user-scoped counting
+- `values_list()` with `flat=True`: Memory-efficient ID lists
+- `exclude()` with `id__in`: Set-based exclusion
 - Ordered querysets use database sorting
 
 ### Indexes
@@ -1081,6 +1252,15 @@ Django templates auto-escape output by default.
 - bulk_create() operations
 - Success/skip messaging
 
+**Missing Issues:**
+
+- MissingIssuesListView queryset filtering
+- MissingIssuesDetailView queryset exclusion
+- Series annotation calculations (total_issues, owned_issues, missing_count)
+- Completion percentage calculations
+- Permission checks (user-scoped)
+- Pagination handling
+
 ### Test Fixtures
 
 **Recommended Fixtures:**
@@ -1092,7 +1272,9 @@ Django templates auto-escape output by default.
 - `collection_item`: Pre-populated collection item
 - `collection_with_items`: User with multiple collection items
 
-### Example Test
+### Example Tests
+
+**Model Tests:**
 
 ```python
 class CollectionItemModelTest(TestCase):
@@ -1119,7 +1301,84 @@ class CollectionItemModelTest(TestCase):
         self.assertNotEqual(item1.pk, item2.pk)
 ```
 
+**Missing Issues View Tests:**
+
+```python
+class MissingIssuesViewTest(TestCase):
+    def setUp(self):
+        self.user = CustomUser.objects.create_user(username="testuser")
+        self.client.force_login(self.user)
+
+        # Create a series with 5 issues
+        self.series = Series.objects.create(name="Test Series")
+        self.issues = [
+            Issue.objects.create(series=self.series, number=str(i))
+            for i in range(1, 6)
+        ]
+
+        # User owns issues 1, 2, and 4
+        for issue_num in [0, 1, 3]:
+            CollectionItem.objects.create(
+                user=self.user,
+                issue=self.issues[issue_num]
+            )
+
+    def test_missing_issues_list_shows_incomplete_series(self):
+        """Test that series with missing issues appears in the list."""
+        response = self.client.get(reverse("user_collection:missing-list"))
+
+        self.assertEqual(response.status_code, 200)
+        self.assertIn(self.series, response.context["series_list"])
+
+        # Check annotations
+        series = response.context["series_list"].get(pk=self.series.pk)
+        self.assertEqual(series.total_issues, 5)
+        self.assertEqual(series.owned_issues, 3)
+        self.assertEqual(series.missing_count, 2)
+
+    def test_missing_issues_detail_shows_correct_issues(self):
+        """Test that detail view shows only missing issues."""
+        response = self.client.get(
+            reverse("user_collection:missing-detail", args=[self.series.id])
+        )
+
+        self.assertEqual(response.status_code, 200)
+        missing = response.context["missing_issues"]
+
+        # Should show issues 3 and 5 (indices 2 and 4)
+        self.assertEqual(missing.count(), 2)
+        self.assertIn(self.issues[2], missing)
+        self.assertIn(self.issues[4], missing)
+
+        # Should NOT show owned issues
+        self.assertNotIn(self.issues[0], missing)
+        self.assertNotIn(self.issues[1], missing)
+        self.assertNotIn(self.issues[3], missing)
+
+    def test_completion_percentage_calculation(self):
+        """Test that completion percentage is calculated correctly."""
+        response = self.client.get(
+            reverse("user_collection:missing-detail", args=[self.series.id])
+        )
+
+        # 3 out of 5 = 60%
+        self.assertEqual(response.context["completion_percentage"], 60.0)
+```
+
 ## Future Enhancements
+
+### Recently Implemented
+
+**Missing Issues Functionality** ✓
+
+- Identify series where user owns some but not all issues
+- View specific missing issues for each series
+- Track completion percentage by series
+- Color-coded progress indicators (red/yellow/green)
+- Prioritize series by missing issue count
+- Generate shopping lists for completing runs
+
+See [MissingIssuesListView](#missingissueslistview) and [MissingIssuesDetailView](#missingissuesdetailview) for technical details.
 
 ### Planned Features
 
@@ -1132,10 +1391,10 @@ class CollectionItemModelTest(TestCase):
 2. **Enhanced Statistics**
     - Value appreciation tracking
     - Most valuable issues
-    - Completion percentage by series
     - Reading velocity (issues per month)
     - Grade distribution charts
     - Publisher/imprint breakdowns
+    - ~~Completion percentage by series~~ ✓ Implemented (see Missing Issues feature)
 
 3. **Import/Export**
     - CSV import for bulk collection entry
