@@ -1,4 +1,5 @@
-from django.db.models import Count, Prefetch, Q, Sum
+from django.db import models
+from django.db.models import Count, F, Prefetch, Q, Sum
 from django.http import Http404
 from drf_spectacular.utils import extend_schema
 from rest_framework import mixins, status, viewsets
@@ -25,6 +26,8 @@ from api.v1_0.serializers import (
     IssueListSerializer,
     IssueReadSerializer,
     IssueSerializer,
+    MissingIssueSerializer,
+    MissingSeriesSerializer,
     PublisherListSerializer,
     PublisherSerializer,
     ReadingListItemSerializer,
@@ -694,3 +697,62 @@ class CollectionViewSet(
                 "by_format": format_counts,
             }
         )
+
+    @extend_schema(responses={200: MissingSeriesSerializer(many=True)}, filters=False)
+    @action(detail=False, methods=["get"])
+    def missing_series(self, request):
+        """Return series where the user has some issues but is missing others."""
+        user = request.user
+
+        # Annotate all series with total and owned issue counts
+        # Then filter to only show series with missing issues
+        queryset = (
+            Series.objects.annotate(
+                total_issues=Count("issues", distinct=True),
+                owned_issues=Count(
+                    "issues", filter=models.Q(issues__in_collections__user=user), distinct=True
+                ),
+            )
+            .annotate(missing_count=F("total_issues") - F("owned_issues"))
+            .filter(owned_issues__gt=0, missing_count__gt=0)
+            .select_related("publisher", "series_type", "imprint")
+            .order_by("-missing_count", "sort_name")
+        )
+
+        page = self.paginate_queryset(queryset)
+        if page is not None:
+            serializer = MissingSeriesSerializer(page, many=True, context={"request": request})
+            return self.get_paginated_response(serializer.data)
+
+        serializer = MissingSeriesSerializer(queryset, many=True, context={"request": request})
+        return Response(serializer.data)
+
+    @extend_schema(
+        responses={200: MissingIssueSerializer(many=True)},
+        filters=False,
+    )
+    @action(detail=False, methods=["get"], url_path="missing_issues/(?P<series_id>[^/.]+)")
+    def missing_issues(self, request, series_id=None):
+        """Return specific missing issues for a series."""
+        user = request.user
+
+        # Get user's owned issue IDs for this series
+        owned_issue_ids = CollectionItem.objects.filter(
+            user=user, issue__series_id=series_id
+        ).values_list("issue_id", flat=True)
+
+        # Get all issues from series that user doesn't own
+        queryset = (
+            Issue.objects.filter(series_id=series_id)
+            .exclude(id__in=owned_issue_ids)
+            .select_related("series", "series__publisher", "series__series_type")
+            .order_by("cover_date", "number")
+        )
+
+        page = self.paginate_queryset(queryset)
+        if page is not None:
+            serializer = MissingIssueSerializer(page, many=True, context={"request": request})
+            return self.get_paginated_response(serializer.data)
+
+        serializer = MissingIssueSerializer(queryset, many=True, context={"request": request})
+        return Response(serializer.data)

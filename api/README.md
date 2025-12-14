@@ -728,6 +728,8 @@ User comic book collections with tracking for ownership, grading, reading status
 - `GET /api/collection/` - List authenticated user's collection items
 - `GET /api/collection/{id}/` - Retrieve collection item details (must belong to user)
 - `GET /api/collection/stats/` - Get collection statistics
+- `GET /api/collection/missing_series/` - Get series where user has incomplete runs
+- `GET /api/collection/missing_issues/{series_id}/` - Get specific missing issues for a series
 
 **Read-Only API:**
 
@@ -927,6 +929,109 @@ GET /api/collection/?series_name=spider-man&is_read=true&rating=5
 # Get details of a specific collection item
 GET /api/collection/123/
 ```
+
+---
+
+#### Missing Issues Tracking
+
+The Collection API includes endpoints to help identify gaps in your series runs.
+
+**Missing Series Endpoint:**
+
+`GET /api/collection/missing_series/`
+
+Returns series where you own some issues but are missing others. This helps identify incomplete series runs in your collection.
+
+**Response Fields:**
+```json
+{
+  "id": 123,
+  "name": "Amazing Spider-Man",
+  "sort_name": "Amazing Spider-Man",
+  "year_began": 1963,
+  "year_end": null,
+  "publisher": {
+    "id": 1,
+    "name": "Marvel Comics"
+  },
+  "series_type": {
+    "id": 1,
+    "name": "Ongoing Series"
+  },
+  "total_issues": 900,
+  "owned_issues": 45,
+  "missing_count": 855,
+  "completion_percentage": 5.0
+}
+```
+
+**Field Descriptions:**
+
+- `total_issues` - Total number of issues in the series
+- `owned_issues` - Number of issues you own
+- `missing_count` - Number of issues you're missing (total - owned)
+- `completion_percentage` - Percentage of series owned (0.0 to 100.0)
+
+**Sorting:**
+
+Results are ordered by `missing_count` (descending) then `sort_name` (ascending), showing series with the most gaps first.
+
+**Missing Issues Endpoint:**
+
+`GET /api/collection/missing_issues/{series_id}/`
+
+Returns specific issues from a series that you don't own. Use this to see exactly which issues you're missing from a particular series.
+
+**Response Fields:**
+```json
+{
+  "id": 5432,
+  "series": {
+    "id": 123,
+    "name": "Amazing Spider-Man",
+    "volume": 1,
+    "series_type": {
+      "id": 1,
+      "name": "Ongoing Series"
+    }
+  },
+  "number": "100",
+  "cover_date": "1971-09-01",
+  "store_date": "1971-07-15"
+}
+```
+
+**Examples:**
+```bash
+# Get all incomplete series in your collection
+GET /api/collection/missing_series/
+
+# Get missing issues for a specific series
+GET /api/collection/missing_issues/123/
+
+# Paginate through missing series
+GET /api/collection/missing_series/?page=2
+
+# Get missing issues with pagination
+GET /api/collection/missing_issues/456/?page=2
+```
+
+**Use Cases:**
+
+- **Gap Analysis:** Identify which series you're actively collecting but haven't completed
+- **Wishlist Building:** Generate a list of issues to look for at comic shops or conventions
+- **Collection Planning:** See completion percentages to prioritize which runs to complete
+- **Progress Tracking:** Monitor your progress toward completing series runs
+
+**Notes:**
+
+- Only shows series where you own at least one issue but not all issues
+- Series where you own zero issues are not included
+- Series where you own all issues are not included
+- Missing issues are ordered by cover date and number for easy reference
+- Results are paginated (default page size applies)
+
+---
 
 **Notes:**
 

@@ -1,5 +1,6 @@
 """Tests for the Collection API."""
 
+from datetime import date
 from decimal import Decimal
 
 from django.urls import reverse
@@ -371,3 +372,213 @@ def test_filter_by_rating(api_client, collection_user, collection_issue_1, colle
     assert resp.status_code == status.HTTP_200_OK
     assert resp.data["count"] == 1
     assert resp.data["results"][0]["rating"] == 3
+
+
+# Missing Series Endpoint Tests
+def test_unauthenticated_missing_series_requires_auth(api_client):
+    """Unauthenticated users require authentication to view missing series."""
+    resp = api_client.get(reverse("api:collection-missing-series"))
+    assert resp.status_code == status.HTTP_401_UNAUTHORIZED
+
+
+def test_missing_series_returns_incomplete_series(
+    api_client,
+    collection_user,
+    collection_series,
+    collection_issue_1,
+    collection_issue_2,
+    create_user,
+):
+    """Test that missing_series returns series where user owns some but not all issues."""
+    api_client.force_authenticate(user=collection_user)
+
+    # Create a third issue in the series
+    user = create_user()
+
+    collection_issue_1.__class__.objects.create(
+        series=collection_series,
+        number="3",
+        slug="collection-series-3",
+        cover_date=date(2023, 3, 1),
+        edited_by=user,
+        created_by=user,
+    )
+
+    # User owns issues 1 and 2, but not issue 3
+    CollectionItem.objects.create(user=collection_user, issue=collection_issue_1, quantity=1)
+    CollectionItem.objects.create(user=collection_user, issue=collection_issue_2, quantity=1)
+
+    resp = api_client.get(reverse("api:collection-missing-series"))
+    assert resp.status_code == status.HTTP_200_OK
+    assert resp.data["count"] == 1
+
+    series_data = resp.data["results"][0]
+    assert series_data["id"] == collection_series.id
+    assert series_data["name"] == collection_series.name
+    assert series_data["total_issues"] == 3
+    assert series_data["owned_issues"] == 2
+    assert series_data["missing_count"] == 1
+    assert series_data["completion_percentage"] == 66.7
+
+
+def test_missing_series_excludes_complete_series(
+    api_client, collection_user, collection_series, collection_issue_1, collection_issue_2
+):
+    """Test that series with all issues owned are excluded."""
+    api_client.force_authenticate(user=collection_user)
+
+    # User owns all issues in the series
+    CollectionItem.objects.create(user=collection_user, issue=collection_issue_1, quantity=1)
+    CollectionItem.objects.create(user=collection_user, issue=collection_issue_2, quantity=1)
+
+    resp = api_client.get(reverse("api:collection-missing-series"))
+    assert resp.status_code == status.HTTP_200_OK
+    assert resp.data["count"] == 0
+
+
+def test_missing_series_excludes_unowned_series(
+    api_client, collection_user, collection_series, collection_issue_1
+):
+    """Test that series with no owned issues are excluded."""
+    api_client.force_authenticate(user=collection_user)
+
+    # Don't create any collection items
+    resp = api_client.get(reverse("api:collection-missing-series"))
+    assert resp.status_code == status.HTTP_200_OK
+    assert resp.data["count"] == 0
+
+
+def test_missing_series_only_shows_user_data(
+    api_client,
+    collection_user,
+    other_collection_user,
+    collection_series,
+    collection_issue_1,
+    collection_issue_2,
+    create_user,
+):
+    """Test that missing_series only shows data for the authenticated user."""
+    user = create_user()
+    issue_3 = collection_issue_1.__class__.objects.create(
+        series=collection_series,
+        number="3",
+        slug="collection-series-3",
+        cover_date=date(2023, 3, 1),
+        edited_by=user,
+        created_by=user,
+    )
+
+    # collection_user owns 1 issue
+    CollectionItem.objects.create(user=collection_user, issue=collection_issue_1, quantity=1)
+
+    # other_collection_user owns all 3 issues
+    CollectionItem.objects.create(user=other_collection_user, issue=collection_issue_1, quantity=1)
+    CollectionItem.objects.create(user=other_collection_user, issue=collection_issue_2, quantity=1)
+    CollectionItem.objects.create(user=other_collection_user, issue=issue_3, quantity=1)
+
+    # Authenticate as collection_user
+    api_client.force_authenticate(user=collection_user)
+    resp = api_client.get(reverse("api:collection-missing-series"))
+    assert resp.status_code == status.HTTP_200_OK
+    assert resp.data["count"] == 1
+    assert resp.data["results"][0]["owned_issues"] == 1
+    assert resp.data["results"][0]["missing_count"] == 2
+
+    # Authenticate as other_collection_user
+    api_client.force_authenticate(user=other_collection_user)
+    resp = api_client.get(reverse("api:collection-missing-series"))
+    assert resp.status_code == status.HTTP_200_OK
+    # other_collection_user has complete series, so no missing issues
+    assert resp.data["count"] == 0
+
+
+# Missing Issues Endpoint Tests
+def test_unauthenticated_missing_issues_requires_auth(api_client, collection_series):
+    """Unauthenticated users require authentication to view missing issues."""
+    resp = api_client.get(
+        reverse("api:collection-missing-issues", kwargs={"series_id": collection_series.id})
+    )
+    assert resp.status_code == status.HTTP_401_UNAUTHORIZED
+
+
+def test_missing_issues_returns_unowned_issues(
+    api_client, collection_user, collection_series, collection_issue_1, collection_issue_2
+):
+    """Test that missing_issues returns issues not in user's collection."""
+    api_client.force_authenticate(user=collection_user)
+
+    # User owns issue 1 but not issue 2
+    CollectionItem.objects.create(user=collection_user, issue=collection_issue_1, quantity=1)
+
+    resp = api_client.get(
+        reverse("api:collection-missing-issues", kwargs={"series_id": collection_series.id})
+    )
+    assert resp.status_code == status.HTTP_200_OK
+    assert resp.data["count"] == 1
+    assert resp.data["results"][0]["id"] == collection_issue_2.id
+    assert resp.data["results"][0]["number"] == "2"
+
+
+def test_missing_issues_excludes_owned_issues(
+    api_client, collection_user, collection_series, collection_issue_1, collection_issue_2
+):
+    """Test that owned issues are excluded from missing issues list."""
+    api_client.force_authenticate(user=collection_user)
+
+    # User owns both issues
+    CollectionItem.objects.create(user=collection_user, issue=collection_issue_1, quantity=1)
+    CollectionItem.objects.create(user=collection_user, issue=collection_issue_2, quantity=1)
+
+    resp = api_client.get(
+        reverse("api:collection-missing-issues", kwargs={"series_id": collection_series.id})
+    )
+    assert resp.status_code == status.HTTP_200_OK
+    assert resp.data["count"] == 0
+
+
+def test_missing_issues_only_shows_user_data(
+    api_client,
+    collection_user,
+    other_collection_user,
+    collection_series,
+    collection_issue_1,
+    collection_issue_2,
+):
+    """Test that missing_issues only considers the authenticated user's collection."""
+    # collection_user owns issue 1
+    CollectionItem.objects.create(user=collection_user, issue=collection_issue_1, quantity=1)
+
+    # other_collection_user owns issue 2
+    CollectionItem.objects.create(user=other_collection_user, issue=collection_issue_2, quantity=1)
+
+    # Authenticate as collection_user - should see issue 2 as missing
+    api_client.force_authenticate(user=collection_user)
+    resp = api_client.get(
+        reverse("api:collection-missing-issues", kwargs={"series_id": collection_series.id})
+    )
+    assert resp.status_code == status.HTTP_200_OK
+    assert resp.data["count"] == 1
+    assert resp.data["results"][0]["id"] == collection_issue_2.id
+
+    # Authenticate as other_collection_user - should see issue 1 as missing
+    api_client.force_authenticate(user=other_collection_user)
+    resp = api_client.get(
+        reverse("api:collection-missing-issues", kwargs={"series_id": collection_series.id})
+    )
+    assert resp.status_code == status.HTTP_200_OK
+    assert resp.data["count"] == 1
+    assert resp.data["results"][0]["id"] == collection_issue_1.id
+
+
+def test_missing_issues_returns_all_if_none_owned(
+    api_client, collection_user, collection_series, collection_issue_1, collection_issue_2
+):
+    """Test that all issues are returned if user owns none."""
+    api_client.force_authenticate(user=collection_user)
+
+    # User doesn't own any issues
+    resp = api_client.get(
+        reverse("api:collection-missing-issues", kwargs={"series_id": collection_series.id})
+    )
+    assert resp.status_code == status.HTTP_200_OK
+    assert resp.data["count"] == 2

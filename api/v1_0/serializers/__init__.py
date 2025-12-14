@@ -55,6 +55,8 @@ from api.v1_0.serializers.reading_list import (
 from api.v1_0.serializers.collection import (
     CollectionListSerializer,
     CollectionReadSerializer,
+    MissingIssueSerializer,
+    MissingSeriesSerializer,
 )
 
 __all__ = [
@@ -81,6 +83,8 @@ __all__ = [
     "IssueReadSerializer",
     "IssueSerializer",
     "IssueSeriesSerializer",
+    "MissingIssueSerializer",
+    "MissingSeriesSerializer",
     "PublisherListSerializer",
     "PublisherSerializer",
     "RatingSerializer",

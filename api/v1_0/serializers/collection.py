@@ -1,8 +1,10 @@
 from rest_framework import serializers
 
 from api.v1_0.serializers.issue import IssueListSeriesSerializer
+from api.v1_0.serializers.publisher import BasicPublisherSerializer
 from api.v1_0.serializers.reading_list import UserSerializer
-from comicsdb.models import Issue
+from api.v1_0.serializers.series import SeriesTypeSerializer
+from comicsdb.models import Issue, Series
 from user_collection.models import CollectionItem
 
 
@@ -81,4 +83,53 @@ class CollectionReadSerializer(serializers.ModelSerializer):
             "resource_url",
             "created_on",
             "modified",
+        )
+
+
+class MissingSeriesSerializer(serializers.ModelSerializer):
+    """Serializer for series with missing issues."""
+
+    publisher = BasicPublisherSerializer(read_only=True)
+    series_type = SeriesTypeSerializer(read_only=True)
+    total_issues = serializers.IntegerField(read_only=True)
+    owned_issues = serializers.IntegerField(read_only=True)
+    missing_count = serializers.IntegerField(read_only=True)
+    completion_percentage = serializers.SerializerMethodField()
+
+    def get_completion_percentage(self, obj: Series) -> float:
+        """Calculate completion percentage."""
+        if obj.total_issues > 0:
+            return round((obj.owned_issues / obj.total_issues) * 100, 1)
+        return 0.0
+
+    class Meta:
+        model = Series
+        fields = (
+            "id",
+            "name",
+            "sort_name",
+            "year_began",
+            "year_end",
+            "publisher",
+            "series_type",
+            "total_issues",
+            "owned_issues",
+            "missing_count",
+            "completion_percentage",
+        )
+
+
+class MissingIssueSerializer(serializers.ModelSerializer):
+    """Serializer for missing issues in a series."""
+
+    series = IssueListSeriesSerializer(read_only=True)
+
+    class Meta:
+        model = Issue
+        fields = (
+            "id",
+            "series",
+            "number",
+            "cover_date",
+            "store_date",
         )
