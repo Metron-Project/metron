@@ -1,7 +1,7 @@
 from django.db import models
 from django.db.models import Count, F, Prefetch, Q, Sum
 from django.http import Http404
-from drf_spectacular.utils import extend_schema
+from drf_spectacular.utils import OpenApiParameter, extend_schema
 from rest_framework import mixins, status, viewsets
 from rest_framework.decorators import action
 from rest_framework.pagination import PageNumberPagination
@@ -729,6 +729,14 @@ class CollectionViewSet(
 
     @extend_schema(
         responses={200: MissingIssueSerializer(many=True)},
+        parameters=[
+            OpenApiParameter(
+                name="series_id",
+                type=int,
+                location=OpenApiParameter.PATH,
+                description="ID of the series to get missing issues for",
+            )
+        ],
         filters=False,
     )
     @action(detail=False, methods=["get"], url_path="missing_issues/(?P<series_id>[^/.]+)")
