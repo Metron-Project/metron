@@ -2,7 +2,8 @@ from chartkick.django import PieChart
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
-from django.db.models import Count, Sum
+from django.db import models
+from django.db.models import Count, F, Sum
 from django.shortcuts import get_object_or_404, render
 from django.urls import reverse, reverse_lazy
 from django.views.decorators.http import require_POST
@@ -19,7 +20,7 @@ from django.views.generic import (
 from comicsdb.filters.collection import CollectionViewFilter
 from comicsdb.models.issue import Issue
 from comicsdb.models.publisher import Publisher
-from comicsdb.models.series import SeriesType
+from comicsdb.models.series import Series, SeriesType
 from user_collection.forms import AddIssuesFromSeriesForm, CollectionItemForm
 from user_collection.models import GRADE_CHOICES, CollectionItem
 
@@ -398,3 +399,91 @@ def update_rating(request, pk):
         "user_collection/partials/star_rating.html",
         {"item": item},
     )
+
+
+class MissingIssuesListView(LoginRequiredMixin, ListView):
+    """Display series where the user is missing issues."""
+
+    model = Series
+    template_name = "user_collection/missing_issues_list.html"
+    context_object_name = "series_list"
+    paginate_by = 50
+
+    def get_queryset(self):
+        user = self.request.user
+
+        # Annotate all series with total and owned issue counts
+        # Then filter to only show series with missing issues
+        return (
+            Series.objects.annotate(
+                total_issues=Count("issues", distinct=True),
+                owned_issues=Count(
+                    "issues", filter=models.Q(issues__in_collections__user=user), distinct=True
+                ),
+            )
+            .annotate(missing_count=F("total_issues") - F("owned_issues"))
+            .filter(owned_issues__gt=0, missing_count__gt=0)
+            .select_related("publisher", "series_type", "imprint")
+            .order_by("-missing_count", "sort_name")
+        )
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        # Add total count of series with missing issues
+        context["series_with_missing_count"] = self.get_queryset().count()
+        return context
+
+
+class MissingIssuesDetailView(LoginRequiredMixin, ListView):
+    """Display specific missing issues for a series."""
+
+    model = Issue
+    template_name = "user_collection/missing_issues_detail.html"
+    context_object_name = "missing_issues"
+    paginate_by = 50
+
+    def get_queryset(self):
+        user = self.request.user
+        series_id = self.kwargs["series_id"]
+
+        # Get user's owned issue IDs for this series
+        owned_issue_ids = CollectionItem.objects.filter(
+            user=user, issue__series_id=series_id
+        ).values_list("issue_id", flat=True)
+
+        # Get all issues from series that user doesn't own
+        return (
+            Issue.objects.filter(series_id=series_id)
+            .exclude(id__in=owned_issue_ids)
+            .select_related("series", "series__publisher", "series__series_type")
+            .order_by("cover_date", "number")
+        )
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        series_id = self.kwargs["series_id"]
+        user = self.request.user
+
+        # Get series object with related data
+        series = get_object_or_404(
+            Series.objects.select_related("publisher", "series_type", "imprint"),
+            id=series_id,
+        )
+
+        # Calculate ownership stats
+        total_issues = series.issues.count()
+        owned_issues = CollectionItem.objects.filter(user=user, issue__series=series).count()
+        missing_count = total_issues - owned_issues
+        completion_pct = (owned_issues / total_issues * 100) if total_issues > 0 else 0
+
+        context.update(
+            {
+                "series": series,
+                "total_issues": total_issues,
+                "owned_issues": owned_issues,
+                "missing_count": missing_count,
+                "completion_percentage": round(completion_pct, 1),
+            }
+        )
+
+        return context

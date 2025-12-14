@@ -1,0 +1,123 @@
+{% extends parent_template|default:"base.html" %}
+{% load static %}
+{% block title %}Missing Issues - {{ series.name }} - Metron{% endblock %}
+{% block content %}
+    <header class="block">
+        <h1 class="title">Missing Issues</h1>
+        <h2 class="subtitle">{{ series.name }} {% if series.year_began %}({{ series.year_began }}){% endif %}</h2>
+    </header>
+    <nav class="level mb-5">
+        <div class="level-left">
+            <div class="buttons">
+                <a class="button is-rounded" href="{% url 'user_collection:missing-list' %}">
+                    <span class="icon"><i class="fas fa-arrow-left"></i></span>
+                    <span>Back to Missing List</span>
+                </a>
+                <a class="button is-rounded is-light" href="{% url 'user_collection:list' %}">
+                    <span class="icon"><i class="fas fa-home"></i></span>
+                    <span>Collection</span>
+                </a>
+            </div>
+        </div>
+    </nav>
+    <section class="section">
+        <div class="container">
+            <div class="box">
+                <div class="columns is-vcentered">
+                    <div class="column">
+                        <h3 class="title is-5">Series Information</h3>
+                        <dl>
+                            <dt class="has-text-weight-bold">Publisher:</dt>
+                            <dd class="mb-2">{{ series.publisher.name }}</dd>
+                            <dt class="has-text-weight-bold">Series Type:</dt>
+                            <dd class="mb-2">{{ series.series_type.name }}</dd>
+                            {% if series.volume %}
+                                <dt class="has-text-weight-bold">Volume:</dt>
+                                <dd>{{ series.volume }}</dd>
+                            {% endif %}
+                        </dl>
+                    </div>
+                    <div class="column">
+                        <h3 class="title is-5">Collection Progress</h3>
+                        <div class="has-text-centered mb-3">
+                            <p class="title is-3">{{ owned_issues }} / {{ total_issues }}</p>
+                            <p class="subtitle is-6">{{ completion_percentage }}% Complete</p>
+                        </div>
+                        <progress class="progress {% if completion_percentage < 50 %}is-danger{% elif completion_percentage < 80 %}is-warning{% else %}is-success{% endif %}"
+                                  value="{{ owned_issues }}"
+                                  max="{{ total_issues }}">
+                            {{ completion_percentage }}%
+                        </progress>
+                        <p class="has-text-centered mt-2">
+                            <span class="tag is-warning is-medium">{{ missing_count }} issue{{ missing_count|pluralize }} missing</span>
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+    {% if missing_issues %}
+        <section class="section pt-0">
+            <div class="container">
+                <div class="table-container">
+                    <table class="table is-fullwidth is-striped is-hoverable">
+                        <thead>
+                            <tr>
+                                <th>Issue</th>
+                                <th>Story Title</th>
+                                <th>Cover Date</th>
+                                <th>Store Date</th>
+                                <th>Cover Price</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for issue in missing_issues %}
+                                <tr>
+                                    <td>
+                                        <a href="{% url 'issue:detail' issue.slug %}">#{{ issue.number }}</a>
+                                    </td>
+                                    <td>
+                                        {% if issue.name %}
+                                            {{ issue.name.0|truncatewords:10 }}
+                                        {% else %}
+                                            <span class="has-text-grey-light">—</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>{{ issue.cover_date|date:"M Y" }}</td>
+                                    <td>
+                                        {% if issue.store_date %}
+                                            {{ issue.store_date|date:"M d, Y" }}
+                                        {% else %}
+                                            <span class="has-text-grey-light">—</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        {% if issue.price %}
+                                            {{ issue.price }}
+                                        {% else %}
+                                            <span class="has-text-grey-light">—</span>
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </section>
+    {% else %}
+        <section class="section pt-0">
+            <div class="container has-text-centered">
+                <span class="icon is-large has-text-success">
+                    <i class="fas fa-check-circle fa-3x"></i>
+                </span>
+                <p class="title is-4 mt-4">No Missing Issues!</p>
+                <p class="subtitle">You own all issues from this series.</p>
+            </div>
+        </section>
+    {% endif %}
+{% endblock %}
+{% block pagination %}
+    {% load pagination_tags %}
+    {% include "comicsdb/partials/pagination.html" %}
+{% endblock %}

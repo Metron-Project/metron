@@ -40,6 +40,7 @@ Your collection records can include:
 
 - **Smart Filtering**: Filter by series, publisher, grade, format, read status, and more
 - **Statistics Dashboard**: Track your collection's size, value, and reading progress
+- **Gap Identification**: Discover which issues are missing from your series runs
 - **Duplicate Detection**: Prevents adding the same issue twice
 - **Privacy**: Your collection is completely private to you
 
@@ -192,6 +193,51 @@ You can rate comics on a 1-5 star scale:
 4. The item is permanently removed from your collection
 
 **Note:** This only removes the item from your collection - it does not delete the issue from the Metron database.
+
+### Finding Missing Issues in Your Series
+
+Identify gaps in your series runs to help complete your collection!
+
+**Missing Issues List** (`/collection/missing/`)
+
+1. From your collection, click "Missing Issues" button
+2. View all series where you own some but not all issues
+3. See at a glance:
+    - **Completion Progress**: Color-coded progress bars
+        - Red: Less than 50% complete
+        - Yellow: 50-80% complete
+        - Green: More than 80% complete
+    - **Statistics**: "You own X of Y issues (Z% complete)"
+    - **Missing Count**: Number of issues you don't have
+4. Click "View Missing" to see specific issues
+
+**Missing Issues Detail** (`/collection/missing/<series_id>/`)
+
+1. Shows the specific series information
+2. Lists all missing issues in chronological order
+3. For each missing issue, see:
+    - Issue number and cover date
+    - Issue title/description
+4. Use this list to plan purchases or fill gaps
+
+**Benefits:**
+
+- Quickly identify incomplete series runs
+- Prioritize which issues to acquire next
+- Track your progress toward completing series
+- Focus collecting efforts on series you've already started
+- Only shows issues that exist in the Metron database
+
+**Example Workflow:**
+
+1. Click "Missing Issues" from your collection
+2. See Amazing Spider-Man Vol 1 at 45% complete
+3. Click "View Missing" to see issues #23, #45, #67, etc.
+4. Use this list when shopping for back issues
+5. After purchasing, add the issues to your collection
+6. Return to Missing Issues to track updated progress
+
+**Note:** Missing Issues only shows series where you own at least one issue. It helps you complete runs you've already started, not discover new series.
 
 ## Grading System
 
@@ -370,6 +416,8 @@ Visit `/collection/stats/` to see detailed analytics about your collection:
 | `/collection/add/` | Add single issue | Yes |
 | `/collection/add-from-series/` | Add issues from series (bulk) | Yes |
 | `/collection/stats/` | View collection statistics | Yes |
+| `/collection/missing/` | View series with missing issues | Yes |
+| `/collection/missing/<series_id>/` | View specific missing issues for a series | Yes |
 | `/collection/<id>/` | View item details | Yes* |
 | `/collection/<id>/update/` | Edit collection item | Yes* |
 | `/collection/<id>/delete/` | Delete collection item | Yes* |
@@ -423,12 +471,21 @@ Visit `/collection/stats/` to see detailed analytics about your collection:
 - **No Public Sharing**: Unlike reading lists, collections cannot be made public
 - **API Access**: Read-only API access available at `/api/collection/`
 
+### Completing Series Runs
+
+1. **Check Missing Issues Regularly**: Visit `/collection/missing/` to see your incomplete series
+2. **Prioritize High-Completion Series**: Focus on series you're close to completing (80%+)
+3. **Use Missing Lists for Shopping**: Check missing issues before visiting comic shops or online stores
+4. **Track Progress**: Revisit after adding new issues to see updated completion percentages
+5. **Focus Your Collecting**: Use the list to decide which series are worth completing vs starting fresh
+
 ### Maintenance Tips
 
 1. **Regular Updates**: Periodically review and update collection details
 2. **Remove Sold Items**: Delete items when you sell or give away comics
 3. **Mark as Read**: Update reading status to track progress
 4. **Review Statistics**: Check stats page to identify collection gaps
+5. **Use Missing Issues**: Regularly check `/collection/missing/` to plan purchases
 
 ### Common Workflows
 
@@ -456,6 +513,15 @@ Visit `/collection/stats/` to see detailed analytics about your collection:
 2. Add professional grades for slabbed books
 3. Use notes to track appreciation or market changes
 4. Review statistics regularly to see total value
+
+**Completing Series Runs:**
+1. Visit `/collection/missing/` to see incomplete series
+2. Sort by completion percentage to find nearly-complete runs
+3. Click "View Missing" on a series you want to complete
+4. Note the specific issue numbers and cover dates
+5. Search for these issues at comic shops or online
+6. Add new acquisitions to your collection
+7. Return to Missing Issues to see updated progress
 
 ---
 
