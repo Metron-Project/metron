@@ -1,0 +1,253 @@
+<div class="box mb-5" id="filter-panel">
+    <form method="get" accept-charset="utf-8">
+        <div class="is-flex is-justify-content-space-between is-align-items-center mb-4">
+            <h2 class="title is-5 mb-0">
+                <span class="icon-text">
+                    <span class="icon has-text-link">
+                        <i class="fas fa-search"></i>
+                    </span>
+                    <span>Search Series</span>
+                </span>
+            </h2>
+            {% if has_active_filters %}
+                <span class="tag is-warning">
+                    <span class="icon">
+                        <i class="fas fa-filter"></i>
+                    </span>
+                    <span>Filters Active</span>
+                </span>
+            {% endif %}
+        </div>
+        {# Quick Search Field #}
+        <div class="field">
+            <label class="label" for="q">Quick Search</label>
+            <div class="control has-icons-left">
+                <input class="input"
+                       type="text"
+                       id="q"
+                       name="q"
+                       value="{{ request.GET.q }}"
+                       placeholder="Search series names..."
+                       aria-label="Quick search">
+                <span class="icon is-small is-left">
+                    <i class="fas fa-search"></i>
+                </span>
+            </div>
+            <p class="help">Search series names (supports multi-word search)</p>
+        </div>
+        {# Collapsible Advanced Filters #}
+        <details {% if has_active_filters %}open{% endif %}>
+            <summary class="has-text-weight-semibold is-clickable mt-4 mb-3">
+                <span class="icon-text">
+                    <span class="icon">
+                        <i class="fas fa-sliders-h"></i>
+                    </span>
+                    <span>Advanced Filters</span>
+                </span>
+            </summary>
+            <div class="columns is-multiline">
+                {# Series Name Filter #}
+                <div class="column is-half">
+                    <div class="field">
+                        <label class="label" for="name">Series Name</label>
+                        <div class="control has-icons-left">
+                            <input class="input"
+                                   type="text"
+                                   id="name"
+                                   name="name"
+                                   value="{{ request.GET.name }}"
+                                   placeholder="e.g., Amazing Spider-Man"
+                                   aria-label="Filter by series name">
+                            <span class="icon is-small is-left">
+                                <i class="fas fa-book-open"></i>
+                            </span>
+                        </div>
+                    </div>
+                </div>
+                {# Series Type Filter #}
+                <div class="column is-half">
+                    <div class="field">
+                        <label class="label" for="series_type">Series Type</label>
+                        <div class="control has-icons-left">
+                            <div class="select is-fullwidth">
+                                <select id="series_type"
+                                        name="series_type"
+                                        aria-label="Filter by series type">
+                                    <option value="">All Types</option>
+                                    {% for type in series_types %}
+                                        <option value="{{ type.id }}"
+                                                {% if request.GET.series_type == type.id|stringformat:"s" %}selected{% endif %}>
+                                            {{ type.name }}
+                                        </option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                            <span class="icon is-small is-left">
+                                <i class="fas fa-book"></i>
+                            </span>
+                        </div>
+                    </div>
+                </div>
+                {# Publisher Filter #}
+                <div class="column is-half">
+                    <div class="field">
+                        <label class="label" for="publisher_name">Publisher</label>
+                        <div class="control has-icons-left">
+                            <input class="input"
+                                   type="text"
+                                   id="publisher_name"
+                                   name="publisher_name"
+                                   value="{{ request.GET.publisher_name }}"
+                                   placeholder="e.g., Marvel"
+                                   aria-label="Filter by publisher">
+                            <span class="icon is-small is-left">
+                                <i class="fas fa-building"></i>
+                            </span>
+                        </div>
+                    </div>
+                </div>
+                {# Imprint Filter #}
+                <div class="column is-half">
+                    <div class="field">
+                        <label class="label" for="imprint_name">Imprint</label>
+                        <div class="control has-icons-left">
+                            <input class="input"
+                                   type="text"
+                                   id="imprint_name"
+                                   name="imprint_name"
+                                   value="{{ request.GET.imprint_name }}"
+                                   placeholder="e.g., Vertigo"
+                                   aria-label="Filter by imprint">
+                            <span class="icon is-small is-left">
+                                <i class="fas fa-bookmark"></i>
+                            </span>
+                        </div>
+                    </div>
+                </div>
+                {# Year Began Range #}
+                <div class="column is-half">
+                    <div class="field">
+                        <label class="label" for="year_began_gte">Year Began (From)</label>
+                        <div class="control has-icons-left">
+                            <input class="input"
+                                   type="number"
+                                   id="year_began_gte"
+                                   name="year_began_gte"
+                                   value="{{ request.GET.year_began_gte }}"
+                                   placeholder="e.g., 1960"
+                                   aria-label="Filter by year began (from)">
+                            <span class="icon is-small is-left">
+                                <i class="fas fa-calendar-alt"></i>
+                            </span>
+                        </div>
+                    </div>
+                </div>
+                <div class="column is-half">
+                    <div class="field">
+                        <label class="label" for="year_began_lte">Year Began (To)</label>
+                        <div class="control has-icons-left">
+                            <input class="input"
+                                   type="number"
+                                   id="year_began_lte"
+                                   name="year_began_lte"
+                                   value="{{ request.GET.year_began_lte }}"
+                                   placeholder="e.g., 2020"
+                                   aria-label="Filter by year began (to)">
+                            <span class="icon is-small is-left">
+                                <i class="fas fa-calendar-alt"></i>
+                            </span>
+                        </div>
+                    </div>
+                </div>
+                {# Volume Filter #}
+                <div class="column is-half">
+                    <div class="field">
+                        <label class="label" for="volume">Volume</label>
+                        <div class="control has-icons-left">
+                            <input class="input"
+                                   type="number"
+                                   id="volume"
+                                   name="volume"
+                                   value="{{ request.GET.volume }}"
+                                   placeholder="e.g., 1"
+                                   aria-label="Filter by volume">
+                            <span class="icon is-small is-left">
+                                <i class="fas fa-layer-group"></i>
+                            </span>
+                        </div>
+                    </div>
+                </div>
+                {# Status Filter #}
+                <div class="column is-half">
+                    <div class="field">
+                        <label class="label" for="status">Status</label>
+                        <div class="control has-icons-left">
+                            <div class="select is-fullwidth">
+                                <select id="status" name="status" aria-label="Filter by status">
+                                    <option value="">All Statuses</option>
+                                    {% for value, label in status_choices %}
+                                        <option value="{{ value }}"
+                                                {% if request.GET.status == value %}selected{% endif %}>
+                                            {{ label }}
+                                        </option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                            <span class="icon is-small is-left">
+                                <i class="fas fa-info-circle"></i>
+                            </span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </details>
+        {# Action Buttons #}
+        <div class="field is-grouped is-flex-direction-column-mobile mt-4">
+            <div class="control">
+                <button class="button is-link" type="submit">
+                    <span class="icon">
+                        <i class="fas fa-search"></i>
+                    </span>
+                    <span>Apply Filters</span>
+                </button>
+            </div>
+            <div class="control">
+                <a class="button is-light"
+                   href="{% url 'series:list' %}"
+                   title="Clear all filters">
+                    <span class="icon">
+                        <i class="fas fa-times"></i>
+                    </span>
+                    <span>Clear Filters</span>
+                </a>
+            </div>
+        </div>
+    </form>
+</div>
+<style>
+/* Enhance details/summary styling */
+details > summary {
+    list-style: none;
+    cursor: pointer;
+    user-select: none;
+}
+
+details > summary::-webkit-details-marker {
+    display: none;
+}
+
+details > summary::before {
+    content: '▶';
+    display: inline-block;
+    margin-right: 0.5rem;
+    transition: transform 0.2s;
+}
+
+details[open] > summary::before {
+    transform: rotate(90deg);
+}
+
+details > summary:hover {
+    color: hsl(217, 71%, 53%);
+}
+</style>

@@ -340,3 +340,426 @@ def test_series_history_m2m_shows_names(auto_login_user, create_user, dc_comics,
             break
 
     assert found_genre_change, "Should have found at least one genre change in history"
+
+
+# Series Filter Tests
+def test_series_filter_quick_search(auto_login_user, create_user, dc_comics, single_issue_type):
+    """Test quick search filters series names with multi-word support."""
+    user = create_user()
+    Series.objects.create(
+        name="Batman",
+        slug="batman-2024",
+        sort_name="Batman",
+        year_began=2024,
+        volume=1,
+        publisher=dc_comics,
+        series_type=single_issue_type,
+        status=Series.Status.ONGOING,
+        desc="The Dark Knight detective",
+        created_by=user,
+        edited_by=user,
+    )
+    Series.objects.create(
+        name="Superman",
+        slug="superman-2024",
+        sort_name="Superman",
+        year_began=2024,
+        volume=1,
+        publisher=dc_comics,
+        series_type=single_issue_type,
+        status=Series.Status.ONGOING,
+        desc="Man of Steel",
+        created_by=user,
+        edited_by=user,
+    )
+
+    client, _ = auto_login_user()
+
+    # Search by name
+    resp = client.get("/series/?q=batman")
+    assert resp.status_code == HTML_OK_CODE
+    assert len(resp.context["series_list"]) == 1
+    assert resp.context["series_list"][0].name == "Batman"
+
+    # Multi-word search
+    resp = client.get("/series/?q=bat+man")
+    assert resp.status_code == HTML_OK_CODE
+    assert len(resp.context["series_list"]) == 1
+    assert resp.context["series_list"][0].name == "Batman"
+
+
+def test_series_filter_multi_word_name_search(
+    auto_login_user, create_user, dc_comics, single_issue_type
+):
+    """Test multi-word series name search."""
+    user = create_user()
+    Series.objects.create(
+        name="Amazing Spider-Man",
+        slug="amazing-spider-man",
+        sort_name="Amazing Spider-Man",
+        year_began=2024,
+        volume=1,
+        publisher=dc_comics,
+        series_type=single_issue_type,
+        status=Series.Status.ONGOING,
+        created_by=user,
+        edited_by=user,
+    )
+    Series.objects.create(
+        name="Spider-Man 2099",
+        slug="spider-man-2099",
+        sort_name="Spider-Man 2099",
+        year_began=2024,
+        volume=1,
+        publisher=dc_comics,
+        series_type=single_issue_type,
+        status=Series.Status.ONGOING,
+        created_by=user,
+        edited_by=user,
+    )
+    Series.objects.create(
+        name="Amazing Fantasy",
+        slug="amazing-fantasy",
+        sort_name="Amazing Fantasy",
+        year_began=2024,
+        volume=1,
+        publisher=dc_comics,
+        series_type=single_issue_type,
+        status=Series.Status.ONGOING,
+        created_by=user,
+        edited_by=user,
+    )
+
+    client, _ = auto_login_user()
+
+    # Search for "Amazing Spider" should only match "Amazing Spider-Man"
+    resp = client.get("/series/?name=Amazing+Spider")
+    assert resp.status_code == HTML_OK_CODE
+    assert len(resp.context["series_list"]) == 1
+    assert resp.context["series_list"][0].name == "Amazing Spider-Man"
+
+
+def test_series_filter_by_series_type(auto_login_user, create_user, dc_comics):
+    """Test filtering by series type."""
+    user = create_user()
+    ongoing_type = SeriesType.objects.create(name="Ongoing Series")
+    limited_type = SeriesType.objects.create(name="Limited Series")
+
+    Series.objects.create(
+        name="Batman",
+        slug="batman-ongoing",
+        sort_name="Batman",
+        year_began=2024,
+        volume=1,
+        publisher=dc_comics,
+        series_type=ongoing_type,
+        status=Series.Status.ONGOING,
+        created_by=user,
+        edited_by=user,
+    )
+    Series.objects.create(
+        name="Crisis",
+        slug="crisis-limited",
+        sort_name="Crisis",
+        year_began=2024,
+        volume=1,
+        publisher=dc_comics,
+        series_type=limited_type,
+        status=Series.Status.ONGOING,
+        created_by=user,
+        edited_by=user,
+    )
+
+    client, _ = auto_login_user()
+
+    # Filter by ongoing series type
+    resp = client.get(f"/series/?series_type={ongoing_type.id}")
+    assert resp.status_code == HTML_OK_CODE
+    assert len(resp.context["series_list"]) == 1
+    assert resp.context["series_list"][0].series_type == ongoing_type
+
+
+def test_series_filter_by_publisher(auto_login_user, create_user, dc_comics, single_issue_type):
+    """Test filtering by publisher name."""
+    user = create_user()
+    from comicsdb.models import Publisher  # noqa: PLC0415
+
+    marvel = Publisher.objects.create(name="Marvel Comics", slug="marvel-comics", founded=1939)
+
+    Series.objects.create(
+        name="Batman",
+        slug="batman-dc",
+        sort_name="Batman",
+        year_began=2024,
+        volume=1,
+        publisher=dc_comics,
+        series_type=single_issue_type,
+        status=Series.Status.ONGOING,
+        created_by=user,
+        edited_by=user,
+    )
+    Series.objects.create(
+        name="Spider-Man",
+        slug="spider-man-marvel",
+        sort_name="Spider-Man",
+        year_began=2024,
+        volume=1,
+        publisher=marvel,
+        series_type=single_issue_type,
+        status=Series.Status.ONGOING,
+        created_by=user,
+        edited_by=user,
+    )
+
+    client, _ = auto_login_user()
+
+    # Filter by publisher name
+    resp = client.get("/series/?publisher_name=Marvel")
+    assert resp.status_code == HTML_OK_CODE
+    assert len(resp.context["series_list"]) == 1
+    assert resp.context["series_list"][0].publisher == marvel
+
+
+def test_series_filter_by_year_range(auto_login_user, create_user, dc_comics, single_issue_type):
+    """Test filtering by year began range."""
+    user = create_user()
+
+    Series.objects.create(
+        name="Golden Age Series",
+        slug="golden-age",
+        sort_name="Golden Age Series",
+        year_began=1945,
+        volume=1,
+        publisher=dc_comics,
+        series_type=single_issue_type,
+        status=Series.Status.ONGOING,
+        created_by=user,
+        edited_by=user,
+    )
+    Series.objects.create(
+        name="Silver Age Series",
+        slug="silver-age",
+        sort_name="Silver Age Series",
+        year_began=1965,
+        volume=1,
+        publisher=dc_comics,
+        series_type=single_issue_type,
+        status=Series.Status.ONGOING,
+        created_by=user,
+        edited_by=user,
+    )
+    Series.objects.create(
+        name="Modern Series",
+        slug="modern",
+        sort_name="Modern Series",
+        year_began=2020,
+        volume=1,
+        publisher=dc_comics,
+        series_type=single_issue_type,
+        status=Series.Status.ONGOING,
+        created_by=user,
+        edited_by=user,
+    )
+
+    client, _ = auto_login_user()
+
+    # Filter by year range (1960-2000)
+    resp = client.get("/series/?year_began_gte=1960&year_began_lte=2000")
+    assert resp.status_code == HTML_OK_CODE
+    assert len(resp.context["series_list"]) == 1
+    assert resp.context["series_list"][0].year_began == 1965
+
+
+def test_series_filter_by_status(auto_login_user, create_user, dc_comics, single_issue_type):
+    """Test filtering by series status."""
+    user = create_user()
+
+    Series.objects.create(
+        name="Ongoing Series",
+        slug="ongoing-series",
+        sort_name="Ongoing Series",
+        year_began=2024,
+        volume=1,
+        publisher=dc_comics,
+        series_type=single_issue_type,
+        status=Series.Status.ONGOING,
+        created_by=user,
+        edited_by=user,
+    )
+    Series.objects.create(
+        name="Cancelled Series",
+        slug="cancelled-series",
+        sort_name="Cancelled Series",
+        year_began=2024,
+        volume=1,
+        year_end=2024,
+        publisher=dc_comics,
+        series_type=single_issue_type,
+        status=Series.Status.CANCELLED,
+        created_by=user,
+        edited_by=user,
+    )
+
+    client, _ = auto_login_user()
+
+    # Filter by ongoing status
+    resp = client.get(f"/series/?status={Series.Status.ONGOING}")
+    assert resp.status_code == HTML_OK_CODE
+    assert len(resp.context["series_list"]) == 1
+    assert resp.context["series_list"][0].status == Series.Status.ONGOING
+
+
+def test_series_filter_by_volume(auto_login_user, create_user, dc_comics, single_issue_type):
+    """Test filtering by volume number."""
+    user = create_user()
+
+    Series.objects.create(
+        name="Batman",
+        slug="batman-v1",
+        sort_name="Batman",
+        volume=1,
+        year_began=1940,
+        publisher=dc_comics,
+        series_type=single_issue_type,
+        status=Series.Status.ONGOING,
+        created_by=user,
+        edited_by=user,
+    )
+    Series.objects.create(
+        name="Batman",
+        slug="batman-v2",
+        sort_name="Batman",
+        volume=2,
+        year_began=2011,
+        publisher=dc_comics,
+        series_type=single_issue_type,
+        status=Series.Status.ONGOING,
+        created_by=user,
+        edited_by=user,
+    )
+
+    client, _ = auto_login_user()
+
+    # Filter by volume 2
+    resp = client.get("/series/?volume=2")
+    assert resp.status_code == HTML_OK_CODE
+    assert len(resp.context["series_list"]) == 1
+    assert resp.context["series_list"][0].volume == 2
+
+
+def test_series_filter_combined(auto_login_user, create_user, dc_comics):
+    """Test combining multiple filters."""
+    user = create_user()
+    ongoing_type = SeriesType.objects.create(name="Ongoing Series")
+
+    Series.objects.create(
+        name="Batman",
+        slug="batman-2020",
+        sort_name="Batman",
+        year_began=2020,
+        volume=1,
+        publisher=dc_comics,
+        series_type=ongoing_type,
+        status=Series.Status.ONGOING,
+        created_by=user,
+        edited_by=user,
+    )
+    Series.objects.create(
+        name="Superman",
+        slug="superman-2020",
+        sort_name="Superman",
+        year_began=2020,
+        volume=1,
+        publisher=dc_comics,
+        series_type=ongoing_type,
+        status=Series.Status.CANCELLED,
+        created_by=user,
+        edited_by=user,
+    )
+
+    client, _ = auto_login_user()
+
+    # Combine publisher, year, and status filters
+    resp = client.get(
+        f"/series/?publisher_name=DC&year_began_gte=2020&status={Series.Status.ONGOING}"
+    )
+    assert resp.status_code == HTML_OK_CODE
+    assert len(resp.context["series_list"]) == 1
+    assert resp.context["series_list"][0].name == "Batman"
+
+
+def test_series_list_context_data(auto_login_user):
+    """Test that series list provides correct context data for filters."""
+    client, _ = auto_login_user()
+
+    # Create a series type
+    SeriesType.objects.create(name="Test Type")
+
+    resp = client.get("/series/")
+    assert resp.status_code == HTML_OK_CODE
+
+    # Check context has filter data
+    assert "series_types" in resp.context
+    assert "status_choices" in resp.context
+    assert "has_active_filters" in resp.context
+
+    # Check has_active_filters is False when no filters
+    assert resp.context["has_active_filters"] is False
+
+
+def test_series_list_has_active_filters_indicator(auto_login_user):
+    """Test that has_active_filters is True when filters are applied."""
+    client, _ = auto_login_user()
+
+    resp = client.get("/series/?q=batman")
+    assert resp.status_code == HTML_OK_CODE
+    assert resp.context["has_active_filters"] is True
+
+    # Check that 'page' parameter doesn't count as active filter
+    resp = client.get("/series/?page=1")
+    assert resp.status_code == HTML_OK_CODE
+    assert resp.context["has_active_filters"] is False
+
+
+def test_series_filter_by_imprint(auto_login_user, create_user, dc_comics, single_issue_type):
+    """Test filtering by imprint name."""
+    user = create_user()
+    from comicsdb.models import Imprint  # noqa: PLC0415
+
+    vertigo = Imprint.objects.create(
+        name="Vertigo", slug="vertigo", founded=1993, publisher=dc_comics
+    )
+
+    Series.objects.create(
+        name="Sandman",
+        slug="sandman",
+        sort_name="Sandman",
+        year_began=1989,
+        volume=1,
+        publisher=dc_comics,
+        imprint=vertigo,
+        series_type=single_issue_type,
+        status=Series.Status.ONGOING,
+        created_by=user,
+        edited_by=user,
+    )
+    Series.objects.create(
+        name="Batman",
+        slug="batman",
+        sort_name="Batman",
+        year_began=2024,
+        volume=1,
+        publisher=dc_comics,
+        series_type=single_issue_type,
+        status=Series.Status.ONGOING,
+        created_by=user,
+        edited_by=user,
+    )
+
+    client, _ = auto_login_user()
+
+    # Filter by imprint name
+    resp = client.get("/series/?imprint_name=Vertigo")
+    assert resp.status_code == HTML_OK_CODE
+    assert len(resp.context["series_list"]) == 1
+    assert resp.context["series_list"][0].imprint == vertigo
