@@ -17,51 +17,56 @@
             {% endif %}
         </h1>
     </header>
+    <section class="section">
+        <div class="container">{% include "comicsdb/partials/issue_filter.html" %}</div>
+    </section>
     {% if issue_list %}
-        <section>
-            <div class="columns">
-                {# Main Column #}
-                <div class="column">
-                    {# Navigation Bar #}
-                    <nav class="level" aria-label="Weekly releases navigation">
-                        <div class="level-left">
+        <section class="section pt-0">
+            <div class="container">
+                {# Navigation Bar #}
+                <nav class="level" aria-label="Weekly releases navigation">
+                    <div class="level-left">
+                        <div class="level-item">
+                            <p class="subtitle is-5">
+                                {% if page_obj.paginator %}
+                                    <strong>{{ page_obj.paginator.count }}</strong> Issue{{ page_obj.paginator.count|pluralize }}
+                                {% else %}
+                                    <strong>{{ issue_list.count }}</strong> Issue{{ issue_list.count|pluralize }}
+                                {% endif %}
+                            </p>
+                        </div>
+                    </div>
+                    {% if user.is_authenticated %}
+                        <div class="level-right">
                             <div class="level-item">
-                                <p class="subtitle is-5">
-                                    {% if page_obj.paginator %}
-                                        <strong>{{ page_obj.paginator.count }}</strong> Issue{{ page_obj.paginator.count|pluralize }}
-                                    {% else %}
-                                        <strong>{{ issue_list.count }}</strong> Issue{{ issue_list.count|pluralize }}
-                                    {% endif %}
-                                </p>
+                                <a class="button is-rounded is-primary"
+                                   href="{% url 'issue:create' %}"
+                                   title="Add a new issue"
+                                   aria-label="Add a new issue">
+                                    <span class="icon is-small" aria-hidden="true">
+                                        <i class="fas fa-plus"></i>
+                                    </span>
+                                    <span>New</span>
+                                </a>
                             </div>
                         </div>
-                        {% if user.is_authenticated %}
-                            <div class="level-right">
-                                <div class="level-item">
-                                    <a class="button is-rounded is-primary"
-                                       href="{% url 'issue:create' %}"
-                                       title="Add a new issue"
-                                       aria-label="Add a new issue">
-                                        <span class="icon is-small" aria-hidden="true">
-                                            <i class="fas fa-plus"></i>
-                                        </span>
-                                        <span>New</span>
-                                    </a>
-                                </div>
-                            </div>
-                        {% endif %}
-                    </nav>
-                    {# Issue Cards #}
-                    {% include "comicsdb/partials/issue_card_grid.html" with items=issue_list %}
-                </div>
-                {# Search Sidebar #}
-                <div class="column is-one-fifth">{% include "comicsdb/issue_search_box.html" with objects=series_type %}</div>
+                    {% endif %}
+                </nav>
+                {# Issue Cards #}
+                {% include "comicsdb/partials/issue_card_grid.html" with items=issue_list %}
             </div>
         </section>
     {% else %}
-        <section class="hero">
-            <div class="hero-body">
-                <div class="container has-text-centered">
+        <section class="section pt-0">
+            <div class="container has-text-centered">
+                {% if has_active_filters %}
+                    <p class="title is-4">No results found</p>
+                    <p class="subtitle">Try adjusting your search filters</p>
+                    <a href="{{ request.path }}" class="button is-light is-medium">
+                        <span class="icon"><i class="fas fa-times"></i></span>
+                        <span>Clear All Filters</span>
+                    </a>
+                {% else %}
                     <div class="content">
                         <span class="icon is-large has-text-grey-light" aria-hidden="true">
                             <i class="fas fa-calendar-times fa-3x"></i>
@@ -86,7 +91,7 @@
                             </a>
                         {% endif %}
                     </div>
-                </div>
+                {% endif %}
             </div>
         </section>
     {% endif %}
