@@ -7,6 +7,7 @@ from django.urls import reverse, reverse_lazy
 from django.views import View
 from django.views.generic import CreateView, DeleteView, DetailView, FormView, ListView, UpdateView
 
+from comicsdb.filters.reading_list import ReadingListViewFilter
 from comicsdb.models.issue import Issue
 from comicsdb.views.mixins import LazyLoadMixin, SearchMixin
 from reading_lists.forms import (
@@ -73,7 +74,17 @@ class ReadingListListView(ListView):
             # Show only public lists
             queryset = queryset.filter(is_private=False)
 
-        return queryset.order_by("name", "attribution_source", "user")
+        # Apply filters
+        filtered = ReadingListViewFilter(self.request.GET, queryset=queryset)
+        return filtered.qs.order_by("name", "attribution_source", "user")
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        # Add filter options for the template
+        context["attribution_sources"] = ReadingList.AttributionSource.choices
+        # Check if any filters are active (excluding page parameter)
+        context["has_active_filters"] = any(key != "page" for key in self.request.GET)
+        return context
 
 
 class SearchReadingListListView(SearchMixin, ReadingListListView):
@@ -82,6 +93,38 @@ class SearchReadingListListView(SearchMixin, ReadingListListView):
     def get_search_fields(self):
         """Search across name, username, and attribution source display text."""
         return ["name__icontains", "user__username__icontains", "attribution_source__icontains"]
+
+    def get_queryset(self):
+        """Get queryset without applying the filter (SearchMixin handles search)."""
+        queryset = ReadingList.objects.select_related("user").annotate(issue_count=Count("issues"))
+
+        if self.request.user.is_authenticated:
+            # If admin or reading list editor, show public lists + user's own lists + Metron's lists
+            is_editor = self.request.user.groups.filter(name="reading list editor").exists()
+            if self.request.user.is_staff or is_editor:
+                try:
+                    metron_user = CustomUser.objects.get(username="Metron")
+                    queryset = queryset.filter(
+                        Q(is_private=False) | Q(user=self.request.user) | Q(user=metron_user)
+                    ).distinct()
+                except CustomUser.DoesNotExist:
+                    queryset = queryset.filter(
+                        Q(is_private=False) | Q(user=self.request.user)
+                    ).distinct()
+            else:
+                # Show public lists + user's own lists (including private)
+                queryset = queryset.filter(
+                    Q(is_private=False) | Q(user=self.request.user)
+                ).distinct()
+        else:
+            # Show only public lists
+            queryset = queryset.filter(is_private=False)
+
+        # Apply SearchMixin search logic (not the filter)
+        if query := self.request.GET.get("q"):
+            queryset = self.get_search_queryset(queryset, query)
+
+        return queryset.order_by("name", "attribution_source", "user")
 
 
 class UserReadingListListView(LoginRequiredMixin, ListView):

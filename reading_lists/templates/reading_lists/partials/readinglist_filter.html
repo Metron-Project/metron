@@ -1,0 +1,186 @@
+<div class="box mb-5" id="filter-panel">
+    <form method="get" accept-charset="utf-8">
+        <div class="is-flex is-justify-content-space-between is-align-items-center mb-4">
+            <h2 class="title is-5 mb-0">
+                <span class="icon-text">
+                    <span class="icon has-text-link">
+                        <i class="fas fa-search"></i>
+                    </span>
+                    <span>Search Reading Lists</span>
+                </span>
+            </h2>
+            {% if has_active_filters %}
+                <span class="tag is-warning">
+                    <span class="icon">
+                        <i class="fas fa-filter"></i>
+                    </span>
+                    <span>Filters Active</span>
+                </span>
+            {% endif %}
+        </div>
+        {# Quick Search Field #}
+        <div class="field">
+            <label class="label" for="q">Quick Search</label>
+            <div class="control has-icons-left">
+                <input class="input"
+                       type="text"
+                       id="q"
+                       name="q"
+                       value="{{ request.GET.q }}"
+                       placeholder="Search by list name..."
+                       aria-label="Quick search">
+                <span class="icon is-small is-left">
+                    <i class="fas fa-search"></i>
+                </span>
+            </div>
+            <p class="help">Search by reading list name</p>
+        </div>
+        {# Collapsible Advanced Filters #}
+        <details {% if has_active_filters %}open{% endif %}>
+            <summary class="has-text-weight-semibold is-clickable mt-4 mb-3">
+                <span class="icon-text">
+                    <span class="icon">
+                        <i class="fas fa-sliders-h"></i>
+                    </span>
+                    <span>Advanced Filters</span>
+                </span>
+            </summary>
+            <div class="columns is-multiline">
+                {# List Name Filter #}
+                <div class="column is-half">
+                    <div class="field">
+                        <label class="label" for="name">List Name</label>
+                        <div class="control has-icons-left">
+                            <input class="input"
+                                   type="text"
+                                   id="name"
+                                   name="name"
+                                   value="{{ request.GET.name }}"
+                                   placeholder="e.g., Marvel Reading Order"
+                                   aria-label="Filter by list name">
+                            <span class="icon is-small is-left">
+                                <i class="fas fa-list"></i>
+                            </span>
+                        </div>
+                    </div>
+                </div>
+                {# Creator/Username Filter #}
+                <div class="column is-half">
+                    <div class="field">
+                        <label class="label" for="username">Creator</label>
+                        <div class="control has-icons-left">
+                            <input class="input"
+                                   type="text"
+                                   id="username"
+                                   name="username"
+                                   value="{{ request.GET.username }}"
+                                   placeholder="e.g., Metron"
+                                   aria-label="Filter by creator username">
+                            <span class="icon is-small is-left">
+                                <i class="fas fa-user"></i>
+                            </span>
+                        </div>
+                    </div>
+                </div>
+                {# Attribution Source Filter #}
+                <div class="column is-half">
+                    <div class="field">
+                        <label class="label" for="attribution_source">Attribution Source</label>
+                        <div class="control has-icons-left">
+                            <div class="select is-fullwidth">
+                                <select id="attribution_source"
+                                        name="attribution_source"
+                                        aria-label="Filter by attribution source">
+                                    <option value="">All Sources</option>
+                                    {% for value, label in attribution_sources %}
+                                        <option value="{{ value }}"
+                                                {% if request.GET.attribution_source == value %}selected{% endif %}>
+                                            {{ label }}
+                                        </option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                            <span class="icon is-small is-left">
+                                <i class="fas fa-link"></i>
+                            </span>
+                        </div>
+                    </div>
+                </div>
+                {# Privacy Filter - Only show if user is authenticated #}
+                {% if user.is_authenticated %}
+                    <div class="column is-half">
+                        <div class="field">
+                            <label class="label" for="is_private">Privacy</label>
+                            <div class="control has-icons-left">
+                                <div class="select is-fullwidth">
+                                    <select id="is_private" name="is_private" aria-label="Filter by privacy">
+                                        <option value="">All Lists</option>
+                                        <option value="false"
+                                                {% if request.GET.is_private == "false" %}selected{% endif %}>
+                                            Public
+                                        </option>
+                                        <option value="true"
+                                                {% if request.GET.is_private == "true" %}selected{% endif %}>
+                                            Private
+                                        </option>
+                                    </select>
+                                </div>
+                                <span class="icon is-small is-left">
+                                    <i class="fas fa-lock"></i>
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+                {% endif %}
+            </div>
+        </details>
+        {# Action Buttons #}
+        <div class="field is-grouped is-flex-direction-column-mobile mt-4">
+            <div class="control">
+                <button class="button is-link" type="submit">
+                    <span class="icon">
+                        <i class="fas fa-search"></i>
+                    </span>
+                    <span>Apply Filters</span>
+                </button>
+            </div>
+            <div class="control">
+                <a class="button is-light"
+                   href="{% url 'reading-list:list' %}"
+                   title="Clear all filters">
+                    <span class="icon">
+                        <i class="fas fa-times"></i>
+                    </span>
+                    <span>Clear Filters</span>
+                </a>
+            </div>
+        </div>
+    </form>
+</div>
+<style>
+/* Enhance details/summary styling */
+details > summary {
+    list-style: none;
+    cursor: pointer;
+    user-select: none;
+}
+
+details > summary::-webkit-details-marker {
+    display: none;
+}
+
+details > summary::before {
+    content: '▶';
+    display: inline-block;
+    margin-right: 0.5rem;
+    transition: transform 0.2s;
+}
+
+details[open] > summary::before {
+    transform: rotate(90deg);
+}
+
+details > summary:hover {
+    color: hsl(217, 71%, 53%);
+}
+</style>
