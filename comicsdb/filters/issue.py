@@ -84,6 +84,11 @@ class IssueFilter(df.rest_framework.FilterSet):
 
 
 class IssueViewFilter(df.FilterSet):
+    """Filter for issue list views with search capabilities."""
+
+    # Quick search for series names
+    q = IssueSeriesName(label="Quick Search")
+
     cover_year = df.NumberFilter(label="Cover Year", field_name="cover_date", lookup_expr="year")
     cover_month = df.NumberFilter(label="Cover Month", field_name="cover_date", lookup_expr="month")
     number = df.rest_framework.CharFilter(
@@ -98,9 +103,7 @@ class IssueViewFilter(df.FilterSet):
     publisher_id = df.NumberFilter(
         label="Publisher Metron ID", field_name="series__publisher__id", lookup_expr="exact"
     )
-    series_name = IssueSeriesName(
-        label="Series Name", field_name="series__name", lookup_expr="icontains"
-    )
+    series_name = IssueSeriesName(label="Series Name")
     series_id = df.NumberFilter(
         label="Series Metron ID", field_name="series__id", lookup_expr="exact"
     )
@@ -126,4 +129,4 @@ class IssueViewFilter(df.FilterSet):
 
     class Meta:
         model = Issue
-        fields = ["store_date", "foc_date"]
+        fields = ["q", "store_date", "foc_date"]

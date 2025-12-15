@@ -8,14 +8,14 @@ from django.urls import reverse_lazy
 from django.views.generic import DetailView, ListView
 from django.views.generic.edit import CreateView, DeleteView, UpdateView
 
+from comicsdb.filters.series import SeriesViewFilter
 from comicsdb.forms.series import SeriesForm
-from comicsdb.models import Series
+from comicsdb.models import Series, SeriesType
 from comicsdb.views.constants import PAGINATE_BY
 from comicsdb.views.history import HistoryListView
 from comicsdb.views.mixins import (
     AttributionCreateMixin,
     AttributionUpdateMixin,
-    SearchMixin,
     SlugRedirectView,
 )
 
@@ -25,7 +25,23 @@ LOGGER = logging.getLogger(__name__)
 class SeriesList(LoginRequiredMixin, ListView):
     model = Series
     paginate_by = PAGINATE_BY
-    queryset = Series.objects.select_related("series_type").prefetch_related("issues")
+
+    def get_queryset(self):
+        queryset = Series.objects.select_related(
+            "series_type", "publisher", "imprint"
+        ).prefetch_related("issues")
+        # Apply filters
+        filtered = SeriesViewFilter(self.request.GET, queryset=queryset)
+        return filtered.qs
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        # Add filter options for the template
+        context["series_types"] = SeriesType.objects.values("id", "name").order_by("name")
+        context["status_choices"] = Series.Status.choices
+        # Check if any filters are active (excluding page parameter)
+        context["has_active_filters"] = any(key != "page" for key in self.request.GET)
+        return context
 
 
 class SeriesIssueList(LoginRequiredMixin, ListView):
@@ -123,9 +139,12 @@ class SeriesDetailRedirect(SlugRedirectView):
     url_name = "series:detail"
 
 
-class SearchSeriesList(SearchMixin, SeriesList):
-    def get_search_fields(self):
-        return ["name__unaccent__icontains"]
+class SearchSeriesList(SeriesList):
+    """
+    Legacy search view that redirects to the main list view.
+    Kept for backward compatibility with existing bookmarks/links.
+    The main SeriesList view now handles all filtering.
+    """
 
 
 class SeriesCreate(AttributionCreateMixin, LoginRequiredMixin, CreateView):

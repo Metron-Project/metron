@@ -1,0 +1,433 @@
+{% load range_tags %}
+<div class="box mb-5" id="filter-panel">
+    <form method="get" accept-charset="utf-8">
+        <div class="is-flex is-justify-content-space-between is-align-items-center mb-4">
+            <h2 class="title is-5 mb-0">
+                <span class="icon-text">
+                    <span class="icon has-text-link">
+                        <i class="fas fa-search"></i>
+                    </span>
+                    <span>Search Issues</span>
+                </span>
+            </h2>
+            {% if has_active_filters %}
+                <span class="tag is-warning">
+                    <span class="icon">
+                        <i class="fas fa-filter"></i>
+                    </span>
+                    <span>Filters Active</span>
+                </span>
+            {% endif %}
+        </div>
+        {# Quick Search Field #}
+        <div class="field">
+            <label class="label" for="q">Quick Search</label>
+            <div class="control has-icons-left">
+                <input class="input"
+                       type="text"
+                       id="q"
+                       name="q"
+                       value="{{ request.GET.q }}"
+                       placeholder="Search by series name..."
+                       aria-label="Quick search">
+                <span class="icon is-small is-left">
+                    <i class="fas fa-search"></i>
+                </span>
+            </div>
+            <p class="help">Search series names (supports multi-word search)</p>
+        </div>
+        {# Collapsible Advanced Filters #}
+        <details {% if has_active_filters %}open{% endif %}>
+            <summary class="has-text-weight-semibold is-clickable mt-4 mb-3">
+                <span class="icon-text">
+                    <span class="icon">
+                        <i class="fas fa-sliders-h"></i>
+                    </span>
+                    <span>Advanced Filters</span>
+                </span>
+            </summary>
+            <div class="columns is-multiline">
+                {# Series Name Filter #}
+                <div class="column is-half">
+                    <div class="field">
+                        <label class="label" for="series_name">Series Name</label>
+                        <div class="control has-icons-left">
+                            <input class="input"
+                                   type="text"
+                                   id="series_name"
+                                   name="series_name"
+                                   value="{{ request.GET.series_name }}"
+                                   placeholder="e.g., Amazing Spider-Man"
+                                   aria-label="Filter by series name">
+                            <span class="icon is-small is-left">
+                                <i class="fas fa-archive"></i>
+                            </span>
+                        </div>
+                    </div>
+                </div>
+                {# Series Type Filter #}
+                <div class="column is-half">
+                    <div class="field">
+                        <label class="label" for="series_type">Series Type</label>
+                        <div class="control has-icons-left">
+                            <div class="select is-fullwidth">
+                                <select id="series_type"
+                                        name="series_type"
+                                        aria-label="Filter by series type">
+                                    <option value="">All Types</option>
+                                    {% for type in series_type %}
+                                        <option value="{{ type.id }}"
+                                                {% if request.GET.series_type == type.id|stringformat:"s" %}selected{% endif %}>
+                                            {{ type.name }}
+                                        </option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                            <span class="icon is-small is-left">
+                                <i class="fas fa-book"></i>
+                            </span>
+                        </div>
+                    </div>
+                </div>
+                {# Series Volume Filter #}
+                <div class="column is-half">
+                    <div class="field">
+                        <label class="label" for="series_volume">Series Volume</label>
+                        <div class="control has-icons-left">
+                            <input class="input"
+                                   type="number"
+                                   id="series_volume"
+                                   name="series_volume"
+                                   value="{{ request.GET.series_volume }}"
+                                   placeholder="e.g., 1"
+                                   aria-label="Filter by series volume">
+                            <span class="icon is-small is-left">
+                                <i class="fas fa-layer-group"></i>
+                            </span>
+                        </div>
+                    </div>
+                </div>
+                {# Publisher Filter #}
+                <div class="column is-half">
+                    <div class="field">
+                        <label class="label" for="publisher_name">Publisher</label>
+                        <div class="control has-icons-left">
+                            <input class="input"
+                                   type="text"
+                                   id="publisher_name"
+                                   name="publisher_name"
+                                   value="{{ request.GET.publisher_name }}"
+                                   placeholder="e.g., Marvel"
+                                   aria-label="Filter by publisher">
+                            <span class="icon is-small is-left">
+                                <i class="fas fa-building"></i>
+                            </span>
+                        </div>
+                    </div>
+                </div>
+                <hr class="my-4 column is-full">
+                {# Issue Number Filter #}
+                <div class="column is-half">
+                    <div class="field">
+                        <label class="label" for="number">Issue Number</label>
+                        <div class="control has-icons-left">
+                            <input class="input"
+                                   type="text"
+                                   id="number"
+                                   name="number"
+                                   value="{{ request.GET.number }}"
+                                   placeholder="e.g., 1"
+                                   aria-label="Filter by issue number">
+                            <span class="icon is-small is-left">
+                                <i class="fas fa-hashtag"></i>
+                            </span>
+                        </div>
+                    </div>
+                </div>
+                {# Alternative Number Filter #}
+                <div class="column is-half">
+                    <div class="field">
+                        <label class="label" for="alt_number">Alternative Number</label>
+                        <div class="control has-icons-left">
+                            <input class="input"
+                                   type="text"
+                                   id="alt_number"
+                                   name="alt_number"
+                                   value="{{ request.GET.alt_number }}"
+                                   placeholder="e.g., 616"
+                                   aria-label="Filter by alternative number">
+                            <span class="icon is-small is-left">
+                                <i class="fas fa-sort-numeric-down"></i>
+                            </span>
+                        </div>
+                    </div>
+                </div>
+                <hr class="my-4 column is-full">
+                {# Cover Year Filter #}
+                <div class="column is-half">
+                    <div class="field">
+                        <label class="label" for="cover_year">Cover Year</label>
+                        <div class="control has-icons-left">
+                            <div class="select is-fullwidth">
+                                <select id="cover_year" name="cover_year" aria-label="Filter by cover year">
+                                    <option value="">All Years</option>
+                                    {% now "m" as current_month %}
+                                    {% now "Y" as current_year %}
+                                    {% if current_month >= '10' %}
+                                        {% with next_year=current_year|add:"1" %}
+                                            <option value="{{ next_year }}"
+                                                    {% if request.GET.cover_year == next_year|stringformat:"s" %}selected{% endif %}>
+                                                {{ next_year }}
+                                            </option>
+                                        {% endwith %}
+                                    {% endif %}
+                                    {% for year in 1939|cover_year_range:current_year %}
+                                        <option value="{{ year }}"
+                                                {% if request.GET.cover_year == year|stringformat:"s" %}selected{% endif %}>
+                                            {{ year }}
+                                        </option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                            <span class="icon is-small is-left">
+                                <i class="fas fa-calendar-alt"></i>
+                            </span>
+                        </div>
+                    </div>
+                </div>
+                {# Cover Month Filter #}
+                <div class="column is-half">
+                    <div class="field">
+                        <label class="label" for="cover_month">Cover Month</label>
+                        <div class="control has-icons-left">
+                            <div class="select is-fullwidth">
+                                <select id="cover_month"
+                                        name="cover_month"
+                                        aria-label="Filter by cover month">
+                                    <option value="">All Months</option>
+                                    <option value="1" {% if request.GET.cover_month == "1" %}selected{% endif %}>January</option>
+                                    <option value="2" {% if request.GET.cover_month == "2" %}selected{% endif %}>February</option>
+                                    <option value="3" {% if request.GET.cover_month == "3" %}selected{% endif %}>March</option>
+                                    <option value="4" {% if request.GET.cover_month == "4" %}selected{% endif %}>April</option>
+                                    <option value="5" {% if request.GET.cover_month == "5" %}selected{% endif %}>May</option>
+                                    <option value="6" {% if request.GET.cover_month == "6" %}selected{% endif %}>June</option>
+                                    <option value="7" {% if request.GET.cover_month == "7" %}selected{% endif %}>July</option>
+                                    <option value="8" {% if request.GET.cover_month == "8" %}selected{% endif %}>August</option>
+                                    <option value="9" {% if request.GET.cover_month == "9" %}selected{% endif %}>September</option>
+                                    <option value="10"
+                                            {% if request.GET.cover_month == "10" %}selected{% endif %}>
+                                        October
+                                    </option>
+                                    <option value="11"
+                                            {% if request.GET.cover_month == "11" %}selected{% endif %}>
+                                        November
+                                    </option>
+                                    <option value="12"
+                                            {% if request.GET.cover_month == "12" %}selected{% endif %}>
+                                        December
+                                    </option>
+                                </select>
+                            </div>
+                            <span class="icon is-small is-left">
+                                <i class="fas fa-calendar-day"></i>
+                            </span>
+                        </div>
+                    </div>
+                </div>
+                <hr class="my-4 column is-full">
+                {# Store Date From Filter #}
+                <div class="column is-half">
+                    <div class="field">
+                        <label class="label" for="store_date_after">Store Date From</label>
+                        <div class="control has-icons-left">
+                            <input class="input"
+                                   type="date"
+                                   id="store_date_after"
+                                   name="store_date_after"
+                                   value="{{ request.GET.store_date_after }}"
+                                   aria-label="Filter by store date from">
+                            <span class="icon is-small is-left">
+                                <i class="fas fa-calendar"></i>
+                            </span>
+                        </div>
+                    </div>
+                </div>
+                {# Store Date To Filter #}
+                <div class="column is-half">
+                    <div class="field">
+                        <label class="label" for="store_date_before">Store Date To</label>
+                        <div class="control has-icons-left">
+                            <input class="input"
+                                   type="date"
+                                   id="store_date_before"
+                                   name="store_date_before"
+                                   value="{{ request.GET.store_date_before }}"
+                                   aria-label="Filter by store date to">
+                            <span class="icon is-small is-left">
+                                <i class="fas fa-calendar"></i>
+                            </span>
+                        </div>
+                    </div>
+                </div>
+                {# FOC Date From Filter #}
+                <div class="column is-half">
+                    <div class="field">
+                        <label class="label" for="foc_date_after">FOC Date From</label>
+                        <div class="control has-icons-left">
+                            <input class="input"
+                                   type="date"
+                                   id="foc_date_after"
+                                   name="foc_date_after"
+                                   value="{{ request.GET.foc_date_after }}"
+                                   aria-label="Filter by FOC date from">
+                            <span class="icon is-small is-left">
+                                <i class="fas fa-calendar"></i>
+                            </span>
+                        </div>
+                    </div>
+                </div>
+                {# FOC Date To Filter #}
+                <div class="column is-half">
+                    <div class="field">
+                        <label class="label" for="foc_date_before">FOC Date To</label>
+                        <div class="control has-icons-left">
+                            <input class="input"
+                                   type="date"
+                                   id="foc_date_before"
+                                   name="foc_date_before"
+                                   value="{{ request.GET.foc_date_before }}"
+                                   aria-label="Filter by FOC date to">
+                            <span class="icon is-small is-left">
+                                <i class="fas fa-calendar"></i>
+                            </span>
+                        </div>
+                    </div>
+                </div>
+                <hr class="my-4 column is-full">
+                {# UPC Code Filter #}
+                <div class="column is-half">
+                    <div class="field">
+                        <label class="label" for="upc">UPC Code</label>
+                        <div class="control has-icons-left">
+                            <input class="input"
+                                   type="text"
+                                   id="upc"
+                                   name="upc"
+                                   value="{{ request.GET.upc }}"
+                                   placeholder="e.g., 76194134186700111"
+                                   aria-label="Filter by UPC code">
+                            <span class="icon is-small is-left">
+                                <i class="fas fa-barcode"></i>
+                            </span>
+                        </div>
+                    </div>
+                </div>
+                {# SKU Filter #}
+                <div class="column is-half">
+                    <div class="field">
+                        <label class="label" for="sku">Distributor SKU</label>
+                        <div class="control has-icons-left">
+                            <input class="input"
+                                   type="text"
+                                   id="sku"
+                                   name="sku"
+                                   value="{{ request.GET.sku }}"
+                                   placeholder="e.g., JUN240001"
+                                   aria-label="Filter by distributor SKU">
+                            <span class="icon is-small is-left">
+                                <i class="fas fa-tag"></i>
+                            </span>
+                        </div>
+                    </div>
+                </div>
+                <hr class="my-4 column is-full">
+                {# Comic Vine ID Filter #}
+                <div class="column is-half">
+                    <div class="field">
+                        <label class="label" for="cv_id">Comic Vine ID</label>
+                        <div class="control has-icons-left">
+                            <input class="input"
+                                   type="number"
+                                   id="cv_id"
+                                   name="cv_id"
+                                   value="{{ request.GET.cv_id }}"
+                                   placeholder="e.g., 12345"
+                                   aria-label="Filter by Comic Vine ID">
+                            <span class="icon is-small is-left">
+                                <i class="fas fa-fingerprint"></i>
+                            </span>
+                        </div>
+                    </div>
+                </div>
+                {# GCD ID Filter #}
+                <div class="column is-half">
+                    <div class="field">
+                        <label class="label" for="gcd_id">
+                            <abbr title="Grand Comics Database">GCD</abbr> ID
+                        </label>
+                        <div class="control has-icons-left">
+                            <input class="input"
+                                   type="number"
+                                   id="gcd_id"
+                                   name="gcd_id"
+                                   value="{{ request.GET.gcd_id }}"
+                                   placeholder="e.g., 67890"
+                                   aria-label="Filter by GCD ID">
+                            <span class="icon is-small is-left">
+                                <i class="fas fa-fingerprint"></i>
+                            </span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </details>
+        {# Action Buttons #}
+        <div class="field is-grouped is-flex-direction-column-mobile mt-4">
+            <div class="control">
+                <button class="button is-link" type="submit">
+                    <span class="icon">
+                        <i class="fas fa-search"></i>
+                    </span>
+                    <span>Apply Filters</span>
+                </button>
+            </div>
+            <div class="control">
+                <a class="button is-light"
+                   href="{% url 'issue:list' %}"
+                   title="Clear all filters">
+                    <span class="icon">
+                        <i class="fas fa-times"></i>
+                    </span>
+                    <span>Clear Filters</span>
+                </a>
+            </div>
+        </div>
+    </form>
+</div>
+<style>
+/* Enhance details/summary styling */
+details > summary {
+    list-style: none;
+    cursor: pointer;
+    user-select: none;
+}
+
+details > summary::-webkit-details-marker {
+    display: none;
+}
+
+details > summary::before {
+    content: '▶';
+    display: inline-block;
+    margin-right: 0.5rem;
+    transition: transform 0.2s;
+}
+
+details[open] > summary::before {
+    transform: rotate(90deg);
+}
+
+details > summary:hover {
+    color: hsl(217, 71%, 53%);
+}
+</style>

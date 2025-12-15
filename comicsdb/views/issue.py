@@ -36,11 +36,18 @@ LOGGER = logging.getLogger(__name__)
 class IssueList(LoginRequiredMixin, ListView):
     model = Issue
     paginate_by = PAGINATE_BY
-    queryset = Issue.objects.select_related("series", "series__series_type")
+
+    def get_queryset(self):
+        queryset = Issue.objects.select_related("series", "series__series_type")
+        # Apply filters
+        filtered = IssueViewFilter(self.request.GET, queryset=queryset)
+        return filtered.qs
 
     def get_context_data(self, **kwargs: Any) -> dict[str, Any]:
         context = super().get_context_data(**kwargs)
-        context["series_type"] = SeriesType.objects.values("id", "name")
+        context["series_type"] = SeriesType.objects.values("id", "name").order_by("name")
+        # Check if any filters are active (excluding page parameter)
+        context["has_active_filters"] = any(key != "page" for key in self.request.GET)
         return context
 
 
@@ -167,11 +174,10 @@ class IssueDetailRedirect(SlugRedirectView):
 
 
 class SearchIssueList(IssueList):
-    def get_queryset(self):
-        result = super().get_queryset()
-        issue_result = IssueViewFilter(self.request.GET, queryset=result)
-
-        return issue_result.qs
+    """
+    Legacy search view for backward compatibility with existing bookmarks/links.
+    The main IssueList view now handles all filtering.
+    """
 
 
 class IssueCreate(LoginRequiredMixin, CreateView):
@@ -634,11 +640,16 @@ class WeekList(ListView):
     model = Issue
     paginate_by = PAGINATE_BY
     template_name = "comicsdb/week_list.html"
-    queryset = (
-        Issue.objects.filter(store_date__week=week)
-        .filter(store_date__year=year)
-        .select_related("series", "series__series_type")
-    )
+
+    def get_queryset(self):
+        queryset = (
+            Issue.objects.filter(store_date__week=self.week)
+            .filter(store_date__year=self.year)
+            .select_related("series", "series__series_type")
+        )
+        # Apply filters
+        filtered = IssueViewFilter(self.request.GET, queryset=queryset)
+        return filtered.qs
 
     def get_context_data(self, **kwargs):
         # The '1' in the format string gives the date for Monday
@@ -646,7 +657,9 @@ class WeekList(ListView):
         context = super().get_context_data(**kwargs)
         context["release_day"] = release_day
         context["future"] = False
-        context["series_type"] = SeriesType.objects.values("id", "name")
+        context["series_type"] = SeriesType.objects.values("id", "name").order_by("name")
+        # Check if any filters are active (excluding page parameter)
+        context["has_active_filters"] = any(key != "page" for key in self.request.GET)
         return context
 
 
@@ -662,11 +675,16 @@ class NextWeekList(ListView):
     model = Issue
     paginate_by = PAGINATE_BY
     template_name = "comicsdb/week_list.html"
-    queryset = (
-        Issue.objects.filter(store_date__week=week)
-        .filter(store_date__year=year)
-        .select_related("series", "series__series_type")
-    )
+
+    def get_queryset(self):
+        queryset = (
+            Issue.objects.filter(store_date__week=self.week)
+            .filter(store_date__year=self.year)
+            .select_related("series", "series__series_type")
+        )
+        # Apply filters
+        filtered = IssueViewFilter(self.request.GET, queryset=queryset)
+        return filtered.qs
 
     def get_context_data(self, **kwargs):
         # The '1' in the format string gives the date for Monday
@@ -674,7 +692,9 @@ class NextWeekList(ListView):
         context = super().get_context_data(**kwargs)
         context["release_day"] = release_day
         context["future"] = False
-        context["series_type"] = SeriesType.objects.values("id", "name")
+        context["series_type"] = SeriesType.objects.values("id", "name").order_by("name")
+        # Check if any filters are active (excluding page parameter)
+        context["has_active_filters"] = any(key != "page" for key in self.request.GET)
         return context
 
 
@@ -691,11 +711,16 @@ class FutureList(ListView):
     model = Issue
     paginate_by = PAGINATE_BY
     template_name = "comicsdb/week_list.html"
-    queryset = (
-        Issue.objects.filter(store_date__year__gte=year)
-        .exclude(store_date__week__lte=week, store_date__year=year)
-        .select_related("series", "series__series_type")
-    )
+
+    def get_queryset(self):
+        queryset = (
+            Issue.objects.filter(store_date__year__gte=self.year)
+            .exclude(store_date__week__lte=self.week, store_date__year=self.year)
+            .select_related("series", "series__series_type")
+        )
+        # Apply filters
+        filtered = IssueViewFilter(self.request.GET, queryset=queryset)
+        return filtered.qs
 
     def get_context_data(self, **kwargs):
         # The '1' in the format string gives the date for Monday
@@ -703,7 +728,9 @@ class FutureList(ListView):
         context = super().get_context_data(**kwargs)
         context["release_day"] = release_day
         context["future"] = True
-        context["series_type"] = SeriesType.objects.values("id", "name")
+        context["series_type"] = SeriesType.objects.values("id", "name").order_by("name")
+        # Check if any filters are active (excluding page parameter)
+        context["has_active_filters"] = any(key != "page" for key in self.request.GET)
         return context
 
 
