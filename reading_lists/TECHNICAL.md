@@ -10,6 +10,7 @@ Developer documentation for the `reading_lists` Django app.
 - [Forms](#forms)
 - [Permissions](#permissions)
 - [Autocomplete](#autocomplete)
+- [Filters](#filters)
 - [Templates](#templates)
 - [Database Optimization](#database-optimization)
 - [API Integration](#api-integration)
@@ -20,8 +21,8 @@ Developer documentation for the `reading_lists` Django app.
 
 The reading_lists app follows Django's MTV (Model-Template-View) pattern with:
 
-- **Models**: `ReadingList` and `ReadingListItem` (through model)
-- **Views**: Class-based views (CBVs) for all operations
+- **Models**: `ReadingList`, `ReadingListItem` (through model), and `ReadingListRating`
+- **Views**: Class-based views (CBVs) for all operations, plus HTMX-powered rating view
 - **Forms**: Django forms with autocomplete integration
 - **Permissions**: Mixin-based permission checks
 
@@ -140,6 +141,54 @@ class Meta:
     ]
 ```
 
+### ReadingListRating
+
+Model for community ratings of public reading lists.
+
+**File:** `reading_lists/models.py`
+
+```python
+class ReadingListRating(models.Model):
+    reading_list = models.ForeignKey(ReadingList, on_delete=models.CASCADE, related_name="ratings")
+    user = models.ForeignKey(CustomUser, on_delete=models.CASCADE, related_name="reading_list_ratings")
+    rating = models.PositiveSmallIntegerField(
+        choices=[(i, str(i)) for i in range(1, 6)],
+        help_text="Star rating (1-5) for this reading list",
+    )
+    created_on = models.DateTimeField(db_default=models.functions.Now())
+    modified = models.DateTimeField(auto_now=True)
+```
+
+**Features:**
+
+- **1-5 Star Rating System**: Simple, universally understood rating scale
+- **One Rating Per User**: Unique constraint prevents duplicate ratings
+- **Timestamps**: Tracks when ratings are created and modified
+- **Related Names**: Easy access via `reading_list.ratings` and `user.reading_list_ratings`
+
+**Constraints:**
+
+- Unique together: `(reading_list, user)` - one rating per user per list
+- Index: `(reading_list, user)` - optimizes rating lookups
+
+**Meta Options:**
+```python
+class Meta:
+    unique_together = ["reading_list", "user"]
+    indexes = [
+        models.Index(fields=["reading_list", "user"]),
+    ]
+```
+
+**Business Rules:**
+
+- Users can only rate public reading lists
+- Users cannot rate their own reading lists
+- Ratings can be updated (users can change their rating)
+- Ratings can be deleted (users can clear their rating)
+
+**Migration:** `0003_readinglistrating.py`
+
 ## Views and URLs
 
 All views are class-based views (CBVs) inheriting from Django's generic views.
@@ -161,6 +210,12 @@ class ReadingListListView(ListView):
 - Unauthenticated: Only public lists
 - Authenticated non-admin: Public lists + user's own lists
 - Admin: Public lists + user's own lists + Metron's lists
+
+**Annotations:**
+
+- `issue_count`: Count of issues in the list
+- `average_rating`: Average of all ratings for the list
+- `rating_count`: Total number of ratings for the list
 
 **URL:** `/reading-lists/`
 
@@ -184,8 +239,25 @@ class ReadingListDetailView(DetailView):
 
 **Context Data:**
 
-- `reading_list_items`: Prefetched and ordered by `order` field
+- `reading_list_items`: Prefetched and ordered by `order` field (limited to first 50 for pagination)
+- `reading_list_items_count`: Total count of items in the list
 - `is_owner`: Boolean indicating if user can edit (owner or admin managing Metron)
+- `user_rating`: User's own rating (if authenticated and has rated)
+- `average_rating`: Average rating from all users (annotated)
+- `rating_count`: Total number of ratings (annotated)
+- `start_year`: Earliest cover date year (annotated, not property)
+- `end_year`: Latest cover date year (annotated, not property)
+- `publishers`: Unique publishers extracted from prefetched data
+
+**Query Optimizations:**
+
+The detail view is heavily optimized to reduce database queries:
+
+1. **Prefetch reading list items** with related issue, series, publisher data
+2. **Annotate year ranges** instead of using expensive properties
+3. **Prefetch and annotate ratings** to avoid N+1 queries
+4. **Extract publishers from prefetched data** instead of separate query
+5. **Result**: Reduced from ~20 queries to 4-6 queries per page load
 
 **URL:** `/reading-lists/<slug>/`
 
@@ -331,6 +403,61 @@ class RemoveIssueFromReadingListView(LoginRequiredMixin, UserPassesTestMixin, De
 
 **URL:** `/reading-lists/<slug>/remove-issue/<item_pk>/`
 
+#### update_reading_list_rating (Function-Based View)
+```python
+@login_required
+@require_POST
+def update_reading_list_rating(request, slug):
+    """HTMX view to update the rating of a reading list."""
+```
+
+**Purpose:** HTMX-powered endpoint for updating reading list ratings.
+
+**Validation Rules:**
+
+1. Must be authenticated (`@login_required`)
+2. Must use POST method (`@require_POST`)
+3. Can only rate public lists (returns 403 for private lists)
+4. Cannot rate own lists (returns 403 for owner)
+5. Rating value must be 1-5 or 0 (to clear rating)
+
+**HTMX Integration:**
+
+- Accepts POST requests with `rating` parameter
+- Returns rendered partial template with updated rating data
+- Uses `outerHTML` swap to update the rating component
+- Provides instant feedback without page reload
+
+**Rating Logic:**
+
+```python
+rating_value = request.POST.get("rating")
+if MIN_RATING <= rating <= MAX_RATING:
+    # Update or create rating
+    ReadingListRating.objects.update_or_create(
+        reading_list=reading_list,
+        user=request.user,
+        defaults={"rating": rating},
+    )
+elif rating == 0:
+    # Clear rating
+    ReadingListRating.objects.filter(
+        reading_list=reading_list,
+        user=request.user,
+    ).delete()
+```
+
+**Response:**
+
+Returns the `reading_list_rating.html` partial template with context:
+
+- `reading_list`: The rated reading list
+- `user_rating`: User's updated rating object
+- `average_rating`: Recalculated average rating
+- `rating_count`: Updated rating count
+
+**URL:** `/reading-lists/<slug>/rate/`
+
 ### URL Configuration
 
 **File:** `reading_lists/urls.py`
@@ -349,6 +476,7 @@ urlpatterns = [
     path("<slug:slug>/add-from-series/", AddIssuesFromSeriesView.as_view(), name="add-from-series"),
     path("<slug:slug>/add-from-arc/", AddIssuesFromArcView.as_view(), name="add-from-arc"),
     path("<slug:slug>/remove-issue/<int:item_pk>/", RemoveIssueFromReadingListView.as_view(), name="remove-issue"),
+    path("<slug:slug>/rate/", update_reading_list_rating, name="rate"),
 ]
 ```
 
@@ -621,6 +749,76 @@ Used in `AddIssuesFromArcForm` for arc-based bulk addition feature.
 - Returns formatted results with arc names
 - Enables quick selection of story arcs
 
+## Filters
+
+**File:** `comicsdb/filters/reading_list.py`
+
+### ReadingListFilter (API Filter)
+
+Django filter for API endpoints.
+
+```python
+class ReadingListFilter(filters.FilterSet):
+    name = filters.CharFilter(lookup_expr="icontains")
+    user = filters.NumberFilter(field_name="user__id")
+    username = filters.CharFilter(field_name="user__username", lookup_expr="icontains")
+    attribution_source = filters.CharFilter(lookup_expr="icontains")
+    is_private = filters.BooleanFilter()
+    modified_gt = filters.DateTimeFilter(field_name="modified", lookup_expr="gt")
+    average_rating__gte = filters.NumberFilter(
+        field_name="average_rating",
+        lookup_expr="gte",
+        label="Minimum Rating",
+    )
+```
+
+**Fields:**
+
+- `name`: Case-insensitive search on list name
+- `user`: Filter by user ID
+- `username`: Case-insensitive search on username
+- `attribution_source`: Filter by attribution source
+- `is_private`: Filter by privacy status
+- `modified_gt`: Filter by modification date (greater than)
+- `average_rating__gte`: Filter by minimum average rating (1-5)
+
+### ReadingListViewFilter (Web View Filter)
+
+Django filter for web views with search functionality.
+
+```python
+class ReadingListViewFilter(df.FilterSet):
+    q = df.CharFilter(method="filter_search", label="Search")
+    name = df.CharFilter(lookup_expr="icontains", label="Name")
+    username = df.CharFilter(field_name="user__username", lookup_expr="icontains", label="Username")
+    attribution_source = df.CharFilter(lookup_expr="icontains", label="Source")
+    is_private = df.BooleanFilter(label="Private")
+    average_rating__gte = df.NumberFilter(
+        field_name="average_rating",
+        lookup_expr="gte",
+        label="Minimum Rating",
+    )
+```
+
+**Features:**
+
+- `q`: Global search across name, username, and attribution source
+- Individual field filters for precise searching
+- Rating filter for quality-based discovery
+- Integrated with `ReadingListListView` and `SearchReadingListListView`
+
+**Rating Filter Options:**
+
+The web interface provides a dropdown with:
+- All Ratings (no filter)
+- 1+ Stars
+- 2+ Stars
+- 3+ Stars
+- 4+ Stars
+- 5 Stars
+
+**Filter Template:** `partials/readinglist_filter.html`
+
 ## Templates
 
 **Directory:** `reading_lists/templates/reading_lists/`
@@ -638,6 +836,7 @@ Used in `AddIssuesFromArcForm` for arc-based bulk addition feature.
 | `add_issues_from_series.html` | Bulk add from series | Series autocomplete, HTMX range toggle, usage tips |
 | `add_issues_from_arc.html` | Bulk add from arc | Arc autocomplete, position selection, usage tips |
 | `remove_issue_confirm.html` | Remove issue confirmation | Issue details |
+| `partials/reading_list_rating.html` | Rating component | HTMX-powered star rating, average display |
 
 ### Template Context
 
@@ -681,30 +880,109 @@ htmx.onLoad(function() {
 });
 ```
 
+### Rating Partial Template
+
+**File:** `partials/reading_list_rating.html`
+
+The rating system uses HTMX for instant, no-reload rating updates:
+
+```html
+<button type="button"
+        class="star-button"
+        hx-post="{% url 'reading-list:rate' reading_list.slug %}"
+        hx-vals='{"rating": "{{ forloop.counter }}"}'
+        hx-target="#reading-list-rating-{{ reading_list.pk }}"
+        hx-swap="outerHTML">
+    <i class="fas fa-star"></i>
+</button>
+```
+
+**Features:**
+
+- **HTMX POST Requests**: Star clicks trigger POST to rating endpoint
+- **Partial Replacement**: Uses `outerHTML` swap to update entire rating component
+- **CSRF Protection**: CSRF token configured globally in detail view JavaScript
+- **Inline Styles**: Component includes scoped CSS to avoid style conflicts
+- **Accessibility**: Proper labels and ARIA attributes for screen readers
+
+**Rating Display:**
+
+1. **Average Rating**: Displays filled/unfilled stars based on average (always visible for public lists)
+2. **User Rating**: Interactive stars for authenticated non-owners
+3. **Clear Button**: × button to remove user's rating
+
+**CSRF Configuration:**
+
+```javascript
+document.body.addEventListener('htmx:configRequest', (event) => {
+    event.detail.headers['X-CSRFToken'] = '{{ csrf_token }}';
+});
+```
+
+This ensures all HTMX requests include the CSRF token for security.
+
 ## Database Optimization
 
 ### QuerySet Optimizations
 
 **List Views:**
 ```python
-queryset = ReadingList.objects.select_related("user").annotate(issue_count=Count("issues"))
+queryset = ReadingList.objects.select_related("user").annotate(
+    issue_count=Count("issues"),
+    average_rating=Avg("ratings__rating"),
+    rating_count=Count("ratings", distinct=True),
+)
 ```
 
 **Detail View:**
 ```python
-queryset = ReadingList.objects.select_related("user").prefetch_related(
-    "reading_list_items__issue__series__series_type"
+queryset = (
+    ReadingList.objects.select_related("user")
+    .prefetch_related(
+        Prefetch(
+            "reading_list_items",
+            queryset=ReadingListItem.objects.select_related(
+                "issue__series__series_type",
+                "issue__series__publisher",
+            ).order_by("order"),
+        ),
+        Prefetch(
+            "ratings",
+            queryset=ReadingListRating.objects.select_related("user"),
+        ),
+    )
+    .annotate(
+        start_year_annotated=Min("reading_list_items__issue__cover_date__year"),
+        end_year_annotated=Max("reading_list_items__issue__cover_date__year"),
+        average_rating_annotated=Avg("ratings__rating"),
+        rating_count_annotated=Count("ratings", distinct=True),
+    )
 )
+
+# For authenticated users, prefetch their own rating
+if request.user.is_authenticated:
+    queryset = queryset.prefetch_related(
+        Prefetch(
+            "ratings",
+            queryset=ReadingListRating.objects.filter(user=request.user),
+            to_attr="user_rating_list",
+        )
+    )
 ```
 
 **Benefits:**
 
 - `select_related()`: Reduces queries for ForeignKey relationships
 - `prefetch_related()`: Optimizes M2M and reverse ForeignKey queries
-- `annotate()`: Computes issue counts in database
+- `annotate()`: Computes counts, averages, and aggregates in database
+- `Prefetch()`: Fine-grained control over prefetch querysets
+- **Rating Optimizations**: All rating data fetched in initial query
+- **Year Range Annotations**: Replaces expensive property calls with database aggregation
+- **Publisher Extraction**: Extracted from prefetched data instead of separate query
 
 ### Indexes
 
+**ReadingListItem:**
 ```python
 class Meta:
     indexes = [
@@ -712,8 +990,18 @@ class Meta:
     ]
 ```
 
-**Composite Index:**
-Optimizes ordering queries on `(reading_list, order)`.
+**ReadingListRating:**
+```python
+class Meta:
+    indexes = [
+        models.Index(fields=["reading_list", "user"]),
+    ]
+```
+
+**Composite Indexes:**
+
+- `ReadingListItem`: `(reading_list, order)` - optimizes ordering queries
+- `ReadingListRating`: `(reading_list, user)` - optimizes rating lookups and aggregations
 
 **Standard Indexes:**
 
@@ -725,14 +1013,16 @@ Optimizes ordering queries on `(reading_list, order)`.
 
 **Unique Constraints:**
 
-- `ReadingList`: `(user, name)`
-- `ReadingListItem`: `(reading_list, issue)`
+- `ReadingList`: `(user, name)` - prevents duplicate list names per user
+- `ReadingListItem`: `(reading_list, issue)` - prevents duplicate issues in a list
+- `ReadingListRating`: `(reading_list, user)` - one rating per user per list
 
 **Benefits:**
 
 - Prevents duplicate data at database level
 - Faster lookups on constrained fields
 - Data integrity enforcement
+- Enables `update_or_create()` for idempotent rating updates
 
 ## API Integration
 
@@ -839,6 +1129,31 @@ All reading list API endpoints require authentication.
 - Authenticated users can access public lists and their own lists
 - Admin and Reading List Editor users can access Metron's lists
 
+**API Serializers:**
+
+**ReadingListListSerializer:**
+- Includes `average_rating` (FloatField, read-only)
+- Includes `rating_count` (IntegerField, read-only)
+
+**ReadingListReadSerializer:**
+- Includes `average_rating` (FloatField, read-only)
+- Includes `rating_count` (IntegerField, read-only)
+
+**Filtering:**
+
+The API supports filtering by `average_rating__gte` (minimum rating):
+- `/api/reading_list/?average_rating__gte=4` - Lists with 4+ stars
+
+**Query Annotations:**
+
+All API views annotate reading lists with:
+```python
+.annotate(
+    average_rating=Avg("ratings__rating"),
+    rating_count=Count("ratings", distinct=True),
+)
+```
+
 For complete API documentation including filtering, pagination, and response formats, see the [main API documentation](/api/README.md#reading-list).
 
 ## Testing
@@ -856,7 +1171,7 @@ For complete API documentation including filtering, pagination, and response for
 
 **Test Statistics:**
 
-- Total tests: 140+ passing
+- Total tests: 150+ passing
 - Forms: 100% coverage
 - Views: 95% coverage
 - Models: 100% coverage
@@ -896,6 +1211,16 @@ For complete API documentation including filtering, pagination, and response for
     - Permission checks for Metron lists
     - Editor permissions vs admin permissions
     - Attribution field restrictions
+- **Rating system** (comprehensive test suite):
+    - Creating ratings (1-5 stars)
+    - Updating existing ratings
+    - Deleting/clearing ratings
+    - Permission checks (cannot rate own lists, private lists)
+    - Authentication requirements
+    - HTMX endpoint functionality
+    - Average rating calculations
+    - Rating count aggregations
+    - Template rendering with rating data
 
 **Form Tests:**
 
@@ -986,6 +1311,15 @@ class ReadingListModelTest(TestCase):
     - Access reading list items
     - Permission-based filtering
 
+- ✅ **Community Rating System** (Implemented)
+    - 1-5 star ratings for public reading lists
+    - Users can rate lists (except their own)
+    - Average rating and count display
+    - HTMX-powered interactive star component
+    - Rating filter for discovery (minimum rating)
+    - API integration with rating fields
+    - Optimized queries with rating annotations
+
 ### Planned Features
 
 1. **List Collaboration**
@@ -1003,7 +1337,12 @@ class ReadingListModelTest(TestCase):
     - Publisher breakdowns
     - Year distribution charts
 
-4. **Additional Bulk Operations**
+4. **Rating Enhancements**
+    - Written reviews/comments on ratings
+    - Rating categories (accuracy, completeness, organization)
+    - Helpful/unhelpful votes on ratings
+
+5. **Additional Bulk Operations**
     - Import from CSV/text list
     - Export to various formats (CSV, JSON, plain text)
     - Merge multiple lists

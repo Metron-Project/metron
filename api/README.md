@@ -1066,6 +1066,7 @@ This endpoint is read-only. Create, update, and delete operations are not availa
 - `username` - Username (case-insensitive, partial match)
 - `attribution_source` - Attribution source code (exact match)
 - `is_private` - Boolean, filter by privacy status
+- `average_rating__gte` - Minimum average rating (1.0 to 5.0)
 - `modified_gt` - Modified after datetime
 
 **Attribution Source Codes:**
@@ -1091,6 +1092,8 @@ This endpoint is read-only. Create, update, and delete operations are not availa
   },
   "is_private": false,
   "attribution_source": "CBRO",
+  "average_rating": 4.5,
+  "rating_count": 12,
   "modified": "2025-01-15T10:30:00Z"
 }
 ```
@@ -1101,6 +1104,8 @@ This endpoint is read-only. Create, update, and delete operations are not availa
     - `desc` - Description
     - `attribution_source` - Full attribution source name (e.g., "Comic Book Reading Orders")
     - `attribution_url` - URL to source
+    - `average_rating` - Average rating from all users (1.0 to 5.0, null if no ratings)
+    - `rating_count` - Total number of user ratings
     - `items_url` - URL to fetch reading list items
     - `resource_url` - Link to web UI
 
@@ -1167,6 +1172,12 @@ GET /api/reading_list/?username=johndoe
 # Find lists from Comic Book Reading Orders
 GET /api/reading_list/?attribution_source=CBRO
 
+# Find highly-rated reading lists (4+ stars)
+GET /api/reading_list/?average_rating__gte=4
+
+# Find quality public reading lists
+GET /api/reading_list/?is_private=false&average_rating__gte=4.5
+
 # Get reading list details
 GET /api/reading_list/1/
 
@@ -1174,8 +1185,16 @@ GET /api/reading_list/1/
 GET /api/reading_list/1/items/
 
 # Combine multiple filters
-GET /api/reading_list/?name=secret&is_private=false
+GET /api/reading_list/?name=secret&is_private=false&average_rating__gte=3
 ```
+
+**Rating System:**
+
+- **Community Ratings:** Users can rate public reading lists with 1-5 stars
+- **average_rating:** Average of all user ratings (1.0 to 5.0, null if no ratings)
+- **rating_count:** Total number of ratings submitted
+- **Filtering by Quality:** Use `average_rating__gte` to discover highly-rated lists
+- **Rating Restrictions:** Users cannot rate their own lists or private lists
 
 **Notes:**
 
@@ -1183,6 +1202,7 @@ GET /api/reading_list/?name=secret&is_private=false
 - Items endpoint excludes `image` and `cover_hash` from issue data for performance
 - Some lists belong to a special "Metron" user account representing curated/official reading orders
 - Admin users have special access to Metron user's lists
+- Rating data is calculated in real-time from user ratings
 
 ---
 

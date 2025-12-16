@@ -16,6 +16,7 @@ The Reading Lists feature allows you to create, manage, and share curated comic 
 
 - **Create Reading Lists**: Build your own custom reading orders
 - **Public/Private Lists**: Share your lists with the community or keep them private
+- **Community Ratings**: Rate public reading lists with a 1-5 star system
 - **Drag-and-Drop Ordering**: Easily reorder issues within your lists
 - **Smart Search**: Find issues quickly using autocomplete with series and issue number filters
 - **Attribution Tracking**: Credit sources for reading orders (admin feature)
@@ -137,6 +138,35 @@ Perfect for adding all issues from a story arc at once!
 3. Click the "Remove" button next to the issue
 4. Confirm the removal
 
+### Rating Reading Lists
+
+You can rate public reading lists to help the community discover quality content.
+
+**Rating Requirements:**
+
+- Must be logged in
+- Can only rate public lists (not private)
+- Cannot rate your own reading lists
+
+**How to Rate:**
+
+1. Navigate to any public reading list detail page
+2. Find the "Rating" section
+3. Click on a star (1-5 stars) to submit your rating
+    - 1 star = Poor
+    - 2 stars = Below Average
+    - 3 stars = Average
+    - 4 stars = Good
+    - 5 stars = Excellent
+4. Your rating is saved immediately
+5. Click the × button to clear your rating
+
+**Viewing Ratings:**
+
+- **List view**: Shows average rating and total count for each list
+- **Detail view**: Shows average rating, total count, and your rating (if you've rated it)
+- **Filtering**: You can filter lists by minimum rating in the search interface
+
 ### Deleting a Reading List
 
 1. Navigate to your reading list detail page
@@ -153,12 +183,24 @@ The search functionality allows you to find lists by:
 - **List name** (case-insensitive)
 - **Username** of the list owner
 - **Attribution source** (e.g., "Comic Book Reading Orders")
+- **Minimum rating** (filter by average rating)
 
 **Example:** Searching "marvel" would find:
 
 - Lists with "marvel" in the name
 - Lists created by user "marvelFan"
 - Lists from "Complete Marvel Reading Orders" (CMRO)
+
+**Rating Filter:**
+
+You can filter reading lists by minimum rating:
+
+- **All Ratings**: Shows all lists regardless of rating
+- **1+ Stars**: Shows lists with at least 1 star
+- **2+ Stars**: Shows lists with at least 2 stars
+- **3+ Stars**: Shows lists with at least 3 stars (average or better)
+- **4+ Stars**: Shows lists with at least 4 stars (good quality)
+- **5 Stars**: Shows only lists with perfect 5-star ratings
 
 ### Searching for Issues
 
@@ -250,6 +292,7 @@ Some reading lists are owned by a special "Metron" user account:
 | `/reading-lists/<slug>/add-issue/` | Add issues individually | Yes |
 | `/reading-lists/<slug>/add-from-series/` | Add issues from series (bulk) | Yes |
 | `/reading-lists/<slug>/add-from-arc/` | Add issues from arc (bulk) | Yes |
+| `/reading-lists/<slug>/rate/` | Rate a public reading list | Yes |
 
 *Unauthenticated users can only view public lists.
 
@@ -285,7 +328,8 @@ Some reading lists are owned by a special "Metron" user account:
 1. **Make quality lists public**: Share your research with others
 2. **Use clear descriptions**: Help others understand the reading order
 3. **Keep lists updated**: Return to add new issues as series continue
-4. **Report issues**: If you find problems, contact an admin
+4. **Rate helpful lists**: Help others discover quality reading orders by rating lists you've used
+5. **Report issues**: If you find problems, contact an admin
 
 ---
 
