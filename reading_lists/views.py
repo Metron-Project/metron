@@ -1,10 +1,13 @@
 from django.contrib import messages
+from django.contrib.auth.decorators import login_required
 from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
 from django.db import models
-from django.db.models import Count, Q
+from django.db.models import Avg, Count, Max, Min, Prefetch, Q
+from django.http import HttpResponseForbidden
 from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse, reverse_lazy
 from django.views import View
+from django.views.decorators.http import require_POST
 from django.views.generic import CreateView, DeleteView, DetailView, FormView, ListView, UpdateView
 
 from comicsdb.filters.reading_list import ReadingListViewFilter
@@ -16,11 +19,15 @@ from reading_lists.forms import (
     AddIssueWithSearchForm,
     ReadingListForm,
 )
-from reading_lists.models import ReadingList, ReadingListItem
+from reading_lists.models import ReadingList, ReadingListItem, ReadingListRating
 from users.models import CustomUser
 
 # Pagination constant for reading list detail view
 READING_LIST_DETAIL_PAGINATE_BY = 50
+
+# Rating constants
+MIN_RATING = 1
+MAX_RATING = 5
 
 
 def can_manage_reading_list(user, reading_list):
@@ -50,7 +57,11 @@ class ReadingListListView(ListView):
     paginate_by = 30
 
     def get_queryset(self):
-        queryset = ReadingList.objects.select_related("user").annotate(issue_count=Count("issues"))
+        queryset = ReadingList.objects.select_related("user").annotate(
+            issue_count=Count("issues"),
+            average_rating=Avg("ratings__rating"),
+            rating_count=Count("ratings", distinct=True),
+        )
 
         if self.request.user.is_authenticated:
             # If admin or reading list editor, show public lists + user's own lists + Metron's lists
@@ -96,7 +107,11 @@ class SearchReadingListListView(SearchMixin, ReadingListListView):
 
     def get_queryset(self):
         """Get queryset without applying the filter (SearchMixin handles search)."""
-        queryset = ReadingList.objects.select_related("user").annotate(issue_count=Count("issues"))
+        queryset = ReadingList.objects.select_related("user").annotate(
+            issue_count=Count("issues"),
+            average_rating=Avg("ratings__rating"),
+            rating_count=Count("ratings", distinct=True),
+        )
 
         if self.request.user.is_authenticated:
             # If admin or reading list editor, show public lists + user's own lists + Metron's lists
@@ -138,7 +153,11 @@ class UserReadingListListView(LoginRequiredMixin, ListView):
     def get_queryset(self):
         return (
             ReadingList.objects.filter(user=self.request.user)
-            .annotate(issue_count=Count("issues"))
+            .annotate(
+                issue_count=Count("issues"),
+                average_rating=Avg("ratings__rating"),
+                rating_count=Count("ratings", distinct=True),
+            )
             .order_by("name", "attribution_source", "user")
         )
 
@@ -151,9 +170,39 @@ class ReadingListDetailView(DetailView):
     context_object_name = "reading_list"
 
     def get_queryset(self):
-        queryset = ReadingList.objects.select_related("user").prefetch_related(
-            "reading_list_items__issue__series__series_type"
+        # Build the base queryset with all necessary prefetches and annotations
+        queryset = (
+            ReadingList.objects.select_related("user")
+            .prefetch_related(
+                Prefetch(
+                    "reading_list_items",
+                    queryset=ReadingListItem.objects.select_related(
+                        "issue__series__series_type",
+                        "issue__series__publisher",
+                    ).order_by("order"),
+                ),
+                Prefetch(
+                    "ratings",
+                    queryset=ReadingListRating.objects.select_related("user"),
+                ),
+            )
+            .annotate(
+                start_year_annotated=Min("reading_list_items__issue__cover_date__year"),
+                end_year_annotated=Max("reading_list_items__issue__cover_date__year"),
+                average_rating_annotated=Avg("ratings__rating"),
+                rating_count_annotated=Count("ratings", distinct=True),
+            )
         )
+
+        # If authenticated, prefetch user groups to avoid repeated queries
+        if self.request.user.is_authenticated:
+            queryset = queryset.prefetch_related(
+                Prefetch(
+                    "ratings",
+                    queryset=ReadingListRating.objects.filter(user=self.request.user),
+                    to_attr="user_rating_list",
+                )
+            )
 
         # If not authenticated, only show public lists
         if not self.request.user.is_authenticated:
@@ -177,22 +226,47 @@ class ReadingListDetailView(DetailView):
         context = super().get_context_data(**kwargs)
         reading_list = context["reading_list"]
 
-        # Get ordered issues with count for pagination
-        reading_list_items_qs = reading_list.reading_list_items.select_related(
-            "issue__series__series_type"
-        ).order_by("order")
+        # Use prefetched reading_list_items (already ordered in get_queryset)
+        reading_list_items = reading_list.reading_list_items.all()
+        reading_list_items_count = len(reading_list_items)  # Use len() to avoid extra query
 
-        reading_list_items_count = reading_list_items_qs.count()
         context["reading_list_items_count"] = reading_list_items_count
 
         if reading_list_items_count > 0:
-            context["reading_list_items"] = reading_list_items_qs[:READING_LIST_DETAIL_PAGINATE_BY]
+            context["reading_list_items"] = reading_list_items[:READING_LIST_DETAIL_PAGINATE_BY]
 
         # Check if user can manage this reading list
         if self.request.user.is_authenticated:
             context["is_owner"] = can_manage_reading_list(self.request.user, reading_list)
         else:
             context["is_owner"] = False
+
+        # Get user's rating from prefetched data
+        user_rating = None
+        if self.request.user.is_authenticated:
+            user_rating_list = getattr(reading_list, "user_rating_list", [])
+            user_rating = user_rating_list[0] if user_rating_list else None
+
+        # Use annotated average rating (already calculated in get_queryset)
+        context["user_rating"] = user_rating
+        context["average_rating"] = reading_list.average_rating_annotated
+        context["rating_count"] = reading_list.rating_count_annotated
+
+        # Add annotated year data to context
+        context["start_year"] = reading_list.start_year_annotated
+        context["end_year"] = reading_list.end_year_annotated
+
+        # Prefetch publishers efficiently
+        if reading_list_items_count > 0:
+            # Get unique publishers from already-prefetched data
+            publishers = {}
+            for item in reading_list_items:
+                publisher = item.issue.series.publisher
+                if publisher and publisher.id not in publishers:
+                    publishers[publisher.id] = publisher
+            context["publishers"] = sorted(publishers.values(), key=lambda p: p.name)
+        else:
+            context["publishers"] = []
 
         return context
 
@@ -710,3 +784,61 @@ class ReadingListItemsLoadMore(LazyLoadMixin, View):
             context["is_owner"] = False
 
         return context
+
+
+@login_required
+@require_POST
+def update_reading_list_rating(request, slug):
+    """HTMX view to update the rating of a reading list."""
+    reading_list = get_object_or_404(ReadingList, slug=slug)
+
+    # Only allow rating public lists
+    if reading_list.is_private:
+        return HttpResponseForbidden("Cannot rate private reading lists")
+
+    # Prevent users from rating their own reading lists
+    if reading_list.user == request.user:
+        return HttpResponseForbidden("Cannot rate your own reading list")
+
+    rating_value = request.POST.get("rating")
+    if rating_value:
+        try:
+            rating = int(rating_value)
+            if MIN_RATING <= rating <= MAX_RATING:
+                # Update or create rating
+                ReadingListRating.objects.update_or_create(
+                    reading_list=reading_list,
+                    user=request.user,
+                    defaults={"rating": rating},
+                )
+            elif rating == 0:  # Allow clearing the rating
+                ReadingListRating.objects.filter(
+                    reading_list=reading_list,
+                    user=request.user,
+                ).delete()
+        except ValueError:
+            pass
+
+    # Get user's current rating and average
+    user_rating = ReadingListRating.objects.filter(
+        reading_list=reading_list,
+        user=request.user,
+    ).first()
+
+    # Calculate average rating
+    avg_data = reading_list.ratings.aggregate(
+        avg=Avg("rating"),
+        count=Count("id"),
+    )
+
+    # Return the updated rating partial
+    return render(
+        request,
+        "reading_lists/partials/reading_list_rating.html",
+        {
+            "reading_list": reading_list,
+            "user_rating": user_rating,
+            "average_rating": avg_data["avg"],
+            "rating_count": avg_data["count"],
+        },
+    )

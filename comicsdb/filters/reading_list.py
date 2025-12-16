@@ -32,10 +32,23 @@ class ReadingListFilter(filters.FilterSet):
     modified_gt = filters.DateTimeFilter(
         label="Greater than Modified DateTime", field_name="modified", lookup_expr="gt"
     )
+    average_rating__gte = filters.NumberFilter(
+        field_name="average_rating",
+        lookup_expr="gte",
+        label="Minimum Rating",
+    )
 
     class Meta:
         model = ReadingList
-        fields = ["name", "user", "username", "attribution_source", "is_private", "modified_gt"]
+        fields = [
+            "name",
+            "user",
+            "username",
+            "attribution_source",
+            "is_private",
+            "modified_gt",
+            "average_rating__gte",
+        ]
 
 
 class ReadingListViewFilter(df.FilterSet):
@@ -58,6 +71,20 @@ class ReadingListViewFilter(df.FilterSet):
     # Privacy filter
     is_private = df.BooleanFilter(label="Private")
 
+    # Rating filter
+    average_rating__gte = df.NumberFilter(
+        field_name="average_rating",
+        lookup_expr="gte",
+        label="Minimum Rating",
+    )
+
     class Meta:
         model = ReadingList
-        fields = ["q", "name", "username", "attribution_source", "is_private"]
+        fields = [
+            "q",
+            "name",
+            "username",
+            "attribution_source",
+            "is_private",
+            "average_rating__gte",
+        ]

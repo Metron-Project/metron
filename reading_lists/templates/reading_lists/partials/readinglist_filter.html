@@ -106,6 +106,44 @@
                         </div>
                     </div>
                 </div>
+                {# Minimum Rating Filter #}
+                <div class="column is-half">
+                    <div class="field">
+                        <label class="label" for="average_rating__gte">Minimum Rating</label>
+                        <div class="control has-icons-left">
+                            <div class="select is-fullwidth">
+                                <select id="average_rating__gte"
+                                        name="average_rating__gte"
+                                        aria-label="Filter by minimum rating">
+                                    <option value="">All Ratings</option>
+                                    <option value="1"
+                                            {% if request.GET.average_rating__gte == "1" %}selected{% endif %}>
+                                        1+ Stars
+                                    </option>
+                                    <option value="2"
+                                            {% if request.GET.average_rating__gte == "2" %}selected{% endif %}>
+                                        2+ Stars
+                                    </option>
+                                    <option value="3"
+                                            {% if request.GET.average_rating__gte == "3" %}selected{% endif %}>
+                                        3+ Stars
+                                    </option>
+                                    <option value="4"
+                                            {% if request.GET.average_rating__gte == "4" %}selected{% endif %}>
+                                        4+ Stars
+                                    </option>
+                                    <option value="5"
+                                            {% if request.GET.average_rating__gte == "5" %}selected{% endif %}>
+                                        5 Stars
+                                    </option>
+                                </select>
+                            </div>
+                            <span class="icon is-small is-left">
+                                <i class="fas fa-star"></i>
+                            </span>
+                        </div>
+                    </div>
+                </div>
                 {# Privacy Filter - Only show if user is authenticated #}
                 {% if user.is_authenticated %}
                     <div class="column is-half">

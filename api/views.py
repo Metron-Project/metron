@@ -1,5 +1,5 @@
 from django.db import models
-from django.db.models import Count, F, Prefetch, Q, Sum
+from django.db.models import Avg, Count, F, Prefetch, Q, Sum
 from django.http import Http404
 from drf_spectacular.utils import OpenApiParameter, extend_schema
 from rest_framework import mixins, status, viewsets
@@ -556,7 +556,10 @@ class ReadingListViewSet(
 
     def get_queryset(self):
         """Filter reading lists based on user permissions and visibility rules."""
-        queryset = ReadingList.objects.select_related("user")
+        queryset = ReadingList.objects.select_related("user").annotate(
+            average_rating=Avg("ratings__rating"),
+            rating_count=Count("ratings", distinct=True),
+        )
 
         # Unauthenticated users - only public lists
         if not self.request.user.is_authenticated:

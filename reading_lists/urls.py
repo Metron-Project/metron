@@ -13,6 +13,7 @@ from reading_lists.views import (
     RemoveIssueFromReadingListView,
     SearchReadingListListView,
     UserReadingListListView,
+    update_reading_list_rating,
 )
 
 app_name = "reading-list"
@@ -49,4 +50,5 @@ urlpatterns = [
         ReadingListItemsLoadMore.as_view(),
         name="items-load-more",
     ),
+    path("<slug:slug>/rate/", update_reading_list_rating, name="rate"),
 ]

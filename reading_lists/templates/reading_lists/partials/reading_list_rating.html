@@ -1,0 +1,103 @@
+<div id="reading-list-rating-{{ reading_list.pk }}"
+     class="reading-list-rating">
+    {% if not reading_list.is_private %}
+        {# Display average rating #}
+        <div class="average-rating mb-2">
+            <span class="has-text-weight-bold">Average Rating:</span>
+            {% if average_rating %}
+                <span class="rating-stars">
+                    {% for star_num in "12345" %}
+                        <i class="{% if star_num|add:'0' <= average_rating %}fas{% else %}far{% endif %} fa-star"
+                           style="color: #ffd700"></i>
+                    {% endfor %}
+                </span>
+                <span class="rating-value">{{ average_rating|floatformat:1 }} ({{ rating_count }} rating{{ rating_count|pluralize }})</span>
+            {% else %}
+                <span class="has-text-grey-light">No ratings yet</span>
+            {% endif %}
+        </div>
+        {# User's rating (if authenticated and not the owner) #}
+        {% if user.is_authenticated and reading_list.user != user %}
+            <div class="user-rating">
+                <span class="has-text-weight-bold">Your Rating:</span>
+                <div class="star-rating">
+                    {% for star_num in "12345" %}
+                        <button type="button"
+                                class="star-button {% if user_rating and forloop.counter <= user_rating.rating %}filled{% else %}empty{% endif %}"
+                                hx-post="{% url 'reading-list:rate' reading_list.slug %}"
+                                hx-vals='{"rating": "{{ forloop.counter }}"}'
+                                hx-target="#reading-list-rating-{{ reading_list.pk }}"
+                                hx-swap="outerHTML"
+                                title="Rate {{ forloop.counter }} star{% if forloop.counter > 1 %}s{% endif %}">
+                            <i class="{% if user_rating and forloop.counter <= user_rating.rating %}fas{% else %}far{% endif %} fa-star"></i>
+                        </button>
+                    {% endfor %}
+                    {% if user_rating %}
+                        <button type="button"
+                                class="star-clear"
+                                hx-post="{% url 'reading-list:rate' reading_list.slug %}"
+                                hx-vals='{"rating": "0"}'
+                                hx-target="#reading-list-rating-{{ reading_list.pk }}"
+                                hx-swap="outerHTML"
+                                title="Clear rating">
+                            <i class="fas fa-times-circle"></i>
+                        </button>
+                    {% endif %}
+                </div>
+            </div>
+        {% endif %}
+    {% endif %}
+</div>
+<style>
+    .reading-list-rating .star-rating {
+        display: inline-flex;
+        gap: 4px;
+        align-items: center;
+    }
+
+    .reading-list-rating .star-button {
+        background: none;
+        border: none;
+        cursor: pointer;
+        padding: 0;
+        font-size: 1.2rem;
+        transition: transform 0.2s, filter 0.2s;
+    }
+
+    .reading-list-rating .star-button:hover {
+        transform: scale(1.2);
+        filter: brightness(1.2);
+    }
+
+    .reading-list-rating .star-button.filled i {
+        color: #ffd700;
+    }
+
+    .reading-list-rating .star-button.empty i {
+        color: #dbdbdb;
+    }
+
+    .reading-list-rating .star-clear {
+        background: none;
+        border: none;
+        cursor: pointer;
+        padding: 0;
+        margin-left: 8px;
+        font-size: 1rem;
+        color: #f14668;
+        transition: transform 0.2s;
+    }
+
+    .reading-list-rating .star-clear:hover {
+        transform: scale(1.2);
+    }
+
+    .reading-list-rating .average-rating {
+        margin-bottom: 0.5rem;
+    }
+
+    .reading-list-rating .rating-value {
+        margin-left: 0.5rem;
+        color: #4a4a4a;
+    }
+</style>

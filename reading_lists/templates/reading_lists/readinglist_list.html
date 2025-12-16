@@ -69,6 +69,18 @@
                                                 <span>{{ reading_list.issue_count }} issue{{ reading_list.issue_count|pluralize }}</span>
                                             </span>
                                         </p>
+                                        {% if reading_list.average_rating %}
+                                            <p class="is-size-7">
+                                                <span class="icon-text">
+                                                    {% for star_num in "12345" %}
+                                                        <i class="{% if star_num|add:'0' <= reading_list.average_rating %}fas{% else %}far{% endif %} fa-star"
+                                                           style="color: #ffd700;
+                                                                  font-size: 0.9rem"></i>
+                                                    {% endfor %}
+                                                    <span class="ml-1">{{ reading_list.average_rating|floatformat:1 }} ({{ reading_list.rating_count }})</span>
+                                                </span>
+                                            </p>
+                                        {% endif %}
                                         <p class="is-size-7 has-text-grey">Updated {{ reading_list.modified|timesince }} ago</p>
                                     </div>
                                 </div>

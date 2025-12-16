@@ -122,4 +122,34 @@ class ReadingListItem(models.Model):
         return f"{self.reading_list.name} - {self.issue} (Order: {self.order})"
 
 
+class ReadingListRating(models.Model):
+    """User ratings for reading lists."""
+
+    reading_list = models.ForeignKey(
+        ReadingList,
+        on_delete=models.CASCADE,
+        related_name="ratings",
+    )
+    user = models.ForeignKey(
+        CustomUser,
+        on_delete=models.CASCADE,
+        related_name="reading_list_ratings",
+    )
+    rating = models.PositiveSmallIntegerField(
+        choices=[(i, str(i)) for i in range(1, 6)],
+        help_text="Star rating (1-5) for this reading list",
+    )
+    created_on = models.DateTimeField(db_default=models.functions.Now())
+    modified = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        unique_together = ["reading_list", "user"]
+        indexes = [
+            models.Index(fields=["reading_list", "user"]),
+        ]
+
+    def __str__(self) -> str:
+        return f"{self.user.username} - {self.reading_list.name}: {self.rating}"
+
+
 pre_save.connect(pre_save_slug, sender=ReadingList)

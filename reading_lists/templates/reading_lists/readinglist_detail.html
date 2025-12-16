@@ -138,20 +138,24 @@
                     <dd class="mb-3">
                         {{ reading_list_items_count }}
                     </dd>
-                    {% if reading_list.start_year %}
+                    <dt class="has-text-weight-bold">Rating:</dt>
+                    <dd class="mb-3">
+                        {% include "reading_lists/partials/reading_list_rating.html" %}
+                    </dd>
+                    {% if start_year %}
                         <dt class="has-text-weight-bold">Year Range:</dt>
                         <dd class="mb-3">
-                            {% if reading_list.start_year == reading_list.end_year %}
-                                {{ reading_list.start_year }}
+                            {% if start_year == end_year %}
+                                {{ start_year }}
                             {% else %}
-                                {{ reading_list.start_year }} - {{ reading_list.end_year }}
+                                {{ start_year }} - {{ end_year }}
                             {% endif %}
                         </dd>
                     {% endif %}
-                    {% if reading_list.publishers %}
+                    {% if publishers %}
                         <dt class="has-text-weight-bold">Publishers:</dt>
                         <dd class="mb-3">
-                            {% for publisher in reading_list.publishers %}
+                            {% for publisher in publishers %}
                                 <a href="{% url 'publisher:detail' publisher.slug %}">{{ publisher.name }}</a>
                                 {% if not forloop.last %},{% endif %}
                             {% endfor %}
@@ -197,4 +201,9 @@
 {% endblock %}
 {% block js %}
     {% htmx_script %}
+    <script>
+        document.body.addEventListener('htmx:configRequest', (event) => {
+            event.detail.headers['X-CSRFToken'] = '{{ csrf_token }}';
+        });
+    </script>
 {% endblock %}

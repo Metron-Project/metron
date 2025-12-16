@@ -42,6 +42,8 @@ class ReadingListItemSerializer(serializers.ModelSerializer):
 
 class ReadingListListSerializer(serializers.ModelSerializer):
     user = UserSerializer(read_only=True)
+    average_rating = serializers.FloatField(read_only=True)
+    rating_count = serializers.IntegerField(read_only=True)
 
     class Meta:
         model = ReadingList
@@ -52,6 +54,8 @@ class ReadingListListSerializer(serializers.ModelSerializer):
             "user",
             "is_private",
             "attribution_source",
+            "average_rating",
+            "rating_count",
             "modified",
         )
 
@@ -63,6 +67,8 @@ class ReadingListReadSerializer(serializers.ModelSerializer):
     )
     resource_url = serializers.SerializerMethodField("get_resource_url")
     items_url = serializers.SerializerMethodField()
+    average_rating = serializers.FloatField(read_only=True)
+    rating_count = serializers.IntegerField(read_only=True)
 
     def get_resource_url(self, obj: ReadingList) -> str:
         return self.context["request"].build_absolute_uri(obj.get_absolute_url())
@@ -84,6 +90,8 @@ class ReadingListReadSerializer(serializers.ModelSerializer):
             "is_private",
             "attribution_source",
             "attribution_url",
+            "average_rating",
+            "rating_count",
             "items_url",
             "resource_url",
             "modified",
