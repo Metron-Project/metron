@@ -24,6 +24,8 @@ class CustomUserCreationForm(UserCreationForm):
         blocklist = {
             "hey.com",
             "inboxes.app",
+            "passinbox.com",
+            "passmail.net",
         }  # List of providers that provide temp email addresses.
         whitelist = {"gmail.com", "yahoo.com", "proton.me"}
 
