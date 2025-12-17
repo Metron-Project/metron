@@ -173,7 +173,7 @@
             </div>
         </details>
         {# Action Buttons #}
-        <div class="field is-grouped is-flex-direction-column-mobile mt-4">
+        <div class="field is-grouped filter-buttons mt-4">
             <div class="control">
                 <button class="button is-link" type="submit">
                     <span class="icon">
@@ -220,5 +220,25 @@ details[open] > summary::before {
 
 details > summary:hover {
     color: hsl(217, 71%, 53%);
+}
+
+/* Mobile filter buttons styling */
+@media screen and (max-width: 768px) {
+    .filter-buttons.is-grouped {
+        flex-direction: column;
+    }
+
+    .filter-buttons .control {
+        width: 100%;
+        margin-bottom: 0.5rem;
+    }
+
+    .filter-buttons .control:last-child {
+        margin-bottom: 0;
+    }
+
+    .filter-buttons .button {
+        width: 100%;
+    }
 }
 </style>
