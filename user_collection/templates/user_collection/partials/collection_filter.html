@@ -69,10 +69,13 @@
                         <label class="label" for="series_type">Series Type</label>
                         <div class="control has-icons-left">
                             <div class="select is-fullwidth">
-                                <select id="series_type" name="series_type" aria-label="Filter by series type">
+                                <select id="series_type"
+                                        name="series_type"
+                                        aria-label="Filter by series type">
                                     <option value="">All Types</option>
                                     {% for type in series_type %}
-                                        <option value="{{ type.id }}" {% if request.GET.series_type == type.id|stringformat:"s" %}selected{% endif %}>
+                                        <option value="{{ type.id }}"
+                                                {% if request.GET.series_type == type.id|stringformat:"s" %}selected{% endif %}>
                                             {{ type.name }}
                                         </option>
                                     {% endfor %}
@@ -129,7 +132,8 @@
                                 <select id="book_format" name="book_format" aria-label="Filter by format">
                                     <option value="">All Formats</option>
                                     {% for value, label in book_formats %}
-                                        <option value="{{ value }}" {% if request.GET.book_format == value %}selected{% endif %}>
+                                        <option value="{{ value }}"
+                                                {% if request.GET.book_format == value %}selected{% endif %}>
                                             {{ label }}
                                         </option>
                                     {% endfor %}
@@ -149,8 +153,10 @@
                             <div class="select is-fullwidth">
                                 <select id="is_read" name="is_read" aria-label="Filter by read status">
                                     <option value="">All</option>
-                                    <option value="true" {% if request.GET.is_read == "true" %}selected{% endif %}>Read</option>
-                                    <option value="false" {% if request.GET.is_read == "false" %}selected{% endif %}>Unread</option>
+                                    <option value="true"
+                                            {% if request.GET.is_read == "true" %}selected{% endif %}>Read</option>
+                                    <option value="false"
+                                            {% if request.GET.is_read == "false" %}selected{% endif %}>Unread</option>
                                 </select>
                             </div>
                             <span class="icon is-small is-left">
@@ -168,7 +174,8 @@
                                 <select id="grade" name="grade" aria-label="Filter by grade">
                                     <option value="">All Grades</option>
                                     {% for value, label in grade_choices %}
-                                        <option value="{{ value }}" {% if request.GET.grade == value|stringformat:"s" %}selected{% endif %}>
+                                        <option value="{{ value }}"
+                                                {% if request.GET.grade == value|stringformat:"s" %}selected{% endif %}>
                                             {{ label }}
                                         </option>
                                     {% endfor %}
@@ -186,10 +193,13 @@
                         <label class="label" for="grading_company">Grading Company</label>
                         <div class="control has-icons-left">
                             <div class="select is-fullwidth">
-                                <select id="grading_company" name="grading_company" aria-label="Filter by grading company">
+                                <select id="grading_company"
+                                        name="grading_company"
+                                        aria-label="Filter by grading company">
                                     <option value="">All Companies</option>
                                     {% for value, label in grading_companies %}
-                                        <option value="{{ value }}" {% if request.GET.grading_company == value %}selected{% endif %}>
+                                        <option value="{{ value }}"
+                                                {% if request.GET.grading_company == value %}selected{% endif %}>
                                             {{ label }}
                                         </option>
                                     {% endfor %}
@@ -210,7 +220,8 @@
                                 <select id="rating" name="rating" aria-label="Filter by rating">
                                     <option value="">All Ratings</option>
                                     {% for value, label in rating_choices %}
-                                        <option value="{{ value }}" {% if request.GET.rating == value|stringformat:"s" %}selected{% endif %}>
+                                        <option value="{{ value }}"
+                                                {% if request.GET.rating == value|stringformat:"s" %}selected{% endif %}>
                                             {{ label }} Star{{ label|pluralize }}
                                         </option>
                                     {% endfor %}
@@ -225,7 +236,7 @@
             </div>
         </details>
         {# Action Buttons #}
-        <div class="field is-grouped is-flex-direction-column-mobile mt-4">
+        <div class="field is-grouped filter-buttons mt-4">
             <div class="control">
                 <button class="button is-link" type="submit">
                     <span class="icon">
@@ -235,7 +246,9 @@
                 </button>
             </div>
             <div class="control">
-                <a class="button is-light" href="{% url 'user_collection:list' %}" title="Clear all filters">
+                <a class="button is-light"
+                   href="{% url 'user_collection:list' %}"
+                   title="Clear all filters">
                     <span class="icon">
                         <i class="fas fa-times"></i>
                     </span>
@@ -270,5 +283,25 @@ details[open] > summary::before {
 
 details > summary:hover {
     color: hsl(217, 71%, 53%);
+}
+
+/* Mobile filter buttons styling */
+@media screen and (max-width: 768px) {
+    .filter-buttons.is-grouped {
+        flex-direction: column;
+    }
+
+    .filter-buttons .control {
+        width: 100%;
+        margin-bottom: 0.5rem;
+    }
+
+    .filter-buttons .control:last-child {
+        margin-bottom: 0;
+    }
+
+    .filter-buttons .button {
+        width: 100%;
+    }
 }
 </style>

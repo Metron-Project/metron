@@ -52,7 +52,9 @@
                             {% for series in series_list %}
                                 <tr>
                                     <td>
-                                        <a href="{% url 'series:detail' series.slug %}">{{ series.name }} {% if series.year_began %}({{ series.year_began }}){% endif %}</a>
+                                        <a href="{% url 'series:detail' series.slug %}">{{ series.name }}
+                                            {% if series.year_began %}({{ series.year_began }}){% endif %}
+                                        </a>
                                     </td>
                                     <td>{{ series.publisher.name }}</td>
                                     <td>

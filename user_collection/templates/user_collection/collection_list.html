@@ -46,9 +46,7 @@
         </div>
     </section>
     <section class="section">
-        <div class="container">
-            {% include "user_collection/partials/collection_filter.html" %}
-        </div>
+        <div class="container">{% include "user_collection/partials/collection_filter.html" %}</div>
     </section>
     {% if collection_items %}
         <section class="section pt-0">
@@ -107,9 +105,7 @@
                                             </span>
                                         {% endif %}
                                     </td>
-                                    <td>
-                                        {% include "user_collection/partials/star_rating.html" %}
-                                    </td>
+                                    <td>{% include "user_collection/partials/star_rating.html" %}</td>
                                     <td>{{ item.quantity }}</td>
                                     <td>
                                         {% if item.purchase_price %}
