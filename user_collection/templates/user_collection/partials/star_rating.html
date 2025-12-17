@@ -10,7 +10,6 @@
             <i class="{% if item.rating and forloop.counter <= item.rating %}fas{% else %}far{% endif %} fa-star"></i>
         </button>
     {% endfor %}
-
     {% if item.rating %}
         <button type="button"
                 class="star-clear"
@@ -23,7 +22,6 @@
         </button>
     {% endif %}
 </div>
-
 <style>
     .star-rating {
         display: inline-flex;
