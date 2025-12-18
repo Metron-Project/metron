@@ -8,7 +8,7 @@ class ReadingListItemInline(admin.TabularInline):
 
     model = ReadingListItem
     extra = 1
-    fields = ("issue", "order")
+    fields = ("issue", "order", "issue_type")
     autocomplete_fields = ["issue"]
 
 
@@ -41,7 +41,8 @@ class ReadingListAdmin(admin.ModelAdmin):
 class ReadingListItemAdmin(admin.ModelAdmin):
     """Admin interface for reading list items."""
 
-    list_display = ("reading_list", "issue", "order")
+    list_display = ("reading_list", "issue", "order", "issue_type")
+    list_filter = ("issue_type",)
     search_fields = ("reading_list__name", "issue__series__name")
     autocomplete_fields = ["reading_list", "issue"]
     ordering = ("reading_list", "order")

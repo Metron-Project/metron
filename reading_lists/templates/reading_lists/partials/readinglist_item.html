@@ -1,0 +1,39 @@
+<li id="item-{{ item.pk }}">
+    <div class="level">
+        <div class="level-left">
+            <div class="level-item">
+                <div>
+                    <a href="{% url 'issue:detail' item.issue.slug %}">{{ item.issue }}</a>
+                    <span class="has-text-grey-light">— {{ item.issue.cover_date|date:"M Y" }}</span>
+                    {% if item.issue_type %}
+                        <span class="tag is-info is-light ml-2">{{ item.get_issue_type_display }}</span>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+        {% if is_owner %}
+            <div class="level-right">
+                <div class="level-item">
+                    <div class="buttons has-addons">
+                        <button class="button is-small is-info is-outlined"
+                                hx-get="{% url 'reading-list:edit-issue-type' reading_list_slug item.pk %}"
+                                hx-target="#item-{{ item.pk }}"
+                                hx-swap="outerHTML"
+                                title="Edit issue type">
+                            <span class="icon is-small">
+                                <i class="fas fa-tag"></i>
+                            </span>
+                        </button>
+                        <a href="{% url 'reading-list:remove-issue' reading_list_slug item.pk %}"
+                           class="button is-small is-danger is-outlined"
+                           title="Remove from list">
+                            <span class="icon is-small">
+                                <i class="fas fa-times"></i>
+                            </span>
+                        </a>
+                    </div>
+                </div>
+            </div>
+        {% endif %}
+    </div>
+</li>

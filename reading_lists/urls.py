@@ -13,6 +13,9 @@ from reading_lists.views import (
     RemoveIssueFromReadingListView,
     SearchReadingListListView,
     UserReadingListListView,
+    cancel_edit_issue_type,
+    edit_issue_type,
+    update_issue_type,
     update_reading_list_rating,
 )
 
@@ -51,4 +54,19 @@ urlpatterns = [
         name="items-load-more",
     ),
     path("<slug:slug>/rate/", update_reading_list_rating, name="rate"),
+    path(
+        "<slug:slug>/item/<int:item_pk>/edit-type/",
+        edit_issue_type,
+        name="edit-issue-type",
+    ),
+    path(
+        "<slug:slug>/item/<int:item_pk>/update-type/",
+        update_issue_type,
+        name="update-issue-type",
+    ),
+    path(
+        "<slug:slug>/item/<int:item_pk>/cancel-edit-type/",
+        cancel_edit_issue_type,
+        name="cancel-edit-issue-type",
+    ),
 ]

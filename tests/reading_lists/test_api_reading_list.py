@@ -275,6 +275,7 @@ def test_items_response_structure(api_client_with_credentials, reading_list_with
         assert "id" in item
         assert "issue" in item
         assert "order" in item
+        assert "issue_type" in item
         # Check nested issue structure
         assert "id" in item["issue"]
         assert "series" in item["issue"]

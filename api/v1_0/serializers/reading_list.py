@@ -34,10 +34,11 @@ class ReadingListIssueSerializer(serializers.ModelSerializer):
 
 class ReadingListItemSerializer(serializers.ModelSerializer):
     issue = ReadingListIssueSerializer(read_only=True)
+    issue_type = serializers.CharField(source="get_issue_type_display", read_only=True)
 
     class Meta:
         model = ReadingListItem
-        fields = ("id", "issue", "order")
+        fields = ("id", "issue", "order", "issue_type")
 
 
 class ReadingListListSerializer(serializers.ModelSerializer):
