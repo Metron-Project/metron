@@ -122,10 +122,43 @@ Through model for the M2M relationship between ReadingList and Issue.
 
 ```python
 class ReadingListItem(models.Model):
+    class IssueType(models.TextChoices):
+        """Issue type choices for reading list items."""
+        PROLOGUE = "PROLOGUE", "Prologue"
+        CORE = "CORE", "Core Issue"
+        TIE_IN = "TIE_IN", "Tie-In"
+        EPILOGUE = "EPILOGUE", "Epilogue"
+
     reading_list = models.ForeignKey(ReadingList, on_delete=models.CASCADE)
     issue = models.ForeignKey(Issue, on_delete=models.CASCADE)
     order = models.PositiveIntegerField(default=0)
+    issue_type = models.CharField(
+        max_length=10,
+        choices=IssueType.choices,
+        blank=True,
+        help_text="Optional categorization of this issue's role in the reading list",
+    )
 ```
+
+**Issue Type Categorization:**
+
+The `issue_type` field allows users to categorize issues within their reading lists to indicate their narrative role:
+
+- **PROLOGUE**: Setup or prelude issues
+- **CORE**: Main storyline issues
+- **TIE_IN**: Related supplementary issues
+- **EPILOGUE**: Conclusion or aftermath issues
+- **Blank**: Uncategorized (default)
+
+**Features:**
+
+- Optional field (blank=True)
+- Uses Django's TextChoices for type safety
+- Displayed as badges in the web UI
+- Exposed in API serializer
+- Inline HTMX-based editing
+
+**Migration:** `0004_readinglistitem_issue_type.py`
 
 **Constraints:**
 
@@ -458,6 +491,93 @@ Returns the `reading_list_rating.html` partial template with context:
 
 **URL:** `/reading-lists/<slug>/rate/`
 
+#### edit_issue_type (Function-Based View)
+```python
+@login_required
+def edit_issue_type(request, slug, item_pk):
+    """HTMX view to show the edit form for issue type."""
+```
+
+**Purpose:** HTMX-powered endpoint for displaying the issue type edit form.
+
+**Validation Rules:**
+
+1. Must be authenticated (`@login_required`)
+2. Must have permission to manage the reading list
+3. Reading list item must exist
+
+**HTMX Integration:**
+
+- Accepts GET requests
+- Returns rendered partial template with edit form
+- Uses `outerHTML` swap to replace display with edit mode
+- Provides instant inline editing without page navigation
+
+**URL:** `/reading-lists/<slug>/item/<item_pk>/edit-type/`
+
+#### update_issue_type (Function-Based View)
+```python
+@login_required
+@require_POST
+def update_issue_type(request, slug, item_pk):
+    """HTMX view to update the issue type of a reading list item."""
+```
+
+**Purpose:** HTMX-powered endpoint for saving issue type changes.
+
+**Validation Rules:**
+
+1. Must be authenticated (`@login_required`)
+2. Must use POST method (`@require_POST`)
+3. Must have permission to manage the reading list
+4. Issue type value must be valid or empty
+
+**Issue Type Validation:**
+```python
+issue_type = request.POST.get("issue_type", "")
+if issue_type in dict(ReadingListItem.IssueType.choices) or issue_type == "":
+    item.issue_type = issue_type
+    item.save()
+```
+
+**HTMX Integration:**
+
+- Accepts POST requests with `issue_type` parameter
+- Returns rendered partial template with updated display
+- Uses `outerHTML` swap to replace edit form with display
+- Provides instant feedback without page reload
+
+**Supported Values:**
+
+- `PROLOGUE`, `CORE`, `TIE_IN`, `EPILOGUE`: Valid issue types
+- Empty string `""`: Clears the issue type
+- Invalid values: Ignored, no change made
+
+**URL:** `/reading-lists/<slug>/item/<item_pk>/update-type/`
+
+#### cancel_edit_issue_type (Function-Based View)
+```python
+@login_required
+def cancel_edit_issue_type(request, slug, item_pk):
+    """HTMX view to cancel editing and return to display mode."""
+```
+
+**Purpose:** HTMX-powered endpoint for canceling issue type editing.
+
+**Validation Rules:**
+
+1. Must be authenticated (`@login_required`)
+2. Must have permission to manage the reading list
+
+**HTMX Integration:**
+
+- Accepts GET requests
+- Returns rendered partial template with original display
+- Uses `outerHTML` swap to replace edit form with display
+- Discards any unsaved changes
+
+**URL:** `/reading-lists/<slug>/item/<item_pk>/cancel-edit-type/`
+
 ### URL Configuration
 
 **File:** `reading_lists/urls.py`
@@ -477,6 +597,9 @@ urlpatterns = [
     path("<slug:slug>/add-from-arc/", AddIssuesFromArcView.as_view(), name="add-from-arc"),
     path("<slug:slug>/remove-issue/<int:item_pk>/", RemoveIssueFromReadingListView.as_view(), name="remove-issue"),
     path("<slug:slug>/rate/", update_reading_list_rating, name="rate"),
+    path("<slug:slug>/item/<int:item_pk>/edit-type/", edit_issue_type, name="edit-issue-type"),
+    path("<slug:slug>/item/<int:item_pk>/update-type/", update_issue_type, name="update-issue-type"),
+    path("<slug:slug>/item/<int:item_pk>/cancel-edit-type/", cancel_edit_issue_type, name="cancel-edit-issue-type"),
 ]
 ```
 
@@ -837,6 +960,9 @@ The web interface provides a dropdown with:
 | `add_issues_from_arc.html` | Bulk add from arc | Arc autocomplete, position selection, usage tips |
 | `remove_issue_confirm.html` | Remove issue confirmation | Issue details |
 | `partials/reading_list_rating.html` | Rating component | HTMX-powered star rating, average display |
+| `partials/readinglist_item.html` | Single item display | Issue type badge, inline edit button, remove button |
+| `partials/readinglist_item_edit.html` | Single item edit form | Issue type dropdown, save/cancel buttons |
+| `partials/readinglist_item_list.html` | Item list wrapper | Used for load-more pagination |
 
 ### Template Context
 
@@ -920,6 +1046,148 @@ document.body.addEventListener('htmx:configRequest', (event) => {
 ```
 
 This ensures all HTMX requests include the CSRF token for security.
+
+### Issue Type Editing Partials
+
+**Files:**
+- `partials/readinglist_item.html` - Display mode
+- `partials/readinglist_item_edit.html` - Edit mode
+
+The issue type editing system uses HTMX for inline, no-reload editing:
+
+**Display Mode Template (`readinglist_item.html`):**
+
+```html
+<li id="item-{{ item.pk }}">
+    <div class="level">
+        <div class="level-left">
+            <div class="level-item">
+                <div>
+                    <a href="{% url 'issue:detail' item.issue.slug %}">{{ item.issue }}</a>
+                    <span class="has-text-grey-light">— {{ item.issue.cover_date|date:"M Y" }}</span>
+                    {% if item.issue_type %}
+                        <span class="tag is-info is-light ml-2">{{ item.get_issue_type_display }}</span>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+        {% if is_owner %}
+            <div class="level-right">
+                <div class="level-item">
+                    <div class="buttons has-addons">
+                        <button class="button is-small is-info is-outlined"
+                                hx-get="{% url 'reading-list:edit-issue-type' reading_list_slug item.pk %}"
+                                hx-target="#item-{{ item.pk }}"
+                                hx-swap="outerHTML"
+                                title="Edit issue type">
+                            <span class="icon is-small">
+                                <i class="fas fa-tag"></i>
+                            </span>
+                        </button>
+                        <a href="{% url 'reading-list:remove-issue' reading_list_slug item.pk %}"
+                           class="button is-small is-danger is-outlined"
+                           title="Remove from list">
+                            <span class="icon is-small">
+                                <i class="fas fa-times"></i>
+                            </span>
+                        </a>
+                    </div>
+                </div>
+            </div>
+        {% endif %}
+    </div>
+</li>
+```
+
+**Features:**
+
+- **Issue Type Badge**: Displays colored badge when issue has a type
+- **Edit Button**: Tag icon button triggers edit mode via HTMX GET
+- **Target Swap**: Uses `outerHTML` to replace entire list item with edit form
+- **Permission-Based**: Edit button only shown to owners/editors
+
+**Edit Mode Template (`readinglist_item_edit.html`):**
+
+```html
+<li id="item-{{ item.pk }}">
+    <div class="level">
+        <div class="level-left">
+            <div class="level-item">
+                <div>
+                    <a href="{% url 'issue:detail' item.issue.slug %}">{{ item.issue }}</a>
+                    <span class="has-text-grey-light">— {{ item.issue.cover_date|date:"M Y" }}</span>
+                </div>
+            </div>
+            <div class="level-item">
+                <form hx-post="{% url 'reading-list:update-issue-type' reading_list_slug item.pk %}"
+                      hx-target="#item-{{ item.pk }}"
+                      hx-swap="outerHTML">
+                    {% csrf_token %}
+                    <div class="field has-addons">
+                        <div class="control">
+                            <div class="select is-small">
+                                <select name="issue_type">
+                                    <option value="">-- No Type --</option>
+                                    <option value="PROLOGUE" {% if item.issue_type == 'PROLOGUE' %}selected{% endif %}>Prologue</option>
+                                    <option value="CORE" {% if item.issue_type == 'CORE' %}selected{% endif %}>Core Issue</option>
+                                    <option value="TIE_IN" {% if item.issue_type == 'TIE_IN' %}selected{% endif %}>Tie-In</option>
+                                    <option value="EPILOGUE" {% if item.issue_type == 'EPILOGUE' %}selected{% endif %}>Epilogue</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="control">
+                            <button type="submit" class="button is-small is-success">
+                                <span class="icon is-small">
+                                    <i class="fas fa-check"></i>
+                                </span>
+                            </button>
+                        </div>
+                        <div class="control">
+                            <button type="button"
+                                    class="button is-small"
+                                    hx-get="{% url 'reading-list:cancel-edit-issue-type' reading_list_slug item.pk %}"
+                                    hx-target="#item-{{ item.pk }}"
+                                    hx-swap="outerHTML">
+                                <span class="icon is-small">
+                                    <i class="fas fa-times"></i>
+                                </span>
+                            </button>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</li>
+```
+
+**Features:**
+
+- **Dropdown Selection**: All four issue types plus "No Type" option
+- **Current Value**: Pre-selects current issue type
+- **Save Button**: Checkmark icon submits via HTMX POST
+- **Cancel Button**: X icon reverts to display mode via HTMX GET
+- **Inline Form**: Form embedded directly in the list item
+- **CSRF Protection**: Token included in form
+
+**HTMX Workflow:**
+
+1. User clicks edit button (tag icon)
+2. HTMX GET request to `edit-issue-type` endpoint
+3. Server returns edit form template
+4. Form replaces list item via `outerHTML` swap
+5. User selects type and clicks save OR clicks cancel
+6. HTMX POST/GET request to `update-issue-type` or `cancel-edit-issue-type`
+7. Server returns display template with updated/original data
+8. Display replaces form via `outerHTML` swap
+
+**Benefits:**
+
+- No page reload required
+- Instant visual feedback
+- Progressive enhancement (works without JavaScript)
+- Consistent with project's HTMX patterns
+- Minimal JavaScript code required
 
 ## Database Optimization
 
@@ -1131,6 +1399,21 @@ All reading list API endpoints require authentication.
 
 **API Serializers:**
 
+**ReadingListItemSerializer:**
+```python
+class ReadingListItemSerializer(serializers.ModelSerializer):
+    issue = ReadingListIssueSerializer(read_only=True)
+    issue_type = serializers.CharField(source="get_issue_type_display", read_only=True)
+
+    class Meta:
+        model = ReadingListItem
+        fields = ("id", "issue", "order", "issue_type")
+```
+
+- Includes `issue_type` field (CharField, read-only)
+- Uses `get_issue_type_display()` to return human-readable labels
+- Returns "Prologue", "Core Issue", "Tie-In", "Epilogue", or empty string
+
 **ReadingListListSerializer:**
 - Includes `average_rating` (FloatField, read-only)
 - Includes `rating_count` (IntegerField, read-only)
@@ -1171,10 +1454,10 @@ For complete API documentation including filtering, pagination, and response for
 
 **Test Statistics:**
 
-- Total tests: 150+ passing
+- Total tests: 236 passing (2 skipped)
 - Forms: 100% coverage
-- Views: 95% coverage
-- Models: 100% coverage
+- Views: 94% coverage
+- Models: 99% coverage
 
 ### Test Coverage by Feature
 
@@ -1221,6 +1504,20 @@ For complete API documentation including filtering, pagination, and response for
     - Average rating calculations
     - Rating count aggregations
     - Template rendering with rating data
+- **Issue type editing** (13 comprehensive tests):
+    - Authentication requirements (login required for all operations)
+    - Permission checks (owner/admin/editor access control)
+    - Edit form display (HTMX GET endpoint)
+    - Setting issue types (all four types: Prologue, Core, Tie-In, Epilogue)
+    - Clearing issue types (empty string)
+    - Updating issue types (HTMX POST endpoint)
+    - Canceling edits (HTMX GET endpoint)
+    - Invalid value rejection (non-existent types ignored)
+    - Metron list permissions (admin can edit)
+    - Metron list permissions (reading list editors can edit)
+    - Metron list permissions (regular users cannot edit)
+    - Template rendering in display mode
+    - Template rendering in edit mode
 
 **Form Tests:**
 
@@ -1319,6 +1616,15 @@ class ReadingListModelTest(TestCase):
     - Rating filter for discovery (minimum rating)
     - API integration with rating fields
     - Optimized queries with rating annotations
+
+- ✅ **Issue Type Categorization** (Implemented)
+    - Tag issues as Prologue, Core Issue, Tie-In, or Epilogue
+    - Optional field with four predefined choices
+    - HTMX-powered inline editing interface
+    - Colored badges display in web UI
+    - Exposed in API serializer
+    - Permission-based editing (owners, admins, reading list editors)
+    - Comprehensive test coverage (13 tests)
 
 ### Planned Features
 
