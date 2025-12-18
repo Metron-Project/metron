@@ -15,6 +15,7 @@ The Reading Lists feature allows you to create, manage, and share curated comic 
 ### Core Functionality
 
 - **Create Reading Lists**: Build your own custom reading orders
+- **Issue Type Categorization**: Tag issues as Prologue, Core Issue, Tie-In, or Epilogue
 - **Public/Private Lists**: Share your lists with the community or keep them private
 - **Community Ratings**: Rate public reading lists with a 1-5 star system
 - **Drag-and-Drop Ordering**: Easily reorder issues within your lists
@@ -137,6 +138,38 @@ Perfect for adding all issues from a story arc at once!
 2. Find the issue you want to remove
 3. Click the "Remove" button next to the issue
 4. Confirm the removal
+
+### Categorizing Issues with Issue Types
+
+You can categorize issues in your reading lists to indicate their role in the story. This helps readers understand how each issue fits into the narrative.
+
+**Available Issue Types:**
+
+- **Prologue**: Setup or prelude issues that introduce the story
+- **Core Issue**: Main storyline issues essential to the narrative
+- **Tie-In**: Related issues that supplement the main story
+- **Epilogue**: Conclusion or aftermath issues that wrap up the story
+- **No Type**: Leave uncategorized (default)
+
+**How to Set Issue Types:**
+
+1. View your reading list detail page (must be a list you can edit)
+2. Find the issue you want to categorize
+3. Click the tag icon (🏷️) button next to the issue
+4. Select an issue type from the dropdown, or choose "-- No Type --" to clear it
+5. Click the checkmark (✓) to save, or X to cancel
+
+**Display:**
+
+- Issue types appear as colored badges next to issues in the reading list
+- Example: "Amazing Spider-Man #1" **[Core Issue]**
+- Helps readers quickly identify which issues are essential vs. supplementary
+
+**Use Cases:**
+
+- **Story Arcs**: Mark the main event issues as "Core Issue" and crossovers as "Tie-In"
+- **Events**: Identify setup (Prologue), main story (Core), and aftermath (Epilogue)
+- **Reading Orders**: Help readers know which issues they must read vs. can skip
 
 ### Rating Reading Lists
 
@@ -292,6 +325,8 @@ Some reading lists are owned by a special "Metron" user account:
 | `/reading-lists/<slug>/add-issue/` | Add issues individually | Yes |
 | `/reading-lists/<slug>/add-from-series/` | Add issues from series (bulk) | Yes |
 | `/reading-lists/<slug>/add-from-arc/` | Add issues from arc (bulk) | Yes |
+| `/reading-lists/<slug>/item/<item_pk>/edit-type/` | Edit issue type (HTMX) | Yes |
+| `/reading-lists/<slug>/item/<item_pk>/update-type/` | Update issue type (HTMX) | Yes |
 | `/reading-lists/<slug>/rate/` | Rate a public reading list | Yes |
 
 *Unauthenticated users can only view public lists.
@@ -302,9 +337,10 @@ Some reading lists are owned by a special "Metron" user account:
 
 1. **Use descriptive names**: "Secret Wars (2015)" is better than "My List"
 2. **Add descriptions**: Explain what the reading order covers
-3. **Credit your sources**: If you got the order from a website, note it in the description
-4. **Consider privacy**: Make lists public to share with the community
-5. **Keep it organized**: Use drag-and-drop to ensure proper reading order
+3. **Categorize with issue types**: Tag issues to help readers understand the story structure
+4. **Credit your sources**: If you got the order from a website, note it in the description
+5. **Consider privacy**: Make lists public to share with the community
+6. **Keep it organized**: Use drag-and-drop to ensure proper reading order
 
 ### Managing Large Lists
 

@@ -1131,9 +1131,29 @@ This endpoint is read-only. Create, update, and delete operations are not availa
     "gcd_id": null,
     "modified": "2025-01-10T14:20:00Z"
   },
-  "order": 1
+  "order": 1,
+  "issue_type": "Core Issue"
 }
 ```
+
+**Field Descriptions:**
+
+- `id` - Reading list item ID
+- `issue` - Nested issue object with series details
+- `order` - Position in the reading list (ascending)
+- `issue_type` - Categorization of issue's role in the reading list (optional)
+
+**Issue Type Values:**
+
+The `issue_type` field categorizes an issue's narrative role within the reading list:
+
+- `"Prologue"` - Setup or prelude issues that introduce the story
+- `"Core Issue"` - Main storyline issues essential to the narrative
+- `"Tie-In"` - Related issues that supplement the main story
+- `"Epilogue"` - Conclusion or aftermath issues that wrap up the story
+- `""` (empty string) - No categorization assigned
+
+This field helps readers understand which issues are essential versus supplementary.
 
 **Permissions:**
 

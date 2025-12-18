@@ -1611,3 +1611,228 @@ class TestReadingListRating:
         # Calculate average
         avg_rating = reading_list.ratings.aggregate(avg=Avg("rating"))["avg"]
         assert avg_rating == 4.0
+
+
+class TestIssueTypeEditing:
+    """Test cases for editing issue types in reading lists."""
+
+    def test_edit_issue_type_requires_login(self, client, reading_list_with_issues):
+        """Test that editing issue type requires authentication."""
+        item = reading_list_with_issues.reading_list_items.first()
+        url = reverse(
+            "reading-list:edit-issue-type",
+            kwargs={"slug": reading_list_with_issues.slug, "item_pk": item.pk},
+        )
+        resp = client.get(url)
+        assert resp.status_code == HTTP_302_FOUND
+        assert "/login/" in resp.url
+
+    def test_edit_issue_type_requires_ownership(
+        self, client, reading_list_with_issues, other_user, test_password
+    ):
+        """Test that only the owner can edit issue types."""
+        client.login(username=other_user.username, password=test_password)
+        item = reading_list_with_issues.reading_list_items.first()
+        url = reverse(
+            "reading-list:edit-issue-type",
+            kwargs={"slug": reading_list_with_issues.slug, "item_pk": item.pk},
+        )
+        resp = client.get(url)
+        assert resp.status_code == HTTP_403_FORBIDDEN
+
+    def test_edit_issue_type_owner_success(
+        self, client, reading_list_with_issues, reading_list_user, test_password
+    ):
+        """Test that owner can view the edit form."""
+        client.login(username=reading_list_user.username, password=test_password)
+        item = reading_list_with_issues.reading_list_items.first()
+        url = reverse(
+            "reading-list:edit-issue-type",
+            kwargs={"slug": reading_list_with_issues.slug, "item_pk": item.pk},
+        )
+        resp = client.get(url)
+        assert resp.status_code == HTTP_200_OK
+        assert b"issue_type" in resp.content
+
+    def test_update_issue_type_set_type(
+        self, client, reading_list_with_issues, reading_list_user, test_password
+    ):
+        """Test setting an issue type."""
+        client.login(username=reading_list_user.username, password=test_password)
+        item = reading_list_with_issues.reading_list_items.first()
+        assert item.issue_type == ""  # Initially empty
+
+        url = reverse(
+            "reading-list:update-issue-type",
+            kwargs={"slug": reading_list_with_issues.slug, "item_pk": item.pk},
+        )
+        resp = client.post(url, data={"issue_type": "CORE"})
+        assert resp.status_code == HTTP_200_OK
+
+        # Refresh from database
+        item.refresh_from_db()
+        assert item.issue_type == "CORE"
+
+    def test_update_issue_type_clear_type(
+        self, client, reading_list_with_issues, reading_list_user, test_password
+    ):
+        """Test clearing an issue type."""
+        client.login(username=reading_list_user.username, password=test_password)
+        item = reading_list_with_issues.reading_list_items.first()
+        item.issue_type = "PROLOGUE"
+        item.save()
+
+        url = reverse(
+            "reading-list:update-issue-type",
+            kwargs={"slug": reading_list_with_issues.slug, "item_pk": item.pk},
+        )
+        resp = client.post(url, data={"issue_type": ""})
+        assert resp.status_code == HTTP_200_OK
+
+        # Refresh from database
+        item.refresh_from_db()
+        assert item.issue_type == ""
+
+    def test_update_issue_type_all_types(
+        self, client, reading_list_with_issues, reading_list_user, test_password
+    ):
+        """Test all valid issue types."""
+        client.login(username=reading_list_user.username, password=test_password)
+        item = reading_list_with_issues.reading_list_items.first()
+        url = reverse(
+            "reading-list:update-issue-type",
+            kwargs={"slug": reading_list_with_issues.slug, "item_pk": item.pk},
+        )
+
+        valid_types = ["PROLOGUE", "CORE", "TIE_IN", "EPILOGUE"]
+        for issue_type in valid_types:
+            resp = client.post(url, data={"issue_type": issue_type})
+            assert resp.status_code == HTTP_200_OK
+            item.refresh_from_db()
+            assert item.issue_type == issue_type
+
+    def test_update_issue_type_invalid_value(
+        self, client, reading_list_with_issues, reading_list_user, test_password
+    ):
+        """Test that invalid issue types are rejected."""
+        client.login(username=reading_list_user.username, password=test_password)
+        item = reading_list_with_issues.reading_list_items.first()
+        original_type = item.issue_type
+
+        url = reverse(
+            "reading-list:update-issue-type",
+            kwargs={"slug": reading_list_with_issues.slug, "item_pk": item.pk},
+        )
+        resp = client.post(url, data={"issue_type": "INVALID"})
+        assert resp.status_code == HTTP_200_OK
+
+        # Value should not have changed
+        item.refresh_from_db()
+        assert item.issue_type == original_type
+
+    def test_update_issue_type_requires_login(self, client, reading_list_with_issues):
+        """Test that updating requires authentication."""
+        item = reading_list_with_issues.reading_list_items.first()
+        url = reverse(
+            "reading-list:update-issue-type",
+            kwargs={"slug": reading_list_with_issues.slug, "item_pk": item.pk},
+        )
+        resp = client.post(url, data={"issue_type": "CORE"})
+        assert resp.status_code == HTTP_302_FOUND
+        assert "/login/" in resp.url
+
+    def test_update_issue_type_requires_ownership(
+        self, client, reading_list_with_issues, other_user, test_password
+    ):
+        """Test that only owner can update issue types."""
+        client.login(username=other_user.username, password=test_password)
+        item = reading_list_with_issues.reading_list_items.first()
+        url = reverse(
+            "reading-list:update-issue-type",
+            kwargs={"slug": reading_list_with_issues.slug, "item_pk": item.pk},
+        )
+        resp = client.post(url, data={"issue_type": "CORE"})
+        assert resp.status_code == HTTP_403_FORBIDDEN
+
+    def test_cancel_edit_issue_type(
+        self, client, reading_list_with_issues, reading_list_user, test_password
+    ):
+        """Test canceling the edit returns to display mode."""
+        client.login(username=reading_list_user.username, password=test_password)
+        item = reading_list_with_issues.reading_list_items.first()
+        item.issue_type = "CORE"
+        item.save()
+
+        url = reverse(
+            "reading-list:cancel-edit-issue-type",
+            kwargs={"slug": reading_list_with_issues.slug, "item_pk": item.pk},
+        )
+        resp = client.get(url)
+        assert resp.status_code == HTTP_200_OK
+
+        # Should show the display template, not edit template
+        assert b"Core Issue" in resp.content  # Display of issue type
+        assert b'name="issue_type"' not in resp.content  # No form field
+
+    def test_admin_can_edit_metron_list_issue_type(
+        self, client, admin_user, metron_reading_list, reading_list_issue_1, test_password
+    ):
+        """Test that admin can edit issue types on Metron lists."""
+        # Add an issue to the Metron list
+        item = ReadingListItem.objects.create(
+            reading_list=metron_reading_list, issue=reading_list_issue_1, order=1
+        )
+
+        client.login(username=admin_user.username, password=test_password)
+        url = reverse(
+            "reading-list:update-issue-type",
+            kwargs={"slug": metron_reading_list.slug, "item_pk": item.pk},
+        )
+        resp = client.post(url, data={"issue_type": "CORE"})
+        assert resp.status_code == HTTP_200_OK
+
+        item.refresh_from_db()
+        assert item.issue_type == "CORE"
+
+    def test_editor_can_edit_metron_list_issue_type(
+        self,
+        client,
+        reading_list_editor_user,
+        metron_reading_list,
+        reading_list_issue_1,
+        test_password,
+    ):
+        """Test that reading list editors can edit issue types on Metron lists."""
+        # Add an issue to the Metron list
+        item = ReadingListItem.objects.create(
+            reading_list=metron_reading_list, issue=reading_list_issue_1, order=1
+        )
+
+        client.login(username=reading_list_editor_user.username, password=test_password)
+        url = reverse(
+            "reading-list:update-issue-type",
+            kwargs={"slug": metron_reading_list.slug, "item_pk": item.pk},
+        )
+        resp = client.post(url, data={"issue_type": "PROLOGUE"})
+        assert resp.status_code == HTTP_200_OK
+
+        item.refresh_from_db()
+        assert item.issue_type == "PROLOGUE"
+
+    def test_regular_user_cannot_edit_metron_list_issue_type(
+        self, client, metron_reading_list, reading_list_issue_1, create_user, test_password
+    ):
+        """Test that regular users cannot edit issue types on Metron lists."""
+        regular_user = create_user(username="regular_user")
+        # Add an issue to the Metron list
+        item = ReadingListItem.objects.create(
+            reading_list=metron_reading_list, issue=reading_list_issue_1, order=1
+        )
+
+        client.login(username=regular_user.username, password=test_password)
+        url = reverse(
+            "reading-list:update-issue-type",
+            kwargs={"slug": metron_reading_list.slug, "item_pk": item.pk},
+        )
+        resp = client.post(url, data={"issue_type": "CORE"})
+        assert resp.status_code == HTTP_403_FORBIDDEN

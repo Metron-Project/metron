@@ -842,3 +842,93 @@ def update_reading_list_rating(request, slug):
             "rating_count": avg_data["count"],
         },
     )
+
+
+@login_required
+def edit_issue_type(request, slug, item_pk):
+    """HTMX view to show the edit form for issue type."""
+    reading_list = get_object_or_404(ReadingList, slug=slug)
+
+    # Check if user can manage this reading list
+    if not can_manage_reading_list(request.user, reading_list):
+        return HttpResponseForbidden("You do not have permission to edit this reading list")
+
+    # Get the reading list item
+    item = get_object_or_404(
+        ReadingListItem,
+        reading_list=reading_list,
+        pk=item_pk,
+    )
+
+    # Return the edit form
+    return render(
+        request,
+        "reading_lists/partials/readinglist_item_edit.html",
+        {
+            "item": item,
+            "reading_list_slug": slug,
+        },
+    )
+
+
+@login_required
+@require_POST
+def update_issue_type(request, slug, item_pk):
+    """HTMX view to update the issue type of a reading list item."""
+    reading_list = get_object_or_404(ReadingList, slug=slug)
+
+    # Check if user can manage this reading list
+    if not can_manage_reading_list(request.user, reading_list):
+        return HttpResponseForbidden("You do not have permission to edit this reading list")
+
+    # Get the reading list item
+    item = get_object_or_404(
+        ReadingListItem,
+        reading_list=reading_list,
+        pk=item_pk,
+    )
+
+    # Update the issue type
+    issue_type = request.POST.get("issue_type", "")
+    if issue_type in dict(ReadingListItem.IssueType.choices) or issue_type == "":
+        item.issue_type = issue_type
+        item.save()
+
+    # Return the updated item display
+    return render(
+        request,
+        "reading_lists/partials/readinglist_item.html",
+        {
+            "item": item,
+            "reading_list_slug": slug,
+            "is_owner": True,
+        },
+    )
+
+
+@login_required
+def cancel_edit_issue_type(request, slug, item_pk):
+    """HTMX view to cancel editing and return to display mode."""
+    reading_list = get_object_or_404(ReadingList, slug=slug)
+
+    # Check if user can manage this reading list
+    if not can_manage_reading_list(request.user, reading_list):
+        return HttpResponseForbidden("You do not have permission to edit this reading list")
+
+    # Get the reading list item
+    item = get_object_or_404(
+        ReadingListItem,
+        reading_list=reading_list,
+        pk=item_pk,
+    )
+
+    # Return the display view
+    return render(
+        request,
+        "reading_lists/partials/readinglist_item.html",
+        {
+            "item": item,
+            "reading_list_slug": slug,
+            "is_owner": True,
+        },
+    )

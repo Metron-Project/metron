@@ -96,6 +96,14 @@ class ReadingList(CommonInfo):
 class ReadingListItem(models.Model):
     """Through model for ordering issues within a reading list."""
 
+    class IssueType(models.TextChoices):
+        """Issue type choices for reading list items."""
+
+        PROLOGUE = "PROLOGUE", "Prologue"
+        CORE = "CORE", "Core Issue"
+        TIE_IN = "TIE_IN", "Tie-In"
+        EPILOGUE = "EPILOGUE", "Epilogue"
+
     reading_list = models.ForeignKey(
         ReadingList,
         on_delete=models.CASCADE,
@@ -109,6 +117,12 @@ class ReadingListItem(models.Model):
     order = models.PositiveIntegerField(
         default=0,
         help_text="Position of this issue in the reading list",
+    )
+    issue_type = models.CharField(
+        max_length=10,
+        choices=IssueType.choices,
+        blank=True,
+        help_text="Optional categorization of this issue's role in the reading list",
     )
 
     class Meta:
