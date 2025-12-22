@@ -26,6 +26,7 @@ class CustomUserCreationForm(UserCreationForm):
             "inboxes.app",
             "passinbox.com",
             "passmail.net",
+            "usemx.de",
         }  # List of providers that provide temp email addresses.
         whitelist = {"gmail.com", "yahoo.com", "proton.me"}
 
