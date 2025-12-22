@@ -635,25 +635,33 @@ class IssueHistory(HistoryListView):
 
 
 class WeekList(ListView):
-    year, week, _ = date.today().isocalendar()
-
     model = Issue
     paginate_by = PAGINATE_BY
     template_name = "comicsdb/week_list.html"
 
+    def get_week_info(self):
+        """Get the current year and week number."""
+        year, week, _ = date.today().isocalendar()
+        return year, week
+
     def get_queryset(self):
-        queryset = (
-            Issue.objects.filter(store_date__week=self.week)
-            .filter(store_date__year=self.year)
-            .select_related("series", "series__series_type")
-        )
+        year, week = self.get_week_info()
+        # Get the Monday of the ISO week (start of week)
+        week_start = datetime.strptime(f"{year}-{week}-1", "%G-%V-%u").date()
+        # Get the Sunday of the ISO week (end of week)
+        week_end = datetime.strptime(f"{year}-{week}-7", "%G-%V-%u").date()
+
+        queryset = Issue.objects.filter(
+            store_date__gte=week_start, store_date__lte=week_end
+        ).select_related("series", "series__series_type")
         # Apply filters
         filtered = IssueViewFilter(self.request.GET, queryset=queryset)
         return filtered.qs
 
     def get_context_data(self, **kwargs):
+        year, week = self.get_week_info()
         # The '1' in the format string gives the date for Monday
-        release_day = datetime.strptime(f"{self.year}-{self.week}-1", "%G-%V-%u")
+        release_day = datetime.strptime(f"{year}-{week}-1", "%G-%V-%u")
         context = super().get_context_data(**kwargs)
         context["release_day"] = release_day
         context["future"] = False
@@ -664,31 +672,39 @@ class WeekList(ListView):
 
 
 class NextWeekList(ListView):
-    year, week, _ = date.today().isocalendar()
-    # Check if we're at the last week of the year.
-    if week != TOTAL_WEEKS_YEAR:
-        week += 1
-    else:
-        year += 1
-        week = 1
-
     model = Issue
     paginate_by = PAGINATE_BY
     template_name = "comicsdb/week_list.html"
 
+    def get_week_info(self):
+        """Get the next week's year and week number."""
+        year, week, _ = date.today().isocalendar()
+        # Check if we're at the last week of the year.
+        if week != TOTAL_WEEKS_YEAR:
+            week += 1
+        else:
+            year += 1
+            week = 1
+        return year, week
+
     def get_queryset(self):
-        queryset = (
-            Issue.objects.filter(store_date__week=self.week)
-            .filter(store_date__year=self.year)
-            .select_related("series", "series__series_type")
-        )
+        year, week = self.get_week_info()
+        # Get the Monday of the ISO week (start of week)
+        week_start = datetime.strptime(f"{year}-{week}-1", "%G-%V-%u").date()
+        # Get the Sunday of the ISO week (end of week)
+        week_end = datetime.strptime(f"{year}-{week}-7", "%G-%V-%u").date()
+
+        queryset = Issue.objects.filter(
+            store_date__gte=week_start, store_date__lte=week_end
+        ).select_related("series", "series__series_type")
         # Apply filters
         filtered = IssueViewFilter(self.request.GET, queryset=queryset)
         return filtered.qs
 
     def get_context_data(self, **kwargs):
+        year, week = self.get_week_info()
         # The '1' in the format string gives the date for Monday
-        release_day = datetime.strptime(f"{self.year}-{self.week}-1", "%G-%V-%u")
+        release_day = datetime.strptime(f"{year}-{week}-1", "%G-%V-%u")
         context = super().get_context_data(**kwargs)
         context["release_day"] = release_day
         context["future"] = False
@@ -700,31 +716,38 @@ class NextWeekList(ListView):
 
 # View to show any issues released after next weeks.
 class FutureList(ListView):
-    year, week, _ = date.today().isocalendar()
-    # Check if we're at the last week of the year.
-    if week != TOTAL_WEEKS_YEAR:
-        week += 1
-    else:
-        year += 1
-        week = 1
-
     model = Issue
     paginate_by = PAGINATE_BY
     template_name = "comicsdb/week_list.html"
 
+    def get_week_info(self):
+        """Get the next week's year and week number for filtering future issues."""
+        year, week, _ = date.today().isocalendar()
+        # Check if we're at the last week of the year.
+        if week != TOTAL_WEEKS_YEAR:
+            week += 1
+        else:
+            year += 1
+            week = 1
+        return year, week
+
     def get_queryset(self):
-        queryset = (
-            Issue.objects.filter(store_date__year__gte=self.year)
-            .exclude(store_date__week__lte=self.week, store_date__year=self.year)
-            .select_related("series", "series__series_type")
+        year, week = self.get_week_info()
+        # Get the Sunday of next week (end of next week)
+        week_end = datetime.strptime(f"{year}-{week}-7", "%G-%V-%u").date()
+
+        # Show all issues after next week
+        queryset = Issue.objects.filter(store_date__gt=week_end).select_related(
+            "series", "series__series_type"
         )
         # Apply filters
         filtered = IssueViewFilter(self.request.GET, queryset=queryset)
         return filtered.qs
 
     def get_context_data(self, **kwargs):
+        year, week = self.get_week_info()
         # The '1' in the format string gives the date for Monday
-        release_day = datetime.strptime(f"{self.year}-{self.week}-1", "%G-%V-%u")
+        release_day = datetime.strptime(f"{year}-{week}-1", "%G-%V-%u")
         context = super().get_context_data(**kwargs)
         context["release_day"] = release_day
         context["future"] = True
