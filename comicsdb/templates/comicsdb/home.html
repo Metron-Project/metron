@@ -63,160 +63,158 @@
 {# Information Cards #}
 <section class="section">
     <div class="container">
-        <div class="fixed-grid has-1-cols-mobile has-2-cols-tablet">
-            <div class="grid">
+        <div class="columns is-multiline is-mobile">
+            <div class="column is-12-mobile is-12-tablet is-full-desktop">
                 {# What is Metron #}
-                <div class="cell">
-                    <article class="box has-background-link has-text-link-invert is-height-100">
-                        <h2 class="title has-text-link-invert">What is Metron?</h2>
-                        <div class="content">
-                            <p>
-                                <strong>Metron</strong> is a community-based site whose goal is to build an open database
-                                with a <a href="https://en.wikipedia.org/wiki/Representational_state_transfer"
+                <article class="box has-background-link has-text-link-invert is-height-100">
+                    <h2 class="title has-text-link-invert">What is Metron?</h2>
+                    <div class="content">
+                        <p>
+                            <strong>Metron</strong> is a community-based site whose goal is to build an open database
+                            with a <a href="https://en.wikipedia.org/wiki/Representational_state_transfer"
     target="_blank"
     rel="noopener noreferrer"
     class="has-text-link-invert">REST</a> API for comic books.
-                            </p>
-                            <p>
-                                Originally, when this project was created, the only comic book database that provided a REST API for users was
-                                <a href="https://comicvine.gamespot.com/"
-                                   target="_blank"
-                                   rel="noopener noreferrer"
-                                   class="has-text-link-invert">Comic Vine</a>. Unfortunately, it's a corporately-owned service and
-                                the community that uses it has no control over the resources provided to maintain it or ensure its
-                                continued accessibility. This project was started to create an alternative.
-                            </p>
-                            <p>
-                                <strong>Note:</strong> Recently, the <a href="https://www.comics.org/"
+                        </p>
+                        <p>
+                            Originally, when this project was created, the only comic book database that provided a REST API for users was
+                            <a href="https://comicvine.gamespot.com/"
+                               target="_blank"
+                               rel="noopener noreferrer"
+                               class="has-text-link-invert">Comic Vine</a>. Unfortunately, it's a corporately-owned service and
+                            the community that uses it has no control over the resources provided to maintain it or ensure its
+                            continued accessibility. This project was started to create an alternative.
+                        </p>
+                        <p>
+                            <strong>Note:</strong> Recently, the <a href="https://www.comics.org/"
     target="_blank"
     rel="noopener noreferrer"
     class="has-text-link-invert">Grand Comics Database</a> created an
-                                <a href="https://github.com/GrandComicsDatabase/gcd-django/wiki/API"
-                                   target="_blank"
-                                   rel="noopener noreferrer"
-                                   class="has-text-link-invert">API</a>, which you may wish to explore as an alternative.
-                            </p>
-                        </div>
-                    </article>
-                </div>
+                            <a href="https://github.com/GrandComicsDatabase/gcd-django/wiki/API"
+                               target="_blank"
+                               rel="noopener noreferrer"
+                               class="has-text-link-invert">API</a>, which you may wish to explore as an alternative.
+                        </p>
+                    </div>
+                </article>
+            </div>
+            <div class="column is-12-mobile is-6-tablet">
                 {# Using the REST API #}
-                <div class="cell">
-                    <article class="box has-background-warning has-text-warning-invert is-height-100">
-                        <h2 class="title has-text-warning-invert">Using the REST API</h2>
-                        <div class="content">
-                            <p>
-                                If you want to use data from Metron, there is a <a href="https://www.python.org/"
+                <article class="box has-background-warning has-text-warning-invert is-height-100">
+                    <h2 class="title has-text-warning-invert">Using the REST API</h2>
+                    <div class="content">
+                        <p>
+                            If you want to use data from Metron, there is a <a href="https://www.python.org/"
     target="_blank"
     rel="noopener noreferrer"
     class="has-text-warning-invert">Python</a> wrapper
-                                called <a href="https://github.com/Metron-Project/mokkari"
+                            called <a href="https://github.com/Metron-Project/mokkari"
     target="_blank"
     rel="noopener noreferrer"
     class="has-text-warning-invert">Mokkari</a> to make it easy to use the API.
-                            </p>
-                            <p>Want to tag your comic archives with metadata from Metron? You can use these projects:</p>
-                            <ul>
-                                <li>
-                                    <a href="https://github.com/Metron-Project/metron-tagger"
-                                       target="_blank"
-                                       rel="noopener noreferrer"
-                                       class="has-text-warning-invert">Metron-Tagger</a>
-                                </li>
-                                <li>
-                                    <a href="https://github.com/Buried-In-Code/Perdoo"
-                                       target="_blank"
-                                       rel="noopener noreferrer"
-                                       class="has-text-warning-invert">Perdoo</a>
-                                </li>
-                                <li>
-                                    <s><a href="https://github.com/comictagger/comictagger/issues/783"
+                        </p>
+                        <p>Want to tag your comic archives with metadata from Metron? You can use these projects:</p>
+                        <ul>
+                            <li>
+                                <a href="https://github.com/Metron-Project/metron-tagger"
+                                   target="_blank"
+                                   rel="noopener noreferrer"
+                                   class="has-text-warning-invert">Metron-Tagger</a>
+                            </li>
+                            <li>
+                                <a href="https://github.com/Buried-In-Code/Perdoo"
+                                   target="_blank"
+                                   rel="noopener noreferrer"
+                                   class="has-text-warning-invert">Perdoo</a>
+                            </li>
+                            <li>
+                                <s><a href="https://github.com/comictagger/comictagger/issues/783"
    target="_blank"
    rel="noopener noreferrer"
    class="has-text-warning-invert">Comic Tagger</a></s> (No longer supported)
-                                </li>
-                            </ul>
-                            <p>
-                                For more information on the API, please refer to the
-                                <a href="{% url 'wiki:root' %}" class="has-text-warning-invert">Wiki</a>.
-                            </p>
-                        </div>
-                    </article>
-                </div>
+                            </li>
+                        </ul>
+                        <p>
+                            For more information on the API, please refer to the
+                            <a href="{% url 'wiki:root' %}" class="has-text-warning-invert">Wiki</a>.
+                        </p>
+                    </div>
+                </article>
+            </div>
+            <div class="column is-12-mobile is-6-tablet">
                 {# Reading Lists & Collections #}
-                <div class="cell">
-                    <article class="box has-background-info has-text-info-invert is-height-100">
-                        <h2 class="title has-text-info-invert">Reading Lists & Collections</h2>
-                        <div class="content">
-                            <p>
-                                Metron now supports <strong>Reading Lists</strong> and <strong>Collections</strong> to help you organize and track your comics!
-                            </p>
-                            <p>
-                                <strong>Reading Lists</strong> allow you to create custom lists of issues you want to read, mark your progress, and share your reading order with others.
-                            </p>
-                            <p>
-                                <strong>Collections</strong> let you catalog and organize the comics you own, making it easy to keep track of your personal library.
-                            </p>
-                            <p>Sign up for an account to start creating your own reading lists and collections today!</p>
-                        </div>
-                    </article>
-                </div>
+                <article class="box has-background-info has-text-info-invert is-height-100">
+                    <h2 class="title has-text-info-invert">Reading Lists & Collections</h2>
+                    <div class="content">
+                        <p>
+                            Metron now supports <strong>Reading Lists</strong> and <strong>Collections</strong> to help you organize and track your comics!
+                        </p>
+                        <p>
+                            <strong>Reading Lists</strong> allow you to create custom lists of issues you want to read, mark your progress, and share your reading order with others.
+                        </p>
+                        <p>
+                            <strong>Collections</strong> let you catalog and organize the comics you own, making it easy to keep track of your personal library.
+                        </p>
+                        <p>Sign up for an account to start creating your own reading lists and collections today!</p>
+                    </div>
+                </article>
+            </div>
+            <div class="column is-12-mobile is-6-tablet">
                 {# Want to Contribute #}
-                <div class="cell">
-                    <article class="box has-background-primary has-text-primary-invert is-height-100">
-                        <h2 class="title has-text-primary-invert">Want to Contribute?</h2>
-                        <div class="content">
-                            <p>
-                                If you would like to donate to help cover server and development costs, you can support us through
-                                <a href="https://opencollective.com/metron"
-                                   target="_blank"
-                                   rel="noopener noreferrer"
-                                   class="has-text-primary-invert">OpenCollective</a>.
-                            </p>
-                            <p>
-                                If you want to add information to Metron, sign up for an account and read the
-                                <a href="{% url 'wiki:root' %}" class="has-text-primary-invert">Wiki</a>
-                                before starting.
-                            </p>
-                            <p>
-                                Want to help with the technical side of Metron? Metron is built with
-                                <a href="https://www.djangoproject.com/"
-                                   target="_blank"
-                                   rel="noopener noreferrer"
-                                   class="has-text-primary-invert">Django</a>. If you have knowledge of Python and Django, head over
-                                to <a href="https://github.com/Metron-Project/metron"
+                <article class="box has-background-primary has-text-primary-invert is-height-100">
+                    <h2 class="title has-text-primary-invert">Want to Contribute?</h2>
+                    <div class="content">
+                        <p>
+                            If you would like to donate to help cover server and development costs, you can support us through
+                            <a href="https://opencollective.com/metron"
+                               target="_blank"
+                               rel="noopener noreferrer"
+                               class="has-text-primary-invert">OpenCollective</a>.
+                        </p>
+                        <p>
+                            If you want to add information to Metron, sign up for an account and read the
+                            <a href="{% url 'wiki:root' %}" class="has-text-primary-invert">Wiki</a>
+                            before starting.
+                        </p>
+                        <p>
+                            Want to help with the technical side of Metron? Metron is built with
+                            <a href="https://www.djangoproject.com/"
+                               target="_blank"
+                               rel="noopener noreferrer"
+                               class="has-text-primary-invert">Django</a>. If you have knowledge of Python and Django, head over
+                            to <a href="https://github.com/Metron-Project/metron"
     target="_blank"
     rel="noopener noreferrer"
     class="has-text-primary-invert">GitHub</a> to check out the site's code.
-                            </p>
-                        </div>
-                    </article>
-                </div>
+                        </p>
+                    </div>
+                </article>
+            </div>
+            <div class="column is-12-mobile is-6-tablet">
                 {# Questions #}
-                <div class="cell">
-                    <article class="box has-background-danger has-text-danger-invert is-height-100">
-                        <h2 class="title has-text-danger-invert">Questions?</h2>
-                        <div class="content">
-                            <p>Have questions not covered here or suggestions? Feel free to contact us at any of these places:</p>
-                            <ul>
-                                <li>
-                                    <a href="https://matrix.to/#/#metrondb:matrix.org"
-                                       target="_blank"
-                                       rel="noopener noreferrer"
-                                       class="has-text-danger-invert">Matrix Chat</a>
-                                </li>
-                                <li>
-                                    <a href="https://github.com/Metron-Project/metron/discussions"
-                                       target="_blank"
-                                       rel="noopener noreferrer"
-                                       class="has-text-danger-invert">GitHub Discussions</a>
-                                </li>
-                                <li>
-                                    <a href="mailto:bpepple@metron.cloud" class="has-text-danger-invert">Email Site Admin</a>
-                                </li>
-                            </ul>
-                        </div>
-                    </article>
-                </div>
+                <article class="box has-background-danger has-text-danger-invert is-height-100">
+                    <h2 class="title has-text-danger-invert">Questions?</h2>
+                    <div class="content">
+                        <p>Have questions not covered here or suggestions? Feel free to contact us at any of these places:</p>
+                        <ul>
+                            <li>
+                                <a href="https://matrix.to/#/#metrondb:matrix.org"
+                                   target="_blank"
+                                   rel="noopener noreferrer"
+                                   class="has-text-danger-invert">Matrix Chat</a>
+                            </li>
+                            <li>
+                                <a href="https://github.com/Metron-Project/metron/discussions"
+                                   target="_blank"
+                                   rel="noopener noreferrer"
+                                   class="has-text-danger-invert">GitHub Discussions</a>
+                            </li>
+                            <li>
+                                <a href="mailto:bpepple@metron.cloud" class="has-text-danger-invert">Email Site Admin</a>
+                            </li>
+                        </ul>
+                    </div>
+                </article>
             </div>
         </div>
     </div>
