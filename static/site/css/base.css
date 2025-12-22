@@ -218,6 +218,11 @@ a:focus-visible {
     display: flex;
 }
 
+/* Make first card span full width */
+.fixed-grid .grid > .cell:first-child {
+    grid-column: span 2;
+}
+
 /* Hero improvements */
 .hero .level {
     max-width: 600px;
