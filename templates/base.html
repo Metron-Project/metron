@@ -37,7 +37,9 @@
         <link rel="stylesheet" href="{% static 'site/css/base.css' %}">
         {% block headcss %}{% endblock %}
         {# Head Scripts #}
-        {% block headscripts %}{% endblock %}
+        {% block headscripts %}
+        <script src="{% static 'site/js/touch-interface-dropdown.js' %}"></script>
+        {% endblock %}
     </head>
     <body class="has-navbar-fixed-top">
         {# Navigation #}
