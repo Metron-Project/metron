@@ -22,13 +22,14 @@ class CustomUserCreationForm(UserCreationForm):
 
     def clean(self) -> dict[str, Any]:
         blocklist = {
+            "duck.com",
             "hey.com",
             "inboxes.app",
             "passinbox.com",
             "passmail.net",
-            "usemx.de",
             "officialwizard.xyz",
             "simplelogin.com",
+            "usemx.de",
         }  # List of providers that provide temp email addresses.
         whitelist = {"gmail.com", "yahoo.com", "proton.me"}
 
