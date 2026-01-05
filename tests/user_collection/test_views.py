@@ -1,6 +1,6 @@
 """Tests for user_collection views."""
 
-from datetime import date
+from datetime import date, datetime, timezone
 from decimal import Decimal
 
 from django.urls import reverse
@@ -252,7 +252,7 @@ class TestCollectionCreateView:
         # Check that the item was created with read status
         item = CollectionItem.objects.get(user=collection_user, issue=collection_issue_1)
         assert item.is_read is True
-        assert str(item.date_read) == "2024-06-15"
+        assert item.date_read.date().isoformat() == "2024-06-15"
 
     def test_collection_create_view_with_is_read_without_date(
         self, client, collection_user, collection_issue_1, test_password
@@ -359,7 +359,7 @@ class TestCollectionUpdateView:
         # Check that the item was updated
         collection_item.refresh_from_db()
         assert collection_item.is_read is True
-        assert str(collection_item.date_read) == "2024-07-01"
+        assert collection_item.date_read.date().isoformat() == "2024-07-01"
 
     def test_collection_update_view_unmark_as_read(
         self, client, collection_user, collection_item, test_password
@@ -367,7 +367,7 @@ class TestCollectionUpdateView:
         """Test updating a collection item to unmark it as read."""
         # First mark it as read
         collection_item.is_read = True
-        collection_item.date_read = "2024-07-01"
+        collection_item.date_read = datetime(2024, 7, 1, 12, 0, 0, tzinfo=timezone.utc)
         collection_item.save()
 
         client.login(username=collection_user.username, password=test_password)

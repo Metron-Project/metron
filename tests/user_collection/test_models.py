@@ -1,6 +1,6 @@
 """Tests for user_collection models."""
 
-from datetime import date
+from datetime import date, datetime, timezone
 from decimal import Decimal
 
 import pytest
@@ -262,11 +262,11 @@ class TestCollectionItemModel:
     def test_collection_item_update_date_read(self, collection_item):
         """Test updating date_read field."""
         assert collection_item.date_read is None
-        read_date = date(2024, 6, 1)
-        collection_item.date_read = read_date
+        read_datetime = datetime(2024, 6, 1, 12, 0, 0, tzinfo=timezone.utc)
+        collection_item.date_read = read_datetime
         collection_item.save()
         collection_item.refresh_from_db()
-        assert collection_item.date_read == read_date
+        assert collection_item.date_read == read_datetime
 
     def test_collection_item_read_status_independent_of_date(
         self, collection_user, collection_issue_1, create_user

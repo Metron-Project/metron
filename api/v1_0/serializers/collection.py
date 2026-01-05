@@ -133,3 +133,38 @@ class MissingIssueSerializer(serializers.ModelSerializer):
             "cover_date",
             "store_date",
         )
+
+
+class ScrobbleRequestSerializer(serializers.Serializer):
+    """Serializer for scrobble request validation."""
+
+    issue_id = serializers.IntegerField()
+    date_read = serializers.DateTimeField(required=False, allow_null=True)
+    rating = serializers.IntegerField(required=False, allow_null=True, min_value=1, max_value=5)
+
+    def validate_issue_id(self, value):
+        """Verify issue exists."""
+        try:
+            Issue.objects.get(pk=value)
+        except Issue.DoesNotExist as err:
+            raise serializers.ValidationError(f"Issue with id {value} does not exist.") from err
+        return value
+
+
+class ScrobbleResponseSerializer(serializers.ModelSerializer):
+    """Serializer for scrobble response."""
+
+    issue = CollectionIssueSerializer(read_only=True)
+    created = serializers.BooleanField(read_only=True)
+
+    class Meta:
+        model = CollectionItem
+        fields = (
+            "id",
+            "issue",
+            "is_read",
+            "date_read",
+            "rating",
+            "created",
+            "modified",
+        )

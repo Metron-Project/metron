@@ -115,7 +115,9 @@ class CollectionItem(models.Model):
 
     # Reading tracking
     is_read = models.BooleanField(default=False, help_text="Whether the issue has been read")
-    date_read = models.DateField(null=True, blank=True, help_text="Date when the issue was read")
+    date_read = models.DateTimeField(
+        null=True, blank=True, help_text="Date and time when the issue was read"
+    )
     rating = models.PositiveSmallIntegerField(
         null=True,
         blank=True,
