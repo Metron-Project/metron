@@ -38,72 +38,59 @@
     {% if history_items %}
         <section class="section pt-0">
             <div class="container">
-                {% regroup history_items by date_read|date:"F Y" as history_by_month %}
-                {% for month_group in history_by_month %}
-                    <div class="mb-5">
+                {% regroup history_items by date_read|date:"Y-m-d" as history_by_day %}
+                {% for day_group in history_by_day %}
+                    <div class="mb-6">
                         <h2 class="title is-5 has-text-grey mb-4">
                             <span class="icon-text">
                                 <span class="icon">
                                     <i class="fas fa-calendar-alt"></i>
                                 </span>
                                 <span>
-                                    {% if month_group.grouper %}
-                                        {{ month_group.grouper }}
+                                    {% if day_group.grouper %}
+                                        {% with day_group.list|first as first_item %}
+                                            <b>{{ first_item.date_read|date:"l" }}</b> {{ first_item.date_read|date:"F j, Y" }}
+                                        {% endwith %}
                                     {% else %}
                                         Date Unknown
                                     {% endif %}
                                 </span>
                             </span>
                         </h2>
-                        <div class="box p-0">
-                            {% for item in month_group.list %}
-                                <div class="media p-4 {% if not forloop.last %}bb-1{% endif %}"
-                                     style="{% if not forloop.last %}border-bottom: 1px solid #dbdbdb;
-                                            {% endif %}">
-                                    <figure class="media-left">
-                                        <p class="image" style="width: 96px; height: 144px;">
-                                            <a href="{% url 'issue:detail' item.issue.slug %}">
-                                                {% if item.issue.image %}
-                                                    {% thumbnail item.issue.image "96x144" crop="center" format="WEBP" as im %}
-                                                        <img src="{{ im.url }}"
-                                                             width="{{ im.width }}"
-                                                             height="{{ im.height }}"
-                                                             alt="{{ item.issue }}"
+                        <div class="columns is-multiline is-mobile">
+                            {% for item in day_group.list %}
+                                <div class="column is-half-mobile is-one-third-tablet is-one-quarter-desktop is-one-fifth-widescreen">
+                                    <div class="card">
+                                        <div class="card-image">
+                                            <figure class="image is-2by3">
+                                                <a href="{% url 'issue:detail' item.issue.slug %}">
+                                                    {% if item.issue.image %}
+                                                        {% thumbnail item.issue.image "300x450" crop="center" format="WEBP" as im %}
+                                                            <img src="{{ im.url }}" alt="{{ item.issue }}" loading="lazy">
+                                                        {% endthumbnail %}
+                                                    {% else %}
+                                                        <img src="{% static 'site/img/image-not-found.webp' %}"
+                                                             alt="No cover available"
                                                              loading="lazy">
-                                                    {% endthumbnail %}
-                                                {% else %}
-                                                    <img src="{% static 'site/img/image-not-found.webp' %}"
-                                                         alt="No cover available"
-                                                         loading="lazy">
-                                                {% endif %}
-                                            </a>
-                                        </p>
-                                    </figure>
-                                    <div class="media-content">
-                                        <div class="content">
+                                                    {% endif %}
+                                                </a>
+                                            </figure>
+                                        </div>
+                                        <div class="card-content p-3">
                                             <p class="mb-2">
-                                                <strong class="is-size-5">
-                                                    <a href="{% url 'issue:detail' item.issue.slug %}" class="has-text-dark">{{ item.issue.series.name }} #{{ item.issue.number }}</a>
+                                                <strong class="is-size-7">
+                                                    <a href="{% url 'issue:detail' item.issue.slug %}">{{ item.issue.series.name }} #{{ item.issue.number }}</a>
                                                 </strong>
-                                                {% if item.issue.store_date %}
-                                                    <br>
-                                                    <span class="has-text-grey is-size-7">{{ item.issue.cover_date|date:"F Y" }}</span>
-                                                {% endif %}
                                             </p>
-                                            <p class="is-size-7 has-text-grey mb-3">
-                                                <a href="{% url 'series:detail' item.issue.series.slug %}"
-                                                   class="has-text-grey">{{ item.issue.series.name }}</a>
-                                                {% if item.issue.series.publisher %}• {{ item.issue.series.publisher.name }}{% endif %}
-                                            </p>
-                                            <div class="tags mb-2">
-                                                {% if item.date_read %}
-                                                    <span class="tag is-info is-light">
-                                                        <span class="icon is-small">
-                                                            <i class="far fa-clock"></i>
-                                                        </span>
-                                                        <span title="{{ item.date_read|date:'F d, Y h:i A' }}">{{ item.date_read|date:"M d, g:i A" }}</span>
+                                            {% if item.date_read %}
+                                                <p class="is-size-7 has-text-grey mb-2">
+                                                    <span class="icon is-small">
+                                                        <i class="far fa-clock"></i>
                                                     </span>
-                                                {% endif %}
+                                                    <span title="{{ item.date_read|date:'F d, Y h:i A' }}">{{ item.date_read|date:"M d, g:i A" }}</span>
+                                                </p>
+                                            {% endif %}
+                                            <div class="tags are-small mb-2">
                                                 <span class="tag {% if item.book_format == 'DIGITAL' %}is-link{% elif item.book_format == 'BOTH' %}is-success{% else %}is-primary{% endif %} is-light">
                                                     {{ item.get_book_format_display }}
                                                 </span>
@@ -119,16 +106,15 @@
                                                     </span>
                                                 {% endif %}
                                             </div>
+                                            <a href="{% url 'user_collection:detail' item.pk %}"
+                                               class="button is-small is-info is-outlined is-fullwidth"
+                                               title="View Details">
+                                                <span class="icon is-small">
+                                                    <i class="fas fa-eye"></i>
+                                                </span>
+                                                <span>Details</span>
+                                            </a>
                                         </div>
-                                    </div>
-                                    <div class="media-right">
-                                        <a href="{% url 'user_collection:detail' item.pk %}"
-                                           class="button is-small is-info is-outlined"
-                                           title="View Details">
-                                            <span class="icon is-small">
-                                                <i class="fas fa-eye"></i>
-                                            </span>
-                                        </a>
                                     </div>
                                 </div>
                             {% endfor %}

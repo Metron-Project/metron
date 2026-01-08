@@ -342,7 +342,7 @@
     </div>
     {# Recent Reading Activity #}
     {% if recent_reads %}
-        <div class="box">
+        <div class="block">
             <div class="level mb-4">
                 <div class="level-left">
                     <div class="level-item">
@@ -368,59 +368,51 @@
                     </div>
                 {% endif %}
             </div>
-            <div class="content">
+            <div class="columns is-multiline is-mobile">
                 {% for item in recent_reads %}
-                    <div class="media {% if not forloop.last %}mb-4{% endif %}"
-                         {% if not forloop.last %}style="border-bottom: 1px solid #dbdbdb; padding-bottom: 1rem;"{% endif %}>
-                        <figure class="media-left">
-                            <p class="image" style="width: 64px; height: 96px;">
-                                <a href="{% url 'issue:detail' item.issue.slug %}">
-                                    {% if item.issue.image %}
-                                        {% thumbnail item.issue.image "64x96" crop="center" format="WEBP" as im %}
-                                            <img src="{{ im.url }}"
-                                                 width="{{ im.width }}"
-                                                 height="{{ im.height }}"
-                                                 alt="{{ item.issue }}"
+                    <div class="column is-half-mobile is-one-third-tablet is-one-quarter-desktop is-one-fifth-widescreen">
+                        <div class="card">
+                            <div class="card-image">
+                                <figure class="image is-2by3">
+                                    <a href="{% url 'issue:detail' item.issue.slug %}">
+                                        {% if item.issue.image %}
+                                            {% thumbnail item.issue.image "300x450" crop="center" format="WEBP" as im %}
+                                                <img src="{{ im.url }}" alt="{{ item.issue }}" loading="lazy">
+                                            {% endthumbnail %}
+                                        {% else %}
+                                            <img src="{% static 'site/img/image-not-found.webp' %}"
+                                                 alt="No cover available"
                                                  loading="lazy">
-                                        {% endthumbnail %}
-                                    {% else %}
-                                        <img src="{% static 'site/img/image-not-found.webp' %}"
-                                             alt="No cover available"
-                                             loading="lazy">
-                                    {% endif %}
-                                </a>
-                            </p>
-                        </figure>
-                        <div class="media-content">
-                            <p class="mb-2">
-                                <strong>
-                                    <a href="{% url 'issue:detail' item.issue.slug %}">{{ item.issue.series.name }} #{{ item.issue.number }}</a>
-                                </strong>
-                            </p>
-                            <p class="is-size-7 has-text-grey mb-2">
-                                <a href="{% url 'series:detail' item.issue.series.slug %}"
-                                   class="has-text-grey">{{ item.issue.series.name }}</a>
-                                {% if item.issue.series.publisher %}• {{ item.issue.series.publisher.name }}{% endif %}
-                            </p>
-                            <div class="tags are-small">
+                                        {% endif %}
+                                    </a>
+                                </figure>
+                            </div>
+                            <div class="card-content p-3">
+                                <p class="mb-2">
+                                    <strong class="is-size-7">
+                                        <a href="{% url 'issue:detail' item.issue.slug %}">{{ item.issue.series.name }} #{{ item.issue.number }}</a>
+                                    </strong>
+                                </p>
                                 {% if item.date_read %}
-                                    <span class="tag is-info is-light">
+                                    <p class="is-size-7 has-text-grey mb-2">
                                         <span class="icon is-small">
                                             <i class="far fa-clock"></i>
                                         </span>
                                         <span title="{{ item.date_read|date:'F d, Y h:i A' }}">{{ item.date_read|date:"M d, g:i A" }}</span>
-                                    </span>
+                                    </p>
                                 {% endif %}
                                 {% if item.rating %}
-                                    <span class="tag is-warning is-light">
-                                        <span class="icon-text">
-                                            {% for i in "12345" %}
-                                                <span class="icon is-small {% if forloop.counter <= item.rating %}has-text-warning{% else %}has-text-grey-lighter{% endif %}">
-                                                    <i class="fas fa-star"></i>
-                                                </span>
-                                            {% endfor %}
+                                    <div class="tags are-small mb-0">
+                                        <span class="tag is-warning is-light">
+                                            <span class="icon-text">
+                                                {% for i in "12345" %}
+                                                    <span class="icon is-small {% if forloop.counter <= item.rating %}has-text-warning{% else %}has-text-grey-lighter{% endif %}">
+                                                        <i class="fas fa-star"></i>
+                                                    </span>
+                                                {% endfor %}
+                                            </span>
                                         </span>
-                                    </span>
+                                    </div>
                                 {% endif %}
                             </div>
                         </div>
