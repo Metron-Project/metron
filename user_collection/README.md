@@ -44,6 +44,7 @@ Your collection records can include:
 - **Statistics Dashboard**: Track your collection's size, value, and reading progress
 - **Gap Identification**: Discover which issues are missing from your series runs
 - **Duplicate Detection**: Prevents adding the same issue twice
+- **Quick Scrobble**: Instantly mark issues as read via API with optional rating
 - **Privacy**: Your collection is completely private to you
 
 ## Getting Started
@@ -242,6 +243,108 @@ Identify gaps in your series runs to help complete your collection!
 6. Return to Missing Issues to track updated progress
 
 **Note:** Missing Issues only shows series where you own at least one issue. It helps you complete runs you've already started, not discover new series.
+
+### Quick Scrobble (API)
+
+The scrobble feature allows you to quickly mark issues as read via the API, perfect for mobile apps or browser extensions.
+
+**Endpoint:** `POST /api/collection/scrobble/`
+
+**Purpose:**
+
+- Instantly mark an issue as read without navigating through the web UI
+- Automatically creates a collection item if the issue isn't already in your collection
+- Updates read status if the issue is already owned
+
+**Request Body:**
+
+```json
+{
+  "issue_id": 12345,
+  "date_read": "2026-01-08T14:30:00Z",  // Optional, defaults to now
+  "rating": 4                             // Optional, 1-5 stars
+}
+```
+
+**Response (201 Created - New Item):**
+
+```json
+{
+  "id": 789,
+  "issue": {
+    "id": 12345,
+    "series_name": "Amazing Spider-Man",
+    "number": "300"
+  },
+  "is_read": true,
+  "date_read": "2026-01-08T14:30:00Z",
+  "rating": 4,
+  "created": true,
+  "modified": "2026-01-08T14:30:00Z"
+}
+```
+
+**Response (200 OK - Updated Existing):**
+
+```json
+{
+  "id": 456,
+  "issue": {
+    "id": 12345,
+    "series_name": "Amazing Spider-Man",
+    "number": "300"
+  },
+  "is_read": true,
+  "date_read": "2026-01-08T14:30:00Z",
+  "rating": 4,
+  "created": false,
+  "modified": "2026-01-08T14:30:00Z"
+}
+```
+
+**Auto-Creation Behavior:**
+
+When scrobbling an issue not in your collection, a new collection item is automatically created with:
+- `quantity`: 1
+- `book_format`: DIGITAL
+- `is_read`: true
+- `date_read`: From request or current timestamp
+- `rating`: From request (if provided)
+
+**Use Cases:**
+
+1. **Reading Tracker App**: Mark issues as read immediately after finishing them
+2. **Browser Extension**: One-click scrobble while reading digital comics
+3. **Import Tool**: Bulk import reading history from other services
+4. **Mobile App**: Quick scrobble without full collection interface
+
+**Example with curl:**
+
+```bash
+# Mark issue #12345 as read right now
+curl -X POST https://metron.cloud/api/collection/scrobble/ \
+  -u "username:password" \
+  -H "Content-Type: application/json" \
+  -d '{"issue_id": 12345}'
+
+# Mark as read with specific date and rating
+curl -X POST https://metron.cloud/api/collection/scrobble/ \
+  -u "username:password" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "issue_id": 12345,
+    "date_read": "2026-01-08T10:00:00Z",
+    "rating": 5
+  }'
+```
+
+**Benefits:**
+
+- **Fast**: One API call to mark as read
+- **Automatic**: Creates collection items automatically
+- **Precise**: Tracks exact read timestamp (not just date)
+- **Flexible**: Works with existing or new collection items
+- **Private**: Respects collection privacy (user-scoped)
 
 ## Grading System
 
@@ -445,6 +548,7 @@ Visit `/collection/stats/` to see detailed analytics about your collection:
 | `/collection/<id>/update/` | Edit collection item | Yes* |
 | `/collection/<id>/delete/` | Delete collection item | Yes* |
 | `/collection/<id>/rate/` | Rate item (HTMX endpoint) | Yes* |
+| `/api/collection/scrobble/` | Mark issue as read (API endpoint) | Yes |
 
 *Must be the owner of the collection item.
 
