@@ -132,6 +132,7 @@ class UserProfile(DetailView):
             Team,
             Universe,
         )
+        from user_collection.models import CollectionItem  # noqa: PLC0415
 
         # Add statistics to context
         context["stats"] = {
@@ -145,5 +146,15 @@ class UserProfile(DetailView):
             "arcs": Arc.objects.filter(created_by=user).count(),
             "universes": Universe.objects.filter(created_by=user).count(),
         }
+
+        # Add recent reading history (last 10 items)
+        context["recent_reads"] = (
+            CollectionItem.objects.filter(user=user, is_read=True)
+            .select_related(
+                "issue__series__series_type",
+                "issue__series__publisher",
+            )
+            .order_by("-date_read", "-modified")[:10]
+        )
 
         return context

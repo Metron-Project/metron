@@ -1,0 +1,157 @@
+{% extends parent_template|default:"base.html" %}
+{% load thumbnail %}
+{% load static %}
+{% block title %}Reading History - Metron{% endblock %}
+{% block content %}
+    <header class="block has-text-centered">
+        <h1 class="title">My Reading History</h1>
+    </header>
+    <section class="section">
+        <div class="container">
+            <div class="level">
+                <div class="level-left">
+                    <div class="level-item">
+                        <p class="subtitle is-5">
+                            <strong>{{ page_obj.paginator.count }}</strong> issue{{ page_obj.paginator.count|pluralize }} read
+                        </p>
+                    </div>
+                </div>
+                <div class="level-right">
+                    <div class="level-item">
+                        <div class="buttons is-flex-direction-column-mobile">
+                            <a href="{% url 'user_collection:stats' %}"
+                               class="button is-info is-rounded">
+                                <span class="icon"><i class="fas fa-chart-bar"></i></span>
+                                <span>View Statistics</span>
+                            </a>
+                            <a href="{% url 'user_collection:list' %}"
+                               class="button is-link is-rounded">
+                                <span class="icon"><i class="fas fa-th-list"></i></span>
+                                <span>My Collection</span>
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+    {% if history_items %}
+        <section class="section pt-0">
+            <div class="container">
+                {% regroup history_items by date_read|date:"F Y" as history_by_month %}
+                {% for month_group in history_by_month %}
+                    <div class="mb-5">
+                        <h2 class="title is-5 has-text-grey mb-4">
+                            <span class="icon-text">
+                                <span class="icon">
+                                    <i class="fas fa-calendar-alt"></i>
+                                </span>
+                                <span>
+                                    {% if month_group.grouper %}
+                                        {{ month_group.grouper }}
+                                    {% else %}
+                                        Date Unknown
+                                    {% endif %}
+                                </span>
+                            </span>
+                        </h2>
+                        <div class="box p-0">
+                            {% for item in month_group.list %}
+                                <div class="media p-4 {% if not forloop.last %}bb-1{% endif %}"
+                                     style="{% if not forloop.last %}border-bottom: 1px solid #dbdbdb;
+                                            {% endif %}">
+                                    <figure class="media-left">
+                                        <p class="image" style="width: 96px; height: 144px;">
+                                            <a href="{% url 'issue:detail' item.issue.slug %}">
+                                                {% if item.issue.image %}
+                                                    {% thumbnail item.issue.image "96x144" crop="center" format="WEBP" as im %}
+                                                        <img src="{{ im.url }}"
+                                                             width="{{ im.width }}"
+                                                             height="{{ im.height }}"
+                                                             alt="{{ item.issue }}"
+                                                             loading="lazy">
+                                                    {% endthumbnail %}
+                                                {% else %}
+                                                    <img src="{% static 'site/img/image-not-found.webp' %}"
+                                                         alt="No cover available"
+                                                         loading="lazy">
+                                                {% endif %}
+                                            </a>
+                                        </p>
+                                    </figure>
+                                    <div class="media-content">
+                                        <div class="content">
+                                            <p class="mb-2">
+                                                <strong class="is-size-5">
+                                                    <a href="{% url 'issue:detail' item.issue.slug %}" class="has-text-dark">{{ item.issue.series.name }} #{{ item.issue.number }}</a>
+                                                </strong>
+                                                {% if item.issue.store_date %}
+                                                    <br>
+                                                    <span class="has-text-grey is-size-7">{{ item.issue.cover_date|date:"F Y" }}</span>
+                                                {% endif %}
+                                            </p>
+                                            <p class="is-size-7 has-text-grey mb-3">
+                                                <a href="{% url 'series:detail' item.issue.series.slug %}"
+                                                   class="has-text-grey">{{ item.issue.series.name }}</a>
+                                                {% if item.issue.series.publisher %}• {{ item.issue.series.publisher.name }}{% endif %}
+                                            </p>
+                                            <div class="tags mb-2">
+                                                {% if item.date_read %}
+                                                    <span class="tag is-info is-light">
+                                                        <span class="icon is-small">
+                                                            <i class="far fa-clock"></i>
+                                                        </span>
+                                                        <span title="{{ item.date_read|date:'F d, Y h:i A' }}">{{ item.date_read|date:"M d, g:i A" }}</span>
+                                                    </span>
+                                                {% endif %}
+                                                <span class="tag {% if item.book_format == 'DIGITAL' %}is-link{% elif item.book_format == 'BOTH' %}is-success{% else %}is-primary{% endif %} is-light">
+                                                    {{ item.get_book_format_display }}
+                                                </span>
+                                                {% if item.rating %}
+                                                    <span class="tag is-warning is-light">
+                                                        <span class="icon-text">
+                                                            {% for i in "12345" %}
+                                                                <span class="icon is-small {% if forloop.counter <= item.rating %}has-text-warning{% else %}has-text-grey-lighter{% endif %}">
+                                                                    <i class="fas fa-star"></i>
+                                                                </span>
+                                                            {% endfor %}
+                                                        </span>
+                                                    </span>
+                                                {% endif %}
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="media-right">
+                                        <a href="{% url 'user_collection:detail' item.pk %}"
+                                           class="button is-small is-info is-outlined"
+                                           title="View Details">
+                                            <span class="icon is-small">
+                                                <i class="fas fa-eye"></i>
+                                            </span>
+                                        </a>
+                                    </div>
+                                </div>
+                            {% endfor %}
+                        </div>
+                    </div>
+                {% endfor %}
+            </div>
+        </section>
+    {% else %}
+        <section class="section pt-0">
+            <div class="container has-text-centered">
+                <p class="title is-4">No reading history yet</p>
+                <p class="subtitle">Start reading and marking issues as read to build your reading history!</p>
+                <a href="{% url 'user_collection:list' %}"
+                   class="button is-primary is-large">
+                    <span class="icon"><i class="fas fa-book-open"></i></span>
+                    <span>Go to My Collection</span>
+                </a>
+            </div>
+        </section>
+    {% endif %}
+{% endblock %}
+{% block pagination %}
+    {% load pagination_tags %}
+    {% include "comicsdb/partials/pagination.html" %}
+{% endblock %}

@@ -340,6 +340,95 @@
             </div>
         {% endif %}
     </div>
+    {# Recent Reading Activity #}
+    {% if recent_reads %}
+        <div class="box">
+            <div class="level mb-4">
+                <div class="level-left">
+                    <div class="level-item">
+                        <h3 class="title is-5 is-size-6-mobile mb-0">
+                            <span class="icon has-text-info" aria-hidden="true">
+                                <i class="fas fa-book-open"></i>
+                            </span>
+                            Recent Reading Activity
+                        </h3>
+                    </div>
+                </div>
+                {% if customuser.pk == request.user.pk %}
+                    <div class="level-right">
+                        <div class="level-item">
+                            <a href="{% url 'user_collection:history' %}"
+                               class="button is-small is-info is-outlined">
+                                <span class="icon is-small">
+                                    <i class="fas fa-history"></i>
+                                </span>
+                                <span>View Full History</span>
+                            </a>
+                        </div>
+                    </div>
+                {% endif %}
+            </div>
+            <div class="content">
+                {% for item in recent_reads %}
+                    <div class="media {% if not forloop.last %}mb-4{% endif %}"
+                         {% if not forloop.last %}style="border-bottom: 1px solid #dbdbdb; padding-bottom: 1rem;"{% endif %}>
+                        <figure class="media-left">
+                            <p class="image" style="width: 64px; height: 96px;">
+                                <a href="{% url 'issue:detail' item.issue.slug %}">
+                                    {% if item.issue.image %}
+                                        {% thumbnail item.issue.image "64x96" crop="center" format="WEBP" as im %}
+                                            <img src="{{ im.url }}"
+                                                 width="{{ im.width }}"
+                                                 height="{{ im.height }}"
+                                                 alt="{{ item.issue }}"
+                                                 loading="lazy">
+                                        {% endthumbnail %}
+                                    {% else %}
+                                        <img src="{% static 'site/img/image-not-found.webp' %}"
+                                             alt="No cover available"
+                                             loading="lazy">
+                                    {% endif %}
+                                </a>
+                            </p>
+                        </figure>
+                        <div class="media-content">
+                            <p class="mb-2">
+                                <strong>
+                                    <a href="{% url 'issue:detail' item.issue.slug %}">{{ item.issue.series.name }} #{{ item.issue.number }}</a>
+                                </strong>
+                            </p>
+                            <p class="is-size-7 has-text-grey mb-2">
+                                <a href="{% url 'series:detail' item.issue.series.slug %}"
+                                   class="has-text-grey">{{ item.issue.series.name }}</a>
+                                {% if item.issue.series.publisher %}• {{ item.issue.series.publisher.name }}{% endif %}
+                            </p>
+                            <div class="tags are-small">
+                                {% if item.date_read %}
+                                    <span class="tag is-info is-light">
+                                        <span class="icon is-small">
+                                            <i class="far fa-clock"></i>
+                                        </span>
+                                        <span title="{{ item.date_read|date:'F d, Y h:i A' }}">{{ item.date_read|date:"M d, g:i A" }}</span>
+                                    </span>
+                                {% endif %}
+                                {% if item.rating %}
+                                    <span class="tag is-warning is-light">
+                                        <span class="icon-text">
+                                            {% for i in "12345" %}
+                                                <span class="icon is-small {% if forloop.counter <= item.rating %}has-text-warning{% else %}has-text-grey-lighter{% endif %}">
+                                                    <i class="fas fa-star"></i>
+                                                </span>
+                                            {% endfor %}
+                                        </span>
+                                    </span>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                {% endfor %}
+            </div>
+        </div>
+    {% endif %}
     {# Community Guidelines for New Users #}
     {% if customuser.pk == request.user.pk and not customuser.bio %}
         <div class="notification is-primary is-light">
