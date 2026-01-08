@@ -487,3 +487,23 @@ class MissingIssuesDetailView(LoginRequiredMixin, ListView):
         )
 
         return context
+
+
+class ReadingHistoryListView(LoginRequiredMixin, ListView):
+    """Display the user's reading history."""
+
+    model = CollectionItem
+    template_name = "user_collection/reading_history.html"
+    context_object_name = "history_items"
+    paginate_by = 50
+
+    def get_queryset(self):
+        return (
+            CollectionItem.objects.filter(user=self.request.user, is_read=True)
+            .select_related(
+                "issue__series__series_type",
+                "issue__series__publisher",
+                "issue__series__imprint",
+            )
+            .order_by("-date_read", "-modified")
+        )

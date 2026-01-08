@@ -77,7 +77,7 @@ class CollectionItem(models.Model):
 
     # Reading tracking
     is_read = models.BooleanField(default=False)
-    date_read = models.DateField(null=True, blank=True)
+    date_read = models.DateTimeField(null=True, blank=True)  # Changed from DateField for precise scrobble tracking
     rating = models.PositiveSmallIntegerField(null=True, choices=[(i, i) for i in range(1, 6)])
 
     # Timestamps
@@ -148,7 +148,7 @@ class Meta:
 - `purchase_price`: MoneyField with currency support
 - `rating`: 1-5 star rating system for personal tracking
 - `is_read`: Boolean for reading progress tracking
-- `date_read`: Optional timestamp of when issue was read
+- `date_read`: Optional timestamp of when issue was read (DateTimeField for precise scrobble tracking)
 
 ## Views and URLs
 
@@ -525,6 +525,125 @@ def update_rating(request, pk):
 
 **URL:** `/collection/<pk>/rate/`
 
+### scrobble (API ViewSet Action)
+
+```python
+@action(detail=False, methods=["post"])
+def scrobble(self, request):
+    """
+    Mark an issue as read with optional rating and date_read.
+
+    If the issue is not in the user's collection, it will be automatically
+    added with quantity=1 and is_read=True.
+
+    If the issue is already in the collection, the read status and date will
+    be updated.
+
+    Returns:
+    - 201: Created new collection item
+    - 200: Updated existing collection item
+    - 400: Validation error
+    - 404: Issue not found
+    """
+```
+
+**File:** `api/views.py` (CollectionViewSet)
+
+**Purpose:** Quick scrobble endpoint for marking issues as read via API.
+
+**Request Body:**
+
+```python
+{
+    "issue_id": int,              # Required
+    "date_read": datetime,        # Optional, defaults to timezone.now()
+    "rating": int                 # Optional, 1-5
+}
+```
+
+**Features:**
+
+- **Auto-creation**: Creates collection item if issue not owned
+- **Auto-update**: Updates existing collection items
+- **Precise timestamps**: Uses DateTimeField for exact read time
+- **Default values**: Sets reasonable defaults for auto-created items
+- **User-scoped**: Automatically filtered to request.user
+
+**Auto-Creation Defaults:**
+
+When creating a new collection item via scrobble:
+
+```python
+defaults={
+    "quantity": 1,
+    "book_format": CollectionItem.BookFormat.DIGITAL,
+    "is_read": True,
+    "date_read": date_read,
+    "rating": rating,
+}
+```
+
+**Update Logic:**
+
+When updating an existing item:
+
+```python
+collection_item.is_read = True
+collection_item.date_read = date_read
+if rating is not None:
+    collection_item.rating = rating
+collection_item.save()
+```
+
+**Response:**
+
+Uses `ScrobbleResponseSerializer` with additional `created` flag:
+
+```python
+{
+    "id": int,
+    "issue": {
+        "id": int,
+        "series_name": str,
+        "number": str
+    },
+    "is_read": bool,
+    "date_read": datetime,
+    "rating": int|null,
+    "created": bool,      # True if new, False if updated
+    "modified": datetime
+}
+```
+
+**Status Codes:**
+
+- `201 Created`: New collection item was created
+- `200 OK`: Existing collection item was updated
+- `400 Bad Request`: Validation error (invalid issue_id, rating out of range)
+- `404 Not Found`: Issue with specified ID doesn't exist
+
+**Use Cases:**
+
+- Mobile reading apps marking issues as read
+- Browser extensions for one-click scrobbling
+- Bulk import of reading history
+- Integration with external reading trackers
+
+**Security:**
+
+- Requires authentication (IsAuthenticated permission)
+- User-scoped (can only scrobble to own collection)
+- Issue validation via serializer
+- Rating range validation (1-5)
+
+**Performance:**
+
+- Single `get_or_create()` query
+- Minimal fields updated on existing items
+- No unnecessary eager loading
+
+**URL:** `POST /api/collection/scrobble/`
+
 ### URL Configuration
 
 **File:** `user_collection/urls.py`
@@ -653,6 +772,88 @@ Designed for quickly adding entire series runs to collection:
 - From specific issue onward (e.g., 50-end)
 - Up to specific issue (e.g., 1-50)
 
+### ScrobbleRequestSerializer
+
+**File:** `api/v1_0/serializers/collection.py`
+
+```python
+class ScrobbleRequestSerializer(serializers.Serializer):
+    issue_id = serializers.IntegerField()
+    date_read = serializers.DateTimeField(required=False, allow_null=True)
+    rating = serializers.IntegerField(required=False, allow_null=True, min_value=1, max_value=5)
+
+    def validate_issue_id(self, value):
+        """Verify issue exists."""
+        try:
+            Issue.objects.get(pk=value)
+        except Issue.DoesNotExist as err:
+            raise serializers.ValidationError(f"Issue with id {value} does not exist.") from err
+        return value
+```
+
+**Purpose:** Validates scrobble request data.
+
+**Fields:**
+
+- `issue_id`: Required integer, validated to ensure issue exists
+- `date_read`: Optional datetime, defaults to `timezone.now()` in view
+- `rating`: Optional integer with range validation (1-5)
+
+**Validation:**
+
+- `issue_id` must reference existing Issue object
+- `rating` must be between 1 and 5 (inclusive)
+- Both optional fields can be null
+
+### ScrobbleResponseSerializer
+
+**File:** `api/v1_0/serializers/collection.py`
+
+```python
+class ScrobbleResponseSerializer(serializers.ModelSerializer):
+    issue = CollectionIssueSerializer(read_only=True)
+    created = serializers.BooleanField(read_only=True)
+
+    class Meta:
+        model = CollectionItem
+        fields = (
+            "id",
+            "issue",
+            "is_read",
+            "date_read",
+            "rating",
+            "created",
+            "modified",
+        )
+```
+
+**Purpose:** Serializes scrobble response with minimal fields.
+
+**Features:**
+
+- **Nested issue**: Uses `CollectionIssueSerializer` for issue details
+- **Created flag**: Indicates if item was created (True) or updated (False)
+- **Minimal fields**: Only includes scrobble-relevant data
+- **Read-only**: All fields read-only (no write operations)
+
+**Response Format:**
+
+```json
+{
+  "id": 123,
+  "issue": {
+    "id": 456,
+    "series_name": "Amazing Spider-Man",
+    "number": "1"
+  },
+  "is_read": true,
+  "date_read": "2026-01-08T14:30:00Z",
+  "rating": 5,
+  "created": true,
+  "modified": "2026-01-08T14:30:00Z"
+}
+```
+
 ## Filters
 
 ### CollectionFilter (API)
@@ -671,11 +872,11 @@ class CollectionFilter(filters.FilterSet):
     storage_location = filters.CharFilter(lookup_expr="icontains")
     issue__series = filters.NumberFilter(field_name="issue__series__id")
     is_read = filters.BooleanFilter()
-    date_read = filters.DateFilter()
-    date_read_gt = filters.DateFilter(field_name="date_read", lookup_expr="gt")
-    date_read_lt = filters.DateFilter(field_name="date_read", lookup_expr="lt")
-    date_read_gte = filters.DateFilter(field_name="date_read", lookup_expr="gte")
-    date_read_lte = filters.DateFilter(field_name="date_read", lookup_expr="lte")
+    date_read = filters.DateFilter(field_name="date_read__date")  # Uses __date lookup for DateTimeField
+    date_read_gt = filters.DateFilter(field_name="date_read__date", lookup_expr="gt")
+    date_read_lt = filters.DateFilter(field_name="date_read__date", lookup_expr="lt")
+    date_read_gte = filters.DateFilter(field_name="date_read__date", lookup_expr="gte")
+    date_read_lte = filters.DateFilter(field_name="date_read__date", lookup_expr="lte")
     grade = filters.ChoiceFilter(choices=GRADE_CHOICES)
     grading_company = filters.ChoiceFilter(choices=CollectionItem.GradingCompany.choices)
     rating = filters.NumberFilter()
@@ -683,6 +884,8 @@ class CollectionFilter(filters.FilterSet):
 ```
 
 **Usage:** REST API filtering via django-filter
+
+**Note:** `date_read` filters use `__date` lookup because `date_read` is a DateTimeField. This allows date-based filtering while preserving precise timestamp data for scrobble functionality.
 
 ### CollectionViewFilter (Web UI)
 
@@ -1261,6 +1464,20 @@ Django templates auto-escape output by default.
 - Permission checks (user-scoped)
 - Pagination handling
 
+**Scrobble Endpoint:**
+
+- Request validation (ScrobbleRequestSerializer)
+- Issue existence validation
+- Rating range validation (1-5)
+- Auto-creation of collection items
+- Auto-update of existing items
+- Default value assignment (quantity=1, book_format=DIGITAL)
+- Timestamp handling (timezone.now() default)
+- Response serialization with created flag
+- Status code differentiation (201 vs 200)
+- User-scoped permissions
+- Error handling (404 for missing issues)
+
 ### Test Fixtures
 
 **Recommended Fixtures:**
@@ -1379,6 +1596,21 @@ class MissingIssuesViewTest(TestCase):
 - Generate shopping lists for completing runs
 
 See [MissingIssuesListView](#missingissueslistview) and [MissingIssuesDetailView](#missingissuesdetailview) for technical details.
+
+**Scrobble API Endpoint** ✓
+
+- Quick scrobble endpoint for marking issues as read via API
+- Auto-creates collection items if issue not already owned
+- Auto-updates existing collection items with read status
+- Precise timestamp tracking with DateTimeField
+- Optional rating support (1-5 stars)
+- Defaults to timezone.now() for date_read if not provided
+- Returns 201 for new items, 200 for updates
+- Mobile app and browser extension ready
+
+**Database Migration:** `date_read` field changed from DateField to DateTimeField for precise scrobble tracking (migration `0002_collectionitem_date_read_datetime.py`).
+
+See [scrobble](#scrobble-api-viewset-action) for technical details.
 
 ### Planned Features
 

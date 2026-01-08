@@ -1,6 +1,6 @@
 """Tests for the Collection API."""
 
-from datetime import date
+from datetime import date, datetime, timezone
 from decimal import Decimal
 
 from django.urls import reverse
@@ -207,10 +207,16 @@ def test_filter_by_date_read(api_client, collection_user, collection_issue_1, co
 
     # Create items with different read dates
     CollectionItem.objects.create(
-        user=collection_user, issue=collection_issue_1, is_read=True, date_read="2024-06-01"
+        user=collection_user,
+        issue=collection_issue_1,
+        is_read=True,
+        date_read=datetime(2024, 6, 1, 12, 0, 0, tzinfo=timezone.utc),
     )
     CollectionItem.objects.create(
-        user=collection_user, issue=collection_issue_2, is_read=True, date_read="2024-07-01"
+        user=collection_user,
+        issue=collection_issue_2,
+        is_read=True,
+        date_read=datetime(2024, 7, 1, 12, 0, 0, tzinfo=timezone.utc),
     )
 
     # Filter by exact date

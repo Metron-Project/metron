@@ -1,6 +1,7 @@
 from django.db import models
 from django.db.models import Avg, Count, F, Prefetch, Q, Sum
 from django.http import Http404
+from django.utils import timezone
 from drf_spectacular.utils import OpenApiParameter, extend_schema
 from rest_framework import mixins, status, viewsets
 from rest_framework.decorators import action
@@ -34,6 +35,8 @@ from api.v1_0.serializers import (
     ReadingListListSerializer,
     ReadingListReadSerializer,
     RoleSerializer,
+    ScrobbleRequestSerializer,
+    ScrobbleResponseSerializer,
     SeriesListSerializer,
     SeriesReadSerializer,
     SeriesSerializer,
@@ -771,3 +774,83 @@ class CollectionViewSet(
 
         serializer = MissingIssueSerializer(queryset, many=True, context={"request": request})
         return Response(serializer.data)
+
+    @extend_schema(
+        request=ScrobbleRequestSerializer,
+        responses={
+            201: ScrobbleResponseSerializer,
+            200: ScrobbleResponseSerializer,
+            400: {"type": "object"},
+            404: {"type": "object"},
+        },
+        description="Mark an issue as read (scrobble). Auto-creates collection item if needed.",
+    )
+    @action(detail=False, methods=["post"])
+    def scrobble(self, request):
+        """
+        Mark an issue as read with optional rating and date_read.
+
+        If the issue is not in the user's collection, it will be automatically
+        added with quantity=1 and is_read=True.
+
+        If the issue is already in the collection, the read status and date will
+        be updated.
+
+        Returns:
+        - 201: Created new collection item
+        - 200: Updated existing collection item
+        - 400: Validation error
+        - 404: Issue not found
+        """
+
+        serializer = ScrobbleRequestSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+
+        issue_id = serializer.validated_data["issue_id"]
+        rating = serializer.validated_data.get("rating")
+        date_read = serializer.validated_data.get("date_read")
+
+        # Default date_read to now if not provided
+        if date_read is None:
+            date_read = timezone.now()
+
+        try:
+            issue = Issue.objects.get(pk=issue_id)
+        except Issue.DoesNotExist:
+            return Response(
+                {"detail": f"Issue with id {issue_id} not found."},
+                status=status.HTTP_404_NOT_FOUND,
+            )
+
+        # Get or create collection item
+        collection_item, created = CollectionItem.objects.get_or_create(
+            user=request.user,
+            issue=issue,
+            defaults={
+                "quantity": 1,
+                "book_format": CollectionItem.BookFormat.DIGITAL,
+                "is_read": True,
+                "date_read": date_read,
+                "rating": rating,
+            },
+        )
+
+        # If item already existed, update it
+        if not created:
+            collection_item.is_read = True
+            collection_item.date_read = date_read
+            if rating is not None:
+                collection_item.rating = rating
+            collection_item.save()
+
+        # Return appropriate status code and response
+        response_serializer = ScrobbleResponseSerializer(
+            collection_item, context={"request": request}
+        )
+        response_data = response_serializer.data
+        response_data["created"] = created
+
+        return Response(
+            response_data,
+            status=status.HTTP_201_CREATED if created else status.HTTP_200_OK,
+        )

@@ -9,6 +9,7 @@ urlpatterns = [
     path("add/", views.CollectionCreateView.as_view(), name="create"),
     path("add-from-series/", views.AddIssuesFromSeriesView.as_view(), name="add-from-series"),
     path("stats/", views.CollectionStatsView.as_view(), name="stats"),
+    path("history/", views.ReadingHistoryListView.as_view(), name="history"),
     path("missing/", views.MissingIssuesListView.as_view(), name="missing-list"),
     path(
         "missing/<int:series_id>/",

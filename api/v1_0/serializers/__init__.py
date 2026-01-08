@@ -57,6 +57,8 @@ from api.v1_0.serializers.collection import (
     CollectionReadSerializer,
     MissingIssueSerializer,
     MissingSeriesSerializer,
+    ScrobbleRequestSerializer,
+    ScrobbleResponseSerializer,
 )
 
 __all__ = [
@@ -93,6 +95,8 @@ __all__ = [
     "ReadingListReadSerializer",
     "ReprintSerializer",
     "RoleSerializer",
+    "ScrobbleRequestSerializer",
+    "ScrobbleResponseSerializer",
     "SeriesListSerializer",
     "SeriesReadSerializer",
     "SeriesSerializer",
