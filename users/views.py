@@ -1,5 +1,18 @@
 import logging
 
+# Import models for counting
+from comicsdb.models import (
+    Arc,
+    Character,
+    Creator,
+    Imprint,
+    Issue,
+    Publisher,
+    Series,
+    Team,
+    Universe,
+)
+
 from django.contrib import messages
 from django.contrib.auth import login, update_session_auth_hash
 from django.contrib.auth.views import PasswordChangeView
@@ -17,6 +30,8 @@ from users.forms import CustomUserChangeForm, CustomUserCreationForm
 from users.models import CustomUser
 from users.tokens import account_activation_token
 from users.utils import send_pushover
+
+from user_collection.models import CollectionItem
 
 logger = logging.getLogger(__name__)
 
@@ -119,20 +134,6 @@ class UserProfile(DetailView):
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         user = self.get_object()
-
-        # Import models for counting
-        from comicsdb.models import (  # noqa: PLC0415
-            Arc,
-            Character,
-            Creator,
-            Imprint,
-            Issue,
-            Publisher,
-            Series,
-            Team,
-            Universe,
-        )
-        from user_collection.models import CollectionItem  # noqa: PLC0415
 
         # Add statistics to context
         context["stats"] = {
