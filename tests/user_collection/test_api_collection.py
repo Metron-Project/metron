@@ -4,9 +4,10 @@ from datetime import date, datetime, timezone
 from decimal import Decimal
 
 from django.urls import reverse
+from django.utils import timezone as django_timezone
 from rest_framework import status
 
-from user_collection.models import CollectionItem
+from user_collection.models import CollectionItem, ReadDate
 
 
 # List Endpoint Tests - Authentication
@@ -588,3 +589,104 @@ def test_missing_issues_returns_all_if_none_owned(
     )
     assert resp.status_code == status.HTTP_200_OK
     assert resp.data["count"] == 2
+
+
+# ReadDate API Tests
+def test_collection_item_includes_read_dates(api_client, collection_item):
+    """Test that the collection item API includes read_dates."""
+    api_client.force_authenticate(user=collection_item.user)
+
+    # Add some read dates
+    date1 = datetime(2024, 1, 15, 10, 0, 0, tzinfo=timezone.utc)
+    date2 = datetime(2024, 6, 15, 14, 30, 0, tzinfo=timezone.utc)
+    ReadDate.objects.create(collection_item=collection_item, read_date=date1)
+    ReadDate.objects.create(collection_item=collection_item, read_date=date2)
+
+    resp = api_client.get(reverse("api:collection-detail", kwargs={"pk": collection_item.pk}))
+    assert resp.status_code == status.HTTP_200_OK
+
+    # Check that read_dates is included
+    assert "read_dates" in resp.data
+    assert len(resp.data["read_dates"]) == 2
+
+    # Check the structure of read_dates
+    for read_date in resp.data["read_dates"]:
+        assert "id" in read_date
+        assert "read_date" in read_date
+        assert "created_on" in read_date
+
+
+def test_collection_item_includes_read_count(api_client, collection_item):
+    """Test that the collection item API includes read_count."""
+    api_client.force_authenticate(user=collection_item.user)
+
+    # Add read dates
+    ReadDate.objects.create(
+        collection_item=collection_item,
+        read_date=django_timezone.now(),
+    )
+    ReadDate.objects.create(
+        collection_item=collection_item,
+        read_date=django_timezone.now(),
+    )
+
+    resp = api_client.get(reverse("api:collection-detail", kwargs={"pk": collection_item.pk}))
+    assert resp.status_code == status.HTTP_200_OK
+
+    assert "read_count" in resp.data
+    assert resp.data["read_count"] == 2
+
+
+def test_collection_item_read_dates_ordered(api_client, collection_item):
+    """Test that read_dates are ordered by most recent first."""
+    api_client.force_authenticate(user=collection_item.user)
+
+    old_date = datetime(2024, 1, 1, 12, 0, 0, tzinfo=timezone.utc)
+    new_date = datetime(2024, 6, 15, 12, 0, 0, tzinfo=timezone.utc)
+
+    # Create in chronological order
+    ReadDate.objects.create(collection_item=collection_item, read_date=old_date)
+    ReadDate.objects.create(collection_item=collection_item, read_date=new_date)
+
+    resp = api_client.get(reverse("api:collection-detail", kwargs={"pk": collection_item.pk}))
+    assert resp.status_code == status.HTTP_200_OK
+
+    read_dates = resp.data["read_dates"]
+    assert len(read_dates) == 2
+    # Most recent should be first
+    assert read_dates[0]["read_date"] > read_dates[1]["read_date"]
+
+
+def test_collection_item_no_read_dates(api_client, collection_item):
+    """Test that collection item with no read dates returns empty array."""
+    api_client.force_authenticate(user=collection_item.user)
+
+    resp = api_client.get(reverse("api:collection-detail", kwargs={"pk": collection_item.pk}))
+    assert resp.status_code == status.HTTP_200_OK
+
+    assert "read_dates" in resp.data
+    assert resp.data["read_dates"] == []
+    assert resp.data["read_count"] == 0
+
+
+def test_collection_list_includes_read_count(
+    api_client, collection_user, collection_item, collection_item_with_details
+):
+    """Test that the collection list API includes read_count for each item."""
+    api_client.force_authenticate(user=collection_user)
+
+    # Add read dates to first item
+    ReadDate.objects.create(
+        collection_item=collection_item,
+        read_date=django_timezone.now(),
+    )
+
+    resp = api_client.get(reverse("api:collection-list"))
+    assert resp.status_code == status.HTTP_200_OK
+
+    # Find collection_item in results
+    for item in resp.data["results"]:
+        if item["id"] == collection_item.id:
+            assert item["read_count"] == 1
+        if item["id"] == collection_item_with_details.id:
+            assert item["read_count"] == 0

@@ -5,10 +5,11 @@ from decimal import Decimal
 
 import pytest
 from django.db import IntegrityError
+from django.utils import timezone as django_timezone
 from djmoney.money import Money
 
 from comicsdb.models.issue import Issue
-from user_collection.models import CollectionItem
+from user_collection.models import CollectionItem, ReadDate
 
 
 class TestCollectionItemModel:
@@ -472,3 +473,213 @@ class TestCollectionItemModel:
         )
         assert item.grade is None
         assert item.grading_company == "CGC"
+
+
+class TestReadDateModel:
+    """Tests for the ReadDate model."""
+
+    def test_read_date_creation(self, collection_item):
+        """Test creating a read date entry."""
+        read_datetime = django_timezone.now()
+        read_date = ReadDate.objects.create(
+            collection_item=collection_item,
+            read_date=read_datetime,
+        )
+        assert isinstance(read_date, ReadDate)
+        assert read_date.collection_item == collection_item
+        assert read_date.read_date == read_datetime
+        assert read_date.created_on is not None
+
+    def test_read_date_str(self, collection_item):
+        """Test the string representation of a read date."""
+        read_datetime = datetime(2024, 6, 15, 14, 30, 0, tzinfo=timezone.utc)
+        read_date = ReadDate.objects.create(
+            collection_item=collection_item,
+            read_date=read_datetime,
+        )
+        expected = f"{collection_item} - 2024-06-15 14:30:00+00:00"
+        assert str(read_date) == expected
+
+    def test_read_date_ordering(self, collection_item):
+        """Test that read dates are ordered by -read_date (most recent first)."""
+        old_date = datetime(2024, 1, 1, 12, 0, 0, tzinfo=timezone.utc)
+        new_date = datetime(2024, 6, 15, 12, 0, 0, tzinfo=timezone.utc)
+
+        # Create in chronological order
+        ReadDate.objects.create(collection_item=collection_item, read_date=old_date)
+        ReadDate.objects.create(collection_item=collection_item, read_date=new_date)
+
+        read_dates = collection_item.read_dates.all()
+        assert read_dates.count() == 2
+        # Most recent should be first
+        assert read_dates[0].read_date == new_date
+        assert read_dates[1].read_date == old_date
+
+    def test_read_date_cascade_delete(self, collection_item):
+        """Test that deleting a collection item deletes its read dates."""
+        ReadDate.objects.create(
+            collection_item=collection_item,
+            read_date=django_timezone.now(),
+        )
+        assert collection_item.read_dates.count() == 1
+
+        item_id = collection_item.id
+        collection_item.delete()
+
+        # Verify read dates were deleted
+        assert ReadDate.objects.filter(collection_item_id=item_id).count() == 0
+
+    def test_multiple_read_dates_per_item(self, collection_item):
+        """Test that a collection item can have multiple read dates."""
+        dates = [
+            datetime(2024, 1, 15, 10, 0, 0, tzinfo=timezone.utc),
+            datetime(2024, 3, 20, 14, 30, 0, tzinfo=timezone.utc),
+            datetime(2024, 6, 10, 9, 15, 0, tzinfo=timezone.utc),
+        ]
+
+        for date_time in dates:
+            ReadDate.objects.create(
+                collection_item=collection_item,
+                read_date=date_time,
+            )
+
+        assert collection_item.read_dates.count() == 3
+
+    def test_get_read_count(self, collection_item):
+        """Test the get_read_count helper method."""
+        assert collection_item.get_read_count() == 0
+
+        # Add read dates
+        ReadDate.objects.create(
+            collection_item=collection_item,
+            read_date=django_timezone.now(),
+        )
+        assert collection_item.get_read_count() == 1
+
+        ReadDate.objects.create(
+            collection_item=collection_item,
+            read_date=django_timezone.now(),
+        )
+        assert collection_item.get_read_count() == 2
+
+    def test_get_latest_read_date(self, collection_item):
+        """Test the get_latest_read_date helper method."""
+        assert collection_item.get_latest_read_date() is None
+
+        old_date = datetime(2024, 1, 1, 12, 0, 0, tzinfo=timezone.utc)
+        new_date = datetime(2024, 6, 15, 12, 0, 0, tzinfo=timezone.utc)
+
+        ReadDate.objects.create(collection_item=collection_item, read_date=old_date)
+        ReadDate.objects.create(collection_item=collection_item, read_date=new_date)
+
+        # Should return the most recent date
+        assert collection_item.get_latest_read_date() == new_date
+
+    def test_add_read_date_with_specific_date(self, collection_item):
+        """Test the add_read_date helper method with a specific date."""
+        specific_date = datetime(2024, 6, 15, 14, 30, 0, tzinfo=timezone.utc)
+
+        collection_item.add_read_date(specific_date)
+
+        assert collection_item.read_dates.count() == 1
+        assert collection_item.read_dates.first().read_date == specific_date
+
+        # Check backward compatibility fields were synced
+        collection_item.refresh_from_db()
+        assert collection_item.is_read is True
+        assert collection_item.date_read == specific_date
+
+    def test_add_read_date_without_date(self, collection_item):
+        """Test the add_read_date helper method without specifying a date."""
+        before_time = django_timezone.now()
+        collection_item.add_read_date()
+        after_time = django_timezone.now()
+
+        assert collection_item.read_dates.count() == 1
+        read_date = collection_item.read_dates.first().read_date
+
+        # Should be between before and after
+        assert before_time <= read_date <= after_time
+
+        # Check backward compatibility fields
+        collection_item.refresh_from_db()
+        assert collection_item.is_read is True
+        assert collection_item.date_read == read_date
+
+    def test_add_multiple_read_dates(self, collection_item):
+        """Test adding multiple read dates via helper method."""
+        date1 = datetime(2024, 1, 15, 10, 0, 0, tzinfo=timezone.utc)
+        date2 = datetime(2024, 3, 20, 14, 30, 0, tzinfo=timezone.utc)
+        date3 = datetime(2024, 6, 10, 9, 15, 0, tzinfo=timezone.utc)
+
+        collection_item.add_read_date(date1)
+        collection_item.add_read_date(date2)
+        collection_item.add_read_date(date3)
+
+        assert collection_item.get_read_count() == 3
+
+        # Latest date should be synced to date_read
+        collection_item.refresh_from_db()
+        assert collection_item.date_read == date3
+
+    def test_backward_compatibility_sync(self, collection_item):
+        """Test that is_read and date_read stay synced when adding read dates."""
+        # Initially unread
+        assert collection_item.is_read is False
+        assert collection_item.date_read is None
+
+        # Add first read date
+        first_read = datetime(2024, 1, 15, 10, 0, 0, tzinfo=timezone.utc)
+        collection_item.add_read_date(first_read)
+        collection_item.refresh_from_db()
+
+        assert collection_item.is_read is True
+        assert collection_item.date_read == first_read
+
+        # Add second read date
+        second_read = datetime(2024, 6, 15, 14, 30, 0, tzinfo=timezone.utc)
+        collection_item.add_read_date(second_read)
+        collection_item.refresh_from_db()
+
+        assert collection_item.is_read is True
+        assert collection_item.date_read == second_read  # Updated to latest
+
+    def test_read_date_index(self, collection_item):
+        """Test that the database index on collection_item and read_date exists."""
+        # This is more of a sanity check that the model is configured correctly
+        read_datetime = django_timezone.now()
+        read_date = ReadDate.objects.create(
+            collection_item=collection_item,
+            read_date=read_datetime,
+        )
+
+        # Query using the indexed fields should work efficiently
+        found = ReadDate.objects.filter(
+            collection_item=collection_item,
+            read_date=read_datetime,
+        ).first()
+
+        assert found == read_date
+
+    def test_different_items_can_have_same_read_date(
+        self, collection_user, collection_issue_1, collection_issue_2
+    ):
+        """Test that different collection items can have the same read date."""
+        same_datetime = datetime(2024, 6, 15, 12, 0, 0, tzinfo=timezone.utc)
+
+        item1 = CollectionItem.objects.create(
+            user=collection_user,
+            issue=collection_issue_1,
+        )
+        item2 = CollectionItem.objects.create(
+            user=collection_user,
+            issue=collection_issue_2,
+        )
+
+        ReadDate.objects.create(collection_item=item1, read_date=same_datetime)
+        ReadDate.objects.create(collection_item=item2, read_date=same_datetime)
+
+        assert item1.read_dates.count() == 1
+        assert item2.read_dates.count() == 1
+        assert item1.read_dates.first().read_date == same_datetime
+        assert item2.read_dates.first().read_date == same_datetime

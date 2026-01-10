@@ -24,7 +24,6 @@ class CollectionItemForm(forms.ModelForm):
             "storage_location",
             "notes",
             "is_read",
-            "date_read",
         )
         widgets = {
             "issue": widgets.AutocompleteWidget(
@@ -67,14 +66,6 @@ class CollectionItemForm(forms.ModelForm):
                     "rows": 4,
                 }
             ),
-            "date_read": forms.DateTimeInput(
-                format="%Y-%m-%d %H:%M",
-                attrs={
-                    "type": "text",
-                    "data-bulma-calendar": "on",
-                    "data-type": "datetime",
-                }
-            ),
         }
         labels = {
             "book_format": "Format",
@@ -84,7 +75,6 @@ class CollectionItemForm(forms.ModelForm):
             "purchase_price": "Price Paid",
             "purchase_store": "Store/Vendor",
             "is_read": "Have you read this issue?",
-            "date_read": "Date Read",
         }
         help_texts = {
             "quantity": "Number of copies you own",
@@ -96,8 +86,7 @@ class CollectionItemForm(forms.ModelForm):
             "purchase_store": "Where did you buy it?",
             "storage_location": "Where is it stored?",
             "notes": "Any additional notes about this item",
-            "is_read": "Mark this if you've read the issue",
-            "date_read": "When did you read this issue?",
+            "is_read": "Mark this if you've read the issue (read dates managed in detail view)",
         }
 
     def __init__(self, *args, **kwargs):

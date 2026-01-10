@@ -829,19 +829,16 @@ class CollectionViewSet(
             defaults={
                 "quantity": 1,
                 "book_format": CollectionItem.BookFormat.DIGITAL,
-                "is_read": True,
-                "date_read": date_read,
-                "rating": rating,
             },
         )
 
-        # If item already existed, update it
-        if not created:
-            collection_item.is_read = True
-            collection_item.date_read = date_read
-            if rating is not None:
-                collection_item.rating = rating
-            collection_item.save()
+        # Add read date (this will also set is_read=True and date_read)
+        collection_item.add_read_date(date_read)
+
+        # Update rating if provided
+        if rating is not None:
+            collection_item.rating = rating
+            collection_item.save(update_fields=["rating"])
 
         # Return appropriate status code and response
         response_serializer = ScrobbleResponseSerializer(

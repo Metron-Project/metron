@@ -719,7 +719,7 @@ GET /api/universe/?designation=616
 
 ### Collection
 
-User comic book collections with tracking for ownership, grading, reading status, and personal ratings.
+User comic book collections with tracking for ownership, grading, reading status, multiple read dates, and personal ratings.
 
 **Base Path:** `/api/collection/`
 
@@ -730,10 +730,11 @@ User comic book collections with tracking for ownership, grading, reading status
 - `GET /api/collection/stats/` - Get collection statistics
 - `GET /api/collection/missing_series/` - Get series where user has incomplete runs
 - `GET /api/collection/missing_issues/{series_id}/` - Get specific missing issues for a series
+- `POST /api/collection/scrobble/` - Quick scrobble: mark an issue as read
 
-**Read-Only API:**
+**Collection Management:**
 
-This endpoint is read-only. Create, update, and delete operations are not available via the API. Use the web interface to manage your collection.
+Most collection operations are managed through the web interface. The API provides read access plus the scrobble endpoint for marking issues as read.
 
 **Authentication:**
 
@@ -825,6 +826,12 @@ The Collection endpoint supports comprehensive filtering for organizing and sear
   "grading_company": "CGC (Certified Guaranty Company)",
   "purchase_date": "2024-01-15",
   "is_read": true,
+  "date_read": "2024-03-20T19:30:00Z",
+  "read_dates": [
+    "2024-03-20T19:30:00Z",
+    "2024-01-15T14:00:00Z"
+  ],
+  "read_count": 2,
   "rating": 5,
   "modified": "2025-01-15T10:30:00Z"
 }
@@ -837,9 +844,15 @@ The Collection endpoint supports comprehensive filtering for organizing and sear
     - `purchase_store` - Store where purchased
     - `storage_location` - Where the item is stored
     - `notes` - Personal notes
-    - `date_read` - Date when read
     - `resource_url` - Link to web UI
     - `created_on` - When item was added to collection
+
+**Read Dates Fields:**
+
+- `is_read` - Boolean indicating if the item has been read (auto-synced from read_dates)
+- `date_read` - Most recent read date/time (auto-synced from read_dates)
+- `read_dates` - Array of all read date/time stamps in descending order (most recent first)
+- `read_count` - Total number of times read (count of read_dates array)
 
 **Stats Response Fields:**
 ```json
@@ -1034,6 +1047,155 @@ GET /api/collection/missing_issues/456/?page=2
 
 ---
 
+---
+
+#### Scrobble Endpoint
+
+The scrobble endpoint provides a quick way to mark issues as read via the API, perfect for mobile apps or browser extensions.
+
+**Endpoint:** `POST /api/collection/scrobble/`
+
+**Purpose:**
+
+- Instantly mark an issue as read with a single API call
+- Automatically creates a collection item if the issue isn't already in your collection
+- Adds a new read date to existing items (preserves all previous read dates for re-read tracking)
+- Optionally set a rating when scrobbling
+
+**Request Body:**
+```json
+{
+  "issue_id": 12345,
+  "date_read": "2026-01-08T14:30:00Z",
+  "rating": 4
+}
+```
+
+**Request Fields:**
+
+- `issue_id` - Required. The Metron issue ID to scrobble
+- `date_read` - Optional. Timestamp when issue was read (defaults to current time if omitted)
+- `rating` - Optional. Star rating from 1-5
+
+**Response (201 Created - New Item):**
+```json
+{
+  "id": 789,
+  "issue": {
+    "id": 12345,
+    "series_name": "Amazing Spider-Man",
+    "number": "300"
+  },
+  "is_read": true,
+  "date_read": "2026-01-08T14:30:00Z",
+  "read_dates": [
+    "2026-01-08T14:30:00Z"
+  ],
+  "read_count": 1,
+  "rating": 4,
+  "created": true,
+  "modified": "2026-01-08T14:30:00Z"
+}
+```
+
+**Response (200 OK - Updated Existing):**
+```json
+{
+  "id": 456,
+  "issue": {
+    "id": 12345,
+    "series_name": "Amazing Spider-Man",
+    "number": "300"
+  },
+  "is_read": true,
+  "date_read": "2026-01-08T14:30:00Z",
+  "read_dates": [
+    "2026-01-08T14:30:00Z",
+    "2025-12-15T10:00:00Z",
+    "2025-11-01T08:30:00Z"
+  ],
+  "read_count": 3,
+  "rating": 4,
+  "created": false,
+  "modified": "2026-01-08T14:30:00Z"
+}
+```
+
+**Response Fields:**
+
+- `created` - Boolean. `true` if a new collection item was created, `false` if existing item was updated
+- All other fields match the standard collection item response format
+
+**Status Codes:**
+
+- `201 Created` - New collection item was created and marked as read
+- `200 OK` - Existing collection item was updated with new read date
+- `400 Bad Request` - Validation error (invalid issue_id, rating out of range)
+- `404 Not Found` - Issue with specified ID doesn't exist
+
+**Auto-Creation Behavior:**
+
+When scrobbling an issue not in your collection, a new collection item is automatically created with:
+
+- `quantity`: 1
+- `book_format`: DIGITAL
+- `is_read`: true
+- `date_read`: From request or current timestamp
+- `read_dates`: Array with single entry
+- `rating`: From request (if provided)
+
+**Read Date Behavior:**
+
+- Scrobbling ADDS a new read date (doesn't replace existing ones)
+- All previous read dates are preserved in the `read_dates` array
+- The `date_read` field always shows the most recent read
+- The `read_count` field shows total number of reads
+- Perfect for tracking re-reads over time
+
+**Examples:**
+```bash
+# Mark issue as read right now
+curl -X POST https://metron.cloud/api/collection/scrobble/ \
+  -u "username:password" \
+  -H "Content-Type: application/json" \
+  -d '{"issue_id": 12345}'
+
+# Mark as read with specific date and rating
+curl -X POST https://metron.cloud/api/collection/scrobble/ \
+  -u "username:password" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "issue_id": 12345,
+    "date_read": "2026-01-08T10:00:00Z",
+    "rating": 5
+  }'
+
+# Scrobble a re-read (adds to existing read_dates)
+curl -X POST https://metron.cloud/api/collection/scrobble/ \
+  -u "username:password" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "issue_id": 12345,
+    "date_read": "2026-03-15T20:00:00Z"
+  }'
+```
+
+**Use Cases:**
+
+- **Reading Tracker Apps:** Mark issues as read immediately after finishing them
+- **Browser Extensions:** One-click scrobble while reading digital comics
+- **Import Tools:** Bulk import reading history from other services
+- **Mobile Apps:** Quick scrobble without full collection interface
+- **Re-read Tracking:** Scrobble the same issue multiple times to track re-reads
+
+**Validation:**
+
+- `issue_id` must reference an existing issue in the Metron database
+- `rating` must be between 1 and 5 (inclusive) if provided
+- `date_read` must be a valid ISO 8601 datetime string if provided
+
+---
+
 **Notes:**
 
 - Collection items are private - each user can only access their own collection
@@ -1041,6 +1203,8 @@ GET /api/collection/missing_issues/456/?page=2
 - The `quantity` field allows tracking multiple copies of the same issue
 - Statistics are calculated in real-time from the user's current collection
 - Format counts in stats show the raw choice value (PRINT, DIGITAL, BOTH) not the display name
+- Multiple read dates are supported - comics can be re-read and each read is tracked separately
+- The `is_read` and `date_read` fields are automatically synchronized from the `read_dates` array
 
 ---
 

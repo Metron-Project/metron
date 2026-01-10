@@ -1,0 +1,46 @@
+<div class="content">
+    {% if item.read_dates.exists %}
+        <ul>
+            {% for read_date_entry in item.read_dates.all %}
+                <li class="is-flex is-align-items-center">
+                    <span class="mr-2">{{ read_date_entry.read_date|date:"F d, Y g:i A" }}</span>
+                    <button class="delete is-small"
+                            hx-post="{% url 'user_collection:delete_read_date' item.pk read_date_entry.pk %}"
+                            hx-target="#read-dates-container"
+                            hx-confirm="Remove this read date?"
+                            aria-label="Remove read date"></button>
+                </li>
+            {% endfor %}
+        </ul>
+        <p class="is-size-7 has-text-grey">Read {{ item.get_read_count }} time{{ item.get_read_count|pluralize }}</p>
+    {% else %}
+        <p class="has-text-grey-light">Not read yet</p>
+    {% endif %}
+    <div class="mt-3">
+        <div class="field">
+            <div class="control">
+                <input class="input is-small"
+                       type="text"
+                       name="read_date"
+                       id="new-read-date-{{ item.pk }}"
+                       placeholder="Optional: specify date/time"
+                       data-bulma-calendar="on"
+                       data-type="datetime">
+            </div>
+            <p class="help is-size-7">Leave blank to use current date/time</p>
+        </div>
+        <div class="field">
+            <div class="control">
+                <button class="button is-small is-info is-fullwidth"
+                        hx-post="{% url 'user_collection:add_read_date' item.pk %}"
+                        hx-include="#new-read-date-{{ item.pk }}"
+                        hx-target="#read-dates-container">
+                    <span class="icon is-small">
+                        <i class="fas fa-plus"></i>
+                    </span>
+                    <span>Add Read Date</span>
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
