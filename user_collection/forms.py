@@ -67,10 +67,12 @@ class CollectionItemForm(forms.ModelForm):
                     "rows": 4,
                 }
             ),
-            "date_read": forms.DateInput(
+            "date_read": forms.DateTimeInput(
+                format="%Y-%m-%d %H:%M",
                 attrs={
-                    "type": "date",
+                    "type": "text",
                     "data-bulma-calendar": "on",
+                    "data-type": "datetime",
                 }
             ),
         }
