@@ -36,7 +36,8 @@ The user_collection app follows Django's MTV (Model-Template-View) pattern with:
 - `django-money` for currency fields
 - `comicsdb` app for Issue, Series, Publisher models
 - `users` app for CustomUser model
-- HTMX for dynamic rating updates
+- HTMX for dynamic rating updates and read date management
+- Bulma Calendar for date/time input widgets
 
 **Privacy Model:**
 
@@ -75,9 +76,9 @@ class CollectionItem(models.Model):
     storage_location = models.CharField(max_length=255, blank=True)
     notes = models.TextField(blank=True)
 
-    # Reading tracking
+    # Reading tracking (backward compatibility fields, auto-synced from ReadDate model)
     is_read = models.BooleanField(default=False)
-    date_read = models.DateTimeField(null=True, blank=True)  # Changed from DateField for precise scrobble tracking
+    date_read = models.DateTimeField(null=True, blank=True)
     rating = models.PositiveSmallIntegerField(null=True, choices=[(i, i) for i in range(1, 6)])
 
     # Timestamps
@@ -138,6 +139,9 @@ class Meta:
 
 - `get_absolute_url()`: Returns detail view URL using primary key
 - `__str__()`: Returns formatted string with username, issue, and quantity
+- `get_read_count()`: Returns the number of times the item has been read (count of ReadDate objects)
+- `get_latest_read_date()`: Returns the most recent read date or None
+- `add_read_date(read_date=None)`: Adds a new read date and auto-syncs `is_read` and `date_read` fields
 
 **Field Details:**
 
@@ -147,8 +151,59 @@ class Meta:
 - `grading_company`: Optional - blank means user-assessed grade
 - `purchase_price`: MoneyField with currency support
 - `rating`: 1-5 star rating system for personal tracking
-- `is_read`: Boolean for reading progress tracking
-- `date_read`: Optional timestamp of when issue was read (DateTimeField for precise scrobble tracking)
+- `is_read`: Boolean for reading progress tracking (auto-synced from ReadDate model)
+- `date_read`: Most recent read timestamp (auto-synced from ReadDate model)
+
+**Backward Compatibility:**
+
+The `is_read` and `date_read` fields are maintained for backward compatibility with existing code and templates. They are automatically synchronized when read dates are added or removed:
+
+- `is_read` = True when at least one ReadDate exists, False otherwise
+- `date_read` = Most recent ReadDate.read_date value, or None if no read dates
+
+### ReadDate
+
+Model for tracking individual read dates for collection items. Supports tracking multiple re-reads of the same issue.
+
+**File:** `user_collection/models.py`
+
+```python
+class ReadDate(models.Model):
+    collection_item = models.ForeignKey(
+        CollectionItem,
+        on_delete=models.CASCADE,
+        related_name="read_dates",
+    )
+    read_date = models.DateTimeField()
+    created_on = models.DateTimeField(db_default=Now())
+```
+
+**Meta Options:**
+
+```python
+class Meta:
+    ordering = ["-read_date"]  # Most recent first
+    indexes = [
+        models.Index(fields=["collection_item", "-read_date"]),
+    ]
+```
+
+**Purpose:**
+
+Comics are commonly re-read, so this model allows users to track multiple read dates for each collection item. Each ReadDate represents one reading of the issue.
+
+**Relationships:**
+
+- Related to CollectionItem via `read_dates` reverse relation
+- Cascade deletion: All read dates deleted when CollectionItem is deleted
+
+**Ordering:**
+
+Default ordering is by `-read_date` (most recent first), making it easy to retrieve the latest read date with `.first()`.
+
+**Synchronization:**
+
+When ReadDate objects are created or deleted, the parent CollectionItem's `is_read` and `date_read` fields are automatically updated to maintain backward compatibility.
 
 ## Views and URLs
 
@@ -525,6 +580,88 @@ def update_rating(request, pk):
 
 **URL:** `/collection/<pk>/rate/`
 
+### add_read_date
+
+```python
+@login_required
+@require_POST
+def add_read_date(request, pk):
+    """HTMX view to add a new read date to a collection item."""
+    item = get_object_or_404(CollectionItem, pk=pk, user=request.user)
+
+    # Get read_date from POST data or default to now
+    read_date_str = request.POST.get("read_date")
+    if read_date_str:
+        read_date = timezone.datetime.fromisoformat(read_date_str)
+    else:
+        read_date = timezone.now()
+
+    # Use the helper method which handles synchronization
+    item.add_read_date(read_date)
+
+    return render(
+        request,
+        "user_collection/partials/read_dates_list.html",
+        {"item": item}
+    )
+```
+
+**Features:**
+
+- HTMX endpoint for adding read dates without page refresh
+- Owner-only access via `get_object_or_404`
+- Accepts optional `read_date` parameter (defaults to now)
+- Uses `add_read_date()` helper method for automatic synchronization
+- Returns partial template showing updated read dates list
+- Integrates with Bulma Calendar widget for date/time input
+
+**URL:** `/collection/<pk>/add-read-date/`
+
+### delete_read_date
+
+```python
+@login_required
+@require_POST
+def delete_read_date(request, pk, read_date_id):
+    """HTMX view to delete a read date from a collection item."""
+    item = get_object_or_404(CollectionItem, pk=pk, user=request.user)
+    read_date = get_object_or_404(ReadDate, pk=read_date_id, collection_item=item)
+
+    read_date.delete()
+
+    # Sync backward compatibility fields
+    if item.read_dates.exists():
+        # Still have read dates - update to latest
+        item.is_read = True
+        item.date_read = item.get_latest_read_date()
+    else:
+        # No more read dates - mark as unread
+        item.is_read = False
+        item.date_read = None
+    item.save(update_fields=["is_read", "date_read"])
+
+    return render(
+        request,
+        "user_collection/partials/read_dates_list.html",
+        {"item": item}
+    )
+```
+
+**Features:**
+
+- HTMX endpoint for deleting read dates without page refresh
+- Owner-only access via double `get_object_or_404` (item and read_date)
+- Automatically syncs `is_read` and `date_read` after deletion
+- Sets `is_read=False` when last read date is deleted
+- Updates `date_read` to next most recent read date (or None)
+- Returns partial template showing updated read dates list
+
+**Bug Fix (Commit 3588d3c):**
+
+Fixed incorrect behavior where deleting one of multiple read dates would set `is_read=False`. Now correctly maintains `is_read=True` when other read dates still exist.
+
+**URL:** `/collection/<pk>/delete-read-date/<read_date_id>/`
+
 ### scrobble (API ViewSet Action)
 
 ```python
@@ -588,12 +725,14 @@ defaults={
 When updating an existing item:
 
 ```python
-collection_item.is_read = True
-collection_item.date_read = date_read
+# Add a new read date (preserves existing read dates)
+collection_item.add_read_date(date_read)
 if rating is not None:
     collection_item.rating = rating
-collection_item.save()
+    collection_item.save(update_fields=["rating"])
 ```
+
+**Important:** Scrobbling ADDS a new read date rather than replacing existing ones. This allows tracking multiple re-reads of the same issue over time.
 
 **Response:**
 
@@ -609,8 +748,10 @@ Uses `ScrobbleResponseSerializer` with additional `created` flag:
     },
     "is_read": bool,
     "date_read": datetime,
+    "read_dates": [datetime, ...],  # Array of all read dates
+    "read_count": int,               # Total number of reads
     "rating": int|null,
-    "created": bool,      # True if new, False if updated
+    "created": bool,                 # True if new, False if updated
     "modified": datetime
 }
 ```
@@ -661,6 +802,8 @@ urlpatterns = [
     path("<int:pk>/update/", CollectionUpdateView.as_view(), name="update"),
     path("<int:pk>/delete/", CollectionDeleteView.as_view(), name="delete"),
     path("<int:pk>/rate/", update_rating, name="rate"),
+    path("<int:pk>/add-read-date/", add_read_date, name="add-read-date"),
+    path("<int:pk>/delete-read-date/<int:read_date_id>/", delete_read_date, name="delete-read-date"),
 ]
 ```
 
@@ -677,9 +820,11 @@ class CollectionItemForm(forms.ModelForm):
         fields = (
             "issue", "quantity", "book_format", "grade", "grading_company",
             "purchase_date", "purchase_price", "purchase_store",
-            "storage_location", "notes", "is_read", "date_read",
+            "storage_location", "notes",
         )
 ```
+
+**Note:** The `is_read` and `date_read` fields have been removed from the form. Read dates are now managed separately via the detail page using HTMX endpoints and the ReadDate model.
 
 **Custom Widgets:**
 
@@ -996,6 +1141,75 @@ The collection uses HTMX for real-time star rating updates without page refresh.
 - Mobile-friendly single-click rating
 - Consistent with project's HTMX-first approach
 
+### Read Dates Management
+
+**File:** `user_collection/templates/user_collection/partials/read_dates_list.html`
+
+The collection uses HTMX for managing multiple read dates without page refresh.
+
+**Add Read Date Form:**
+
+```html
+<form hx-post="{% url 'user_collection:add-read-date' item.pk %}"
+      hx-target="#read-dates-list"
+      hx-swap="outerHTML">
+    {% csrf_token %}
+    <input type="datetime-local"
+           name="read_date"
+           class="bulmaCalendar"
+           data-display-mode="inline">
+    <button type="submit">Add</button>
+</form>
+```
+
+**Delete Read Date:**
+
+```html
+<button hx-post="{% url 'user_collection:delete-read-date' item.pk read_date.pk %}"
+        hx-target="#read-dates-list"
+        hx-swap="outerHTML"
+        hx-confirm="Delete this read date?">
+    Delete
+</button>
+```
+
+**Features:**
+
+- **Real-time updates**: Add/delete read dates without page refresh
+- **Bulma Calendar integration**: User-friendly date/time picker
+- **Automatic synchronization**: Updates `is_read` and `date_read` fields
+- **Confirmation dialog**: Prevents accidental deletion with `hx-confirm`
+- **Mobile responsive**: Optimized layout for small screens
+- **Partial swap**: Only updates the read dates list, not entire page
+
+**Flow (Add):**
+
+1. User selects date/time using Bulma Calendar widget
+2. User clicks "Add"
+3. HTMX sends POST to `/collection/<pk>/add-read-date/`
+4. View creates ReadDate and syncs CollectionItem fields
+5. View returns updated `read_dates_list.html` partial
+6. HTMX swaps old list with new
+7. User sees new read date in list immediately
+
+**Flow (Delete):**
+
+1. User clicks "Delete" on a read date
+2. HTMX shows confirmation dialog
+3. HTMX sends POST to `/collection/<pk>/delete-read-date/<id>/`
+4. View deletes ReadDate and syncs CollectionItem fields
+5. View returns updated `read_dates_list.html` partial
+6. HTMX swaps old list with new
+7. User sees read date removed immediately
+
+**Benefits:**
+
+- Improved UX with instant feedback
+- No page refresh or navigation required
+- Automatic field synchronization prevents data inconsistency
+- Mobile-friendly interface for common re-reading workflow
+- Consistent with project's HTMX-first approach
+
 ### Range Toggle (Add from Series)
 
 **File:** `user_collection/templates/user_collection/add_issues_from_series.html`
@@ -1078,6 +1292,7 @@ Used in `AddIssuesFromSeriesForm` for bulk addition.
 | `missing_issues_list.html` | Series with missing issues | Completion percentage, progress bars, pagination |
 | `missing_issues_detail.html` | Specific missing issues | Chronological list, issue details, series stats |
 | `partials/star_rating.html` | Star rating component | HTMX-enabled, reusable |
+| `partials/read_dates_list.html` | Read dates management | HTMX add/delete, Bulma Calendar widget |
 | `partials/collection_filter.html` | Filter form | All filter options, clear button |
 
 ### Template Context
@@ -1411,6 +1626,10 @@ Django templates auto-escape output by default.
 - Choice field validation (BookFormat, GradingCompany, Grade)
 - MoneyField handling
 - Rating range validation (1-5)
+- ReadDate model creation and ordering
+- ReadDate cascade deletion with CollectionItem
+- Helper methods: `get_read_count()`, `get_latest_read_date()`, `add_read_date()`
+- Backward compatibility field synchronization (`is_read`, `date_read`)
 
 **Views:**
 
@@ -1444,6 +1663,11 @@ Django templates auto-escape output by default.
 - Owner-only rating updates
 - Rating value validation (1-5)
 - Clear rating functionality (value=0)
+- Add read date endpoint
+- Delete read date endpoint
+- Read dates list partial rendering
+- Automatic `is_read`/`date_read` synchronization after add/delete
+- Bulma Calendar widget integration
 
 **Bulk Addition:**
 
@@ -1470,13 +1694,14 @@ Django templates auto-escape output by default.
 - Issue existence validation
 - Rating range validation (1-5)
 - Auto-creation of collection items
-- Auto-update of existing items
+- Adding read dates to existing items (not replacing)
 - Default value assignment (quantity=1, book_format=DIGITAL)
 - Timestamp handling (timezone.now() default)
-- Response serialization with created flag
+- Response serialization with `created` flag, `read_dates` array, and `read_count`
 - Status code differentiation (201 vs 200)
 - User-scoped permissions
 - Error handling (404 for missing issues)
+- Preservation of existing read dates on scrobble
 
 ### Test Fixtures
 
@@ -1586,6 +1811,27 @@ class MissingIssuesViewTest(TestCase):
 
 ### Recently Implemented
 
+**Multiple Read Dates Feature** ✓ (Commits: cdb2a4a, 3588d3c)
+
+- New ReadDate model for tracking multiple read dates per collection item
+- Support for re-reading comics with complete history
+- HTMX-powered UI for adding/deleting read dates on detail page
+- Bulma Calendar widget for date/time input
+- Helper methods: `get_read_count()`, `get_latest_read_date()`, `add_read_date()`
+- Automatic synchronization of `is_read` and `date_read` backward compatibility fields
+- ReadDate admin with inline editor for CollectionItem
+- API serializers updated to expose `read_dates` array and `read_count`
+- Scrobble endpoint now adds read dates instead of replacing
+- Comprehensive test coverage (13 ReadDate model tests, 6 API tests, 13 HTMX view tests)
+- Bug fix: delete_read_date now correctly maintains `is_read=True` when deleting one of multiple dates
+- Mobile-responsive read date input layout
+
+**Database Migrations:**
+
+- `0003_add_readdate_model.py`: Creates ReadDate table, migrates existing date_read values, adds indexes
+
+See [ReadDate](#readdate), [add_read_date](#add_read_date), and [delete_read_date](#delete_read_date) for technical details.
+
 **Missing Issues Functionality** ✓
 
 - Identify series where user owns some but not all issues
@@ -1601,14 +1847,13 @@ See [MissingIssuesListView](#missingissueslistview) and [MissingIssuesDetailView
 
 - Quick scrobble endpoint for marking issues as read via API
 - Auto-creates collection items if issue not already owned
-- Auto-updates existing collection items with read status
+- Adds new read dates to existing items (preserves history)
 - Precise timestamp tracking with DateTimeField
 - Optional rating support (1-5 stars)
 - Defaults to timezone.now() for date_read if not provided
 - Returns 201 for new items, 200 for updates
+- Returns `read_dates` array and `read_count` in response
 - Mobile app and browser extension ready
-
-**Database Migration:** `date_read` field changed from DateField to DateTimeField for precise scrobble tracking (migration `0002_collectionitem_date_read_datetime.py`).
 
 See [scrobble](#scrobble-api-viewset-action) for technical details.
 

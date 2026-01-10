@@ -34,7 +34,7 @@ Your collection records can include:
 - **Condition**: Grade on CGC scale (0.5 to 10.0) and grading company
 - **Purchase Information**: Date, price, and store
 - **Storage**: Physical location for easy retrieval
-- **Reading Status**: Whether read and when
+- **Reading Status**: Track multiple read dates for re-reads
 - **Personal Rating**: 1-5 star rating system
 - **Notes**: Custom notes for each item
 
@@ -149,6 +149,40 @@ Perfect for quickly adding entire series runs to your collection!
 - Displays all tracking information
 - Access to Edit and Delete buttons
 
+### Tracking Read Dates
+
+Comics are commonly re-read, so the collection tracks multiple read dates per item.
+
+**Managing Read Dates (Detail Page):**
+
+1. Navigate to the item's detail page
+2. View all your read dates in chronological order
+3. Add a new read date:
+   - Click "Add Read Date"
+   - Select the date and time (defaults to now)
+   - Click "Add" to save
+4. Delete a read date:
+   - Click the "Delete" button next to any read date
+   - The item automatically marks as unread if you delete all read dates
+
+**How It Works:**
+
+- Each time you read an issue, add a new read date
+- All read dates are preserved in your history
+- The most recent read date is displayed prominently
+- The `is_read` status automatically syncs:
+  - `True` when you have at least one read date
+  - `False` when you have no read dates
+- Scrobbling via API adds a new read date instead of replacing
+
+**Example:**
+
+- First read: January 5, 2026
+- Re-read: March 15, 2026
+- Third read: June 20, 2026
+
+All three dates are tracked separately, allowing you to see your complete reading history for each issue.
+
 ### Editing a Collection Item
 
 1. Navigate to the item's detail page
@@ -164,10 +198,9 @@ Perfect for quickly adding entire series runs to your collection!
 - Purchase information
 - Storage location
 - Notes
-- Reading status and date
 - Rating
 
-**Note:** You cannot change which issue the collection item refers to. If you need to track a different issue, delete this item and create a new one.
+**Note:** You cannot change which issue the collection item refers to. If you need to track a different issue, delete this item and create a new one. Read dates are managed separately on the detail page, not in the edit form.
 
 ### Rating Your Comics
 
@@ -254,7 +287,7 @@ The scrobble feature allows you to quickly mark issues as read via the API, perf
 
 - Instantly mark an issue as read without navigating through the web UI
 - Automatically creates a collection item if the issue isn't already in your collection
-- Updates read status if the issue is already owned
+- Adds a new read date to existing items (preserves all previous read dates)
 
 **Request Body:**
 
@@ -278,6 +311,10 @@ The scrobble feature allows you to quickly mark issues as read via the API, perf
   },
   "is_read": true,
   "date_read": "2026-01-08T14:30:00Z",
+  "read_dates": [
+    "2026-01-08T14:30:00Z"
+  ],
+  "read_count": 1,
   "rating": 4,
   "created": true,
   "modified": "2026-01-08T14:30:00Z"
@@ -296,6 +333,12 @@ The scrobble feature allows you to quickly mark issues as read via the API, perf
   },
   "is_read": true,
   "date_read": "2026-01-08T14:30:00Z",
+  "read_dates": [
+    "2026-01-08T14:30:00Z",
+    "2025-12-15T10:00:00Z",
+    "2025-11-01T08:30:00Z"
+  ],
+  "read_count": 3,
   "rating": 4,
   "created": false,
   "modified": "2026-01-08T14:30:00Z"
@@ -305,11 +348,21 @@ The scrobble feature allows you to quickly mark issues as read via the API, perf
 **Auto-Creation Behavior:**
 
 When scrobbling an issue not in your collection, a new collection item is automatically created with:
+
 - `quantity`: 1
 - `book_format`: DIGITAL
 - `is_read`: true
 - `date_read`: From request or current timestamp
+- `read_dates`: Array with single entry
 - `rating`: From request (if provided)
+
+**Read Date Behavior:**
+
+- Scrobbling ADDS a new read date (doesn't replace existing ones)
+- All previous read dates are preserved
+- The `date_read` field shows the most recent read
+- The `read_count` field shows total number of reads
+- Perfect for tracking re-reads over time
 
 **Use Cases:**
 
@@ -317,6 +370,7 @@ When scrobbling an issue not in your collection, a new collection item is automa
 2. **Browser Extension**: One-click scrobble while reading digital comics
 3. **Import Tool**: Bulk import reading history from other services
 4. **Mobile App**: Quick scrobble without full collection interface
+5. **Re-read Tracking**: Scrobble the same issue multiple times to track re-reads
 
 **Example with curl:**
 
@@ -344,6 +398,7 @@ curl -X POST https://metron.cloud/api/collection/scrobble/ \
 - **Automatic**: Creates collection items automatically
 - **Precise**: Tracks exact read timestamp (not just date)
 - **Flexible**: Works with existing or new collection items
+- **Re-read Friendly**: Adds to history instead of replacing
 - **Private**: Respects collection privacy (user-scoped)
 
 ## Grading System
@@ -548,6 +603,8 @@ Visit `/collection/stats/` to see detailed analytics about your collection:
 | `/collection/<id>/update/` | Edit collection item | Yes* |
 | `/collection/<id>/delete/` | Delete collection item | Yes* |
 | `/collection/<id>/rate/` | Rate item (HTMX endpoint) | Yes* |
+| `/collection/<id>/add-read-date/` | Add read date (HTMX endpoint) | Yes* |
+| `/collection/<id>/delete-read-date/<read_date_id>/` | Delete read date (HTMX endpoint) | Yes* |
 | `/api/collection/scrobble/` | Mark issue as read (API endpoint) | Yes |
 
 *Must be the owner of the collection item.
