@@ -98,20 +98,30 @@
 document.addEventListener('DOMContentLoaded', function() {
     'use strict';
 
-    // Initialize bulma-calendar for date inputs
-    var dateInputs = document.querySelectorAll('input[data-bulma-calendar="on"]');
-    dateInputs.forEach(function(input) {
-        bulmaCalendar.attach(input, {
-            type: 'date',
+    // Initialize bulma-calendar for date and datetime inputs
+    var calendarInputs = document.querySelectorAll('input[data-bulma-calendar="on"]');
+
+    calendarInputs.forEach(function(input) {
+        var dataType = input.getAttribute('data-type');
+        var isDateTime = dataType === 'datetime';
+
+        var config = {
+            type: isDateTime ? 'datetime' : 'date',
             dateFormat: 'yyyy-MM-dd',
+            timeFormat: 'HH:mm',
             displayMode: 'default',
             showHeader: true,
-            closeOnSelect: true,
+            closeOnSelect: !isDateTime,
             clearButton: false,
             todayButton: true,
             showFooter: true,
-            weekStart: 0
-        });
+            weekStart: 0,
+            showClearButton: false,
+            showTodayButton: true,
+            closeOnOverlayClick: true
+        };
+
+        bulmaCalendar.attach(input, config);
     });
 });
     </script>
