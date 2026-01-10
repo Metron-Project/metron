@@ -1,18 +1,5 @@
 import logging
 
-# Import models for counting
-from comicsdb.models import (
-    Arc,
-    Character,
-    Creator,
-    Imprint,
-    Issue,
-    Publisher,
-    Series,
-    Team,
-    Universe,
-)
-
 from django.contrib import messages
 from django.contrib.auth import login, update_session_auth_hash
 from django.contrib.auth.views import PasswordChangeView
@@ -25,13 +12,24 @@ from django.utils.encoding import force_bytes, force_str
 from django.utils.http import urlsafe_base64_decode, urlsafe_base64_encode
 from django.views.generic import DetailView
 
+# Import models for counting
+from comicsdb.models import (
+    Arc,
+    Character,
+    Creator,
+    Imprint,
+    Issue,
+    Publisher,
+    Series,
+    Team,
+    Universe,
+)
 from metron.utils import get_recaptcha_auth
+from user_collection.models import CollectionItem
 from users.forms import CustomUserChangeForm, CustomUserCreationForm
 from users.models import CustomUser
 from users.tokens import account_activation_token
 from users.utils import send_pushover
-
-from user_collection.models import CollectionItem
 
 logger = logging.getLogger(__name__)
 

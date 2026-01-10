@@ -3,6 +3,7 @@ from decimal import Decimal
 from django.db import models
 from django.db.models.functions import Now
 from django.urls import reverse
+from django.utils import timezone
 from djmoney.models.fields import MoneyField
 
 from comicsdb.models.issue import Issue
@@ -116,7 +117,9 @@ class CollectionItem(models.Model):
     # Reading tracking
     is_read = models.BooleanField(default=False, help_text="Whether the issue has been read")
     date_read = models.DateTimeField(
-        null=True, blank=True, help_text="Date and time when the issue was read"
+        null=True,
+        blank=True,
+        help_text="Date and time when the issue was last read (synced from read_dates)",
     )
     rating = models.PositiveSmallIntegerField(
         null=True,
@@ -148,3 +151,48 @@ class CollectionItem(models.Model):
 
     def get_absolute_url(self):
         return reverse("user_collection:detail", args=[self.pk])
+
+    def get_read_count(self):
+        """Return the number of times this item has been read."""
+        return self.read_dates.count()
+
+    def get_latest_read_date(self):
+        """Return the most recent read date, or None."""
+        latest = self.read_dates.first()  # Already ordered by -read_date
+        return latest.read_date if latest else None
+
+    def add_read_date(self, read_date=None):
+        """Add a new read date entry and sync backward compatibility fields."""
+        if read_date is None:
+            read_date = timezone.now()
+
+        ReadDate.objects.create(collection_item=self, read_date=read_date)
+
+        # Update backward compatibility fields
+        self.is_read = True
+        self.date_read = read_date
+        self.save(update_fields=["is_read", "date_read"])
+
+
+class ReadDate(models.Model):
+    """Track individual read dates for collection items."""
+
+    collection_item = models.ForeignKey(
+        CollectionItem,
+        on_delete=models.CASCADE,
+        related_name="read_dates",
+        help_text="The collection item this read date belongs to",
+    )
+    read_date = models.DateTimeField(help_text="Date and time when the issue was read")
+    created_on = models.DateTimeField(db_default=Now())
+
+    class Meta:
+        ordering = ["-read_date"]
+        indexes = [
+            models.Index(fields=["collection_item", "-read_date"], name="collection_read_date_idx"),
+        ]
+        verbose_name = "Read Date"
+        verbose_name_plural = "Read Dates"
+
+    def __str__(self) -> str:
+        return f"{self.collection_item} - {self.read_date}"

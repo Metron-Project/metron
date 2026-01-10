@@ -1,3 +1,5 @@
+from datetime import datetime
+
 from chartkick.django import PieChart
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
@@ -6,6 +8,8 @@ from django.db import models
 from django.db.models import Count, F, Sum
 from django.shortcuts import get_object_or_404, render
 from django.urls import reverse, reverse_lazy
+from django.utils import timezone
+from django.utils.dateparse import parse_datetime
 from django.views.decorators.http import require_POST
 from django.views.generic import (
     CreateView,
@@ -22,7 +26,7 @@ from comicsdb.models.issue import Issue
 from comicsdb.models.publisher import Publisher
 from comicsdb.models.series import Series, SeriesType
 from user_collection.forms import AddIssuesFromSeriesForm, CollectionItemForm
-from user_collection.models import GRADE_CHOICES, CollectionItem
+from user_collection.models import GRADE_CHOICES, CollectionItem, ReadDate
 
 # Rating constants
 MIN_RATING = 1
@@ -102,8 +106,14 @@ class CollectionCreateView(LoginRequiredMixin, CreateView):
     def form_valid(self, form):
         """Set the user to the current user before saving."""
         form.instance.user = self.request.user
+        response = super().form_valid(form)
+
+        # If is_read is checked and there are no read dates, add one
+        if form.instance.is_read and not form.instance.read_dates.exists():
+            form.instance.add_read_date()
+
         messages.success(self.request, "Item added to your collection!")
-        return super().form_valid(form)
+        return response
 
     def get_success_url(self):
         return reverse("user_collection:list")
@@ -128,8 +138,14 @@ class CollectionUpdateView(LoginRequiredMixin, UserPassesTestMixin, UpdateView):
         return kwargs
 
     def form_valid(self, form):
+        response = super().form_valid(form)
+
+        # If is_read is checked and there are no read dates, add one
+        if form.instance.is_read and not form.instance.read_dates.exists():
+            form.instance.add_read_date()
+
         messages.success(self.request, "Collection item updated!")
-        return super().form_valid(form)
+        return response
 
     def get_success_url(self):
         return reverse("user_collection:detail", kwargs={"pk": self.object.pk})
@@ -507,3 +523,55 @@ class ReadingHistoryListView(LoginRequiredMixin, ListView):
             )
             .order_by("-date_read", "-modified")
         )
+
+
+@login_required
+@require_POST
+def add_read_date(request, pk):
+    """HTMX view to add a new read date to a collection item."""
+    item = get_object_or_404(CollectionItem, pk=pk, user=request.user)
+
+    read_date_str = request.POST.get("read_date", "").strip()
+    if read_date_str:
+        try:
+            # Try parsing Bulma Calendar format (yyyy-MM-dd HH:mm)
+            read_date = datetime.strptime(read_date_str, "%Y-%m-%d %H:%M")
+            # Make it timezone-aware
+            read_date = timezone.make_aware(read_date)
+            item.add_read_date(read_date)
+        except ValueError:
+            # Fall back to Django's parse_datetime for other formats
+            try:
+                read_date = parse_datetime(read_date_str)
+                if read_date:
+                    item.add_read_date(read_date)
+                else:
+                    item.add_read_date()  # Invalid format, use current time
+            except (ValueError, TypeError):
+                item.add_read_date()  # Use current time on error
+    else:
+        item.add_read_date()  # Use current time if empty
+
+    return render(request, "user_collection/partials/read_dates_list.html", {"item": item})
+
+
+@login_required
+@require_POST
+def delete_read_date(request, pk, read_date_pk):
+    """HTMX view to delete a specific read date."""
+    item = get_object_or_404(CollectionItem, pk=pk, user=request.user)
+    read_date = get_object_or_404(ReadDate, pk=read_date_pk, collection_item=item)
+
+    read_date.delete()
+
+    # Update backward compatibility fields
+    latest = item.get_latest_read_date()
+    if latest:
+        item.date_read = latest
+        item.save(update_fields=["date_read"])
+    else:
+        item.is_read = False
+        item.date_read = None
+        item.save(update_fields=["is_read", "date_read"])
+
+    return render(request, "user_collection/partials/read_dates_list.html", {"item": item})

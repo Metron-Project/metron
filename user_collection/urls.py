@@ -20,4 +20,10 @@ urlpatterns = [
     path("<int:pk>/update/", views.CollectionUpdateView.as_view(), name="update"),
     path("<int:pk>/delete/", views.CollectionDeleteView.as_view(), name="delete"),
     path("<int:pk>/rate/", views.update_rating, name="rate"),
+    path("<int:pk>/read-date/add/", views.add_read_date, name="add_read_date"),
+    path(
+        "<int:pk>/read-date/<int:read_date_pk>/delete/",
+        views.delete_read_date,
+        name="delete_read_date",
+    ),
 ]

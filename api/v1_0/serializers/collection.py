@@ -5,7 +5,15 @@ from api.v1_0.serializers.publisher import BasicPublisherSerializer
 from api.v1_0.serializers.reading_list import UserSerializer
 from api.v1_0.serializers.series import SeriesTypeSerializer
 from comicsdb.models import Issue, Series
-from user_collection.models import CollectionItem
+from user_collection.models import CollectionItem, ReadDate
+
+
+class ReadDateSerializer(serializers.ModelSerializer):
+    """Serializer for read dates."""
+
+    class Meta:
+        model = ReadDate
+        fields = ("id", "read_date", "created_on")
 
 
 class CollectionIssueSerializer(serializers.ModelSerializer):
@@ -57,6 +65,8 @@ class CollectionReadSerializer(serializers.ModelSerializer):
     issue = CollectionIssueSerializer(read_only=True)
     book_format = serializers.CharField(source="get_book_format_display", read_only=True)
     grading_company = serializers.CharField(source="get_grading_company_display", read_only=True)
+    read_dates = ReadDateSerializer(many=True, read_only=True)
+    read_count = serializers.IntegerField(source="get_read_count", read_only=True)
     resource_url = serializers.SerializerMethodField("get_resource_url")
 
     def get_resource_url(self, obj: CollectionItem) -> str:
@@ -79,6 +89,8 @@ class CollectionReadSerializer(serializers.ModelSerializer):
             "notes",
             "is_read",
             "date_read",
+            "read_dates",
+            "read_count",
             "rating",
             "resource_url",
             "created_on",

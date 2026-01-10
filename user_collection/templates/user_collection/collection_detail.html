@@ -3,6 +3,10 @@
 {% load thumbnail %}
 {% load django_htmx %}
 {% block title %}{{ item.issue }} - My Collection - Metron{% endblock %}
+{% block headcss %}
+    <link rel="stylesheet"
+          href="{% static 'site/css/bulma-calendar.min.css' %}">
+{% endblock %}
 {% block content %}
     <header class="block">
         <h1 class="title">Collection Item Details</h1>
@@ -175,12 +179,10 @@
                     <dd class="mb-3">
                         {% include "user_collection/partials/star_rating.html" %}
                     </dd>
-                    {% if item.date_read %}
-                        <dt class="has-text-weight-bold">Date Read:</dt>
-                        <dd class="mb-3">
-                            {{ item.date_read|date:"F d, Y" }}
-                        </dd>
-                    {% endif %}
+                    <dt class="has-text-weight-bold">Read History:</dt>
+                    <dd class="mb-3" id="read-dates-container">
+                        {% include "user_collection/partials/read_dates_list.html" %}
+                    </dd>
                     <dt class="has-text-weight-bold">Added to Collection:</dt>
                     <dd class="mb-3">
                         {{ item.created_on|date:"F d, Y" }}
@@ -196,9 +198,44 @@
 {% endblock %}
 {% block js %}
     {% htmx_script %}
+    <script src="{% static 'extensions/bulma-calendar/dist/js/bulma-calendar.min.js' %}"></script>
     <script>
         document.body.addEventListener('htmx:configRequest', (event) => {
             event.detail.headers['X-CSRFToken'] = '{{ csrf_token }}';
         });
+
+        // Initialize Bulma Calendar for datetime inputs
+        function initializeDateTimePickers() {
+            var calendarInputs = document.querySelectorAll('input[data-bulma-calendar="on"]');
+
+            calendarInputs.forEach(function(input) {
+                var dataType = input.getAttribute('data-type');
+                var isDateTime = dataType === 'datetime';
+
+                var config = {
+                    type: isDateTime ? 'datetime' : 'date',
+                    dateFormat: 'yyyy-MM-dd',
+                    timeFormat: 'HH:mm',
+                    displayMode: 'default',
+                    showHeader: true,
+                    closeOnSelect: !isDateTime,
+                    clearButton: false,
+                    todayButton: true,
+                    showFooter: true,
+                    weekStart: 0,
+                    showClearButton: false,
+                    showTodayButton: true,
+                    closeOnOverlayClick: true
+                };
+
+                bulmaCalendar.attach(input, config);
+            });
+        }
+
+        // Initialize on page load
+        document.addEventListener('DOMContentLoaded', initializeDateTimePickers);
+
+        // Re-initialize after HTMX swaps content
+        document.body.addEventListener('htmx:afterSwap', initializeDateTimePickers);
     </script>
 {% endblock %}
