@@ -12,17 +12,6 @@
     {{ form.media.css }}
     <link rel="stylesheet"
           href="{% static 'site/css/bulma-calendar.min.css' %}">
-    <style>
-        /* Ensure Bulma Calendar appears above other elements */
-        .datetimepicker,
-        .datepicker {
-            z-index: 9999 !important;
-        }
-        .datetimepicker .modal,
-        .datepicker .modal {
-            z-index: 9999 !important;
-        }
-    </style>
 {% endblock %}
 {% block content %}
     <header class="block has-text-centered">
@@ -109,10 +98,7 @@
 document.addEventListener('DOMContentLoaded', function() {
     'use strict';
 
-    if (typeof bulmaCalendar === 'undefined') {
-        return;
-    }
-
+    // Initialize bulma-calendar for date and datetime inputs
     var calendarInputs = document.querySelectorAll('input[data-bulma-calendar="on"]');
 
     calendarInputs.forEach(function(input) {
