@@ -567,8 +567,9 @@ def delete_read_date(request, pk, read_date_pk):
     # Update backward compatibility fields
     latest = item.get_latest_read_date()
     if latest:
+        item.is_read = True
         item.date_read = latest
-        item.save(update_fields=["date_read"])
+        item.save(update_fields=["is_read", "date_read"])
     else:
         item.is_read = False
         item.date_read = None
