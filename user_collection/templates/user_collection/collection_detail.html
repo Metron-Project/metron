@@ -199,6 +199,7 @@
 {% block js %}
     {% htmx_script %}
     <script src="{% static 'extensions/bulma-calendar/dist/js/bulma-calendar.min.js' %}"></script>
+    <script src="{% static 'site/js/bulma-modal.js' %}"></script>
     <script>
         document.body.addEventListener('htmx:configRequest', (event) => {
             event.detail.headers['X-CSRFToken'] = '{{ csrf_token }}';

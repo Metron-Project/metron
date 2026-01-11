@@ -4,12 +4,32 @@
             {% for read_date_entry in item.read_dates.all %}
                 <li class="is-flex is-align-items-center">
                     <span class="mr-2">{{ read_date_entry.read_date|date:"F d, Y g:i A" }}</span>
-                    <button class="delete is-small"
-                            hx-post="{% url 'user_collection:delete_read_date' item.pk read_date_entry.pk %}"
-                            hx-target="#read-dates-container"
-                            hx-confirm="Remove this read date?"
+                    <button class="delete is-small modal-button"
+                            data-target="delete-read-date-modal-{{ read_date_entry.pk }}"
                             aria-label="Remove read date"></button>
                 </li>
+                {# Delete confirmation modal for this read date #}
+                <div class="modal" id="delete-read-date-modal-{{ read_date_entry.pk }}">
+                    <div class="modal-background"></div>
+                    <div class="modal-card">
+                        <header class="modal-card-head">
+                            <p class="modal-card-title">Confirm Delete</p>
+                            <button class="delete" aria-label="close"></button>
+                        </header>
+                        <section class="modal-card-body">
+                            <p>
+                                Are you sure you want to remove the read date <strong>{{ read_date_entry.read_date|date:"F d, Y g:i A" }}</strong>?
+                            </p>
+                            <p class="mt-2 has-text-grey">This action cannot be undone.</p>
+                        </section>
+                        <footer class="modal-card-foot">
+                            <button class="button is-danger"
+                                    hx-post="{% url 'user_collection:delete_read_date' item.pk read_date_entry.pk %}"
+                                    hx-target="#read-dates-container">Remove Read Date</button>
+                            <button class="button">Cancel</button>
+                        </footer>
+                    </div>
+                </div>
             {% endfor %}
         </ul>
         <p class="is-size-7 has-text-grey">Read {{ item.get_read_count }} time{{ item.get_read_count|pluralize }}</p>
