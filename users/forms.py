@@ -22,6 +22,7 @@ class CustomUserCreationForm(UserCreationForm):
 
     def clean(self) -> dict[str, Any]:
         blocklist = {
+            "cloudinbox.top",
             "duck.com",
             "hey.com",
             "inboxes.app",
