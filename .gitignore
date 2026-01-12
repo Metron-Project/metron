@@ -114,3 +114,6 @@ node_modules/
 # pycharm
 .idea/
 .xml
+
+# AI agents
+CLAUDE.md
