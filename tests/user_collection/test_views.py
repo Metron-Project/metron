@@ -2255,3 +2255,98 @@ class TestDeleteReadDateView:
 
         resp = client.post(url, HTTP_HX_REQUEST="true")
         assert resp.status_code == HTTP_404_NOT_FOUND
+
+    def test_delete_multiple_read_dates_sequentially(
+        self, client, collection_user, collection_item, test_password
+    ):
+        """Test that multiple read dates can be deleted in sequence.
+
+        This verifies that deleting one read date doesn't prevent deleting another,
+        which could happen if the HTMX response doesn't properly reinitialize
+        the UI components for the remaining read dates.
+        """
+        date1 = ReadDate.objects.create(
+            collection_item=collection_item,
+            read_date=datetime(2024, 1, 15, 10, 0, 0, tzinfo=timezone.utc),
+        )
+        date2 = ReadDate.objects.create(
+            collection_item=collection_item,
+            read_date=datetime(2024, 3, 20, 14, 0, 0, tzinfo=timezone.utc),
+        )
+        date3 = ReadDate.objects.create(
+            collection_item=collection_item,
+            read_date=datetime(2024, 6, 15, 18, 30, 0, tzinfo=timezone.utc),
+        )
+
+        client.login(username=collection_user.username, password=test_password)
+
+        # Verify initial state
+        assert collection_item.read_dates.count() == 3
+
+        # Delete the first read date
+        url1 = reverse(
+            "user_collection:delete_read_date",
+            kwargs={"pk": collection_item.pk, "read_date_pk": date1.pk},
+        )
+        resp1 = client.post(url1, HTTP_HX_REQUEST="true")
+        assert resp1.status_code == HTTP_200_OK
+        assert collection_item.read_dates.count() == 2
+
+        # Delete the second read date - this should work even after the first deletion
+        url2 = reverse(
+            "user_collection:delete_read_date",
+            kwargs={"pk": collection_item.pk, "read_date_pk": date2.pk},
+        )
+        resp2 = client.post(url2, HTTP_HX_REQUEST="true")
+        assert resp2.status_code == HTTP_200_OK
+        assert collection_item.read_dates.count() == 1
+
+        # Delete the last read date
+        url3 = reverse(
+            "user_collection:delete_read_date",
+            kwargs={"pk": collection_item.pk, "read_date_pk": date3.pk},
+        )
+        resp3 = client.post(url3, HTTP_HX_REQUEST="true")
+        assert resp3.status_code == HTTP_200_OK
+        assert collection_item.read_dates.count() == 0
+
+        # Verify backward compat fields are updated correctly
+        collection_item.refresh_from_db()
+        assert collection_item.is_read is False
+        assert collection_item.date_read is None
+
+    def test_delete_read_date_response_contains_remaining_dates(
+        self, client, collection_user, collection_item, test_password
+    ):
+        """Test that the response after deletion contains the remaining read dates.
+
+        The HTMX response should include the updated list of read dates so the
+        UI can be properly updated with working delete buttons for remaining dates.
+        """
+        date1 = ReadDate.objects.create(
+            collection_item=collection_item,
+            read_date=datetime(2024, 1, 15, 10, 0, 0, tzinfo=timezone.utc),
+        )
+        date2 = ReadDate.objects.create(
+            collection_item=collection_item,
+            read_date=datetime(2024, 6, 15, 14, 30, 0, tzinfo=timezone.utc),
+        )
+
+        client.login(username=collection_user.username, password=test_password)
+
+        # Delete the first read date
+        url = reverse(
+            "user_collection:delete_read_date",
+            kwargs={"pk": collection_item.pk, "read_date_pk": date1.pk},
+        )
+        resp = client.post(url, HTTP_HX_REQUEST="true")
+
+        assert resp.status_code == HTTP_200_OK
+        content = resp.content.decode()
+
+        # Verify the response contains the remaining read date's delete button/modal
+        assert f"delete-read-date-modal-{date2.pk}" in content
+        # Verify the deleted read date's modal is no longer present
+        assert f"delete-read-date-modal-{date1.pk}" not in content
+        # Verify the remaining date is displayed
+        assert "June 15, 2024" in content

@@ -16,7 +16,9 @@
 {% block content %}
     {# Cover Modal #}
     <div id="modal-bis" class="modal">
-        <div class="modal-background"></div>
+        <div class="modal-background"
+             hx-on:click="this.parentElement.classList.remove('is-active'); document.documentElement.classList.remove('is-clipped');">
+        </div>
         <div class="modal-content">
             <figure class="image is-2by3">
                 {% if issue.image %}
@@ -30,7 +32,10 @@
                 {% endif %}
             </figure>
         </div>
-        <button class="modal-close is-large" aria-label="close"></button>
+        <button class="modal-close is-large"
+                aria-label="close"
+                hx-on:click="this.closest('.modal').classList.remove('is-active'); document.documentElement.classList.remove('is-clipped');">
+        </button>
     </div>
     {# Page Header #}
     <header class="block">
@@ -154,9 +159,8 @@
                 <figure class="image is-2by3">
                     {% if issue.image %}
                         {% thumbnail issue.image "320x480" crop="center" format="WEBP" as im %}
-                            <a class="modal-button"
-                               data-target="modal-bis"
-                               aria-label="View larger cover image">
+                            <a aria-label="View larger cover image"
+                               hx-on:click="document.getElementById('modal-bis').classList.add('is-active'); document.documentElement.classList.add('is-clipped');">
                                 <img src="{{ im.url }}"
                                      width="{{ im.width }}"
                                      height="{{ im.height }}"
@@ -604,6 +608,5 @@
 {% endblock content %}
 {% block js %}
     {% htmx_script %}
-    <script src="{% static 'site/js/bulma-modal.js' %}"></script>
     <script src="{% static 'site/js/bulma-notifications.js' %}"></script>
 {% endblock %}
