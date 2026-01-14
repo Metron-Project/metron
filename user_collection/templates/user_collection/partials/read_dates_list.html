@@ -4,17 +4,23 @@
             {% for read_date_entry in item.read_dates.all %}
                 <li class="is-flex is-align-items-center">
                     <span class="mr-2">{{ read_date_entry.read_date|date:"F d, Y g:i A" }}</span>
-                    <button class="delete is-small modal-button"
-                            data-target="delete-read-date-modal-{{ read_date_entry.pk }}"
-                            aria-label="Remove read date"></button>
+                    <button class="delete is-small"
+                            aria-label="Remove read date"
+                            hx-on:click="document.getElementById('delete-read-date-modal-{{ read_date_entry.pk }}').classList.add('is-active'); document.documentElement.classList.add('is-clipped');">
+                    </button>
                 </li>
                 {# Delete confirmation modal for this read date #}
                 <div class="modal" id="delete-read-date-modal-{{ read_date_entry.pk }}">
-                    <div class="modal-background"></div>
+                    <div class="modal-background"
+                         hx-on:click="this.parentElement.classList.remove('is-active'); document.documentElement.classList.remove('is-clipped');">
+                    </div>
                     <div class="modal-card">
                         <header class="modal-card-head">
                             <p class="modal-card-title">Confirm Delete</p>
-                            <button class="delete" aria-label="close"></button>
+                            <button class="delete"
+                                    aria-label="close"
+                                    hx-on:click="this.closest('.modal').classList.remove('is-active'); document.documentElement.classList.remove('is-clipped');">
+                            </button>
                         </header>
                         <section class="modal-card-body">
                             <p>
@@ -26,7 +32,10 @@
                             <button class="button is-danger"
                                     hx-post="{% url 'user_collection:delete_read_date' item.pk read_date_entry.pk %}"
                                     hx-target="#read-dates-container">Remove Read Date</button>
-                            <button class="button">Cancel</button>
+                            <button class="button"
+                                    hx-on:click="this.closest('.modal').classList.remove('is-active'); document.documentElement.classList.remove('is-clipped');">
+                                Cancel
+                            </button>
                         </footer>
                     </div>
                 </div>
