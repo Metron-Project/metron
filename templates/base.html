@@ -40,7 +40,8 @@
         {% django_htmx_script %}
         {% block headscripts %}{% endblock %}
     </head>
-    <body class="has-navbar-fixed-top" hx-headers='{"x-csrftoken": "{{ csrf_token }}"}'>
+    <body class="has-navbar-fixed-top"
+          hx-headers='{"x-csrftoken": "{{ csrf_token }}"}'>
         {# Navigation #}
         {% include "partials/navbar.html" %}
         {# Main Content #}
@@ -66,7 +67,6 @@
         {% include "partials/footer.html" %}
         {# Scripts #}
         {% block js %}{% endblock %}
-        <script src="{% static 'site/js/bulma-navbar-burger.js' %}"></script>
         {# Analytics or other tracking scripts can go here #}
         {% block analytics %}{% endblock %}
     </body>
