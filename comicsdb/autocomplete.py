@@ -268,7 +268,7 @@ class IssueAutocomplete(ModelAutocomplete):
             # Search both number and alt_number fields
             if number_part:
                 conditions.append(
-                    Q(number__icontains=number_part) | Q(alt_number__icontains=number_part)
+                    Q(number__iexact=number_part) | Q(alt_number__iexact=number_part)
                 )
 
             # Combine conditions with AND if both parts exist, otherwise use the single condition
