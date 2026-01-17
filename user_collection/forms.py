@@ -77,6 +77,7 @@ class CollectionItemForm(forms.ModelForm):
             "is_read": "Have you read this issue?",
         }
         help_texts = {
+            "issue": "Search using 'Series Name (Year) #Number' format.",
             "quantity": "Number of copies you own",
             "book_format": "Physical print, digital, or both",
             "grade": "Comic book condition grade (CGC scale)",
