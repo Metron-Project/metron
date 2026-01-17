@@ -60,7 +60,8 @@
                     <input class="file-input"
                            type="{{ widget.type }}"
                            name="{{ widget.name }}"
-                           {% include "django/forms/widgets/attrs.html" %}>
+                           {% include "django/forms/widgets/attrs.html" %}
+                           onchange="document.getElementById('filename-{{ widget.name }}').textContent = this.files.length > 0 ? this.files[0].name : 'No file selected';">
                     <span class="file-cta">
                         <span class="file-icon">
                             <i class="fas fa-upload"></i>
@@ -79,7 +80,8 @@
             <input class="file-input"
                    type="{{ widget.type }}"
                    name="{{ widget.name }}"
-                   {% include "django/forms/widgets/attrs.html" %}>
+                   {% include "django/forms/widgets/attrs.html" %}
+                   onchange="document.getElementById('filename-{{ widget.name }}').textContent = this.files.length > 0 ? this.files[0].name : 'No file selected';">
             <span class="file-cta">
                 <span class="file-icon">
                     <i class="fas fa-upload"></i>
@@ -90,22 +92,3 @@
         </label>
     </div>
 {% endif %}
-<script>
-    // Update filename display when file is selected
-    (function() {
-        const fileInputs = document.querySelectorAll('input[name="{{ widget.name }}"]');
-        const fileNameDisplay = document.getElementById('filename-{{ widget.name }}');
-        
-        fileInputs.forEach(function(input) {
-            if (input.type === 'file' && fileNameDisplay) {
-                input.addEventListener('change', function(e) {
-                    if (e.target.files.length > 0) {
-                        fileNameDisplay.textContent = e.target.files[0].name;
-                    } else {
-                        fileNameDisplay.textContent = 'No file selected';
-                    }
-                });
-            }
-        });
-    })();
-</script>
