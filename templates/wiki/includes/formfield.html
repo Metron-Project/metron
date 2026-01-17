@@ -77,9 +77,7 @@
                     </label>
                 </div>
                 {% for error in field.errors %}<p class="help is-danger">{{ error }}</p>{% endfor %}
-                {% if field.help_text %}
-                    <p class="help">{{ field.help_text|safe }}</p>
-                {% endif %}
+                {% if field.help_text %}<p class="help">{{ field.help_text|safe }}</p>{% endif %}
             </div>
         {% else %}
             {% if field.auto_id %}

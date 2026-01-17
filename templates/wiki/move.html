@@ -95,9 +95,9 @@
         }
     }
     </style>
-    {% endaddtoblock %}
-    {% addtoblock "js" %}
-    <script type="text/javascript">
+{% endaddtoblock %}
+{% addtoblock "js" %}
+<script type="text/javascript">
     $('#id_destination').after($('#dest_selector').remove());
     $('#id_destination').attr('type', 'hidden');
     $('#id_slug').val('{{ urlpath.slug }}');
@@ -126,6 +126,6 @@
     $('#dest_selector .dropdown-content').on('click', 'a', function() {
       $('#dest_selector').removeClass('is-active');
     });
-    </script>
+</script>
 {% endaddtoblock %}
 {% endblock %}

@@ -424,7 +424,9 @@
     {# Community Guidelines for New Users #}
     {% if customuser.pk == request.user.pk and not customuser.bio %}
         <div class="notification is-primary is-light">
-            <button class="delete" aria-label="close"></button>
+            <button class="delete"
+                    aria-label="close"
+                    onclick="this.parentElement.remove();"></button>
             <p class="has-text-weight-bold mb-2">
                 <span class="icon">
                     <i class="fas fa-star"></i>
@@ -446,7 +448,4 @@
             </div>
         </div>
     {% endif %}
-{% endblock %}
-{% block js %}
-    <script src="{% static 'site/js/bulma-notifications.js' %}"></script>
 {% endblock %}
