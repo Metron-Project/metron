@@ -65,7 +65,8 @@
                                class="file-input"
                                name="{{ field.name }}"
                                id="{{ field.auto_id }}"
-                               {% if field.field.required %}required{% endif %}>
+                               {% if field.field.required %}required{% endif %}
+                               onchange="document.getElementById('filename_{{ field.auto_id }}').textContent = this.files.length > 0 ? this.files[0].name : 'No file chosen';">
                         <span class="file-cta">
                             <span class="file-icon">
                                 <i class="fa fa-upload"></i>
@@ -75,25 +76,8 @@
                         <span class="file-name" id="filename_{{ field.auto_id }}">No file chosen</span>
                     </label>
                 </div>
-                <script>
-        (function() {
-          var fileInput = document.getElementById('{{ field.auto_id }}');
-          var fileName = document.getElementById('filename_{{ field.auto_id }}');
-          if (fileInput && fileName) {
-            fileInput.addEventListener('change', function(e) {
-              if (e.target.files.length > 0) {
-                fileName.textContent = e.target.files[0].name;
-              } else {
-                fileName.textContent = 'No file chosen';
-              }
-            });
-          }
-        })();
-                </script>
                 {% for error in field.errors %}<p class="help is-danger">{{ error }}</p>{% endfor %}
-                {% if field.help_text %}
-                    <p class="help">{{ field.help_text|safe }}</p>
-                {% endif %}
+                {% if field.help_text %}<p class="help">{{ field.help_text|safe }}</p>{% endif %}
             </div>
         {% else %}
             {% if field.auto_id %}

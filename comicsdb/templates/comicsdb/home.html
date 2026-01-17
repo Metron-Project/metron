@@ -18,7 +18,9 @@
             {% for announcement in active_announcements %}
                 <div class="notification is-{{ announcement.display_type }} is-light"
                      role="alert">
-                    <button class="delete" aria-label="Dismiss announcement"></button>
+                    <button class="delete"
+                            aria-label="Dismiss announcement"
+                            onclick="this.parentElement.remove();"></button>
                     {{ announcement.content|safe }}
                 </div>
             {% endfor %}
@@ -240,7 +242,4 @@
         </div>
     </section>
 {% endif %}
-{% endblock %}
-{% block js %}
-    <script src="{% static 'site/js/bulma-notifications.js' %}"></script>
 {% endblock %}

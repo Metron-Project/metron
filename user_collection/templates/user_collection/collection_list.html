@@ -1,6 +1,5 @@
 {% extends parent_template|default:"base.html" %}
 {% load static %}
-{% load django_htmx %}
 {% block title %}My Collection - Metron{% endblock %}
 {% block content %}
     <header class="block has-text-centered">
@@ -178,12 +177,4 @@
 {% block pagination %}
     {% load pagination_tags %}
     {% include "comicsdb/partials/pagination.html" %}
-{% endblock %}
-{% block js %}
-    {% htmx_script %}
-    <script>
-        document.body.addEventListener('htmx:configRequest', (event) => {
-            event.detail.headers['X-CSRFToken'] = '{{ csrf_token }}';
-        });
-    </script>
 {% endblock %}

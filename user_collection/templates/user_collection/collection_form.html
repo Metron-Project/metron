@@ -1,5 +1,5 @@
 {% extends parent_template|default:"base.html" %}
-{% load static bulma_tags django_htmx %}
+{% load static bulma_tags %}
 {% block title %}
     {% if object %}
         Edit
@@ -91,7 +91,6 @@
     </section>
 {% endblock %}
 {% block js %}
-    {% htmx_script %}
     {{ form.media.js }}
     <script src="{% static 'extensions/bulma-calendar/dist/js/bulma-calendar.min.js' %}"></script>
     <script>

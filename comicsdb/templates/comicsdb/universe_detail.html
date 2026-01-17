@@ -2,13 +2,9 @@
 {% load thumbnail %}
 {% load static %}
 {% load humanize %}
-{% load django_htmx %}
 {% block title %}
     {{ universe.name }}
 {% endblock title %}
-{% block js %}
-    {% htmx_script %}
-{% endblock js %}
 {% block content %}
     {# Page Header #}
     <header class="block">

@@ -21,7 +21,7 @@
            aria-label="menu"
            aria-expanded="false"
            aria-controls="navMenu"
-           data-target="navMenu">
+           onclick="this.classList.toggle('is-active'); document.getElementById('navMenu').classList.toggle('is-active');">
             <span aria-hidden="true"></span>
             <span aria-hidden="true"></span>
             <span aria-hidden="true"></span>
@@ -33,162 +33,162 @@
             {% if user.is_authenticated %}
                 {# Releases Menu #}
                 <div class="navbar-item has-dropdown is-hoverable">
-                <a class="navbar-link" aria-haspopup="true" aria-expanded="false">Releases</a>
-                <div class="navbar-dropdown">
-                    <a class="navbar-item" href="{% url 'issue:thisweek' %}">
-                        <span class="icon" aria-hidden="true">
-                            <i class="fas fa-star"></i>
-                        </span>
-                        <span>This Week</span>
-                    </a>
-                    <a class="navbar-item" href="{% url 'issue:nextweek' %}">
-                        <span class="icon" aria-hidden="true">
-                            <i class="fas fa-bolt"></i>
-                        </span>
-                        <span>Next Week</span>
-                    </a>
-                    <a class="navbar-item" href="{% url 'issue:future' %}">
-                        <span class="icon" aria-hidden="true">
-                            <i class="fas fa-gem"></i>
-                        </span>
-                        <span>Future</span>
-                    </a>
-                </div>
-            </div>
-            {# Browse Menu #}
-            <div class="navbar-item has-dropdown is-hoverable">
-                <a class="navbar-link" aria-haspopup="true" aria-expanded="false">Browse</a>
-                <div class="navbar-dropdown">
-                    <a class="navbar-item" href="{% url 'publisher:list' %}">
-                        <span class="icon" aria-hidden="true">
-                            <i class="fas fa-building"></i>
-                        </span>
-                        <span>Publishers</span>
-                    </a>
-                    <a class="navbar-item" href="{% url 'imprint:list' %}">
-                        <span class="icon" aria-hidden="true">
-                            <i class="fas fa-bookmark"></i>
-                        </span>
-                        <span>Imprints</span>
-                    </a>
-                    <a class="navbar-item" href="{% url 'series:list' %}">
-                        <span class="icon" aria-hidden="true">
-                            <i class="fas fa-list"></i>
-                        </span>
-                        <span>Series</span>
-                    </a>
-                    <a class="navbar-item" href="{% url 'issue:list' %}">
-                        <span class="icon" aria-hidden="true">
-                            <i class="fas fa-book"></i>
-                        </span>
-                        <span>Issues</span>
-                    </a>
-                    <hr class="navbar-divider" role="separator">
-                    <a class="navbar-item" href="{% url 'creator:list' %}">
-                        <span class="icon" aria-hidden="true">
-                            <i class="fas fa-pencil-alt"></i>
-                        </span>
-                        <span>Creators</span>
-                    </a>
-                    <a class="navbar-item" href="{% url 'character:list' %}">
-                        <span class="icon" aria-hidden="true">
-                            <i class="fas fa-mask"></i>
-                        </span>
-                        <span>Characters</span>
-                    </a>
-                    <a class="navbar-item" href="{% url 'team:list' %}">
-                        <span class="icon" aria-hidden="true">
-                            <i class="fas fa-users"></i>
-                        </span>
-                        <span>Teams</span>
-                    </a>
-                    <hr class="navbar-divider" role="separator">
-                    <a class="navbar-item" href="{% url 'arc:list' %}">
-                        <span class="icon" aria-hidden="true">
-                            <i class="fas fa-project-diagram"></i>
-                        </span>
-                        <span>Story Arcs</span>
-                    </a>
-                    <a class="navbar-item" href="{% url 'universe:list' %}">
-                        <span class="icon" aria-hidden="true">
-                            <i class="fas fa-globe"></i>
-                        </span>
-                        <span>Universes</span>
-                    </a>
-                    <hr class="navbar-divider" role="separator">
-                    <a class="navbar-item" href="{% url 'reading-list:list' %}">
-                        <span class="icon" aria-hidden="true">
-                            <i class="fas fa-book-reader"></i>
-                        </span>
-                        <span>Reading Lists</span>
-                    </a>
-                    {% if user.is_authenticated %}
-                        <a class="navbar-item" href="{% url 'reading-list:my-lists' %}">
+                    <a class="navbar-link" aria-haspopup="true" aria-expanded="false">Releases</a>
+                    <div class="navbar-dropdown">
+                        <a class="navbar-item" href="{% url 'issue:thisweek' %}">
                             <span class="icon" aria-hidden="true">
-                                <i class="fas fa-clipboard-check"></i>
+                                <i class="fas fa-star"></i>
                             </span>
-                            <span>My Reading Lists</span>
+                            <span>This Week</span>
                         </a>
-                        <a class="navbar-item" href="{% url 'user_collection:list' %}">
+                        <a class="navbar-item" href="{% url 'issue:nextweek' %}">
                             <span class="icon" aria-hidden="true">
-                                <i class="fas fa-box-open"></i>
+                                <i class="fas fa-bolt"></i>
                             </span>
-                            <span>My Collection</span>
+                            <span>Next Week</span>
                         </a>
-                    {% endif %}
-                </div>
-            </div>
-            {# More Menu #}
-            <div class="navbar-item has-dropdown is-hoverable">
-                <a class="navbar-link" aria-haspopup="true" aria-expanded="false">More</a>
-                <div class="navbar-dropdown">
-                    <a class="navbar-item" href="{% url 'wiki:root' %}">
-                        <span class="icon" aria-hidden="true">
-                            <i class="fas fa-book-open"></i>
-                        </span>
-                        <span>Wiki</span>
-                    </a>
-                    {% if user.is_authenticated %}
-                        <a class="navbar-item" href="/docs/">
+                        <a class="navbar-item" href="{% url 'issue:future' %}">
                             <span class="icon" aria-hidden="true">
-                                <i class="fas fa-file"></i>
+                                <i class="fas fa-gem"></i>
                             </span>
-                            <span>API Docs</span>
+                            <span>Future</span>
                         </a>
-                    {% endif %}
-                    <a class="navbar-item" href="{% url 'statistics' %}">
-                        <span class="icon" aria-hidden="true">
-                            <i class="fas fa-chart-bar"></i>
-                        </span>
-                        <span>Statistics</span>
-                    </a>
-                    <a class="navbar-item"
-                       href="https://metron-project.github.io/blog"
-                       target="_blank"
-                       rel="noopener noreferrer">
-                        <span class="icon" aria-hidden="true">
-                            <i class="fas fa-blog"></i>
-                        </span>
-                        <span>Blog</span>
-                        <span class="icon is-small" aria-hidden="true">
-                            <i class="fas fa-external-link-alt"></i>
-                        </span>
-                    </a>
-                    <hr class="navbar-divider" role="separator">
-                    <a class="navbar-item"
-                       href="https://github.com/Metron-Project/metron/issues/new/choose"
-                       target="_blank"
-                       rel="noopener noreferrer">
-                        <span class="icon" aria-hidden="true">
-                            <i class="fas fa-bug"></i>
-                        </span>
-                        <span>Report an Issue</span>
-                        <span class="icon is-small" aria-hidden="true">
-                            <i class="fas fa-external-link-alt"></i>
-                        </span>
-                    </a>
+                    </div>
                 </div>
-            </div>
+                {# Browse Menu #}
+                <div class="navbar-item has-dropdown is-hoverable">
+                    <a class="navbar-link" aria-haspopup="true" aria-expanded="false">Browse</a>
+                    <div class="navbar-dropdown">
+                        <a class="navbar-item" href="{% url 'publisher:list' %}">
+                            <span class="icon" aria-hidden="true">
+                                <i class="fas fa-building"></i>
+                            </span>
+                            <span>Publishers</span>
+                        </a>
+                        <a class="navbar-item" href="{% url 'imprint:list' %}">
+                            <span class="icon" aria-hidden="true">
+                                <i class="fas fa-bookmark"></i>
+                            </span>
+                            <span>Imprints</span>
+                        </a>
+                        <a class="navbar-item" href="{% url 'series:list' %}">
+                            <span class="icon" aria-hidden="true">
+                                <i class="fas fa-list"></i>
+                            </span>
+                            <span>Series</span>
+                        </a>
+                        <a class="navbar-item" href="{% url 'issue:list' %}">
+                            <span class="icon" aria-hidden="true">
+                                <i class="fas fa-book"></i>
+                            </span>
+                            <span>Issues</span>
+                        </a>
+                        <hr class="navbar-divider" role="separator">
+                        <a class="navbar-item" href="{% url 'creator:list' %}">
+                            <span class="icon" aria-hidden="true">
+                                <i class="fas fa-pencil-alt"></i>
+                            </span>
+                            <span>Creators</span>
+                        </a>
+                        <a class="navbar-item" href="{% url 'character:list' %}">
+                            <span class="icon" aria-hidden="true">
+                                <i class="fas fa-mask"></i>
+                            </span>
+                            <span>Characters</span>
+                        </a>
+                        <a class="navbar-item" href="{% url 'team:list' %}">
+                            <span class="icon" aria-hidden="true">
+                                <i class="fas fa-users"></i>
+                            </span>
+                            <span>Teams</span>
+                        </a>
+                        <hr class="navbar-divider" role="separator">
+                        <a class="navbar-item" href="{% url 'arc:list' %}">
+                            <span class="icon" aria-hidden="true">
+                                <i class="fas fa-project-diagram"></i>
+                            </span>
+                            <span>Story Arcs</span>
+                        </a>
+                        <a class="navbar-item" href="{% url 'universe:list' %}">
+                            <span class="icon" aria-hidden="true">
+                                <i class="fas fa-globe"></i>
+                            </span>
+                            <span>Universes</span>
+                        </a>
+                        <hr class="navbar-divider" role="separator">
+                        <a class="navbar-item" href="{% url 'reading-list:list' %}">
+                            <span class="icon" aria-hidden="true">
+                                <i class="fas fa-book-reader"></i>
+                            </span>
+                            <span>Reading Lists</span>
+                        </a>
+                        {% if user.is_authenticated %}
+                            <a class="navbar-item" href="{% url 'reading-list:my-lists' %}">
+                                <span class="icon" aria-hidden="true">
+                                    <i class="fas fa-clipboard-check"></i>
+                                </span>
+                                <span>My Reading Lists</span>
+                            </a>
+                            <a class="navbar-item" href="{% url 'user_collection:list' %}">
+                                <span class="icon" aria-hidden="true">
+                                    <i class="fas fa-box-open"></i>
+                                </span>
+                                <span>My Collection</span>
+                            </a>
+                        {% endif %}
+                    </div>
+                </div>
+                {# More Menu #}
+                <div class="navbar-item has-dropdown is-hoverable">
+                    <a class="navbar-link" aria-haspopup="true" aria-expanded="false">More</a>
+                    <div class="navbar-dropdown">
+                        <a class="navbar-item" href="{% url 'wiki:root' %}">
+                            <span class="icon" aria-hidden="true">
+                                <i class="fas fa-book-open"></i>
+                            </span>
+                            <span>Wiki</span>
+                        </a>
+                        {% if user.is_authenticated %}
+                            <a class="navbar-item" href="/docs/">
+                                <span class="icon" aria-hidden="true">
+                                    <i class="fas fa-file"></i>
+                                </span>
+                                <span>API Docs</span>
+                            </a>
+                        {% endif %}
+                        <a class="navbar-item" href="{% url 'statistics' %}">
+                            <span class="icon" aria-hidden="true">
+                                <i class="fas fa-chart-bar"></i>
+                            </span>
+                            <span>Statistics</span>
+                        </a>
+                        <a class="navbar-item"
+                           href="https://metron-project.github.io/blog"
+                           target="_blank"
+                           rel="noopener noreferrer">
+                            <span class="icon" aria-hidden="true">
+                                <i class="fas fa-blog"></i>
+                            </span>
+                            <span>Blog</span>
+                            <span class="icon is-small" aria-hidden="true">
+                                <i class="fas fa-external-link-alt"></i>
+                            </span>
+                        </a>
+                        <hr class="navbar-divider" role="separator">
+                        <a class="navbar-item"
+                           href="https://github.com/Metron-Project/metron/issues/new/choose"
+                           target="_blank"
+                           rel="noopener noreferrer">
+                            <span class="icon" aria-hidden="true">
+                                <i class="fas fa-bug"></i>
+                            </span>
+                            <span>Report an Issue</span>
+                            <span class="icon is-small" aria-hidden="true">
+                                <i class="fas fa-external-link-alt"></i>
+                            </span>
+                        </a>
+                    </div>
+                </div>
             {% endif %}
         </div>
         <div class="navbar-end">

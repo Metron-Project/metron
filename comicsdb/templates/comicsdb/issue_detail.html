@@ -2,7 +2,6 @@
 {% load thumbnail %}
 {% load humanize %}
 {% load static %}
-{% load django_htmx %}
 {% block sitedesc %}
     <meta name="description" content="{{ issue }} Information">
 {% endblock sitedesc %}
@@ -606,7 +605,3 @@
         </div>
     </div>
 {% endblock content %}
-{% block js %}
-    {% htmx_script %}
-    <script src="{% static 'site/js/bulma-notifications.js' %}"></script>
-{% endblock %}
