@@ -1242,16 +1242,34 @@ The bulk addition form uses HTMX for showing/hiding range input fields:
 ```python
 class IssueAutocomplete(ModelAutocomplete):
     model = Issue
-    search_attrs = ["series__name", "number"]
+    search_attrs = ["series__name", "number", "alt_number"]
 ```
 
 Used in `CollectionItemForm` for issue selection.
 
-**Smart Search:**
+**Search Format:**
 
-- Basic: OR search across series name and number
-- Smart: AND search when `#` separator used
-- Example: `"spider #1"` → series contains "spider" AND number contains "1"
+`Series Name (Year) #Number`
+
+**Smart Search Features:**
+
+- **Word order flexibility**: Words in the series name can be in any order
+  - Example: `"Spider Amazing #1"` matches "Amazing Spider-Man #1"
+- **Year filtering**: Include year in parentheses to filter by series start year
+  - Example: `"Amazing Spider-Man (2022) #1"` matches only the 2022 series
+- **Exact number matching**: Number after `#` uses exact match (not partial)
+  - Example: `"spider #1"` matches only issue #1, not #10 or #100
+- **Alt number support**: Searches both `number` and `alt_number` fields
+
+**Examples:**
+
+| Search Query | Matches |
+|-------------|---------|
+| `spider #100` | Issues where series contains "spider" AND number is exactly "100" |
+| `Amazing Spider #1` | Issues where series contains "Amazing" AND "Spider" AND number is "1" |
+| `Spider Amazing #1` | Same as above (word order doesn't matter) |
+| `Spider-Man (2022) #1` | Only issues from series starting in 2022 |
+| `(1963) #1` | All #1 issues from series starting in 1963 |
 
 **Queryset Optimization:**
 
