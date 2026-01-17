@@ -99,7 +99,7 @@ class IssueForm(ModelForm):
             "name": "Separate multiple story titles by a semicolon",
             "title": "Only used with Collected Editions like a Trade Paperback.",
             "price": "In United States currency",
-            "reprints": "Search for and select any issues that are reprinted in this issue.",
+            "reprints": "Search using 'Series Name (Year) #Number' format.",
             "foc_date": "This date should be earlier than the store date",
         }
         labels = {
