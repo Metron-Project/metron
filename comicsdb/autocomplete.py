@@ -1,6 +1,7 @@
 """Autocomplete views for comicsdb app."""
 
 import operator
+import re
 from functools import reduce
 
 from autocomplete import ModelAutocomplete, register
@@ -261,14 +262,31 @@ class IssueAutocomplete(ModelAutocomplete):
 
             # Add series name filter if there's text before '#'
             # Use unaccent for accent-insensitive series name matching
+            # Split into words so order doesn't matter (e.g., "Spider Amazing" matches "Amazing Spider-Man")
+            # Also extract year if present in parentheses (e.g., "Speed Racer (2025)")
             if series_part:
-                conditions.append(Q(series__name__unaccent__icontains=series_part))
+                # Check for year in parentheses at the end
+                year_match = re.search(r"\((\d{4})\)\s*$", series_part)
+                if year_match:
+                    year = int(year_match.group(1))
+                    # Remove the year portion from series_part
+                    series_part = series_part[: year_match.start()].strip()
+                    conditions.append(Q(series__year_began=year))
+
+                # Filter by series name words (if any remain after removing year)
+                if series_part:
+                    series_words = series_part.split()
+                    series_conditions = [
+                        Q(series__name__unaccent__icontains=word) for word in series_words
+                    ]
+                    # All words must match (AND logic)
+                    conditions.append(reduce(operator.and_, series_conditions))
 
             # Add number filter if there's text after '#'
             # Search both number and alt_number fields
             if number_part:
                 conditions.append(
-                    Q(number__icontains=number_part) | Q(alt_number__icontains=number_part)
+                    Q(number__iexact=number_part) | Q(alt_number__iexact=number_part)
                 )
 
             # Combine conditions with AND if both parts exist, otherwise use the single condition

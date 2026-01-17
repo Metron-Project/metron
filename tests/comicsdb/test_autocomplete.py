@@ -73,6 +73,23 @@ def batman_series(create_user, autocomplete_publisher, single_issue_type):
 
 
 @pytest.fixture
+def spider_man_2022_series(create_user, autocomplete_publisher, single_issue_type):
+    """Create Amazing Spider-Man (2022) series."""
+    user = create_user()
+    return Series.objects.create(
+        name="Amazing Spider-Man",
+        slug="amazing-spider-man-2022",
+        publisher=autocomplete_publisher,
+        volume="6",
+        year_began=2022,
+        series_type=single_issue_type,
+        status=Series.Status.ONGOING,
+        edited_by=user,
+        created_by=user,
+    )
+
+
+@pytest.fixture
 def spider_man_issue_1(create_user, spider_man_series):
     """Create Amazing Spider-Man #1."""
     user = create_user()
@@ -143,6 +160,20 @@ def batman_issue_100(create_user, batman_series):
 
 
 @pytest.fixture
+def spider_man_2022_issue_1(create_user, spider_man_2022_series):
+    """Create Amazing Spider-Man (2022) #1."""
+    user = create_user()
+    return Issue.objects.create(
+        series=spider_man_2022_series,
+        number="1",
+        slug="amazing-spider-man-2022-1",
+        cover_date=date(2022, 4, 1),
+        edited_by=user,
+        created_by=user,
+    )
+
+
+@pytest.fixture
 def all_test_issues(
     spider_man_issue_1,
     spider_man_issue_100,
@@ -203,17 +234,15 @@ class TestIssueAutocomplete:
         assert all_test_issues[1].id in issue_ids  # Spider-Man #100
 
     def test_search_with_full_series_name_and_number(self, all_test_issues):
-        """Test searching with full series name and number containing '1'."""
+        """Test searching with full series name and exact number match."""
         queryset = IssueAutocomplete.get_query_filtered_queryset(
             "Amazing Spider-Man#1", context=None
         )
         issue_ids = list(queryset.values_list("id", flat=True))
 
-        # Should find all Spider-Man issues with "1" in the number (1, 100, Annual 1)
-        assert len(issue_ids) == 3
+        # Should find only Spider-Man #1 (exact number match)
+        assert len(issue_ids) == 1
         assert all_test_issues[0].id in issue_ids  # Spider-Man #1
-        assert all_test_issues[1].id in issue_ids  # Spider-Man #100
-        assert all_test_issues[2].id in issue_ids  # Spider-Man Annual #1
 
     def test_search_with_spaces_around_pound(self, all_test_issues):
         """Test searching with spaces around the # character."""
@@ -253,14 +282,13 @@ class TestIssueAutocomplete:
         assert queryset.count() == 0
 
     def test_search_with_batman_and_number(self, all_test_issues):
-        """Test searching for Batman with number containing '1'."""
+        """Test searching for Batman with exact number match."""
         queryset = IssueAutocomplete.get_query_filtered_queryset("batman#1", context=None)
         issue_ids = list(queryset.values_list("id", flat=True))
 
-        # Should find Batman issues with "1" in the number (#1 and #100)
-        assert len(issue_ids) == 2
+        # Should find only Batman #1 (exact number match)
+        assert len(issue_ids) == 1
         assert all_test_issues[3].id in issue_ids  # Batman #1
-        assert all_test_issues[4].id in issue_ids  # Batman #100
 
     def test_search_case_insensitive(self, all_test_issues):
         """Test that search is case insensitive."""
@@ -281,17 +309,14 @@ class TestIssueAutocomplete:
         assert all_test_issues[1].id in issue_ids  # Spider-Man #100
         assert all_test_issues[4].id in issue_ids  # Batman #100
 
-    def test_search_with_series_and_partial_number(self, all_test_issues):
-        """Test searching with series name and partial number."""
+    def test_search_with_series_and_exact_number(self, all_test_issues):
+        """Test searching with series name and exact number match."""
         queryset = IssueAutocomplete.get_query_filtered_queryset("spider#1", context=None)
         issue_ids = list(queryset.values_list("id", flat=True))
 
-        # Should find both Spider-Man #1 and #100 (both contain "1")
-        # and Annual 1 (contains "1")
-        assert len(issue_ids) == 3
+        # Should find only Spider-Man #1 (exact number match)
+        assert len(issue_ids) == 1
         assert all_test_issues[0].id in issue_ids  # Spider-Man #1
-        assert all_test_issues[1].id in issue_ids  # Spider-Man #100
-        assert all_test_issues[2].id in issue_ids  # Spider-Man Annual #1
 
     def test_search_with_nonexistent_series(self, all_test_issues):
         """Test searching for a series that doesn't exist."""
@@ -333,6 +358,90 @@ class TestIssueAutocomplete:
         # Should split on first # and search for "1#extra" in number field
         # This should find issues with "1" in the number
         assert len(issue_ids) == 0  # "1#extra" won't match anything
+
+    def test_search_with_words_in_different_order(self, all_test_issues):
+        """Test that word order in series name doesn't matter."""
+        queryset = IssueAutocomplete.get_query_filtered_queryset(
+            "Spider Amazing#1", context=None
+        )
+        issue_ids = list(queryset.values_list("id", flat=True))
+
+        # Should find Spider-Man #1 with reversed word order (exact number match)
+        assert len(issue_ids) == 1
+        assert all_test_issues[0].id in issue_ids  # Spider-Man #1
+
+    def test_search_with_words_in_different_order_exact_number(self, all_test_issues):
+        """Test word order independence with exact number match."""
+        queryset = IssueAutocomplete.get_query_filtered_queryset(
+            "Spider Amazing#100", context=None
+        )
+        issue_ids = list(queryset.values_list("id", flat=True))
+
+        # Should find only Spider-Man #100
+        assert len(issue_ids) == 1
+        assert all_test_issues[1].id in issue_ids  # Spider-Man #100
+
+    def test_search_with_year_filter(self, spider_man_issue_1, spider_man_2022_issue_1):
+        """Test that year in parentheses filters by series year_began."""
+        queryset = IssueAutocomplete.get_query_filtered_queryset(
+            "Amazing Spider-Man (2022)#1", context=None
+        )
+        issue_ids = list(queryset.values_list("id", flat=True))
+
+        # Should find only the 2022 series issue
+        assert len(issue_ids) == 1
+        assert spider_man_2022_issue_1.id in issue_ids
+        assert spider_man_issue_1.id not in issue_ids
+
+    def test_search_with_year_filter_1963(self, spider_man_issue_1, spider_man_2022_issue_1):
+        """Test year filter for 1963 series."""
+        queryset = IssueAutocomplete.get_query_filtered_queryset(
+            "Amazing Spider-Man (1963)#1", context=None
+        )
+        issue_ids = list(queryset.values_list("id", flat=True))
+
+        # Should find only the 1963 series issue
+        assert len(issue_ids) == 1
+        assert spider_man_issue_1.id in issue_ids
+        assert spider_man_2022_issue_1.id not in issue_ids
+
+    def test_search_with_year_and_word_order_independence(
+        self, spider_man_issue_1, spider_man_2022_issue_1
+    ):
+        """Test that year filter works with word order independence."""
+        # spider_man_issue_1 needed to ensure both series exist in DB
+        queryset = IssueAutocomplete.get_query_filtered_queryset(
+            "Spider Amazing (2022)#1", context=None
+        )
+        issue_ids = list(queryset.values_list("id", flat=True))
+
+        # Should find only the 2022 series issue with reversed word order
+        assert len(issue_ids) == 1
+        assert spider_man_2022_issue_1.id in issue_ids
+        assert spider_man_issue_1.id not in issue_ids
+
+    def test_search_with_year_only(self, spider_man_issue_1, spider_man_2022_issue_1):
+        """Test searching with just year (no series name)."""
+        # spider_man_issue_1 needed to ensure both series exist in DB
+        queryset = IssueAutocomplete.get_query_filtered_queryset("(2022)#1", context=None)
+        issue_ids = list(queryset.values_list("id", flat=True))
+
+        # Should find the 2022 series issue (year filter only, no name filter)
+        assert len(issue_ids) == 1
+        assert spider_man_2022_issue_1.id in issue_ids
+        assert spider_man_issue_1.id not in issue_ids
+
+    def test_search_with_nonexistent_year(self, spider_man_issue_1, spider_man_2022_issue_1):
+        """Test searching with a year that doesn't match any series."""
+        # Both fixtures needed to ensure issues exist but none match year 2000
+        assert spider_man_issue_1 is not None
+        assert spider_man_2022_issue_1 is not None
+        queryset = IssueAutocomplete.get_query_filtered_queryset(
+            "Amazing Spider-Man (2000)#1", context=None
+        )
+
+        # Should return empty queryset
+        assert queryset.count() == 0
 
 
 class TestArcAutocomplete:
