@@ -2,13 +2,9 @@
 {% load humanize %}
 {% load thumbnail %}
 {% load static %}
-{% load django_htmx %}
 {% block title %}
     {{ publisher.name }}
 {% endblock title %}
-{% block js %}
-    {% htmx_script %}
-{% endblock js %}
 {% block content %}
     {# Page Header #}
     <header class="block">

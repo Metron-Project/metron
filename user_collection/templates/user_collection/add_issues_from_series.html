@@ -1,8 +1,7 @@
 {% extends parent_template|default:"base.html" %}
-{% load static django_htmx %}
+{% load static %}
 {% block title %}Add from Series - My Collection - Metron{% endblock %}
 {% block js %}
-    {% htmx_script %}
     {{ form.media }}
 {% endblock js %}
 {% block content %}

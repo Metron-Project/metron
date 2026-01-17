@@ -1,4 +1,4 @@
-{% load static %}
+{% load static django_htmx %}
 <!DOCTYPE html>
 <html lang="en">
     <head>
@@ -37,9 +37,10 @@
         <link rel="stylesheet" href="{% static 'site/css/base.css' %}">
         {% block headcss %}{% endblock %}
         {# Head Scripts #}
+        {% django_htmx_script %}
         {% block headscripts %}{% endblock %}
     </head>
-    <body class="has-navbar-fixed-top">
+    <body class="has-navbar-fixed-top" hx-headers='{"x-csrftoken": "{{ csrf_token }}"}'>
         {# Navigation #}
         {% include "partials/navbar.html" %}
         {# Main Content #}

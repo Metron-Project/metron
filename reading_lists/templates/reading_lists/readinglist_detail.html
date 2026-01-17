@@ -1,6 +1,5 @@
 {% extends parent_template|default:"base.html" %}
 {% load static %}
-{% load django_htmx %}
 {% block title %}{{ reading_list.name }} - Metron{% endblock %}
 {% block content %}
     <header class="block">
@@ -174,12 +173,4 @@
             </div>
         </div>
     </div>
-{% endblock %}
-{% block js %}
-    {% htmx_script %}
-    <script>
-        document.body.addEventListener('htmx:configRequest', (event) => {
-            event.detail.headers['X-CSRFToken'] = '{{ csrf_token }}';
-        });
-    </script>
 {% endblock %}

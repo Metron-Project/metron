@@ -1,7 +1,6 @@
 {% extends parent_template|default:"base.html" %}
 {% load static %}
 {% load bulma_tags %}
-{% load django_htmx %}
 {% block title %}
     Issue Form
 {% endblock title %}
@@ -54,7 +53,6 @@
     </form>
 {% endblock %}
 {% block js %}
-    {% htmx_script %}
     {{ form.media.js }}
     <script src="{% static 'site/js/bulma-fileupload.js' %}"></script>
     <script src="{% static 'extensions/bulma-calendar/dist/js/bulma-calendar.min.js' %}"></script>

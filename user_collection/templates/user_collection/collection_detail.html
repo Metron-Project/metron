@@ -1,7 +1,6 @@
 {% extends parent_template|default:"base.html" %}
 {% load static %}
 {% load thumbnail %}
-{% load django_htmx %}
 {% block title %}{{ item.issue }} - My Collection - Metron{% endblock %}
 {% block headcss %}
     <link rel="stylesheet"
@@ -197,13 +196,8 @@
     </div>
 {% endblock %}
 {% block js %}
-    {% htmx_script %}
     <script src="{% static 'extensions/bulma-calendar/dist/js/bulma-calendar.min.js' %}"></script>
     <script>
-        document.body.addEventListener('htmx:configRequest', (event) => {
-            event.detail.headers['X-CSRFToken'] = '{{ csrf_token }}';
-        });
-
         // Initialize Bulma Calendar for datetime inputs
         function initializeDateTimePickers() {
             var calendarInputs = document.querySelectorAll('input[data-bulma-calendar="on"]');
