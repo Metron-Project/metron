@@ -4,7 +4,6 @@ verify_ssl = true
 name = "pypi"
 
 [packages]
-django = ">=5.2.8"
 pillow = "*"
 redis = "*"
 sorl-thumbnail = "*"
@@ -26,6 +25,7 @@ django-simple-history = "*"
 wiki = "*"
 django-htmx = "*"
 django-htmx-autocomplete = "*"
+django = "*"
 
 [dev-packages]
 django-debug-toolbar = "*"
