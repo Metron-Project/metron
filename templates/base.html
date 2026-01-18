@@ -50,6 +50,11 @@
                 {# Messages/Notifications #}
                 {% if messages %}
                     {% include "partials/messages.html" %}
+                    <script>
+                        document.querySelectorAll('[data-auto-dismiss]').forEach(el => {
+                            setTimeout(() => el.remove(), 5000);
+                        });
+                    </script>
                 {% endif %}
                 {# Page Content #}
                 {% block content %}{% endblock %}
