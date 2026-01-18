@@ -7,7 +7,10 @@
 <div class="messages">
     {% for message in messages %}
         <div class="notification is-{{ message.tags|bulma_message_tag }} is-light"
-             role="alert">
+             role="alert"
+             {% if message.tags != 'error' and message.tags != 'danger' %}
+             hx-on:load="setTimeout(() => this.remove(), 5000)"
+             {% endif %}>
             <button class="delete"
                     aria-label="close notification"
                     onclick="this.parentElement.remove();"></button>
