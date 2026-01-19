@@ -247,7 +247,7 @@
                 {% endif %}
                 <footer class="content is-small is-italic mt-4">
                     Last edited on <time datetime="{{ issue.modified|date:'c' }}">{{ issue.modified }}</time> by
-                    <a href="{% url 'user-detail' issue.edited_by.id %}">{{ issue.edited_by.username }}</a>
+                    <a href="{% url 'user-detail' username=issue.edited_by.username %}">{{ issue.edited_by.username }}</a>
                 </footer>
             </div>
             {# Credits #}

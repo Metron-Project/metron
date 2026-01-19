@@ -162,6 +162,12 @@
                             </span>
                             <span>Statistics</span>
                         </a>
+                        <a class="navbar-item" href="{% url 'user-list' %}">
+                            <span class="icon" aria-hidden="true">
+                                <i class="fas fa-users"></i>
+                            </span>
+                            <span>Users</span>
+                        </a>
                         <a class="navbar-item"
                            href="https://metron-project.github.io/blog"
                            target="_blank"
@@ -214,7 +220,7 @@
             {# User Authentication #}
             {% if user.is_authenticated %}
                 <a class="navbar-item"
-                   href="{% url 'user-detail' pk=user.pk %}"
+                   href="{% url 'user-detail' username=user.username %}"
                    aria-label="View your account">
                     <span class="icon" aria-hidden="true">
                         <i class="fas fa-user"></i>

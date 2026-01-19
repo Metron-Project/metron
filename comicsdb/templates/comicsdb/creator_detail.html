@@ -107,7 +107,7 @@
                 {% endif %}
                 <footer class="content is-small is-italic mt-4">
                     Last edited on <time datetime="{{ creator.modified|date:'c' }}">{{ creator.modified }}</time> by
-                    <a href="{% url 'user-detail' creator.edited_by.id %}">{{ creator.edited_by.username }}</a>
+                    <a href="{% url 'user-detail' username=creator.edited_by.username %}">{{ creator.edited_by.username }}</a>
                 </footer>
             </div>
             {# Series Credits #}

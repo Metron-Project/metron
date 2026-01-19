@@ -113,7 +113,7 @@
                 {% endif %}
                 <footer class="content is-small is-italic mt-4">
                     Last edited on <time datetime="{{ publisher.modified|date:'c' }}">{{ publisher.modified }}</time> by
-                    <a href="{% url 'user-detail' publisher.edited_by.id %}">{{ publisher.edited_by.username }}</a>
+                    <a href="{% url 'user-detail' username=publisher.edited_by.username %}">{{ publisher.edited_by.username }}</a>
                 </footer>
             </div>
             {# Imprints #}

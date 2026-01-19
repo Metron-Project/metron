@@ -106,7 +106,7 @@
                 {% endif %}
                 <footer class="content is-small is-italic mt-4">
                     Last edited on <time datetime="{{ arc.modified|date:'c' }}">{{ arc.modified }}</time> by
-                    <a href="{% url 'user-detail' arc.edited_by.id %}">{{ arc.edited_by.username }}</a>
+                    <a href="{% url 'user-detail' username=arc.edited_by.username %}">{{ arc.edited_by.username }}</a>
                 </footer>
             </div>
             {# Issues List #}

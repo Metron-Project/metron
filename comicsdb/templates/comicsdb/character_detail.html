@@ -107,7 +107,7 @@
                 {% endif %}
                 <footer class="content is-small is-italic mt-4">
                     Last edited on <time datetime="{{ character.modified|date:'c' }}">{{ character.modified }}</time> by
-                    <a href="{% url 'user-detail' character.edited_by.id %}">{{ character.edited_by.username }}</a>
+                    <a href="{% url 'user-detail' username=character.edited_by.username %}">{{ character.edited_by.username }}</a>
                 </footer>
             </div>
             {# Series Appearances #}

@@ -23,7 +23,6 @@ def reverse_migrate_read_dates(apps, schema_editor):
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
         ("user_collection", "0002_collectionitem_date_read_datetime"),
     ]

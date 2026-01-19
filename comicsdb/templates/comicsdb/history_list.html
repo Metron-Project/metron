@@ -32,7 +32,7 @@
                                 </td>
                                 <td>
                                     {% if history.history_user %}
-                                        <a href="{% url 'user-detail' history.history_user.id %}">{{ history.history_user.username }}</a>
+                                        <a href="{% url 'user-detail' username=history.history_user.username %}">{{ history.history_user.username }}</a>
                                     {% else %}
                                         <span class="has-text-grey-light">Unknown</span>
                                     {% endif %}
