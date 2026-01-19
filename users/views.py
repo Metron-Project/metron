@@ -5,9 +5,9 @@ from django.contrib.auth import login, update_session_auth_hash
 from django.contrib.auth.views import PasswordChangeView
 from django.contrib.messages.views import SuccessMessageMixin
 from django.contrib.sites.shortcuts import get_current_site
-from django.shortcuts import redirect, render
+from django.shortcuts import get_object_or_404, redirect, render
 from django.template.loader import render_to_string
-from django.urls import reverse_lazy
+from django.urls import reverse, reverse_lazy
 from django.utils.encoding import force_bytes, force_str
 from django.utils.http import urlsafe_base64_decode, urlsafe_base64_encode
 from django.views.generic import DetailView
@@ -119,15 +119,23 @@ def change_profile(request):
             user = form.save()
             update_session_auth_hash(request, user)  # Important!
             messages.success(request, "Your profile was successfully updated!")
-            return redirect("user-detail", pk=request.user.pk)
+            return redirect("user-detail", username=request.user.username)
         messages.error(request, "Please correct the error below.")
     else:
         form = CustomUserChangeForm(instance=request.user)
     return render(request, "users/change_profile.html", {"form": form})
 
 
+def user_profile_redirect(request, pk):
+    """Redirect from old pk-based URL to username-based URL."""
+    user = get_object_or_404(CustomUser, pk=pk)
+    return redirect(reverse("user-detail", kwargs={"username": user.username}), permanent=True)
+
+
 class UserProfile(DetailView):
     model = CustomUser
+    slug_field = "username"
+    slug_url_kwarg = "username"
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)

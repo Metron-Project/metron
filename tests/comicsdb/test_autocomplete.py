@@ -361,9 +361,7 @@ class TestIssueAutocomplete:
 
     def test_search_with_words_in_different_order(self, all_test_issues):
         """Test that word order in series name doesn't matter."""
-        queryset = IssueAutocomplete.get_query_filtered_queryset(
-            "Spider Amazing#1", context=None
-        )
+        queryset = IssueAutocomplete.get_query_filtered_queryset("Spider Amazing#1", context=None)
         issue_ids = list(queryset.values_list("id", flat=True))
 
         # Should find Spider-Man #1 with reversed word order (exact number match)
@@ -372,9 +370,7 @@ class TestIssueAutocomplete:
 
     def test_search_with_words_in_different_order_exact_number(self, all_test_issues):
         """Test word order independence with exact number match."""
-        queryset = IssueAutocomplete.get_query_filtered_queryset(
-            "Spider Amazing#100", context=None
-        )
+        queryset = IssueAutocomplete.get_query_filtered_queryset("Spider Amazing#100", context=None)
         issue_ids = list(queryset.values_list("id", flat=True))
 
         # Should find only Spider-Man #100

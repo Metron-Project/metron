@@ -285,9 +285,7 @@ class IssueAutocomplete(ModelAutocomplete):
             # Add number filter if there's text after '#'
             # Search both number and alt_number fields
             if number_part:
-                conditions.append(
-                    Q(number__iexact=number_part) | Q(alt_number__iexact=number_part)
-                )
+                conditions.append(Q(number__iexact=number_part) | Q(alt_number__iexact=number_part))
 
             # Combine conditions with AND if both parts exist, otherwise use the single condition
             if len(conditions) > 1:
