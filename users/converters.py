@@ -12,6 +12,8 @@ RESERVED_USERNAMES = {
     "update",
     "activate",
     "account_activation_sent",
+    "users",
+    "search",
 }
 
 

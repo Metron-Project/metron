@@ -71,6 +71,31 @@ def test_profile_view_uses_correct_template(auto_login_user):
     assertTemplateUsed(resp, "users/customuser_detail.html")
 
 
+def test_user_list_view_url_exists(auto_login_user):
+    client, _ = auto_login_user()
+    resp = client.get("/accounts/users/")
+    assert resp.status_code == HTML_OK_CODE
+
+
+def test_user_list_view_accessible_by_name(auto_login_user):
+    client, _ = auto_login_user()
+    resp = client.get(reverse("user-list"))
+    assert resp.status_code == HTML_OK_CODE
+
+
+def test_user_list_view_uses_correct_template(auto_login_user):
+    client, _ = auto_login_user()
+    resp = client.get(reverse("user-list"))
+    assert resp.status_code == HTML_OK_CODE
+    assertTemplateUsed(resp, "users/customuser_list.html")
+
+
+def test_user_search_view_accessible_by_name(auto_login_user):
+    client, user = auto_login_user()
+    resp = client.get(reverse("user-search"), {"q": user.username})
+    assert resp.status_code == HTML_OK_CODE
+
+
 def test_valid_form(db):
     form = CustomUserChangeForm(
         data={

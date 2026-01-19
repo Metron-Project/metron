@@ -2,6 +2,7 @@ import logging
 
 from django.contrib import messages
 from django.contrib.auth import login, update_session_auth_hash
+from django.contrib.auth.mixins import LoginRequiredMixin
 from django.contrib.auth.views import PasswordChangeView
 from django.contrib.messages.views import SuccessMessageMixin
 from django.contrib.sites.shortcuts import get_current_site
@@ -10,7 +11,8 @@ from django.template.loader import render_to_string
 from django.urls import reverse, reverse_lazy
 from django.utils.encoding import force_bytes, force_str
 from django.utils.http import urlsafe_base64_decode, urlsafe_base64_encode
-from django.views.generic import DetailView
+from django.views.generic import DetailView, ListView
+from comicsdb.views.mixins import SearchMixin
 
 # Import models for counting
 from comicsdb.models import (
@@ -132,7 +134,21 @@ def user_profile_redirect(request, pk):
     return redirect(reverse("user-detail", kwargs={"username": user.username}), permanent=True)
 
 
-class UserProfile(DetailView):
+PAGINATE_BY = 28
+
+
+class UserList(LoginRequiredMixin, ListView):
+    model = CustomUser
+    paginate_by = PAGINATE_BY
+    queryset = CustomUser.objects.filter(is_active=True).order_by("username")
+
+
+class SearchUserList(SearchMixin, UserList):
+    def get_search_fields(self):
+        return ["username__icontains", "first_name__icontains", "last_name__icontains"]
+
+
+class UserProfile(LoginRequiredMixin, DetailView):
     model = CustomUser
     slug_field = "username"
     slug_url_kwarg = "username"
