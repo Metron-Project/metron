@@ -265,7 +265,7 @@ class SlugRedirectView(RedirectView):
             raise NotImplementedError(f"{self.__class__.__name__} must define 'model' attribute")
         if not self.url_name:
             raise NotImplementedError(f"{self.__class__.__name__} must define 'url_name' attribute")
-        obj = self.model.objects.get(pk=pk)
+        obj = get_object_or_404(self.model, pk=pk)
         return reverse(self.url_name, kwargs={"slug": obj.slug})
 
 
