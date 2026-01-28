@@ -5,7 +5,7 @@ from typing import Any
 from django.contrib import messages
 from django.contrib.auth.mixins import LoginRequiredMixin, PermissionRequiredMixin
 from django.core.exceptions import ObjectDoesNotExist
-from django.db import transaction
+from django.db import IntegrityError, transaction
 from django.db.models import Prefetch
 from django.http import HttpResponse, HttpResponseRedirect
 from django.shortcuts import get_object_or_404
@@ -203,25 +203,37 @@ class IssueCreate(LoginRequiredMixin, CreateView):
         credits_form = context["credits"]
         variants_form = context["variants"]
         attribution_form = context["attribution"]
-        with transaction.atomic():
-            form.instance.created_by = self.request.user
-            form.instance.edited_by = self.request.user
-            self.object = form.save()
+        try:
+            with transaction.atomic():
+                form.instance.created_by = self.request.user
+                form.instance.edited_by = self.request.user
+                self.object = form.save()
 
-            if credits_form.is_valid() and variants_form.is_valid() and attribution_form.is_valid():
-                credits_form.instance = self.object
-                credits_form.save()
-                variants_form.instance = self.object
-                variants_form.save()
-                attribution_form.instance = self.object
-                attribution_form.save()
+                if (
+                    credits_form.is_valid()
+                    and variants_form.is_valid()
+                    and attribution_form.is_valid()
+                ):
+                    credits_form.instance = self.object
+                    credits_form.save()
+                    variants_form.instance = self.object
+                    variants_form.save()
+                    attribution_form.instance = self.object
+                    attribution_form.save()
 
-            LOGGER.info(
-                "Issue: %s #%s was created by %s",
-                form.instance.series,
-                form.instance.number,
-                self.request.user,
+                LOGGER.info(
+                    "Issue: %s #%s was created by %s",
+                    form.instance.series,
+                    form.instance.number,
+                    self.request.user,
+                )
+        except IntegrityError:
+            form.add_error(
+                None,
+                "An issue with this series and number already exists. "
+                "It may have been created by another user.",
             )
+            return self.form_invalid(form)
         return super().form_valid(form)
 
 
