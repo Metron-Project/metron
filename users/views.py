@@ -65,10 +65,7 @@ def activate(request, uidb64, token):
     # Add a message asking the user to star the repository.
     msg = (
         "If you are planning on adding new information to the database, please refer to the "
-        "<strong>Editing Guidelines</strong>.<br/><br/>"
-        "If you have a GitHub account, the project would appreciate it if you could "
-        "<strong>star</strong> the "
-        "<a href='https://github.com/Metron-Project/metron'>Metron</a> repository. Thanks!"
+        "<a href='/wiki/editing-guidelines/'>Editing Guidelines</a>."
     )
     messages.success(request, mark_safe(msg))
 
