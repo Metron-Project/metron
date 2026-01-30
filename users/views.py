@@ -10,6 +10,7 @@ from django.shortcuts import get_object_or_404, redirect, render
 from django.template.loader import render_to_string
 from django.urls import reverse, reverse_lazy
 from django.utils.encoding import force_bytes, force_str
+from django.utils.safestring import mark_safe
 from django.utils.http import urlsafe_base64_decode, urlsafe_base64_encode
 from django.views.generic import DetailView, ListView
 from comicsdb.views.mixins import SearchMixin
@@ -69,7 +70,7 @@ def activate(request, uidb64, token):
         "<strong>star</strong> the "
         "<a href='https://github.com/Metron-Project/metron'>Metron</a> repository. Thanks!"
     )
-    messages.success(request, msg)
+    messages.success(request, mark_safe(msg))
 
     return redirect("home")
 
