@@ -1,214 +1,245 @@
 {% autoescape off %}
-    <!DOCTYPE html>
-    <html lang="en">
+    <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+    <html xmlns="http://www.w3.org/1999/xhtml">
         <head>
-            <meta charset="UTF-8">
-            <meta name="viewport" content="width=device-width, initial-scale=1.0">
+            <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+            <meta name="viewport" content="width=device-width, initial-scale=1.0" />
             <title>Activate Your Metron Account</title>
-            <style>
-        body {
-            margin: 0;
-            padding: 0;
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Helvetica Neue', sans-serif;
-            line-height: 1.6;
-            color: #363636;
-            background-color: #f5f5f5;
-        }
-        .email-container {
-            max-width: 600px;
-            margin: 0 auto;
-            background-color: #ffffff;
-        }
-        .header {
-            background: linear-gradient(135deg, #3273dc 0%, #209cee 100%);
-            padding: 40px 20px;
-            text-align: center;
-        }
-        .logo {
-            color: #ffffff;
-            font-size: 32px;
-            font-weight: bold;
-            margin: 0;
-            text-decoration: none;
-        }
-        .content {
-            padding: 40px 30px;
-        }
-        .greeting {
-            font-size: 24px;
-            color: #363636;
-            margin: 0 0 20px 0;
-            font-weight: 600;
-        }
-        .message {
-            font-size: 16px;
-            color: #4a4a4a;
-            margin: 0 0 30px 0;
-        }
-        .button-container {
-            text-align: center;
-            margin: 40px 0;
-        }
-        .button {
-            display: inline-block;
-            padding: 16px 40px;
-            background: linear-gradient(135deg, #3273dc 0%, #209cee 100%);
-            color: #ffffff !important;
-            text-decoration: none;
-            border-radius: 6px;
-            font-weight: 600;
-            font-size: 16px;
-            box-shadow: 0 4px 6px rgba(50, 115, 220, 0.3);
-        }
-        .button:hover {
-            background: linear-gradient(135deg, #2366d1 0%, #1496ed 100%);
-        }
-        .alternative-link {
-            margin: 30px 0;
-            padding: 20px;
-            background-color: #f5f5f5;
-            border-radius: 6px;
-            border-left: 4px solid #3273dc;
-        }
-        .alternative-link p {
-            margin: 0 0 10px 0;
-            font-size: 14px;
-            color: #4a4a4a;
-        }
-        .link-text {
-            word-break: break-all;
-            color: #3273dc;
-            font-size: 13px;
-            font-family: monospace;
-        }
-        .info-box {
-            background-color: #eff5fb;
-            border-left: 4px solid #3273dc;
-            padding: 20px;
-            margin: 30px 0;
-            border-radius: 4px;
-        }
-        .info-box h3 {
-            margin: 0 0 10px 0;
-            color: #3273dc;
-            font-size: 16px;
-        }
-        .info-box ul {
-            margin: 10px 0;
-            padding-left: 20px;
-        }
-        .info-box li {
-            margin: 5px 0;
-            color: #4a4a4a;
-            font-size: 14px;
-        }
-        .footer {
-            background-color: #363636;
-            color: #b5b5b5;
-            padding: 30px;
-            text-align: center;
-            font-size: 14px;
-        }
-        .footer a {
-            color: #3273dc;
-            text-decoration: none;
-        }
-        .footer a:hover {
-            text-decoration: underline;
-        }
-        .divider {
-            height: 1px;
-            background-color: #dbdbdb;
-            margin: 30px 0;
-        }
-        .security-notice {
-            background-color: #fff9e6;
-            border-left: 4px solid #ffdd57;
-            padding: 15px;
-            margin: 20px 0;
-            border-radius: 4px;
-        }
-        .security-notice p {
-            margin: 0;
-            font-size: 14px;
-            color: #4a4a4a;
-        }
-        @media only screen and (max-width: 600px) {
-            .content {
-                padding: 30px 20px;
-            }
-            .greeting {
-                font-size: 20px;
-            }
-            .button {
-                padding: 14px 30px;
-                font-size: 15px;
-            }
-        }
-            </style>
         </head>
-        <body>
-            <div class="email-container">
-                <!-- Header -->
-                <div class="header">
-                    <h1 class="logo">Metron</h1>
-                </div>
-                <!-- Main Content -->
-                <div class="content">
-                    <h2 class="greeting">Welcome to Metron, {{ user.username }}! 🎉</h2>
-                    <p class="message">
-                        Thank you for joining the Metron Comic Book Database community! We're excited to have you as part of our growing community of comic book enthusiasts.
-                    </p>
-                    <p class="message">To complete your registration and activate your account, please click the button below:</p>
-                    <!-- Activation Button -->
-                    <div class="button-container">
-                        <a href="http://{{ domain }}{% url 'activate' uidb64=uid token=token %}"
-                           class="button">Activate My Account</a>
-                    </div>
-                    <!-- Alternative Link -->
-                    <div class="alternative-link">
-                        <p>
-                            <strong>Button not working?</strong> Copy and paste this link into your browser:
-                        </p>
-                        <p class="link-text">http://{{ domain }}{% url 'activate' uidb64=uid token=token %}</p>
-                    </div>
-                    <!-- Info Box -->
-                    <div class="info-box">
-                        <h3>What you can do with your Metron account:</h3>
-                        <ul>
-                            <li>Contribute to the comic book database by adding and editing information</li>
-                            <li>Access our comprehensive API for developers</li>
-                            <li>Join discussions with fellow comic book fans</li>
-                            <li>Help build the most accurate comic book database</li>
-                        </ul>
-                    </div>
-                    <div class="divider"></div>
-                    <!-- Security Notice -->
-                    <div class="security-notice">
-                        <p>
-                            <strong>⏰ This link expires in 24 hours.</strong> If you don't activate your account within this time, you'll need to sign up again.
-                        </p>
-                    </div>
-                    <p class="message" style="margin-top: 30px;">
-                        If you didn't create an account with Metron, you can safely ignore this email.
-                    </p>
-                </div>
-                <!-- Footer -->
-                <div class="footer">
-                    <p style="margin: 0 0 10px 0;">
-                        <strong>Metron Comic Book Database</strong>
-                    </p>
-                    <p style="margin: 0 0 15px 0;">A community-driven project for comic book enthusiasts</p>
-                    <p style="margin: 0 0 10px 0;">
-                        <a href="https://metron.cloud">Visit Website</a> •
-                        <a href="https://github.com/Metron-Project/metron">GitHub</a> •
-                        <a href="mailto:bpepple@metron.cloud">Contact Us</a>
-                    </p>
-                    <p style="margin: 15px 0 0 0; font-size: 12px; color: #7a7a7a;">
-                        © {% now "Y" %} Metron Project. All rights reserved.
-                    </p>
-                </div>
-            </div>
+        <body style="margin: 0;
+                     padding: 0;
+                     font-family: Arial, Helvetica, sans-serif;
+                     line-height: 1.6;
+                     color: #363636;
+                     background-color: #f5f5f5">
+            <!-- Wrapper table -->
+            <table border="0"
+                   cellpadding="0"
+                   cellspacing="0"
+                   width="100%"
+                   style="background-color: #f5f5f5">
+                <tr>
+                    <td align="center" style="padding: 20px 10px;">
+                        <!-- Email container -->
+                        <table border="0"
+                               cellpadding="0"
+                               cellspacing="0"
+                               width="600"
+                               style="max-width: 600px;
+                                      background-color: #ffffff">
+                            <!-- Header -->
+                            <tr>
+                                <td align="center" style="background-color: #3273dc; padding: 40px 20px;">
+                                    <h1 style="margin: 0;
+                                               color: #ffffff;
+                                               font-size: 32px;
+                                               font-weight: bold;
+                                               font-family: Arial, Helvetica, sans-serif">Metron</h1>
+                                </td>
+                            </tr>
+                            <!-- Main Content -->
+                            <tr>
+                                <td style="padding: 40px 30px;">
+                                    <h2 style="margin: 0 0 20px 0;
+                                               font-size: 24px;
+                                               color: #363636;
+                                               font-weight: 600;
+                                               font-family: Arial, Helvetica, sans-serif">
+                                        Welcome to Metron, {{ user.username }}!
+                                    </h2>
+                                    <p style="margin: 0 0 20px 0;
+                                              font-size: 16px;
+                                              color: #4a4a4a;
+                                              font-family: Arial, Helvetica, sans-serif">
+                                        Thank you for joining the Metron Comic Book Database community! We're excited to have you as part of our growing community of comic book enthusiasts.
+                                    </p>
+                                    <p style="margin: 0 0 30px 0;
+                                              font-size: 16px;
+                                              color: #4a4a4a;
+                                              font-family: Arial, Helvetica, sans-serif">
+                                        To complete your registration and activate your account, please click the button below:
+                                    </p>
+                                    <!-- Button -->
+                                    <table border="0" cellpadding="0" cellspacing="0" width="100%">
+                                        <tr>
+                                            <td align="center" style="padding: 20px 0 30px 0;">
+                                                <table border="0" cellpadding="0" cellspacing="0">
+                                                    <tr>
+                                                        <td align="center" style="background-color: #3273dc; border-radius: 6px;">
+                                                            <a href="http://{{ domain }}{% url 'activate' uidb64=uid token=token %}"
+                                                               target="_blank"
+                                                               style="display: inline-block;
+                                                                      padding: 16px 40px;
+                                                                      font-size: 16px;
+                                                                      font-weight: 600;
+                                                                      color: #ffffff;
+                                                                      text-decoration: none;
+                                                                      font-family: Arial, Helvetica, sans-serif">Activate My Account</a>
+                                                        </td>
+                                                    </tr>
+                                                </table>
+                                            </td>
+                                        </tr>
+                                    </table>
+                                    <!-- Alternative Link -->
+                                    <table border="0"
+                                           cellpadding="0"
+                                           cellspacing="0"
+                                           width="100%"
+                                           style="background-color: #f5f5f5;
+                                                  border-left: 4px solid #3273dc">
+                                        <tr>
+                                            <td style="padding: 20px;">
+                                                <p style="margin: 0 0 10px 0;
+                                                          font-size: 14px;
+                                                          color: #4a4a4a;
+                                                          font-family: Arial, Helvetica, sans-serif">
+                                                    <strong>Button not working?</strong> Copy and paste this link into your browser:
+                                                </p>
+                                                <p style="margin: 0;
+                                                          font-size: 13px;
+                                                          color: #3273dc;
+                                                          font-family: Courier New, monospace;
+                                                          word-break: break-all">
+                                                    http://{{ domain }}{% url 'activate' uidb64=uid token=token %}
+                                                </p>
+                                            </td>
+                                        </tr>
+                                    </table>
+                                    <!-- Info Box -->
+                                    <table border="0"
+                                           cellpadding="0"
+                                           cellspacing="0"
+                                           width="100%"
+                                           style="margin-top: 30px;
+                                                  background-color: #eff5fb;
+                                                  border-left: 4px solid #3273dc">
+                                        <tr>
+                                            <td style="padding: 20px;">
+                                                <h3 style="margin: 0 0 10px 0;
+                                                           font-size: 16px;
+                                                           color: #3273dc;
+                                                           font-family: Arial, Helvetica, sans-serif">
+                                                    What you can do with your Metron account:
+                                                </h3>
+                                                <table border="0"
+                                                       cellpadding="0"
+                                                       cellspacing="0"
+                                                       style="margin: 10px 0 0 20px">
+                                                    <tr>
+                                                        <td style="padding: 5px 0;
+                                                                   font-size: 14px;
+                                                                   color: #4a4a4a;
+                                                                   font-family: Arial, Helvetica, sans-serif">
+                                                            &#8226; Contribute to the comic book database by adding and editing information
+                                                        </td>
+                                                    </tr>
+                                                    <tr>
+                                                        <td style="padding: 5px 0;
+                                                                   font-size: 14px;
+                                                                   color: #4a4a4a;
+                                                                   font-family: Arial, Helvetica, sans-serif">
+                                                            &#8226; Access our comprehensive API for developers
+                                                        </td>
+                                                    </tr>
+                                                    <tr>
+                                                        <td style="padding: 5px 0;
+                                                                   font-size: 14px;
+                                                                   color: #4a4a4a;
+                                                                   font-family: Arial, Helvetica, sans-serif">
+                                                            &#8226; Join discussions with fellow comic book fans
+                                                        </td>
+                                                    </tr>
+                                                    <tr>
+                                                        <td style="padding: 5px 0;
+                                                                   font-size: 14px;
+                                                                   color: #4a4a4a;
+                                                                   font-family: Arial, Helvetica, sans-serif">
+                                                            &#8226; Help build the most accurate comic book database
+                                                        </td>
+                                                    </tr>
+                                                </table>
+                                            </td>
+                                        </tr>
+                                    </table>
+                                    <!-- Divider -->
+                                    <table border="0" cellpadding="0" cellspacing="0" width="100%">
+                                        <tr>
+                                            <td style="padding: 30px 0;">
+                                                <table border="0" cellpadding="0" cellspacing="0" width="100%">
+                                                    <tr>
+                                                        <td style="border-top: 1px solid #dbdbdb;"></td>
+                                                    </tr>
+                                                </table>
+                                            </td>
+                                        </tr>
+                                    </table>
+                                    <!-- Security Notice -->
+                                    <table border="0"
+                                           cellpadding="0"
+                                           cellspacing="0"
+                                           width="100%"
+                                           style="background-color: #fff9e6;
+                                                  border-left: 4px solid #ffdd57">
+                                        <tr>
+                                            <td style="padding: 15px;">
+                                                <p style="margin: 0;
+                                                          font-size: 14px;
+                                                          color: #4a4a4a;
+                                                          font-family: Arial, Helvetica, sans-serif">
+                                                    <strong>This link expires in 24 hours.</strong> If you don't activate your account within this time, you'll need to sign up again.
+                                                </p>
+                                            </td>
+                                        </tr>
+                                    </table>
+                                    <p style="margin: 30px 0 0 0;
+                                              font-size: 16px;
+                                              color: #4a4a4a;
+                                              font-family: Arial, Helvetica, sans-serif">
+                                        If you didn't create an account with Metron, you can safely ignore this email.
+                                    </p>
+                                </td>
+                            </tr>
+                            <!-- Footer -->
+                            <tr>
+                                <td style="background-color: #363636; padding: 30px; text-align: center;">
+                                    <p style="margin: 0 0 10px 0;
+                                              font-size: 14px;
+                                              color: #ffffff;
+                                              font-family: Arial, Helvetica, sans-serif">
+                                        <strong>Metron Comic Book Database</strong>
+                                    </p>
+                                    <p style="margin: 0 0 15px 0;
+                                              font-size: 14px;
+                                              color: #b5b5b5;
+                                              font-family: Arial, Helvetica, sans-serif">
+                                        A community-driven project for comic book enthusiasts
+                                    </p>
+                                    <p style="margin: 0 0 10px 0;
+                                              font-size: 14px;
+                                              font-family: Arial, Helvetica, sans-serif">
+                                        <a href="https://metron.cloud"
+                                           style="color: #3273dc;
+                                                  text-decoration: none">Visit Website</a> &#8226;
+                                        <a href="https://github.com/Metron-Project/metron"
+                                           style="color: #3273dc;
+                                                  text-decoration: none">GitHub</a> &#8226;
+                                        <a href="mailto:bpepple@metron.cloud"
+                                           style="color: #3273dc;
+                                                  text-decoration: none">Contact Us</a>
+                                    </p>
+                                    <p style="margin: 15px 0 0 0;
+                                              font-size: 12px;
+                                              color: #7a7a7a;
+                                              font-family: Arial, Helvetica, sans-serif">
+                                        &copy; {% now "Y" %} Metron Project. All rights reserved.
+                                    </p>
+                                </td>
+                            </tr>
+                        </table>
+                    </td>
+                </tr>
+            </table>
         </body>
     </html>
 {% endautoescape %}

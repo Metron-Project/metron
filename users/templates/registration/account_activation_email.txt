@@ -1,0 +1,29 @@
+{% autoescape off %}
+Welcome to Metron, {{ user.username }}!
+
+Thank you for joining the Metron Comic Book Database community! We're excited to have you as part of our growing community of comic book enthusiasts.
+
+To complete your registration and activate your account, please visit:
+
+http://{{ domain }}{% url 'activate' uidb64=uid token=token %}
+
+What you can do with your Metron account:
+- Contribute to the comic book database by adding and editing information
+- Access our comprehensive API for developers
+- Join discussions with fellow comic book fans
+- Help build the most accurate comic book database
+
+IMPORTANT: This link expires in 24 hours. If you don't activate your account within this time, you'll need to sign up again.
+
+If you didn't create an account with Metron, you can safely ignore this email.
+
+---
+Metron Comic Book Database
+A community-driven project for comic book enthusiasts
+
+Website: https://metron.cloud
+GitHub: https://github.com/Metron-Project/metron
+Contact: bpepple@metron.cloud
+
+(c) {% now "Y" %} Metron Project. All rights reserved.
+{% endautoescape %}

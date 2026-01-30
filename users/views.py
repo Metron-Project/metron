@@ -6,14 +6,14 @@ from django.contrib.auth.mixins import LoginRequiredMixin
 from django.contrib.auth.views import PasswordChangeView
 from django.contrib.messages.views import SuccessMessageMixin
 from django.contrib.sites.shortcuts import get_current_site
+from django.core.mail import EmailMultiAlternatives
 from django.shortcuts import get_object_or_404, redirect, render
 from django.template.loader import render_to_string
 from django.urls import reverse, reverse_lazy
 from django.utils.encoding import force_bytes, force_str
-from django.utils.safestring import mark_safe
 from django.utils.http import urlsafe_base64_decode, urlsafe_base64_encode
+from django.utils.safestring import mark_safe
 from django.views.generic import DetailView, ListView
-from comicsdb.views.mixins import SearchMixin
 
 # Import models for counting
 from comicsdb.models import (
@@ -27,6 +27,7 @@ from comicsdb.models import (
     Team,
     Universe,
 )
+from comicsdb.views.mixins import SearchMixin
 from metron.utils import get_recaptcha_auth
 from user_collection.models import CollectionItem
 from users.forms import CustomUserChangeForm, CustomUserCreationForm
@@ -84,16 +85,25 @@ def signup(request):  # sourcery skip: extract-method
                 user.save()
                 current_site = get_current_site(request)
                 subject = "Activate Your Metron Account"
-                message = render_to_string(
-                    "registration/account_activation_email.html",
-                    {
-                        "user": user,
-                        "domain": current_site.domain,
-                        "uid": urlsafe_base64_encode(force_bytes(user.pk)),
-                        "token": account_activation_token.make_token(user),
-                    },
+                context = {
+                    "user": user,
+                    "domain": current_site.domain,
+                    "uid": urlsafe_base64_encode(force_bytes(user.pk)),
+                    "token": account_activation_token.make_token(user),
+                }
+                html_message = render_to_string(
+                    "registration/account_activation_email.html", context
                 )
-                user.email_user(subject, message)
+                text_message = render_to_string(
+                    "registration/account_activation_email.txt", context
+                )
+                email = EmailMultiAlternatives(
+                    subject=subject,
+                    body=text_message,
+                    to=[user.email],
+                )
+                email.attach_alternative(html_message, "text/html")
+                email.send()
                 # Let's send a pushover notice that a user requested an account.
                 send_pushover(f"{user} signed up for an account on Metron.")
                 logger.info("%s signed up for an account on Metron", user)
