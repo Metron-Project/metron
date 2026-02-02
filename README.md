@@ -12,7 +12,7 @@ alternative to Comic Vine and as an educational exercise.
 ## 🔊 <a href="community">Community</a>
 
 [![Social - Matrix](https://img.shields.io/matrix/metron-general:matrix.org?label=Metron%20General&logo=matrix&style=for-the-badge)](https://matrix.to/#/#metron-general:matrix.org)\
-[![Social - Matrix](https://img.shields.io/matrix/metron-devel:matrix.org?label=Metron%20Development&logo=matrix&style=for-the-badge)](https://matrix.to/#/#metron-development:matrix.org)\
+[![Social - Matrix](https://img.shields.io/matrix/metron-devel:matrix.org?label=Metron%20Development&logo=matrix&style=for-the-badge)](https://matrix.to/#/#metron-devel:matrix.org)\
 [![Social - Mastodon](https://img.shields.io/badge/%40Metron-teal?label=Mastodon.Social&logo=mastodon&style=for-the-badge)](https://mastodon.social/@metron)
 
 ## 🤝 <a href="contributing">Contributing</a>
