@@ -14,7 +14,10 @@
 {% endblock title %}
 {% block content %}
     {# Cover Modal #}
-    <div id="modal-bis" class="modal">
+    <div id="modal-bis"
+         class="modal"
+         tabindex="-1"
+         hx-on:keydown="if (event.key === 'Escape') { this.classList.remove('is-active'); document.documentElement.classList.remove('is-clipped'); }">
         <div class="modal-background"
              hx-on:click="this.parentElement.classList.remove('is-active'); document.documentElement.classList.remove('is-clipped');">
         </div>
@@ -159,7 +162,7 @@
                     {% if issue.image %}
                         {% thumbnail issue.image "320x480" crop="center" format="WEBP" as im %}
                             <a aria-label="View larger cover image"
-                               hx-on:click="document.getElementById('modal-bis').classList.add('is-active'); document.documentElement.classList.add('is-clipped');">
+                               hx-on:click="var modal = document.getElementById('modal-bis'); modal.classList.add('is-active'); document.documentElement.classList.add('is-clipped'); modal.focus();">
                                 <img src="{{ im.url }}"
                                      width="{{ im.width }}"
                                      height="{{ im.height }}"
