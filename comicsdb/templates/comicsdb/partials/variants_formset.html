@@ -4,13 +4,22 @@
     Usage: {% include "comicsdb/partials/variants_formset.html" with formset=variants %}
 {% endcomment %}
 <table class="table is-bordered is-striped is-narrow is-hoverable is-fullwidth"
-       id="variantsTable">
+       id="variantsTable"
+       style="table-layout: fixed">
     {{ formset.management_form }}
     {% if formset.non_form_errors %}
         <caption class="has-text-danger">
             {% for error in formset.non_form_errors %}<strong>{{ error }}</strong>{% endfor %}
         </caption>
     {% endif %}
+    <colgroup>
+        <col style="width: 25%;">
+        <col style="width: 25%;">
+        <col style="width: 18%;">
+        <col style="width: 11%;">
+        <col style="width: 16%;">
+        <col style="width: 5%;">
+    </colgroup>
     <thead>
         <tr>
             <th scope="col">Image</th>
@@ -18,7 +27,7 @@
             <th scope="col">Price</th>
             <th scope="col">SKU</th>
             <th scope="col">UPC</th>
-            <th scope="col" class="has-text-centered" style="width: 80px;">Delete</th>
+            <th scope="col" class="has-text-centered">Delete</th>
         </tr>
     </thead>
     <tbody id="variantsTableBody">
@@ -26,7 +35,7 @@
             <tr class="formset-row">
                 {% for field in form.visible_fields %}
                     {% if field.name != 'DELETE' %}
-                        <td>
+                        <td style="overflow: hidden; word-break: break-word;">
                             {# Hidden fields and non-field errors in first column only #}
                             {% if forloop.first %}
                                 {% for hidden in form.hidden_fields %}{{ hidden }}{% endfor %}
