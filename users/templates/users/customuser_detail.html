@@ -72,7 +72,7 @@
                                     </span>
                                 {% endif %}
                                 {% for group in customuser.groups.all %}
-                                    {% if group.name == "Editors" %}
+                                    {% if group.name == "editor" %}
                                         <span class="tag is-info" title="Database Editor">
                                             <span class="icon is-small">
                                                 <i class="fas fa-pen"></i>
@@ -97,7 +97,7 @@
                                     </span>
                                 {% endif %}
                                 {% for group in customuser.groups.all %}
-                                    {% if group.name == "Editors" %}
+                                    {% if group.name == "editor" %}
                                         <span class="tag is-info" title="Database Editor">
                                             <span class="icon is-small">
                                                 <i class="fas fa-pen"></i>

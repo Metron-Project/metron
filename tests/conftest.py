@@ -45,7 +45,7 @@ def create_user(db, test_password, test_email):
 
 @pytest.fixture
 def create_editor_group(db):
-    group, _ = Group.objects.get_or_create(name="editors")
+    group, _ = Group.objects.get_or_create(name="editor")
     models = [
         Arc,
         Character,
