@@ -79,6 +79,13 @@
                                             </span>
                                             <span>Editor</span>
                                         </span>
+                                    {% elif group.name == "reading list editor" %}
+                                        <span class="tag is-success" title="Reading List Editor">
+                                            <span class="icon is-small">
+                                                <i class="fas fa-book-reader"></i>
+                                            </span>
+                                            <span>List Editor</span>
+                                        </span>
                                     {% endif %}
                                 {% endfor %}
                             </span>
@@ -103,6 +110,13 @@
                                                 <i class="fas fa-pen"></i>
                                             </span>
                                             <span>Editor</span>
+                                        </span>
+                                    {% elif group.name == "reading list editor" %}
+                                        <span class="tag is-success" title="Reading List Editor">
+                                            <span class="icon is-small">
+                                                <i class="fas fa-book-reader"></i>
+                                            </span>
+                                            <span>List Editor</span>
                                         </span>
                                     {% endif %}
                                 {% endfor %}
