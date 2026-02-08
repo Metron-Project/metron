@@ -646,8 +646,10 @@ class CollectionViewSet(
 
     def get_queryset(self):
         """Only return collection items belonging to the authenticated user."""
-        return CollectionItem.objects.filter(user=self.request.user).select_related(
-            "issue__series__series_type", "issue__series__publisher"
+        return (
+            CollectionItem.objects.filter(user=self.request.user)
+            .select_related("issue__series__series_type", "issue__series__publisher")
+            .prefetch_related("read_dates")
         )
 
     def get_serializer_class(self):

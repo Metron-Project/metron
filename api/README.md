@@ -826,10 +826,17 @@ The Collection endpoint supports comprehensive filtering for organizing and sear
   "grading_company": "CGC (Certified Guaranty Company)",
   "purchase_date": "2024-01-15",
   "is_read": true,
-  "date_read": "2024-03-20T19:30:00Z",
   "read_dates": [
-    "2024-03-20T19:30:00Z",
-    "2024-01-15T14:00:00Z"
+    {
+      "id": 1,
+      "read_date": "2024-03-20T19:30:00Z",
+      "created_on": "2024-03-20T19:35:00Z"
+    },
+    {
+      "id": 2,
+      "read_date": "2024-01-15T14:00:00Z",
+      "created_on": "2024-01-15T14:05:00Z"
+    }
   ],
   "read_count": 2,
   "rating": 5,
@@ -840,6 +847,7 @@ The Collection endpoint supports comprehensive filtering for organizing and sear
 **Detail Response Fields:**
 
 - All list fields plus:
+    - `date_read` - Most recent read date/time (auto-synced from read_dates)
     - `purchase_price` - Purchase price
     - `purchase_store` - Store where purchased
     - `storage_location` - Where the item is stored
@@ -850,8 +858,11 @@ The Collection endpoint supports comprehensive filtering for organizing and sear
 **Read Dates Fields:**
 
 - `is_read` - Boolean indicating if the item has been read (auto-synced from read_dates)
-- `date_read` - Most recent read date/time (auto-synced from read_dates)
-- `read_dates` - Array of all read date/time stamps in descending order (most recent first)
+- `date_read` - Most recent read date/time (auto-synced from read_dates, detail view only)
+- `read_dates` - Array of read date objects in descending order (most recent first). Each object contains:
+    - `id` - Read date entry ID
+    - `read_date` - Date/time the issue was read
+    - `created_on` - When the read date entry was created
 - `read_count` - Total number of times read (count of read_dates array)
 
 **Stats Response Fields:**

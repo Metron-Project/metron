@@ -40,6 +40,7 @@ class CollectionListSerializer(serializers.ModelSerializer):
     issue = CollectionIssueSerializer(read_only=True)
     book_format = serializers.CharField(source="get_book_format_display", read_only=True)
     grading_company = serializers.CharField(source="get_grading_company_display", read_only=True)
+    read_dates = ReadDateSerializer(many=True, read_only=True)
     read_count = serializers.IntegerField(source="get_read_count", read_only=True)
 
     class Meta:
@@ -54,6 +55,7 @@ class CollectionListSerializer(serializers.ModelSerializer):
             "grading_company",
             "purchase_date",
             "is_read",
+            "read_dates",
             "read_count",
             "rating",
             "modified",
