@@ -116,7 +116,9 @@ class SeriesForm(ModelForm):
     def clean_associated(self):
         assoc = self.cleaned_data["associated"]
         if assoc:
-            series_type = self.cleaned_data["series_type"]
+            series_type = self.cleaned_data.get("series_type")
+            if series_type is None:
+                return assoc
             # If adding an associated series and self.series_type is a TPB, OMNI, or HC
             # raise a validation error.
             if series_type.id in [HC, OMNI, TPB]:
