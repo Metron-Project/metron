@@ -9,6 +9,7 @@ from rest_framework.pagination import PageNumberPagination
 from rest_framework.parsers import FormParser, MultiPartParser
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
+from rest_framework_condition import last_modified
 
 from api.v1_0.serializers import (
     ArcListSerializer,
@@ -80,6 +81,27 @@ class ReadingListItemsPagination(PageNumberPagination):
     page_size = 50
 
 
+class ConditionalRetrieveModelMixin(mixins.RetrieveModelMixin):
+    def retrieve(self, request, *args, **kwargs):
+        retrieve = last_modified(last_modified_func=self._last_modified)(super().retrieve)
+
+        return retrieve(self, request, *args, **kwargs)
+
+    def get_object(self):
+        if not hasattr(self, "_cached_object"):
+            self._cached_object = super().get_object()
+
+        return self._cached_object
+
+    def _last_modified(self, *args, **kwargs):
+        obj = self.get_object()
+
+        if obj and getattr(obj, "modified", None):
+            return obj.modified
+
+        return None
+
+
 class UserTrackingMixin:
     """Mixin to automatically track user edits in create and update operations."""
 
@@ -116,7 +138,7 @@ class ArcViewSet(
     UserTrackingMixin,
     IssueListMixin,
     mixins.CreateModelMixin,
-    mixins.RetrieveModelMixin,
+    ConditionalRetrieveModelMixin,
     mixins.ListModelMixin,
     mixins.UpdateModelMixin,
     viewsets.GenericViewSet,
@@ -147,7 +169,7 @@ class CharacterViewSet(
     UserTrackingMixin,
     IssueListMixin,
     mixins.CreateModelMixin,
-    mixins.RetrieveModelMixin,
+    ConditionalRetrieveModelMixin,
     mixins.ListModelMixin,
     mixins.UpdateModelMixin,
     viewsets.GenericViewSet,
@@ -185,7 +207,7 @@ class CharacterViewSet(
 class CreatorViewSet(
     UserTrackingMixin,
     mixins.CreateModelMixin,
-    mixins.RetrieveModelMixin,
+    ConditionalRetrieveModelMixin,
     mixins.ListModelMixin,
     mixins.UpdateModelMixin,
     viewsets.GenericViewSet,
@@ -235,7 +257,7 @@ class CreditViewset(
 class ImprintViewSet(
     UserTrackingMixin,
     mixins.CreateModelMixin,
-    mixins.RetrieveModelMixin,
+    ConditionalRetrieveModelMixin,
     mixins.ListModelMixin,
     mixins.UpdateModelMixin,
     viewsets.GenericViewSet,
@@ -277,7 +299,7 @@ class ImprintViewSet(
 class IssueViewSet(
     UserTrackingMixin,
     mixins.CreateModelMixin,
-    mixins.RetrieveModelMixin,
+    ConditionalRetrieveModelMixin,
     mixins.ListModelMixin,
     mixins.UpdateModelMixin,
     viewsets.GenericViewSet,
@@ -334,7 +356,7 @@ class IssueViewSet(
 class PublisherViewSet(
     UserTrackingMixin,
     mixins.CreateModelMixin,
-    mixins.RetrieveModelMixin,
+    ConditionalRetrieveModelMixin,
     mixins.ListModelMixin,
     mixins.UpdateModelMixin,
     viewsets.GenericViewSet,
@@ -396,7 +418,7 @@ class SeriesViewSet(
     UserTrackingMixin,
     IssueListMixin,
     mixins.CreateModelMixin,
-    mixins.RetrieveModelMixin,
+    ConditionalRetrieveModelMixin,
     mixins.ListModelMixin,
     mixins.UpdateModelMixin,
     viewsets.GenericViewSet,
@@ -465,7 +487,7 @@ class TeamViewSet(
     UserTrackingMixin,
     IssueListMixin,
     mixins.CreateModelMixin,
-    mixins.RetrieveModelMixin,
+    ConditionalRetrieveModelMixin,
     mixins.ListModelMixin,
     mixins.UpdateModelMixin,
     viewsets.GenericViewSet,
@@ -503,7 +525,7 @@ class TeamViewSet(
 class UniverseViewSet(
     UserTrackingMixin,
     mixins.CreateModelMixin,
-    mixins.RetrieveModelMixin,
+    ConditionalRetrieveModelMixin,
     mixins.ListModelMixin,
     mixins.UpdateModelMixin,
     viewsets.GenericViewSet,
@@ -537,7 +559,7 @@ class UniverseViewSet(
 
 
 class ReadingListViewSet(
-    mixins.RetrieveModelMixin,
+    ConditionalRetrieveModelMixin,
     mixins.ListModelMixin,
     viewsets.GenericViewSet,
 ):
@@ -627,7 +649,7 @@ class VariantViewset(
 
 
 class CollectionViewSet(
-    mixins.RetrieveModelMixin,
+    ConditionalRetrieveModelMixin,
     mixins.ListModelMixin,
     viewsets.GenericViewSet,
 ):
