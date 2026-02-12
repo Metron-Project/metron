@@ -25,6 +25,7 @@ Welcome to the Metron API documentation. This API provides programmatic access t
 - [Filtering](#filtering)
 - [Pagination](#pagination)
 - [Error Handling](#error-handling)
+- [Conditional Requests](#conditional-requests)
 - [Rate Limiting](#rate-limiting)
 - [Additional Resources](#additional-resources)
 
@@ -41,6 +42,7 @@ The Metron API is a RESTful API that provides access to a comprehensive database
 - External ID mapping (Comic Vine, Grand Comics Database)
 - Image uploads for editor and admin users
 - Perceptual hash matching for covers
+- Conditional requests with `If-Modified-Since` / `Last-Modified` headers
 
 **Version:** v1.0
 
@@ -1594,6 +1596,7 @@ GET /api/issue/?series_name=spider-man&page=3
 - `200 OK` - Request succeeded
 - `201 Created` - Resource created successfully
 - `204 No Content` - Delete succeeded
+- `304 Not Modified` - Resource has not changed since the time specified in the `If-Modified-Since` header (see [Conditional Requests](#conditional-requests))
 
 **Client Error Codes:**
 
@@ -1650,6 +1653,83 @@ Solution: Check that the resource ID is correct.
 
 ---
 
+## Conditional Requests
+
+Detail endpoints (retrieving a single resource by ID) support HTTP conditional requests using the `Last-Modified` and `If-Modified-Since` headers. This allows clients to avoid downloading data that has not changed, saving bandwidth and improving performance.
+
+### How It Works
+
+1. When you retrieve a resource, the response includes a `Last-Modified` header with the timestamp of the last modification.
+2. On subsequent requests, include the `If-Modified-Since` header with the value from the previous `Last-Modified` header.
+3. If the resource has not been modified since that time, the API returns `304 Not Modified` with no response body.
+4. If the resource has been modified, the API returns `200 OK` with the full response as usual.
+
+### Supported Endpoints
+
+Conditional requests are supported on the following detail endpoints:
+
+- `GET /api/arc/{id}/`
+- `GET /api/character/{id}/`
+- `GET /api/creator/{id}/`
+- `GET /api/imprint/{id}/`
+- `GET /api/issue/{id}/`
+- `GET /api/publisher/{id}/`
+- `GET /api/series/{id}/`
+- `GET /api/team/{id}/`
+- `GET /api/universe/{id}/`
+- `GET /api/reading_list/{id}/`
+- `GET /api/collection/{id}/`
+
+**Note:** List endpoints (`GET /api/{resource}/`) do not support conditional requests.
+
+### Example
+
+```bash
+# First request: retrieve the resource and note the Last-Modified header
+curl -i -X GET https://metron.cloud/api/issue/12345/ \
+  -u "username:password"
+
+# Response headers include:
+# HTTP/1.1 200 OK
+# Last-Modified: Wed, 12 Feb 2026 10:30:00 GMT
+# ...
+
+# Subsequent request: include If-Modified-Since header
+curl -i -X GET https://metron.cloud/api/issue/12345/ \
+  -u "username:password" \
+  -H "If-Modified-Since: Wed, 12 Feb 2026 10:30:00 GMT"
+
+# If unchanged, the response is:
+# HTTP/1.1 304 Not Modified
+# (no body)
+```
+
+### Python Example
+
+```python
+import requests
+
+session = requests.Session()
+session.auth = ("username", "password")
+
+# First request
+resp = session.get("https://metron.cloud/api/issue/12345/")
+last_modified = resp.headers["Last-Modified"]
+
+# Subsequent request with conditional header
+resp = session.get(
+    "https://metron.cloud/api/issue/12345/",
+    headers={"If-Modified-Since": last_modified},
+)
+
+if resp.status_code == 304:
+    print("Resource has not changed, use cached data")
+else:
+    data = resp.json()
+```
+
+---
+
 ## Rate Limiting
 
 The API implements rate limiting to ensure fair usage. Rate limit details:
@@ -1689,9 +1769,10 @@ The API supports mapping to external databases:
 2. **Respect Rate Limits:** Implement backoff strategies if rate limited
 3. **Handle Pagination:** Process all pages when retrieving complete datasets
 4. **Cache Responses:** Cache data when appropriate to reduce API calls
-5. **Use Modified Dates:** Use `modified_gt` to sync only changed data
-6. **Include User-Agent:** Identify your application in the User-Agent header
-7. **Handle Errors Gracefully:** Implement proper error handling and retries
+5. **Use Conditional Requests:** Use `If-Modified-Since` headers on detail endpoints to avoid re-downloading unchanged resources (see [Conditional Requests](#conditional-requests))
+6. **Use Modified Dates:** Use `modified_gt` to sync only changed data
+7. **Include User-Agent:** Identify your application in the User-Agent header
+8. **Handle Errors Gracefully:** Implement proper error handling and retries
 
 ### Example Client Code
 
@@ -1798,6 +1879,9 @@ For questions, issues, or feature requests:
 ---
 
 ## Changelog
+
+### Version 1.1
+- Conditional request support (`If-Modified-Since` / `Last-Modified`) on all detail endpoints
 
 ### Version 1.0
 - Initial API release
