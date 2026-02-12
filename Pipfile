@@ -26,6 +26,7 @@ wiki = "*"
 django-htmx = "*"
 django-htmx-autocomplete = "*"
 django = "*"
+django-rest-framework-condition = "*"
 
 [dev-packages]
 django-debug-toolbar = "*"
