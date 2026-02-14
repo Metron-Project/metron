@@ -1,11 +1,12 @@
-from datetime import datetime
+from datetime import datetime, timedelta
 
-from chartkick.django import PieChart
+from chartkick.django import ColumnChart, PieChart
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
 from django.db import models
 from django.db.models import Count, F, Sum
+from django.db.models.functions import TruncDate, TruncMonth
 from django.shortcuts import get_object_or_404, render
 from django.urls import reverse, reverse_lazy
 from django.utils import timezone
@@ -250,6 +251,42 @@ class CollectionStatsView(LoginRequiredMixin, TemplateView):
             legend="bottom",
         )
 
+        # Reading history charts
+        read_dates_qs = ReadDate.objects.filter(collection_item__user=self.request.user)
+
+        daily_reads = (
+            read_dates_qs.annotate(day=TruncDate("read_date"))
+            .values("day")
+            .annotate(c=Count("day"))
+            .order_by("-day")[:30]
+        )
+        daily_counts = {r["day"]: r["c"] for r in daily_reads}
+        today = datetime.now().date()
+        daily_dict = {
+            (today - timedelta(days=i)).strftime("%m/%d"): daily_counts.get(
+                today - timedelta(days=i), 0
+            )
+            for i in range(29, -1, -1)
+        }
+        reading_daily_chart = ColumnChart(
+            daily_dict,
+            title="Issues Read (Last 30 Days)",
+            thousands=",",
+        )
+
+        monthly_reads = (
+            read_dates_qs.annotate(month=TruncMonth("read_date"))
+            .values("month")
+            .annotate(c=Count("month"))
+            .order_by("-month")[:12]
+        )
+        monthly_dict = {r["month"].strftime("%b %Y"): r["c"] for r in monthly_reads[::-1]}
+        reading_monthly_chart = ColumnChart(
+            monthly_dict,
+            title="Issues Read (Last 12 Months)",
+            thousands=",",
+        )
+
         context.update(
             {
                 "total_items": total_items,
@@ -262,6 +299,8 @@ class CollectionStatsView(LoginRequiredMixin, TemplateView):
                 "publisher_chart": publisher_chart,
                 "series_type_chart": series_type_chart,
                 "format_chart": format_chart,
+                "reading_daily_chart": reading_daily_chart,
+                "reading_monthly_chart": reading_monthly_chart,
             }
         )
 
