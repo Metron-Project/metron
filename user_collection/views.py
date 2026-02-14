@@ -521,6 +521,7 @@ class ReadingHistoryListView(LoginRequiredMixin, ListView):
                 "issue__series__publisher",
                 "issue__series__imprint",
             )
+            .annotate(read_count=Count("read_dates"))
             .order_by("-date_read", "-modified")
         )
 

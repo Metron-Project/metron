@@ -61,7 +61,7 @@
                             {% for item in day_group.list %}
                                 <div class="column is-half-mobile is-one-third-tablet is-one-quarter-desktop is-one-fifth-widescreen">
                                     <div class="card">
-                                        <div class="card-image">
+                                        <div class="card-image" style="position: relative;">
                                             <figure class="image is-2by3">
                                                 <a href="{% url 'issue:detail' item.issue.slug %}">
                                                     {% if item.issue.image %}
@@ -75,6 +75,16 @@
                                                     {% endif %}
                                                 </a>
                                             </figure>
+                                            {% if item.read_count > 1 %}
+                                                <span class="tag is-info"
+                                                      style="position: absolute;
+                                                             top: 0.5rem;
+                                                             right: 0.5rem"
+                                                      title="Read {{ item.read_count }} times">
+                                                    <span class="icon is-small"><i class="fas fa-book-reader"></i></span>
+                                                    <span>&times;{{ item.read_count }}</span>
+                                                </span>
+                                            {% endif %}
                                         </div>
                                         <div class="card-content p-3">
                                             <p class="mb-2">
