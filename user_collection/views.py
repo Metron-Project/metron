@@ -560,7 +560,12 @@ class ReadingHistoryListView(LoginRequiredMixin, ListView):
                 "issue__series__publisher",
                 "issue__series__imprint",
             )
-            .annotate(read_count=Count("read_dates"))
+            .annotate(
+                read_count=Count(
+                    "read_dates",
+                    filter=models.Q(read_dates__read_date__date=TruncDate(F("date_read"))),
+                )
+            )
             .order_by("-date_read", "-modified")
         )
 
