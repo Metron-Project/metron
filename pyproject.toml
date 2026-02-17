@@ -47,10 +47,11 @@ ban-relative-imports = "all"
 combine-as-imports = true
 
 [tool.ruff.lint.per-file-ignores]
-"users/migrations/*.py" = ["E501", "N806"]
 "comicsdb/models/__init__.py" = ["I001"]
 "comicsdb/migrations/*.py" = ["E501", "N806"]
 "tests/*/*.py" = ["PLR2004", "PT004", "S101", "PLR0913"]
+"users/apps.py" = ["PLC0415",]
+"users/migrations/*.py" = ["E501", "N806"]
 
 [tool.coverage.html]
 directory = "test-results/coverage"
