@@ -121,7 +121,7 @@ class IssueListMixin:
             "cover_date", "series", "number"
         )
 
-    @extend_schema(responses={200: IssueListSerializer(many=True)})
+    @extend_schema(responses={200: IssueListSerializer(many=True)}, filters=False)
     @action(detail=True)
     def issue_list(self, request, pk=None):
         """Returns a list of issues for this object."""
