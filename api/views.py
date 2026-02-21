@@ -388,7 +388,7 @@ class PublisherViewSet(
             case _:
                 return PublisherSerializer
 
-    @extend_schema(responses={200: SeriesListSerializer(many=True)})
+    @extend_schema(responses={200: SeriesListSerializer(many=True)}, filters=False)
     @action(detail=True)
     def series_list(self, request, pk=None):
         """
