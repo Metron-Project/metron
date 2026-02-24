@@ -127,6 +127,9 @@ class Issue(CommonInfo):
                 name="series_cover_store_num_idx",
             ),
             models.Index(fields=["series", "number"], name="series_number_idx"),
+            models.Index(fields=["cover_hash"], name="issue_cover_hash_idx"),
+            models.Index(fields=["store_date"], name="issue_store_date_idx"),
+            models.Index(fields=["foc_date"], name="issue_foc_date_idx"),
         ]
         ordering = ["series__sort_name", "cover_date", "store_date", "number"]
         unique_together = ["series", "number"]
