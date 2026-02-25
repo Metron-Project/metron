@@ -61,7 +61,11 @@ class Imprint(CommonInfo):
         return self.name
 
     class Meta:
-        indexes = [models.Index(fields=["name"], name="imprint_name_idx")]
+        indexes = [
+            models.Index(fields=["name"], name="imprint_name_idx"),
+            models.Index(fields=["cv_id"], name="imprint_cv_id_idx"),
+            models.Index(fields=["gcd_id"], name="imprint_gcd_id_idx"),
+        ]
         ordering = ["name"]
 
 

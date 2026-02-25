@@ -61,7 +61,11 @@ class Publisher(CommonInfo):
         return self.name
 
     class Meta:
-        indexes = [models.Index(fields=["name"], name="publisher_name_idx")]
+        indexes = [
+            models.Index(fields=["name"], name="publisher_name_idx"),
+            models.Index(fields=["cv_id"], name="publisher_cv_id_idx"),
+            models.Index(fields=["gcd_id"], name="publisher_gcd_id_idx"),
+        ]
         ordering = ["name"]
 
 

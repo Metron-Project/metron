@@ -62,7 +62,11 @@ class Team(CommonInfo):
         return self.name
 
     class Meta:
-        indexes = [models.Index(fields=["name"], name="team_name_idx")]
+        indexes = [
+            models.Index(fields=["name"], name="team_name_idx"),
+            models.Index(fields=["cv_id"], name="team_cv_id_idx"),
+            models.Index(fields=["gcd_id"], name="team_gcd_id_idx"),
+        ]
         ordering = ["name"]
 
 
