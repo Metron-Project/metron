@@ -66,7 +66,11 @@ class Creator(CommonInfo):
         return self.name
 
     class Meta:
-        indexes = [models.Index(fields=["name"], name="creator_name_idx")]
+        indexes = [
+            models.Index(fields=["name"], name="creator_name_idx"),
+            models.Index(fields=["cv_id"], name="creator_cv_id_idx"),
+            models.Index(fields=["gcd_id"], name="creator_gcd_id_idx"),
+        ]
         ordering = ["name"]
 
 

@@ -74,7 +74,11 @@ class Character(CommonInfo):
         return self.name
 
     class Meta:
-        indexes = [models.Index(fields=["name"], name="character_name_idx")]
+        indexes = [
+            models.Index(fields=["name"], name="character_name_idx"),
+            models.Index(fields=["cv_id"], name="character_cv_id_idx"),
+            models.Index(fields=["gcd_id"], name="character_gcd_id_idx"),
+        ]
         ordering = ["name"]
 
 
