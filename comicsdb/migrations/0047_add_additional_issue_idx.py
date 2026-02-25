@@ -5,27 +5,26 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
-        ('comicsdb', '0046_remove_flatpages'),
+        ("comicsdb", "0046_remove_flatpages"),
         migrations.swappable_dependency(settings.AUTH_USER_MODEL),
     ]
 
     operations = [
         migrations.AddIndex(
-            model_name='issue',
-            index=models.Index(fields=['store_date'], name='issue_store_date_idx'),
+            model_name="issue",
+            index=models.Index(fields=["store_date"], name="issue_store_date_idx"),
         ),
         migrations.AddIndex(
-            model_name='issue',
-            index=models.Index(fields=['foc_date'], name='issue_foc_date_idx'),
+            model_name="issue",
+            index=models.Index(fields=["foc_date"], name="issue_foc_date_idx"),
         ),
         migrations.AddIndex(
-            model_name='issue',
-            index=models.Index(fields=['cv_id'], name='issue_cv_id_idx'),
+            model_name="issue",
+            index=models.Index(fields=["cv_id"], name="issue_cv_id_idx"),
         ),
         migrations.AddIndex(
-            model_name='issue',
-            index=models.Index(fields=['gcd_id'], name='issue_gcd_id_idx'),
+            model_name="issue",
+            index=models.Index(fields=["gcd_id"], name="issue_gcd_id_idx"),
         ),
     ]

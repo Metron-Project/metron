@@ -5,19 +5,18 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
-        ('comicsdb', '0047_add_additional_issue_idx'),
+        ("comicsdb", "0047_add_additional_issue_idx"),
         migrations.swappable_dependency(settings.AUTH_USER_MODEL),
     ]
 
     operations = [
         migrations.AddIndex(
-            model_name='series',
-            index=models.Index(fields=['cv_id'], name='series_cv_id_idx'),
+            model_name="series",
+            index=models.Index(fields=["cv_id"], name="series_cv_id_idx"),
         ),
         migrations.AddIndex(
-            model_name='series',
-            index=models.Index(fields=['gcd_id'], name='series_gcd_id_idx'),
+            model_name="series",
+            index=models.Index(fields=["gcd_id"], name="series_gcd_id_idx"),
         ),
     ]
