@@ -95,6 +95,8 @@ class Series(CommonInfo):
         indexes = [
             models.Index(fields=["sort_name", "year_began"], name="sort_year_began_idx"),
             models.Index(fields=["name"], name="series_name_idx"),
+            models.Index(fields=["cv_id"], name="series_cv_id_idx"),
+            models.Index(fields=["gcd_id"], name="series_gcd_id_idx"),
         ]
         ordering = ["sort_name", "year_began"]
         unique_together = ["publisher", "name", "volume", "series_type"]
