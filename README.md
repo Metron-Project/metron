@@ -34,6 +34,6 @@ back us through [OpenCollective](https://opencollective.com/metron).
 The project is fairly new compared to the other databases, so it might not meet your needs. Some alternatives include:
 
 * [Grand Comics Database (GCD)](https://www.comics.org/) - Large database, that unfortunately doesn't provide an API.
-* [League of Comic Greeks](https://leagueofcomicgeeks.com/) - Has an API that is only available to retailers, and they
+* [League of Comic Geeks](https://leagueofcomicgeeks.com/) - Has an API that is only available to retailers, and they
   seem to have zero interest in opening access to their community.
 * [Comic Vine](https://comicvine.gamespot.com/) - Publicly available API.
