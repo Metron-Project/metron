@@ -8,7 +8,7 @@ from comicsdb.models import Series, SeriesType
 
 class SeriesListSerializer(serializers.ModelSerializer):
     series = serializers.CharField(source="__str__")
-    issue_count = serializers.ReadOnlyField()
+    issue_count = serializers.IntegerField(source="num_issues", read_only=True)
 
     class Meta:
         model = Series
@@ -96,6 +96,6 @@ class SeriesReadSerializer(SeriesSerializer):
     imprint = BasicImprintSerializer(read_only=True)
     series_type = SeriesTypeSerializer(read_only=True)
     status = serializers.CharField(source="get_status_display", read_only=True)
-    issue_count = serializers.ReadOnlyField()
+    issue_count = serializers.IntegerField(source="num_issues", read_only=True)
     associated = AssociatedSeriesSerializer(many=True, read_only=True)
     genres = GenreSerializer(many=True, read_only=True)

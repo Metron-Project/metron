@@ -3,7 +3,7 @@ from functools import reduce
 from urllib.parse import quote_plus
 
 import pytest
-from django.db.models import Q
+from django.db.models import Count, Q
 from django.urls import reverse
 from rest_framework import status
 
@@ -106,7 +106,7 @@ def test_series_search(api_client_with_credentials, bat_sups_series, fc_series):
     resp = api_client_with_credentials.get(f"/api/series/?name={quote_plus(search_term)}")
     expected = Series.objects.filter(
         reduce(operator.and_, (Q(name__icontains=q) for q in search_term.split()))
-    )
+    ).annotate(num_issues=Count("issues", distinct=True))
     serializer = SeriesListSerializer(expected, many=True)
     assert resp.status_code == status.HTTP_200_OK
     assert resp.data["results"] == serializer.data

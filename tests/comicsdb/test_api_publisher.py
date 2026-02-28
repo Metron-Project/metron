@@ -1,8 +1,10 @@
 import pytest
+from django.db.models import Count
 from django.urls import reverse
 from rest_framework import status
 
 from api.v1_0.serializers import SeriesListSerializer
+from comicsdb.models import Series
 
 
 @pytest.fixture
@@ -114,7 +116,13 @@ def test_publisher_series_list_view(api_client_with_credentials, dc_comics, fc_s
     resp = api_client_with_credentials.get(
         reverse("api:publisher-series-list", kwargs={"pk": dc_comics.pk})
     )
-    serializer = SeriesListSerializer(fc_series)
+
+    series = (
+        Series.objects.filter(pk=fc_series.pk)
+        .annotate(num_issues=Count("issues", distinct=True))
+        .first()
+    )
+    serializer = SeriesListSerializer(series)
     assert resp.data["count"] == 1
     assert resp.data["next"] is None
     assert resp.data["previous"] is None
