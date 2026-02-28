@@ -400,8 +400,10 @@ class PublisherViewSet(
         Returns a list of series for a publisher.
         """
         publisher = self.get_object()
-        queryset = publisher.series.select_related("series_type").annotate(
-            num_issues=Count("issues", distinct=True)
+        queryset = (
+            publisher.series.select_related("series_type")
+            .annotate(num_issues=Count("issues", distinct=True))
+            .order_by("sort_name", "year_began")
         )
         page = self.paginate_queryset(queryset)
         if page is not None:
@@ -451,7 +453,9 @@ class SeriesViewSet(
         queryset = super().get_queryset()
         match self.action:
             case "list":
-                queryset = queryset.annotate(num_issues=Count("issues", distinct=True))
+                queryset = queryset.annotate(num_issues=Count("issues", distinct=True)).order_by(
+                    "sort_name", "year_began"
+                )
             case "retrieve":
                 queryset = (
                     queryset.select_related("imprint")
