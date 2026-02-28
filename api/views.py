@@ -1,5 +1,5 @@
 from django.db import models
-from django.db.models import Avg, Count, F, Prefetch, Q, Sum
+from django.db.models import Avg, Case, Count, F, IntegerField, Prefetch, Q, Sum, When
 from django.http import Http404
 from django.utils import timezone
 from drf_spectacular.utils import OpenApiParameter, extend_schema
@@ -276,7 +276,7 @@ class ImprintViewSet(
     Update an imprint's information.
     """
 
-    queryset = Imprint.objects.prefetch_related("series", "series__series_type")
+    queryset = Imprint.objects.all()
     filterset_class = ComicVineFilter
     parser_classes = (MultiPartParser, FormParser)
 
@@ -315,33 +315,38 @@ class IssueViewSet(
     ImageHash. https://github.com/JohannesBuchner/imagehash
     """
 
-    queryset = Issue.objects.select_related(
-        "series",
-        "series__series_type",
-        "series__publisher",
-        "series__imprint",
-        "rating",
-    ).prefetch_related(
-        "series__genres",
-        "arcs",
-        "characters",
-        "teams",
-        "universes",
-        "variants",
-        Prefetch(
-            "credits_set",
-            queryset=Credits.objects.order_by("creator__name")
-            .distinct("creator__name")
-            .select_related("creator")
-            .prefetch_related("role"),
-        ),
-        Prefetch(
-            "reprints",
-            queryset=Issue.objects.select_related("series", "series__series_type"),
-        ),
-    )
+    queryset = Issue.objects.all()
     filterset_class = IssueFilter
     parser_classes = (MultiPartParser, FormParser)
+
+    def get_queryset(self):
+        if self.action == "list":
+            return Issue.objects.select_related("series", "series__series_type")
+        return Issue.objects.select_related(
+            "series",
+            "series__series_type",
+            "series__publisher",
+            "series__imprint",
+            "rating",
+        ).prefetch_related(
+            "series__genres",
+            "arcs",
+            "characters",
+            "teams",
+            "universes",
+            "variants",
+            Prefetch(
+                "credits_set",
+                queryset=Credits.objects.order_by("creator__name")
+                .distinct("creator__name")
+                .select_related("creator")
+                .prefetch_related("role"),
+            ),
+            Prefetch(
+                "reprints",
+                queryset=Issue.objects.select_related("series", "series__series_type"),
+            ),
+        )
 
     def get_serializer_class(self):
         match self.action:
@@ -375,7 +380,7 @@ class PublisherViewSet(
     Update a publisher's information.
     """
 
-    queryset = Publisher.objects.prefetch_related("series")
+    queryset = Publisher.objects.all()
     filterset_class = ComicVineFilter
     parser_classes = (MultiPartParser, FormParser)
 
@@ -395,7 +400,9 @@ class PublisherViewSet(
         Returns a list of series for a publisher.
         """
         publisher = self.get_object()
-        queryset = publisher.series.select_related("series_type").prefetch_related("issues")
+        queryset = publisher.series.select_related("series_type").annotate(
+            num_issues=Count("issues", distinct=True)
+        )
         page = self.paginate_queryset(queryset)
         if page is not None:
             serializer = SeriesListSerializer(page, many=True, context={"request": request})
@@ -442,8 +449,15 @@ class SeriesViewSet(
 
     def get_queryset(self):
         queryset = super().get_queryset()
-        if self.action == "retrieve":
-            queryset = queryset.select_related("imprint").prefetch_related("genres", "associated")
+        match self.action:
+            case "list":
+                queryset = queryset.annotate(num_issues=Count("issues", distinct=True))
+            case "retrieve":
+                queryset = (
+                    queryset.select_related("imprint")
+                    .prefetch_related("genres", "associated")
+                    .annotate(num_issues=Count("issues", distinct=True))
+                )
         return queryset
 
     def get_serializer_class(self):
@@ -468,8 +482,9 @@ class SeriesViewSet(
         return serializer_class(*args, **kwargs)
 
     def get_issue_queryset(self, obj):
-        """Series issues don't need extra optimization - already optimized at queryset level."""
-        return obj.issues.all()
+        return obj.issues.select_related("series", "series__series_type").order_by(
+            "cover_date", "series", "number"
+        )
 
 
 class SeriesTypeViewSet(mixins.ListModelMixin, viewsets.GenericViewSet):
@@ -707,27 +722,23 @@ class CollectionViewSet(
     @action(detail=False, methods=["get"])
     def stats(self, request):
         """Return statistics about the user's collection."""
-        queryset = self.get_queryset()
-        total_items = queryset.count()
-        total_quantity = queryset.aggregate(Sum("quantity"))["quantity__sum"] or 0
-
-        # Calculate total value
-        total_value_result = queryset.aggregate(Sum("purchase_price"))
-        total_value = total_value_result["purchase_price__sum"]
-
-        # Reading statistics
-        read_count = queryset.filter(is_read=True).count()
-        unread_count = queryset.filter(is_read=False).count()
-
+        queryset = CollectionItem.objects.filter(user=self.request.user)
+        stats = queryset.aggregate(
+            total_items=Count("id"),
+            total_quantity=Sum("quantity"),
+            total_value=Sum("purchase_price"),
+            read_count=Count(Case(When(is_read=True, then=1), output_field=IntegerField())),
+            unread_count=Count(Case(When(is_read=False, then=1), output_field=IntegerField())),
+        )
         format_counts = queryset.values("book_format").annotate(count=Count("id"))
 
         return Response(
             {
-                "total_items": total_items,
-                "total_quantity": total_quantity,
-                "total_value": str(total_value) if total_value else "0.00",
-                "read_count": read_count,
-                "unread_count": unread_count,
+                "total_items": stats["total_items"] or 0,
+                "total_quantity": stats["total_quantity"] or 0,
+                "total_value": str(stats["total_value"]) if stats["total_value"] else "0.00",
+                "read_count": stats["read_count"],
+                "unread_count": stats["unread_count"],
                 "by_format": format_counts,
             }
         )
