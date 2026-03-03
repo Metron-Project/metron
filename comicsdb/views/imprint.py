@@ -1,6 +1,7 @@
 import logging
 
 from django.contrib.auth.mixins import LoginRequiredMixin, PermissionRequiredMixin
+from django.db.models import Count
 from django.shortcuts import get_object_or_404
 from django.urls import reverse_lazy
 from django.views.generic import CreateView, DeleteView, DetailView, ListView, UpdateView
@@ -23,7 +24,7 @@ LOGGER = logging.getLogger(__name__)
 class ImprintList(LoginRequiredMixin, ListView):
     model = Imprint
     paginate_by = PAGINATE_BY
-    queryset = Imprint.objects.prefetch_related("series")
+    queryset = Imprint.objects.annotate(series_count=Count("series"))
 
 
 class ImprintSeriesList(LoginRequiredMixin, ListView):

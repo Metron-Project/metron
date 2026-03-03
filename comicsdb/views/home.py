@@ -25,7 +25,7 @@ class HomePageView(TemplateView):
         recently_edited = cache.get("recently_edited")
         if not recently_edited:
             recently_edited = (
-                Issue.objects.prefetch_related("series", "series__series_type")
+                Issue.objects.select_related("series", "series__series_type")
                 .order_by("-modified")
                 .all()[:12]
             )

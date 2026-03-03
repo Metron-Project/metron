@@ -29,7 +29,7 @@ class SeriesList(LoginRequiredMixin, ListView):
     def get_queryset(self):
         queryset = Series.objects.select_related(
             "series_type", "publisher", "imprint"
-        ).prefetch_related("issues")
+        ).annotate(issue_count=Count("issues"))
         # Apply filters
         filtered = SeriesViewFilter(self.request.GET, queryset=queryset)
         return filtered.qs

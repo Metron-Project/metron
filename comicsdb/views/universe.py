@@ -40,7 +40,7 @@ class UniverseSeriesList(LoginRequiredMixin, ListView):
 class UniverseList(LoginRequiredMixin, ListView):
     model = Universe
     paginate_by = PAGINATE_BY
-    queryset = Universe.objects.prefetch_related("issues")
+    queryset = Universe.objects.annotate(issue_count=Count("issues"))
 
 
 class UniverseIssueList(LoginRequiredMixin, ListView):

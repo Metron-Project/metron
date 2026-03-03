@@ -315,13 +315,13 @@ class IssueViewSet(
     ImageHash. https://github.com/JohannesBuchner/imagehash
     """
 
-    queryset = Issue.objects.all()
+    queryset = Issue.objects.select_related("series", "series__series_type")
     filterset_class = IssueFilter
     parser_classes = (MultiPartParser, FormParser)
 
     def get_queryset(self):
         if self.action == "list":
-            return Issue.objects.select_related("series", "series__series_type")
+            return super().get_queryset()
         return Issue.objects.select_related(
             "series",
             "series__series_type",
@@ -450,18 +450,12 @@ class SeriesViewSet(
     filterset_class = SeriesFilter
 
     def get_queryset(self):
-        queryset = super().get_queryset()
+        queryset = super().get_queryset().annotate(num_issues=Count("issues", distinct=True))
         match self.action:
             case "list":
-                queryset = queryset.annotate(num_issues=Count("issues", distinct=True)).order_by(
-                    "sort_name", "year_began"
-                )
+                queryset = queryset.order_by("sort_name", "year_began")
             case "retrieve":
-                queryset = (
-                    queryset.select_related("imprint")
-                    .prefetch_related("genres", "associated")
-                    .annotate(num_issues=Count("issues", distinct=True))
-                )
+                queryset = queryset.select_related("imprint").prefetch_related("genres", "associated")
         return queryset
 
     def get_serializer_class(self):
@@ -489,6 +483,10 @@ class SeriesViewSet(
         return obj.issues.select_related("series", "series__series_type").order_by(
             "cover_date", "series", "number"
         )
+
+    def perform_create(self, serializer):
+        instance = serializer.save()
+        instance.num_issues = 0
 
 
 class SeriesTypeViewSet(mixins.ListModelMixin, viewsets.GenericViewSet):

@@ -39,7 +39,7 @@ class CharacterSeriesList(LoginRequiredMixin, ListView):
 class CharacterList(LoginRequiredMixin, ListView):
     model = Character
     paginate_by = PAGINATE_BY
-    queryset = Character.objects.prefetch_related("issues")
+    queryset = Character.objects.annotate(issue_count=Count("issues"))
 
 
 class CharacterIssueList(LoginRequiredMixin, ListView):

@@ -69,7 +69,7 @@ class Series(CommonInfo):
         return reverse("series:detail", args=[self.slug])
 
     def __str__(self) -> str:
-        match self.series_type.id:
+        match self.series_type_id:
             case 12:
                 return f"{self.name} ({self.year_began}) Digital"
             case 10:
@@ -86,10 +86,6 @@ class Series(CommonInfo):
             return self.issues.first().image
         except AttributeError:
             return None
-
-    @property
-    def issue_count(self) -> int:
-        return self.issues.count()
 
     class Meta:
         indexes = [

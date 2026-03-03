@@ -1,6 +1,7 @@
 import logging
 
 from django.contrib.auth.mixins import LoginRequiredMixin, PermissionRequiredMixin
+from django.db.models import Count
 from django.shortcuts import get_object_or_404
 from django.urls import reverse_lazy
 from django.views.generic import DetailView, ListView
@@ -25,7 +26,7 @@ LOGGER = logging.getLogger(__name__)
 class ArcList(LoginRequiredMixin, ListView):
     model = Arc
     paginate_by = PAGINATE_BY
-    queryset = Arc.objects.prefetch_related("issues")
+    queryset = Arc.objects.annotate(issue_count=Count("issues"))
 
 
 class ArcIssueList(LoginRequiredMixin, ListView):
