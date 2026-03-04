@@ -195,7 +195,7 @@ REST_FRAMEWORK = {
         "api.throttle.BurstRateThrottle",
         "api.throttle.SustainedRateThrottle",
     ],
-    "DEFAULT_THROTTLE_RATES": {"burst": "35/minute", "sustained": "10000/day"},
+    "DEFAULT_THROTTLE_RATES": {"burst": "20/minute", "sustained": "5000/day"},
     "DEFAULT_FILTER_BACKENDS": ("django_filters.rest_framework.DjangoFilterBackend",),
     "DEFAULT_PAGINATION_CLASS": "rest_framework.pagination.PageNumberPagination",
     "PAGE_SIZE": 100,
