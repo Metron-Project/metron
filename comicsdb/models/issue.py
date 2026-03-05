@@ -114,7 +114,7 @@ class Issue(CommonInfo):
         return super().save(*args, **kwargs)
 
     def __str__(self) -> str:
-        match self.series.series_type.id:
+        match self.series.series_type_id:
             case 12:
                 return f"{self.series} Chapter #{self.number}"
             case _:
