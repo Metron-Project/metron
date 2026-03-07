@@ -30,6 +30,7 @@ class AssociatedSeriesSerializer(serializers.ModelSerializer):
 
 
 class SeriesSerializer(serializers.ModelSerializer):
+    issue_count = serializers.IntegerField(read_only=True)
     resource_url = serializers.SerializerMethodField("get_resource_url")
     status = serializers.ChoiceField(choices=Series.Status.choices)
 
