@@ -1,6 +1,7 @@
 import logging
 
 from django.contrib.auth.mixins import LoginRequiredMixin, PermissionRequiredMixin
+from django.db.models import Count, OuterRef, Subquery
 from django.shortcuts import get_object_or_404
 from django.urls import reverse_lazy
 from django.views.generic import DetailView, ListView
@@ -22,12 +23,18 @@ from comicsdb.views.mixins import (
 
 LOGGER = logging.getLogger(__name__)
 
+series_count_sq = (
+    Series.objects.filter(publisher=OuterRef("pk"))
+    .values("publisher")
+    .annotate(count=Count("pk"))
+    .values("count")
+)
+
 
 class PublisherList(LoginRequiredMixin, ListView):
     model = Publisher
     paginate_by = PAGINATE_BY
-    queryset = Publisher.objects.prefetch_related("series")
-
+    queryset = Publisher.objects.annotate(series_count=Subquery(series_count_sq)).order_by("name")
 
 class PublisherSeriesList(LoginRequiredMixin, ListView):
     template_name = "comicsdb/series_list.html"
