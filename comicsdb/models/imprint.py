@@ -45,9 +45,6 @@ class Imprint(CommonInfo):
     def get_absolute_url(self):
         return reverse("imprint:detail", args=[self.slug])
 
-    @property
-    def series_count(self):
-        return self.series.all().count()
 
     @property
     def wikipedia(self):
