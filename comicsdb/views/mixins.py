@@ -170,7 +170,7 @@ class NavigationMixin:
 
     def get_navigation_context(self):
         """Get the navigation context dict."""
-        obj = self.get_object()
+        obj = self.object
         ordering_field = self.get_ordering_field()
         qs = self.get_navigation_queryset().order_by(ordering_field)
 
