@@ -1,8 +1,7 @@
 import logging
 
 from django.contrib.auth.mixins import LoginRequiredMixin, PermissionRequiredMixin
-from django.core.exceptions import ObjectDoesNotExist
-from django.db.models import Count
+from django.db.models import Count, OuterRef, Subquery
 from django.shortcuts import get_object_or_404
 from django.urls import reverse_lazy
 from django.views.generic import DetailView, ListView
@@ -11,6 +10,7 @@ from django.views.generic.edit import CreateView, DeleteView, UpdateView
 from comicsdb.filters.series import SeriesViewFilter
 from comicsdb.forms.series import SeriesForm
 from comicsdb.models import Series, SeriesType
+from comicsdb.models.issue import Issue
 from comicsdb.views.constants import PAGINATE_BY
 from comicsdb.views.history import HistoryListView
 from comicsdb.views.mixins import (
@@ -21,15 +21,24 @@ from comicsdb.views.mixins import (
 
 LOGGER = logging.getLogger(__name__)
 
+_issue_count_sq = (
+    Issue.objects.filter(series=OuterRef("pk"))
+    .values("series")
+    .annotate(count=Count("pk"))
+    .values("count")
+)
+
 
 class SeriesList(LoginRequiredMixin, ListView):
     model = Series
     paginate_by = PAGINATE_BY
 
     def get_queryset(self):
-        queryset = Series.objects.select_related(
-            "series_type", "publisher", "imprint"
-        ).prefetch_related("issues")
+        queryset = (
+            Series.objects.select_related("series_type", "publisher", "imprint")
+            .prefetch_related("issues")
+            .annotate(issue_count=Subquery(_issue_count_sq))
+        )
         # Apply filters
         filtered = SeriesViewFilter(self.request.GET, queryset=queryset)
         return filtered.qs
@@ -60,13 +69,15 @@ class SeriesIssueList(LoginRequiredMixin, ListView):
 
 class SeriesDetail(LoginRequiredMixin, DetailView):
     model = Series
-    queryset = Series.objects.select_related(
-        "publisher", "imprint", "edited_by", "series_type"
-    ).prefetch_related("issues")
+    queryset = (
+        Series.objects.select_related("publisher", "imprint", "edited_by", "series_type")
+        .prefetch_related("issues")
+        .annotate(issue_count=Subquery(_issue_count_sq))
+    )
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        series = self.get_object()
+        series = self.object
 
         # Set the initial value for the navigation variables
         next_series = None
@@ -81,31 +92,18 @@ class SeriesDetail(LoginRequiredMixin, DetailView):
         # If there is more than one series with the same name
         # let's attempt to get the next and previous items
         if series_count > 1:
-            try:
-                next_series = qs.filter(
-                    sort_name=series.sort_name, year_began__gt=series.year_began
-                ).first()
-            except ObjectDoesNotExist:
-                next_series = None
-
-            try:
-                previous_series = qs.filter(
-                    sort_name=series.sort_name, year_began__lt=series.year_began
-                ).last()
-            except ObjectDoesNotExist:
-                previous_series = None
+            next_series = qs.filter(
+                sort_name=series.sort_name, year_began__gt=series.year_began
+            ).first()
+            previous_series = qs.filter(
+                sort_name=series.sort_name, year_began__lt=series.year_began
+            ).last()
 
         if not next_series:
-            try:
-                next_series = qs.filter(sort_name__gt=series.sort_name).first()
-            except ObjectDoesNotExist:
-                next_series = None
+            next_series = qs.filter(sort_name__gt=series.sort_name).first()
 
         if not previous_series:
-            try:
-                previous_series = qs.filter(sort_name__lt=series.sort_name).last()
-            except ObjectDoesNotExist:
-                previous_series = None
+            previous_series = qs.filter(sort_name__lt=series.sort_name).last()
 
         # Top 10 creator credits for series. Might be worthwhile to exclude editors, etc.
         creators = (

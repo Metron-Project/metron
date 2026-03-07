@@ -87,10 +87,6 @@ class Series(CommonInfo):
         except AttributeError:
             return None
 
-    @property
-    def issue_count(self) -> int:
-        return self.issues.count()
-
     class Meta:
         indexes = [
             models.Index(fields=["sort_name", "year_began"], name="sort_year_began_idx"),
