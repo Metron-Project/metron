@@ -103,7 +103,7 @@ def test_role_verbose_name_plural(writer):
 
 
 def test_publisher_series_count(dc_comics, fc_series):
-    assert dc_comics.series_count == 1
+    assert dc_comics.series.count() == 1
 
 
 def test_publisher_creation(dc_comics):
@@ -122,7 +122,7 @@ def test_publisher_absolute_url(auto_login_user, dc_comics):
 
 
 def test_imprint_series_count(vertigo_imprint, sandman_series):
-    assert vertigo_imprint.series_count == 1
+    assert vertigo_imprint.series.count() == 1
 
 
 def test_imprint_creation(vertigo_imprint):
@@ -172,8 +172,7 @@ def test_issue_absolute_url(auto_login_user, issue_with_arc):
 
 # This test should be in the SeriesTest but for now let's leave this here.
 def test_issue_count(issue_with_arc, superman):
-    issue_count = superman.issue_count
-    assert issue_count == 1
+    assert superman.issues.count() == 1
 
 
 def test_seriestype_creation(single_issue_type):
