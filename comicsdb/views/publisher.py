@@ -36,6 +36,7 @@ class PublisherList(LoginRequiredMixin, ListView):
     paginate_by = PAGINATE_BY
     queryset = Publisher.objects.annotate(series_count=Subquery(series_count_sq)).order_by("name")
 
+
 class PublisherSeriesList(LoginRequiredMixin, ListView):
     template_name = "comicsdb/series_list.html"
     paginate_by = PAGINATE_BY

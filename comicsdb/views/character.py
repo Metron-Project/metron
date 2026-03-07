@@ -34,13 +34,15 @@ class CharacterSeriesList(LoginRequiredMixin, ListView):
         return Issue.objects.select_related("series").filter(
             characters=self.character, series=self.series
         )
-    
+
+
 _issue_count_qs = (
     Issue.objects.filter(characters=OuterRef("pk"))
     .values("characters")
     .annotate(count=Count("pk"))
     .values("count")
 )
+
 
 class CharacterList(LoginRequiredMixin, ListView):
     model = Character

@@ -3,17 +3,13 @@ from rest_framework import status
 
 
 def test_arc_returns_last_modified_header(api_client_with_credentials, wwh_arc):
-    resp = api_client_with_credentials.get(
-        reverse("api:arc-detail", kwargs={"pk": wwh_arc.pk})
-    )
+    resp = api_client_with_credentials.get(reverse("api:arc-detail", kwargs={"pk": wwh_arc.pk}))
     assert resp.status_code == status.HTTP_200_OK
     assert "Last-Modified" in resp
 
 
 def test_arc_conditional_request_returns_304(api_client_with_credentials, wwh_arc):
-    resp = api_client_with_credentials.get(
-        reverse("api:arc-detail", kwargs={"pk": wwh_arc.pk})
-    )
+    resp = api_client_with_credentials.get(reverse("api:arc-detail", kwargs={"pk": wwh_arc.pk}))
     assert resp.status_code == status.HTTP_200_OK
     last_modified = resp["Last-Modified"]
 
@@ -108,9 +104,7 @@ def test_team_conditional_request_returns_304(api_client_with_credentials, teen_
     assert resp.status_code == status.HTTP_304_NOT_MODIFIED
 
 
-def test_universe_conditional_request_returns_304(
-    api_client_with_credentials, earth_2_universe
-):
+def test_universe_conditional_request_returns_304(api_client_with_credentials, earth_2_universe):
     resp = api_client_with_credentials.get(
         reverse("api:universe-detail", kwargs={"pk": earth_2_universe.pk})
     )
@@ -124,9 +118,7 @@ def test_universe_conditional_request_returns_304(
     assert resp.status_code == status.HTTP_304_NOT_MODIFIED
 
 
-def test_imprint_conditional_request_returns_304(
-    api_client_with_credentials, vertigo_imprint
-):
+def test_imprint_conditional_request_returns_304(api_client_with_credentials, vertigo_imprint):
     resp = api_client_with_credentials.get(
         reverse("api:imprint-detail", kwargs={"pk": vertigo_imprint.pk})
     )
@@ -140,9 +132,7 @@ def test_imprint_conditional_request_returns_304(
     assert resp.status_code == status.HTTP_304_NOT_MODIFIED
 
 
-def test_conditional_request_with_old_date_returns_200(
-    api_client_with_credentials, wwh_arc
-):
+def test_conditional_request_with_old_date_returns_200(api_client_with_credentials, wwh_arc):
     resp = api_client_with_credentials.get(
         reverse("api:arc-detail", kwargs={"pk": wwh_arc.pk}),
         HTTP_IF_MODIFIED_SINCE="Wed, 01 Jan 2020 00:00:00 GMT",
