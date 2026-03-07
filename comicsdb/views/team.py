@@ -1,12 +1,14 @@
 import logging
 
 from django.contrib.auth.mixins import LoginRequiredMixin, PermissionRequiredMixin
+from django.db.models import Count, OuterRef, Subquery
 from django.shortcuts import get_object_or_404
 from django.urls import reverse_lazy
 from django.views.generic import DetailView, ListView
 from django.views.generic.edit import CreateView, DeleteView, UpdateView
 
 from comicsdb.forms.team import TeamForm
+from comicsdb.models import Issue
 from comicsdb.models.team import Team
 from comicsdb.views.constants import DETAIL_PAGINATE_BY, PAGINATE_BY
 from comicsdb.views.history import HistoryListView
@@ -21,11 +23,18 @@ from comicsdb.views.mixins import (
 
 LOGGER = logging.getLogger(__name__)
 
+_issue_count_sq = (
+    Issue.objects.filter(teams=OuterRef("pk"))
+    .values("teams")
+    .annotate(count=Count("pk"))
+    .values("count")
+)
+
 
 class TeamList(LoginRequiredMixin, ListView):
     model = Team
     paginate_by = PAGINATE_BY
-    queryset = Team.objects.prefetch_related("issues")
+    queryset = Team.objects.annotate(issue_count=Subquery(_issue_count_sq))
 
 
 class TeamIssueList(LoginRequiredMixin, ListView):
@@ -44,20 +53,22 @@ class TeamIssueList(LoginRequiredMixin, ListView):
 
 class TeamDetail(LoginRequiredMixin, NavigationMixin, DetailView):
     model = Team
-    # Don't prefetch issues - only need member count
-    queryset = Team.objects.select_related("edited_by")
+    queryset = (
+        Team.objects.select_related("edited_by")
+        .prefetch_related("characters")
+        .annotate(issue_count=Subquery(_issue_count_sq))
+    )
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        team = context["object"]
+        team = self.object
 
-        # Get member count and paginate
-        member_count = team.characters.count()
+        members = list(team.characters.all())
+        member_count = len(members)
         context["member_count"] = member_count
 
-        # Only load first batch of members
         if member_count > 0:
-            context["members"] = team.characters.all()[:DETAIL_PAGINATE_BY]
+            context["members"] = members[:DETAIL_PAGINATE_BY]
 
         return context
 

@@ -47,10 +47,6 @@ class Team(CommonInfo):
         return reverse("team:detail", args=[self.slug])
 
     @property
-    def issue_count(self) -> int:
-        return self.issues.count()
-
-    @property
     def wikipedia(self):
         return self.attribution.filter(source=Attribution.Source.WIKIPEDIA)
 

@@ -39,10 +39,6 @@ class Arc(CommonInfo):
                 this.image.delete(save=False)
         return super().save(*args, **kwargs)
 
-    @property
-    def issue_count(self) -> int:
-        return self.issues.count()
-
     def get_absolute_url(self):
         return reverse("arc:detail", args=[self.slug])
 

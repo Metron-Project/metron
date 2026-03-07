@@ -1,6 +1,7 @@
 import logging
 
 from django.contrib.auth.mixins import LoginRequiredMixin, PermissionRequiredMixin
+from django.db.models import Count, OuterRef, Subquery
 from django.shortcuts import get_object_or_404
 from django.urls import reverse_lazy
 from django.views.generic import DetailView, ListView
@@ -8,6 +9,7 @@ from django.views.generic.edit import CreateView, DeleteView, UpdateView
 
 from comicsdb.forms.arc import ArcForm
 from comicsdb.models.arc import Arc
+from comicsdb.models.issue import Issue
 from comicsdb.views.constants import DETAIL_PAGINATE_BY, PAGINATE_BY
 from comicsdb.views.history import HistoryListView
 from comicsdb.views.mixins import (
@@ -21,11 +23,18 @@ from comicsdb.views.mixins import (
 
 LOGGER = logging.getLogger(__name__)
 
+_issue_count_sq = (
+    Issue.objects.filter(arcs=OuterRef("pk"))
+    .values("arcs")
+    .annotate(count=Count("pk"))
+    .values("count")
+)
+
 
 class ArcList(LoginRequiredMixin, ListView):
     model = Arc
     paginate_by = PAGINATE_BY
-    queryset = Arc.objects.prefetch_related("issues")
+    queryset = Arc.objects.annotate(issue_count=Subquery(_issue_count_sq)).order_by("name")
 
 
 class ArcIssueList(LoginRequiredMixin, ListView):
@@ -44,21 +53,21 @@ class ArcIssueList(LoginRequiredMixin, ListView):
 
 class ArcDetail(LoginRequiredMixin, NavigationMixin, DetailView):
     model = Arc
-    queryset = Arc.objects.select_related("edited_by")
+    queryset = Arc.objects.select_related("edited_by").annotate(
+        issue_count=Subquery(_issue_count_sq)
+    )
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         arc = context["object"]
 
-        # Get issue count and paginate
-        issue_count = arc.issues.count()
+        issue_count = arc.issue_count or 0
         context["issue_count"] = issue_count
 
-        # Only load first batch of issues
         if issue_count > 0:
             issues_qs = arc.issues.order_by(
                 "cover_date", "store_date", "series__sort_name", "number"
-            ).select_related("series", "series__series_type")
+            ).select_related("series")
             context["issues"] = issues_qs[:DETAIL_PAGINATE_BY]
 
         return context
@@ -111,7 +120,7 @@ class ArcIssuesLoadMore(LoginRequiredMixin, LazyLoadMixin):
         """Custom query with ordering and select_related."""
         issues_qs = parent_object.issues.order_by(
             "cover_date", "store_date", "series__sort_name", "number"
-        ).select_related("series", "series__series_type")
+        ).select_related("series")
         return issues_qs[offset : offset + limit]
 
     def get_total_count(self, parent_object):

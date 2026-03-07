@@ -146,6 +146,11 @@ class ReprintSerializer(serializers.ModelSerializer):
 #       Need to handle variants & credits sets.
 class IssueSerializer(serializers.ModelSerializer):
     price = PriceField(required=False, allow_null=True)
+    reprints = serializers.PrimaryKeyRelatedField(
+        many=True,
+        queryset=Issue.objects.select_related("series", "series__series_type"),
+        required=False,
+    )
     resource_url = serializers.SerializerMethodField("get_resource_url")
 
     def get_resource_url(self, obj: Issue) -> str:

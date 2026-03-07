@@ -1,7 +1,7 @@
 import logging
 
 from django.contrib.auth.mixins import LoginRequiredMixin, PermissionRequiredMixin
-from django.db.models import Count
+from django.db.models import Count, OuterRef, Subquery
 from django.shortcuts import get_object_or_404
 from django.urls import reverse_lazy
 from django.views.generic import DetailView, ListView
@@ -21,6 +21,13 @@ from comicsdb.views.mixins import (
 )
 
 LOGGER = logging.getLogger(__name__)
+
+_issue_count_sq = (
+    Credits.objects.filter(creator=OuterRef("pk"))
+    .values("creator")
+    .annotate(count=Count("pk"))
+    .values("count")
+)
 
 
 class CreatorSeriesList(LoginRequiredMixin, ListView):
@@ -52,12 +59,14 @@ class CreatorIssueList(LoginRequiredMixin, ListView):
 class CreatorList(LoginRequiredMixin, ListView):
     model = Creator
     paginate_by = PAGINATE_BY
-    queryset = Creator.objects.prefetch_related("credits_set")
+    queryset = Creator.objects.annotate(issue_count=Subquery(_issue_count_sq))
 
 
 class CreatorDetail(LoginRequiredMixin, NavigationMixin, DetailView):
     model = Creator
-    queryset = Creator.objects.select_related("edited_by")
+    queryset = Creator.objects.select_related("edited_by").annotate(
+        issue_count=Subquery(_issue_count_sq)
+    )
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)

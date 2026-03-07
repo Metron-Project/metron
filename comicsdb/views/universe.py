@@ -1,14 +1,15 @@
 import logging
 
 from django.contrib.auth.mixins import LoginRequiredMixin, PermissionRequiredMixin
-from django.db.models import Count
+from django.db.models import Count, OuterRef, Subquery
 from django.shortcuts import get_object_or_404
 from django.urls import reverse_lazy
 from django.views.generic import CreateView, DeleteView, DetailView, ListView, UpdateView
 
 from comicsdb.forms.universe import UniverseForm
-from comicsdb.models.issue import Issue
+from comicsdb.models import Character, Issue
 from comicsdb.models.series import Series
+from comicsdb.models.team import Team
 from comicsdb.models.universe import Universe
 from comicsdb.views.constants import DETAIL_PAGINATE_BY, PAGINATE_BY
 from comicsdb.views.history import HistoryListView
@@ -22,6 +23,27 @@ from comicsdb.views.mixins import (
 )
 
 LOGGER = logging.getLogger(__name__)
+
+_issue_count_sq = (
+    Issue.objects.filter(universes=OuterRef("pk"))
+    .values("universes")
+    .annotate(count=Count("pk"))
+    .values("count")
+)
+
+_character_count_sq = (
+    Character.objects.filter(universes=OuterRef("pk"))
+    .values("universes")
+    .annotate(count=Count("pk"))
+    .values("count")
+)
+
+_team_count_sq = (
+    Team.objects.filter(universes=OuterRef("pk"))
+    .values("universes")
+    .annotate(count=Count("pk"))
+    .values("count")
+)
 
 
 class UniverseSeriesList(LoginRequiredMixin, ListView):
@@ -40,7 +62,7 @@ class UniverseSeriesList(LoginRequiredMixin, ListView):
 class UniverseList(LoginRequiredMixin, ListView):
     model = Universe
     paginate_by = PAGINATE_BY
-    queryset = Universe.objects.prefetch_related("issues")
+    queryset = Universe.objects.annotate(issue_count=Subquery(_issue_count_sq))
 
 
 class UniverseIssueList(LoginRequiredMixin, ListView):
@@ -59,30 +81,21 @@ class UniverseIssueList(LoginRequiredMixin, ListView):
 
 class UniverseDetail(LoginRequiredMixin, NavigationMixin, DetailView):
     model = Universe
-    # Don't use expensive COUNT DISTINCT in queryset - calculate in get_context_data instead
-    queryset = Universe.objects.select_related("edited_by", "publisher")
+    queryset = Universe.objects.select_related("edited_by", "publisher").annotate(
+        issue_count=Subquery(_issue_count_sq),
+        character_count=Subquery(_character_count_sq),
+        team_count=Subquery(_team_count_sq),
+    )
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        universe = context["object"]  # Use the object from context, not get_object()
+        universe = self.object
 
-        # Get counts with simple, fast queries instead of expensive COUNT DISTINCT
-        # These are much faster than annotating on the queryset
-        character_count = universe.characters.count()
-        team_count = universe.teams.count()
-        total_issue_count = universe.issues.count()
-
-        # Add counts to context
-        context["character_count"] = character_count
-        context["team_count"] = team_count
+        total_issue_count = universe.issue_count or 0
+        context["character_count"] = universe.character_count or 0
+        context["team_count"] = universe.team_count or 0
         context["total_issue_count"] = total_issue_count
 
-        # Also add to object for template compatibility
-        universe.character_count = character_count
-        universe.team_count = team_count
-        universe.total_issue_count = total_issue_count
-
-        # Run this context queryset if the issue count is greater than 0.
         if total_issue_count:
             series_issues = (
                 Issue.objects.filter(universes=universe)

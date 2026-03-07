@@ -1,7 +1,7 @@
 import logging
 
 from django.contrib.auth.mixins import LoginRequiredMixin, PermissionRequiredMixin
-from django.db.models import Count
+from django.db.models import Count, OuterRef, Subquery
 from django.shortcuts import get_object_or_404
 from django.urls import reverse_lazy
 from django.views.generic import DetailView, ListView
@@ -36,10 +36,18 @@ class CharacterSeriesList(LoginRequiredMixin, ListView):
         )
 
 
+_issue_count_qs = (
+    Issue.objects.filter(characters=OuterRef("pk"))
+    .values("characters")
+    .annotate(count=Count("pk"))
+    .values("count")
+)
+
+
 class CharacterList(LoginRequiredMixin, ListView):
     model = Character
     paginate_by = PAGINATE_BY
-    queryset = Character.objects.prefetch_related("issues")
+    queryset = Character.objects.annotate(issue_count=Subquery(_issue_count_qs))
 
 
 class CharacterIssueList(LoginRequiredMixin, ListView):
@@ -58,8 +66,9 @@ class CharacterIssueList(LoginRequiredMixin, ListView):
 
 class CharacterDetail(LoginRequiredMixin, NavigationMixin, DetailView):
     model = Character
-    # Don't prefetch issues - we only need series aggregates, not all issue objects
-    queryset = Character.objects.select_related("edited_by")
+    queryset = Character.objects.select_related("edited_by").annotate(
+        issue_count=Subquery(_issue_count_qs)
+    )
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)

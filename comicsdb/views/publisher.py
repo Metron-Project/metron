@@ -1,14 +1,17 @@
 import logging
 
 from django.contrib.auth.mixins import LoginRequiredMixin, PermissionRequiredMixin
+from django.db.models import Count, OuterRef, Subquery
 from django.shortcuts import get_object_or_404
 from django.urls import reverse_lazy
 from django.views.generic import DetailView, ListView
 from django.views.generic.edit import CreateView, DeleteView, UpdateView
 
 from comicsdb.forms.publisher import PublisherForm
+from comicsdb.models.imprint import Imprint
 from comicsdb.models.publisher import Publisher
 from comicsdb.models.series import Series
+from comicsdb.models.universe import Universe
 from comicsdb.views.constants import DETAIL_PAGINATE_BY, PAGINATE_BY
 from comicsdb.views.history import HistoryListView
 from comicsdb.views.mixins import (
@@ -22,11 +25,32 @@ from comicsdb.views.mixins import (
 
 LOGGER = logging.getLogger(__name__)
 
+_series_count_sq = (
+    Series.objects.filter(publisher=OuterRef("pk"))
+    .values("publisher")
+    .annotate(count=Count("pk"))
+    .values("count")
+)
+
+_imprint_count_sq = (
+    Imprint.objects.filter(publisher=OuterRef("pk"))
+    .values("publisher")
+    .annotate(count=Count("pk"))
+    .values("count")
+)
+
+_universe_count_sq = (
+    Universe.objects.filter(publisher=OuterRef("pk"))
+    .values("publisher")
+    .annotate(count=Count("pk"))
+    .values("count")
+)
+
 
 class PublisherList(LoginRequiredMixin, ListView):
     model = Publisher
     paginate_by = PAGINATE_BY
-    queryset = Publisher.objects.prefetch_related("series")
+    queryset = Publisher.objects.annotate(series_count=Subquery(_series_count_sq)).order_by("name")
 
 
 class PublisherSeriesList(LoginRequiredMixin, ListView):
@@ -50,15 +74,17 @@ class PublisherSeriesList(LoginRequiredMixin, ListView):
 class PublisherDetail(LoginRequiredMixin, NavigationMixin, DetailView):
     model = Publisher
     # Don't prefetch - we'll paginate imprints and universes
-    queryset = Publisher.objects.select_related("edited_by")
+    queryset = Publisher.objects.select_related("edited_by").annotate(
+        imprint_count=Subquery(_imprint_count_sq),
+        universe_count=Subquery(_universe_count_sq),
+    )
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         publisher = context["object"]
 
-        # Get counts for imprints and universes
-        imprint_count = publisher.imprints.count()
-        universe_count = publisher.universes.count()
+        imprint_count = publisher.imprint_count or 0
+        universe_count = publisher.universe_count or 0
 
         context["imprint_count"] = imprint_count
         context["universe_count"] = universe_count

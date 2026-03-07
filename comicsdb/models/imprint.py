@@ -46,10 +46,6 @@ class Imprint(CommonInfo):
         return reverse("imprint:detail", args=[self.slug])
 
     @property
-    def series_count(self):
-        return self.series.all().count()
-
-    @property
     def wikipedia(self):
         return self.attribution.filter(source=Attribution.Source.WIKIPEDIA)
 

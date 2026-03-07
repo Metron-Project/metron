@@ -46,10 +46,6 @@ class Universe(CommonInfo):
         return reverse("universe:detail", args=[self.slug])
 
     @property
-    def issue_count(self):
-        return self.issues.all().count()
-
-    @property
     def first_appearance(self):
         return self.issues.order_by("cover_date").all().first
 

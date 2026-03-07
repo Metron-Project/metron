@@ -103,6 +103,9 @@ class IssueDetail(LoginRequiredMixin, DetailView):
                 )
                 .order_by("cover_date", "store_date"),
             ),
+            "characters",
+            "teams",
+            "universes",
         )
     )
 
@@ -150,20 +153,23 @@ class IssueDetail(LoginRequiredMixin, DetailView):
         if credits_count > 0:
             context["credits"] = credits_qs[:DETAIL_PAGINATE_BY]
 
-        characters_count = issue.characters.count()
+        characters = list(issue.characters.all())
+        characters_count = len(characters)
         context["characters_count"] = characters_count
         if characters_count > 0:
-            context["characters"] = issue.characters.all()[:DETAIL_PAGINATE_BY]
+            context["characters"] = characters[:DETAIL_PAGINATE_BY]
 
-        teams_count = issue.teams.count()
+        teams = list(issue.teams.all())
+        teams_count = len(teams)
         context["teams_count"] = teams_count
         if teams_count > 0:
-            context["teams"] = issue.teams.all()[:DETAIL_PAGINATE_BY]
+            context["teams"] = teams[:DETAIL_PAGINATE_BY]
 
-        universes_count = issue.universes.count()
+        universes = list(issue.universes.all())
+        universes_count = len(universes)
         context["universes_count"] = universes_count
         if universes_count > 0:
-            context["universes"] = issue.universes.all()[:DETAIL_PAGINATE_BY]
+            context["universes"] = universes[:DETAIL_PAGINATE_BY]
 
         return context
 
