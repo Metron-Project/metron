@@ -35,7 +35,7 @@ class CharacterSeriesList(LoginRequiredMixin, ListView):
             characters=self.character, series=self.series
         )
     
-_issue_count_sq = (
+_issue_count_qs = (
     Issue.objects.filter(characters=OuterRef("pk"))
     .values("characters")
     .annotate(count=Count("pk"))
@@ -45,7 +45,7 @@ _issue_count_sq = (
 class CharacterList(LoginRequiredMixin, ListView):
     model = Character
     paginate_by = PAGINATE_BY
-    queryset = Character.objects.annotate(issue_count=Subquery(_issue_count_sq))
+    queryset = Character.objects.annotate(issue_count=Subquery(_issue_count_qs))
 
 
 class CharacterIssueList(LoginRequiredMixin, ListView):
@@ -65,7 +65,7 @@ class CharacterIssueList(LoginRequiredMixin, ListView):
 class CharacterDetail(LoginRequiredMixin, NavigationMixin, DetailView):
     model = Character
     queryset = Character.objects.select_related("edited_by").annotate(
-        issue_count=Subquery(_issue_count_sq)
+        issue_count=Subquery(_issue_count_qs)
     )
 
     def get_context_data(self, **kwargs):
