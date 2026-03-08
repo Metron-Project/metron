@@ -8,6 +8,7 @@ from django.views.generic import CreateView, DeleteView, DetailView, ListView, U
 
 from comicsdb.forms.imprint import ImprintForm
 from comicsdb.models import Imprint, Series
+from comicsdb.models.issue import Issue
 from comicsdb.views.constants import PAGINATE_BY
 from comicsdb.views.history import HistoryListView
 from comicsdb.views.mixins import (
@@ -19,6 +20,13 @@ from comicsdb.views.mixins import (
 )
 
 LOGGER = logging.getLogger(__name__)
+
+_issue_count_sq = (
+    Issue.objects.filter(series=OuterRef("pk"))
+    .values("series")
+    .annotate(count=Count("pk"))
+    .values("count")
+)
 
 _series_count_qs = (
     Series.objects.filter(imprint=OuterRef("pk"))
@@ -48,6 +56,7 @@ class ImprintSeriesList(LoginRequiredMixin, ListView):
             Series.objects.select_related("series_type")
             .filter(imprint=self.imprint)
             .prefetch_related("issues")
+            .annotate(issue_count=Subquery(_issue_count_sq))
         )
 
     def get_context_data(self, **kwargs):
