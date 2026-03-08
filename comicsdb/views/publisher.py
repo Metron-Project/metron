@@ -9,6 +9,7 @@ from django.views.generic.edit import CreateView, DeleteView, UpdateView
 
 from comicsdb.forms.publisher import PublisherForm
 from comicsdb.models.imprint import Imprint
+from comicsdb.models.issue import Issue
 from comicsdb.models.publisher import Publisher
 from comicsdb.models.series import Series
 from comicsdb.models.universe import Universe
@@ -24,6 +25,13 @@ from comicsdb.views.mixins import (
 )
 
 LOGGER = logging.getLogger(__name__)
+
+_issue_count_sq = (
+    Issue.objects.filter(series=OuterRef("pk"))
+    .values("series")
+    .annotate(count=Count("pk"))
+    .values("count")
+)
 
 _series_count_sq = (
     Series.objects.filter(publisher=OuterRef("pk"))
@@ -63,6 +71,7 @@ class PublisherSeriesList(LoginRequiredMixin, ListView):
             Series.objects.select_related("series_type")
             .filter(publisher=self.publisher)
             .prefetch_related("issues")
+            .annotate(issue_count=Subquery(_issue_count_sq))
         )
 
     def get_context_data(self, **kwargs):
