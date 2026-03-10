@@ -81,19 +81,21 @@ class ReadingListItemsPagination(PageNumberPagination):
     page_size = 50
 
 
-class ConditionalRetrieveModelMixin(mixins.RetrieveModelMixin):
-    def retrieve(self, request, *args, **kwargs):
-        retrieve = last_modified(last_modified_func=self._last_modified)(super().retrieve)
-
-        return retrieve(self, request, *args, **kwargs)
-
+class CachedObjectMixin:
     def get_object(self):
         if not hasattr(self, "_cached_object"):
             self._cached_object = super().get_object()
 
         return self._cached_object
 
-    def _last_modified(self, *args, **kwargs):
+
+class ConditionalRetrieveModelMixin(CachedObjectMixin, mixins.RetrieveModelMixin):
+    def retrieve(self, request, *args, **kwargs):
+        retrieve = last_modified(last_modified_func=self._retrieve_last_modified)(super().retrieve)
+
+        return retrieve(self, request, *args, **kwargs)
+
+    def _retrieve_last_modified(self, *args, **kwargs):
         obj = self.get_object()
 
         if obj and getattr(obj, "modified", None):
@@ -112,7 +114,7 @@ class UserTrackingMixin:
         serializer.save(edited_by=self.request.user)
 
 
-class IssueListMixin:
+class IssueListMixin(CachedObjectMixin):
     """Mixin to provide a standard issue_list action for related models."""
 
     def get_issue_queryset(self, obj):
@@ -123,7 +125,14 @@ class IssueListMixin:
 
     @extend_schema(responses={200: IssueListSerializer(many=True)}, filters=False)
     @action(detail=True)
-    def issue_list(self, request, pk=None):
+    def issue_list(self, request, *args, **kwargs):
+        issue_list = last_modified(last_modified_func=self._issue_list_last_modified)(
+            self._issue_list
+        )
+
+        return issue_list(self, request, *args, **kwargs)
+
+    def _issue_list(self, request, *args, **kwargs):
         """Returns a list of issues for this object."""
         obj = self.get_object()
         queryset = self.get_issue_queryset(obj)
@@ -132,6 +141,14 @@ class IssueListMixin:
             serializer = IssueListSerializer(page, many=True, context={"request": request})
             return self.get_paginated_response(serializer.data)
         raise Http404
+
+    def _issue_list_last_modified(self, *args, **kwargs):
+        obj = self.get_object()
+
+        if obj and getattr(obj, "modified", None):
+            return obj.modified
+
+        return None
 
 
 class ArcViewSet(
