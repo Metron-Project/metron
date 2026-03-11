@@ -1691,6 +1691,8 @@ Conditional requests are supported on the following endpoints:
 
 **Note:** General list endpoints (`GET /api/{resource}/`) do not support conditional requests.
 
+**Tip:** Since a parent object's `modified` timestamp is updated whenever its issues change (added, edited, or removed), you can use conditional requests on the parent detail endpoint (e.g. `GET /api/arc/{id}/`) to detect whether the issue list has changed, without needing to call the `issue_list/` endpoint at all.
+
 ### Example
 
 ```bash
