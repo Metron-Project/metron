@@ -144,3 +144,84 @@ def test_list_endpoint_does_not_return_304(api_client_with_credentials, wwh_arc,
     resp = api_client_with_credentials.get(reverse("api:arc-list"))
     assert resp.status_code == status.HTTP_200_OK
     assert "Last-Modified" not in resp
+
+
+def test_arc_issue_list_returns_last_modified_header(api_client_with_credentials, issue_with_arc):
+    arc = issue_with_arc.arcs.first()
+    resp = api_client_with_credentials.get(reverse("api:arc-issue-list", kwargs={"pk": arc.pk}))
+    assert resp.status_code == status.HTTP_200_OK
+    assert "Last-Modified" in resp
+
+
+def test_arc_issue_list_conditional_request_returns_304(
+    api_client_with_credentials, issue_with_arc
+):
+    arc = issue_with_arc.arcs.first()
+    resp = api_client_with_credentials.get(reverse("api:arc-issue-list", kwargs={"pk": arc.pk}))
+    assert resp.status_code == status.HTTP_200_OK
+    last_modified = resp["Last-Modified"]
+
+    resp = api_client_with_credentials.get(
+        reverse("api:arc-issue-list", kwargs={"pk": arc.pk}),
+        HTTP_IF_MODIFIED_SINCE=last_modified,
+    )
+    assert resp.status_code == status.HTTP_304_NOT_MODIFIED
+
+
+def test_character_issue_list_conditional_request_returns_304(
+    api_client_with_credentials, superman
+):
+    resp = api_client_with_credentials.get(
+        reverse("api:character-issue-list", kwargs={"pk": superman.pk})
+    )
+    assert resp.status_code == status.HTTP_200_OK
+    last_modified = resp["Last-Modified"]
+
+    resp = api_client_with_credentials.get(
+        reverse("api:character-issue-list", kwargs={"pk": superman.pk}),
+        HTTP_IF_MODIFIED_SINCE=last_modified,
+    )
+    assert resp.status_code == status.HTTP_304_NOT_MODIFIED
+
+
+def test_series_issue_list_conditional_request_returns_304(
+    api_client_with_credentials, basic_issue
+):
+    resp = api_client_with_credentials.get(
+        reverse("api:series-issue-list", kwargs={"pk": basic_issue.series.pk})
+    )
+    assert resp.status_code == status.HTTP_200_OK
+    last_modified = resp["Last-Modified"]
+
+    resp = api_client_with_credentials.get(
+        reverse("api:series-issue-list", kwargs={"pk": basic_issue.series.pk}),
+        HTTP_IF_MODIFIED_SINCE=last_modified,
+    )
+    assert resp.status_code == status.HTTP_304_NOT_MODIFIED
+
+
+def test_team_issue_list_conditional_request_returns_304(
+    api_client_with_credentials, multi_story_issue, teen_titans
+):
+    resp = api_client_with_credentials.get(
+        reverse("api:team-issue-list", kwargs={"pk": teen_titans.pk})
+    )
+    assert resp.status_code == status.HTTP_200_OK
+    last_modified = resp["Last-Modified"]
+
+    resp = api_client_with_credentials.get(
+        reverse("api:team-issue-list", kwargs={"pk": teen_titans.pk}),
+        HTTP_IF_MODIFIED_SINCE=last_modified,
+    )
+    assert resp.status_code == status.HTTP_304_NOT_MODIFIED
+
+
+def test_issue_list_conditional_request_with_old_date_returns_200(
+    api_client_with_credentials, issue_with_arc
+):
+    arc = issue_with_arc.arcs.first()
+    resp = api_client_with_credentials.get(
+        reverse("api:arc-issue-list", kwargs={"pk": arc.pk}),
+        HTTP_IF_MODIFIED_SINCE="Wed, 01 Jan 2020 00:00:00 GMT",
+    )
+    assert resp.status_code == status.HTTP_200_OK
