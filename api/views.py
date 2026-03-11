@@ -138,7 +138,7 @@ class IssueListMixin(CachedObjectMixin):
         queryset = self.get_issue_queryset(obj)
         page = self.paginate_queryset(queryset)
         if page is not None:
-            serializer = IssueListSerializer(page, many=True, context={"request": request})
+            serializer = IssueListSerializer(page, many=True, context={"request": self.request})
             return self.get_paginated_response(serializer.data)
         raise Http404
 

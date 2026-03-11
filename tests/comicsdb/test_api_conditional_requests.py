@@ -169,7 +169,7 @@ def test_arc_issue_list_conditional_request_returns_304(
 
 
 def test_character_issue_list_conditional_request_returns_304(
-    api_client_with_credentials, issue_with_arc, superman
+    api_client_with_credentials, superman
 ):
     resp = api_client_with_credentials.get(
         reverse("api:character-issue-list", kwargs={"pk": superman.pk})

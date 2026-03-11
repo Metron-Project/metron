@@ -22,7 +22,7 @@ def test_issue_save_updates_series_modified_on_create(basic_issue):
     assert basic_issue.series.modified > old_modified
 
 
-def test_issue_save_does_not_update_series_on_update(basic_issue):
+def test_issue_save_updates_series_modified_on_update(basic_issue):
     past = timezone.now() - timedelta(days=1)
     Series.objects.filter(pk=basic_issue.series_id).update(modified=past)
     basic_issue.series.refresh_from_db()
@@ -30,7 +30,7 @@ def test_issue_save_does_not_update_series_on_update(basic_issue):
 
     update_series_modified_on_issue_save(sender=Issue, instance=basic_issue, created=False)
     basic_issue.series.refresh_from_db()
-    assert basic_issue.series.modified == old_modified
+    assert basic_issue.series.modified > old_modified
 
 
 def test_issue_delete_updates_series_modified(basic_issue):
@@ -95,6 +95,30 @@ def test_update_related_modified_empty_pk_set_from_issue(wwh_arc):
     old_modified = wwh_arc.modified
 
     update_related_modified(Arc, MagicMock(spec=Issue), "post_add", set())
+    wwh_arc.refresh_from_db()
+    assert wwh_arc.modified == old_modified
+
+
+def test_update_related_modified_post_clear_from_parent(wwh_arc):
+    past = timezone.now() - timedelta(days=1)
+    Arc.objects.filter(pk=wwh_arc.pk).update(modified=past)
+    wwh_arc.refresh_from_db()
+    old_modified = wwh_arc.modified
+
+    update_related_modified(Arc, wwh_arc, "post_clear", None)
+    wwh_arc.refresh_from_db()
+    assert wwh_arc.modified > old_modified
+
+
+def test_update_related_modified_post_clear_from_issue_is_noop(wwh_arc):
+    past = timezone.now() - timedelta(days=1)
+    Arc.objects.filter(pk=wwh_arc.pk).update(modified=past)
+    wwh_arc.refresh_from_db()
+    old_modified = wwh_arc.modified
+
+    # When clearing from the issue side, pk_set is None so we cannot identify
+    # which parents were affected; the update is intentionally skipped.
+    update_related_modified(Arc, MagicMock(spec=Issue), "post_clear", None)
     wwh_arc.refresh_from_db()
     assert wwh_arc.modified == old_modified
 
