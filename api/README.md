@@ -1666,7 +1666,9 @@ Detail endpoints (retrieving a single resource by ID) support HTTP conditional r
 
 ### Supported Endpoints
 
-Conditional requests are supported on the following detail endpoints:
+Conditional requests are supported on the following endpoints:
+
+**Detail endpoints:**
 
 - `GET /api/arc/{id}/`
 - `GET /api/character/{id}/`
@@ -1680,7 +1682,14 @@ Conditional requests are supported on the following detail endpoints:
 - `GET /api/reading_list/{id}/`
 - `GET /api/collection/{id}/`
 
-**Note:** List endpoints (`GET /api/{resource}/`) do not support conditional requests.
+**Issue list endpoints:**
+
+- `GET /api/arc/{id}/issue_list/`
+- `GET /api/character/{id}/issue_list/`
+- `GET /api/series/{id}/issue_list/`
+- `GET /api/team/{id}/issue_list/`
+
+**Note:** General list endpoints (`GET /api/{resource}/`) do not support conditional requests.
 
 ### Example
 
