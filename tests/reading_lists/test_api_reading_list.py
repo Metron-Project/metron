@@ -279,3 +279,43 @@ def test_items_response_structure(api_client_with_credentials, reading_list_with
         # Check nested issue structure
         assert "id" in item["issue"]
         assert "series" in item["issue"]
+
+
+# Conditional Request Tests
+def test_reading_list_detail_returns_last_modified_header(
+    api_client_with_credentials, public_reading_list
+):
+    """Test that reading list detail response includes Last-Modified header."""
+    resp = api_client_with_credentials.get(
+        reverse("api:reading_list-detail", kwargs={"pk": public_reading_list.pk})
+    )
+    assert resp.status_code == status.HTTP_200_OK
+    assert "Last-Modified" in resp
+
+
+def test_reading_list_detail_conditional_request_returns_304(
+    api_client_with_credentials, public_reading_list
+):
+    """Test that reading list detail returns 304 when If-Modified-Since matches."""
+    resp = api_client_with_credentials.get(
+        reverse("api:reading_list-detail", kwargs={"pk": public_reading_list.pk})
+    )
+    assert resp.status_code == status.HTTP_200_OK
+    last_modified = resp["Last-Modified"]
+
+    resp = api_client_with_credentials.get(
+        reverse("api:reading_list-detail", kwargs={"pk": public_reading_list.pk}),
+        HTTP_IF_MODIFIED_SINCE=last_modified,
+    )
+    assert resp.status_code == status.HTTP_304_NOT_MODIFIED
+
+
+def test_reading_list_detail_conditional_request_returns_200_for_older_date(
+    api_client_with_credentials, public_reading_list
+):
+    """Test that reading list detail returns 200 when If-Modified-Since is older."""
+    resp = api_client_with_credentials.get(
+        reverse("api:reading_list-detail", kwargs={"pk": public_reading_list.pk}),
+        HTTP_IF_MODIFIED_SINCE="Sat, 01 Jan 2000 00:00:00 GMT",
+    )
+    assert resp.status_code == status.HTTP_200_OK
