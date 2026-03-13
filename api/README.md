@@ -1689,9 +1689,13 @@ Conditional requests are supported on the following endpoints:
 - `GET /api/series/{id}/issue_list/`
 - `GET /api/team/{id}/issue_list/`
 
+**Reading list items endpoint:**
+
+- `GET /api/reading_list/{id}/items/`
+
 **Note:** General list endpoints (`GET /api/{resource}/`) do not support conditional requests.
 
-**Tip:** Since a parent object's `modified` timestamp is updated whenever its issues change (added, edited, or removed), you can use conditional requests on the parent detail endpoint (e.g. `GET /api/arc/{id}/`) to detect whether the issue list has changed, without needing to call the `issue_list/` endpoint at all.
+**Tip:** Since a parent object's `modified` timestamp is updated whenever its issues change (added, edited, or removed), you can use conditional requests on the parent detail endpoint (e.g. `GET /api/arc/{id}/`) to detect whether the issue list has changed, without needing to call the `issue_list/` endpoint at all. The same applies to reading lists: the `GET /api/reading_list/{id}/` detail endpoint is updated whenever an item is added to or removed from the list, so you can use it to detect changes without calling the `items/` endpoint.
 
 ### Example
 
