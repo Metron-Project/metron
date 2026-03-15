@@ -87,6 +87,7 @@ MIDDLEWARE = [
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
     "simple_history.middleware.HistoryRequestMiddleware",
     "django_htmx.middleware.HtmxMiddleware",
+    "api.middleware.RateLimitHeadersMiddleware",
 ]
 
 ROOT_URLCONF = "metron.urls"
