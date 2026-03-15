@@ -1,8 +1,12 @@
+import time
+
 import pytest
+from django.core.cache import cache
 from django.urls import reverse
 from pytest_django.asserts import assertTemplateUsed
 
 from users.forms import CustomUserChangeForm
+from users.views import SUSTAINED_DURATION, SUSTAINED_LIMIT, get_rate_limit_usage
 
 HTML_REDIRECT_CODE = 301
 HTML_OK_CODE = 200
@@ -120,3 +124,67 @@ def test_form_invalid(db):
         }
     )
     assert form.is_valid() is False
+
+
+# --- get_rate_limit_usage tests ---
+
+
+def test_rate_limit_usage_no_history(create_user):
+    user = create_user()
+    cache.delete(f"throttle_sustained_{user.pk}")
+    result = get_rate_limit_usage(user)
+    assert result["used"] == 0
+    assert result["remaining"] == SUSTAINED_LIMIT
+    assert result["limit"] == SUSTAINED_LIMIT
+    assert result["percent_used"] == 0.0
+
+
+def test_rate_limit_usage_with_history(create_user):
+    user = create_user()
+    now = time.time()
+    # Simulate 10 recent requests
+    cache.set(f"throttle_sustained_{user.pk}", [now - i for i in range(10)])
+    result = get_rate_limit_usage(user)
+    assert result["used"] == 10
+    assert result["remaining"] == SUSTAINED_LIMIT - 10
+    cache.delete(f"throttle_sustained_{user.pk}")
+
+
+def test_rate_limit_usage_filters_old_timestamps(create_user):
+    user = create_user()
+    now = time.time()
+    recent = [now - 100, now - 200]
+    old = [now - SUSTAINED_DURATION - 1, now - SUSTAINED_DURATION - 3600]
+    cache.set(f"throttle_sustained_{user.pk}", recent + old)
+    result = get_rate_limit_usage(user)
+    assert result["used"] == 2
+    cache.delete(f"throttle_sustained_{user.pk}")
+
+
+def test_rate_limit_percent_used(create_user):
+    user = create_user()
+    now = time.time()
+    used = 500
+    cache.set(f"throttle_sustained_{user.pk}", [now - i for i in range(used)])
+    result = get_rate_limit_usage(user)
+    assert result["percent_used"] == round(used / SUSTAINED_LIMIT * 100, 1)
+    cache.delete(f"throttle_sustained_{user.pk}")
+
+
+# --- Profile view rate_limit context tests ---
+
+
+def test_profile_view_includes_rate_limit_for_own_profile(auto_login_user):
+    client, user = auto_login_user()
+    resp = client.get(reverse("user-detail", kwargs={"username": user.username}))
+    assert resp.status_code == HTML_OK_CODE
+    assert "rate_limit" in resp.context
+    assert resp.context["rate_limit"]["limit"] == SUSTAINED_LIMIT
+
+
+def test_profile_view_excludes_rate_limit_for_other_profile(auto_login_user, create_user):
+    client, _ = auto_login_user()
+    other = create_user()
+    resp = client.get(reverse("user-detail", kwargs={"username": other.username}))
+    assert resp.status_code == HTML_OK_CODE
+    assert "rate_limit" not in resp.context

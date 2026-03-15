@@ -340,6 +340,24 @@
                                 <span class="tag is-warning is-light">Not Confirmed</span>
                             {% endif %}
                         </p>
+                        {% if rate_limit %}
+                            <div class="mt-4">
+                                <p class="mb-1">
+                                    <span class="icon" aria-hidden="true">
+                                        <i class="fas fa-tachometer-alt"></i>
+                                    </span>
+                                    <strong>Daily API Usage:</strong>
+                                    {{ rate_limit.used }} / {{ rate_limit.limit }}
+                                    <span class="has-text-grey is-size-7">({{ rate_limit.remaining }} remaining)</span>
+                                </p>
+                                <progress class="progress {% if rate_limit.percent_used >= 90 %}is-danger{% elif rate_limit.percent_used >= 70 %}is-warning{% else %}is-info{% endif %} is-small"
+                                          value="{{ rate_limit.used }}"
+                                          max="{{ rate_limit.limit }}"
+                                          title="{{ rate_limit.percent_used }}% used">
+                                    {{ rate_limit.percent_used }}%
+                                </progress>
+                            </div>
+                        {% endif %}
                         <div class="buttons mt-4">
                             <a class="button is-small is-fullwidth"
                                href="{% url 'change_profile' %}">
