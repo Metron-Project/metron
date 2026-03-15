@@ -1751,9 +1751,9 @@ The API implements rate limiting to ensure fair usage. Rate limit details:
 
 - Limits are applied per user/IP address
 - Rate limit information is included in response headers:
-    - `X-RateLimit-Limit` - Requests allowed per time period
-    - `X-RateLimit-Remaining` - Requests remaining
-    - `X-RateLimit-Reset` - Time when limit resets
+    - `X-RateLimit-Burst-Limit` / `X-RateLimit-Sustained-Limit` - Requests allowed per time period
+    - `X-RateLimit-Burst-Remaining` / `X-RateLimit-Sustained-Remaining` - Requests remaining
+    - `X-RateLimit-Burst-Reset` / `X-RateLimit-Sustained-Reset` - Unix timestamp when the limit resets
 
 If you exceed the rate limit, you'll receive a `429 Too Many Requests` response.
 
