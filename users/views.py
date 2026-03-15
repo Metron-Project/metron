@@ -1,4 +1,5 @@
 import logging
+import time
 
 from django.contrib import messages
 from django.contrib.auth import login, update_session_auth_hash
@@ -6,13 +7,14 @@ from django.contrib.auth.mixins import LoginRequiredMixin
 from django.contrib.auth.views import PasswordChangeView
 from django.contrib.messages.views import SuccessMessageMixin
 from django.contrib.sites.shortcuts import get_current_site
+from django.core.cache import cache
 from django.core.mail import EmailMultiAlternatives
 from django.shortcuts import get_object_or_404, redirect, render
 from django.template.loader import render_to_string
 from django.urls import reverse, reverse_lazy
 from django.utils.encoding import force_bytes, force_str
+from django.utils.html import format_html
 from django.utils.http import urlsafe_base64_decode, urlsafe_base64_encode
-from django.utils.safestring import mark_safe
 from django.views.generic import DetailView, ListView
 
 # Import models for counting
@@ -64,11 +66,11 @@ def activate(request, uidb64, token):
     send_pushover(f"{user} activated their account on Metron.")
     logger.info("%s activated their account on Metron", user)
     # Add a message asking the user to star the repository.
-    msg = (
+    msg = format_html(
         "If you are planning on adding new information to the database, please refer to the "
         "<a href='/wiki/editing-guidelines/'>Editing Guidelines</a>."
     )
-    messages.success(request, mark_safe(msg))
+    messages.success(request, msg)
 
     return redirect("home")
 
@@ -143,6 +145,21 @@ def user_profile_redirect(request, pk):
 
 
 PAGINATE_BY = 28
+SUSTAINED_LIMIT = 5000
+SUSTAINED_DURATION = 86400  # 1 day in seconds
+
+
+def get_rate_limit_usage(user):
+    cache_key = f"throttle_sustained_{user.pk}"
+    history = cache.get(cache_key, [])
+    now = time.time()
+    used = sum(1 for ts in history if ts > now - SUSTAINED_DURATION)
+    return {
+        "limit": SUSTAINED_LIMIT,
+        "used": used,
+        "remaining": max(0, SUSTAINED_LIMIT - used),
+        "percent_used": round(used / SUSTAINED_LIMIT * 100, 1),
+    }
 
 
 class UserList(LoginRequiredMixin, ListView):
@@ -177,6 +194,10 @@ class UserProfile(LoginRequiredMixin, DetailView):
             "arcs": Arc.objects.filter(created_by=user).count(),
             "universes": Universe.objects.filter(created_by=user).count(),
         }
+
+        # Add daily API rate limit usage (only visible to the user themselves)
+        if user.pk == self.request.user.pk:
+            context["rate_limit"] = get_rate_limit_usage(user)
 
         # Add recent reading history (last 10 items)
         context["recent_reads"] = (
