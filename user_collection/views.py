@@ -1,6 +1,6 @@
 from datetime import datetime, timedelta
 
-from chartkick.django import ColumnChart, PieChart
+from chartkick.django import BarChart, ColumnChart, PieChart
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
@@ -23,6 +23,7 @@ from django.views.generic import (
 )
 
 from comicsdb.filters.collection import CollectionViewFilter
+from comicsdb.models.credits import Credits
 from comicsdb.models.issue import Issue
 from comicsdb.models.publisher import Publisher
 from comicsdb.models.series import Series, SeriesType
@@ -287,6 +288,49 @@ class CollectionStatsView(LoginRequiredMixin, TemplateView):
             thousands=",",
         )
 
+        # Favorite Creators charts
+        user_issue_ids = queryset.values_list("issue_id", flat=True)
+
+        writer_roles = ["Writer", "Script", "Story", "Plot"]
+        top_writers_data = (
+            Credits.objects.filter(issue_id__in=user_issue_ids, role__name__in=writer_roles)
+            .values("creator__name")
+            .annotate(count=Count("issue", distinct=True))
+            .order_by("-count")[:10]
+        )
+        writers_dict = {item["creator__name"]: item["count"] for item in top_writers_data}
+        top_writers_chart = BarChart(
+            writers_dict,
+            title="Top Writers",
+            thousands=",",
+            library={"scales": {"x": {"ticks": {"precision": 0}}}},
+        )
+
+        artist_roles = [
+            "Artist",
+            "Penciller",
+            "Illustrator",
+            "Layouts",
+            "Breakdowns",
+            "Inker",
+            "Embellisher",
+            "Finishes",
+            "Ink Assists",
+        ]
+        top_artists_data = (
+            Credits.objects.filter(issue_id__in=user_issue_ids, role__name__in=artist_roles)
+            .values("creator__name")
+            .annotate(count=Count("issue", distinct=True))
+            .order_by("-count")[:10]
+        )
+        artists_dict = {item["creator__name"]: item["count"] for item in top_artists_data}
+        top_artists_chart = BarChart(
+            artists_dict,
+            title="Top Artists",
+            thousands=",",
+            library={"scales": {"x": {"ticks": {"precision": 0}}}},
+        )
+
         context.update(
             {
                 "total_items": total_items,
@@ -301,6 +345,8 @@ class CollectionStatsView(LoginRequiredMixin, TemplateView):
                 "format_chart": format_chart,
                 "reading_daily_chart": reading_daily_chart,
                 "reading_monthly_chart": reading_monthly_chart,
+                "top_writers_chart": top_writers_chart,
+                "top_artists_chart": top_artists_chart,
             }
         )
 
