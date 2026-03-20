@@ -22,17 +22,17 @@
              hx-on:click="this.parentElement.classList.remove('is-active'); document.documentElement.classList.remove('is-clipped');">
         </div>
         <div class="modal-content">
-            <figure class="image is-2by3">
-                {% if issue.image %}
-                    {% thumbnail issue.image "640x960" crop="center" format="WEBP" as im %}
+            {% if issue.image %}
+                {% thumbnail issue.image "640x960" format="WEBP" as im %}
+                    <figure class="image {% if im.width > im.height %}is-3by2{% else %}is-2by3{% endif %}">
                         <img src="{{ im.url }}"
                              width="{{ im.width }}"
                              height="{{ im.height }}"
                              alt="{{ issue }}"
                              loading="lazy">
-                    {% endthumbnail %}
-                {% endif %}
-            </figure>
+                    </figure>
+                {% endthumbnail %}
+            {% endif %}
         </div>
         <button class="modal-close is-large"
                 aria-label="close"
@@ -158,9 +158,9 @@
         <div class="column is-one-quarter">
             {# Main Cover #}
             <div class="box">
-                <figure class="image is-2by3">
-                    {% if issue.image %}
-                        {% thumbnail issue.image "320x480" crop="center" format="WEBP" as im %}
+                {% if issue.image %}
+                    {% thumbnail issue.image "320x480" format="WEBP" as im %}
+                        <figure class="image {% if im.width > im.height %}is-3by2{% else %}is-2by3{% endif %}">
                             <a aria-label="View larger cover image"
                                hx-on:click="var modal = document.getElementById('modal-bis'); modal.classList.add('is-active'); document.documentElement.classList.add('is-clipped'); modal.focus();">
                                 <img src="{{ im.url }}"
@@ -169,19 +169,19 @@
                                      alt="{{ issue }}"
                                      loading="lazy">
                             </a>
-                        {% endthumbnail %}
-                    {% else %}
-                        <img src="{% static 'site/img/image-not-found.webp' %}"
-                             alt="No image for {{ issue }}"
-                             loading="lazy">
-                    {% endif %}
-                </figure>
-                {% if issue.image %}
+                        </figure>
+                    {% endthumbnail %}
                     <p class="has-text-centered mt-3">
                         <strong class="is-size-6">Main Cover</strong>
                         <br>
                         <small class="has-text-grey">Click to enlarge</small>
                     </p>
+                {% else %}
+                    <figure class="image is-2by3">
+                        <img src="{% static 'site/img/image-not-found.webp' %}"
+                             alt="No image for {{ issue }}"
+                             loading="lazy">
+                    </figure>
                 {% endif %}
             </div>
             {# Variant Covers #}
@@ -189,21 +189,23 @@
                 {% if variants %}
                     {% for variant in variants %}
                         <div class="box">
-                            <figure class="image is-2by3">
-                                {% if variant.image %}
-                                    {% thumbnail variant.image "320x480" crop="center" format="WEBP" as im %}
+                            {% if variant.image %}
+                                {% thumbnail variant.image "320x480" format="WEBP" as im %}
+                                    <figure class="image {% if im.width > im.height %}is-3by2{% else %}is-2by3{% endif %}">
                                         <img src="{{ im.url }}"
                                              width="{{ im.width }}"
                                              height="{{ im.height }}"
                                              alt="{{ variant.name }}"
                                              loading="lazy">
-                                    {% endthumbnail %}
-                                {% else %}
+                                    </figure>
+                                {% endthumbnail %}
+                            {% else %}
+                                <figure class="image is-2by3">
                                     <img src="{% static 'site/img/image-not-found.webp' %}"
                                          alt="No image for {{ variant.name }}"
                                          loading="lazy">
-                                {% endif %}
-                            </figure>
+                                </figure>
+                            {% endif %}
                             <div class="has-text-centered mt-3">
                                 <p class="is-size-6">
                                     <strong>{{ variant.name }}</strong>
