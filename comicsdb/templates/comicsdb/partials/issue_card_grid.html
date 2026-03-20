@@ -21,24 +21,29 @@
                 </header>
                 {# Card Image #}
                 <div class="card-image">
-                    <figure class="image is-2by3">
-                        <a href="{% url 'issue:detail' issue.slug %}"
-                           aria-label="View details for {{ issue }}">
-                            {% if issue.image %}
-                                {% thumbnail issue.image "320x480" crop="center" format="WEBP" as im %}
+                    {% if issue.image %}
+                        {% thumbnail issue.image "320x480" format="WEBP" as im %}
+                            <figure class="image {% if im.width > im.height %}is-3by2{% else %}is-2by3{% endif %}">
+                                <a href="{% url 'issue:detail' issue.slug %}"
+                                   aria-label="View details for {{ issue }}">
                                     <img src="{{ im.url }}"
                                          width="{{ im.width }}"
                                          height="{{ im.height }}"
                                          alt="{{ issue }}"
                                          loading="lazy">
-                                {% endthumbnail %}
-                            {% else %}
+                                </a>
+                            </figure>
+                        {% endthumbnail %}
+                    {% else %}
+                        <figure class="image is-2by3">
+                            <a href="{% url 'issue:detail' issue.slug %}"
+                               aria-label="View details for {{ issue }}">
                                 <img src="{% static 'site/img/image-not-found.webp' %}"
                                      alt="No image available for {{ issue }}"
                                      loading="lazy">
-                            {% endif %}
-                        </a>
-                    </figure>
+                            </a>
+                        </figure>
+                    {% endif %}
                 </div>
                 {# Card Footer #}
                 <footer class="card-footer">
