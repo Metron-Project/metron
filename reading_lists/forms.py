@@ -13,9 +13,10 @@ class ReadingListForm(forms.ModelForm):
 
     class Meta:
         model = ReadingList
-        fields = ("name", "desc", "is_private", "attribution_source", "attribution_url")
+        fields = ("name", "desc", "image", "is_private", "attribution_source", "attribution_url")
         widgets = {
             "name": forms.TextInput(attrs={"placeholder": "Enter a name for your reading list"}),
+            "image": forms.ClearableFileInput(),
             "desc": forms.Textarea(
                 attrs={
                     "placeholder": "Describe the reading list (optional)",

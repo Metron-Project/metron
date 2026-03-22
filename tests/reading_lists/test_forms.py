@@ -68,7 +68,14 @@ class TestReadingListForm:
     def test_reading_list_form_fields(self):
         """Test that form has the correct fields."""
         form = ReadingListForm()
-        expected_fields = ["name", "desc", "is_private", "attribution_source", "attribution_url"]
+        expected_fields = [
+            "name",
+            "desc",
+            "image",
+            "is_private",
+            "attribution_source",
+            "attribution_url",
+        ]
         assert list(form.fields.keys()) == expected_fields
 
     def test_reading_list_form_widgets(self):
