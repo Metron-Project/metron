@@ -67,6 +67,32 @@ class TestReadingListListView:
         assert resp.status_code == HTTP_200_OK
         assert len(resp.context["reading_lists"]) == 30  # paginate_by = 30
 
+    def test_filter_by_publisher(
+        self, client, public_reading_list, reading_list_with_issues, reading_list_publisher
+    ):
+        """Test filtering reading lists by publisher name."""
+        url = reverse("reading-list:list")
+        resp = client.get(url, {"publisher": reading_list_publisher.name})
+        assert resp.status_code == HTTP_200_OK
+        assert reading_list_with_issues in resp.context["reading_lists"]
+        # List with no issues has no publisher association
+        assert public_reading_list not in resp.context["reading_lists"]
+
+    def test_filter_by_publisher_no_results(self, client, reading_list_with_issues):
+        """Test that filtering by a non-existent publisher returns no results."""
+        url = reverse("reading-list:list")
+        resp = client.get(url, {"publisher": "Nonexistent Publisher"})
+        assert resp.status_code == HTTP_200_OK
+        assert len(resp.context["reading_lists"]) == 0
+
+    def test_filter_by_publisher_no_duplicates(self, client, reading_list_with_issues):
+        """Test that filtering by publisher does not return duplicate reading lists."""
+        url = reverse("reading-list:list")
+        resp = client.get(url, {"publisher": "Test Publisher"})
+        assert resp.status_code == HTTP_200_OK
+        reading_lists = list(resp.context["reading_lists"])
+        assert len(reading_lists) == len({rl.pk for rl in reading_lists})
+
 
 class TestSearchReadingListListView:
     """Tests for the SearchReadingListListView."""

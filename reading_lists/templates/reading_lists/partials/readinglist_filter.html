@@ -82,6 +82,24 @@
                         </div>
                     </div>
                 </div>
+                {# Publisher Filter #}
+                <div class="column is-half">
+                    <div class="field">
+                        <label class="label" for="publisher">Publisher</label>
+                        <div class="control has-icons-left">
+                            <input class="input"
+                                   type="text"
+                                   id="publisher"
+                                   name="publisher"
+                                   value="{{ request.GET.publisher }}"
+                                   placeholder="e.g., Marvel"
+                                   aria-label="Filter by publisher">
+                            <span class="icon is-small is-left">
+                                <i class="fas fa-building"></i>
+                            </span>
+                        </div>
+                    </div>
+                </div>
                 {# Attribution Source Filter #}
                 <div class="column is-half">
                     <div class="field">
