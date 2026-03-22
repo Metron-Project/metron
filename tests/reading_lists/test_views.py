@@ -93,6 +93,30 @@ class TestReadingListListView:
         reading_lists = list(resp.context["reading_lists"])
         assert len(reading_lists) == len({rl.pk for rl in reading_lists})
 
+    def test_issue_count_not_inflated_by_ratings(
+        self, client, create_user, reading_list_with_issues
+    ):
+        """Regression test: issue_count must not be multiplied by the number of ratings.
+
+        When annotating with both Count("issues") and Count/Avg on "ratings", Django
+        performs a cross-join that inflates counts unless distinct=True is used.
+        A list with 3 issues and 2 ratings should report issue_count=3, not 6.
+        """
+        rater1 = create_user()
+        rater2 = create_user()
+        ReadingListRating.objects.create(
+            reading_list=reading_list_with_issues, user=rater1, rating=4
+        )
+        ReadingListRating.objects.create(
+            reading_list=reading_list_with_issues, user=rater2, rating=5
+        )
+
+        url = reverse("reading-list:list")
+        resp = client.get(url)
+        assert resp.status_code == HTTP_200_OK
+        rl = next(r for r in resp.context["reading_lists"] if r.pk == reading_list_with_issues.pk)
+        assert rl.issue_count == 3
+
 
 class TestSearchReadingListListView:
     """Tests for the SearchReadingListListView."""
@@ -154,6 +178,25 @@ class TestSearchReadingListListView:
         assert resp.status_code == HTTP_200_OK
         assert len(resp.context["reading_lists"]) == 0
 
+    def test_issue_count_not_inflated_by_ratings(
+        self, client, create_user, reading_list_with_issues
+    ):
+        """Regression test: issue_count must not be multiplied by the number of ratings."""
+        rater1 = create_user()
+        rater2 = create_user()
+        ReadingListRating.objects.create(
+            reading_list=reading_list_with_issues, user=rater1, rating=4
+        )
+        ReadingListRating.objects.create(
+            reading_list=reading_list_with_issues, user=rater2, rating=5
+        )
+
+        url = reverse("reading-list:search")
+        resp = client.get(url, {"q": "List With Issues"})
+        assert resp.status_code == HTTP_200_OK
+        rl = next(r for r in resp.context["reading_lists"] if r.pk == reading_list_with_issues.pk)
+        assert rl.issue_count == 3
+
     def test_search_reading_list_respects_privacy(
         self, client, reading_list_user, private_reading_list, test_password
     ):
@@ -210,6 +253,31 @@ class TestUserReadingListListView:
         resp = client.get(url)
         assert resp.status_code == HTTP_200_OK
         assert public_reading_list not in resp.context["reading_lists"]
+
+    def test_issue_count_not_inflated_by_ratings(
+        self,
+        client,
+        create_user,
+        reading_list_user,
+        reading_list_with_issues,
+        test_password,
+    ):
+        """Regression test: issue_count must not be multiplied by the number of ratings."""
+        rater1 = create_user()
+        rater2 = create_user()
+        ReadingListRating.objects.create(
+            reading_list=reading_list_with_issues, user=rater1, rating=4
+        )
+        ReadingListRating.objects.create(
+            reading_list=reading_list_with_issues, user=rater2, rating=5
+        )
+
+        client.login(username=reading_list_user.username, password=test_password)
+        url = reverse("reading-list:my-lists")
+        resp = client.get(url)
+        assert resp.status_code == HTTP_200_OK
+        rl = next(r for r in resp.context["reading_lists"] if r.pk == reading_list_with_issues.pk)
+        assert rl.issue_count == 3
 
 
 class TestReadingListDetailView:

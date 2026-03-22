@@ -58,7 +58,7 @@ class ReadingListListView(ListView):
 
     def get_queryset(self):
         queryset = ReadingList.objects.select_related("user").annotate(
-            issue_count=Count("issues"),
+            issue_count=Count("issues", distinct=True),
             average_rating=Avg("ratings__rating"),
             rating_count=Count("ratings", distinct=True),
         )
@@ -108,7 +108,7 @@ class SearchReadingListListView(SearchMixin, ReadingListListView):
     def get_queryset(self):
         """Get queryset without applying the filter (SearchMixin handles search)."""
         queryset = ReadingList.objects.select_related("user").annotate(
-            issue_count=Count("issues"),
+            issue_count=Count("issues", distinct=True),
             average_rating=Avg("ratings__rating"),
             rating_count=Count("ratings", distinct=True),
         )
@@ -154,7 +154,7 @@ class UserReadingListListView(LoginRequiredMixin, ListView):
         return (
             ReadingList.objects.filter(user=self.request.user)
             .annotate(
-                issue_count=Count("issues"),
+                issue_count=Count("issues", distinct=True),
                 average_rating=Avg("ratings__rating"),
                 rating_count=Count("ratings", distinct=True),
             )
