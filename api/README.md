@@ -1279,6 +1279,7 @@ This endpoint is read-only. Create, update, and delete operations are not availa
 
 - All list fields plus:
     - `desc` - Description
+    - `image` - Cover image URL (null if not set)
     - `attribution_source` - Full attribution source name (e.g., "Comic Book Reading Orders")
     - `attribution_url` - URL to source
     - `average_rating` - Average rating from all users (1.0 to 5.0, null if no ratings)

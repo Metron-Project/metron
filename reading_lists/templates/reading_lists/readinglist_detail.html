@@ -1,16 +1,39 @@
 {% extends parent_template|default:"base.html" %}
-{% load static %}
+{% load static thumbnail %}
 {% block title %}{{ reading_list.name }} - Metron{% endblock %}
 {% block content %}
-    <header class="block">
-        <h1 class="title">
-            {{ reading_list.name }}
-            {% if reading_list.is_private %}<span class="tag is-warning">Private</span>{% endif %}
-        </h1>
-        <p class="subtitle is-6">
-            Created by <strong>{{ reading_list.user.username }}</strong>
-        </p>
-    </header>
+    {% if reading_list.image %}
+        {% thumbnail reading_list.image "1200x500" crop="center" format="WEBP" as hero_img %}
+            <header class="block mb-5"
+                    style="position: relative; overflow: hidden; border-radius: 6px; min-height: 200px;">
+                <div style="position: absolute;
+                            inset: 0;
+                            background-image: url('{{ hero_img.url }}');
+                            background-size: cover;
+                            background-position: center;
+                            opacity: 0.8;"></div>
+                <div style="position: relative; padding: 3rem 2rem;">
+                    <h1 class="title">
+                        {{ reading_list.name }}
+                        {% if reading_list.is_private %}<span class="tag is-warning">Private</span>{% endif %}
+                    </h1>
+                    <p class="subtitle is-6">
+                        Created by <strong>{{ reading_list.user.username }}</strong>
+                    </p>
+                </div>
+            </header>
+        {% endthumbnail %}
+    {% else %}
+        <header class="block">
+            <h1 class="title">
+                {{ reading_list.name }}
+                {% if reading_list.is_private %}<span class="tag is-warning">Private</span>{% endif %}
+            </h1>
+            <p class="subtitle is-6">
+                Created by <strong>{{ reading_list.user.username }}</strong>
+            </p>
+        </header>
+    {% endif %}
     {% if is_owner %}
         <nav class="level mb-5">
             <div class="level-left"></div>

@@ -70,6 +70,7 @@ class ReadingListReadSerializer(serializers.ModelSerializer):
     items_url = serializers.SerializerMethodField()
     average_rating = serializers.FloatField(read_only=True)
     rating_count = serializers.IntegerField(read_only=True)
+    image = serializers.ImageField(read_only=True)
 
     def get_resource_url(self, obj: ReadingList) -> str:
         return self.context["request"].build_absolute_uri(obj.get_absolute_url())
@@ -88,6 +89,7 @@ class ReadingListReadSerializer(serializers.ModelSerializer):
             "name",
             "slug",
             "desc",
+            "image",
             "is_private",
             "attribution_source",
             "attribution_url",

@@ -1,6 +1,7 @@
 from django.db import models
 from django.db.models.signals import pre_save
 from django.urls import reverse
+from sorl.thumbnail import ImageField
 
 from comicsdb.models.common import CommonInfo, pre_save_slug
 from comicsdb.models.issue import Issue
@@ -47,6 +48,7 @@ class ReadingList(CommonInfo):
         blank=True,
         help_text="URL of the specific page where this reading list was obtained",
     )
+    image = ImageField(upload_to="reading_list/%Y/%m/%d/", blank=True)
     issues = models.ManyToManyField(
         Issue,
         through="ReadingListItem",
