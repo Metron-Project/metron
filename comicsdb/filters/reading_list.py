@@ -71,6 +71,13 @@ class ReadingListViewFilter(df.FilterSet):
     # Privacy filter
     is_private = df.BooleanFilter(label="Private")
 
+    # Publisher filter
+    publisher = df.CharFilter(
+        label="Publisher",
+        field_name="reading_list_items__issue__series__publisher__name",
+        lookup_expr="icontains",
+    )
+
     # Rating filter
     average_rating__gte = df.NumberFilter(
         field_name="average_rating",
@@ -84,6 +91,7 @@ class ReadingListViewFilter(df.FilterSet):
             "q",
             "name",
             "username",
+            "publisher",
             "attribution_source",
             "is_private",
             "average_rating__gte",
