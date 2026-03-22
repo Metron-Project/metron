@@ -257,6 +257,7 @@ def test_detail_response_structure(api_client_with_credentials, reading_list_wit
     assert "id" in resp.data
     assert "name" in resp.data
     assert "desc" in resp.data
+    assert "image" in resp.data
     assert "user" in resp.data
     assert "is_private" in resp.data
     assert "attribution_source" in resp.data
