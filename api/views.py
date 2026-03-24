@@ -496,7 +496,11 @@ class SeriesViewSet(
         serializer_class = self.get_serializer_class()
         kwargs["context"] = self.get_serializer_context()
 
-        if "data" in kwargs and not kwargs["data"].get("imprint"):
+        if (
+            self.action != "partial_update"
+            and "data" in kwargs
+            and not kwargs["data"].get("imprint")
+        ):
             data = kwargs["data"].copy()
             data["imprint"] = None
             kwargs["data"] = data
