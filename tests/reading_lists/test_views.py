@@ -93,6 +93,27 @@ class TestReadingListListView:
         reading_lists = list(resp.context["reading_lists"])
         assert len(reading_lists) == len({rl.pk for rl in reading_lists})
 
+    def test_filter_by_list_type(self, client, reading_list_user, public_reading_list):
+        """Test filtering reading lists by list_type."""
+        story_list = ReadingList.objects.create(
+            user=reading_list_user,
+            name="Story List",
+            list_type=ReadingList.ListType.STORY,
+        )
+        url = reverse("reading-list:list")
+        resp = client.get(url, {"list_type": ReadingList.ListType.STORY})
+        assert resp.status_code == HTTP_200_OK
+        assert story_list in resp.context["reading_lists"]
+        assert public_reading_list not in resp.context["reading_lists"]
+
+    def test_list_type_choices_in_context(self, client, db):
+        """Test that list_type choices are passed to the template context."""
+        url = reverse("reading-list:list")
+        resp = client.get(url)
+        assert resp.status_code == HTTP_200_OK
+        assert "list_types" in resp.context
+        assert list(resp.context["list_types"]) == list(ReadingList.ListType.choices)
+
     def test_issue_count_not_inflated_by_ratings(
         self, client, create_user, reading_list_with_issues
     ):
@@ -373,6 +394,7 @@ class TestReadingListCreateView:
             "name": "New Reading List",
             "desc": "A new reading list",
             "is_private": False,
+            "list_type": ReadingList.ListType.EVENT,
         }
         resp = client.post(url, data)
         assert resp.status_code == HTTP_302_FOUND
@@ -424,6 +446,7 @@ class TestReadingListUpdateView:
             "name": "Updated Reading List",
             "desc": "An updated reading list",
             "is_private": True,
+            "list_type": ReadingList.ListType.EVENT,
         }
         resp = client.post(url, data)
         assert resp.status_code == HTTP_302_FOUND
@@ -703,6 +726,7 @@ class TestAttributionFieldRestrictions:
             "name": "New Reading List",
             "desc": "A new reading list",
             "is_private": False,
+            "list_type": ReadingList.ListType.EVENT,
             "attribution_source": ReadingList.AttributionSource.CBRO,
             "attribution_url": "https://example.com/source",
         }
@@ -724,6 +748,7 @@ class TestAttributionFieldRestrictions:
             "name": "Admin Reading List",
             "desc": "A reading list with attribution",
             "is_private": False,
+            "list_type": ReadingList.ListType.EVENT,
             "attribution_source": ReadingList.AttributionSource.CBRO,
             "attribution_url": "https://example.com/source",
         }
@@ -788,6 +813,7 @@ class TestAttributionFieldRestrictions:
             "name": "Updated List",
             "desc": "Updated description",
             "is_private": True,
+            "list_type": ReadingList.ListType.EVENT,
             "attribution_source": ReadingList.AttributionSource.CMRO,  # Attempt to change
             "attribution_url": "https://example.com/modified",  # Attempt to change
         }
@@ -813,6 +839,7 @@ class TestAttributionFieldRestrictions:
             "name": "Updated Metron List",
             "desc": "Updated description",
             "is_private": False,
+            "list_type": ReadingList.ListType.EVENT,
             "attribution_source": ReadingList.AttributionSource.CMRO,
             "attribution_url": "https://example.com/updated",
         }

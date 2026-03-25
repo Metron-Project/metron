@@ -35,6 +35,9 @@
                                 </header>
                                 <div class="card-content">
                                     <div class="content">
+                                        <p class="mb-2">
+                                            <span class="tag is-info is-light">{{ reading_list.get_list_type_display }}</span>
+                                        </p>
                                         {% if reading_list.desc %}
                                             <p>{{ reading_list.desc|truncatewords:20 }}</p>
                                         {% else %}

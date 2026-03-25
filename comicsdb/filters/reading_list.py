@@ -28,6 +28,7 @@ class ReadingListFilter(filters.FilterSet):
     user = filters.NumberFilter(field_name="user__id", lookup_expr="exact")
     username = filters.CharFilter(field_name="user__username", lookup_expr="icontains")
     attribution_source = filters.ChoiceFilter(choices=ReadingList.AttributionSource.choices)
+    list_type = filters.ChoiceFilter(choices=ReadingList.ListType.choices)
     is_private = filters.BooleanFilter()
     modified_gt = filters.DateTimeFilter(
         label="Greater than Modified DateTime", field_name="modified", lookup_expr="gt"
@@ -45,6 +46,7 @@ class ReadingListFilter(filters.FilterSet):
             "user",
             "username",
             "attribution_source",
+            "list_type",
             "is_private",
             "modified_gt",
             "average_rating__gte",
@@ -67,6 +69,9 @@ class ReadingListViewFilter(df.FilterSet):
     attribution_source = df.ChoiceFilter(
         label="Attribution Source", choices=ReadingList.AttributionSource.choices
     )
+
+    # List type filter
+    list_type = df.ChoiceFilter(label="List Type", choices=ReadingList.ListType.choices)
 
     # Privacy filter
     is_private = df.BooleanFilter(label="Private")
@@ -93,6 +98,7 @@ class ReadingListViewFilter(df.FilterSet):
             "username",
             "publisher",
             "attribution_source",
+            "list_type",
             "is_private",
             "average_rating__gte",
         ]

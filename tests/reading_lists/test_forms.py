@@ -18,6 +18,7 @@ class TestReadingListForm:
             "name": "Test Reading List",
             "desc": "A test reading list",
             "is_private": False,
+            "list_type": ReadingList.ListType.EVENT,
             "attribution_source": "",
             "attribution_url": "",
         }
@@ -30,6 +31,7 @@ class TestReadingListForm:
             "name": "Test Reading List",
             "desc": "A test reading list",
             "is_private": False,
+            "list_type": ReadingList.ListType.EVENT,
             "attribution_source": ReadingList.AttributionSource.CBRO,
             "attribution_url": "https://example.com/reading-order",
         }
@@ -51,6 +53,7 @@ class TestReadingListForm:
         form_data = {
             "name": "Test Reading List",
             "is_private": False,
+            "list_type": ReadingList.ListType.EVENT,
         }
         form = ReadingListForm(data=form_data)
         assert form.is_valid()
@@ -59,6 +62,7 @@ class TestReadingListForm:
         """Test that is_private defaults to False."""
         form_data = {
             "name": "Test Reading List",
+            "list_type": ReadingList.ListType.EVENT,
         }
         form = ReadingListForm(data=form_data)
         assert form.is_valid()
@@ -73,6 +77,7 @@ class TestReadingListForm:
             "desc",
             "image",
             "is_private",
+            "list_type",
             "attribution_source",
             "attribution_url",
         ]
@@ -99,8 +104,40 @@ class TestReadingListForm:
         form = ReadingListForm()
         assert form.fields["desc"].label == "Description"
         assert form.fields["is_private"].label == "Private List"
+        assert form.fields["list_type"].label == "List Type"
         assert form.fields["attribution_source"].label == "Source"
         assert form.fields["attribution_url"].label == "Source URL"
+
+    def test_reading_list_form_list_type_default(self):
+        """Test that list_type defaults to Event."""
+        form_data = {
+            "name": "Test Reading List",
+            "list_type": ReadingList.ListType.EVENT,
+        }
+        form = ReadingListForm(data=form_data)
+        assert form.is_valid()
+        assert form.cleaned_data["list_type"] == ReadingList.ListType.EVENT
+
+    def test_reading_list_form_valid_with_list_type(self):
+        """Test form accepts all valid list_type choices."""
+        for value, _label in ReadingList.ListType.choices:
+            form_data = {
+                "name": "Test Reading List",
+                "list_type": value,
+            }
+            form = ReadingListForm(data=form_data)
+            assert form.is_valid(), f"Form should be valid for list_type={value}"
+            assert form.cleaned_data["list_type"] == value
+
+    def test_reading_list_form_invalid_list_type(self):
+        """Test form rejects an invalid list_type value."""
+        form_data = {
+            "name": "Test Reading List",
+            "list_type": "INVALID",
+        }
+        form = ReadingListForm(data=form_data)
+        assert not form.is_valid()
+        assert "list_type" in form.errors
 
     def test_reading_list_form_help_texts(self):
         """Test that form has the correct help texts."""

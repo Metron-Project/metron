@@ -40,6 +40,25 @@ class TestReadingListModel:
         """Test that slug is automatically generated."""
         assert public_reading_list.slug == "public-reading-list"
 
+    def test_reading_list_list_type_default(self, public_reading_list):
+        """Test that list_type defaults to Event."""
+        assert public_reading_list.list_type == ReadingList.ListType.EVENT
+
+    def test_reading_list_list_type_display(self, public_reading_list):
+        """Test get_list_type_display returns the human-readable label."""
+        assert public_reading_list.get_list_type_display() == "Event"
+
+    def test_reading_list_list_type_choices(self, reading_list_user):
+        """Test that all ListType choices can be assigned and saved."""
+        for value, label in ReadingList.ListType.choices:
+            rl = ReadingList.objects.create(
+                user=reading_list_user,
+                name=f"List {value}",
+                list_type=value,
+            )
+            assert rl.list_type == value
+            assert rl.get_list_type_display() == label
+
     def test_reading_list_unique_user_name(self, reading_list_user):
         """Test that user + name combination must be unique."""
         ReadingList.objects.create(

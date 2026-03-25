@@ -159,6 +159,8 @@
                             {% endfor %}
                         </dd>
                     {% endif %}
+                    <dt class="has-text-weight-bold">Type:</dt>
+                    <dd class="mb-3">{{ reading_list.get_list_type_display }}</dd>
                     <dt class="has-text-weight-bold">Visibility:</dt>
                     <dd class="mb-3">
                         {% if reading_list.is_private %}

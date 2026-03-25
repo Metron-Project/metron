@@ -39,6 +39,7 @@ class TestAdminMetronPermissions:
             "name": "Updated by Admin",
             "desc": "Updated description",
             "is_private": False,
+            "list_type": ReadingList.ListType.EVENT,
         }
         resp = client.post(url, data)
         assert resp.status_code == HTTP_302_FOUND
