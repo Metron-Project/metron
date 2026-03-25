@@ -15,6 +15,8 @@ The Reading Lists feature allows you to create, manage, and share curated comic 
 ### Core Functionality
 
 - **Create Reading Lists**: Build your own custom reading orders
+- **List Type**: Classify your list as Event, Story, Characters, Teams, or Master
+- **Cover Image**: Upload a cover image that displays as a hero banner on the list detail page
 - **Issue Type Categorization**: Tag issues as Prologue, Core Issue, Tie-In, or Epilogue
 - **Public/Private Lists**: Share your lists with the community or keep them private
 - **Community Ratings**: Rate public reading lists with a 1-5 star system
@@ -51,8 +53,10 @@ Reading lists automatically display:
 2. Navigate to `/reading-lists/create/`
 3. Enter a name for your list (required)
 4. Add a description (optional but recommended)
-5. Choose whether to make it public or private
-6. Click "Create"
+5. Choose a list type (Event, Story, Characters, Teams, or Master)
+6. Upload a cover image (optional)
+7. Choose whether to make it public or private
+8. Click "Create"
 
 ## Usage Examples
 
@@ -61,10 +65,17 @@ Reading lists automatically display:
 1. Navigate to `/reading-lists/create/`
 2. Enter a name (required)
 3. Add a description (optional)
-4. Choose public or private:
+4. Choose a list type:
+    - **Event**: A crossover or company-wide event (default)
+    - **Story**: A self-contained story arc or run
+    - **Characters**: Issues focused on a particular character
+    - **Teams**: Issues focused on a team
+    - **Master**: A comprehensive reading order spanning multiple events or storylines
+5. Upload a cover image (optional) — displayed as a hero banner on the detail page
+6. Choose public or private:
     - **Public**: Anyone can view your list
     - **Private**: Only you can see it
-5. Click "Create"
+7. Click "Create"
 
 ### Adding Issues to Your List
 
@@ -129,7 +140,7 @@ Perfect for adding all issues from a story arc at once!
 
 1. Navigate to your reading list detail page
 2. Click "Edit" (or "Update")
-3. Modify the name, description, or privacy setting
+3. Modify the name, description, list type, cover image, or privacy setting
 4. Click "Update" to save changes
 
 ### Removing Issues
@@ -215,6 +226,8 @@ The search functionality allows you to find lists by:
 
 - **List name** (case-insensitive)
 - **Username** of the list owner
+- **Publisher** (e.g., "Marvel", "DC")
+- **List type** (Event, Story, Characters, Teams, or Master)
 - **Attribution source** (e.g., "Comic Book Reading Orders")
 - **Minimum rating** (filter by average rating)
 
@@ -223,6 +236,14 @@ The search functionality allows you to find lists by:
 - Lists with "marvel" in the name
 - Lists created by user "marvelFan"
 - Lists from "Complete Marvel Reading Orders" (CMRO)
+
+**Publisher Filter:**
+
+Filter lists to show only those containing issues from a specific publisher.
+
+**List Type Filter:**
+
+Filter lists by their type to quickly find Events, Stories, character-focused lists, team-focused lists, or comprehensive Master reading orders.
 
 **Rating Filter:**
 
@@ -337,10 +358,12 @@ Some reading lists are owned by a special "Metron" user account:
 
 1. **Use descriptive names**: "Secret Wars (2015)" is better than "My List"
 2. **Add descriptions**: Explain what the reading order covers
-3. **Categorize with issue types**: Tag issues to help readers understand the story structure
-4. **Credit your sources**: If you got the order from a website, note it in the description
-5. **Consider privacy**: Make lists public to share with the community
-6. **Keep it organized**: Use drag-and-drop to ensure proper reading order
+3. **Choose the right list type**: Use Event for crossovers, Story for a single arc, Characters/Teams for focused runs, and Master for comprehensive orders spanning many events
+4. **Add a cover image**: A recognizable cover makes your list stand out in the browse view
+5. **Categorize with issue types**: Tag issues to help readers understand the story structure
+6. **Credit your sources**: If you got the order from a website, note it in the description
+7. **Consider privacy**: Make lists public to share with the community
+8. **Keep it organized**: Use drag-and-drop to ensure proper reading order
 
 ### Managing Large Lists
 
