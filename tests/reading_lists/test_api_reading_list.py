@@ -230,6 +230,40 @@ def test_filter_by_username(
     assert resp.data["results"][0]["name"] == "Public Reading List"
 
 
+def test_filter_by_list_type(api_client_with_credentials, reading_list_user, public_reading_list):
+    """Test filtering reading lists by list_type."""
+    story_list = ReadingList.objects.create(
+        user=reading_list_user,
+        name="Story Reading List",
+        list_type=ReadingList.ListType.STORY,
+    )
+    resp = api_client_with_credentials.get(
+        reverse("api:reading_list-list"), {"list_type": ReadingList.ListType.STORY}
+    )
+    assert resp.status_code == status.HTTP_200_OK
+    assert resp.data["count"] == 1
+    assert resp.data["results"][0]["name"] == story_list.name
+
+
+def test_list_type_display_value_in_list_response(api_client_with_credentials, public_reading_list):
+    """Test that list_type returns the human-readable display value."""
+    resp = api_client_with_credentials.get(reverse("api:reading_list-list"))
+    assert resp.status_code == status.HTTP_200_OK
+    result = next(r for r in resp.data["results"] if r["name"] == public_reading_list.name)
+    assert result["list_type"] == "Event"
+
+
+def test_list_type_display_value_in_detail_response(
+    api_client_with_credentials, public_reading_list
+):
+    """Test that list_type returns the human-readable display value in detail view."""
+    resp = api_client_with_credentials.get(
+        reverse("api:reading_list-detail", kwargs={"pk": public_reading_list.pk})
+    )
+    assert resp.status_code == status.HTTP_200_OK
+    assert resp.data["list_type"] == "Event"
+
+
 # Response Structure Tests
 def test_list_response_structure(api_client_with_credentials, public_reading_list):
     """Test that list response has the expected structure."""
@@ -245,6 +279,7 @@ def test_list_response_structure(api_client_with_credentials, public_reading_lis
         assert "id" in item
         assert "name" in item
         assert "user" in item
+        assert "list_type" in item
 
 
 def test_detail_response_structure(api_client_with_credentials, reading_list_with_issues):
@@ -259,6 +294,7 @@ def test_detail_response_structure(api_client_with_credentials, reading_list_wit
     assert "desc" in resp.data
     assert "image" in resp.data
     assert "user" in resp.data
+    assert "list_type" in resp.data
     assert "is_private" in resp.data
     assert "attribution_source" in resp.data
     assert "attribution_url" in resp.data

@@ -16,6 +16,15 @@ class ReadingList(CommonInfo):
     edit permissions for that list.
     """
 
+    class ListType(models.TextChoices):
+        """Reading list type choices."""
+
+        EVENT = "EVENT", "Event"
+        STORY = "STORY", "Story"
+        CHARACTERS = "CHARACTERS", "Characters"
+        TEAMS = "TEAMS", "Teams"
+        MASTER = "MASTER", "Master"
+
     class AttributionSource(models.TextChoices):
         """Source attribution choices."""
 
@@ -37,6 +46,12 @@ class ReadingList(CommonInfo):
     is_private = models.BooleanField(
         default=False,
         help_text="Whether this list is private (only visible to the owner)",
+    )
+    list_type = models.CharField(
+        max_length=10,
+        choices=ListType.choices,
+        default=ListType.EVENT,
+        help_text="The type of reading list",
     )
     attribution_source = models.CharField(
         max_length=10,

@@ -1242,9 +1242,18 @@ This endpoint is read-only. Create, update, and delete operations are not availa
 - `user` - User ID (exact match)
 - `username` - Username (case-insensitive, partial match)
 - `attribution_source` - Attribution source code (exact match)
+- `list_type` - List type code (exact match)
 - `is_private` - Boolean, filter by privacy status
 - `average_rating__gte` - Minimum average rating (1.0 to 5.0)
 - `modified_gt` - Modified after datetime
+
+**List Type Codes:**
+
+- `EVENT` - Event
+- `STORY` - Story
+- `CHARACTERS` - Characters
+- `TEAMS` - Teams
+- `MASTER` - Master
 
 **Attribution Source Codes:**
 
@@ -1267,6 +1276,7 @@ This endpoint is read-only. Create, update, and delete operations are not availa
     "id": 5,
     "username": "johndoe"
   },
+  "list_type": "Event",
   "is_private": false,
   "attribution_source": "CBRO",
   "average_rating": 4.5,
@@ -1280,6 +1290,7 @@ This endpoint is read-only. Create, update, and delete operations are not availa
 - All list fields plus:
     - `desc` - Description
     - `image` - Cover image URL (null if not set)
+    - `list_type` - Human-readable list type (e.g., "Event", "Story")
     - `attribution_source` - Full attribution source name (e.g., "Comic Book Reading Orders")
     - `attribution_url` - URL to source
     - `average_rating` - Average rating from all users (1.0 to 5.0, null if no ratings)
@@ -1370,6 +1381,9 @@ GET /api/reading_list/?username=johndoe
 # Find lists from Comic Book Reading Orders
 GET /api/reading_list/?attribution_source=CBRO
 
+# Find event reading lists
+GET /api/reading_list/?list_type=EVENT
+
 # Find highly-rated reading lists (4+ stars)
 GET /api/reading_list/?average_rating__gte=4
 
@@ -1396,7 +1410,7 @@ GET /api/reading_list/?name=secret&is_private=false&average_rating__gte=3
 
 **Notes:**
 
-- When filtering, use attribution source codes (e.g., `CBRO`). In detail responses, the full name is returned (e.g., "Comic Book Reading Orders")
+- When filtering, use attribution source codes (e.g., `CBRO`) and list type codes (e.g., `EVENT`). In detail responses, the human-readable values are returned (e.g., "Comic Book Reading Orders", "Event")
 - Items endpoint excludes `image` and `cover_hash` from issue data for performance
 - Some lists belong to a special "Metron" user account representing curated/official reading orders
 - Admin users have special access to Metron user's lists

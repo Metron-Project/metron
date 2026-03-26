@@ -43,6 +43,7 @@ class ReadingListItemSerializer(serializers.ModelSerializer):
 
 class ReadingListListSerializer(serializers.ModelSerializer):
     user = UserSerializer(read_only=True)
+    list_type = serializers.CharField(source="get_list_type_display", read_only=True)
     average_rating = serializers.FloatField(read_only=True)
     rating_count = serializers.IntegerField(read_only=True)
 
@@ -53,6 +54,7 @@ class ReadingListListSerializer(serializers.ModelSerializer):
             "name",
             "slug",
             "user",
+            "list_type",
             "is_private",
             "attribution_source",
             "average_rating",
@@ -63,6 +65,7 @@ class ReadingListListSerializer(serializers.ModelSerializer):
 
 class ReadingListReadSerializer(serializers.ModelSerializer):
     user = UserSerializer(read_only=True)
+    list_type = serializers.CharField(source="get_list_type_display", read_only=True)
     attribution_source = serializers.CharField(
         source="get_attribution_source_display", read_only=True
     )
@@ -90,6 +93,7 @@ class ReadingListReadSerializer(serializers.ModelSerializer):
             "slug",
             "desc",
             "image",
+            "list_type",
             "is_private",
             "attribution_source",
             "attribution_url",

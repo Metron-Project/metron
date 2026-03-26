@@ -13,7 +13,15 @@ class ReadingListForm(forms.ModelForm):
 
     class Meta:
         model = ReadingList
-        fields = ("name", "desc", "image", "is_private", "attribution_source", "attribution_url")
+        fields = (
+            "name",
+            "desc",
+            "image",
+            "is_private",
+            "list_type",
+            "attribution_source",
+            "attribution_url",
+        )
         widgets = {
             "name": forms.TextInput(attrs={"placeholder": "Enter a name for your reading list"}),
             "image": forms.ClearableFileInput(),
@@ -23,6 +31,7 @@ class ReadingListForm(forms.ModelForm):
                     "rows": 5,
                 }
             ),
+            "list_type": forms.Select(),
             "attribution_source": forms.Select(),
             "attribution_url": forms.URLInput(
                 attrs={
@@ -34,6 +43,7 @@ class ReadingListForm(forms.ModelForm):
         labels = {
             "desc": "Description",
             "is_private": "Private List",
+            "list_type": "List Type",
             "attribution_source": "Source",
             "attribution_url": "Source URL",
         }

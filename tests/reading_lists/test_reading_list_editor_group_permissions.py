@@ -42,6 +42,7 @@ class TestReadingListEditorGroupPermissions:
             "name": "Updated by Editor",
             "desc": "Updated description",
             "is_private": False,
+            "list_type": ReadingList.ListType.EVENT,
         }
         resp = client.post(url, data)
         assert resp.status_code == HTTP_302_FOUND
@@ -268,6 +269,7 @@ class TestReadingListEditorGroupPermissions:
             "name": "Updated by Editor",
             "desc": "Updated description",
             "is_private": False,
+            "list_type": ReadingList.ListType.EVENT,
             "attribution_source": ReadingList.AttributionSource.CMRO,  # Will be ignored
             "attribution_url": "https://example.com/modified",  # Will be ignored
         }

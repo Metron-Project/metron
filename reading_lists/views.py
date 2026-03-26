@@ -93,6 +93,7 @@ class ReadingListListView(ListView):
         context = super().get_context_data(**kwargs)
         # Add filter options for the template
         context["attribution_sources"] = ReadingList.AttributionSource.choices
+        context["list_types"] = ReadingList.ListType.choices
         # Check if any filters are active (excluding page parameter)
         context["has_active_filters"] = any(key != "page" for key in self.request.GET)
         return context
