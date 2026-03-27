@@ -1,5 +1,22 @@
+from autocomplete import widgets as ac_widgets
 from django import forms
 from djmoney.forms.widgets import MoneyWidget
+
+
+class SafeAutocompleteWidget(ac_widgets.AutocompleteWidget):
+    """AutocompleteWidget subclass that handles empty-string values gracefully.
+
+    The upstream widget crashes when ``value`` is ``''`` because it passes
+    ``['']`` to ``get_items_from_keys``, which in turn calls
+    ``queryset.filter(id__in=[''])`` and raises a ValueError.  This subclass
+    normalises empty strings (and empty lists) to ``None`` before delegating to
+    the parent so the widget simply renders with no pre-selected item.
+    """
+
+    def get_context(self, name, value, attrs):
+        if value in ("", []):
+            value = None
+        return super().get_context(name, value, attrs)
 
 
 class BulmaMoneyWidget(MoneyWidget):

@@ -1,4 +1,3 @@
-from autocomplete import widgets
 from django.forms import (
     ClearableFileInput,
     DateInput,
@@ -16,25 +15,25 @@ from comicsdb.autocomplete import (
 )
 from comicsdb.forms.team import TeamsWidget
 from comicsdb.forms.universe import UniversesWidget
-from comicsdb.forms.widgets import BulmaMoneyWidget
+from comicsdb.forms.widgets import BulmaMoneyWidget, SafeAutocompleteWidget
 from comicsdb.models import Issue, Rating, Series
 
 MINIMUM_YEAR = 1900
 
 
-ArcsWidget = widgets.AutocompleteWidget(
+ArcsWidget = SafeAutocompleteWidget(
     ac_class=ArcAutocomplete,
     attrs={"class": "input"},
     options={"multiselect": True},
 )
 
-CharactersWidget = widgets.AutocompleteWidget(
+CharactersWidget = SafeAutocompleteWidget(
     ac_class=CharacterAutocomplete,
     attrs={"class": "input"},
     options={"multiselect": True},
 )
 
-IssuesWidget = widgets.AutocompleteWidget(
+IssuesWidget = SafeAutocompleteWidget(
     ac_class=IssueAutocomplete,
     attrs={"class": "input"},
     options={"multiselect": True},
@@ -44,7 +43,7 @@ IssuesWidget = widgets.AutocompleteWidget(
 class IssueForm(ModelForm):
     series = ModelChoiceField(
         queryset=Series.objects.all(),
-        widget=widgets.AutocompleteWidget(
+        widget=SafeAutocompleteWidget(
             ac_class=SeriesAutocomplete,
             attrs={
                 "placeholder": "Autocomplete...",

@@ -1,10 +1,10 @@
-from autocomplete import widgets
 from django.forms import ClearableFileInput, ModelForm
 
 from comicsdb.autocomplete import UniverseAutocomplete
+from comicsdb.forms.widgets import SafeAutocompleteWidget
 from comicsdb.models import Universe
 
-UniversesWidget = widgets.AutocompleteWidget(
+UniversesWidget = SafeAutocompleteWidget(
     ac_class=UniverseAutocomplete,
     attrs={"class": "input"},
     options={"multiselect": True},

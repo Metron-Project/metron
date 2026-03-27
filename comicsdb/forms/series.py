@@ -1,7 +1,7 @@
-from autocomplete import widgets
 from django.forms import ModelChoiceField, ModelForm, ValidationError
 
 from comicsdb.autocomplete import ImprintAutocomplete, PublisherAutocomplete, SeriesAutocomplete
+from comicsdb.forms.widgets import SafeAutocompleteWidget
 from comicsdb.models import Imprint, Publisher, Series
 
 # Series_Type objects id's
@@ -10,12 +10,12 @@ OMNI = 15
 TPB = 10
 
 
-SeriesWidget = widgets.AutocompleteWidget(
+SeriesWidget = SafeAutocompleteWidget(
     ac_class=SeriesAutocomplete,
     attrs={"class": "input"},
 )
 
-MultiSeriesWidget = widgets.AutocompleteWidget(
+MultiSeriesWidget = SafeAutocompleteWidget(
     ac_class=SeriesAutocomplete,
     attrs={"class": "input"},
     options={"multiselect": True},
@@ -26,12 +26,12 @@ class SeriesForm(ModelForm):
     publisher = ModelChoiceField(
         queryset=Publisher.objects.all(),
         label="Publisher",
-        widget=widgets.AutocompleteWidget(ac_class=PublisherAutocomplete),
+        widget=SafeAutocompleteWidget(ac_class=PublisherAutocomplete),
     )
     imprint = ModelChoiceField(
         queryset=Imprint.objects.all(),
         label="Imprint",
-        widget=widgets.AutocompleteWidget(ac_class=ImprintAutocomplete),
+        widget=SafeAutocompleteWidget(ac_class=ImprintAutocomplete),
         required=False,
     )
 

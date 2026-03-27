@@ -1,10 +1,10 @@
-from autocomplete import widgets
 from django.forms import ClearableFileInput, ModelForm, ValidationError
 
 from comicsdb.autocomplete import PublisherAutocomplete
+from comicsdb.forms.widgets import SafeAutocompleteWidget
 from comicsdb.models import Publisher
 
-PublisherWidget = widgets.AutocompleteWidget(
+PublisherWidget = SafeAutocompleteWidget(
     ac_class=PublisherAutocomplete,
     attrs={"class": "input"},
 )
