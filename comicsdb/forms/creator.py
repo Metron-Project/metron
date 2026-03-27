@@ -1,10 +1,10 @@
-from autocomplete import widgets
 from django.forms import ClearableFileInput, DateInput, ModelForm
 
 from comicsdb.autocomplete import CreatorAutocomplete
+from comicsdb.forms.widgets import SafeAutocompleteWidget
 from comicsdb.models import Creator
 
-CreatorsWidget = widgets.AutocompleteWidget(
+CreatorsWidget = SafeAutocompleteWidget(
     ac_class=CreatorAutocomplete,
     attrs={"class": "input"},
     options={"multiselect": True},
