@@ -76,11 +76,11 @@ class ReadingListViewFilter(df.FilterSet):
     # Privacy filter
     is_private = df.BooleanFilter(label="Private")
 
-    # Publisher filter
+    # Publisher filter — uses a subquery to avoid combining the deep JOIN chain
+    # with the COUNT/AVG aggregations, which causes extreme slowness.
     publisher = df.CharFilter(
         label="Publisher",
-        field_name="reading_list_items__issue__series__publisher__name",
-        lookup_expr="icontains",
+        method="filter_by_publisher",
     )
 
     # Rating filter
@@ -89,6 +89,16 @@ class ReadingListViewFilter(df.FilterSet):
         lookup_expr="gte",
         label="Minimum Rating",
     )
+
+    def filter_by_publisher(self, queryset, name, value):
+        matching_ids = (
+            ReadingList.objects.filter(
+                reading_list_items__issue__series__publisher__name__icontains=value
+            )
+            .values("id")
+            .distinct()
+        )
+        return queryset.filter(id__in=matching_ids)
 
     class Meta:
         model = ReadingList
