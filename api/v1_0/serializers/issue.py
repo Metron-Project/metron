@@ -112,7 +112,7 @@ class IssueSeriesSerializer(serializers.ModelSerializer):
 class IssueListSeriesSerializer(serializers.ModelSerializer):
     class Meta:
         model = Series
-        fields = ("name", "volume", "year_began")
+        fields = ("id", "name", "volume", "year_began")
 
 
 class IssueListSerializer(serializers.ModelSerializer):
