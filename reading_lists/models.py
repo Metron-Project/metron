@@ -73,7 +73,7 @@ class ReadingList(CommonInfo):
 
     class Meta:
         ordering = ["name", "attribution_source", "user"]
-        unique_together = ["user", "name"]
+        unique_together = ["user", "name", "attribution_source"]
 
     def __str__(self) -> str:
         result = f"{self.user.username}: {self.name}"
