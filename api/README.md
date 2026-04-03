@@ -1241,6 +1241,7 @@ This endpoint is read-only. Create, update, and delete operations are not availa
 - `name` - Reading list name (case-insensitive, partial match)
 - `user` - User ID (exact match)
 - `username` - Username (case-insensitive, partial match)
+- `publisher` - Publisher name (case-insensitive, partial match)
 - `attribution_source` - Attribution source code (exact match)
 - `list_type` - List type code (exact match)
 - `is_private` - Boolean, filter by privacy status
@@ -1380,6 +1381,9 @@ GET /api/reading_list/?username=johndoe
 
 # Find lists from Comic Book Reading Orders
 GET /api/reading_list/?attribution_source=CBRO
+
+# Find reading lists by publisher
+GET /api/reading_list/?publisher=marvel
 
 # Find event reading lists
 GET /api/reading_list/?list_type=EVENT
