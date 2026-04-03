@@ -8,6 +8,17 @@ from django_filters import rest_framework as filters
 from reading_lists.models import ReadingList
 
 
+def filter_reading_lists_by_publisher(queryset, value):
+    matching_ids = (
+        ReadingList.objects.filter(
+            reading_list_items__issue__series__publisher__name__icontains=value
+        )
+        .values("id")
+        .distinct()
+    )
+    return queryset.filter(id__in=matching_ids)
+
+
 class QuickSearchFilter(df.CharFilter):
     """Quick search by reading list name."""
 
@@ -38,6 +49,13 @@ class ReadingListFilter(filters.FilterSet):
         lookup_expr="gte",
         label="Minimum Rating",
     )
+    publisher = filters.CharFilter(
+        label="Publisher",
+        method="filter_by_publisher",
+    )
+
+    def filter_by_publisher(self, queryset, name, value):
+        return filter_reading_lists_by_publisher(queryset, value)
 
     class Meta:
         model = ReadingList
@@ -45,6 +63,7 @@ class ReadingListFilter(filters.FilterSet):
             "name",
             "user",
             "username",
+            "publisher",
             "attribution_source",
             "list_type",
             "is_private",
@@ -91,14 +110,7 @@ class ReadingListViewFilter(df.FilterSet):
     )
 
     def filter_by_publisher(self, queryset, name, value):
-        matching_ids = (
-            ReadingList.objects.filter(
-                reading_list_items__issue__series__publisher__name__icontains=value
-            )
-            .values("id")
-            .distinct()
-        )
-        return queryset.filter(id__in=matching_ids)
+        return filter_reading_lists_by_publisher(queryset, value)
 
     class Meta:
         model = ReadingList
