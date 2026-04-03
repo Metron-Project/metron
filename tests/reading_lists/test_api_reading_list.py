@@ -230,6 +230,29 @@ def test_filter_by_username(
     assert resp.data["results"][0]["name"] == "Public Reading List"
 
 
+def test_filter_by_publisher(
+    api_client_with_credentials, reading_list_with_issues, public_reading_list
+):
+    """Test filtering reading lists by publisher name."""
+    resp = api_client_with_credentials.get(
+        reverse("api:reading_list-list"), {"publisher": "Test Publisher"}
+    )
+    assert resp.status_code == status.HTTP_200_OK
+    assert resp.data["count"] == 1
+    assert resp.data["results"][0]["name"] == "List With Issues"
+
+
+def test_filter_by_publisher_no_match(
+    api_client_with_credentials, reading_list_with_issues, public_reading_list
+):
+    """Test filtering by publisher with no matching results."""
+    resp = api_client_with_credentials.get(
+        reverse("api:reading_list-list"), {"publisher": "Nonexistent Publisher"}
+    )
+    assert resp.status_code == status.HTTP_200_OK
+    assert resp.data["count"] == 0
+
+
 def test_filter_by_list_type(api_client_with_credentials, reading_list_user, public_reading_list):
     """Test filtering reading lists by list_type."""
     story_list = ReadingList.objects.create(
