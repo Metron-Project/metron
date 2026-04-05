@@ -10,10 +10,14 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     zlib1g-dev \
     && rm -rf /var/lib/apt/lists/*
 
-# Install Python dependencies from lockfile
+# Install Python production dependencies from lockfile.
+# PIPENV_VENV_IN_PROJECT and PIPENV_IGNORE_VIRTUALENVS prevent pipenv from
+# creating a virtualenv inside the container. --deploy fails the build if
+# Pipfile.lock is out of sync with Pipfile.
 COPY Pipfile Pipfile.lock ./
 RUN pip install --no-cache-dir pipenv && \
-    pipenv sync --system && \
+    PIPENV_VENV_IN_PROJECT=0 PIPENV_IGNORE_VIRTUALENVS=1 \
+    pipenv sync --system --deploy && \
     pip uninstall -y pipenv
 
 # Copy application code
