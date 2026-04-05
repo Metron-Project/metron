@@ -1,0 +1,24 @@
+[Unit]
+Description=Metron Nginx Reverse Proxy
+After=metron-web.service
+Requires=metron-web.service
+
+[Container]
+Image=docker.io/library/nginx:alpine
+ContainerName=metron-nginx
+Network=metron.network
+# firewalld forwards external 80→8080 and 443→8443 on the host.
+# These mappings land traffic in the container on the standard ports.
+PublishPort=8080:80
+PublishPort=8443:443
+# nginx.conf: update this path to where the repo is cloned on the droplet
+Volume=%h/metron/nginx/nginx.conf:/etc/nginx/conf.d/default.conf:ro,Z
+# Let's Encrypt certs: see deployment notes in .quadlet/README.md
+Volume=%h/.local/share/metron/letsencrypt:/etc/letsencrypt:ro,Z
+Volume=%h/.local/share/metron/certbot-webroot:/var/www/certbot:ro,Z
+
+[Service]
+Restart=always
+
+[Install]
+WantedBy=default.target

@@ -1,0 +1,16 @@
+[Unit]
+Description=Metron Redis Cache
+After=network-online.target
+
+[Container]
+Image=docker.io/library/redis:7-alpine
+ContainerName=metron-redis
+Network=metron.network
+Volume=metron-redis.volume:/data
+Exec=redis-server --appendonly yes
+
+[Service]
+Restart=always
+
+[Install]
+WantedBy=default.target
