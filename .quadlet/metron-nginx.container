@@ -7,8 +7,10 @@ Requires=metron-web.service
 Image=docker.io/library/nginx:alpine
 ContainerName=metron-nginx
 Network=metron.network
-PublishPort=80:80
-PublishPort=443:443
+# firewalld forwards external 80→8080 and 443→8443 on the host.
+# These mappings land traffic in the container on the standard ports.
+PublishPort=8080:80
+PublishPort=8443:443
 # nginx.conf: update this path to where the repo is cloned on the droplet
 Volume=%h/metron/nginx/nginx.conf:/etc/nginx/conf.d/default.conf:ro,Z
 # Let's Encrypt certs: see deployment notes in .quadlet/README.md

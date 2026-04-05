@@ -6,9 +6,11 @@ with Quadlet (systemd-managed containers).
 ## Architecture
 
 ```
-nginx (443/80) → metron-web (gunicorn :8000)
-                      ↓
-              metron-postgres  metron-redis
+internet (80/443) → firewalld → nginx (host 8080/8443 → container 80/443)
+                                      ↓
+                              metron-web (gunicorn :8000)
+                                      ↓
+                          metron-postgres  metron-redis
 ```
 
 All containers share the `metron` bridge network. Static and media files are
@@ -110,14 +112,17 @@ sudo dnf install -y certbot
 
 ### Get the initial certificate
 
-Use the standalone method (nginx is not yet running, so port 80 is free):
+Use the standalone method (nginx is not yet running). Because firewalld
+forwards external port 80 to 8080, certbot must bind on 8080 so the ACME
+challenge traffic reaches it:
 
 ```bash
 mkdir -p ~/.local/share/metron/{letsencrypt,certbot-webroot}
 
 sudo certbot certonly --standalone \
+  --http-01-port 8080 \
   -d metron.cloud -d www.metron.cloud \
-  --config-dir ~/.local/share/metron/letsencrypt \
+  --config-dir /home/metron/.local/share/metron/letsencrypt \
   --work-dir /tmp/certbot \
   --logs-dir /tmp/certbot-logs
 
