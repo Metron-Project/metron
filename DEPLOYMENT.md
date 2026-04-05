@@ -39,7 +39,37 @@ sudo firewall-cmd --reload
 
 ---
 
-## 2. Create the deploy user
+## 2. Create admin users and add SSH keys
+
+For each server admin, create a user account, grant sudo access, and install
+their SSH public key:
+
+```bash
+# Create the admin account
+sudo useradd -m -G wheel <admin-username>
+
+# Add their SSH public key
+sudo mkdir -p /home/<admin-username>/.ssh
+sudo chmod 700 /home/<admin-username>/.ssh
+echo "<paste-public-key>" | sudo tee /home/<admin-username>/.ssh/authorized_keys
+sudo chmod 600 /home/<admin-username>/.ssh/authorized_keys
+sudo chown -R <admin-username>:<admin-username> /home/<admin-username>/.ssh
+```
+
+On CentOS, members of the `wheel` group have full sudo access by default.
+
+Repeat for each admin, then verify SSH key login works for each account before
+disabling password authentication:
+
+```bash
+# Once all admins can log in with their keys, disable password auth
+sudo sed -i 's/^#*PasswordAuthentication.*/PasswordAuthentication no/' /etc/ssh/sshd_config
+sudo systemctl restart sshd
+```
+
+---
+
+## 3. Create the deploy user
 
 Create a dedicated `metron` service account and enable systemd linger so its
 user services survive logout:
@@ -59,7 +89,7 @@ sudo usermod -aG metron <admin-username>
 
 ---
 
-## 3. Clone the repo
+## 4. Clone the repo
 
 ```bash
 sudo -u metron -s
@@ -69,7 +99,7 @@ git clone https://github.com/Metron-Project/metron.git metron
 
 ---
 
-## 4. Configure the environment file
+## 5. Configure the environment file
 
 ```bash
 mkdir -p ~/.config/containers
@@ -80,7 +110,7 @@ nano ~/.config/containers/metron.env   # fill in all values
 
 ---
 
-## 5. Install Quadlet unit files
+## 6. Install Quadlet unit files
 
 Quadlet reads `.container`, `.network`, and `.volume` files from
 `~/.config/containers/systemd/` and generates systemd user units automatically.
@@ -99,7 +129,7 @@ systemctl --user list-unit-files 'metron-*'
 
 ---
 
-## 6. Obtain TLS certificates
+## 7. Obtain TLS certificates
 
 ### Install certbot
 
@@ -110,11 +140,33 @@ sudo dnf install -y epel-release
 sudo dnf install -y certbot
 ```
 
-### Get the initial certificate
+### Migrating from an existing droplet — copy existing certificates
 
-Use the standalone method (nginx is not yet running). Because firewalld
-forwards external port 80 to 8080, certbot must bind on 8080 so the ACME
-challenge traffic reaches it:
+While DNS still points at the old droplet, issuing a new certificate will fail
+because Let's Encrypt cannot reach this droplet to complete the ACME challenge.
+Copy the existing valid certificates from the old droplet instead:
+
+```bash
+mkdir -p ~/.local/share/metron/{letsencrypt,certbot-webroot}
+
+# On the OLD droplet — archive the letsencrypt directory
+sudo tar -czf /tmp/letsencrypt.tar.gz -C /etc letsencrypt
+
+# Transfer to the new droplet
+scp /tmp/letsencrypt.tar.gz metron@<new-droplet-ip>:/tmp/
+
+# On the NEW droplet — extract into the user cert directory
+tar -xzf /tmp/letsencrypt.tar.gz -C ~/.local/share/metron/letsencrypt \
+  --strip-components=1
+rm /tmp/letsencrypt.tar.gz
+```
+
+### Fresh deployment — issue a new certificate
+
+For a **fresh deployment** with DNS already pointing at this droplet, use the
+standalone method (nginx is not yet running). Because firewalld forwards
+external port 80 to 8080, certbot must bind on 8080 so the ACME challenge
+traffic reaches it:
 
 ```bash
 mkdir -p ~/.local/share/metron/{letsencrypt,certbot-webroot}
@@ -177,7 +229,7 @@ systemctl --user list-timers certbot-renew.timer
 
 ---
 
-## 7. Build the app image
+## 8. Build the app image
 
 ```bash
 cd ~/metron
@@ -186,7 +238,7 @@ podman build -t localhost/metron:latest .
 
 ---
 
-## 8. Migrate data from the existing droplet
+## 9. Migrate data from the existing droplet
 
 Follow these steps when rebuilding from an existing droplet to preserve all database data.
 
@@ -250,7 +302,7 @@ podman exec -it metron-postgres psql -U metron -d metron \
 
 ---
 
-## 9. Start services
+## 10. Start services
 
 Start Redis and the app, then nginx:
 
@@ -281,6 +333,129 @@ systemctl --user enable metron-postgres metron-redis metron-web metron-nginx
 
 ---
 
+## Pre-cutover testing
+
+You can test the new droplet fully before switching any traffic. Public DNS
+keeps pointing at the old droplet throughout; only your local machine sees the
+new one.
+
+### Copy the existing TLS certificates from the old droplet
+
+Rather than issuing new certs before the DNS cutover (which requires Let's
+Encrypt to reach the new droplet via public DNS), copy the existing valid certs
+from the old droplet:
+
+```bash
+# Run on the old droplet — archive the letsencrypt directory
+sudo tar -czf /tmp/letsencrypt.tar.gz -C /etc letsencrypt
+
+# Transfer to the new droplet
+scp /tmp/letsencrypt-backup.tar.gz metron@<new-droplet-ip>:/tmp/
+
+# Run on the new droplet — extract into the user cert directory
+tar -xzf /tmp/letsencrypt.tar.gz -C ~/.local/share/metron/letsencrypt \
+  --strip-components=1
+rm /tmp/letsencrypt.tar.gz
+```
+
+### Override DNS on your local machine
+
+Add a temporary entry to your local `/etc/hosts` so your browser resolves the
+domain to the new droplet while everyone else still hits the old one:
+
+```bash
+# On your local machine
+echo '<new-droplet-ip>  metron.cloud www.metron.cloud' | sudo tee -a /etc/hosts
+```
+
+Browse to `https://metron.cloud` and verify the site works end-to-end — login,
+API, image loading from Spaces, etc. The TLS cert is valid because the domain
+still matches.
+
+When testing is complete, remove the hosts override:
+
+```bash
+# Remove the line added above
+sudo sed -i '/<new-droplet-ip>/d' /etc/hosts
+```
+
+Then proceed with the cutover steps below.
+
+---
+
+## Cutover: switching traffic from the old droplet to the new one
+
+The recommended approach is a **DigitalOcean Reserved IP**. Reassigning a
+reserved IP between droplets takes effect in seconds with no DNS propagation
+delay.
+
+### Option A — Reserved IP (recommended, ~zero downtime)
+
+**Before the maintenance window** (do this days in advance):
+
+1. In the DigitalOcean control panel, go to **Networking → Reserved IPs**.
+2. If the old droplet does not already have a reserved IP assigned, create one
+   and assign it. This gives you a stable IP that is separate from the
+   droplet's own IP.
+3. Update your DNS A records to point `metron.cloud` and `www.metron.cloud` at
+   the reserved IP (if they don't already).
+4. Lower the TTL on those records to 60 seconds so any remaining DNS cache
+   clears quickly on cutover day.
+5. Complete all setup steps on the new droplet up through section 10, but do
+   **not** yet do the final data restore — that happens in the maintenance
+   window.
+
+**During the maintenance window:**
+
+```bash
+# 1. On the OLD droplet — stop the web service to prevent new writes
+sudo systemctl stop gunicorn   # adjust unit name as needed
+
+# 2. On the OLD droplet — take a final database dump
+sudo -u postgres pg_dump -Fc metron -f /tmp/metron-final.dump
+
+# 3. Transfer the dump to the new droplet
+scp /tmp/metron-final.dump metron@<new-droplet-ip>:/tmp/metron.dump
+
+# 4. On the NEW droplet — restore (postgres must already be running)
+podman exec -i metron-postgres pg_restore \
+  --username {db_username} \
+  --dbname {db_name} \
+  --no-owner \
+  --role {db_username} \
+  --verbose \
+  < /tmp/metron.dump
+rm /tmp/metron.dump
+
+# 5. On the NEW droplet — start remaining services
+systemctl --user start metron-redis metron-web metron-nginx
+```
+
+Then in the DigitalOcean control panel, reassign the reserved IP from the old
+droplet to the new droplet. Traffic switches immediately.
+
+**Verify** the site is working on the new droplet, then restore the DNS TTL
+to a normal value (e.g. 3600) and power off or destroy the old droplet once
+satisfied.
+
+---
+
+### Option B — DNS cutover (no reserved IP)
+
+Use this if a reserved IP is not available.
+
+**Days before cutover**, lower the TTL on your DNS A records to 60 seconds so
+the cache clears quickly when you update them.
+
+Follow the same maintenance window steps as Option A (stop old service, final
+dump, restore on new droplet), then update the DNS A records to point at the
+new droplet's IP. Allow up to a few minutes for the low TTL to propagate.
+
+Once the site is confirmed working, restore the TTL to a normal value (e.g.
+3600) and decommission the old droplet.
+
+---
+
 ## Updating the application
 
 ```bash
@@ -292,6 +467,97 @@ systemctl --user restart metron-web
 podman exec metron-web python manage.py migrate
 # Re-run collectstatic only if static assets changed:
 # podman exec metron-web python manage.py collectstatic --no-input
+```
+
+---
+
+## Database backups
+
+### Manual backup
+
+```bash
+# Create a timestamped dump in custom format
+podman exec metron-postgres pg_dump \
+  -U {db_username} \
+  -Fc {db_name} \
+  -f /tmp/metron-$(date +%Y%m%d-%H%M%S).dump
+
+# Copy the dump out of the container to the host
+podman cp metron-postgres:/tmp/metron-*.dump ~/backups/
+```
+
+### Automated backups with a systemd timer
+
+Create the service unit at `~/.config/systemd/user/metron-backup.service`:
+
+```ini
+[Unit]
+Description=Metron PostgreSQL backup
+
+[Service]
+Type=oneshot
+ExecStart=podman exec metron-postgres pg_dump \
+  -U {db_username} -Fc {db_name} \
+  -f /tmp/metron-backup.dump
+ExecStartPost=podman cp metron-postgres:/tmp/metron-backup.dump \
+  %h/backups/metron-%(%Y%m%d-%H%M%S)T.dump
+```
+
+Create the timer unit at `~/.config/systemd/user/metron-backup.timer`:
+
+```ini
+[Unit]
+Description=Daily Metron database backup
+
+[Timer]
+OnCalendar=*-*-* 02:00:00
+RandomizedDelaySec=30m
+Persistent=true
+
+[Install]
+WantedBy=timers.target
+```
+
+Enable and start the timer:
+
+```bash
+mkdir -p ~/backups
+systemctl --user daemon-reload
+systemctl --user enable --now metron-backup.timer
+
+# Verify it is scheduled
+systemctl --user list-timers metron-backup.timer
+```
+
+### Restoring from a backup
+
+```bash
+# Copy the dump into the container
+podman cp ~/backups/<dump-file> metron-postgres:/tmp/metron.dump
+
+# Stop the web service to prevent writes during restore
+systemctl --user stop metron-web
+
+# Restore
+podman exec metron-postgres pg_restore \
+  --username {db_username} \
+  --dbname {db_name} \
+  --no-owner \
+  --role {db_username} \
+  --verbose \
+  /tmp/metron.dump
+
+# Clean up and restart
+podman exec metron-postgres rm /tmp/metron.dump
+systemctl --user start metron-web
+```
+
+### Pruning old backups
+
+To keep only the last 30 days of backups, add this to the service unit:
+
+```ini
+ExecStartPost=find %h/backups -name 'metron-*.dump' -mtime +30 -delete
 ```
 
 ---
