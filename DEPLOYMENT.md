@@ -339,11 +339,9 @@ systemctl --user start metron-nginx
 > already in place — `migrate` is a no-op and static files live on
 > DigitalOcean Spaces, so `collectstatic` is not needed either.
 
-Enable all services to start automatically on boot:
-
-```bash
-systemctl --user enable metron-postgres metron-redis metron-web metron-nginx
-```
+The container services start automatically on boot without needing
+`systemctl enable` — the `WantedBy=default.target` line in each `.container`
+file instructs the Quadlet generator to wire this up at startup.
 
 ---
 
