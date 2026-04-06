@@ -19,34 +19,21 @@ file storage responsibility beyond database and cache data volumes.
 
 ---
 
-## 1. Provision the droplet
+## 1. Create admin users and add SSH keys
 
-Install Podman, then use firewalld (enabled by default on CentOS) to forward
-the standard HTTP/HTTPS ports to unprivileged ports that the rootless nginx
-container binds instead. This is more targeted than lowering the kernel's
-unprivileged port start system-wide.
-
-```bash
-sudo dnf install -y podman
-
-# Forward external ports 80/443 to the ports the rootless nginx container
-# binds (8080/8443). Masquerade is required for local port forwarding.
-sudo firewall-cmd --permanent --add-forward-port=port=80:proto=tcp:toport=8080
-sudo firewall-cmd --permanent --add-forward-port=port=443:proto=tcp:toport=8443
-sudo firewall-cmd --permanent --add-masquerade
-sudo firewall-cmd --reload
-```
-
----
-
-## 2. Create admin users and add SSH keys
-
-For each server admin, create a user account, grant sudo access, and install
-their SSH public key:
+These steps are performed as root (or the default admin user provided by
+DigitalOcean) before any other setup. For each server admin, create a user
+account, grant sudo access, set a temporary password, and install their SSH
+public key:
 
 ```bash
 # Create the admin account
 sudo useradd -m -G wheel <admin-username>
+
+# Set a temporary password — share it with the admin out-of-band and force
+# them to change it on first login
+sudo passwd <admin-username>
+sudo chage -d 0 <admin-username>
 
 # Add their SSH public key
 sudo mkdir -p /home/<admin-username>/.ssh
@@ -65,6 +52,26 @@ disabling password authentication:
 # Once all admins can log in with their keys, disable password auth
 sudo sed -i 's/^#*PasswordAuthentication.*/PasswordAuthentication no/' /etc/ssh/sshd_config
 sudo systemctl restart sshd
+```
+
+---
+
+## 2. Provision the droplet
+
+Install Podman, then use firewalld (enabled by default on CentOS) to forward
+the standard HTTP/HTTPS ports to unprivileged ports that the rootless nginx
+container binds instead. This is more targeted than lowering the kernel's
+unprivileged port start system-wide.
+
+```bash
+sudo dnf install -y podman
+
+# Forward external ports 80/443 to the ports the rootless nginx container
+# binds (8080/8443). Masquerade is required for local port forwarding.
+sudo firewall-cmd --permanent --add-forward-port=port=80:proto=tcp:toport=8080
+sudo firewall-cmd --permanent --add-forward-port=port=443:proto=tcp:toport=8443
+sudo firewall-cmd --permanent --add-masquerade
+sudo firewall-cmd --reload
 ```
 
 ---
