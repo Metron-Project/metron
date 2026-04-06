@@ -7,6 +7,7 @@ Requires=metron-postgres.service metron-redis.service
 Image=localhost/metron:latest
 ContainerName=metron-web
 Network=metron.network
+PublishPort=127.0.0.1:8000:8000
 EnvironmentFile=%h/.config/containers/metron.env
 LogDriver=journald
 
