@@ -1,0 +1,17 @@
+[Unit]
+Description=Metron Django Web Application
+After=metron-postgres.service metron-redis.service
+Requires=metron-postgres.service metron-redis.service
+
+[Container]
+Image=localhost/metron:latest
+ContainerName=metron-web
+Network=metron.network
+EnvironmentFile=%h/.config/containers/metron.env
+
+[Service]
+Restart=always
+TimeoutStartSec=60
+
+[Install]
+WantedBy=default.target

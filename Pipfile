@@ -19,7 +19,7 @@ chartkick = "*"
 imagehash = "*"
 isbnlib = "*"
 django-countries = "*"
-psycopg = {extras = ["pool"], version = "*"}
+psycopg = {extras = ["binary", "pool"], version = "*"}
 django-money = "*"
 django-simple-history = "*"
 wiki = "*"

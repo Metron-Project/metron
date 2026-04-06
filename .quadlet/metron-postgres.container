@@ -1,0 +1,22 @@
+[Unit]
+Description=Metron PostgreSQL Database
+After=network-online.target
+
+[Container]
+Image=docker.io/library/postgres:16
+ContainerName=metron-postgres
+Network=metron.network
+Volume=metron-postgres.volume:/var/lib/postgresql/data
+EnvironmentFile=%h/.config/containers/metron.env
+HealthCmd=pg_isready -U postgres
+HealthInterval=10s
+HealthRetries=5
+HealthStartPeriod=30s
+HealthTimeout=5s
+
+[Service]
+Restart=always
+TimeoutStartSec=300
+
+[Install]
+WantedBy=default.target
