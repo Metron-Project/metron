@@ -64,15 +64,15 @@ instead. This is more targeted than lowering the kernel's unprivileged port
 start system-wide.
 
 ```bash
-sudo dnf install -y podman firewalld git
-sudo systemctl enable --now firewalld
+dnf install -y podman firewalld git
+systemctl enable --now firewalld
 
 # Forward external ports 80/443 to the ports the rootless nginx container
 # binds (8080/8443). Masquerade is required for local port forwarding.
-sudo firewall-cmd --permanent --add-forward-port=port=80:proto=tcp:toport=8080
-sudo firewall-cmd --permanent --add-forward-port=port=443:proto=tcp:toport=8443
-sudo firewall-cmd --permanent --add-masquerade
-sudo firewall-cmd --reload
+firewall-cmd --permanent --add-forward-port=port=80:proto=tcp:toport=8080
+firewall-cmd --permanent --add-forward-port=port=443:proto=tcp:toport=8443
+firewall-cmd --permanent --add-masquerade
+firewall-cmd --reload
 ```
 
 ---
