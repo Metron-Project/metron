@@ -9,7 +9,7 @@ WORKDIR /app
 COPY Pipfile Pipfile.lock ./
 RUN pip install --no-cache-dir pipenv && \
     PIPENV_VENV_IN_PROJECT=0 PIPENV_IGNORE_VIRTUALENVS=1 \
-    pipenv sync --system --deploy && \
+    pipenv install --system --deploy && \
     pip uninstall -y pipenv
 
 # Copy application code
