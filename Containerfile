@@ -2,14 +2,6 @@ FROM python:3.12-slim
 
 WORKDIR /app
 
-# Install system dependencies for psycopg and Pillow
-RUN apt-get update && apt-get install -y --no-install-recommends \
-    libpq-dev \
-    gcc \
-    libjpeg-dev \
-    zlib1g-dev \
-    && rm -rf /var/lib/apt/lists/*
-
 # Install Python production dependencies from lockfile.
 # PIPENV_VENV_IN_PROJECT and PIPENV_IGNORE_VIRTUALENVS prevent pipenv from
 # creating a virtualenv inside the container. --deploy fails the build if
