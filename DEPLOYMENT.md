@@ -58,13 +58,14 @@ sudo systemctl restart sshd
 
 ## 2. Provision the droplet
 
-Install Podman, then use firewalld (enabled by default on CentOS) to forward
-the standard HTTP/HTTPS ports to unprivileged ports that the rootless nginx
-container binds instead. This is more targeted than lowering the kernel's
-unprivileged port start system-wide.
+Install Podman and firewalld, then use firewalld to forward the standard
+HTTP/HTTPS ports to unprivileged ports that the rootless nginx container binds
+instead. This is more targeted than lowering the kernel's unprivileged port
+start system-wide.
 
 ```bash
-sudo dnf install -y podman
+sudo dnf install -y podman firewalld git
+sudo systemctl enable --now firewalld
 
 # Forward external ports 80/443 to the ports the rootless nginx container
 # binds (8080/8443). Masquerade is required for local port forwarding.
@@ -90,8 +91,21 @@ To allow other server admins to manage this user's services:
 
 ```bash
 sudo usermod -aG metron <admin-username>
-# Admins can then run commands as the service user with:
-#   sudo -u metron -s
+```
+
+Admins can then switch to the service user with:
+
+```bash
+sudo -u metron -s
+export XDG_RUNTIME_DIR=/run/user/$(id -u)
+```
+
+The `XDG_RUNTIME_DIR` export is required every time you switch to the metron
+user via `sudo` — without it, `systemctl --user` commands will fail. You may
+want to add it to the metron user's `~/.bashrc` so it is set automatically:
+
+```bash
+echo 'export XDG_RUNTIME_DIR=/run/user/$(id -u)' | sudo -u metron tee -a /home/metron/.bashrc
 ```
 
 ---
@@ -100,6 +114,7 @@ sudo usermod -aG metron <admin-username>
 
 ```bash
 sudo -u metron -s
+export XDG_RUNTIME_DIR=/run/user/$(id -u)
 cd ~
 git clone https://github.com/Metron-Project/metron.git metron
 ```
@@ -112,7 +127,7 @@ git clone https://github.com/Metron-Project/metron.git metron
 mkdir -p ~/.config/containers
 cp ~/metron/metron.env.example ~/.config/containers/metron.env
 chmod 600 ~/.config/containers/metron.env
-nano ~/.config/containers/metron.env   # fill in all values
+vi ~/.config/containers/metron.env   # fill in all values
 ```
 
 ---
