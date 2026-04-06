@@ -28,19 +28,19 @@ public key:
 
 ```bash
 # Create the admin account
-sudo useradd -m -G wheel <admin-username>
+useradd -m -G wheel <admin-username>
 
 # Set a temporary password — share it with the admin out-of-band and force
 # them to change it on first login
-sudo passwd <admin-username>
-sudo chage -d 0 <admin-username>
+passwd <admin-username>
+chage -d 0 <admin-username>
 
 # Add their SSH public key
-sudo mkdir -p /home/<admin-username>/.ssh
-sudo chmod 700 /home/<admin-username>/.ssh
-echo "<paste-public-key>" | sudo tee /home/<admin-username>/.ssh/authorized_keys
-sudo chmod 600 /home/<admin-username>/.ssh/authorized_keys
-sudo chown -R <admin-username>:<admin-username> /home/<admin-username>/.ssh
+mkdir -p /home/<admin-username>/.ssh
+chmod 700 /home/<admin-username>/.ssh
+echo "<paste-public-key>" > /home/<admin-username>/.ssh/authorized_keys
+chmod 600 /home/<admin-username>/.ssh/authorized_keys
+chown -R <admin-username>:<admin-username> /home/<admin-username>/.ssh
 ```
 
 On CentOS, members of the `wheel` group have full sudo access by default.
@@ -50,8 +50,8 @@ disabling password authentication:
 
 ```bash
 # Once all admins can log in with their keys, disable password auth
-sudo sed -i 's/^#*PasswordAuthentication.*/PasswordAuthentication no/' /etc/ssh/sshd_config
-sudo systemctl restart sshd
+sed -i 's/^#*PasswordAuthentication.*/PasswordAuthentication no/' /etc/ssh/sshd_config
+systemctl restart sshd
 ```
 
 ---
