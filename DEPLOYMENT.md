@@ -471,6 +471,50 @@ podman exec metron-web python manage.py migrate
 
 ---
 
+## History cleanup
+
+`django-simple-history` accumulates duplicate history entries over time.
+Set up a systemd user timer to clean them up every 30 minutes.
+
+Create the service unit at `~/.config/systemd/user/metron-history-cleanup.service`:
+
+```ini
+[Unit]
+Description=Clean duplicate django-simple-history entries
+After=metron-web.service
+Requires=metron-web.service
+
+[Service]
+Type=oneshot
+ExecStart=podman exec metron-web python manage.py clean_duplicate_history -m 40 --auto
+```
+
+Create the timer unit at `~/.config/systemd/user/metron-history-cleanup.timer`:
+
+```ini
+[Unit]
+Description=Periodic django-simple-history duplicate cleanup
+
+[Timer]
+OnCalendar=*-*-* *:00,30:00
+Persistent=true
+
+[Install]
+WantedBy=timers.target
+```
+
+Enable and start the timer:
+
+```bash
+systemctl --user daemon-reload
+systemctl --user enable --now metron-history-cleanup.timer
+
+# Verify it is scheduled
+systemctl --user list-timers metron-history-cleanup.timer
+```
+
+---
+
 ## Database backups
 
 ### Manual backup
