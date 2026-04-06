@@ -87,25 +87,18 @@ sudo useradd -m metron
 sudo loginctl enable-linger metron
 ```
 
-To allow other server admins to manage this user's services:
+Admins can switch to the service user with:
 
 ```bash
-sudo usermod -aG metron <admin-username>
+sudo su - metron
 ```
 
-Admins can then switch to the service user with:
+Using `sudo su - metron` (rather than `sudo -u metron -s`) gives a full login
+shell which correctly sets `XDG_RUNTIME_DIR` — required for `systemctl --user`
+commands to work. Add it to the metron user's `~/.bashrc` as a safety net:
 
 ```bash
-sudo -u metron -s
-export XDG_RUNTIME_DIR=/run/user/$(id -u)
-```
-
-The `XDG_RUNTIME_DIR` export is required every time you switch to the metron
-user via `sudo` — without it, `systemctl --user` commands will fail. You may
-want to add it to the metron user's `~/.bashrc` so it is set automatically:
-
-```bash
-echo 'export XDG_RUNTIME_DIR=/run/user/$(id -u)' | sudo -u metron tee -a /home/metron/.bashrc
+echo 'export XDG_RUNTIME_DIR=/run/user/$(id -u)' >> /home/metron/.bashrc
 ```
 
 ---
@@ -113,8 +106,7 @@ echo 'export XDG_RUNTIME_DIR=/run/user/$(id -u)' | sudo -u metron tee -a /home/m
 ## 4. Clone the repo
 
 ```bash
-sudo -u metron -s
-export XDG_RUNTIME_DIR=/run/user/$(id -u)
+sudo su - metron
 cd ~
 git clone https://github.com/Metron-Project/metron.git metron
 ```
@@ -481,7 +473,7 @@ Once the site is confirmed working, restore the TTL to a normal value (e.g.
 ## Updating the application
 
 ```bash
-sudo -u metron -s
+sudo su - metron
 cd ~/metron
 git pull
 podman build -t localhost/metron:latest .
