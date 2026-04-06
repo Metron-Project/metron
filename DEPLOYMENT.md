@@ -214,7 +214,7 @@ ExecStart=certbot renew \
   --config-dir %h/.local/share/metron/letsencrypt \
   --work-dir /tmp/certbot \
   --logs-dir /tmp/certbot-logs
-ExecStartPost=systemctl --user reload metron-nginx
+ExecStartPost=podman exec metron-nginx nginx -s reload
 ```
 
 Create the timer unit at `~/.config/systemd/user/certbot-renew.timer`:
@@ -669,7 +669,7 @@ podman exec -it metron-web bash
 podman exec -it metron-postgres psql -U metron -d metron
 
 # Reload nginx config without downtime
-systemctl --user reload metron-nginx
+podman exec metron-nginx nginx -s reload
 
 # Restart all services
 systemctl --user restart metron-postgres metron-redis metron-web metron-nginx
