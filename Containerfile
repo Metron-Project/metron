@@ -23,6 +23,7 @@ CMD ["gunicorn", "metron.wsgi:application", \
     "--bind", "0.0.0.0:8000", \
     "--workers", "5", \
     "--timeout", "60", \
+    "--max-requests", "300", \
     "--forwarded-allow-ips", "*", \
     "--access-logfile", "-", \
     "--error-logfile", "-"]
