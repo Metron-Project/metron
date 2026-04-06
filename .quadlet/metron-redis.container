@@ -6,6 +6,7 @@ After=network-online.target
 Image=docker.io/library/redis:7-alpine
 ContainerName=metron-redis
 Network=metron.network
+LogDriver=journald
 Volume=metron-redis.volume:/data
 Exec=redis-server --appendonly yes
 

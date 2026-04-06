@@ -85,6 +85,7 @@ user services survive logout:
 ```bash
 sudo useradd -m metron
 sudo loginctl enable-linger metron
+sudo usermod -aG systemd-journal metron
 ```
 
 Admins can switch to the service user with:
@@ -618,6 +619,27 @@ ExecStartPost=find %h/backups -name 'metron-*.dump' -mtime +30 -delete
 
 ---
 
+## Enable persistent journals
+
+On CentOS, journal logs are not persisted across reboots by default. Run this
+once as an admin to enable persistent journaling:
+
+```bash
+sudo mkdir -p /var/log/journal
+sudo systemd-tmpfiles --create --prefix /var/log/journal
+sudo systemctl restart systemd-journald
+```
+
+New log entries will be written to persistent storage immediately. Entries from
+before this change will not be back-filled.
+
+Note: because the container services run under a linger session, their logs go
+to the **system** journal rather than a user-specific journal. Use
+`_SYSTEMD_USER_UNIT=` to filter them (see Useful commands below) rather than
+`journalctl --user`.
+
+---
+
 ## Useful commands
 
 ```bash
@@ -625,10 +647,20 @@ ExecStartPost=find %h/backups -name 'metron-*.dump' -mtime +30 -delete
 systemctl --user status metron-web
 
 # Follow logs for a service
-journalctl --user -u metron-web -f
+# Note: on CentOS with linger, user unit logs go to the system journal.
+# Use _SYSTEMD_USER_UNIT= rather than journalctl --user
+journalctl _SYSTEMD_USER_UNIT=metron-web.service
+journalctl _SYSTEMD_USER_UNIT=metron-web.service -f
 
-# Follow logs for all metron services
-journalctl --user -u 'metron-*' -f
+# Follow logs for all metron services at once
+journalctl _SYSTEMD_USER_UNIT=metron-postgres.service \
+           _SYSTEMD_USER_UNIT=metron-redis.service \
+           _SYSTEMD_USER_UNIT=metron-web.service \
+           _SYSTEMD_USER_UNIT=metron-nginx.service -f
+
+# View container logs directly via podman
+podman logs metron-web
+podman logs -f metron-web
 
 # Open a shell in the web container
 podman exec -it metron-web bash

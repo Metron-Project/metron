@@ -8,6 +8,7 @@ Image=localhost/metron:latest
 ContainerName=metron-web
 Network=metron.network
 EnvironmentFile=%h/.config/containers/metron.env
+LogDriver=journald
 
 [Service]
 Restart=always

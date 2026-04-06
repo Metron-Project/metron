@@ -6,6 +6,7 @@ After=network-online.target
 Image=docker.io/library/postgres:16
 ContainerName=metron-postgres
 Network=metron.network
+LogDriver=journald
 Volume=metron-postgres.volume:/var/lib/postgresql/data
 EnvironmentFile=%h/.config/containers/metron.env
 HealthCmd=pg_isready -U postgres

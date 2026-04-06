@@ -7,6 +7,7 @@ Requires=metron-web.service
 Image=docker.io/library/nginx:alpine
 ContainerName=metron-nginx
 Network=metron.network
+LogDriver=journald
 # firewalld forwards external 80→8080 and 443→8443 on the host.
 # These mappings land traffic in the container on the standard ports.
 PublishPort=8080:80
