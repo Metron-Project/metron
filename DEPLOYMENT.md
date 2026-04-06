@@ -310,7 +310,7 @@ If the restore prints errors about existing objects or ownership, those are
 typically harmless. Verify the data looks correct before continuing:
 
 ```bash
-podman exec -it metron-postgres psql -U metron -d metron \
+podman exec -it metron-postgres psql -U {db_username} -d metron \
   -c "SELECT COUNT(*) FROM comicsdb_issue;"
 ```
 
