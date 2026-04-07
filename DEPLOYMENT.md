@@ -7,7 +7,9 @@ with Quadlet (systemd-managed containers).
 
 ```
 internet (80/443) → firewalld → nginx container (host network, :8080/:8443)
-                                      ↓ 127.0.0.1:8000
+                                      ↓ 127.0.0.1:8923
+                             metron-anubis (Anubis, metron.network)
+                                      ↓ metron-web:8000
                               metron-web (gunicorn, metron.network)
                                       ↓
                           metron-postgres  metron-redis
@@ -16,9 +18,11 @@ internet (80/443) → firewalld → nginx container (host network, :8080/:8443)
 
 The nginx container uses `Network=host` so it sits directly on the host network
 stack, which allows real client IPs to be logged rather than pasta's internal
-NAT addresses. The metron-web, metron-postgres, and metron-redis containers
-share the `metron` bridge network; metron-web is also published on
-`127.0.0.1:8000` so nginx can reach gunicorn via the loopback interface.
+NAT addresses. The metron-anubis, metron-web, metron-postgres, and metron-redis
+containers share the `metron` bridge network; metron-anubis is published on
+`127.0.0.1:8923` so nginx can reach it via the loopback interface. Anubis
+enforces a proof-of-work challenge for browser traffic and forwards to
+metron-web; API requests (`/api/`) are exempted and pass through unconditionally.
 Static and media files are served from DigitalOcean Spaces (S3-compatible);
 the containers have no local file storage responsibility beyond database and
 cache data volumes.
@@ -127,6 +131,12 @@ mkdir -p ~/.config/containers
 cp ~/metron/metron.env.example ~/.config/containers/metron.env
 chmod 600 ~/.config/containers/metron.env
 vi ~/.config/containers/metron.env   # fill in all values
+```
+
+Generate the Anubis signing key and paste it into `ED25519_PRIVATE_KEY_HEX`:
+
+```bash
+openssl rand -hex 32
 ```
 
 ---
@@ -325,13 +335,16 @@ podman exec -it metron-postgres psql -U {db_username} -d metron \
 
 ## 10. Start services
 
-Start Redis and the app, then nginx:
+Start Redis and the app, then Anubis, then nginx:
 
 ```bash
 systemctl --user start metron-redis
 systemctl --user start metron-web
 
-# Now start nginx
+# Start Anubis (depends on metron-web)
+systemctl --user start metron-anubis
+
+# Now start nginx (depends on metron-anubis)
 systemctl --user start metron-nginx
 ```
 
@@ -471,7 +484,7 @@ cp ~/metron/.quadlet/* ~/.config/containers/systemd/
 systemctl --user daemon-reload
 
 podman build -t localhost/metron:latest .
-systemctl --user restart metron-web
+systemctl --user restart metron-web metron-anubis
 podman exec metron-web python manage.py migrate
 # Re-run collectstatic only if static assets changed:
 # podman exec metron-web python manage.py collectstatic --no-input
@@ -665,8 +678,11 @@ podman exec -it metron-postgres psql -U metron -d metron
 # Restart nginx to apply config or certificate changes
 systemctl --user restart metron-nginx
 
+# Restart Anubis (e.g. after editing anubis/policy.yaml — no hot-reload)
+systemctl --user restart metron-anubis
+
 # Restart all services
-systemctl --user restart metron-postgres metron-redis metron-web metron-nginx
+systemctl --user restart metron-postgres metron-redis metron-web metron-anubis metron-nginx
 ```
 
 ---
@@ -680,4 +696,5 @@ systemctl --user restart metron-postgres metron-redis metron-web metron-nginx
 | `~/.config/containers/systemd/` | Quadlet unit files |
 | `~/.local/share/metron/letsencrypt/` | Let's Encrypt certificates |
 | `~/.local/share/metron/certbot-webroot/` | ACME challenge webroot |
+| `~/metron/anubis/policy.yaml` | Anubis bot-protection policy rules |
 | Podman named volumes | Postgres and Redis data (managed by Podman) |

@@ -1,0 +1,22 @@
+[Unit]
+Description=Anubis Bot Protection Proxy
+After=metron-web.service
+Requires=metron-web.service
+
+[Container]
+Image=ghcr.io/techarohq/anubis:latest
+ContainerName=metron-anubis
+Network=metron.network
+PublishPort=127.0.0.1:8923:8923
+Environment=BIND=:8923
+Environment=TARGET=http://metron-web:8000
+Environment=POLICY_FNAME=/etc/anubis/policy.yaml
+EnvironmentFile=%h/.config/containers/metron.env
+Volume=%h/metron/anubis/policy.yaml:/etc/anubis/policy.yaml:ro,Z
+LogDriver=journald
+
+[Service]
+Restart=always
+
+[Install]
+WantedBy=default.target

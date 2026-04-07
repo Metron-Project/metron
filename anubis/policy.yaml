@@ -1,0 +1,11 @@
+bots:
+  # Pass API requests through without a proof-of-work challenge.
+  # API consumers (Metron-Tron, scripts, etc.) are not browsers and cannot
+  # solve a JavaScript challenge.
+  - name: api
+    path_regex: ^/api/.*$
+    action: ALLOW
+
+# Import Anubis's built-in crawler rules (allows known good bots such as
+# search engine crawlers; denies known malicious scrapers).
+import: (data)/crawlers.yaml
