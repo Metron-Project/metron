@@ -13,6 +13,7 @@ Environment=TARGET=http://metron-web:8000
 Environment=POLICY_FNAME=/etc/anubis/policy.yaml
 EnvironmentFile=%h/.config/containers/metron.env
 Volume=%h/metron/anubis/policy.yaml:/etc/anubis/policy.yaml:ro,Z
+Volume=metron-anubis.volume:/data:Z
 LogDriver=journald
 
 [Service]

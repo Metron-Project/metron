@@ -23,3 +23,11 @@ bots:
 # Import Anubis's built-in crawler rules (allows known good bots such as
 # search engine crawlers; denies known malicious scrapers).
 import: (data)/crawlers.yaml
+
+# BBolt persists challenge state to disk so restarts do not force all users
+# to re-solve the proof-of-work. Required for production; the default memory
+# backend is explicitly not recommended for production use.
+store:
+  backend: bbolt
+  parameters:
+    path: /data/anubis.bdb
