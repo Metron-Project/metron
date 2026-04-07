@@ -651,6 +651,10 @@ sudo systemctl enable --now fail2ban
 The filter and jail files are stored in the repo under `fail2ban/`:
 
 ```bash
+# Create the log directory (fail2ban reads from here; container writes here)
+sudo mkdir -p /var/log/metron-nginx
+sudo chown metron:metron /var/log/metron-nginx
+
 sudo sh -c 'cp /home/metron/metron/fail2ban/filter.d/* /etc/fail2ban/filter.d/'
 sudo sh -c 'cp /home/metron/metron/fail2ban/jail.d/metron.conf /etc/fail2ban/jail.d/'
 sudo systemctl restart fail2ban
@@ -680,7 +684,7 @@ sudo fail2ban-client set metron-nginx-401 banip <ip-address>
 sudo fail2ban-client set metron-nginx-401 unbanip <ip-address>
 
 # Test a filter against the journal
-sudo fail2ban-regex /home/metron/.local/share/metron/nginx-logs/access.log \
+sudo fail2ban-regex /var/log/metron-nginx/access.log \
   /etc/fail2ban/filter.d/metron-nginx-429.conf
 ```
 
