@@ -15,6 +15,7 @@ Volume=%h/metron/nginx/nginx.conf:/etc/nginx/conf.d/default.conf:ro,Z
 # Let's Encrypt certs: see deployment notes in .quadlet/README.md
 Volume=%h/.local/share/metron/letsencrypt:/etc/letsencrypt:ro,Z
 Volume=%h/.local/share/metron/certbot-webroot:/var/www/certbot:ro,Z
+Volume=%h/.local/share/metron/nginx-logs:/var/log/nginx:z
 
 [Service]
 Restart=always
