@@ -6,6 +6,20 @@ bots:
     path_regex: ^/api/.*$
     action: ALLOW
 
+  # Allow HTMX requests from users who have already passed the challenge.
+  # Without this, Anubis would return its full challenge page in response to
+  # a partial HTMX request, breaking the page update. Note: this checks for
+  # the presence of the anubis-auth cookie but not its cryptographic validity,
+  # which is an acceptable trade-off per the Anubis docs.
+  - name: allow-htmx-iff-already-passed-challenge
+    action: ALLOW
+    expression:
+      all:
+        - '"Cookie" in headers'
+        - 'headers["Cookie"].contains("anubis-auth")'
+        - '"Hx-Request" in headers'
+        - 'headers["Hx-Request"] == "true"'
+
 # Import Anubis's built-in crawler rules (allows known good bots such as
 # search engine crawlers; denies known malicious scrapers).
 import: (data)/crawlers.yaml
