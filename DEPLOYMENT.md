@@ -634,6 +634,68 @@ to the **system** journal rather than a user-specific journal. Use
 
 ---
 
+## Fail2ban
+
+fail2ban monitors the nginx journald logs and uses firewalld to ban IPs that
+generate excessive 429 (rate limit) or 401 (unauthorized) responses.
+
+### Install
+
+```bash
+sudo dnf install -y fail2ban
+sudo systemctl enable --now fail2ban
+```
+
+### Deploy filters and jail config
+
+The filter and jail files are stored in the repo under `fail2ban/`:
+
+```bash
+sudo cp ~/metron/fail2ban/filter.d/* /etc/fail2ban/filter.d/
+sudo cp ~/metron/fail2ban/jail.d/metron.conf /etc/fail2ban/jail.d/
+sudo systemctl restart fail2ban
+```
+
+### Thresholds
+
+| Jail | Trigger | Window | Ban duration |
+|---|---|---|---|
+| `metron-nginx-429` | 30 rate-limit hits | 60 s | 1 hour |
+| `metron-nginx-401` | 10 auth failures | 5 min | 24 hours |
+
+### Useful fail2ban commands
+
+```bash
+# Check status of all jails
+sudo fail2ban-client status
+
+# Check a specific jail
+sudo fail2ban-client status metron-nginx-429
+sudo fail2ban-client status metron-nginx-401
+
+# Manually ban an IP
+sudo fail2ban-client set metron-nginx-401 banip <ip-address>
+
+# Manually unban an IP
+sudo fail2ban-client set metron-nginx-401 unbanip <ip-address>
+
+# Test a filter against the journal
+sudo fail2ban-regex systemd-journal /etc/fail2ban/filter.d/metron-nginx-429.conf \
+  --journalmatch '_SYSTEMD_USER_UNIT=metron-nginx.service'
+```
+
+### Updating filters or jail config
+
+After changing any file under `fail2ban/` in the repo:
+
+```bash
+sudo cp ~/metron/fail2ban/filter.d/* /etc/fail2ban/filter.d/
+sudo cp ~/metron/fail2ban/jail.d/metron.conf /etc/fail2ban/jail.d/
+sudo systemctl restart fail2ban
+```
+
+---
+
 ## Useful commands
 
 ```bash
@@ -681,3 +743,5 @@ systemctl --user restart metron-postgres metron-redis metron-web metron-nginx
 | `~/.local/share/metron/letsencrypt/` | Let's Encrypt certificates |
 | `~/.local/share/metron/certbot-webroot/` | ACME challenge webroot |
 | Podman named volumes | Postgres and Redis data (managed by Podman) |
+| `/etc/fail2ban/filter.d/` | fail2ban filter definitions |
+| `/etc/fail2ban/jail.d/metron.conf` | fail2ban jail configuration |
