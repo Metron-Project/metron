@@ -681,7 +681,7 @@ sudo fail2ban-client set metron-nginx-401 unbanip <ip-address>
 
 # Test a filter against the journal
 sudo fail2ban-regex systemd-journal /etc/fail2ban/filter.d/metron-nginx-429.conf \
-  --journalmatch '_SYSTEMD_USER_UNIT=metron-nginx.service'
+  --journalmatch 'SYSLOG_IDENTIFIER=metron-nginx'
 ```
 
 ### Updating filters or jail config
