@@ -630,7 +630,9 @@ before this change will not be back-filled.
 Note: because the container services run under a linger session, their logs go
 to the **system** journal rather than a user-specific journal. Use
 `_SYSTEMD_USER_UNIT=` to filter them (see Useful commands below) rather than
-`journalctl --user`.
+`journalctl --user`. The nginx container is an exception — it uses
+`LogDriver=journald`, so its logs are tagged with `CONTAINER_NAME=metron-nginx`
+and must be queried with that field instead.
 
 ---
 
@@ -713,11 +715,15 @@ systemctl --user status metron-web
 journalctl _SYSTEMD_USER_UNIT=metron-web.service
 journalctl _SYSTEMD_USER_UNIT=metron-web.service -f
 
+# nginx uses LogDriver=journald, so its logs are tagged by container name
+journalctl CONTAINER_NAME=metron-nginx
+journalctl CONTAINER_NAME=metron-nginx -f
+
 # Follow logs for all metron services at once
 journalctl _SYSTEMD_USER_UNIT=metron-postgres.service \
            _SYSTEMD_USER_UNIT=metron-redis.service \
            _SYSTEMD_USER_UNIT=metron-web.service \
-           _SYSTEMD_USER_UNIT=metron-nginx.service -f
+           CONTAINER_NAME=metron-nginx -f
 
 # View container logs directly via podman
 podman logs metron-web
