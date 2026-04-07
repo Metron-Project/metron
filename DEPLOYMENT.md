@@ -669,6 +669,7 @@ sudo systemctl restart fail2ban
 |---|---|---|---|
 | `metron-nginx-429` | 30 rate-limit hits | 60 s | 1 hour |
 | `metron-nginx-499` | 20 client-closed connections | 60 s | 1 hour |
+| `metron-nginx-403` | 10 forbidden responses | 5 min | 24 hours |
 | `metron-nginx-401` | 10 auth failures | 5 min | 24 hours |
 
 ### Useful fail2ban commands
@@ -679,6 +680,7 @@ sudo fail2ban-client status
 
 # Check a specific jail
 sudo fail2ban-client status metron-nginx-429
+sudo fail2ban-client status metron-nginx-403
 sudo fail2ban-client status metron-nginx-401
 
 # Manually ban an IP
