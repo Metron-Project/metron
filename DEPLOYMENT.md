@@ -567,8 +567,7 @@ Type=oneshot
 ExecStart=podman exec metron-postgres pg_dump \
   -U {db_username} -Fc {db_name} \
   -f /tmp/metron-backup.dump
-ExecStartPost=podman cp metron-postgres:/tmp/metron-backup.dump \
-  %h/backups/metron-%(%Y%m%d-%H%M%S)T.dump
+ExecStartPost=/bin/sh -c 'podman cp metron-postgres:/tmp/metron-backup.dump %h/backups/metron-$(date +%%Y%%m%%d-%%H%%M%%S).dump'
 ```
 
 Create the timer unit at `~/.config/systemd/user/metron-backup.timer`:
