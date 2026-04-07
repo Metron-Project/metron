@@ -25,4 +25,5 @@ CMD ["gunicorn", "metron.wsgi:application", \
     "--timeout", "60", \
     "--max-requests", "300", \
     "--forwarded-allow-ips", "*", \
+    "--access-logfile", "-", \
     "--error-logfile", "-"]
