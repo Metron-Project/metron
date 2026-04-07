@@ -408,7 +408,7 @@ The recommended approach is a **DigitalOcean Reserved IP**. Reassigning a
 reserved IP between droplets takes effect in seconds with no DNS propagation
 delay.
 
-### Option A — Reserved IP (recommended, ~zero downtime)
+### Reserved IP (~zero downtime)
 
 **Before the maintenance window** (do this days in advance):
 
@@ -456,22 +456,6 @@ droplet to the new droplet. Traffic switches immediately.
 **Verify** the site is working on the new droplet, then restore the DNS TTL
 to a normal value (e.g. 3600) and power off or destroy the old droplet once
 satisfied.
-
----
-
-### Option B — DNS cutover (no reserved IP)
-
-Use this if a reserved IP is not available.
-
-**Days before cutover**, lower the TTL on your DNS A records to 60 seconds so
-the cache clears quickly when you update them.
-
-Follow the same maintenance window steps as Option A (stop old service, final
-dump, restore on new droplet), then update the DNS A records to point at the
-new droplet's IP. Allow up to a few minutes for the low TTL to propagate.
-
-Once the site is confirmed working, restore the TTL to a normal value (e.g.
-3600) and decommission the old droplet.
 
 ---
 
