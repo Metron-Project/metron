@@ -651,8 +651,8 @@ sudo systemctl enable --now fail2ban
 The filter and jail files are stored in the repo under `fail2ban/`:
 
 ```bash
-sudo cp ~/metron/fail2ban/filter.d/* /etc/fail2ban/filter.d/
-sudo cp ~/metron/fail2ban/jail.d/metron.conf /etc/fail2ban/jail.d/
+sudo sh -c 'cp /home/metron/metron/fail2ban/filter.d/* /etc/fail2ban/filter.d/'
+sudo sh -c 'cp /home/metron/metron/fail2ban/jail.d/metron.conf /etc/fail2ban/jail.d/'
 sudo systemctl restart fail2ban
 ```
 
@@ -689,8 +689,8 @@ sudo fail2ban-regex systemd-journal /etc/fail2ban/filter.d/metron-nginx-429.conf
 After changing any file under `fail2ban/` in the repo:
 
 ```bash
-sudo cp ~/metron/fail2ban/filter.d/* /etc/fail2ban/filter.d/
-sudo cp ~/metron/fail2ban/jail.d/metron.conf /etc/fail2ban/jail.d/
+sudo sh -c 'cp /home/metron/metron/fail2ban/filter.d/* /etc/fail2ban/filter.d/'
+sudo sh -c 'cp /home/metron/metron/fail2ban/jail.d/metron.conf /etc/fail2ban/jail.d/'
 sudo systemctl restart fail2ban
 ```
 
