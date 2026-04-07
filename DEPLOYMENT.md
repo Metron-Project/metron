@@ -6,16 +6,22 @@ with Quadlet (systemd-managed containers).
 ## Architecture
 
 ```
-internet (80/443) → firewalld → nginx (host 8080/8443 → container 80/443)
-                                      ↓
-                              metron-web (gunicorn :8000)
+internet (80/443) → firewalld → nginx container (host network, :8080/:8443)
+                                      ↓ 127.0.0.1:8000
+                              metron-web (gunicorn, metron.network)
                                       ↓
                           metron-postgres  metron-redis
+                              (metron.network)
 ```
 
-All containers share the `metron` bridge network. Static and media files are
-served from DigitalOcean Spaces (S3-compatible); the containers have no local
-file storage responsibility beyond database and cache data volumes.
+The nginx container uses `Network=host` so it sits directly on the host network
+stack, which allows real client IPs to be logged rather than pasta's internal
+NAT addresses. The metron-web, metron-postgres, and metron-redis containers
+share the `metron` bridge network; metron-web is also published on
+`127.0.0.1:8000` so nginx can reach gunicorn via the loopback interface.
+Static and media files are served from DigitalOcean Spaces (S3-compatible);
+the containers have no local file storage responsibility beyond database and
+cache data volumes.
 
 ---
 
@@ -363,7 +369,7 @@ from the old droplet:
 sudo tar -czf /tmp/letsencrypt.tar.gz -C /etc letsencrypt
 
 # Transfer to the new droplet
-scp /tmp/letsencrypt-backup.tar.gz metron@<new-droplet-ip>:/tmp/
+scp /tmp/letsencrypt.tar.gz metron@<new-droplet-ip>:/tmp/
 
 # Run on the new droplet — extract into the user cert directory
 tar -xzf /tmp/letsencrypt.tar.gz -C ~/.local/share/metron/letsencrypt \
@@ -475,6 +481,11 @@ Once the site is confirmed working, restore the TTL to a normal value (e.g.
 sudo su - metron
 cd ~/metron
 git pull
+
+# If any .quadlet/* files changed, copy them and reload the daemon
+cp ~/metron/.quadlet/* ~/.config/containers/systemd/
+systemctl --user daemon-reload
+
 podman build -t localhost/metron:latest .
 systemctl --user restart metron-web
 podman exec metron-web python manage.py migrate
