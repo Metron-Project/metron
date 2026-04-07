@@ -657,6 +657,7 @@ The filter and jail files are stored in the repo under `fail2ban/`:
 sudo mkdir -p /var/log/metron-nginx
 sudo chown metron:metron /var/log/metron-nginx
 
+sudo sh -c 'cp /home/metron/metron/fail2ban/action.d/* /etc/fail2ban/action.d/'
 sudo sh -c 'cp /home/metron/metron/fail2ban/filter.d/* /etc/fail2ban/filter.d/'
 sudo sh -c 'cp /home/metron/metron/fail2ban/jail.d/metron.conf /etc/fail2ban/jail.d/'
 sudo systemctl restart fail2ban
@@ -696,6 +697,7 @@ sudo fail2ban-regex /var/log/metron-nginx/access.log \
 After changing any file under `fail2ban/` in the repo:
 
 ```bash
+sudo sh -c 'cp /home/metron/metron/fail2ban/action.d/* /etc/fail2ban/action.d/'
 sudo sh -c 'cp /home/metron/metron/fail2ban/filter.d/* /etc/fail2ban/filter.d/'
 sudo sh -c 'cp /home/metron/metron/fail2ban/jail.d/metron.conf /etc/fail2ban/jail.d/'
 sudo systemctl restart fail2ban
