@@ -172,6 +172,14 @@ def generate_cover_hash(instance: Issue) -> str:
 
 def pre_save_cover_hash(sender, instance: Issue, *args, **kwargs) -> None:
     if instance.image:
+        # Skip S3 download if the image field hasn't changed
+        if instance.pk:
+            try:
+                old_image = Issue.objects.filter(pk=instance.pk).values_list("image", flat=True)[0]
+                if old_image == instance.image.name and instance.cover_hash:
+                    return
+            except IndexError:
+                pass
         ch = generate_cover_hash(instance)
         if instance.cover_hash != ch:
             LOGGER.info(
