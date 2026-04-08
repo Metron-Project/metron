@@ -1,7 +1,7 @@
 [Unit]
 Description=Metron Nginx Reverse Proxy
-After=metron-web.service
-Requires=metron-web.service
+After=metron-anubis.service
+Requires=metron-anubis.service
 
 [Container]
 Image=docker.io/library/nginx:alpine
