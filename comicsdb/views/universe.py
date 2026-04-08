@@ -46,7 +46,7 @@ _team_count_sq = (
 )
 
 
-class UniverseSeriesList(LoginRequiredMixin, ListView):
+class UniverseSeriesList(ListView):
     paginate_by = PAGINATE_BY
     template_name = "comicsdb/issue_list.html"
 
@@ -59,13 +59,13 @@ class UniverseSeriesList(LoginRequiredMixin, ListView):
         )
 
 
-class UniverseList(LoginRequiredMixin, ListView):
+class UniverseList(ListView):
     model = Universe
     paginate_by = PAGINATE_BY
     queryset = Universe.objects.annotate(issue_count=Subquery(_issue_count_sq))
 
 
-class UniverseIssueList(LoginRequiredMixin, ListView):
+class UniverseIssueList(ListView):
     paginate_by = PAGINATE_BY
     template_name = "comicsdb/issue_list.html"
 
@@ -79,7 +79,7 @@ class UniverseIssueList(LoginRequiredMixin, ListView):
         return context
 
 
-class UniverseDetail(LoginRequiredMixin, NavigationMixin, DetailView):
+class UniverseDetail(NavigationMixin, DetailView):
     model = Universe
     queryset = Universe.objects.select_related("edited_by", "publisher").annotate(
         issue_count=Subquery(_issue_count_sq),
@@ -171,7 +171,7 @@ class UniverseHistory(HistoryListView):
     model = Universe
 
 
-class UniverseCharactersLoadMore(LoginRequiredMixin, LazyLoadMixin):
+class UniverseCharactersLoadMore(LazyLoadMixin):
     """HTMX endpoint for lazy loading more characters."""
 
     model = Universe
@@ -181,7 +181,7 @@ class UniverseCharactersLoadMore(LoginRequiredMixin, LazyLoadMixin):
     slug_context_name = "universe_slug"
 
 
-class UniverseTeamsLoadMore(LoginRequiredMixin, LazyLoadMixin):
+class UniverseTeamsLoadMore(LazyLoadMixin):
     """HTMX endpoint for lazy loading more teams."""
 
     model = Universe
@@ -191,7 +191,7 @@ class UniverseTeamsLoadMore(LoginRequiredMixin, LazyLoadMixin):
     slug_context_name = "universe_slug"
 
 
-class UniverseSeriesLoadMore(LoginRequiredMixin, LazyLoadMixin):
+class UniverseSeriesLoadMore(LazyLoadMixin):
     """HTMX endpoint for lazy loading more series appearances."""
 
     model = Universe

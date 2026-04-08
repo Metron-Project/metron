@@ -38,8 +38,7 @@ def test_team_verbose_name_plural(avengers):
     assert str(avengers._meta.verbose_name_plural) == "teams"
 
 
-def test_team_absolute_url(auto_login_user, avengers):
-    client, _ = auto_login_user()
+def test_team_absolute_url(client, avengers):
     resp = client.get(avengers.get_absolute_url())
     assert resp.status_code == HTTP_200_OK
 
@@ -53,8 +52,7 @@ def test_character_verbose_name_plural(batman):
     assert str(batman._meta.verbose_name_plural) == "characters"
 
 
-def test_character_absolute_url(auto_login_user, batman):
-    client, _ = auto_login_user()
+def test_character_absolute_url(client, batman):
     resp = client.get(batman.get_absolute_url())
     assert resp.status_code == HTTP_200_OK
 
@@ -68,8 +66,7 @@ def test_arc_verbose_name_plural(wwh_arc):
     assert str(wwh_arc._meta.verbose_name_plural) == "arcs"
 
 
-def test_arc_absolute_url(auto_login_user, wwh_arc):
-    client, _ = auto_login_user()
+def test_arc_absolute_url(client, wwh_arc):
     resp = client.get(wwh_arc.get_absolute_url())
     assert resp.status_code == HTTP_200_OK
 
@@ -87,8 +84,7 @@ def test_creator_verbose_name_plural(john_byrne):
     assert str(john_byrne._meta.verbose_name_plural) == "creators"
 
 
-def test_creator_absolute_url(auto_login_user, john_byrne):
-    client, _ = auto_login_user()
+def test_creator_absolute_url(client, john_byrne):
     resp = client.get(john_byrne.get_absolute_url())
     assert resp.status_code == HTTP_200_OK
 
@@ -115,8 +111,7 @@ def test_publisher_verbose_name_plural(dc_comics):
     assert str(dc_comics._meta.verbose_name_plural) == "publishers"
 
 
-def test_publisher_absolute_url(auto_login_user, dc_comics):
-    client, _ = auto_login_user()
+def test_publisher_absolute_url(client, dc_comics):
     resp = client.get(dc_comics.get_absolute_url())
     assert resp.status_code == HTTP_200_OK
 

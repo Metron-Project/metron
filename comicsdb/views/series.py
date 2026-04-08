@@ -29,7 +29,7 @@ _issue_count_sq = (
 )
 
 
-class SeriesList(LoginRequiredMixin, ListView):
+class SeriesList(ListView):
     model = Series
     paginate_by = PAGINATE_BY
 
@@ -53,7 +53,7 @@ class SeriesList(LoginRequiredMixin, ListView):
         return context
 
 
-class SeriesIssueList(LoginRequiredMixin, ListView):
+class SeriesIssueList(ListView):
     template_name = "comicsdb/issue_list.html"
     paginate_by = PAGINATE_BY
 
@@ -67,7 +67,7 @@ class SeriesIssueList(LoginRequiredMixin, ListView):
         return context
 
 
-class SeriesDetail(LoginRequiredMixin, DetailView):
+class SeriesDetail(DetailView):
     model = Series
     queryset = (
         Series.objects.select_related("publisher", "imprint", "edited_by", "series_type")

@@ -36,13 +36,13 @@ _series_count_qs = (
 )
 
 
-class ImprintList(LoginRequiredMixin, ListView):
+class ImprintList(ListView):
     model = Imprint
     paginate_by = PAGINATE_BY
     queryset = Imprint.objects.annotate(series_count=Subquery(_series_count_qs)).order_by("name")
 
 
-class ImprintSeriesList(LoginRequiredMixin, ListView):
+class ImprintSeriesList(ListView):
     template_name = "comicsdb/series_list.html"
     paginate_by = PAGINATE_BY
 
@@ -65,7 +65,7 @@ class ImprintSeriesList(LoginRequiredMixin, ListView):
         return context
 
 
-class ImprintDetail(LoginRequiredMixin, NavigationMixin, DetailView):
+class ImprintDetail(NavigationMixin, DetailView):
     model = Imprint
     queryset = Imprint.objects.select_related("edited_by").prefetch_related("series")
 

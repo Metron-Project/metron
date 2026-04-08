@@ -15,12 +15,6 @@ def test_view_url_accessible_by_name(db, client):
 
 
 # Statistics View
-def test_statistics_view_requires_login(client):
-    """Test that statistics view requires authentication."""
-    resp = client.get(reverse("statistics"))
-    assert resp.status_code == HTML_REDIRECT
-
-
 def test_statistics_view_accessible_when_logged_in(auto_login_user):
     """Test that statistics view is accessible when logged in."""
     client, _ = auto_login_user()
