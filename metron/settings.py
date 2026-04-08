@@ -14,6 +14,7 @@ import logging.config
 from os import environ
 from pathlib import Path
 
+from botocore.config import Config as BotocoreConfig
 from decouple import Csv, config
 from django.utils.log import DEFAULT_LOGGING
 
@@ -325,6 +326,16 @@ if not DEBUG:
     AWS_STORAGE_BUCKET_NAME = config("DO_STORAGE_BUCKET_NAME")
     AWS_S3_ENDPOINT_URL = config("DO_S3_ENDPOINT_URL")
     AWS_S3_CUSTOM_DOMAIN = config("DO_S3_CUSTOM_DOMAIN")
+    # Short timeouts so S3 slowness fails fast rather than blocking a gunicorn
+    # worker until the 60s SIGALRM fires. botocore's defaults are far too generous.
+    AWS_S3_CLIENT_CONFIG = BotocoreConfig(
+        connect_timeout=5,
+        read_timeout=10,
+        retries={"max_attempts": 2, "mode": "standard"},
+        # Prevent stale connections in boto3's pool — rootless Podman's
+        # user-space network stack (pasta) can silently drop idle TCP connections.
+        tcp_keepalive=True,
+    )
     # Set the cache to 7 days. 86400 seconds/day * 7
     AWS_S3_OBJECT_PARAMETERS = {
         "CacheControl": "max-age=604800",
