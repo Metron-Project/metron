@@ -31,13 +31,13 @@ _issue_count_sq = (
 )
 
 
-class TeamList(LoginRequiredMixin, ListView):
+class TeamList(ListView):
     model = Team
     paginate_by = PAGINATE_BY
     queryset = Team.objects.annotate(issue_count=Subquery(_issue_count_sq))
 
 
-class TeamIssueList(LoginRequiredMixin, ListView):
+class TeamIssueList(ListView):
     paginate_by = PAGINATE_BY
     template_name = "comicsdb/issue_list.html"
 
@@ -51,7 +51,7 @@ class TeamIssueList(LoginRequiredMixin, ListView):
         return context
 
 
-class TeamDetail(LoginRequiredMixin, NavigationMixin, DetailView):
+class TeamDetail(NavigationMixin, DetailView):
     model = Team
     queryset = (
         Team.objects.select_related("edited_by")
@@ -107,7 +107,7 @@ class TeamHistory(HistoryListView):
     model = Team
 
 
-class TeamMembersLoadMore(LoginRequiredMixin, LazyLoadMixin):
+class TeamMembersLoadMore(LazyLoadMixin):
     """HTMX endpoint for lazy loading more team members."""
 
     model = Team

@@ -1,7 +1,6 @@
 from datetime import datetime
 
 from chartkick.django import ColumnChart, PieChart
-from django.contrib.auth.decorators import login_required
 from django.core.cache import cache
 from django.db.models import Count
 from django.db.models.functions import TruncDate, TruncMonth, TruncYear
@@ -93,7 +92,6 @@ def _create_character_dict() -> dict[str, int]:
     return {character["month"].strftime("%b"): character["c"] for character in characters[::-1]}
 
 
-@login_required
 def statistics(request):
     # Resource totals
     cache_keys = [

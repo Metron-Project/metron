@@ -23,7 +23,7 @@ from comicsdb.views.mixins import (
 LOGGER = logging.getLogger(__name__)
 
 
-class CharacterSeriesList(LoginRequiredMixin, ListView):
+class CharacterSeriesList(ListView):
     paginate_by = PAGINATE_BY
     template_name = "comicsdb/issue_list.html"
 
@@ -44,13 +44,13 @@ _issue_count_qs = (
 )
 
 
-class CharacterList(LoginRequiredMixin, ListView):
+class CharacterList(ListView):
     model = Character
     paginate_by = PAGINATE_BY
     queryset = Character.objects.annotate(issue_count=Subquery(_issue_count_qs))
 
 
-class CharacterIssueList(LoginRequiredMixin, ListView):
+class CharacterIssueList(ListView):
     paginate_by = PAGINATE_BY
     template_name = "comicsdb/issue_list.html"
 
@@ -64,7 +64,7 @@ class CharacterIssueList(LoginRequiredMixin, ListView):
         return context
 
 
-class CharacterDetail(LoginRequiredMixin, NavigationMixin, DetailView):
+class CharacterDetail(NavigationMixin, DetailView):
     model = Character
     queryset = Character.objects.select_related("edited_by").annotate(
         issue_count=Subquery(_issue_count_qs)
@@ -150,7 +150,7 @@ class CharacterHistory(HistoryListView):
     model = Character
 
 
-class CharacterSeriesLoadMore(LoginRequiredMixin, LazyLoadMixin):
+class CharacterSeriesLoadMore(LazyLoadMixin):
     """HTMX endpoint for lazy loading more series appearances."""
 
     model = Character

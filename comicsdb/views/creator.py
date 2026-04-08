@@ -30,7 +30,7 @@ _issue_count_sq = (
 )
 
 
-class CreatorSeriesList(LoginRequiredMixin, ListView):
+class CreatorSeriesList(ListView):
     paginate_by = PAGINATE_BY
     template_name = "comicsdb/issue_list.html"
 
@@ -42,7 +42,7 @@ class CreatorSeriesList(LoginRequiredMixin, ListView):
         )
 
 
-class CreatorIssueList(LoginRequiredMixin, ListView):
+class CreatorIssueList(ListView):
     paginate_by = PAGINATE_BY
     template_name = "comicsdb/issue_list.html"
 
@@ -56,13 +56,13 @@ class CreatorIssueList(LoginRequiredMixin, ListView):
         return context
 
 
-class CreatorList(LoginRequiredMixin, ListView):
+class CreatorList(ListView):
     model = Creator
     paginate_by = PAGINATE_BY
     queryset = Creator.objects.annotate(issue_count=Subquery(_issue_count_sq))
 
 
-class CreatorDetail(LoginRequiredMixin, NavigationMixin, DetailView):
+class CreatorDetail(NavigationMixin, DetailView):
     model = Creator
     queryset = Creator.objects.select_related("edited_by").annotate(
         issue_count=Subquery(_issue_count_sq)
@@ -133,7 +133,7 @@ class CreatorHistory(HistoryListView):
     model = Creator
 
 
-class CreatorSeriesLoadMore(LoginRequiredMixin, LazyLoadMixin):
+class CreatorSeriesLoadMore(LazyLoadMixin):
     """HTMX endpoint for lazy loading more series credits."""
 
     model = Creator

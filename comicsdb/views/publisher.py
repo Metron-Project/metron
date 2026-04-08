@@ -55,13 +55,13 @@ _universe_count_sq = (
 )
 
 
-class PublisherList(LoginRequiredMixin, ListView):
+class PublisherList(ListView):
     model = Publisher
     paginate_by = PAGINATE_BY
     queryset = Publisher.objects.annotate(series_count=Subquery(_series_count_sq)).order_by("name")
 
 
-class PublisherSeriesList(LoginRequiredMixin, ListView):
+class PublisherSeriesList(ListView):
     template_name = "comicsdb/series_list.html"
     paginate_by = PAGINATE_BY
 
@@ -80,7 +80,7 @@ class PublisherSeriesList(LoginRequiredMixin, ListView):
         return context
 
 
-class PublisherDetail(LoginRequiredMixin, NavigationMixin, DetailView):
+class PublisherDetail(NavigationMixin, DetailView):
     model = Publisher
     # Don't prefetch - we'll paginate imprints and universes
     queryset = Publisher.objects.select_related("edited_by").annotate(
@@ -143,7 +143,7 @@ class PublisherHistory(HistoryListView):
     model = Publisher
 
 
-class PublisherImprintsLoadMore(LoginRequiredMixin, LazyLoadMixin):
+class PublisherImprintsLoadMore(LazyLoadMixin):
     """HTMX endpoint for lazy loading more imprints."""
 
     model = Publisher
@@ -153,7 +153,7 @@ class PublisherImprintsLoadMore(LoginRequiredMixin, LazyLoadMixin):
     slug_context_name = "publisher_slug"
 
 
-class PublisherUniversesLoadMore(LoginRequiredMixin, LazyLoadMixin):
+class PublisherUniversesLoadMore(LazyLoadMixin):
     """HTMX endpoint for lazy loading more universes."""
 
     model = Publisher

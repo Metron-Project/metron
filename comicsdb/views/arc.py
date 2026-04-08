@@ -31,13 +31,13 @@ _issue_count_sq = (
 )
 
 
-class ArcList(LoginRequiredMixin, ListView):
+class ArcList(ListView):
     model = Arc
     paginate_by = PAGINATE_BY
     queryset = Arc.objects.annotate(issue_count=Subquery(_issue_count_sq)).order_by("name")
 
 
-class ArcIssueList(LoginRequiredMixin, ListView):
+class ArcIssueList(ListView):
     template_name = "comicsdb/issue_list.html"
     paginate_by = PAGINATE_BY
 
@@ -51,7 +51,7 @@ class ArcIssueList(LoginRequiredMixin, ListView):
         return context
 
 
-class ArcDetail(LoginRequiredMixin, NavigationMixin, DetailView):
+class ArcDetail(NavigationMixin, DetailView):
     model = Arc
     queryset = Arc.objects.select_related("edited_by").annotate(
         issue_count=Subquery(_issue_count_sq)
@@ -107,7 +107,7 @@ class ArcHistory(HistoryListView):
     model = Arc
 
 
-class ArcIssuesLoadMore(LoginRequiredMixin, LazyLoadMixin):
+class ArcIssuesLoadMore(LazyLoadMixin):
     """HTMX endpoint for lazy loading more arc issues."""
 
     model = Arc
