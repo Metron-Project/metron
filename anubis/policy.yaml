@@ -20,9 +20,11 @@ bots:
         - '"Hx-Request" in headers'
         - 'headers["Hx-Request"] == "true"'
 
-# Import Anubis's built-in crawler rules (allows known good bots such as
-# search engine crawlers; denies known malicious scrapers).
-import: (data)/crawlers.yaml
+# Import Anubis's built-in bot policies. This provides the weight-threshold
+# challenge system, known good crawler allowlist (Googlebot, Bingbot, etc.),
+# and known bad bot denials. Without this, Anubis has no challenge rules and
+# allows all traffic through unconditionally.
+import: (data)/botPolicies.yaml
 
 # BBolt persists challenge state to disk so restarts do not force all users
 # to re-solve the proof-of-work. Required for production; the default memory
