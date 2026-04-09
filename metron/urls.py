@@ -7,6 +7,7 @@ from django.conf import settings
 from django.conf.urls.static import static
 from django.contrib import admin
 from django.urls import include, path
+from django.views.generic import TemplateView
 from django.views.i18n import JavaScriptCatalog
 from drf_spectacular.views import SpectacularAPIView, SpectacularSwaggerView
 
@@ -29,6 +30,10 @@ from user_collection import urls as user_collection_urls
 handler404 = "metron.views.handler404"
 
 urlpatterns = [
+    path(
+        "robots.txt",
+        TemplateView.as_view(template_name="robots.txt", content_type="text/plain"),
+    ),
     path("admin/", admin.site.urls),
     path("api/", include(api_urls)),
     path("api-auth/", include("rest_framework.urls")),
