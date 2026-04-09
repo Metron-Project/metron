@@ -1247,6 +1247,8 @@ User-agent: bingbot
 Disallow: /
 User-agent: Bytespider
 Disallow: /
+User-agent: Applebot
+Disallow: /
 User-agent: Applebot-Extended
 Disallow: /
 User-agent: ClaudeBot
