@@ -22,7 +22,7 @@ bots:
 
   # Deny Meta/Facebook crawlers (meta-externalagent, facebookexternalhit, FacebookBot).
   - name: deny-meta-crawlers
-    user_agent_regex: meta-externalagent|facebookexternalhit|FacebookBot
+    user_agent_regex: meta-externalagent|meta-webindexer|facebookexternalhit|FacebookBot
     action: DENY
 
   # Deny known pathological bots and aggressive scrapers.
