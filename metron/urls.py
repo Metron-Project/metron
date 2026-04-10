@@ -4,10 +4,11 @@ Metron URL Configuration
 
 from autocomplete import urls as autocomplete_urls
 from django.conf import settings
-from django.conf.urls.static import static
+from django.conf.urls.static import static as static_url
 from django.contrib import admin
+from django.templatetags.static import static
 from django.urls import include, path
-from django.views.generic import TemplateView
+from django.views.generic import RedirectView, TemplateView
 from django.views.i18n import JavaScriptCatalog
 from drf_spectacular.views import SpectacularAPIView, SpectacularSwaggerView
 
@@ -30,6 +31,10 @@ from user_collection import urls as user_collection_urls
 handler404 = "metron.views.handler404"
 
 urlpatterns = [
+    path(
+        "favicon.ico",
+        RedirectView.as_view(url=static("site/img/favicon.ico"), permanent=True),
+    ),
     path(
         "robots.txt",
         TemplateView.as_view(template_name="robots.txt", content_type="text/plain"),
@@ -67,4 +72,4 @@ if settings.DEBUG:
     import debug_toolbar
 
     urlpatterns += [path("__debug__/", include(debug_toolbar.urls))]
-    urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
+    urlpatterns += static_url(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
