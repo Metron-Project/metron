@@ -538,33 +538,52 @@ systemctl --user list-timers metron-history-cleanup.timer
 
 ## Database backups
 
+Backups are stored in two places: locally on the droplet (`~/backups/`) and in a
+dedicated DigitalOcean Spaces bucket. Local copies are retained for 30 days;
+Spaces copies are retained for 90 days via a bucket lifecycle rule.
+
+### One-time setup
+
+**1. Install awscli** (S3-compatible, works with DO Spaces):
+
+```bash
+pip3 install awscli
+```
+
+**2. Create a dedicated backup bucket** in the DigitalOcean control panel
+(e.g. `metron-backups`) — keep it separate from the media/static bucket.
+Then set a lifecycle expiry rule of 90 days on the bucket.
+
+**3. Add the bucket name to the env file:**
+
+```bash
+vi ~/.config/containers/metron.env
+# Set DO_BACKUP_BUCKET_NAME=metron-backups (or your chosen name)
+```
+
 ### Manual backup
 
 ```bash
-# Create a timestamped dump in custom format
-podman exec metron-postgres pg_dump \
-  -U {db_username} \
-  -Fc {db_name} \
-  -f /tmp/metron-$(date +%Y%m%d-%H%M%S).dump
-
-# Copy the dump out of the container to the host
-podman cp metron-postgres:/tmp/metron-*.dump ~/backups/
+# Run the backup script directly
+bash ~/metron/scripts/backup.sh
 ```
 
 ### Automated backups with a systemd timer
+
+The backup logic lives in `scripts/backup.sh` in the repo. The service unit
+just calls it after loading the env file.
 
 Create the service unit at `~/.config/systemd/user/metron-backup.service`:
 
 ```ini
 [Unit]
 Description=Metron PostgreSQL backup
+After=metron-postgres.service
 
 [Service]
 Type=oneshot
-ExecStart=podman exec metron-postgres pg_dump \
-  -U {db_username} -Fc {db_name} \
-  -f /tmp/metron-backup.dump
-ExecStartPost=/bin/sh -c 'podman cp metron-postgres:/tmp/metron-backup.dump %h/backups/metron-$(date +%%Y%%m%%d-%%H%%M%%S).dump'
+EnvironmentFile=%h/.config/containers/metron.env
+ExecStart=/bin/bash %h/metron/scripts/backup.sh
 ```
 
 Create the timer unit at `~/.config/systemd/user/metron-backup.timer`:
@@ -593,10 +612,25 @@ systemctl --user enable --now metron-backup.timer
 systemctl --user list-timers metron-backup.timer
 ```
 
+Test a manual run and verify both local and Spaces copies were created:
+
+```bash
+systemctl --user start metron-backup
+journalctl _SYSTEMD_USER_UNIT=metron-backup.service -n 20
+
+# Check local copy
+ls -lh ~/backups/
+
+# Check Spaces copy (substitute your endpoint and bucket)
+AWS_ACCESS_KEY_ID=<key> AWS_SECRET_ACCESS_KEY=<secret> \
+  aws s3 ls s3://<DO_BACKUP_BUCKET_NAME>/db/ \
+  --endpoint-url <DO_S3_ENDPOINT_URL>
+```
+
 ### Restoring from a backup
 
 ```bash
-# Copy the dump into the container
+# Copy the dump into the container (from local or download from Spaces)
 podman cp ~/backups/<dump-file> metron-postgres:/tmp/metron.dump
 
 # Stop the web service to prevent writes during restore
@@ -614,14 +648,6 @@ podman exec metron-postgres pg_restore \
 # Clean up and restart
 podman exec metron-postgres rm /tmp/metron.dump
 systemctl --user start metron-web
-```
-
-### Pruning old backups
-
-To keep only the last 30 days of backups, add this to the service unit:
-
-```ini
-ExecStartPost=find %h/backups -name 'metron-*.dump' -mtime +30 -delete
 ```
 
 ---
