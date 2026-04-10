@@ -22,7 +22,7 @@ bots:
 
   # Deny Meta/Facebook crawlers (meta-externalagent, facebookexternalhit, FacebookBot).
   - name: deny-meta-crawlers
-    user_agent_regex: meta-externalagent|meta-webindexer|facebookexternalhit|FacebookBot
+    user_agent_regex: meta-externalagent|meta-webindexer|FacebookBot
     action: DENY
 
   # Deny known pathological bots and aggressive scrapers.
@@ -49,6 +49,13 @@ bots:
     action: WEIGH
     weight:
       adjust: 10
+
+# Anubis fetches and caches Open Graph tags from Django and serves them to
+# social media crawlers (Facebook, Twitter/X, Slack, Discord, etc.) so that
+# link previews work without bypassing the challenge entirely.
+openGraph:
+  enabled: true
+  ttl: 24h
 
 # Weight thresholds that determine when to challenge a request.
 # The generic-browser rule above adds weight=10 to browser requests,
