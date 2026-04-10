@@ -20,6 +20,11 @@ bots:
         - '"Hx-Request" in headers'
         - 'headers["Hx-Request"] == "true"'
 
+  # Deny Meta/Facebook crawlers (meta-externalagent, facebookexternalhit, FacebookBot).
+  - name: deny-meta-crawlers
+    user_agent_regex: meta-externalagent|meta-webindexer|facebookexternalhit|FacebookBot
+    action: DENY
+
   # Deny known pathological bots and aggressive scrapers.
   - import: (data)/bots/_deny-pathological.yaml
   - import: (data)/bots/aggressive-brazilian-scrapers.yaml
