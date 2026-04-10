@@ -11,6 +11,10 @@
 #   DO_BACKUP_BUCKET_NAME            — dedicated backup bucket name
 set -euo pipefail
 
+# Ensure ~/.local/bin is in PATH — systemd user services have a minimal PATH
+# that does not include pip-installed tools like awscli.
+export PATH="${HOME}/.local/bin:${PATH}"
+
 TIMESTAMP=$(date +%Y%m%d-%H%M%S)
 DUMP_FILE="metron-${TIMESTAMP}.dump"
 BACKUP_DIR="${HOME}/backups"
