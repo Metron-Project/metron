@@ -20,6 +20,13 @@ bots:
         - '"Hx-Request" in headers'
         - 'headers["Hx-Request"] == "true"'
 
+  # Deny bots spoofing Chrome with fake version numbers ending in .0.0.0
+  # (e.g. Chrome/145.0.0.0). Real Chrome builds always have non-zero patch
+  # and build numbers (e.g. Chrome/145.0.7355.90).
+  - name: deny-fake-chrome
+    user_agent_regex: Chrome/\d+\.0\.0\.0
+    action: DENY
+
   # Deny Meta/Facebook crawlers (meta-externalagent, facebookexternalhit, FacebookBot).
   - name: deny-meta-crawlers
     user_agent_regex: meta-externalagent|meta-webindexer|FacebookBot
