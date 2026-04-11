@@ -25,6 +25,12 @@ bots:
     user_agent_regex: meta-externalagent|meta-webindexer|FacebookBot
     action: DENY
 
+  # Deny WordPress path scanners. Metron is a Django app — these paths will
+  # never exist and are purely exploit probes.
+  - name: deny-wordpress-scanners
+    path_regex: wp-includes|wp-admin|wp-login|xmlrpc\.php
+    action: DENY
+
   # Deny known pathological bots and aggressive scrapers.
   - import: (data)/bots/_deny-pathological.yaml
   - import: (data)/bots/aggressive-brazilian-scrapers.yaml
@@ -41,6 +47,14 @@ bots:
   # Allow well-known routes (favicon, robots.txt, .well-known/).
   - import: (data)/common/keep-internet-working.yaml
 
+  # Allow social media OG tag fetchers so link previews work when users share
+  # Metron URLs. These bypass the challenge entirely rather than using the
+  # openGraph passthrough, which would amplify bot attacks by hitting Django
+  # for every challenged request.
+  - name: allow-og-crawlers
+    user_agent_regex: facebookexternalhit|Twitterbot|LinkedInBot|Slackbot|Discordbot|TelegramBot
+    action: ALLOW
+
   # Add weight to generic browser-like user agents. Combined with the
   # thresholds below this triggers the proof-of-work challenge for browsers.
   - name: generic-browser
@@ -50,12 +64,10 @@ bots:
     weight:
       adjust: 10
 
-# Anubis fetches and caches Open Graph tags from Django and serves them to
-# social media crawlers (Facebook, Twitter/X, Slack, Discord, etc.) so that
-# link previews work without bypassing the challenge entirely.
-openGraph:
-  enabled: true
-  ttl: 24h
+# OG passthrough is disabled. When enabled, Anubis fetches OG tags from Django
+# for every challenged request, which amplifies bot attacks by doubling Django
+# load. Social media link previews are handled instead by the allow-og-crawlers
+# rule below which lets known OG fetchers bypass the challenge entirely.
 
 # Weight thresholds that determine when to challenge a request.
 # The generic-browser rule above adds weight=10 to browser requests,
