@@ -32,10 +32,10 @@ bots:
     user_agent_regex: meta-externalagent|meta-webindexer|FacebookBot
     action: DENY
 
-  # Deny WordPress path scanners. Metron is a Django app — these paths will
-  # never exist and are purely exploit probes.
-  - name: deny-wordpress-scanners
-    path_regex: wp-includes|wp-admin|wp-login|xmlrpc\.php
+  # Deny PHP exploit scanners. Metron is a Django app — .php paths will never
+  # exist and requests for them are purely exploit probes.
+  - name: deny-php-scanners
+    path_regex: \.php$|\.php\?
     action: DENY
 
   # Deny known pathological bots and aggressive scrapers.
