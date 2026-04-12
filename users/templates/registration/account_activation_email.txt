@@ -23,7 +23,7 @@ A community-driven project for comic book enthusiasts
 
 Website: https://metron.cloud
 GitHub: https://github.com/Metron-Project/metron
-Contact: bpepple@metron.cloud
+Contact: admin@metron.cloud
 
 (c) {% now "Y" %} Metron Project. All rights reserved.
 {% endautoescape %}
