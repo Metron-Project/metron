@@ -20,13 +20,6 @@ bots:
         - '"Hx-Request" in headers'
         - 'headers["Hx-Request"] == "true"'
 
-  # Deny bots spoofing Chrome with fake version numbers ending in .0.0.0
-  # (e.g. Chrome/145.0.0.0). Real Chrome builds always have non-zero patch
-  # and build numbers (e.g. Chrome/145.0.7355.90).
-  - name: deny-fake-chrome
-    user_agent_regex: Chrome/\d+\.0\.0\.0
-    action: DENY
-
   # Deny Meta/Facebook crawlers (meta-externalagent, facebookexternalhit, FacebookBot).
   - name: deny-meta-crawlers
     user_agent_regex: meta-externalagent|meta-webindexer|FacebookBot
@@ -67,6 +60,15 @@ bots:
   - name: generic-browser
     user_agent_regex: >-
       Mozilla|Opera
+    action: WEIGH
+    weight:
+      adjust: 10
+
+  # Add extra weight to Chrome user agents. Chrome-spoofing bots are common,
+  # so Chrome requests get an additional +10 (total 20) which lands in the
+  # mild-proof-of-work band → fast difficulty 4 (vs difficulty 2 for other browsers).
+  - name: weigh-chrome
+    user_agent_regex: Chrome/
     action: WEIGH
     weight:
       adjust: 10
