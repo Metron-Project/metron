@@ -8,6 +8,7 @@ from django.contrib.contenttypes.fields import GenericRelation
 from django.contrib.postgres.fields import ArrayField
 from django.core.exceptions import ObjectDoesNotExist
 from django.db import models
+from django.db.models.functions import Upper
 from django.db.models.signals import pre_save
 from django.urls import reverse
 from django.utils.text import slugify
@@ -127,6 +128,11 @@ class Issue(CommonInfo):
                 name="series_cover_store_num_idx",
             ),
             models.Index(fields=["series", "number"], name="series_number_idx"),
+            models.Index(
+                "series",
+                Upper("number"),
+                name="issue_series_upper_num_idx",
+            ),
             models.Index(fields=["store_date"], name="issue_store_date_idx"),
             models.Index(fields=["foc_date"], name="issue_foc_date_idx"),
             models.Index(fields=["cv_id"], name="issue_cv_id_idx"),

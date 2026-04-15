@@ -2,7 +2,10 @@ import itertools
 from typing import TYPE_CHECKING
 
 from django.contrib.contenttypes.fields import GenericRelation
+from django.contrib.postgres.indexes import GinIndex, OpClass
+from django.contrib.postgres.lookups import Unaccent
 from django.db import models
+from django.db.models.functions import Upper
 from django.db.models.signals import pre_save
 from django.urls import reverse
 from django.utils.text import slugify
@@ -90,7 +93,10 @@ class Series(CommonInfo):
     class Meta:
         indexes = [
             models.Index(fields=["sort_name", "year_began"], name="sort_year_began_idx"),
-            models.Index(fields=["name"], name="series_name_idx"),
+            GinIndex(
+                OpClass(Upper(Unaccent("name")), name="gin_trgm_ops"),
+                name="series_name_unaccent_trgm_idx",
+            ),
             models.Index(fields=["cv_id"], name="series_cv_id_idx"),
             models.Index(fields=["gcd_id"], name="series_gcd_id_idx"),
         ]
