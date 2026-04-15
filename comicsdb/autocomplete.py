@@ -262,7 +262,8 @@ class IssueAutocomplete(ModelAutocomplete):
 
             # Add series name filter if there's text before '#'
             # Use unaccent for accent-insensitive series name matching
-            # Split into words so order doesn't matter (e.g., "Spider Amazing" matches "Amazing Spider-Man")
+            # Split into words so order doesn't matter
+            # (e.g., "Spider Amazing" matches "Amazing Spider-Man")
             # Also extract year if present in parentheses (e.g., "Speed Racer (2025)")
             if series_part:
                 # Check for year in parentheses at the end
