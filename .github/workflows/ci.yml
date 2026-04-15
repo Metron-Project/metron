@@ -1,0 +1,110 @@
+name: CI
+
+on:
+  push:
+    branches: [master]
+  pull_request:
+    branches: [master]
+
+jobs:
+  lint:
+    name: Lint
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install ruff
+        run: pip install ruff
+
+      - name: Check formatting
+        run: ruff format --check .
+
+      - name: Run linter
+        run: ruff check .
+
+  test:
+    name: Test
+    runs-on: ubuntu-latest
+
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_DB: metron_test
+          POSTGRES_USER: metron
+          POSTGRES_PASSWORD: metron
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+      redis:
+        image: redis:7
+        ports:
+          - 6379:6379
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+    env:
+      SECRET_KEY: "ci-secret-key-not-for-production"
+      DEBUG: "True"
+      ALLOWED_HOSTS: "localhost,127.0.0.1"
+      DB_NAME: metron_test
+      DB_USER: metron
+      DB_PASSWORD: metron
+      DB_HOST: localhost
+      REDIS_URL: "redis://localhost:6379"
+      THUMBNAIL_REDIS_HOST: localhost
+      EMAIL_BACKEND: "django.core.mail.backends.console.EmailBackend"
+      EMAIL_HOST: "localhost"
+      EMAIL_USER: "test@example.com"
+      EMAIL_PASSWORD: "dummy"
+      PUSHOVER_TOKEN: "dummy"
+      PUSHOVER_USER_KEY: "dummy"
+      HCAPTCHA_SECRET_KEY: "dummy"
+      RAPID_API_KEY: "dummy"
+      RAPID_API_HOST: "dummy"
+      STATIC_ROOT: "/tmp/static"
+      MEDIA_ROOT: "/tmp/media"
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Cache pipenv virtualenv
+        uses: actions/cache@v4
+        with:
+          path: ~/.local/share/virtualenvs
+          key: ${{ runner.os }}-pipenv-${{ hashFiles('Pipfile.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-pipenv-
+
+      - name: Install pipenv
+        run: pip install pipenv
+
+      - name: Install dependencies
+        run: pipenv sync --dev --system
+
+      - name: Run tests
+        run: pytest
+
+      - name: Upload coverage report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage-report
+          path: test-results/coverage/
+          retention-days: 14

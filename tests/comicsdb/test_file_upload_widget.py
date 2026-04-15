@@ -3,6 +3,9 @@
 import pytest
 from django.forms import ClearableFileInput, Form, ImageField
 from django.template import Context, Template
+from django.template.loader import get_template
+
+from comicsdb.forms.creator import CreatorForm
 
 
 class TestFileUploadWidgetTemplate:
@@ -81,8 +84,6 @@ class TestFileUploadWidgetInContext:
 
     def test_creator_form_image_field_has_onchange_handler(self, db, creator_form_template):
         """Test that creator form image field includes onchange handler."""
-        from comicsdb.forms.creator import CreatorForm
-
         form = CreatorForm()
         context = Context({"form": form})
         rendered = creator_form_template.render(context)
@@ -97,8 +98,6 @@ class TestWikiFormFieldFileUpload:
 
     def test_wiki_file_field_template_syntax(self):
         """Test that the wiki formfield template has correct onchange syntax."""
-        from django.template.loader import get_template
-
         template = get_template("wiki/includes/formfield.html")
         source = template.template.source
 
