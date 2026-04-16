@@ -14,10 +14,6 @@ class Migration(migrations.Migration):
     ]
 
     operations = [
-        migrations.RunSQL(
-            sql="ALTER FUNCTION unaccent(text) IMMUTABLE;",
-            reverse_sql="ALTER FUNCTION unaccent(text) STABLE;",
-        ),
         migrations.RemoveIndex(
             model_name="series",
             name="series_name_idx",
