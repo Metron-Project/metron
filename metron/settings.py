@@ -331,7 +331,7 @@ if not DEBUG:
     AWS_S3_CLIENT_CONFIG = BotocoreConfig(
         connect_timeout=5,
         read_timeout=10,
-        retries={"max_attempts": 2, "mode": "standard"},
+        retries={"max_attempts": 3, "mode": "standard"},
         # Prevent stale connections in boto3's pool — rootless Podman's
         # user-space network stack (pasta) can silently drop idle TCP connections.
         tcp_keepalive=True,
