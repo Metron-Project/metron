@@ -485,6 +485,7 @@ systemctl --user daemon-reload
 
 podman build -t localhost/metron:latest .
 systemctl --user restart metron-web metron-anubis
+
 podman exec metron-web python manage.py migrate
 # Re-run collectstatic only if static assets changed:
 # podman exec metron-web python manage.py collectstatic --no-input
