@@ -14,6 +14,26 @@ class Migration(migrations.Migration):
     ]
 
     operations = [
+        migrations.RunSQL(
+            sql="""
+                DO $$
+                BEGIN
+                    ALTER FUNCTION unaccent(text) IMMUTABLE;
+                EXCEPTION WHEN insufficient_privilege THEN
+                    NULL;
+                END;
+                $$;
+            """,
+            reverse_sql="""
+                DO $$
+                BEGIN
+                    ALTER FUNCTION unaccent(text) STABLE;
+                EXCEPTION WHEN insufficient_privilege THEN
+                    NULL;
+                END;
+                $$;
+            """,
+        ),
         migrations.RemoveIndex(
             model_name="series",
             name="series_name_idx",
@@ -30,9 +50,7 @@ class Migration(migrations.Migration):
             model_name="series",
             index=django.contrib.postgres.indexes.GinIndex(
                 django.contrib.postgres.indexes.OpClass(
-                    django.db.models.functions.text.Upper(
-                        django.contrib.postgres.lookups.Unaccent("name")
-                    ),
+                    django.contrib.postgres.lookups.Unaccent("name"),
                     name="gin_trgm_ops",
                 ),
                 name="series_name_unaccent_trgm_idx",

@@ -486,10 +486,6 @@ systemctl --user daemon-reload
 podman build -t localhost/metron:latest .
 systemctl --user restart metron-web metron-anubis
 
-# If the release requires it, run any one-time superuser database steps before
-# migrating. For example, when migration 0050 was introduced:
-#   podman exec -it metron-postgres psql -U postgres -d metron \
-#     -c "ALTER FUNCTION unaccent(text) IMMUTABLE;"
 podman exec metron-web python manage.py migrate
 # Re-run collectstatic only if static assets changed:
 # podman exec metron-web python manage.py collectstatic --no-input
