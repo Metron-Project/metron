@@ -21,8 +21,8 @@ class PublisherForm(ModelForm):
     field_order = ["name", "desc", "founded", "country", "cv_id", "gcd_id", "image"]
 
     def clean_country(self):
-        # Only allow US publishers for now.
         country = self.cleaned_data["country"]
-        if country and country != "US":
-            raise ValidationError("Currently only US Publishers are supported")
+        allowed = {"US", "GB"}
+        if country and str(country) not in allowed:
+            raise ValidationError("Currently only US and UK Publishers are supported")
         return country
