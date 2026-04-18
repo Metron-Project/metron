@@ -2,6 +2,8 @@ import contextlib
 import logging
 
 from django.contrib.contenttypes.fields import GenericRelation
+from django.contrib.postgres.indexes import GinIndex, OpClass
+from django.contrib.postgres.lookups import Unaccent
 from django.core.exceptions import ObjectDoesNotExist
 from django.db import models
 from django.db.models.signals import pre_save
@@ -58,7 +60,10 @@ class Imprint(CommonInfo):
 
     class Meta:
         indexes = [
-            models.Index(fields=["name"], name="imprint_name_idx"),
+            GinIndex(
+                OpClass(Unaccent("name"), name="gin_trgm_ops"),
+                name="imprint_name_unaccent_trgm_idx",
+            ),
             models.Index(fields=["cv_id"], name="imprint_cv_id_idx"),
             models.Index(fields=["gcd_id"], name="imprint_gcd_id_idx"),
         ]
