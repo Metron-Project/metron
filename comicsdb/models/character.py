@@ -3,6 +3,8 @@ import logging
 
 from django.contrib.contenttypes.fields import GenericRelation
 from django.contrib.postgres.fields import ArrayField
+from django.contrib.postgres.indexes import GinIndex, OpClass
+from django.contrib.postgres.lookups import Unaccent
 from django.core.exceptions import ObjectDoesNotExist
 from django.db import models
 from django.db.models.signals import pre_save
@@ -71,7 +73,9 @@ class Character(CommonInfo):
 
     class Meta:
         indexes = [
-            models.Index(fields=["name"], name="character_name_idx"),
+            GinIndex(
+                OpClass(Unaccent("name"), name="gin_trgm_ops"), name="character_name_trgm_idx"
+            ),
             models.Index(fields=["cv_id"], name="character_cv_id_idx"),
             models.Index(fields=["gcd_id"], name="character_gcd_id_idx"),
         ]
