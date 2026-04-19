@@ -3,6 +3,50 @@
 This guide covers deploying Metron on a fresh CentOS droplet using rootless Podman
 with Quadlet (systemd-managed containers).
 
+## Table of Contents
+
+- [Architecture](#architecture)
+- [1. Create admin users and add SSH keys](#1-create-admin-users-and-add-ssh-keys)
+- [2. Provision the droplet](#2-provision-the-droplet)
+- [3. Create the deploy user](#3-create-the-deploy-user)
+- [4. Clone the repo](#4-clone-the-repo)
+- [5. Configure the environment file](#5-configure-the-environment-file)
+- [6. Install Quadlet unit files](#6-install-quadlet-unit-files)
+- [7. Obtain TLS certificates](#7-obtain-tls-certificates)
+  - [Install certbot](#install-certbot)
+  - [Migrating from an existing droplet — copy existing certificates](#migrating-from-an-existing-droplet--copy-existing-certificates)
+  - [Fresh deployment — issue a new certificate](#fresh-deployment--issue-a-new-certificate)
+  - [Certificate renewal](#certificate-renewal)
+- [8. Build the app image](#8-build-the-app-image)
+- [9. Migrate data from the existing droplet](#9-migrate-data-from-the-existing-droplet)
+  - [8a. Dump the database on the old droplet](#8a-dump-the-database-on-the-old-droplet)
+  - [8b. Transfer the dump to the new droplet](#8b-transfer-the-dump-to-the-new-droplet)
+  - [8c. Restore the database on the new droplet](#8c-restore-the-database-on-the-new-droplet)
+- [10. Start services](#10-start-services)
+- [Pre-cutover testing](#pre-cutover-testing)
+  - [Copy the existing TLS certificates from the old droplet](#copy-the-existing-tls-certificates-from-the-old-droplet)
+  - [Override DNS on your local machine](#override-dns-on-your-local-machine)
+- [Cutover: switching traffic from the old droplet to the new one](#cutover-switching-traffic-from-the-old-droplet-to-the-new-one)
+  - [Reserved IP (~zero downtime)](#reserved-ip-zero-downtime)
+- [Updating the application](#updating-the-application)
+- [History cleanup](#history-cleanup)
+- [Database backups](#database-backups)
+  - [One-time setup](#one-time-setup)
+  - [Manual backup](#manual-backup)
+  - [Automated backups with a systemd timer](#automated-backups-with-a-systemd-timer)
+  - [Restoring from a backup](#restoring-from-a-backup)
+- [Enable persistent journals](#enable-persistent-journals)
+- [Fail2ban](#fail2ban)
+  - [Install](#install)
+  - [Deploy filters and jail config](#deploy-filters-and-jail-config)
+  - [Thresholds](#thresholds)
+  - [Useful fail2ban commands](#useful-fail2ban-commands)
+  - [Updating filters or jail config](#updating-filters-or-jail-config)
+- [Useful commands](#useful-commands)
+- [File locations on the droplet](#file-locations-on-the-droplet)
+
+---
+
 ## Architecture
 
 ```
