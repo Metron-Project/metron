@@ -1,5 +1,6 @@
 from decimal import Decimal
 
+from django.conf import settings
 from djmoney.money import Money
 from drf_spectacular.utils import extend_schema_field
 from rest_framework import serializers
@@ -19,13 +20,34 @@ from comicsdb.models import Issue, Series, Variant
 
 @extend_schema_field(
     {
-        "type": "string",
-        "format": "decimal",
-        "pattern": r"^\d+\.\d{2}$",
-        "example": "3.99",
+        "oneOf": [
+            {
+                "type": "string",
+                "format": "decimal",
+                "pattern": r"^\d+\.\d{2}$",
+                "example": "3.99",
+                "description": "Decimal string — defaults to USD (e.g. '3.99').",
+            },
+            {
+                "type": "object",
+                "properties": {
+                    "amount": {"type": "number", "example": 3.99},
+                    "currency": {
+                        "type": "string",
+                        "enum": ["USD", "GBP"],
+                        "example": "GBP",
+                    },
+                },
+                "required": ["amount", "currency"],
+                "description": "Object format for non-USD prices (e.g. GBP for UK publishers).",
+            },
+        ],
         "description": (
-            "Price amount as decimal string (e.g., '3.99'). "
-            "Currency information available in price_currency field."
+            "Cover price. For reads, returns the amount as a decimal string; "
+            "see price_currency for the currency. "
+            "For writes, pass a plain decimal string (defaults to USD) or "
+            '{"amount": 3.99, "currency": "GBP"} for UK publishers. '
+            "Supported currencies: USD, GBP."
         ),
         "nullable": True,
     }
@@ -60,7 +82,7 @@ class PriceField(serializers.Field):
         Accepts:
         - None or empty string: returns None (blank price)
         - Decimal/float/string: "3.99" (defaults to USD)
-        - Dict: {"amount": 3.99, "currency": "USD"}
+        - Dict: {"amount": 3.99, "currency": "GBP"} (supported: USD, GBP)
         """
         # Handle None, empty string, or empty dict
         if data in (None, "", {}):
@@ -74,6 +96,11 @@ class PriceField(serializers.Field):
             # Allow empty/null amount in dict format
             if amount in (None, ""):
                 return None
+
+            if currency not in settings.CURRENCIES:
+                raise serializers.ValidationError(
+                    f"Invalid currency '{currency}'. Supported: {', '.join(settings.CURRENCIES)}"
+                )
 
             try:
                 return Money(Decimal(str(amount)), currency)

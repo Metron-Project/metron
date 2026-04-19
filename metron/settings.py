@@ -151,7 +151,7 @@ DATABASES = {
 }
 
 # django-money settings
-CURRENCIES = ("USD",)  # Add other currencies as needed: ('USD', 'GBP', 'EUR')
+CURRENCIES = ("USD", "GBP")
 DEFAULT_CURRENCY = "USD"
 
 # django-wiki'
