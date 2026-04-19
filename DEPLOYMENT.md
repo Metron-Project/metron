@@ -53,23 +53,28 @@ with Quadlet (systemd-managed containers).
 internet (80/443) → firewalld → nginx container (host network, :8080/:8443)
                                       ↓ 127.0.0.1:8923
                              metron-anubis (Anubis, metron.network)
-                                      ↓ metron-web:8000
-                              metron-web (gunicorn, metron.network)
-                                      ↓
+                                      ↓ host.containers.internal:8000
+                              metron-web (gunicorn, host network, :8000)
+                                      ↓ 127.0.0.1:5432 / 127.0.0.1:6379
                           metron-postgres  metron-redis
-                              (metron.network)
+                              (metron.network, published to loopback)
 ```
 
-The nginx container uses `Network=host` so it sits directly on the host network
-stack, which allows real client IPs to be logged rather than pasta's internal
-NAT addresses. The metron-anubis, metron-web, metron-postgres, and metron-redis
-containers share the `metron` bridge network; metron-anubis is published on
-`127.0.0.1:8923` so nginx can reach it via the loopback interface. Anubis
-enforces a proof-of-work challenge for browser traffic and forwards to
-metron-web; API requests (`/api/`) are exempted and pass through unconditionally.
-Static and media files are served from DigitalOcean Spaces (S3-compatible);
-the containers have no local file storage responsibility beyond database and
-cache data volumes.
+Both nginx and metron-web use `Network=host` so they sit directly on the host
+network stack. This routes outbound connections (e.g. to DigitalOcean Spaces S3)
+through the kernel network stack rather than through pasta's user-space proxy,
+which eliminates intermittent connect timeouts. The trade-off is that
+`Network=host` containers cannot use Podman's container-name DNS resolution;
+any service metron-web needs to reach must be published to the host loopback
+and addressed as `127.0.0.1`. metron-postgres and metron-redis
+remain on the `metron` bridge network but publish their ports to `127.0.0.1`
+so metron-web can reach them via the host loopback. metron-anubis stays on the
+bridge network and is published on `127.0.0.1:8923` so nginx can reach it;
+it forwards to metron-web via `host.containers.internal:8000`. Anubis enforces
+a proof-of-work challenge for browser traffic; API requests (`/api/`) pass
+through unconditionally. Static and media files are served from DigitalOcean
+Spaces (S3-compatible); the containers have no local file storage responsibility
+beyond database and cache data volumes.
 
 ---
 
