@@ -1,0 +1,64 @@
+{% extends parent_template|default:"base.html" %}
+{% block title %}Community Polls - Metron{% endblock %}
+{% block content %}
+    <header class="block has-text-centered">
+        <h1 class="title">Community Polls</h1>
+        <p class="subtitle">Vote on governance and policy proposals for the Metron project</p>
+    </header>
+    <section class="section pt-0">
+        <div class="container">
+            {% if polls %}
+                <div class="columns is-multiline">
+                    {% for poll in polls %}
+                        <div class="column is-half">
+                            <div class="card">
+                                <header class="card-header">
+                                    <p class="card-header-title">
+                                        <a href="{% url 'polls:detail' poll.pk %}">{{ poll.title }}</a>
+                                    </p>
+                                </header>
+                                <div class="card-content">
+                                    <div class="content">
+                                        <p class="mb-2">
+                                            {% if poll.status == "active" %}
+                                                <span class="tag is-success">Active</span>
+                                            {% elif poll.status == "upcoming" %}
+                                                <span class="tag is-info">Upcoming</span>
+                                            {% else %}
+                                                <span class="tag is-dark">Closed</span>
+                                            {% endif %}
+                                        </p>
+                                        {% if poll.description %}
+                                            <p>{{ poll.description|truncatewords:20 }}</p>
+                                        {% endif %}
+                                        <p class="is-size-7 has-text-grey">
+                                            <span class="icon-text">
+                                                <span class="icon"><i class="fas fa-calendar-alt"></i></span>
+                                                <span>{{ poll.start_date|date:"M d, Y" }} – {{ poll.end_date|date:"M d, Y" }}</span>
+                                            </span>
+                                        </p>
+                                        <p class="is-size-7 has-text-grey">
+                                            <span class="icon-text">
+                                                <span class="icon"><i class="fas fa-vote-yea"></i></span>
+                                                <span>{{ poll.vote_count }} vote{{ poll.vote_count|pluralize }}</span>
+                                            </span>
+                                        </p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    {% endfor %}
+                </div>
+            {% else %}
+                <div class="has-text-centered">
+                    <p class="title is-4">No polls yet</p>
+                    <p class="subtitle">Check back later for community governance polls.</p>
+                </div>
+            {% endif %}
+        </div>
+    </section>
+{% endblock %}
+{% block pagination %}
+    {% load pagination_tags %}
+    {% include "comicsdb/partials/pagination.html" %}
+{% endblock %}

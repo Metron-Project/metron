@@ -155,6 +155,12 @@
                                 <span>API Docs</span>
                             </a>
                         {% endif %}
+                        <a class="navbar-item" href="{% url 'polls:list' %}">
+                            <span class="icon" aria-hidden="true">
+                                <i class="fas fa-poll"></i>
+                            </span>
+                            <span>Polls</span>
+                        </a>
                         <a class="navbar-item" href="{% url 'statistics' %}">
                             <span class="icon" aria-hidden="true">
                                 <i class="fas fa-chart-bar"></i>

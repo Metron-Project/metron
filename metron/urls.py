@@ -25,6 +25,7 @@ from comicsdb.urls import (
     team as team_urls,
     universe as universe_urls,
 )
+from polls import urls as polls_urls
 from reading_lists import urls as reading_lists_urls
 from user_collection import urls as user_collection_urls
 
@@ -57,6 +58,7 @@ urlpatterns = [
     path("issue/", include(issue_urls)),
     path("jsi18n/", JavaScriptCatalog.as_view(), name="javascript-catalog"),
     path("publisher/", include(publisher_urls)),
+    path("polls/", include(polls_urls)),
     path("reading-lists/", include(reading_lists_urls)),
     path("collection/", include(user_collection_urls)),
     path("series/", include(series_urls)),
