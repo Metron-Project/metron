@@ -1,0 +1,119 @@
+{% extends parent_template|default:"base.html" %}
+{% block title %}{{ poll.title }} - Metron{% endblock %}
+{% block content %}
+    <nav class="breadcrumb mb-4" aria-label="breadcrumbs">
+        <ul>
+            <li>
+                <a href="{% url 'polls:list' %}">
+                    <span class="icon is-small"><i class="fas fa-poll"></i></span>
+                    <span>Polls</span>
+                </a>
+            </li>
+            <li class="is-active">
+                <a aria-current="page">{{ poll.title }}</a>
+            </li>
+        </ul>
+    </nav>
+    <header class="block">
+        <h1 class="title">{{ poll.title }}</h1>
+        <div class="tags">
+            {% if poll.status == "active" %}
+                <span class="tag is-success is-medium">Active</span>
+            {% elif poll.status == "upcoming" %}
+                <span class="tag is-info is-medium">Upcoming</span>
+            {% else %}
+                <span class="tag is-dark is-medium">Closed</span>
+            {% endif %}
+        </div>
+    </header>
+    {% if user.is_staff %}
+        <nav class="level mb-5">
+            <div class="level-left"></div>
+            <div class="level-right">
+                <div class="buttons">
+                    <a class="button is-rounded is-danger"
+                       href="{% url 'polls:delete' poll.pk %}">
+                        <span class="icon is-small"><i class="fas fa-trash"></i></span>
+                        <span>Delete</span>
+                    </a>
+                </div>
+            </div>
+        </nav>
+    {% endif %}
+    <div class="columns">
+        <div class="column is-two-thirds">
+            {% if poll.description %}
+                <div class="box">
+                    <h2 class="title is-5">Proposal</h2>
+                    <div class="content">{{ poll.description|linebreaksbr }}</div>
+                </div>
+            {% endif %}
+            <div id="poll-voting-section">
+                {% if can_vote %}
+                    <div class="box">
+                        <h2 class="title is-5">Cast Your Vote</h2>
+                        <form hx-post="{% url 'polls:vote' poll.pk %}"
+                              hx-target="#poll-voting-section"
+                              hx-swap="innerHTML">
+                            {% csrf_token %}
+                            {% for choice in choices %}
+                                <div class="field">
+                                    <div class="control">
+                                        <label class="radio">
+                                            <input type="radio"
+                                                   name="choice"
+                                                   value="{{ choice.pk }}"
+                                                   required>
+                                            {{ choice.text }}
+                                        </label>
+                                    </div>
+                                </div>
+                            {% endfor %}
+                            <div class="field mt-4">
+                                <div class="control">
+                                    <button type="submit" class="button is-primary is-rounded">
+                                        <span class="icon"><i class="fas fa-vote-yea"></i></span>
+                                        <span>Cast Vote</span>
+                                    </button>
+                                </div>
+                            </div>
+                        </form>
+                    </div>
+                {% elif poll.status == "upcoming" %}
+                    <div class="notification is-info is-light">
+                        <span class="icon"><i class="fas fa-clock"></i></span>
+                        Voting opens on {{ poll.start_date|date:"F j, Y" }}.
+                    </div>
+                {% elif not user.is_authenticated and poll.status == "active" %}
+                    <div class="notification is-warning is-light">
+                        <a href="{% url 'login' %}?next={{ request.path }}">Log in</a>
+                        to cast your vote.
+                    </div>
+                {% else %}
+                    {% include "polls/partials/poll_results.html" %}
+                {% endif %}
+            </div>
+        </div>
+        <div class="column">
+            <div class="box">
+                <h2 class="title is-6">Poll Details</h2>
+                <dl>
+                    <dt class="has-text-weight-bold">Status:</dt>
+                    <dd class="mb-3">
+                        {% if poll.status == "active" %}Active{% elif poll.status == "upcoming" %}Upcoming{% else %}Closed{% endif %}
+                    </dd>
+                    <dt class="has-text-weight-bold">Voting Opens:</dt>
+                    <dd class="mb-3">{{ poll.start_date|date:"F j, Y" }}</dd>
+                    <dt class="has-text-weight-bold">Voting Closes:</dt>
+                    <dd class="mb-3">{{ poll.end_date|date:"F j, Y" }}</dd>
+                    <dt class="has-text-weight-bold">Total Votes:</dt>
+                    <dd class="mb-3">{{ total_votes }}</dd>
+                    {% if poll.created_by %}
+                        <dt class="has-text-weight-bold">Created By:</dt>
+                        <dd class="mb-3">{{ poll.created_by.username }}</dd>
+                    {% endif %}
+                </dl>
+            </div>
+        </div>
+    </div>
+{% endblock %}

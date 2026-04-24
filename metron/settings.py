@@ -76,6 +76,7 @@ INSTALLED_APPS = [
     "users",
     "reading_lists",
     "user_collection",
+    "polls",
 ]
 
 MIDDLEWARE = [

@@ -1,0 +1,40 @@
+<div class="box">
+    <h3 class="title is-5">Results</h3>
+    {% if total_votes > 0 %}
+        {% for choice in choices %}
+            <div class="mb-4">
+                <div class="level mb-1">
+                    <div class="level-left">
+                        <div class="level-item">
+                            <span class="{% if user_vote and user_vote.choice == choice %}has-text-weight-bold{% endif %}">
+                                {% if user_vote and user_vote.choice == choice %}
+                                    <span class="icon has-text-success"><i class="fas fa-check-circle"></i></span>
+                                {% endif %}
+                                {{ choice.text }}
+                            </span>
+                        </div>
+                    </div>
+                    <div class="level-right">
+                        <div class="level-item">
+                            <span class="is-size-7 has-text-grey">
+                                {{ choice.vote_count }} vote{{ choice.vote_count|pluralize }}
+                                ({% widthratio choice.vote_count total_votes 100 %}%)
+                            </span>
+                        </div>
+                    </div>
+                </div>
+                <progress
+                    class="progress {% if user_vote and user_vote.choice == choice %}is-success{% else %}is-link{% endif %} is-small"
+                    value="{{ choice.vote_count }}"
+                    max="{{ total_votes }}">
+                    {% widthratio choice.vote_count total_votes 100 %}%
+                </progress>
+            </div>
+        {% endfor %}
+        <p class="is-size-7 has-text-grey mt-3">
+            <strong>{{ total_votes }}</strong> total vote{{ total_votes|pluralize }}
+        </p>
+    {% else %}
+        <p class="has-text-grey">No votes have been cast yet.</p>
+    {% endif %}
+</div>
