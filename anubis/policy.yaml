@@ -20,6 +20,10 @@ bots:
         - '"Hx-Request" in headers'
         - 'headers["Hx-Request"] == "true"'
 
+  # Allow well-known routes (favicon, robots.txt, .well-known/) before any deny
+  # rules so crawlers can always fetch these regardless of user-agent.
+  - import: (data)/common/keep-internet-working.yaml
+
   # Deny Meta/Facebook crawlers (meta-externalagent, facebookexternalhit, FacebookBot).
   - name: deny-meta-crawlers
     user_agent_regex: meta-externalagent|meta-webindexer|FacebookBot
@@ -43,9 +47,6 @@ bots:
 
   # Challenge Firefox AI previews.
   - import: (data)/clients/x-firefox-ai.yaml
-
-  # Allow well-known routes (favicon, robots.txt, .well-known/).
-  - import: (data)/common/keep-internet-working.yaml
 
   # Allow social media OG tag fetchers so link previews work when users share
   # Metron URLs. These bypass the challenge entirely rather than using the
