@@ -365,7 +365,8 @@ The Issue endpoint supports the most comprehensive filtering options:
 
 - All list fields plus:
     - `desc` - Issue description
-    - `price` - Cover price
+    - `price` - Cover price amount as a decimal string (e.g. `"3.99"`). See `price_currency` for the currency.
+    - `price_currency` - ISO 4217 currency code for the cover price (e.g. `"USD"`, `"GBP"`).
     - `sku` - Distributor SKU
     - `isbn` - ISBN number
     - `upc` - UPC code
@@ -383,6 +384,15 @@ The Issue endpoint supports the most comprehensive filtering options:
     - `cover_hash` - Perceptual image hash
     - `foc_date` - Final order cutoff date
     - `resource_url` - Link to web UI
+
+**Cover Price (Write):**
+
+The `price` field accepts two formats on POST/PATCH:
+
+- **Decimal string** — defaults to USD: `"3.99"`
+- **Object** — for non-USD prices: `{"amount": 3.99, "currency": "GBP"}`
+
+Supported currencies: `USD`, `GBP`. Unsupported currency codes will return a `400 Bad Request`.
 
 **Cover Hash:**
 The `cover_hash` field contains a perceptual hash generated using [ImageHash](https://github.com/JohannesBuchner/imagehash). This allows for finding similar or duplicate covers.
@@ -445,11 +455,16 @@ Comic book publishers.
 **Detail Response Fields:**
 
 - All list fields plus:
+    - `country` - ISO 3166-1 alpha-2 country code (e.g. `"US"`, `"GB"`)
     - `desc` - Description
     - `image` - Publisher logo URL
     - `cv_id` - Comic Vine ID
     - `gcd_id` - Grand Comics Database ID
     - `resource_url` - Link to web UI
+
+**Country (Write):**
+
+The `country` field on POST/PATCH accepts ISO 3166-1 alpha-2 codes. Currently supported values are `"US"` (United States) and `"GB"` (United Kingdom). Other values will return a `400 Bad Request`.
 
 **Example:**
 ```bash
@@ -1913,6 +1928,11 @@ For questions, issues, or feature requests:
 ---
 
 ## Changelog
+
+### Version 1.2
+- UK publisher support: `country` field on Publisher now accepts `"GB"` in addition to `"US"`
+- Issue `price` field now accepts GBP via `{"amount": 3.99, "currency": "GBP"}` on write
+- Issue detail response now includes `price_currency` field
 
 ### Version 1.1
 - Conditional request support (`If-Modified-Since` / `Last-Modified`) on all detail endpoints

@@ -13,7 +13,7 @@ Tests for the REST API endpoints ensuring proper authentication, authorization, 
 - [test_api_creator.py](test_api_creator.py) - Creator (writers, artists, etc.) API endpoints
 - [test_api_credits.py](test_api_credits.py) - Credits API endpoints
 - [test_api_imprint.py](test_api_imprint.py) - Publisher imprint API endpoints
-- [test_api_issue.py](test_api_issue.py) - Comic issue API endpoints
+- [test_api_issue.py](test_api_issue.py) - Comic issue API endpoints including cover price and currency (USD/GBP)
 - [test_api_publisher.py](test_api_publisher.py) - Publisher API endpoints
 - [test_api_role.py](test_api_role.py) - Creator role API endpoints
 - [test_api_series.py](test_api_series.py) - Comic series API endpoints
@@ -45,6 +45,7 @@ Tests for Django models, business logic, and database operations:
 
 ### Form Tests
 - [test_issue_form.py](test_issue_form.py) - Issue form validation and handling
+- [test_publisher_form.py](test_publisher_form.py) - Publisher form validation including country restrictions
 
 ### Management Command Tests
 - [test_management.py](test_management.py) - Django management commands
