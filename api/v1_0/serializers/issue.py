@@ -1,3 +1,4 @@
+import json
 from decimal import Decimal
 
 from django.conf import settings
@@ -83,10 +84,20 @@ class PriceField(serializers.Field):
         - None or empty string: returns None (blank price)
         - Decimal/float/string: "3.99" (defaults to USD)
         - Dict: {"amount": 3.99, "currency": "GBP"} (supported: USD, GBP)
+        - JSON string: '{"amount": 3.99, "currency": "GBP"}' (multipart form uploads)
         """
         # Handle None, empty string, or empty dict
         if data in (None, "", {}):
             return None
+
+        # Handle JSON string encoding of a dict (e.g., from multipart form data)
+        if isinstance(data, str):
+            try:
+                parsed = json.loads(data)
+                if isinstance(parsed, dict):
+                    data = parsed
+            except (ValueError, json.JSONDecodeError):
+                pass
 
         # Handle dict format for multi-currency support
         if isinstance(data, dict):
