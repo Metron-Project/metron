@@ -789,6 +789,30 @@ sudo fail2ban-regex /var/log/metron-nginx/access.log \
   /etc/fail2ban/filter.d/metron-nginx-no-ua.conf
 ```
 
+### Manually blocked IP ranges
+
+Some abusive networks are blocked permanently in the firewalld drop zone rather
+than relying on fail2ban, because they use rotating IPs that never accumulate
+enough hits per address to trigger a jail.
+
+| CIDR | Provider | Reason |
+|------|----------|--------|
+| `43.130.64.0/18` | Tencent Cloud Computing | Persistent API abuse via rotating IPs |
+| `170.106.0.0/16` | Tencent Cloud Computing | Persistent API abuse via rotating IPs |
+
+To add a new range:
+
+```bash
+firewall-cmd --zone=drop --add-source=<cidr> --permanent
+firewall-cmd --reload
+```
+
+To list all permanently blocked sources:
+
+```bash
+firewall-cmd --zone=drop --list-sources --permanent
+```
+
 ### Updating filters or jail config
 
 After changing any file under `fail2ban/` in the repo:
