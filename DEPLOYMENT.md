@@ -797,7 +797,7 @@ enough hits per address to trigger a jail.
 
 | CIDR | Provider | Reason |
 |------|----------|--------|
-| `43.130.64.0/18` | Tencent Cloud Computing | Persistent API abuse via rotating IPs |
+| `43.130.0.0/16` | Tencent Cloud Computing | Persistent API abuse via rotating IPs |
 | `170.106.0.0/16` | Tencent Cloud Computing | Persistent API abuse via rotating IPs |
 
 To add a new range:
