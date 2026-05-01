@@ -59,4 +59,4 @@ class BulmaMoneyWidget(MoneyWidget):
                 value.amount,
                 value.currency.code if hasattr(value, "currency") else value.currency,
             ]
-        return [None, None]
+        return [None, "USD"]
