@@ -96,7 +96,7 @@ class PriceField(serializers.Field):
                 parsed = json.loads(data)
                 if isinstance(parsed, dict):
                     data = parsed
-            except (ValueError, json.JSONDecodeError):
+            except ValueError, json.JSONDecodeError:
                 pass
 
         # Handle dict format for multi-currency support
