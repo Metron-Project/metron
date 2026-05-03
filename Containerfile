@@ -1,19 +1,29 @@
+FROM python:3.14-slim AS builder
+
+COPY --from=ghcr.io/astral-sh/uv:latest /uv /uvx /bin/
+
+WORKDIR /app
+
+ENV UV_COMPILE_BYTECODE=1 UV_LINK_MODE=copy
+
+# Install production dependencies into .venv from lockfile.
+# --no-install-project skips installing the app itself (not a package),
+# enabling Docker layer caching: dep layer rebuilds only when lockfile changes.
+COPY pyproject.toml uv.lock ./
+RUN uv sync --frozen --no-dev --no-install-project
+
+# ---- runtime image ----
 FROM python:3.14-slim
 
 WORKDIR /app
 
-# Install Python production dependencies from lockfile.
-# PIPENV_VENV_IN_PROJECT and PIPENV_IGNORE_VIRTUALENVS prevent pipenv from
-# creating a virtualenv inside the container. --deploy fails the build if
-# Pipfile.lock is out of sync with Pipfile.
-COPY Pipfile Pipfile.lock ./
-RUN pip install --no-cache-dir pipenv && \
-    PIPENV_VENV_IN_PROJECT=0 PIPENV_IGNORE_VIRTUALENVS=1 \
-    pipenv install --system --deploy && \
-    pip uninstall -y pipenv
+# Copy the pre-built virtual environment (uv itself is not included)
+COPY --from=builder /app/.venv /app/.venv
 
 # Copy application code
 COPY . .
+
+ENV PATH="/app/.venv/bin:$PATH"
 
 EXPOSE 8000
 
