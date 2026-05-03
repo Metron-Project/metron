@@ -638,7 +638,7 @@ def add_read_date(request, pk):
                     item.add_read_date(read_date)
                 else:
                     item.add_read_date()  # Invalid format, use current time
-            except (ValueError, TypeError):
+            except ValueError, TypeError:
                 item.add_read_date()  # Use current time on error
     else:
         item.add_read_date()  # Use current time if empty
