@@ -1,3 +1,46 @@
+[project]
+name = "metron"
+version = "0.1.0"
+requires-python = ">=3.14"
+dependencies = [
+    "boto3",
+    "chartkick",
+    "django",
+    "django-countries",
+    "django-filter",
+    "django-htmx",
+    "django-htmx-autocomplete",
+    "django-money",
+    "django-rest-framework-condition",
+    "django-simple-bulma",
+    "django-simple-history",
+    "django-storages",
+    "djangorestframework",
+    "drf-spectacular",
+    "gunicorn",
+    "imagehash",
+    "isbnlib",
+    "pillow",
+    "psycopg[binary,pool]",
+    "python-decouple",
+    "redis",
+    "sorl-thumbnail",
+    "wiki",
+]
+
+[dependency-groups]
+dev = [
+    "coverage",
+    "django-debug-toolbar",
+    "djlint",
+    "pre-commit",
+    "pytest-cov",
+    "pytest-django",
+    "pytest-xdist",
+    "ruff",
+    "seed-isort-config",
+]
+
 [tool.black]
 line-length = 100
 target-version = ["py314"]

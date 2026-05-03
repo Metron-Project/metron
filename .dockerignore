@@ -1,0 +1,10 @@
+.venv
+.vscode
+.git
+__pycache__
+*.pyc
+.ruff_cache
+.mypy_cache
+.pytest_cache
+.claude
+.github
