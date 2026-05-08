@@ -77,6 +77,9 @@ class IssueFilter(df.rest_framework.FilterSet):
     cover_hash = df.rest_framework.CharFilter(
         label="Cover Hash", field_name="cover_hash", lookup_expr="iexact"
     )
+    creator_id = df.rest_framework.NumberFilter(
+        label="Creator Metron ID", field_name="creators__id", lookup_expr="exact", distinct=True
+    )
 
     class Meta:
         model = Issue

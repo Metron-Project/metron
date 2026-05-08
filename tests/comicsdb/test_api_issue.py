@@ -7,8 +7,10 @@ from django.utils import timezone
 from djmoney.money import Money
 from rest_framework import status
 
-from comicsdb.models import Issue
+from comicsdb.models import Credits, Issue
 from comicsdb.models.arc import Arc
+from comicsdb.models.creator import Creator
+from comicsdb.models.credits import Role
 from comicsdb.models.series import Series
 from comicsdb.models.universe import Universe
 
@@ -236,3 +238,22 @@ class TestIssuePriceField:
             reverse("api:issue-list"), data=base_issue_data, format="json"
         )
         assert resp.status_code == status.HTTP_400_BAD_REQUEST
+
+
+def test_filter_by_creator_id(
+    api_client_with_credentials, issue_with_arc: Issue, john_byrne: Creator, writer: Role
+):
+    credit = Credits.objects.create(issue=issue_with_arc, creator=john_byrne)
+    credit.role.add(writer)
+    resp = api_client_with_credentials.get(reverse("api:issue-list"), {"creator_id": john_byrne.id})
+    assert resp.status_code == status.HTTP_200_OK
+    assert resp.data["count"] == 1
+    assert resp.data["results"][0]["id"] == issue_with_arc.id
+
+
+def test_filter_by_creator_id_no_match(
+    api_client_with_credentials, issue_with_arc: Issue, john_byrne: Creator
+):
+    resp = api_client_with_credentials.get(reverse("api:issue-list"), {"creator_id": john_byrne.id})
+    assert resp.status_code == status.HTTP_200_OK
+    assert resp.data["count"] == 0

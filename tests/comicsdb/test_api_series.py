@@ -8,7 +8,9 @@ from django.urls import reverse
 from rest_framework import status
 
 from api.v1_0.serializers import SeriesListSerializer
-from comicsdb.models import Series
+from comicsdb.models import Credits, Series
+from comicsdb.models.creator import Creator
+from comicsdb.models.credits import Role
 from comicsdb.models.publisher import Publisher
 from comicsdb.models.series import SeriesType
 
@@ -110,3 +112,30 @@ def test_series_search(api_client_with_credentials, bat_sups_series, fc_series):
     serializer = SeriesListSerializer(expected, many=True)
     assert resp.status_code == status.HTTP_200_OK
     assert resp.data["results"] == serializer.data
+
+
+def test_filter_by_creator_id(
+    api_client_with_credentials,
+    fc_series: Series,
+    issue_with_arc,
+    john_byrne: Creator,
+    writer: Role,
+):
+    credit = Credits.objects.create(issue=issue_with_arc, creator=john_byrne)
+    credit.role.add(writer)
+    resp = api_client_with_credentials.get(
+        reverse("api:series-list"), {"creator_id": john_byrne.id}
+    )
+    assert resp.status_code == status.HTTP_200_OK
+    assert resp.data["count"] == 1
+    assert resp.data["results"][0]["id"] == fc_series.id
+
+
+def test_filter_by_creator_id_no_match(
+    api_client_with_credentials, fc_series: Series, john_byrne: Creator
+):
+    resp = api_client_with_credentials.get(
+        reverse("api:series-list"), {"creator_id": john_byrne.id}
+    )
+    assert resp.status_code == status.HTTP_200_OK
+    assert resp.data["count"] == 0
