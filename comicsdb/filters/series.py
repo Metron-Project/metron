@@ -39,6 +39,12 @@ class SeriesFilter(filters.FilterSet):
         label="Grand Comics Database ID", field_name="gcd_id", lookup_expr="exact"
     )
     missing_gcd_id = filters.filters.BooleanFilter(field_name="gcd_id", lookup_expr="isnull")
+    creator_id = filters.filters.NumberFilter(
+        label="Creator Metron ID",
+        field_name="issues__creators__id",
+        lookup_expr="exact",
+        distinct=True,
+    )
 
     class Meta:
         model = Series

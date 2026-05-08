@@ -336,6 +336,10 @@ The Issue endpoint supports the most comprehensive filtering options:
 
 - `rating` - Content rating (exact match)
 
+**Creator Filters:**
+
+- `creator_id` - Creator Metron ID (exact match, filters issues with a credit for this creator)
+
 **Metadata:**
 
 - `modified_gt` - Modified after datetime
@@ -416,6 +420,9 @@ GET /api/issue/?cover_year=2024&cover_month=12
 
 # Find by UPC
 GET /api/issue/?upc=75960609558200111
+
+# Get all issues with a credit for a specific creator
+GET /api/issue/?creator_id=123
 ```
 
 ---
@@ -571,6 +578,10 @@ Comic book series.
 - `gcd_id` - Grand Comics Database ID
 - `missing_gcd_id` - Boolean, series without GCD ID
 
+**Creator Filters:**
+
+- `creator_id` - Creator Metron ID (exact match, filters series containing at least one issue with a credit for this creator)
+
 **Metadata:**
 
 - `modified_gt` - Modified after datetime
@@ -631,6 +642,9 @@ GET /api/series/?year_began=2020
 
 # Get issues in a series
 GET /api/series/123/issue_list/
+
+# Get all series with at least one issue credited to a specific creator
+GET /api/series/?creator_id=123
 ```
 
 ---
@@ -1928,6 +1942,10 @@ For questions, issues, or feature requests:
 ---
 
 ## Changelog
+
+### Version 1.3
+- Added `creator_id` filter to Issue endpoint (filters issues with a credit for the given creator)
+- Added `creator_id` filter to Series endpoint (filters series containing at least one issue credited to the given creator)
 
 ### Version 1.2
 - UK publisher support: `country` field on Publisher now accepts `"GB"` in addition to `"US"`
