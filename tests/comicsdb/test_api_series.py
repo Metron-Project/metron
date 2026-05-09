@@ -139,3 +139,31 @@ def test_filter_by_creator_id_no_match(
     )
     assert resp.status_code == status.HTTP_200_OK
     assert resp.data["count"] == 0
+
+
+def test_list_series_year_end_null(api_client_with_credentials, fc_series: Series):
+    resp = api_client_with_credentials.get(reverse("api:series-list"))
+    assert resp.status_code == status.HTTP_200_OK
+    assert resp.data["results"][0]["year_end"] is None
+
+
+def test_list_series_year_end_set(
+    api_client_with_credentials, fc_series: Series, create_user, dc_comics, single_issue_type
+):
+    user = create_user()
+    Series.objects.create(
+        name="Completed Series",
+        slug="completed-series",
+        publisher=dc_comics,
+        volume="1",
+        year_began=2000,
+        year_end=2005,
+        series_type=single_issue_type,
+        status=Series.Status.COMPLETED,
+        edited_by=user,
+        created_by=user,
+    )
+    resp = api_client_with_credentials.get(reverse("api:series-list"))
+    assert resp.status_code == status.HTTP_200_OK
+    completed = next(r for r in resp.data["results"] if r["year_end"] is not None)
+    assert completed["year_end"] == 2005
