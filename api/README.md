@@ -590,18 +590,10 @@ Comic book series.
 ```json
 {
   "id": 1,
-  "series_type": {
-    "id": 1,
-    "name": "Ongoing Series"
-  },
-  "publisher": {
-    "id": 10,
-    "name": "Marvel Comics"
-  },
-  "name": "Amazing Spider-Man",
-  "volume": 1,
+  "series": "Amazing Spider-Man (1963)",
   "year_began": 1963,
   "year_end": null,
+  "volume": 1,
   "issue_count": 900,
   "modified": "2025-01-15T10:30:00Z"
 }
@@ -1942,6 +1934,9 @@ For questions, issues, or feature requests:
 ---
 
 ## Changelog
+
+### Version 1.4
+- Added `year_end` field to Series list endpoint (nullable; present when a series has ended)
 
 ### Version 1.3
 - Added `creator_id` filter to Issue endpoint (filters issues with a credit for the given creator)
