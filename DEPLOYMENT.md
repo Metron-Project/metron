@@ -762,6 +762,7 @@ sudo systemctl restart fail2ban
 | `metron-nginx-403` | 10 forbidden responses | 5 min | 24 hours |
 | `metron-nginx-401` | 10 auth failures | 5 min | 24 hours |
 | `metron-nginx-no-ua` | 5 no-user-agent requests | 60 s | 24 hours |
+| `metron-nginx-comictagger` | 1 comictagger user-agent request | 60 s | 24 hours |
 
 ### Useful fail2ban commands
 
@@ -775,6 +776,7 @@ sudo fail2ban-client status metron-nginx-404
 sudo fail2ban-client status metron-nginx-403
 sudo fail2ban-client status metron-nginx-401
 sudo fail2ban-client status metron-nginx-no-ua
+sudo fail2ban-client status metron-nginx-comictagger
 
 # Manually ban an IP
 sudo fail2ban-client set metron-nginx-401 banip <ip-address>
@@ -787,6 +789,8 @@ sudo fail2ban-regex /var/log/metron-nginx/access.log \
   /etc/fail2ban/filter.d/metron-nginx-429.conf
 sudo fail2ban-regex /var/log/metron-nginx/access.log \
   /etc/fail2ban/filter.d/metron-nginx-no-ua.conf
+sudo fail2ban-regex /var/log/metron-nginx/access.log \
+  /etc/fail2ban/filter.d/metron-nginx-comictagger.conf
 ```
 
 ### Manually blocked IP ranges
