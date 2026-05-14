@@ -42,7 +42,12 @@ bots:
   # Block AI/LLM bots aggressively.
   - import: (data)/meta/ai-block-aggressive.yaml
 
-  # Allow known good search engine crawlers (Google, Bing, DuckDuckGo, etc.)
+  # Deny all Google crawlers to reduce excessive traffic.
+  - name: deny-googlebot
+    user_agent_regex: Googlebot|AdsBot-Google|Google-InspectionTool|GoogleOther
+    action: DENY
+
+  # Allow known good search engine crawlers (Bing, DuckDuckGo, etc.)
   - import: (data)/crawlers/_allow-good.yaml
 
   # Challenge Firefox AI previews.
