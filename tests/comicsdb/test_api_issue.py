@@ -9,9 +9,11 @@ from rest_framework import status
 
 from comicsdb.models import Credits, Issue
 from comicsdb.models.arc import Arc
+from comicsdb.models.character import Character
 from comicsdb.models.creator import Creator
 from comicsdb.models.credits import Role
 from comicsdb.models.series import Series
+from comicsdb.models.team import Team
 from comicsdb.models.universe import Universe
 
 
@@ -257,3 +259,90 @@ def test_filter_by_creator_id_no_match(
     resp = api_client_with_credentials.get(reverse("api:issue-list"), {"creator_id": john_byrne.id})
     assert resp.status_code == status.HTTP_200_OK
     assert resp.data["count"] == 0
+
+
+def test_filter_by_character_id(
+    api_client_with_credentials, basic_issue: Issue, superman: Character
+):
+    basic_issue.characters.add(superman)
+    resp = api_client_with_credentials.get(reverse("api:issue-list"), {"character_id": superman.id})
+    assert resp.status_code == status.HTTP_200_OK
+    assert resp.data["count"] == 1
+    assert resp.data["results"][0]["id"] == basic_issue.id
+
+
+def test_filter_by_character_id_no_match(
+    api_client_with_credentials, basic_issue: Issue, superman: Character
+):
+    resp = api_client_with_credentials.get(reverse("api:issue-list"), {"character_id": superman.id})
+    assert resp.status_code == status.HTTP_200_OK
+    assert resp.data["count"] == 0
+
+
+def test_filter_by_team_id(api_client_with_credentials, basic_issue: Issue, teen_titans: Team):
+    basic_issue.teams.add(teen_titans)
+    resp = api_client_with_credentials.get(reverse("api:issue-list"), {"team_id": teen_titans.id})
+    assert resp.status_code == status.HTTP_200_OK
+    assert resp.data["count"] == 1
+    assert resp.data["results"][0]["id"] == basic_issue.id
+
+
+def test_filter_by_team_id_no_match(
+    api_client_with_credentials, basic_issue: Issue, teen_titans: Team
+):
+    resp = api_client_with_credentials.get(reverse("api:issue-list"), {"team_id": teen_titans.id})
+    assert resp.status_code == status.HTTP_200_OK
+    assert resp.data["count"] == 0
+
+
+def test_filter_by_universe_id(
+    api_client_with_credentials, basic_issue: Issue, earth_2_universe: Universe
+):
+    basic_issue.universes.add(earth_2_universe)
+    resp = api_client_with_credentials.get(
+        reverse("api:issue-list"), {"universe_id": earth_2_universe.id}
+    )
+    assert resp.status_code == status.HTTP_200_OK
+    assert resp.data["count"] == 1
+    assert resp.data["results"][0]["id"] == basic_issue.id
+
+
+def test_filter_by_universe_id_no_match(
+    api_client_with_credentials, basic_issue: Issue, earth_2_universe: Universe
+):
+    resp = api_client_with_credentials.get(
+        reverse("api:issue-list"), {"universe_id": earth_2_universe.id}
+    )
+    assert resp.status_code == status.HTTP_200_OK
+    assert resp.data["count"] == 0
+
+
+def test_filter_by_role_id(
+    api_client_with_credentials, basic_issue: Issue, john_byrne: Creator, writer: Role
+):
+    credit = Credits.objects.create(issue=basic_issue, creator=john_byrne)
+    credit.role.add(writer)
+    resp = api_client_with_credentials.get(reverse("api:issue-list"), {"role_id": writer.id})
+    assert resp.status_code == status.HTTP_200_OK
+    assert resp.data["count"] == 1
+    assert resp.data["results"][0]["id"] == basic_issue.id
+
+
+def test_filter_by_role_id_no_match(api_client_with_credentials, basic_issue: Issue, writer: Role):
+    resp = api_client_with_credentials.get(reverse("api:issue-list"), {"role_id": writer.id})
+    assert resp.status_code == status.HTTP_200_OK
+    assert resp.data["count"] == 0
+
+
+def test_filter_by_multiple_role_ids(
+    api_client_with_credentials, basic_issue: Issue, john_byrne: Creator, writer: Role
+):
+    penciller = Role.objects.create(name="Penciller", notes="", order=30)
+    credit = Credits.objects.create(issue=basic_issue, creator=john_byrne)
+    credit.role.add(writer, penciller)
+    resp = api_client_with_credentials.get(
+        reverse("api:issue-list"), {"role_id": f"{writer.id},{penciller.id}"}
+    )
+    assert resp.status_code == status.HTTP_200_OK
+    assert resp.data["count"] == 1
+    assert resp.data["results"][0]["id"] == basic_issue.id

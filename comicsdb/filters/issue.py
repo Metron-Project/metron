@@ -17,6 +17,10 @@ class IssueSeriesName(df.rest_framework.CharFilter):
         return super().filter(qs, value)
 
 
+class NumberInFilter(df.rest_framework.BaseInFilter, df.rest_framework.NumberFilter):
+    pass
+
+
 class IssueFilter(df.rest_framework.FilterSet):
     cover_year = df.rest_framework.NumberFilter(
         label="Cover Year", field_name="cover_date", lookup_expr="year"
@@ -79,6 +83,18 @@ class IssueFilter(df.rest_framework.FilterSet):
     )
     creator_id = df.rest_framework.NumberFilter(
         label="Creator Metron ID", field_name="creators__id", lookup_expr="exact", distinct=True
+    )
+    character_id = df.rest_framework.NumberFilter(
+        label="Character Metron ID", field_name="characters__id", lookup_expr="exact", distinct=True
+    )
+    team_id = df.rest_framework.NumberFilter(
+        label="Team Metron ID", field_name="teams__id", lookup_expr="exact", distinct=True
+    )
+    universe_id = df.rest_framework.NumberFilter(
+        label="Universe Metron ID", field_name="universes__id", lookup_expr="exact", distinct=True
+    )
+    role_id = NumberInFilter(
+        label="Role Metron ID", field_name="credits__role__id", lookup_expr="in", distinct=True
     )
 
     class Meta:

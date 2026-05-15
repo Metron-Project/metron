@@ -5,6 +5,7 @@ import django_filters as df
 from django.db.models import Q
 from django_filters import rest_framework as filters
 
+from comicsdb.filters.issue import NumberInFilter
 from comicsdb.models import Series
 
 
@@ -25,6 +26,9 @@ class SeriesFilter(filters.FilterSet):
     publisher_id = filters.filters.NumberFilter(field_name="publisher__id", lookup_expr="exact")
     publisher_name = filters.CharFilter(field_name="publisher__name", lookup_expr="icontains")
     imprint_name = filters.CharFilter(field_name="imprint__name", lookup_expr="icontains")
+    imprint_id = filters.filters.NumberFilter(
+        label="Imprint Metron ID", field_name="imprint__id", lookup_expr="exact"
+    )
     series_type_id = filters.filters.NumberFilter(field_name="series_type__id", lookup_expr="exact")
     series_type = filters.CharFilter(field_name="series_type__name", lookup_expr="icontains")
     status = filters.ChoiceFilter(choices=Series.Status)
@@ -43,6 +47,30 @@ class SeriesFilter(filters.FilterSet):
         label="Creator Metron ID",
         field_name="issues__creators__id",
         lookup_expr="exact",
+        distinct=True,
+    )
+    character_id = filters.filters.NumberFilter(
+        label="Character Metron ID",
+        field_name="issues__characters__id",
+        lookup_expr="exact",
+        distinct=True,
+    )
+    team_id = filters.filters.NumberFilter(
+        label="Team Metron ID",
+        field_name="issues__teams__id",
+        lookup_expr="exact",
+        distinct=True,
+    )
+    universe_id = filters.filters.NumberFilter(
+        label="Universe Metron ID",
+        field_name="issues__universes__id",
+        lookup_expr="exact",
+        distinct=True,
+    )
+    role_id = NumberInFilter(
+        label="Role Metron ID",
+        field_name="issues__credits__role__id",
+        lookup_expr="in",
         distinct=True,
     )
 

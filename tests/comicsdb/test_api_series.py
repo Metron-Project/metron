@@ -9,10 +9,14 @@ from rest_framework import status
 
 from api.v1_0.serializers import SeriesListSerializer
 from comicsdb.models import Credits, Series
+from comicsdb.models.character import Character
 from comicsdb.models.creator import Creator
 from comicsdb.models.credits import Role
+from comicsdb.models.imprint import Imprint
 from comicsdb.models.publisher import Publisher
 from comicsdb.models.series import SeriesType
+from comicsdb.models.team import Team
+from comicsdb.models.universe import Universe
 
 
 @pytest.fixture
@@ -139,6 +143,127 @@ def test_filter_by_creator_id_no_match(
     )
     assert resp.status_code == status.HTTP_200_OK
     assert resp.data["count"] == 0
+
+
+def test_filter_by_imprint_id(
+    api_client_with_credentials, sandman_series: Series, vertigo_imprint: Imprint
+):
+    resp = api_client_with_credentials.get(
+        reverse("api:series-list"), {"imprint_id": vertigo_imprint.id}
+    )
+    assert resp.status_code == status.HTTP_200_OK
+    assert resp.data["count"] == 1
+    assert resp.data["results"][0]["id"] == sandman_series.id
+
+
+def test_filter_by_imprint_id_no_match(
+    api_client_with_credentials, fc_series: Series, vertigo_imprint: Imprint
+):
+    resp = api_client_with_credentials.get(
+        reverse("api:series-list"), {"imprint_id": vertigo_imprint.id}
+    )
+    assert resp.status_code == status.HTTP_200_OK
+    assert resp.data["count"] == 0
+
+
+def test_filter_by_character_id(
+    api_client_with_credentials, fc_series: Series, issue_with_arc, superman: Character
+):
+    resp = api_client_with_credentials.get(
+        reverse("api:series-list"), {"character_id": superman.id}
+    )
+    assert resp.status_code == status.HTTP_200_OK
+    assert resp.data["count"] == 1
+    assert resp.data["results"][0]["id"] == fc_series.id
+
+
+def test_filter_by_character_id_no_match(
+    api_client_with_credentials, fc_series: Series, superman: Character
+):
+    resp = api_client_with_credentials.get(
+        reverse("api:series-list"), {"character_id": superman.id}
+    )
+    assert resp.status_code == status.HTTP_200_OK
+    assert resp.data["count"] == 0
+
+
+def test_filter_by_team_id(
+    api_client_with_credentials, fc_series: Series, basic_issue, teen_titans: Team
+):
+    basic_issue.teams.add(teen_titans)
+    resp = api_client_with_credentials.get(reverse("api:series-list"), {"team_id": teen_titans.id})
+    assert resp.status_code == status.HTTP_200_OK
+    assert resp.data["count"] == 1
+    assert resp.data["results"][0]["id"] == fc_series.id
+
+
+def test_filter_by_team_id_no_match(
+    api_client_with_credentials, fc_series: Series, teen_titans: Team
+):
+    resp = api_client_with_credentials.get(reverse("api:series-list"), {"team_id": teen_titans.id})
+    assert resp.status_code == status.HTTP_200_OK
+    assert resp.data["count"] == 0
+
+
+def test_filter_by_universe_id(
+    api_client_with_credentials, fc_series: Series, basic_issue, earth_2_universe: Universe
+):
+    basic_issue.universes.add(earth_2_universe)
+    resp = api_client_with_credentials.get(
+        reverse("api:series-list"), {"universe_id": earth_2_universe.id}
+    )
+    assert resp.status_code == status.HTTP_200_OK
+    assert resp.data["count"] == 1
+    assert resp.data["results"][0]["id"] == fc_series.id
+
+
+def test_filter_by_universe_id_no_match(
+    api_client_with_credentials, fc_series: Series, earth_2_universe: Universe
+):
+    resp = api_client_with_credentials.get(
+        reverse("api:series-list"), {"universe_id": earth_2_universe.id}
+    )
+    assert resp.status_code == status.HTTP_200_OK
+    assert resp.data["count"] == 0
+
+
+def test_filter_by_role_id(
+    api_client_with_credentials,
+    fc_series: Series,
+    basic_issue,
+    john_byrne: Creator,
+    writer: Role,
+):
+    credit = Credits.objects.create(issue=basic_issue, creator=john_byrne)
+    credit.role.add(writer)
+    resp = api_client_with_credentials.get(reverse("api:series-list"), {"role_id": writer.id})
+    assert resp.status_code == status.HTTP_200_OK
+    assert resp.data["count"] == 1
+    assert resp.data["results"][0]["id"] == fc_series.id
+
+
+def test_filter_by_role_id_no_match(api_client_with_credentials, fc_series: Series, writer: Role):
+    resp = api_client_with_credentials.get(reverse("api:series-list"), {"role_id": writer.id})
+    assert resp.status_code == status.HTTP_200_OK
+    assert resp.data["count"] == 0
+
+
+def test_filter_by_multiple_role_ids(
+    api_client_with_credentials,
+    fc_series: Series,
+    basic_issue,
+    john_byrne: Creator,
+    writer: Role,
+):
+    penciller = Role.objects.create(name="Penciller", notes="", order=30)
+    credit = Credits.objects.create(issue=basic_issue, creator=john_byrne)
+    credit.role.add(writer, penciller)
+    resp = api_client_with_credentials.get(
+        reverse("api:series-list"), {"role_id": f"{writer.id},{penciller.id}"}
+    )
+    assert resp.status_code == status.HTTP_200_OK
+    assert resp.data["count"] == 1
+    assert resp.data["results"][0]["id"] == fc_series.id
 
 
 def test_list_series_year_end_null(api_client_with_credentials, fc_series: Series):

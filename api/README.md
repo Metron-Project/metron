@@ -336,9 +336,16 @@ The Issue endpoint supports the most comprehensive filtering options:
 
 - `rating` - Content rating (exact match)
 
-**Creator Filters:**
+**Creator/Role Filters:**
 
 - `creator_id` - Creator Metron ID (exact match, filters issues with a credit for this creator)
+- `role_id` - Role Metron ID (filters issues where a creator has this role; accepts a single ID or multiple comma-separated IDs, e.g. `?role_id=1,2`)
+
+**Character/Team/Universe Filters:**
+
+- `character_id` - Character Metron ID (exact match)
+- `team_id` - Team Metron ID (exact match)
+- `universe_id` - Universe Metron ID (exact match)
 
 **Metadata:**
 
@@ -423,6 +430,21 @@ GET /api/issue/?upc=75960609558200111
 
 # Get all issues with a credit for a specific creator
 GET /api/issue/?creator_id=123
+
+# Get all issues where a creator has a specific role
+GET /api/issue/?role_id=1
+
+# Get all issues where a creator has any of several roles (comma-separated)
+GET /api/issue/?role_id=1,2
+
+# Get all issues featuring a specific character
+GET /api/issue/?character_id=456
+
+# Get all issues featuring a specific team
+GET /api/issue/?team_id=789
+
+# Get all issues set in a specific universe
+GET /api/issue/?universe_id=10
 ```
 
 ---
@@ -560,6 +582,7 @@ Comic book series.
 
 - `publisher_id` - Publisher Metron ID
 - `publisher_name` - Publisher name (partial match)
+- `imprint_id` - Imprint Metron ID
 - `imprint_name` - Imprint name (partial match)
 
 **Series Type:**
@@ -578,9 +601,13 @@ Comic book series.
 - `gcd_id` - Grand Comics Database ID
 - `missing_gcd_id` - Boolean, series without GCD ID
 
-**Creator Filters:**
+**Creator/Role/Character/Team/Universe Filters:**
 
 - `creator_id` - Creator Metron ID (exact match, filters series containing at least one issue with a credit for this creator)
+- `role_id` - Role Metron ID (filters series where a creator has this role; accepts a single ID or multiple comma-separated IDs, e.g. `?role_id=1,2`)
+- `character_id` - Character Metron ID (exact match, filters series containing at least one issue featuring this character)
+- `team_id` - Team Metron ID (exact match, filters series containing at least one issue featuring this team)
+- `universe_id` - Universe Metron ID (exact match, filters series containing at least one issue set in this universe)
 
 **Metadata:**
 
@@ -637,6 +664,24 @@ GET /api/series/123/issue_list/
 
 # Get all series with at least one issue credited to a specific creator
 GET /api/series/?creator_id=123
+
+# Get all series filtered by imprint
+GET /api/series/?imprint_id=5
+
+# Get all series featuring a specific character
+GET /api/series/?character_id=456
+
+# Get all series featuring a specific team
+GET /api/series/?team_id=789
+
+# Get all series set in a specific universe
+GET /api/series/?universe_id=10
+
+# Get all series where a creator has a specific role
+GET /api/series/?role_id=1
+
+# Get all series where a creator has any of several roles (comma-separated)
+GET /api/series/?role_id=1,2
 ```
 
 ---
@@ -1934,6 +1979,11 @@ For questions, issues, or feature requests:
 ---
 
 ## Changelog
+
+### Version 1.5
+- Added `character_id`, `team_id`, and `universe_id` filters to Issue endpoint
+- Added `role_id` filter to Issue and Series endpoints (accepts a single ID or multiple comma-separated IDs)
+- Added `imprint_id`, `character_id`, `team_id`, and `universe_id` filters to Series endpoint
 
 ### Version 1.4
 - Added `year_end` field to Series list endpoint (nullable; present when a series has ended)
