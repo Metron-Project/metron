@@ -80,6 +80,15 @@ class IssueFilter(df.rest_framework.FilterSet):
     creator_id = df.rest_framework.NumberFilter(
         label="Creator Metron ID", field_name="creators__id", lookup_expr="exact", distinct=True
     )
+    character_id = df.rest_framework.NumberFilter(
+        label="Character Metron ID", field_name="characters__id", lookup_expr="exact", distinct=True
+    )
+    team_id = df.rest_framework.NumberFilter(
+        label="Team Metron ID", field_name="teams__id", lookup_expr="exact", distinct=True
+    )
+    universe_id = df.rest_framework.NumberFilter(
+        label="Universe Metron ID", field_name="universes__id", lookup_expr="exact", distinct=True
+    )
 
     class Meta:
         model = Issue
