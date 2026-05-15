@@ -601,9 +601,10 @@ Comic book series.
 - `gcd_id` - Grand Comics Database ID
 - `missing_gcd_id` - Boolean, series without GCD ID
 
-**Creator/Character/Team/Universe Filters:**
+**Creator/Role/Character/Team/Universe Filters:**
 
 - `creator_id` - Creator Metron ID (exact match, filters series containing at least one issue with a credit for this creator)
+- `role_id` - Role Metron ID (filters series where a creator has this role; accepts a single ID or multiple comma-separated IDs, e.g. `?role_id=1,2`)
 - `character_id` - Character Metron ID (exact match, filters series containing at least one issue featuring this character)
 - `team_id` - Team Metron ID (exact match, filters series containing at least one issue featuring this team)
 - `universe_id` - Universe Metron ID (exact match, filters series containing at least one issue set in this universe)
@@ -675,6 +676,12 @@ GET /api/series/?team_id=789
 
 # Get all series set in a specific universe
 GET /api/series/?universe_id=10
+
+# Get all series where a creator has a specific role
+GET /api/series/?role_id=1
+
+# Get all series where a creator has any of several roles (comma-separated)
+GET /api/series/?role_id=1,2
 ```
 
 ---
@@ -1975,7 +1982,7 @@ For questions, issues, or feature requests:
 
 ### Version 1.5
 - Added `character_id`, `team_id`, and `universe_id` filters to Issue endpoint
-- Added `role_id` filter to Issue endpoint (accepts a single ID or multiple comma-separated IDs)
+- Added `role_id` filter to Issue and Series endpoints (accepts a single ID or multiple comma-separated IDs)
 - Added `imprint_id`, `character_id`, `team_id`, and `universe_id` filters to Series endpoint
 
 ### Version 1.4

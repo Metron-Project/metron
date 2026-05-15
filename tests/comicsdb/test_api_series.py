@@ -227,6 +227,45 @@ def test_filter_by_universe_id_no_match(
     assert resp.data["count"] == 0
 
 
+def test_filter_by_role_id(
+    api_client_with_credentials,
+    fc_series: Series,
+    basic_issue,
+    john_byrne: Creator,
+    writer: Role,
+):
+    credit = Credits.objects.create(issue=basic_issue, creator=john_byrne)
+    credit.role.add(writer)
+    resp = api_client_with_credentials.get(reverse("api:series-list"), {"role_id": writer.id})
+    assert resp.status_code == status.HTTP_200_OK
+    assert resp.data["count"] == 1
+    assert resp.data["results"][0]["id"] == fc_series.id
+
+
+def test_filter_by_role_id_no_match(api_client_with_credentials, fc_series: Series, writer: Role):
+    resp = api_client_with_credentials.get(reverse("api:series-list"), {"role_id": writer.id})
+    assert resp.status_code == status.HTTP_200_OK
+    assert resp.data["count"] == 0
+
+
+def test_filter_by_multiple_role_ids(
+    api_client_with_credentials,
+    fc_series: Series,
+    basic_issue,
+    john_byrne: Creator,
+    writer: Role,
+):
+    penciller = Role.objects.create(name="Penciller", notes="", order=30)
+    credit = Credits.objects.create(issue=basic_issue, creator=john_byrne)
+    credit.role.add(writer, penciller)
+    resp = api_client_with_credentials.get(
+        reverse("api:series-list"), {"role_id": f"{writer.id},{penciller.id}"}
+    )
+    assert resp.status_code == status.HTTP_200_OK
+    assert resp.data["count"] == 1
+    assert resp.data["results"][0]["id"] == fc_series.id
+
+
 def test_list_series_year_end_null(api_client_with_credentials, fc_series: Series):
     resp = api_client_with_credentials.get(reverse("api:series-list"))
     assert resp.status_code == status.HTTP_200_OK

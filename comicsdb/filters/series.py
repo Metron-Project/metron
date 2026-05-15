@@ -5,6 +5,7 @@ import django_filters as df
 from django.db.models import Q
 from django_filters import rest_framework as filters
 
+from comicsdb.filters.issue import NumberInFilter
 from comicsdb.models import Series
 
 
@@ -64,6 +65,12 @@ class SeriesFilter(filters.FilterSet):
         label="Universe Metron ID",
         field_name="issues__universes__id",
         lookup_expr="exact",
+        distinct=True,
+    )
+    role_id = NumberInFilter(
+        label="Role Metron ID",
+        field_name="issues__credits__role__id",
+        lookup_expr="in",
         distinct=True,
     )
 
