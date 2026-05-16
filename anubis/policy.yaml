@@ -5,6 +5,11 @@ bots:
     user_agent_regex: lovable\.app
     action: DENY
 
+  # Deny ClickWhir — hammers the API unauthenticated.
+  - name: deny-clickwhir
+    user_agent_regex: ClickWhir
+    action: DENY
+
   # Pass API requests through without a proof-of-work challenge.
   # API consumers (Metron-Tron, scripts, etc.) are not browsers and cannot
   # solve a JavaScript challenge.
