@@ -21,4 +21,4 @@ class PullListReadSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = PullList
-        fields = ("id", "is_private", "series_count", "series_url", "modified")
+        fields = ("id", "series_count", "series_url", "modified")

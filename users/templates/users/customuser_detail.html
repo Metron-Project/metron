@@ -372,37 +372,6 @@
             </div>
         {% endif %}
     </div>
-    {# Pull List / Wish List Links #}
-    {% if pull_list or wish_list %}
-        <div class="box mb-5">
-            <h3 class="title is-5 is-size-6-mobile mb-4">
-                <span class="icon has-text-info" aria-hidden="true">
-                    <i class="fas fa-list-ul"></i>
-                </span>
-                Lists
-            </h3>
-            <div class="buttons">
-                {% if pull_list %}
-                    <a class="button is-rounded is-info"
-                       href="{% if customuser.pk == request.user.pk %}{% url 'pull-list:detail' %}{% else %}{% url 'pull-list:public-detail' pull_list.pk %}{% endif %}">
-                        <span class="icon is-small" aria-hidden="true">
-                            <i class="fas fa-shopping-basket"></i>
-                        </span>
-                        <span>Pull List</span>
-                    </a>
-                {% endif %}
-                {% if wish_list %}
-                    <a class="button is-rounded is-warning"
-                       href="{% if customuser.pk == request.user.pk %}{% url 'wish-list:detail' %}{% else %}{% url 'wish-list:public-detail' wish_list.pk %}{% endif %}">
-                        <span class="icon is-small" aria-hidden="true">
-                            <i class="fas fa-star"></i>
-                        </span>
-                        <span>Wish List</span>
-                    </a>
-                {% endif %}
-            </div>
-        </div>
-    {% endif %}
     {# Recent Reading Activity #}
     {% if recent_reads %}
         <div class="block">

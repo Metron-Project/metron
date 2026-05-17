@@ -21,9 +21,7 @@ def test_detail_view_authenticated_creates_wish_list(client, wish_list_user, tes
     assert WishList.objects.filter(user=wish_list_user).exists()
 
 
-def test_detail_view_shows_items(
-    client, wish_list_user, test_password, wish_list_item, public_wish_list
-):
+def test_detail_view_shows_items(client, wish_list_user, test_password, wish_list_item, wish_list):
     client.login(username=wish_list_user.username, password=test_password)
     resp = client.get(reverse("wish-list:detail"))
     assert resp.status_code == 200
@@ -31,16 +29,14 @@ def test_detail_view_shows_items(
 
 
 # Add item via POST
-def test_add_item_to_wish_list(
-    client, wish_list_user, test_password, public_wish_list, wish_list_issue
-):
+def test_add_item_to_wish_list(client, wish_list_user, test_password, wish_list, wish_list_issue):
     client.login(username=wish_list_user.username, password=test_password)
     resp = client.post(
         reverse("wish-list:detail"),
         data={"issue": wish_list_issue.pk, "priority": 2, "status": "WANTED"},
     )
     assert resp.status_code == 302
-    assert WishListItem.objects.filter(wish_list=public_wish_list, issue=wish_list_issue).exists()
+    assert WishListItem.objects.filter(wish_list=wish_list, issue=wish_list_issue).exists()
 
 
 def test_add_duplicate_item_shows_info(
@@ -54,34 +50,6 @@ def test_add_duplicate_item_shows_info(
     )
     assert resp.status_code == 200
     assert WishListItem.objects.filter(issue=wish_list_issue).count() == 1
-
-
-# Public detail view
-def test_public_detail_accessible_without_auth(client, public_wish_list):
-    resp = client.get(reverse("wish-list:public-detail", kwargs={"pk": public_wish_list.pk}))
-    assert resp.status_code == 200
-
-
-def test_private_wish_list_not_accessible_to_others(
-    client, private_wish_list, other_wish_list_user, test_password
-):
-    client.login(username=other_wish_list_user.username, password=test_password)
-    resp = client.get(reverse("wish-list:public-detail", kwargs={"pk": private_wish_list.pk}))
-    assert resp.status_code == 404
-
-
-# Settings view
-def test_settings_view_requires_login(client):
-    resp = client.get(reverse("wish-list:settings"))
-    assert resp.status_code == 302
-
-
-def test_settings_view_updates_privacy(client, wish_list_user, test_password, public_wish_list):
-    client.login(username=wish_list_user.username, password=test_password)
-    resp = client.post(reverse("wish-list:settings"), data={"is_private": True})
-    assert resp.status_code == 302
-    public_wish_list.refresh_from_db()
-    assert public_wish_list.is_private is True
 
 
 # Item update view

@@ -12,7 +12,6 @@ class PullList(models.Model):
         on_delete=models.CASCADE,
         related_name="pull_list",
     )
-    is_private = models.BooleanField(default=False)
     series = models.ManyToManyField(
         Series,
         through="PullListSeries",

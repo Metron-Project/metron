@@ -12,16 +12,16 @@ def test_unauthenticated_list_requires_auth(api_client):
     assert resp.status_code == status.HTTP_401_UNAUTHORIZED
 
 
-def test_authenticated_user_gets_own_wish_list(api_client, wish_list_user, public_wish_list):
+def test_authenticated_user_gets_own_wish_list(api_client, wish_list_user, wish_list):
     api_client.force_authenticate(user=wish_list_user)
     resp = api_client.get(reverse("api:wish_list-list"))
     assert resp.status_code == status.HTTP_200_OK
     assert resp.data["count"] == 1
-    assert resp.data["results"][0]["id"] == public_wish_list.pk
+    assert resp.data["results"][0]["id"] == wish_list.pk
 
 
 def test_other_user_cannot_see_wish_list(
-    api_client, wish_list_user, other_wish_list_user, public_wish_list
+    api_client, wish_list_user, other_wish_list_user, wish_list
 ):
     api_client.force_authenticate(user=other_wish_list_user)
     resp = api_client.get(reverse("api:wish_list-list"))
@@ -41,20 +41,18 @@ def test_items_action_unauthenticated(api_client):
     assert resp.status_code == status.HTTP_401_UNAUTHORIZED
 
 
-def test_add_item_action_creates_item(
-    api_client, wish_list_user, public_wish_list, wish_list_issue
-):
+def test_add_item_action_creates_item(api_client, wish_list_user, wish_list, wish_list_issue):
     api_client.force_authenticate(user=wish_list_user)
     resp = api_client.post(
         reverse("api:wish_list-add-item"),
         data={"issue_id": wish_list_issue.pk, "priority": 1},
     )
     assert resp.status_code == status.HTTP_201_CREATED
-    assert WishListItem.objects.filter(wish_list=public_wish_list, issue=wish_list_issue).exists()
+    assert WishListItem.objects.filter(wish_list=wish_list, issue=wish_list_issue).exists()
 
 
 def test_add_item_duplicate_returns_200(
-    api_client, wish_list_user, public_wish_list, wish_list_item, wish_list_issue
+    api_client, wish_list_user, wish_list, wish_list_item, wish_list_issue
 ):
     api_client.force_authenticate(user=wish_list_user)
     resp = api_client.post(
@@ -64,7 +62,7 @@ def test_add_item_duplicate_returns_200(
     assert resp.status_code == status.HTTP_200_OK
 
 
-def test_add_item_invalid_issue_returns_400(api_client, wish_list_user, public_wish_list):
+def test_add_item_invalid_issue_returns_400(api_client, wish_list_user, wish_list):
     api_client.force_authenticate(user=wish_list_user)
     resp = api_client.post(
         reverse("api:wish_list-add-item"),

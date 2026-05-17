@@ -74,19 +74,14 @@ def wish_list_issue_2(create_user, wish_list_series):
 
 
 @pytest.fixture
-def public_wish_list(wish_list_user):
-    return WishList.objects.create(user=wish_list_user, is_private=False)
+def wish_list(wish_list_user):
+    return WishList.objects.create(user=wish_list_user)
 
 
 @pytest.fixture
-def private_wish_list(wish_list_user):
-    return WishList.objects.create(user=wish_list_user, is_private=True)
-
-
-@pytest.fixture
-def wish_list_item(public_wish_list, wish_list_issue):
+def wish_list_item(wish_list, wish_list_issue):
     return WishListItem.objects.create(
-        wish_list=public_wish_list,
+        wish_list=wish_list,
         issue=wish_list_issue,
         priority=1,
         status=WishListItem.Status.WANTED,
@@ -94,9 +89,9 @@ def wish_list_item(public_wish_list, wish_list_issue):
 
 
 @pytest.fixture
-def wish_list_item_2(public_wish_list, wish_list_issue_2):
+def wish_list_item_2(wish_list, wish_list_issue_2):
     return WishListItem.objects.create(
-        wish_list=public_wish_list,
+        wish_list=wish_list,
         issue=wish_list_issue_2,
         priority=2,
         status=WishListItem.Status.WANTED,

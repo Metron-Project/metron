@@ -2,11 +2,11 @@ from django.contrib import messages
 from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
 from django.shortcuts import get_object_or_404, redirect
 from django.urls import reverse, reverse_lazy
-from django.views.generic import DeleteView, DetailView, FormView, UpdateView
+from django.views.generic import DeleteView, FormView, UpdateView
 from djmoney.money import Money
 
 from user_collection.models import CollectionItem
-from wish_list.forms import AcquireWishListItemForm, WishListItemForm, WishListSettingsForm
+from wish_list.forms import AcquireWishListItemForm, WishListItemForm
 from wish_list.models import WishList, WishListItem
 
 
@@ -49,41 +49,6 @@ class WishListDetailView(LoginRequiredMixin, FormView):
         ).order_by("priority", "issue__series__sort_name", "issue__cover_date")
         context["is_owner"] = True
         return context
-
-
-class PublicWishListDetailView(DetailView):
-    model = WishList
-    template_name = "wish_list/wishlist_detail.html"
-    context_object_name = "wish_list"
-
-    def get_queryset(self):
-        return WishList.objects.filter(is_private=False)
-
-    def get_context_data(self, **kwargs):
-        context = super().get_context_data(**kwargs)
-        wish_list = context["wish_list"]
-        context["wish_list_items"] = wish_list.wish_list_items.select_related(
-            "issue__series__series_type",
-            "issue__series__publisher",
-        ).order_by("priority", "issue__series__sort_name", "issue__cover_date")
-        context["is_owner"] = (
-            self.request.user.is_authenticated and wish_list.user == self.request.user
-        )
-        return context
-
-
-class WishListSettingsView(LoginRequiredMixin, UpdateView):
-    model = WishList
-    form_class = WishListSettingsForm
-    template_name = "wish_list/wishlist_form.html"
-    success_url = reverse_lazy("wish-list:detail")
-
-    def get_object(self, queryset=None):
-        return get_or_create_wish_list(self.request.user)
-
-    def form_valid(self, form):
-        messages.success(self.request, "Wish list settings updated.")
-        return super().form_valid(form)
 
 
 class WishListItemUpdateView(LoginRequiredMixin, UserPassesTestMixin, UpdateView):

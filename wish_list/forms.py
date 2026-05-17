@@ -3,22 +3,7 @@ from django import forms
 
 from comicsdb.autocomplete import IssueAutocomplete
 from comicsdb.forms.widgets import BulmaMoneyWidget
-from wish_list.models import WishList, WishListItem
-
-
-class WishListSettingsForm(forms.ModelForm):
-    class Meta:
-        model = WishList
-        fields = ("is_private",)
-        labels = {
-            "is_private": "Private Wish List",
-        }
-        help_texts = {
-            "is_private": (
-                "Private wish lists are only visible to you. "
-                "Public wish lists can be viewed by anyone."
-            ),
-        }
+from wish_list.models import WishListItem
 
 
 class WishListItemForm(forms.ModelForm):

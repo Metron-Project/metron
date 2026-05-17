@@ -13,8 +13,8 @@ class PullListSeriesInline(admin.TabularInline):
 
 @admin.register(PullList)
 class PullListAdmin(admin.ModelAdmin):
-    list_display = ("user", "is_private", "series_count", "modified", "created_on")
-    list_filter = ("is_private", "created_on", "modified")
+    list_display = ("user", "series_count", "modified", "created_on")
+    list_filter = ("created_on", "modified")
     search_fields = ("user__username",)
     readonly_fields = ("created_on", "modified")
     autocomplete_fields = ["user"]

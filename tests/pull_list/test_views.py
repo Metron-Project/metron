@@ -31,7 +31,7 @@ def test_detail_view_shows_series_on_list(
 
 # Add series via POST
 def test_add_series_to_pull_list(
-    client, pull_list_user, test_password, public_pull_list, pull_list_series
+    client, pull_list_user, test_password, pull_list, pull_list_series
 ):
     client.login(username=pull_list_user.username, password=test_password)
     resp = client.post(
@@ -39,9 +39,7 @@ def test_add_series_to_pull_list(
         data={"series": pull_list_series.pk},
     )
     assert resp.status_code == 302
-    assert PullListSeries.objects.filter(
-        pull_list=public_pull_list, series=pull_list_series
-    ).exists()
+    assert PullListSeries.objects.filter(pull_list=pull_list, series=pull_list_series).exists()
 
 
 def test_add_duplicate_series_shows_info_message(
@@ -54,44 +52,12 @@ def test_add_duplicate_series_shows_info_message(
         follow=True,
     )
     assert resp.status_code == 200
-    # Series should still only appear once
     assert (
         PullListSeries.objects.filter(
             pull_list=pull_list_with_series, series=pull_list_series
         ).count()
         == 1
     )
-
-
-# Public detail view
-def test_public_detail_accessible_without_auth(client, public_pull_list):
-    resp = client.get(reverse("pull-list:public-detail", kwargs={"pk": public_pull_list.pk}))
-    assert resp.status_code == 200
-
-
-def test_private_list_not_accessible_to_others(
-    client, private_pull_list, other_pull_list_user, test_password
-):
-    client.login(username=other_pull_list_user.username, password=test_password)
-    resp = client.get(reverse("pull-list:public-detail", kwargs={"pk": private_pull_list.pk}))
-    assert resp.status_code == 404
-
-
-# Settings view
-def test_settings_view_requires_login(client):
-    resp = client.get(reverse("pull-list:settings"))
-    assert resp.status_code == 302
-
-
-def test_settings_view_updates_privacy(client, pull_list_user, test_password, public_pull_list):
-    client.login(username=pull_list_user.username, password=test_password)
-    resp = client.post(
-        reverse("pull-list:settings"),
-        data={"is_private": True},
-    )
-    assert resp.status_code == 302
-    public_pull_list.refresh_from_db()
-    assert public_pull_list.is_private is True
 
 
 # Remove series view

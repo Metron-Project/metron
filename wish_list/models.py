@@ -14,7 +14,6 @@ class WishList(models.Model):
         on_delete=models.CASCADE,
         related_name="wish_list",
     )
-    is_private = models.BooleanField(default=False)
     modified = models.DateTimeField(auto_now=True)
     created_on = models.DateTimeField(db_default=Now())
 

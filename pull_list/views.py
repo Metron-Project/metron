@@ -3,10 +3,10 @@ from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
 from django.shortcuts import get_object_or_404, redirect
 from django.urls import reverse, reverse_lazy
 from django.utils import timezone
-from django.views.generic import DeleteView, FormView, UpdateView
+from django.views.generic import DeleteView, FormView
 
 from comicsdb.models.issue import Issue
-from pull_list.forms import AddSeriesToPullListForm, PullListSettingsForm
+from pull_list.forms import AddSeriesToPullListForm
 from pull_list.models import PullList, PullListSeries
 
 
@@ -54,50 +54,6 @@ class PullListDetailView(LoginRequiredMixin, FormView):
         )
         context["is_owner"] = True
         return context
-
-
-class PublicPullListDetailView(FormView):
-    template_name = "pull_list/pulllist_detail.html"
-    form_class = AddSeriesToPullListForm
-
-    def get_pull_list(self):
-        if not hasattr(self, "_pull_list"):
-            self._pull_list = get_object_or_404(PullList, pk=self.kwargs["pk"], is_private=False)
-        return self._pull_list
-
-    def get_context_data(self, **kwargs):
-        context = super().get_context_data(**kwargs)
-        pull_list = self.get_pull_list()
-        context["pull_list"] = pull_list
-        context["series_on_list"] = pull_list.pull_list_series.select_related(
-            "series__series_type",
-            "series__publisher",
-        ).order_by("series__sort_name")
-        today = timezone.now().date()
-        series_ids = list(pull_list.pull_list_series.values_list("series_id", flat=True))
-        context["upcoming_issues"] = (
-            Issue.objects.filter(series_id__in=series_ids, store_date__gte=today)
-            .select_related("series__series_type", "series__publisher")
-            .order_by("store_date", "series__sort_name")[:50]
-        )
-        context["is_owner"] = (
-            self.request.user.is_authenticated and pull_list.user == self.request.user
-        )
-        return context
-
-
-class PullListSettingsView(LoginRequiredMixin, UpdateView):
-    model = PullList
-    form_class = PullListSettingsForm
-    template_name = "pull_list/pulllist_form.html"
-    success_url = reverse_lazy("pull-list:detail")
-
-    def get_object(self, queryset=None):
-        return get_or_create_pull_list(self.request.user)
-
-    def form_valid(self, form):
-        messages.success(self.request, "Pull list settings updated.")
-        return super().form_valid(form)
 
 
 class RemoveSeriesFromPullListView(LoginRequiredMixin, UserPassesTestMixin, DeleteView):

@@ -78,16 +78,11 @@ def pull_list_issue(create_user, pull_list_series):
 
 
 @pytest.fixture
-def public_pull_list(pull_list_user):
-    return PullList.objects.create(user=pull_list_user, is_private=False)
+def pull_list(pull_list_user):
+    return PullList.objects.create(user=pull_list_user)
 
 
 @pytest.fixture
-def private_pull_list(pull_list_user):
-    return PullList.objects.create(user=pull_list_user, is_private=True)
-
-
-@pytest.fixture
-def pull_list_with_series(public_pull_list, pull_list_series):
-    PullListSeries.objects.create(pull_list=public_pull_list, series=pull_list_series)
-    return public_pull_list
+def pull_list_with_series(pull_list, pull_list_series):
+    PullListSeries.objects.create(pull_list=pull_list, series=pull_list_series)
+    return pull_list

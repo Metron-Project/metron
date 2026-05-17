@@ -31,13 +31,11 @@ from comicsdb.models import (
 )
 from comicsdb.views.mixins import SearchMixin
 from metron.utils import get_recaptcha_auth
-from pull_list.models import PullList
 from user_collection.models import CollectionItem
 from users.forms import CustomUserChangeForm, CustomUserCreationForm
 from users.models import CustomUser
 from users.tokens import account_activation_token
 from users.utils import send_pushover
-from wish_list.models import WishList
 
 logger = logging.getLogger(__name__)
 
@@ -210,20 +208,5 @@ class UserProfile(LoginRequiredMixin, DetailView):
             )
             .order_by("-date_read", "-modified")[:10]
         )
-
-        is_own_profile = user.pk == self.request.user.pk
-        try:
-            pull_list = user.pull_list
-            if not pull_list.is_private or is_own_profile:
-                context["pull_list"] = pull_list
-        except PullList.DoesNotExist:
-            pass
-
-        try:
-            wish_list = user.wish_list
-            if not wish_list.is_private or is_own_profile:
-                context["wish_list"] = wish_list
-        except WishList.DoesNotExist:
-            pass
 
         return context
