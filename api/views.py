@@ -50,6 +50,14 @@ from api.v1_0.serializers import (
     UniverseSerializer,
     VariantSerializer,
 )
+from api.v1_0.serializers.pull_list import PullListReadSerializer, PullListSeriesSerializer
+from api.v1_0.serializers.wish_list import (
+    AcquireWishListItemSerializer,
+    WishListAddItemSerializer,
+    WishListItemListSerializer,
+    WishListItemReadSerializer,
+    WishListSerializer,
+)
 from comicsdb.filters.collection import CollectionFilter
 from comicsdb.filters.issue import IssueFilter
 from comicsdb.filters.name import ComicVineFilter, NameFilter, UniverseFilter
@@ -70,9 +78,11 @@ from comicsdb.models import (
 )
 from comicsdb.models.series import SeriesType
 from comicsdb.models.variant import Variant
+from pull_list.models import PullList, PullListSeries
 from reading_lists.models import ReadingList
 from user_collection.models import CollectionItem
 from users.models import CustomUser
+from wish_list.models import WishList, WishListItem
 
 
 class ReadingListItemsPagination(PageNumberPagination):
@@ -911,3 +921,203 @@ class CollectionViewSet(
             response_data,
             status=status.HTTP_201_CREATED if created else status.HTTP_200_OK,
         )
+
+
+class PullListViewSet(
+    ConditionalRetrieveModelMixin,
+    mixins.ListModelMixin,
+    viewsets.GenericViewSet,
+):
+    permission_classes = [IsAuthenticated]
+
+    def get_queryset(self):
+        return PullList.objects.filter(user=self.request.user).annotate(
+            series_count=Count("series", distinct=True)
+        )
+
+    def get_serializer_class(self):
+        if self.action == "series":
+            return PullListSeriesSerializer
+        return PullListReadSerializer
+
+    @extend_schema(responses=PullListSeriesSerializer(many=True))
+    @action(detail=False, methods=["get"])
+    def series(self, request):
+        """Returns the authenticated user's pull list series."""
+        pull_list, _ = PullList.objects.get_or_create(user=request.user)
+        queryset = pull_list.pull_list_series.select_related(
+            "series__series_type", "series__publisher"
+        ).order_by("series__sort_name")
+        page = self.paginate_queryset(queryset)
+        if page is not None:
+            serializer = PullListSeriesSerializer(page, many=True, context={"request": request})
+            return self.get_paginated_response(serializer.data)
+        raise Http404
+
+    @extend_schema(
+        request=None,
+        responses={201: PullListSeriesSerializer, 200: PullListSeriesSerializer},
+        parameters=[OpenApiParameter(name="series_id", type=int, location="query", required=True)],
+    )
+    @action(detail=False, methods=["post"], url_path="series/add")
+    def add_series(self, request):
+        """Add a series to the authenticated user's pull list."""
+        series_id = request.data.get("series_id")
+        if not series_id:
+            return Response(
+                {"detail": "series_id is required."}, status=status.HTTP_400_BAD_REQUEST
+            )
+        try:
+            from comicsdb.models.series import Series as SeriesModel  # noqa: PLC0415
+
+            series = SeriesModel.objects.get(pk=series_id)
+        except SeriesModel.DoesNotExist:
+            return Response(
+                {"detail": f"Series with id {series_id} not found."},
+                status=status.HTTP_404_NOT_FOUND,
+            )
+        pull_list, _ = PullList.objects.get_or_create(user=request.user)
+        pls, created = PullListSeries.objects.get_or_create(pull_list=pull_list, series=series)
+        serializer = PullListSeriesSerializer(pls, context={"request": request})
+        return Response(
+            serializer.data,
+            status=status.HTTP_201_CREATED if created else status.HTTP_200_OK,
+        )
+
+    @extend_schema(responses={204: None, 404: None})
+    @action(
+        detail=False,
+        methods=["delete"],
+        url_path=r"series/(?P<series_pk>[^/.]+)/remove",
+    )
+    def remove_series(self, request, series_pk=None):
+        """Remove a series from the authenticated user's pull list."""
+        pull_list, _ = PullList.objects.get_or_create(user=request.user)
+        deleted, _ = PullListSeries.objects.filter(
+            pull_list=pull_list, series_id=series_pk
+        ).delete()
+        if deleted:
+            return Response(status=status.HTTP_204_NO_CONTENT)
+        return Response(
+            {"detail": "Series not found in pull list."}, status=status.HTTP_404_NOT_FOUND
+        )
+
+
+class WishListViewSet(
+    ConditionalRetrieveModelMixin,
+    mixins.ListModelMixin,
+    viewsets.GenericViewSet,
+):
+    permission_classes = [IsAuthenticated]
+
+    def get_queryset(self):
+        return WishList.objects.filter(user=self.request.user).annotate(
+            item_count=Count("wish_list_items", distinct=True)
+        )
+
+    def get_serializer_class(self):
+        if self.action == "items":
+            return WishListItemListSerializer
+        return WishListSerializer
+
+    @extend_schema(responses=WishListItemListSerializer(many=True))
+    @action(detail=False, methods=["get"])
+    def items(self, request):
+        """Returns paginated wish list items for the authenticated user."""
+        wish_list, _ = WishList.objects.get_or_create(user=request.user)
+        queryset = wish_list.wish_list_items.select_related(
+            "issue__series__series_type", "issue__series__publisher"
+        ).order_by("priority", "issue__series__sort_name")
+        page = self.paginate_queryset(queryset)
+        if page is not None:
+            serializer = WishListItemListSerializer(page, many=True, context={"request": request})
+            return self.get_paginated_response(serializer.data)
+        raise Http404
+
+    @extend_schema(
+        request=WishListAddItemSerializer,
+        responses={201: WishListItemReadSerializer, 200: WishListItemReadSerializer},
+    )
+    @action(detail=False, methods=["post"], url_path="items/add")
+    def add_item(self, request):
+        """Add an issue to the authenticated user's wish list."""
+        serializer = WishListAddItemSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        data = serializer.validated_data
+        from comicsdb.models.issue import Issue as IssueModel  # noqa: PLC0415
+
+        issue = IssueModel.objects.get(pk=data["issue_id"])
+        wish_list, _ = WishList.objects.get_or_create(user=request.user)
+        item, created = WishListItem.objects.get_or_create(
+            wish_list=wish_list,
+            issue=issue,
+            defaults={
+                "priority": data.get("priority", 3),
+                "notes": data.get("notes", ""),
+                "desired_grade": data.get("desired_grade"),
+            },
+        )
+        response_serializer = WishListItemReadSerializer(item, context={"request": request})
+        return Response(
+            response_serializer.data,
+            status=status.HTTP_201_CREATED if created else status.HTTP_200_OK,
+        )
+
+    @extend_schema(
+        request=AcquireWishListItemSerializer,
+        responses={200: None},
+        parameters=[OpenApiParameter(name="item_pk", type=int, location="path", required=True)],
+    )
+    @action(
+        detail=False,
+        methods=["post"],
+        url_path=r"items/(?P<item_pk>[^/.]+)/acquire",
+    )
+    def acquire_item(self, request, item_pk=None):
+        """Mark a wish list item as acquired and create a collection item."""
+        from django.shortcuts import get_object_or_404 as _get  # noqa: PLC0415
+        from djmoney.money import Money  # noqa: PLC0415
+
+        wish_list, _ = WishList.objects.get_or_create(user=request.user)
+        item = _get(WishListItem, pk=item_pk, wish_list=wish_list)
+        serializer = AcquireWishListItemSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        data = serializer.validated_data
+        purchase_price = data.get("purchase_price")
+        collection_item, created = CollectionItem.objects.get_or_create(
+            user=request.user,
+            issue=item.issue,
+            defaults={
+                "purchase_date": data.get("purchase_date"),
+                "purchase_price": Money(purchase_price, "USD") if purchase_price else None,
+                "purchase_store": data.get("purchase_store", ""),
+                "notes": data.get("notes", ""),
+                "grade": item.desired_grade,
+            },
+        )
+        item.status = WishListItem.Status.ACQUIRED
+        item.save(update_fields=["status", "modified"])
+        return Response(
+            {
+                "wish_list_item_id": item.pk,
+                "collection_item_id": collection_item.pk,
+                "created": created,
+                "status": item.get_status_display(),
+            },
+            status=status.HTTP_200_OK,
+        )
+
+    @extend_schema(responses={204: None, 404: None})
+    @action(
+        detail=False,
+        methods=["delete"],
+        url_path=r"items/(?P<item_pk>[^/.]+)/remove",
+    )
+    def remove_item(self, request, item_pk=None):
+        """Remove an item from the authenticated user's wish list."""
+        from django.shortcuts import get_object_or_404 as _get  # noqa: PLC0415
+
+        wish_list, _ = WishList.objects.get_or_create(user=request.user)
+        item = _get(WishListItem, pk=item_pk, wish_list=wish_list)
+        item.delete()
+        return Response(status=status.HTTP_204_NO_CONTENT)
