@@ -1,7 +1,9 @@
 from django.db import models
 from django.db.models import Avg, Case, Count, F, IntegerField, Prefetch, Q, Sum, When
 from django.http import Http404
+from django.shortcuts import get_object_or_404
 from django.utils import timezone
+from djmoney.money import Money
 from drf_spectacular.utils import OpenApiParameter, extend_schema
 from rest_framework import mixins, status, viewsets
 from rest_framework.decorators import action
@@ -968,10 +970,8 @@ class PullListViewSet(
                 {"detail": "series_id is required."}, status=status.HTTP_400_BAD_REQUEST
             )
         try:
-            from comicsdb.models.series import Series as SeriesModel  # noqa: PLC0415
-
-            series = SeriesModel.objects.get(pk=series_id)
-        except SeriesModel.DoesNotExist:
+            series = Series.objects.get(pk=series_id)
+        except Series.DoesNotExist:
             return Response(
                 {"detail": f"Series with id {series_id} not found."},
                 status=status.HTTP_404_NOT_FOUND,
@@ -1044,9 +1044,7 @@ class WishListViewSet(
         serializer = WishListAddItemSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         data = serializer.validated_data
-        from comicsdb.models.issue import Issue as IssueModel  # noqa: PLC0415
-
-        issue = IssueModel.objects.get(pk=data["issue_id"])
+        issue = Issue.objects.get(pk=data["issue_id"])
         wish_list, _ = WishList.objects.get_or_create(user=request.user)
         item, created = WishListItem.objects.get_or_create(
             wish_list=wish_list,
@@ -1075,11 +1073,8 @@ class WishListViewSet(
     )
     def acquire_item(self, request, item_pk=None):
         """Mark a wish list item as acquired and create a collection item."""
-        from django.shortcuts import get_object_or_404 as _get  # noqa: PLC0415
-        from djmoney.money import Money  # noqa: PLC0415
-
         wish_list, _ = WishList.objects.get_or_create(user=request.user)
-        item = _get(WishListItem, pk=item_pk, wish_list=wish_list)
+        item = get_object_or_404(WishListItem, pk=item_pk, wish_list=wish_list)
         serializer = AcquireWishListItemSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         data = serializer.validated_data
@@ -1115,9 +1110,7 @@ class WishListViewSet(
     )
     def remove_item(self, request, item_pk=None):
         """Remove an item from the authenticated user's wish list."""
-        from django.shortcuts import get_object_or_404 as _get  # noqa: PLC0415
-
         wish_list, _ = WishList.objects.get_or_create(user=request.user)
-        item = _get(WishListItem, pk=item_pk, wish_list=wish_list)
+        item = get_object_or_404(WishListItem, pk=item_pk, wish_list=wish_list)
         item.delete()
         return Response(status=status.HTTP_204_NO_CONTENT)
