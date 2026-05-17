@@ -1,0 +1,62 @@
+{% extends parent_template|default:"base.html" %}
+{% load static bulma_tags %}
+{% block title %}Edit Wish List Item - Metron{% endblock %}
+{% block content %}
+    <header class="block has-text-centered">
+        <h1 class="title">Edit Wish List Item</h1>
+    </header>
+    <section class="section">
+        <div class="container">
+            <div class="columns is-centered">
+                <div class="column is-two-thirds">
+                    <div class="box">
+                        <form method="post">
+                            {% csrf_token %}
+                            {% if form.non_field_errors %}
+                                <div class="notification is-danger">{{ form.non_field_errors }}</div>
+                            {% endif %}
+                            {% for field in form %}
+                                <div class="field">
+                                    {% if field|is_field_type:'checkbox' %}
+                                        <div class="control">
+                                            <label class="checkbox">{{ field }} {{ field.label }}</label>
+                                        </div>
+                                    {% elif field|is_field_type:'select' %}
+                                        <label class="label" for="{{ field.id_for_label }}">
+                                            {{ field.label }}
+                                            {% if field.field.required %}<span class="has-text-danger">*</span>{% endif %}
+                                        </label>
+                                        <div class="control">
+                                            <span class="select{% if field.errors %} is-danger{% endif %} is-fullwidth">{{ field }}</span>
+                                        </div>
+                                    {% elif field|is_field_type:'textarea' %}
+                                        <label class="label" for="{{ field.id_for_label }}">
+                                            {{ field.label }}
+                                        </label>
+                                        <div class="control">{{ field|add_field_class:'textarea' }}</div>
+                                    {% else %}
+                                        <label class="label" for="{{ field.id_for_label }}">
+                                            {{ field.label }}
+                                            {% if field.field.required %}<span class="has-text-danger">*</span>{% endif %}
+                                        </label>
+                                        <div class="control">{{ field|add_field_class:'input' }}</div>
+                                    {% endif %}
+                                    {% if field.help_text %}<p class="help">{{ field.help_text }}</p>{% endif %}
+                                    {% for error in field.errors %}<p class="help is-danger">{{ error }}</p>{% endfor %}
+                                </div>
+                            {% endfor %}
+                            <div class="field is-grouped is-grouped-right mt-5">
+                                <div class="control">
+                                    <a href="{% url 'wish-list:detail' %}" class="button">Cancel</a>
+                                </div>
+                                <div class="control">
+                                    <button type="submit" class="button is-primary">Save Changes</button>
+                                </div>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+{% endblock %}

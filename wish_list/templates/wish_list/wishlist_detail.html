@@ -1,0 +1,160 @@
+{% extends parent_template|default:"base.html" %}
+{% load static %}
+{% block title %}{{ wish_list }} - Metron{% endblock %}
+{% block content %}
+    <header class="block">
+        <h1 class="title">
+            {{ wish_list }}
+            {% if wish_list.is_private %}
+                <span class="tag is-warning">Private</span>
+            {% else %}
+                <span class="tag is-success">Public</span>
+            {% endif %}
+        </h1>
+    </header>
+    {% if is_owner %}
+        <nav class="level mb-5">
+            <div class="level-left"></div>
+            <div class="level-right">
+                <div class="buttons">
+                    <a class="button is-rounded is-info"
+                       href="{% url 'wish-list:settings' %}">
+                        <span class="icon is-small"><i class="fas fa-cog"></i></span>
+                        <span>Settings</span>
+                    </a>
+                </div>
+            </div>
+        </nav>
+        <div class="box mb-5">
+            <h2 class="title is-5">Add an Issue</h2>
+            <form method="post">
+                {% csrf_token %}
+                {% if form.non_field_errors %}
+                    <div class="notification is-danger">{{ form.non_field_errors }}</div>
+                {% endif %}
+                <div class="columns is-multiline">
+                    <div class="column is-full">
+                        <div class="field">
+                            <label class="label" for="{{ form.issue.id_for_label }}">{{ form.issue.label }}</label>
+                            <div class="control">{{ form.issue }}</div>
+                            {% if form.issue.help_text %}<p class="help">{{ form.issue.help_text }}</p>{% endif %}
+                            {% for error in form.issue.errors %}<p class="help is-danger">{{ error }}</p>{% endfor %}
+                        </div>
+                    </div>
+                    <div class="column is-one-quarter">
+                        <div class="field">
+                            <label class="label" for="{{ form.priority.id_for_label }}">{{ form.priority.label }}</label>
+                            <div class="control">
+                                <span class="select is-fullwidth">{{ form.priority }}</span>
+                            </div>
+                            {% for error in form.priority.errors %}<p class="help is-danger">{{ error }}</p>{% endfor %}
+                        </div>
+                    </div>
+                    <div class="column is-one-quarter">
+                        <div class="field">
+                            <label class="label" for="{{ form.status.id_for_label }}">{{ form.status.label }}</label>
+                            <div class="control">
+                                <span class="select is-fullwidth">{{ form.status }}</span>
+                            </div>
+                            {% for error in form.status.errors %}<p class="help is-danger">{{ error }}</p>{% endfor %}
+                        </div>
+                    </div>
+                    <div class="column is-one-quarter">
+                        <div class="field">
+                            <label class="label" for="{{ form.desired_grade.id_for_label }}">{{ form.desired_grade.label }}</label>
+                            <div class="control">
+                                <span class="select is-fullwidth">{{ form.desired_grade }}</span>
+                            </div>
+                            {% for error in form.desired_grade.errors %}<p class="help is-danger">{{ error }}</p>{% endfor %}
+                        </div>
+                    </div>
+                    <div class="column is-one-quarter">
+                        <div class="field">
+                            <label class="label" for="{{ form.max_price.id_for_label }}">{{ form.max_price.label }}</label>
+                            <div class="control">{{ form.max_price }}</div>
+                            {% for error in form.max_price.errors %}<p class="help is-danger">{{ error }}</p>{% endfor %}
+                        </div>
+                    </div>
+                </div>
+                <div class="field is-grouped is-grouped-right">
+                    <div class="control">
+                        <button type="submit" class="button is-primary is-rounded">
+                            <span class="icon is-small"><i class="fas fa-plus"></i></span>
+                            <span>Add to Wish List</span>
+                        </button>
+                    </div>
+                </div>
+            </form>
+        </div>
+    {% endif %}
+
+    <div class="box">
+        <h2 class="title is-5">Items ({{ wish_list_items|length }})</h2>
+        {% if wish_list_items %}
+            <div class="table-container">
+                <table class="table is-fullwidth is-striped is-hoverable">
+                    <thead>
+                        <tr>
+                            <th>Priority</th>
+                            <th>Issue</th>
+                            <th>Series</th>
+                            <th>Status</th>
+                            <th>Min Grade</th>
+                            <th>Max Price</th>
+                            {% if is_owner %}<th></th>{% endif %}
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for item in wish_list_items %}
+                            <tr>
+                                <td>{{ item.priority }}</td>
+                                <td>
+                                    <a href="{{ item.issue.get_absolute_url }}">{{ item.issue }}</a>
+                                </td>
+                                <td>
+                                    <a href="{{ item.issue.series.get_absolute_url }}">{{ item.issue.series }}</a>
+                                </td>
+                                <td>
+                                    {% if item.status == 'ACQUIRED' %}
+                                        <span class="tag is-success">{{ item.get_status_display }}</span>
+                                    {% elif item.status == 'FOUND' %}
+                                        <span class="tag is-info">{{ item.get_status_display }}</span>
+                                    {% else %}
+                                        <span class="tag is-warning">{{ item.get_status_display }}</span>
+                                    {% endif %}
+                                </td>
+                                <td>{{ item.desired_grade|default:"—" }}</td>
+                                <td>{{ item.max_price|default:"—" }}</td>
+                                {% if is_owner %}
+                                    <td>
+                                        <div class="buttons are-small">
+                                            {% if item.status != 'ACQUIRED' %}
+                                                <a href="{% url 'wish-list:item-acquire' item.pk %}"
+                                                   class="button is-success is-outlined"
+                                                   title="Acquire">
+                                                    <span class="icon is-small"><i class="fas fa-shopping-cart"></i></span>
+                                                </a>
+                                            {% endif %}
+                                            <a href="{% url 'wish-list:item-update' item.pk %}"
+                                               class="button is-primary is-outlined"
+                                               title="Edit">
+                                                <span class="icon is-small"><i class="fas fa-edit"></i></span>
+                                            </a>
+                                            <a href="{% url 'wish-list:item-delete' item.pk %}"
+                                               class="button is-danger is-outlined"
+                                               title="Remove">
+                                                <span class="icon is-small"><i class="fas fa-trash"></i></span>
+                                            </a>
+                                        </div>
+                                    </td>
+                                {% endif %}
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        {% else %}
+            <p class="has-text-grey">No items on this wish list yet.</p>
+        {% endif %}
+    </div>
+{% endblock %}

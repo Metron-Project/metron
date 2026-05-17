@@ -1,0 +1,40 @@
+{% extends parent_template|default:"base.html" %}
+{% load static %}
+{% block title %}Remove from Wish List - Metron{% endblock %}
+{% block content %}
+    <header class="block has-text-centered">
+        <h1 class="title">Remove from Wish List</h1>
+    </header>
+    <section class="section">
+        <div class="container">
+            <div class="columns is-centered">
+                <div class="column is-half">
+                    <div class="box">
+                        <article class="message is-danger">
+                            <div class="message-header">
+                                <p>Warning</p>
+                            </div>
+                            <div class="message-body">
+                                <p>Are you sure you want to remove
+                                    <strong>{{ object.issue }}</strong>
+                                    from your wish list?</p>
+                                <p class="mt-2">This action cannot be undone.</p>
+                            </div>
+                        </article>
+                        <form method="post">
+                            {% csrf_token %}
+                            <div class="field is-grouped is-grouped-right">
+                                <div class="control">
+                                    <a href="{% url 'wish-list:detail' %}" class="button">Cancel</a>
+                                </div>
+                                <div class="control">
+                                    <button type="submit" class="button is-danger">Remove</button>
+                                </div>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+{% endblock %}
