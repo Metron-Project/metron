@@ -1,6 +1,6 @@
 """Tests for the Collection API."""
 
-from datetime import date, datetime, timezone
+from datetime import UTC, date, datetime
 from decimal import Decimal
 
 from django.urls import reverse
@@ -211,13 +211,13 @@ def test_filter_by_date_read(api_client, collection_user, collection_issue_1, co
         user=collection_user,
         issue=collection_issue_1,
         is_read=True,
-        date_read=datetime(2024, 6, 1, 12, 0, 0, tzinfo=timezone.utc),
+        date_read=datetime(2024, 6, 1, 12, 0, 0, tzinfo=UTC),
     )
     CollectionItem.objects.create(
         user=collection_user,
         issue=collection_issue_2,
         is_read=True,
-        date_read=datetime(2024, 7, 1, 12, 0, 0, tzinfo=timezone.utc),
+        date_read=datetime(2024, 7, 1, 12, 0, 0, tzinfo=UTC),
     )
 
     # Filter by exact date
@@ -597,8 +597,8 @@ def test_collection_item_includes_read_dates(api_client, collection_item):
     api_client.force_authenticate(user=collection_item.user)
 
     # Add some read dates
-    date1 = datetime(2024, 1, 15, 10, 0, 0, tzinfo=timezone.utc)
-    date2 = datetime(2024, 6, 15, 14, 30, 0, tzinfo=timezone.utc)
+    date1 = datetime(2024, 1, 15, 10, 0, 0, tzinfo=UTC)
+    date2 = datetime(2024, 6, 15, 14, 30, 0, tzinfo=UTC)
     ReadDate.objects.create(collection_item=collection_item, read_date=date1)
     ReadDate.objects.create(collection_item=collection_item, read_date=date2)
 
@@ -641,8 +641,8 @@ def test_collection_item_read_dates_ordered(api_client, collection_item):
     """Test that read_dates are ordered by most recent first."""
     api_client.force_authenticate(user=collection_item.user)
 
-    old_date = datetime(2024, 1, 1, 12, 0, 0, tzinfo=timezone.utc)
-    new_date = datetime(2024, 6, 15, 12, 0, 0, tzinfo=timezone.utc)
+    old_date = datetime(2024, 1, 1, 12, 0, 0, tzinfo=UTC)
+    new_date = datetime(2024, 6, 15, 12, 0, 0, tzinfo=UTC)
 
     # Create in chronological order
     ReadDate.objects.create(collection_item=collection_item, read_date=old_date)

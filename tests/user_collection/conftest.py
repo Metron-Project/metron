@@ -1,6 +1,6 @@
 """Fixtures for user_collection app tests."""
 
-from datetime import date, datetime, timezone
+from datetime import UTC, date, datetime
 from decimal import Decimal
 
 import pytest
@@ -114,7 +114,7 @@ def collection_item_read(collection_user, collection_issue_1):
         quantity=1,
         book_format=CollectionItem.BookFormat.PRINT,
         is_read=True,
-        date_read=datetime(2024, 6, 15, 12, 0, 0, tzinfo=timezone.utc),
+        date_read=datetime(2024, 6, 15, 12, 0, 0, tzinfo=UTC),
         rating=4,
     )
 
