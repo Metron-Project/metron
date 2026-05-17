@@ -32,15 +32,17 @@
                 {% if form.non_field_errors %}
                     <div class="notification is-danger">{{ form.non_field_errors }}</div>
                 {% endif %}
-                <div class="field has-addons">
+                <div class="field">
                     <div class="control is-expanded">
                         {{ form.series }}
                         {% for error in form.series.errors %}
                             <p class="help is-danger">{{ error }}</p>
                         {% endfor %}
                     </div>
+                </div>
+                <div class="field is-grouped is-grouped-right">
                     <div class="control">
-                        <button type="submit" class="button is-primary">
+                        <button type="submit" class="button is-primary is-rounded">
                             <span class="icon is-small"><i class="fas fa-plus"></i></span>
                             <span>Add</span>
                         </button>
