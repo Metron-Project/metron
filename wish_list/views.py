@@ -3,7 +3,6 @@ from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
 from django.shortcuts import get_object_or_404, redirect
 from django.urls import reverse, reverse_lazy
 from django.views.generic import DeleteView, FormView, UpdateView
-from djmoney.money import Money
 
 from user_collection.models import CollectionItem
 from wish_list.forms import AcquireWishListItemForm, WishListItemForm
@@ -91,15 +90,12 @@ class AcquireWishListItemView(LoginRequiredMixin, UserPassesTestMixin, FormView)
 
     def form_valid(self, form):
         item = self.wish_list_item
-        purchase_price_amount = form.cleaned_data.get("purchase_price")
         _, created = CollectionItem.objects.get_or_create(
             user=self.request.user,
             issue=item.issue,
             defaults={
                 "purchase_date": form.cleaned_data.get("purchase_date"),
-                "purchase_price": (
-                    Money(purchase_price_amount, "USD") if purchase_price_amount else None
-                ),
+                "purchase_price": form.cleaned_data.get("purchase_price"),
                 "purchase_store": form.cleaned_data.get("purchase_store", ""),
                 "notes": form.cleaned_data.get("notes", ""),
                 "grade": item.desired_grade,

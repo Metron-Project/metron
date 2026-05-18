@@ -1,5 +1,6 @@
 from autocomplete import widgets
 from django import forms
+from djmoney.forms.fields import MoneyField
 
 from comicsdb.autocomplete import IssueAutocomplete
 from comicsdb.forms.widgets import BulmaMoneyWidget
@@ -65,11 +66,11 @@ class AcquireWishListItemForm(forms.Form):
         ),
         label="Purchase Date",
     )
-    purchase_price = forms.DecimalField(
+    purchase_price = MoneyField(
         required=False,
         min_value=0,
         decimal_places=2,
-        widget=forms.NumberInput(attrs={"step": "0.01", "min": "0", "placeholder": "0.00"}),
+        default_currency="USD",
         label="Price Paid",
     )
     purchase_store = forms.CharField(
@@ -83,3 +84,9 @@ class AcquireWishListItemForm(forms.Form):
         widget=forms.Textarea(attrs={"placeholder": "Additional notes", "rows": 3}),
         label="Notes",
     )
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.fields["purchase_price"].widget = BulmaMoneyWidget(
+            attrs={"step": "0.01", "min": "0", "placeholder": "0.00"}
+        )
