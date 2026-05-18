@@ -1,6 +1,6 @@
 """Tests for user_collection views."""
 
-from datetime import date, datetime, timezone
+from datetime import UTC, date, datetime
 from decimal import Decimal
 
 from django.urls import reverse
@@ -369,7 +369,7 @@ class TestCollectionUpdateView:
         """Test updating a collection item to unmark it as read."""
         # First mark it as read
         collection_item.is_read = True
-        collection_item.date_read = datetime(2024, 7, 1, 12, 0, 0, tzinfo=timezone.utc)
+        collection_item.date_read = datetime(2024, 7, 1, 12, 0, 0, tzinfo=UTC)
         collection_item.save()
 
         client.login(username=collection_user.username, password=test_password)
@@ -2171,7 +2171,7 @@ class TestDeleteReadDateView:
         """Test that deleting the last read date updates is_read and date_read."""
         read_date = ReadDate.objects.create(
             collection_item=collection_item,
-            read_date=datetime(2024, 6, 15, 14, 30, 0, tzinfo=timezone.utc),
+            read_date=datetime(2024, 6, 15, 14, 30, 0, tzinfo=UTC),
         )
 
         # Sync backward compatibility fields
@@ -2198,11 +2198,11 @@ class TestDeleteReadDateView:
         """Test deleting one read date when multiple exist."""
         date1 = ReadDate.objects.create(
             collection_item=collection_item,
-            read_date=datetime(2024, 1, 15, 10, 0, 0, tzinfo=timezone.utc),
+            read_date=datetime(2024, 1, 15, 10, 0, 0, tzinfo=UTC),
         )
         date2 = ReadDate.objects.create(
             collection_item=collection_item,
-            read_date=datetime(2024, 6, 15, 14, 30, 0, tzinfo=timezone.utc),
+            read_date=datetime(2024, 6, 15, 14, 30, 0, tzinfo=UTC),
         )
 
         client.login(username=collection_user.username, password=test_password)
@@ -2267,15 +2267,15 @@ class TestDeleteReadDateView:
         """
         date1 = ReadDate.objects.create(
             collection_item=collection_item,
-            read_date=datetime(2024, 1, 15, 10, 0, 0, tzinfo=timezone.utc),
+            read_date=datetime(2024, 1, 15, 10, 0, 0, tzinfo=UTC),
         )
         date2 = ReadDate.objects.create(
             collection_item=collection_item,
-            read_date=datetime(2024, 3, 20, 14, 0, 0, tzinfo=timezone.utc),
+            read_date=datetime(2024, 3, 20, 14, 0, 0, tzinfo=UTC),
         )
         date3 = ReadDate.objects.create(
             collection_item=collection_item,
-            read_date=datetime(2024, 6, 15, 18, 30, 0, tzinfo=timezone.utc),
+            read_date=datetime(2024, 6, 15, 18, 30, 0, tzinfo=UTC),
         )
 
         client.login(username=collection_user.username, password=test_password)
@@ -2325,11 +2325,11 @@ class TestDeleteReadDateView:
         """
         date1 = ReadDate.objects.create(
             collection_item=collection_item,
-            read_date=datetime(2024, 1, 15, 10, 0, 0, tzinfo=timezone.utc),
+            read_date=datetime(2024, 1, 15, 10, 0, 0, tzinfo=UTC),
         )
         date2 = ReadDate.objects.create(
             collection_item=collection_item,
-            read_date=datetime(2024, 6, 15, 14, 30, 0, tzinfo=timezone.utc),
+            read_date=datetime(2024, 6, 15, 14, 30, 0, tzinfo=UTC),
         )
 
         client.login(username=collection_user.username, password=test_password)

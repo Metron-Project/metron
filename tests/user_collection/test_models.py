@@ -1,6 +1,6 @@
 """Tests for user_collection models."""
 
-from datetime import date, datetime, timezone
+from datetime import UTC, date, datetime
 from decimal import Decimal
 
 import pytest
@@ -263,7 +263,7 @@ class TestCollectionItemModel:
     def test_collection_item_update_date_read(self, collection_item):
         """Test updating date_read field."""
         assert collection_item.date_read is None
-        read_datetime = datetime(2024, 6, 1, 12, 0, 0, tzinfo=timezone.utc)
+        read_datetime = datetime(2024, 6, 1, 12, 0, 0, tzinfo=UTC)
         collection_item.date_read = read_datetime
         collection_item.save()
         collection_item.refresh_from_db()
@@ -492,7 +492,7 @@ class TestReadDateModel:
 
     def test_read_date_str(self, collection_item):
         """Test the string representation of a read date."""
-        read_datetime = datetime(2024, 6, 15, 14, 30, 0, tzinfo=timezone.utc)
+        read_datetime = datetime(2024, 6, 15, 14, 30, 0, tzinfo=UTC)
         read_date = ReadDate.objects.create(
             collection_item=collection_item,
             read_date=read_datetime,
@@ -502,8 +502,8 @@ class TestReadDateModel:
 
     def test_read_date_ordering(self, collection_item):
         """Test that read dates are ordered by -read_date (most recent first)."""
-        old_date = datetime(2024, 1, 1, 12, 0, 0, tzinfo=timezone.utc)
-        new_date = datetime(2024, 6, 15, 12, 0, 0, tzinfo=timezone.utc)
+        old_date = datetime(2024, 1, 1, 12, 0, 0, tzinfo=UTC)
+        new_date = datetime(2024, 6, 15, 12, 0, 0, tzinfo=UTC)
 
         # Create in chronological order
         ReadDate.objects.create(collection_item=collection_item, read_date=old_date)
@@ -532,9 +532,9 @@ class TestReadDateModel:
     def test_multiple_read_dates_per_item(self, collection_item):
         """Test that a collection item can have multiple read dates."""
         dates = [
-            datetime(2024, 1, 15, 10, 0, 0, tzinfo=timezone.utc),
-            datetime(2024, 3, 20, 14, 30, 0, tzinfo=timezone.utc),
-            datetime(2024, 6, 10, 9, 15, 0, tzinfo=timezone.utc),
+            datetime(2024, 1, 15, 10, 0, 0, tzinfo=UTC),
+            datetime(2024, 3, 20, 14, 30, 0, tzinfo=UTC),
+            datetime(2024, 6, 10, 9, 15, 0, tzinfo=UTC),
         ]
 
         for date_time in dates:
@@ -566,8 +566,8 @@ class TestReadDateModel:
         """Test the get_latest_read_date helper method."""
         assert collection_item.get_latest_read_date() is None
 
-        old_date = datetime(2024, 1, 1, 12, 0, 0, tzinfo=timezone.utc)
-        new_date = datetime(2024, 6, 15, 12, 0, 0, tzinfo=timezone.utc)
+        old_date = datetime(2024, 1, 1, 12, 0, 0, tzinfo=UTC)
+        new_date = datetime(2024, 6, 15, 12, 0, 0, tzinfo=UTC)
 
         ReadDate.objects.create(collection_item=collection_item, read_date=old_date)
         ReadDate.objects.create(collection_item=collection_item, read_date=new_date)
@@ -577,7 +577,7 @@ class TestReadDateModel:
 
     def test_add_read_date_with_specific_date(self, collection_item):
         """Test the add_read_date helper method with a specific date."""
-        specific_date = datetime(2024, 6, 15, 14, 30, 0, tzinfo=timezone.utc)
+        specific_date = datetime(2024, 6, 15, 14, 30, 0, tzinfo=UTC)
 
         collection_item.add_read_date(specific_date)
 
@@ -608,9 +608,9 @@ class TestReadDateModel:
 
     def test_add_multiple_read_dates(self, collection_item):
         """Test adding multiple read dates via helper method."""
-        date1 = datetime(2024, 1, 15, 10, 0, 0, tzinfo=timezone.utc)
-        date2 = datetime(2024, 3, 20, 14, 30, 0, tzinfo=timezone.utc)
-        date3 = datetime(2024, 6, 10, 9, 15, 0, tzinfo=timezone.utc)
+        date1 = datetime(2024, 1, 15, 10, 0, 0, tzinfo=UTC)
+        date2 = datetime(2024, 3, 20, 14, 30, 0, tzinfo=UTC)
+        date3 = datetime(2024, 6, 10, 9, 15, 0, tzinfo=UTC)
 
         collection_item.add_read_date(date1)
         collection_item.add_read_date(date2)
@@ -629,7 +629,7 @@ class TestReadDateModel:
         assert collection_item.date_read is None
 
         # Add first read date
-        first_read = datetime(2024, 1, 15, 10, 0, 0, tzinfo=timezone.utc)
+        first_read = datetime(2024, 1, 15, 10, 0, 0, tzinfo=UTC)
         collection_item.add_read_date(first_read)
         collection_item.refresh_from_db()
 
@@ -637,7 +637,7 @@ class TestReadDateModel:
         assert collection_item.date_read == first_read
 
         # Add second read date
-        second_read = datetime(2024, 6, 15, 14, 30, 0, tzinfo=timezone.utc)
+        second_read = datetime(2024, 6, 15, 14, 30, 0, tzinfo=UTC)
         collection_item.add_read_date(second_read)
         collection_item.refresh_from_db()
 
@@ -665,7 +665,7 @@ class TestReadDateModel:
         self, collection_user, collection_issue_1, collection_issue_2
     ):
         """Test that different collection items can have the same read date."""
-        same_datetime = datetime(2024, 6, 15, 12, 0, 0, tzinfo=timezone.utc)
+        same_datetime = datetime(2024, 6, 15, 12, 0, 0, tzinfo=UTC)
 
         item1 = CollectionItem.objects.create(
             user=collection_user,

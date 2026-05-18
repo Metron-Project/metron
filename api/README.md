@@ -20,6 +20,8 @@ Welcome to the Metron API documentation. This API provides programmatic access t
     - [Team](#team)
     - [Universe](#universe)
     - [Collection](#collection)
+    - [Pull List](#pull-list)
+    - [Wish List](#wish-list)
     - [Reading List](#reading-list)
     - [Supporting Resources](#supporting-resources)
 - [Filtering](#filtering)
@@ -1284,6 +1286,253 @@ curl -X POST https://metron.cloud/api/collection/scrobble/ \
 - Format counts in stats show the raw choice value (PRINT, DIGITAL, BOTH) not the display name
 - Multiple read dates are supported - comics can be re-read and each read is tracked separately
 - The `is_read` and `date_read` fields are automatically synchronized from the `read_dates` array
+
+---
+
+### Pull List
+
+Track ongoing comic book series a user is following — the digital equivalent of a comic shop pull list.
+
+**Base Path:** `/api/pull_list/`
+
+**Actions:**
+
+- `GET /api/pull_list/` — Retrieve the authenticated user's pull list metadata
+- `GET /api/pull_list/series/` — List series on the pull list
+- `POST /api/pull_list/series/add` — Add a series to the pull list
+- `DELETE /api/pull_list/series/{series_id}/remove` — Remove a series from the pull list
+- `GET /api/pull_list/issues/` — List issues from series on the pull list
+
+**Authentication:**
+
+- **Required:** All pull list endpoints require authentication
+- **Access:** Users can only access their own pull list
+
+**List Response Fields (`GET /api/pull_list/`):**
+```json
+{
+  "id": 1,
+  "series_count": 12,
+  "series_url": "https://metron.cloud/api/pull_list/series/",
+  "modified": "2026-05-01T10:00:00Z"
+}
+```
+
+**Series Response Fields (`GET /api/pull_list/series/`):**
+```json
+{
+  "count": 12,
+  "next": null,
+  "previous": null,
+  "results": [
+    {
+      "id": 7,
+      "series": {
+        "id": 123,
+        "name": "Amazing Spider-Man",
+        "volume": 1,
+        "series_type": {
+          "id": 1,
+          "name": "Ongoing Series"
+        },
+        "publisher": {
+          "id": 2,
+          "name": "Marvel"
+        },
+        "year_began": 1963
+      },
+      "added_on": "2026-04-15T09:30:00Z"
+    }
+  ]
+}
+```
+
+**Add Series (`POST /api/pull_list/series/add`):**
+
+Request body:
+```json
+{
+  "series_id": 123
+}
+```
+
+- Returns `201 Created` with the pull list series entry if the series was added
+- Returns `200 OK` with the existing entry if the series was already on the list
+- Returns `400 Bad Request` if `series_id` is missing
+- Returns `404 Not Found` if the series does not exist
+
+**Remove Series (`DELETE /api/pull_list/series/{series_id}/remove`):**
+
+- Returns `204 No Content` on success
+- Returns `404 Not Found` if the series is not on the pull list
+
+**Issues (`GET /api/pull_list/issues/`):**
+
+Returns a paginated list of issues belonging to series on the pull list, ordered by store date then series name.
+
+Query parameters:
+
+| Parameter | Type | Description |
+|-----------|------|-------------|
+| `store_date_after` | `YYYY-MM-DD` | Return issues with a store date on or after this date (inclusive) |
+| `store_date_before` | `YYYY-MM-DD` | Return issues with a store date on or before this date (inclusive) |
+
+Example response:
+```json
+{
+  "count": 3,
+  "next": null,
+  "previous": null,
+  "results": [
+    {
+      "id": 456,
+      "series": {
+        "id": 123,
+        "name": "Amazing Spider-Man",
+        "volume": 1,
+        "series_type": {"id": 1, "name": "Ongoing Series"},
+        "publisher": {"id": 2, "name": "Marvel"},
+        "year_began": 1963
+      },
+      "number": "42",
+      "cover_date": "2026-05-01",
+      "store_date": "2026-04-30",
+      "image": "https://metron.cloud/media/issue/cover.jpg"
+    }
+  ]
+}
+```
+
+**Notes:**
+
+- The pull list is created automatically on first access — no setup required
+- Each user has exactly one pull list
+- Pull lists are private and only accessible to their owner
+
+---
+
+### Wish List
+
+Track specific comic book issues a user wants to acquire, with priority, condition goals, budget limits, and acquisition status.
+
+**Base Path:** `/api/wish_list/`
+
+**Actions:**
+
+- `GET /api/wish_list/` — Retrieve the authenticated user's wish list metadata
+- `GET /api/wish_list/items/` — List items on the wish list
+- `POST /api/wish_list/items/add` — Add an issue to the wish list
+- `POST /api/wish_list/items/{item_id}/acquire` — Mark an item as acquired and add it to the collection
+- `DELETE /api/wish_list/items/{item_id}/remove` — Remove an item from the wish list
+
+**Authentication:**
+
+- **Required:** All wish list endpoints require authentication
+- **Access:** Users can only access their own wish list
+
+**List Response Fields (`GET /api/wish_list/`):**
+```json
+{
+  "id": 1,
+  "item_count": 8,
+  "items_url": "https://metron.cloud/api/wish_list/items/",
+  "modified": "2026-05-10T14:22:00Z"
+}
+```
+
+**Item Response Fields (`GET /api/wish_list/items/`):**
+```json
+{
+  "count": 8,
+  "next": null,
+  "previous": null,
+  "results": [
+    {
+      "id": 42,
+      "issue": {
+        "id": 5001,
+        "series": {
+          "id": 789,
+          "name": "Amazing Fantasy",
+          "volume": 1
+        },
+        "number": "15",
+        "cover_date": "1962-08-01"
+      },
+      "status": "Wanted",
+      "priority": 1,
+      "desired_grade": "6.0",
+      "modified": "2026-05-10T14:22:00Z"
+    }
+  ]
+}
+```
+
+**Add Item (`POST /api/wish_list/items/add`):**
+
+Request body:
+```json
+{
+  "issue_id": 5001,
+  "priority": 1,
+  "desired_grade": "6.0",
+  "max_price": "500.00",
+  "notes": "First appearance of Spider-Man"
+}
+```
+
+All fields except `issue_id` are optional. Priority defaults to `3` if omitted.
+
+- Returns `201 Created` with the full item if it was added
+- Returns `200 OK` with the existing item if the issue was already on the list
+- Returns `400 Bad Request` if `issue_id` refers to a non-existent issue
+
+**Acquire Item (`POST /api/wish_list/items/{item_id}/acquire`):**
+
+Marks the item as acquired, records purchase details, and creates a `CollectionItem` for the user.
+
+Request body (all fields optional):
+```json
+{
+  "purchase_date": "2026-05-17",
+  "purchase_price": "320.00",
+  "purchase_store": "Local Comic Shop",
+  "notes": "VG copy, slight water stain"
+}
+```
+
+Response:
+```json
+{
+  "wish_list_item_id": 42,
+  "collection_item_id": 987,
+  "created": true,
+  "status": "Acquired"
+}
+```
+
+- `created` is `true` if a new collection item was created, `false` if the issue was already in the collection
+- Returns `404 Not Found` if the item does not belong to the authenticated user
+
+**Remove Item (`DELETE /api/wish_list/items/{item_id}/remove`):**
+
+- Returns `204 No Content` on success
+- Returns `404 Not Found` if the item does not belong to the authenticated user
+
+**Status Values:**
+
+| Value | Meaning |
+|-------|---------|
+| `Wanted` | Actively looking for this issue |
+| `Found` | Located a copy but not yet purchased |
+| `Acquired` | Purchased; collection item created |
+
+**Notes:**
+
+- The wish list is created automatically on first access — no setup required
+- Each user has exactly one wish list
+- Wish lists are private and only accessible to their owner
+- Acquiring an item is idempotent: if the issue is already in the collection, the existing collection item is left unchanged and `created` returns `false`
 
 ---
 

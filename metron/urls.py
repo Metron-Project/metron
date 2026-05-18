@@ -26,8 +26,10 @@ from comicsdb.urls import (
     universe as universe_urls,
 )
 from polls import urls as polls_urls
+from pull_list import urls as pull_list_urls
 from reading_lists import urls as reading_lists_urls
 from user_collection import urls as user_collection_urls
+from wish_list import urls as wish_list_urls
 
 handler404 = "metron.views.handler404"
 
@@ -61,6 +63,8 @@ urlpatterns = [
     path("polls/", include(polls_urls)),
     path("reading-lists/", include(reading_lists_urls)),
     path("collection/", include(user_collection_urls)),
+    path("pull-list/", include(pull_list_urls)),
+    path("wish-list/", include(wish_list_urls)),
     path("series/", include(series_urls)),
     path("team/", include(team_urls)),
     path("universe/", include(universe_urls)),

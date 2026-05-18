@@ -83,7 +83,7 @@ class Series(CommonInfo):
             case _:
                 return f"{self.name} ({self.year_began})"
 
-    def first_issue_cover(self) -> "ImageField | None":
+    def first_issue_cover(self) -> ImageField | None:
         try:
             return self.issues.first().image
         except AttributeError:

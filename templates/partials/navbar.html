@@ -134,6 +134,18 @@
                                 </span>
                                 <span>My Collection</span>
                             </a>
+                            <a class="navbar-item" href="{% url 'pull-list:detail' %}">
+                                <span class="icon" aria-hidden="true">
+                                    <i class="fas fa-shopping-basket"></i>
+                                </span>
+                                <span>My Pull List</span>
+                            </a>
+                            <a class="navbar-item" href="{% url 'wish-list:detail' %}">
+                                <span class="icon" aria-hidden="true">
+                                    <i class="fas fa-star"></i>
+                                </span>
+                                <span>My Wish List</span>
+                            </a>
                         {% endif %}
                     </div>
                 </div>

@@ -1,0 +1,111 @@
+{% extends parent_template|default:"base.html" %}
+{% load static %}
+{% block title %}{{ pull_list }} - Metron{% endblock %}
+{% block content %}
+    <header class="block">
+        <h1 class="title">{{ pull_list }}</h1>
+    </header>
+    {% if is_owner %}
+        <div class="box mb-5">
+            <h2 class="title is-5">Add a Series</h2>
+            <form method="post">
+                {% csrf_token %}
+                {% if form.non_field_errors %}
+                    <div class="notification is-danger">{{ form.non_field_errors }}</div>
+                {% endif %}
+                <div class="field">
+                    <div class="control is-expanded">
+                        {{ form.series }}
+                        {% for error in form.series.errors %}
+                            <p class="help is-danger">{{ error }}</p>
+                        {% endfor %}
+                    </div>
+                </div>
+                <div class="field is-grouped is-grouped-right">
+                    <div class="control">
+                        <button type="submit" class="button is-primary is-rounded">
+                            <span class="icon is-small"><i class="fas fa-plus"></i></span>
+                            <span>Add</span>
+                        </button>
+                    </div>
+                </div>
+            </form>
+        </div>
+    {% endif %}
+
+    <div class="columns">
+        <div class="column is-two-thirds">
+            <div class="box">
+                <h2 class="title is-5">Series on Pull List ({{ series_on_list|length }})</h2>
+                {% if series_on_list %}
+                    <div class="table-container">
+                        <table class="table is-fullwidth is-striped is-hoverable">
+                            <thead>
+                                <tr>
+                                    <th>Series</th>
+                                    <th>Publisher</th>
+                                    <th>Type</th>
+                                    {% if is_owner %}<th></th>{% endif %}
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for pls in series_on_list %}
+                                    <tr>
+                                        <td>
+                                            <a href="{{ pls.series.get_absolute_url }}">{{ pls.series }}</a>
+                                        </td>
+                                        <td>{{ pls.series.publisher }}</td>
+                                        <td>
+                                            <span class="tag is-info">{{ pls.series.series_type }}</span>
+                                        </td>
+                                        {% if is_owner %}
+                                            <td>
+                                                <a href="{% url 'pull-list:remove-series' pls.series.pk %}"
+                                                   class="button is-danger is-small is-outlined">
+                                                    <span class="icon is-small"><i class="fas fa-times"></i></span>
+                                                    <span>Remove</span>
+                                                </a>
+                                            </td>
+                                        {% endif %}
+                                    </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                {% else %}
+                    <p class="has-text-grey">No series on this pull list yet.</p>
+                {% endif %}
+            </div>
+        </div>
+
+        <div class="column">
+            <div class="box">
+                <h2 class="title is-5">Upcoming Issues</h2>
+                {% if upcoming_issues %}
+                    <div class="table-container">
+                        <table class="table is-fullwidth is-striped is-hoverable">
+                            <thead>
+                                <tr>
+                                    <th>Issue</th>
+                                    <th>Store Date</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for issue in upcoming_issues %}
+                                    <tr>
+                                        <td>
+                                            <a href="{{ issue.get_absolute_url }}">{{ issue }}</a>
+                                        </td>
+                                        <td>{{ issue.store_date }}</td>
+                                    </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                {% else %}
+                    <p class="has-text-grey">No upcoming issues found for series on this pull list.</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+{% endblock %}
