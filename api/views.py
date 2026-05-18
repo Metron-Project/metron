@@ -940,6 +940,8 @@ class PullListViewSet(
     def get_serializer_class(self):
         if self.action == "series":
             return PullListSeriesSerializer
+        if self.action == "issues":
+            return IssueListSerializer
         return PullListReadSerializer
 
     @extend_schema(responses=PullListSeriesSerializer(many=True))
@@ -983,6 +985,50 @@ class PullListViewSet(
             serializer.data,
             status=status.HTTP_201_CREATED if created else status.HTTP_200_OK,
         )
+
+    @extend_schema(
+        responses=IssueListSerializer(many=True),
+        parameters=[
+            OpenApiParameter(
+                name="store_date_after",
+                type=str,
+                location="query",
+                description="Return issues with a store date on or after this date (YYYY-MM-DD).",
+            ),
+            OpenApiParameter(
+                name="store_date_before",
+                type=str,
+                location="query",
+                description="Return issues with a store date on or before this date (YYYY-MM-DD).",
+            ),
+        ],
+    )
+    @action(detail=False, methods=["get"])
+    def issues(self, request):
+        """Return issues for series on the authenticated user's pull list.
+
+        Optionally filter by store date using store_date_after and store_date_before.
+        """
+        pull_list, _ = PullList.objects.get_or_create(user=request.user)
+        series_ids = PullListSeries.objects.filter(pull_list=pull_list).values_list(
+            "series_id", flat=True
+        )
+        queryset = (
+            Issue.objects.filter(series_id__in=series_ids)
+            .select_related("series__series_type", "series__publisher")
+            .order_by("store_date", "series__sort_name", "number")
+        )
+        after = request.query_params.get("store_date_after")
+        before = request.query_params.get("store_date_before")
+        if after:
+            queryset = queryset.filter(store_date__gte=after)
+        if before:
+            queryset = queryset.filter(store_date__lte=before)
+        page = self.paginate_queryset(queryset)
+        if page is not None:
+            serializer = IssueListSerializer(page, many=True, context={"request": request})
+            return self.get_paginated_response(serializer.data)
+        raise Http404
 
     @extend_schema(responses={204: None, 404: None})
     @action(

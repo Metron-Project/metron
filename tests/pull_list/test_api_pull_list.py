@@ -100,3 +100,54 @@ def test_add_series_unauthenticated(api_client, pull_list_series):
         reverse("api:pull_list-add-series"), data={"series_id": pull_list_series.pk}
     )
     assert resp.status_code == status.HTTP_401_UNAUTHORIZED
+
+
+# Issues action
+def test_issues_action_returns_issues(
+    api_client, pull_list_user, pull_list_with_series, pull_list_issue
+):
+    api_client.force_authenticate(user=pull_list_user)
+    resp = api_client.get(reverse("api:pull_list-issues"))
+    assert resp.status_code == status.HTTP_200_OK
+    assert resp.data["count"] == 1
+    assert resp.data["results"][0]["id"] == pull_list_issue.pk
+
+
+def test_issues_action_unauthenticated(api_client):
+    resp = api_client.get(reverse("api:pull_list-issues"))
+    assert resp.status_code == status.HTTP_401_UNAUTHORIZED
+
+
+def test_issues_action_store_date_after_filter(
+    api_client, pull_list_user, pull_list_with_series, pull_list_issue
+):
+    # pull_list_issue has store_date=2025-06-04
+    api_client.force_authenticate(user=pull_list_user)
+    resp = api_client.get(reverse("api:pull_list-issues"), {"store_date_after": "2025-06-04"})
+    assert resp.status_code == status.HTTP_200_OK
+    assert resp.data["count"] == 1
+
+    resp = api_client.get(reverse("api:pull_list-issues"), {"store_date_after": "2025-06-05"})
+    assert resp.status_code == status.HTTP_200_OK
+    assert resp.data["count"] == 0
+
+
+def test_issues_action_store_date_before_filter(
+    api_client, pull_list_user, pull_list_with_series, pull_list_issue
+):
+    # pull_list_issue has store_date=2025-06-04
+    api_client.force_authenticate(user=pull_list_user)
+    resp = api_client.get(reverse("api:pull_list-issues"), {"store_date_before": "2025-06-04"})
+    assert resp.status_code == status.HTTP_200_OK
+    assert resp.data["count"] == 1
+
+    resp = api_client.get(reverse("api:pull_list-issues"), {"store_date_before": "2025-06-03"})
+    assert resp.status_code == status.HTTP_200_OK
+    assert resp.data["count"] == 0
+
+
+def test_issues_action_empty_list_when_no_series(api_client, pull_list_user, pull_list):
+    api_client.force_authenticate(user=pull_list_user)
+    resp = api_client.get(reverse("api:pull_list-issues"))
+    assert resp.status_code == status.HTTP_200_OK
+    assert resp.data["count"] == 0

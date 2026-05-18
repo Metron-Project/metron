@@ -1301,6 +1301,7 @@ Track ongoing comic book series a user is following — the digital equivalent o
 - `GET /api/pull_list/series/` — List series on the pull list
 - `POST /api/pull_list/series/add` — Add a series to the pull list
 - `DELETE /api/pull_list/series/{series_id}/remove` — Remove a series from the pull list
+- `GET /api/pull_list/issues/` — List issues from series on the pull list
 
 **Authentication:**
 
@@ -1364,6 +1365,43 @@ Request body:
 
 - Returns `204 No Content` on success
 - Returns `404 Not Found` if the series is not on the pull list
+
+**Issues (`GET /api/pull_list/issues/`):**
+
+Returns a paginated list of issues belonging to series on the pull list, ordered by store date then series name.
+
+Query parameters:
+
+| Parameter | Type | Description |
+|-----------|------|-------------|
+| `store_date_after` | `YYYY-MM-DD` | Return issues with a store date on or after this date (inclusive) |
+| `store_date_before` | `YYYY-MM-DD` | Return issues with a store date on or before this date (inclusive) |
+
+Example response:
+```json
+{
+  "count": 3,
+  "next": null,
+  "previous": null,
+  "results": [
+    {
+      "id": 456,
+      "series": {
+        "id": 123,
+        "name": "Amazing Spider-Man",
+        "volume": 1,
+        "series_type": {"id": 1, "name": "Ongoing Series"},
+        "publisher": {"id": 2, "name": "Marvel"},
+        "year_began": 1963
+      },
+      "number": "42",
+      "cover_date": "2026-05-01",
+      "store_date": "2026-04-30",
+      "image": "https://metron.cloud/media/issue/cover.jpg"
+    }
+  ]
+}
+```
 
 **Notes:**
 
