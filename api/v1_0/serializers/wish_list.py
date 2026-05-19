@@ -1,9 +1,8 @@
-from django.conf import settings
 from rest_framework import serializers
 
 from api.v1_0.serializers.collection import CollectionIssueSerializer
 from comicsdb.models.issue import Issue
-from wish_list.models import WishList, WishListItem
+from wish_list.models import CURRENCY_CHOICES, WishList, WishListItem
 
 
 class WishListItemListSerializer(serializers.ModelSerializer):
@@ -62,6 +61,9 @@ class WishListAddItemSerializer(serializers.Serializer):
     max_price = serializers.DecimalField(
         required=False, allow_null=True, max_digits=7, decimal_places=2
     )
+    max_price_currency = serializers.ChoiceField(
+        choices=CURRENCY_CHOICES, required=False, default="USD"
+    )
     notes = serializers.CharField(required=False, allow_blank=True, default="")
 
     def validate_issue_id(self, value):
@@ -76,7 +78,7 @@ class AcquireWishListItemSerializer(serializers.Serializer):
         required=False, allow_null=True, max_digits=7, decimal_places=2
     )
     purchase_price_currency = serializers.ChoiceField(
-        choices=[(c, c) for c in settings.CURRENCIES], required=False, default="USD"
+        choices=CURRENCY_CHOICES, required=False, default="USD"
     )
     purchase_store = serializers.CharField(required=False, allow_blank=True, default="")
     notes = serializers.CharField(required=False, allow_blank=True, default="")

@@ -1,5 +1,7 @@
 """Tests for the Wish List API."""
 
+from decimal import Decimal
+
 from django.urls import reverse
 from rest_framework import status
 
@@ -49,6 +51,20 @@ def test_add_item_action_creates_item(api_client, wish_list_user, wish_list, wis
     )
     assert resp.status_code == status.HTTP_201_CREATED
     assert WishListItem.objects.filter(wish_list=wish_list, issue=wish_list_issue).exists()
+
+
+def test_add_item_action_sets_max_price_with_currency(
+    api_client, wish_list_user, wish_list, wish_list_issue
+):
+    api_client.force_authenticate(user=wish_list_user)
+    resp = api_client.post(
+        reverse("api:wish_list-add-item"),
+        data={"issue_id": wish_list_issue.pk, "max_price": "9.99", "max_price_currency": "GBP"},
+    )
+    assert resp.status_code == status.HTTP_201_CREATED
+    item = WishListItem.objects.get(wish_list=wish_list, issue=wish_list_issue)
+    assert item.max_price.amount == Decimal("9.99")
+    assert str(item.max_price.currency) == "GBP"
 
 
 def test_add_item_duplicate_returns_200(

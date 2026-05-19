@@ -1095,6 +1095,8 @@ class WishListViewSet(
         data = serializer.validated_data
         issue = Issue.objects.get(pk=data["issue_id"])
         wish_list, _ = WishList.objects.get_or_create(user=request.user)
+        max_price = data.get("max_price")
+        max_price_currency = data.get("max_price_currency", "USD")
         item, created = WishListItem.objects.get_or_create(
             wish_list=wish_list,
             issue=issue,
@@ -1102,6 +1104,7 @@ class WishListViewSet(
                 "priority": data.get("priority", 3),
                 "notes": data.get("notes", ""),
                 "desired_grade": data.get("desired_grade"),
+                "max_price": Money(max_price, max_price_currency) if max_price else None,
             },
         )
         response_serializer = WishListItemReadSerializer(item, context={"request": request})

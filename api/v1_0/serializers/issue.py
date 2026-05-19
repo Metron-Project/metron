@@ -1,7 +1,6 @@
 import json
 from decimal import Decimal
 
-from django.conf import settings
 from djmoney.money import Money
 from drf_spectacular.utils import extend_schema_field
 from rest_framework import serializers
@@ -17,6 +16,7 @@ from api.v1_0.serializers.series import SeriesTypeSerializer
 from api.v1_0.serializers.team import TeamListSerializer
 from api.v1_0.serializers.universe import UniverseListSerializer
 from comicsdb.models import Issue, Series, Variant
+from metron.choices import CURRENCY_CHOICES
 
 
 @extend_schema_field(
@@ -108,9 +108,10 @@ class PriceField(serializers.Field):
             if amount in (None, ""):
                 return None
 
-            if currency not in settings.CURRENCIES:
+            valid_currencies = [c for c, _ in CURRENCY_CHOICES]
+            if currency not in valid_currencies:
                 raise serializers.ValidationError(
-                    f"Invalid currency '{currency}'. Supported: {', '.join(settings.CURRENCIES)}"
+                    f"Invalid currency '{currency}'. Supported: {', '.join(valid_currencies)}"
                 )
 
             try:
