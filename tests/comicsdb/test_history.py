@@ -1,7 +1,7 @@
-# ruff: noqa: PLC0415
 """Tests for django-simple-history integration."""
 
 from django.contrib.auth import get_user_model
+from django.test import RequestFactory
 
 from comicsdb.models import (
     Arc,
@@ -15,6 +15,8 @@ from comicsdb.models import (
     Team,
     Universe,
 )
+from comicsdb.models.rating import Rating
+from comicsdb.views.universe import UniverseHistory
 
 User = get_user_model()
 
@@ -422,7 +424,7 @@ def test_publisher_deletion_tracked(create_user):
     publisher.delete()
 
     # History should still exist after deletion
-    from comicsdb.models.publisher import HistoricalPublisher
+    from comicsdb.models.publisher import HistoricalPublisher  # noqa: PLC0415
 
     deletion_record = HistoricalPublisher.objects.filter(id=publisher_id).first()
     assert deletion_record is not None
@@ -442,7 +444,7 @@ def test_creator_deletion_tracked(create_user):
     creator_id = creator.id
     creator.delete()
 
-    from comicsdb.models.creator import HistoricalCreator
+    from comicsdb.models.creator import HistoricalCreator  # noqa: PLC0415
 
     deletion_record = HistoricalCreator.objects.filter(id=creator_id).first()
     assert deletion_record is not None
@@ -709,8 +711,6 @@ def test_issue_series_fk_tracked(create_user, fc_series, single_issue_type, dc_c
 
 def test_issue_rating_fk_tracked(create_user, fc_series):
     """Test that changing an Issue's rating ForeignKey is tracked in history."""
-    from comicsdb.models.rating import Rating
-
     user = create_user()
     issue = Issue.objects.create(
         series=fc_series,
@@ -736,9 +736,6 @@ def test_issue_rating_fk_tracked(create_user, fc_series):
 
 def test_history_view_resolves_fk_names(create_user, dc_comics, marvel):
     """Test that HistoryListView resolves ForeignKey IDs to names."""
-    from django.test import RequestFactory
-
-    from comicsdb.views.universe import UniverseHistory
 
     user = create_user()
     universe = Universe.objects.create(
@@ -789,9 +786,6 @@ def test_history_view_resolves_fk_names(create_user, dc_comics, marvel):
 
 def test_history_view_prefetch_fk_names(create_user, dc_comics, marvel):
     """Test that _prefetch_fk_names correctly batches queries."""
-    from django.test import RequestFactory
-
-    from comicsdb.views.universe import UniverseHistory
 
     user = create_user()
 
@@ -834,8 +828,6 @@ def test_history_view_prefetch_fk_names(create_user, dc_comics, marvel):
     fk_cache = view._prefetch_fk_names(history_list)
 
     # Verify that the cache contains the expected publishers
-    from comicsdb.models.publisher import Publisher
-
     cache_key = (Publisher, "publisher")
     assert cache_key in fk_cache
     assert dc_comics.id in fk_cache[cache_key]
@@ -846,9 +838,6 @@ def test_history_view_prefetch_fk_names(create_user, dc_comics, marvel):
 
 def test_history_view_resolve_fk_value(create_user, dc_comics):
     """Test that _resolve_fk_value correctly resolves ForeignKey IDs."""
-    from django.test import RequestFactory
-
-    from comicsdb.views.universe import UniverseHistory
 
     user = create_user()
     universe = Universe.objects.create(
@@ -870,8 +859,6 @@ def test_history_view_resolve_fk_value(create_user, dc_comics):
     view.setup(request, slug=universe.slug)
 
     # Create a mock FK cache
-    from comicsdb.models.publisher import Publisher
-
     fk_cache = {(Publisher, "publisher"): {dc_comics.id: str(dc_comics)}}
 
     # Test resolving a valid FK ID

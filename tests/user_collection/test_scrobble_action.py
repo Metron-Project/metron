@@ -1,6 +1,6 @@
 """Tests for the scrobble action on Collection API."""
 
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 
 from django.urls import reverse
 from rest_framework import status
@@ -188,7 +188,7 @@ def test_scrobble_overwrites_previous_date_read(api_client, collection_user, col
     """Scrobbling overwrites previous date_read."""
     api_client.force_authenticate(user=collection_user)
 
-    old_date = datetime(2023, 1, 1, tzinfo=timezone.utc)
+    old_date = datetime(2023, 1, 1, tzinfo=UTC)
     collection_item.date_read = old_date
     collection_item.save()
 

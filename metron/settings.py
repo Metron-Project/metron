@@ -76,6 +76,8 @@ INSTALLED_APPS = [
     "users",
     "reading_lists",
     "user_collection",
+    "pull_list",
+    "wish_list",
     "polls",
 ]
 
@@ -280,6 +282,10 @@ SPECTACULAR_SETTINGS = {
     "LICENSE": {
         "name": "Creative Commons License",
         "url": "https://creativecommons.org/licenses/by-sa/4.0/",
+    },
+    "ENUM_NAME_OVERRIDES": {
+        "CurrencyEnum": "metron.choices.CURRENCY_CHOICES",
+        "DesiredGradeEnum": "user_collection.models.GRADE_CHOICES",
     },
 }
 

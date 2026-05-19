@@ -1,0 +1,39 @@
+{% extends parent_template|default:"base.html" %}
+{% load static %}
+{% block title %}Remove Series from Pull List - Metron{% endblock %}
+{% block content %}
+    <header class="block has-text-centered">
+        <h1 class="title">Remove Series</h1>
+    </header>
+    <section class="section">
+        <div class="container">
+            <div class="columns is-centered">
+                <div class="column is-half">
+                    <div class="box">
+                        <article class="message is-warning">
+                            <div class="message-header">
+                                <p>Confirm Removal</p>
+                            </div>
+                            <div class="message-body">
+                                <p>Are you sure you want to remove
+                                    <strong>{{ object.series }}</strong>
+                                    from your pull list?</p>
+                            </div>
+                        </article>
+                        <form method="post">
+                            {% csrf_token %}
+                            <div class="field is-grouped is-grouped-right">
+                                <div class="control">
+                                    <a href="{% url 'pull-list:detail' %}" class="button is-rounded">Cancel</a>
+                                </div>
+                                <div class="control">
+                                    <button type="submit" class="button is-rounded is-warning">Remove</button>
+                                </div>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+{% endblock %}
