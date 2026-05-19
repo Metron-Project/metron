@@ -1387,21 +1387,22 @@ Example response:
     {
       "id": 456,
       "series": {
-        "id": 123,
         "name": "Amazing Spider-Man",
         "volume": 1,
-        "series_type": {"id": 1, "name": "Ongoing Series"},
-        "publisher": {"id": 2, "name": "Marvel"},
         "year_began": 1963
       },
       "number": "42",
+      "issue": "Amazing Spider-Man (1963) #42",
       "cover_date": "2026-05-01",
       "store_date": "2026-04-30",
-      "image": "https://metron.cloud/media/issue/cover.jpg"
+      "image": "https://metron.cloud/media/issue/cover.jpg",
+      "modified": "2026-04-20T08:00:00Z"
     }
   ]
 }
 ```
+
+Note: `cover_hash` is omitted from this endpoint — it is only available via the standard issue endpoints.
 
 **Notes:**
 

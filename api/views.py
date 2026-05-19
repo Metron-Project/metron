@@ -52,7 +52,11 @@ from api.v1_0.serializers import (
     UniverseSerializer,
     VariantSerializer,
 )
-from api.v1_0.serializers.pull_list import PullListReadSerializer, PullListSeriesSerializer
+from api.v1_0.serializers.pull_list import (
+    PullListIssueSerializer,
+    PullListReadSerializer,
+    PullListSeriesSerializer,
+)
 from api.v1_0.serializers.wish_list import (
     AcquireWishListItemSerializer,
     WishListAddItemSerializer,
@@ -941,7 +945,7 @@ class PullListViewSet(
         if self.action == "series":
             return PullListSeriesSerializer
         if self.action == "issues":
-            return IssueListSerializer
+            return PullListIssueSerializer
         return PullListReadSerializer
 
     @extend_schema(responses=PullListSeriesSerializer(many=True))
@@ -987,7 +991,7 @@ class PullListViewSet(
         )
 
     @extend_schema(
-        responses=IssueListSerializer(many=True),
+        responses=PullListIssueSerializer(many=True),
         parameters=[
             OpenApiParameter(
                 name="store_date_after",
@@ -1026,7 +1030,7 @@ class PullListViewSet(
             queryset = queryset.filter(store_date__lte=before)
         page = self.paginate_queryset(queryset)
         if page is not None:
-            serializer = IssueListSerializer(page, many=True, context={"request": request})
+            serializer = PullListIssueSerializer(page, many=True, context={"request": request})
             return self.get_paginated_response(serializer.data)
         raise Http404
 

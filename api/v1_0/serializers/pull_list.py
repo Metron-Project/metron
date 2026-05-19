@@ -1,7 +1,13 @@
 from rest_framework import serializers
 
+from api.v1_0.serializers.issue import IssueListSerializer
 from api.v1_0.serializers.series import SeriesListSerializer
 from pull_list.models import PullList, PullListSeries
+
+
+class PullListIssueSerializer(IssueListSerializer):
+    class Meta(IssueListSerializer.Meta):
+        fields = tuple(f for f in IssueListSerializer.Meta.fields if f != "cover_hash")
 
 
 class PullListSeriesSerializer(serializers.ModelSerializer):
