@@ -25,6 +25,10 @@ class WishListItemListSerializer(serializers.ModelSerializer):
 class WishListItemReadSerializer(serializers.ModelSerializer):
     issue = CollectionIssueSerializer(read_only=True)
     status = serializers.CharField(source="get_status_display", read_only=True)
+    max_price_currency = serializers.SerializerMethodField()
+
+    def get_max_price_currency(self, obj: WishListItem) -> str | None:
+        return str(obj.max_price_currency) if obj.max_price else None
 
     class Meta:
         model = WishListItem
@@ -35,6 +39,7 @@ class WishListItemReadSerializer(serializers.ModelSerializer):
             "priority",
             "desired_grade",
             "max_price",
+            "max_price_currency",
             "notes",
             "added_on",
             "modified",

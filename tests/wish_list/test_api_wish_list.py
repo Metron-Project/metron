@@ -67,6 +67,30 @@ def test_add_item_action_sets_max_price_with_currency(
     assert str(item.max_price.currency) == "GBP"
 
 
+def test_add_item_response_includes_max_price_currency(
+    api_client, wish_list_user, wish_list, wish_list_issue
+):
+    api_client.force_authenticate(user=wish_list_user)
+    resp = api_client.post(
+        reverse("api:wish_list-add-item"),
+        data={"issue_id": wish_list_issue.pk, "max_price": "5.00", "max_price_currency": "GBP"},
+    )
+    assert resp.status_code == status.HTTP_201_CREATED
+    assert resp.data["max_price_currency"] == "GBP"
+
+
+def test_add_item_response_max_price_currency_null_when_no_price(
+    api_client, wish_list_user, wish_list, wish_list_issue
+):
+    api_client.force_authenticate(user=wish_list_user)
+    resp = api_client.post(
+        reverse("api:wish_list-add-item"),
+        data={"issue_id": wish_list_issue.pk},
+    )
+    assert resp.status_code == status.HTTP_201_CREATED
+    assert resp.data["max_price_currency"] is None
+
+
 def test_add_item_duplicate_returns_200(
     api_client, wish_list_user, wish_list, wish_list_item, wish_list_issue
 ):

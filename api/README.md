@@ -1478,12 +1478,30 @@ Request body:
   "priority": 1,
   "desired_grade": "6.0",
   "max_price": "500.00",
+  "max_price_currency": "GBP",
   "notes": "First appearance of Spider-Man"
 }
 ```
 
-All fields except `issue_id` are optional. Priority defaults to `3` if omitted.
+All fields except `issue_id` are optional. Priority defaults to `3` and `max_price_currency` defaults to `USD` if omitted.
 
+The response includes the full item fields:
+```json
+{
+  "id": 42,
+  "issue": {"id": 5001, "series": {"id": 789, "name": "Amazing Fantasy", "volume": 1}, "number": "15", "cover_date": "1962-08-01"},
+  "status": "Wanted",
+  "priority": 1,
+  "desired_grade": "6.0",
+  "max_price": "500.00",
+  "max_price_currency": "GBP",
+  "notes": "First appearance of Spider-Man",
+  "added_on": "2026-05-19T10:00:00Z",
+  "modified": "2026-05-19T10:00:00Z"
+}
+```
+
+- `max_price_currency` is `null` in the response when no `max_price` is set
 - Returns `201 Created` with the full item if it was added
 - Returns `200 OK` with the existing item if the issue was already on the list
 - Returns `400 Bad Request` if `issue_id` refers to a non-existent issue
