@@ -1030,7 +1030,10 @@ class PullListViewSet(
             return self.get_paginated_response(serializer.data)
         raise Http404
 
-    @extend_schema(responses={204: None, 404: None})
+    @extend_schema(
+        responses={204: None, 404: None},
+        parameters=[OpenApiParameter(name="series_pk", type=int, location="path", required=True)],
+    )
     @action(
         detail=False,
         methods=["delete"],
@@ -1151,7 +1154,10 @@ class WishListViewSet(
             status=status.HTTP_200_OK,
         )
 
-    @extend_schema(responses={204: None, 404: None})
+    @extend_schema(
+        responses={204: None, 404: None},
+        parameters=[OpenApiParameter(name="item_pk", type=int, location="path", required=True)],
+    )
     @action(
         detail=False,
         methods=["delete"],

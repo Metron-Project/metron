@@ -283,6 +283,9 @@ SPECTACULAR_SETTINGS = {
         "name": "Creative Commons License",
         "url": "https://creativecommons.org/licenses/by-sa/4.0/",
     },
+    "ENUM_NAME_OVERRIDES": {
+        "DesiredGradeEnum": "user_collection.models.GRADE_CHOICES",
+    },
 }
 
 STATICFILES_FINDERS = [
