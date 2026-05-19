@@ -2233,6 +2233,10 @@ For questions, issues, or feature requests:
 
 ## Changelog
 
+### Version 1.6
+- Added Wish List endpoints
+- Added Pull List endpoints
+
 ### Version 1.5
 - Added `character_id`, `team_id`, and `universe_id` filters to Issue endpoint
 - Added `role_id` filter to Issue and Series endpoints (accepts a single ID or multiple comma-separated IDs)
