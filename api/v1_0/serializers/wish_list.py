@@ -2,7 +2,8 @@ from rest_framework import serializers
 
 from api.v1_0.serializers.collection import CollectionIssueSerializer
 from comicsdb.models.issue import Issue
-from wish_list.models import CURRENCY_CHOICES, WishList, WishListItem
+from metron.choices import CURRENCY_CHOICES
+from wish_list.models import WishList, WishListItem
 
 
 class WishListItemListSerializer(serializers.ModelSerializer):
