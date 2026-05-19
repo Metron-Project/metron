@@ -1125,12 +1125,15 @@ class WishListViewSet(
         serializer.is_valid(raise_exception=True)
         data = serializer.validated_data
         purchase_price = data.get("purchase_price")
+        purchase_price_currency = data.get("purchase_price_currency", "USD")
         collection_item, created = CollectionItem.objects.get_or_create(
             user=request.user,
             issue=item.issue,
             defaults={
                 "purchase_date": data.get("purchase_date"),
-                "purchase_price": Money(purchase_price, "USD") if purchase_price else None,
+                "purchase_price": Money(purchase_price, purchase_price_currency)
+                if purchase_price
+                else None,
                 "purchase_store": data.get("purchase_store", ""),
                 "notes": data.get("notes", ""),
                 "grade": item.desired_grade,

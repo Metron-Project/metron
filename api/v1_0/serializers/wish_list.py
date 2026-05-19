@@ -1,3 +1,4 @@
+from django.conf import settings
 from rest_framework import serializers
 
 from api.v1_0.serializers.collection import CollectionIssueSerializer
@@ -74,6 +75,9 @@ class AcquireWishListItemSerializer(serializers.Serializer):
     purchase_date = serializers.DateField(required=False, allow_null=True)
     purchase_price = serializers.DecimalField(
         required=False, allow_null=True, max_digits=7, decimal_places=2
+    )
+    purchase_price_currency = serializers.ChoiceField(
+        choices=[(c, c) for c in settings.CURRENCIES], required=False, default="USD"
     )
     purchase_store = serializers.CharField(required=False, allow_blank=True, default="")
     notes = serializers.CharField(required=False, allow_blank=True, default="")

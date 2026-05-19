@@ -1496,10 +1496,13 @@ Request body (all fields optional):
 {
   "purchase_date": "2026-05-17",
   "purchase_price": "320.00",
+  "purchase_price_currency": "GBP",
   "purchase_store": "Local Comic Shop",
   "notes": "VG copy, slight water stain"
 }
 ```
+
+- `purchase_price_currency` accepts `USD` or `GBP` and defaults to `USD` if omitted
 
 Response:
 ```json
