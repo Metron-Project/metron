@@ -2,6 +2,7 @@ from django.conf import settings
 from rest_framework import serializers
 
 from api.v1_0.serializers.collection import CollectionIssueSerializer
+from comicsdb.models.issue import Issue
 from wish_list.models import WishList, WishListItem
 
 
@@ -64,8 +65,6 @@ class WishListAddItemSerializer(serializers.Serializer):
     notes = serializers.CharField(required=False, allow_blank=True, default="")
 
     def validate_issue_id(self, value):
-        from comicsdb.models.issue import Issue  # noqa: PLC0415
-
         if not Issue.objects.filter(pk=value).exists():
             raise serializers.ValidationError(f"Issue with id {value} does not exist.")
         return value

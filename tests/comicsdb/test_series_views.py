@@ -3,7 +3,7 @@ from django.urls import reverse
 from pytest_django.asserts import assertTemplateUsed
 
 from comicsdb.forms.series import SeriesForm
-from comicsdb.models import Series, SeriesType
+from comicsdb.models import Genre, Imprint, Publisher, Series, SeriesType
 from comicsdb.models.attribution import Attribution
 
 HTML_OK_CODE = 200
@@ -274,8 +274,6 @@ def test_series_history_context(auto_login_user, fc_series):
 
 def test_series_history_m2m_shows_names(auto_login_user, create_user, dc_comics, single_issue_type):
     """Test that M2M field changes show object names instead of IDs."""
-    from comicsdb.models import Genre  # noqa: PLC0415
-
     user = create_user()
     genre1 = Genre.objects.create(name="Action")
     genre2 = Genre.objects.create(name="Adventure")
@@ -464,8 +462,6 @@ def test_series_filter_by_series_type(auto_login_user, create_user, dc_comics):
 def test_series_filter_by_publisher(auto_login_user, create_user, dc_comics, single_issue_type):
     """Test filtering by publisher name."""
     user = create_user()
-    from comicsdb.models import Publisher  # noqa: PLC0415
-
     marvel = Publisher.objects.create(name="Marvel Comics", slug="marvel-comics", founded=1939)
 
     Series.objects.create(
@@ -706,8 +702,6 @@ def test_series_list_has_active_filters_indicator(auto_login_user):
 def test_series_filter_by_imprint(auto_login_user, create_user, dc_comics, single_issue_type):
     """Test filtering by imprint name."""
     user = create_user()
-    from comicsdb.models import Imprint  # noqa: PLC0415
-
     vertigo = Imprint.objects.create(
         name="Vertigo", slug="vertigo", founded=1993, publisher=dc_comics
     )
