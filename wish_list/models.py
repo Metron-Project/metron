@@ -18,6 +18,7 @@ class WishList(models.Model):
     created_on = models.DateTimeField(db_default=Now())
 
     class Meta:
+        ordering = ["user"]
         verbose_name = "Wish List"
         verbose_name_plural = "Wish Lists"
 

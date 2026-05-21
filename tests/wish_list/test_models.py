@@ -53,3 +53,7 @@ def test_wish_list_item_status_default(wish_list, wish_list_issue):
 def test_wish_list_item_priority_default(wish_list, wish_list_issue):
     item = WishListItem.objects.create(wish_list=wish_list, issue=wish_list_issue)
     assert item.priority == 3
+
+
+def test_wish_list_meta_ordering_is_set():
+    assert WishList._meta.ordering
