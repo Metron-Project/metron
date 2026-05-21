@@ -1,7 +1,9 @@
 """Tests for the Wish List API."""
 
+import warnings
 from decimal import Decimal
 
+from django.core.paginator import UnorderedObjectListWarning
 from django.urls import reverse
 from rest_framework import status
 
@@ -156,3 +158,11 @@ def test_remove_item_other_user_gets_404(api_client, other_wish_list_user, wish_
 def test_add_item_unauthenticated(api_client, wish_list_issue):
     resp = api_client.post(reverse("api:wish_list-add-item"), data={"issue_id": wish_list_issue.pk})
     assert resp.status_code == status.HTTP_401_UNAUTHORIZED
+
+
+def test_wish_list_list_no_unordered_object_list_warning(api_client, wish_list_user, wish_list):
+    api_client.force_authenticate(user=wish_list_user)
+    with warnings.catch_warnings():
+        warnings.simplefilter("error", UnorderedObjectListWarning)
+        resp = api_client.get(reverse("api:wish_list-list"))
+    assert resp.status_code == status.HTTP_200_OK

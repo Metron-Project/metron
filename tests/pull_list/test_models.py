@@ -43,3 +43,7 @@ def test_pull_list_series_delete_signal_updates_modified(pull_list_with_series):
 def test_pull_list_get_absolute_url(pull_list):
     url = pull_list.get_absolute_url()
     assert "/pull-list/" in url
+
+
+def test_pull_list_meta_ordering_is_set():
+    assert PullList._meta.ordering

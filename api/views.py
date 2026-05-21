@@ -937,8 +937,10 @@ class PullListViewSet(
     permission_classes = [IsAuthenticated]
 
     def get_queryset(self):
-        return PullList.objects.filter(user=self.request.user).annotate(
-            series_count=Count("series", distinct=True)
+        return (
+            PullList.objects.filter(user=self.request.user)
+            .annotate(series_count=Count("series", distinct=True))
+            .order_by("user")
         )
 
     def get_serializer_class(self):
@@ -1064,8 +1066,10 @@ class WishListViewSet(
     permission_classes = [IsAuthenticated]
 
     def get_queryset(self):
-        return WishList.objects.filter(user=self.request.user).annotate(
-            item_count=Count("wish_list_items", distinct=True)
+        return (
+            WishList.objects.filter(user=self.request.user)
+            .annotate(item_count=Count("wish_list_items", distinct=True))
+            .order_by("user")
         )
 
     def get_serializer_class(self):

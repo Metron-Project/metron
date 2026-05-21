@@ -1,5 +1,8 @@
 """Tests for the Pull List API."""
 
+import warnings
+
+from django.core.paginator import UnorderedObjectListWarning
 from django.urls import reverse
 from rest_framework import status
 
@@ -151,3 +154,11 @@ def test_issues_action_empty_list_when_no_series(api_client, pull_list_user, pul
     resp = api_client.get(reverse("api:pull_list-issues"))
     assert resp.status_code == status.HTTP_200_OK
     assert resp.data["count"] == 0
+
+
+def test_pull_list_list_no_unordered_object_list_warning(api_client, pull_list_user, pull_list):
+    api_client.force_authenticate(user=pull_list_user)
+    with warnings.catch_warnings():
+        warnings.simplefilter("error", UnorderedObjectListWarning)
+        resp = api_client.get(reverse("api:pull_list-list"))
+    assert resp.status_code == status.HTTP_200_OK
