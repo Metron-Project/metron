@@ -733,7 +733,7 @@ generate excessive 429 (rate limit) or 401 (unauthorized) responses.
 ### Install
 
 ```bash
-sudo dnf install -y fail2ban
+sudo dnf install -y fail2ban conntrack-tools
 sudo systemctl enable --now fail2ban
 ```
 
@@ -803,6 +803,7 @@ enough hits per address to trigger a jail.
 |------|----------|--------|
 | `43.130.0.0/16` | Tencent Cloud Computing | Persistent API abuse via rotating IPs |
 | `170.106.0.0/16` | Tencent Cloud Computing | Persistent API abuse via rotating IPs |
+| `151.240.54.0/24` | GSL Networks | Persistent API abuse via rotating IPs (disabled user account: Cirsten) |
 
 To add a new range:
 
