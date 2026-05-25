@@ -13,7 +13,7 @@ dependencies = [
     "django-htmx-autocomplete",
     "django-money",
     "django-mptt",
-    "django-nyt",
+    "django-nyt>=1.4.2,<1.5",
     "django-rest-framework-condition",
     "django-sekizai",
     "django-simple-bulma",

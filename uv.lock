@@ -663,7 +663,7 @@ requires-dist = [
     { name = "django-htmx-autocomplete" },
     { name = "django-money" },
     { name = "django-mptt" },
-    { name = "django-nyt" },
+    { name = "django-nyt", specifier = ">=1.4.2,<1.5" },
     { name = "django-rest-framework-condition" },
     { name = "django-sekizai" },
     { name = "django-simple-bulma" },
