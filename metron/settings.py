@@ -40,7 +40,7 @@ SECRET_KEY = config("SECRET_KEY")
 
 # Application definition
 # NOTE: it is important to maintain the order, due to database relational constraints
-#       for django-wiki
+#       for the internal wiki app
 INSTALLED_APPS = [
     "django.contrib.admin",
     "django.contrib.auth",

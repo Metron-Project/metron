@@ -3,6 +3,7 @@ name = "metron"
 version = "0.1.0"
 requires-python = ">=3.14"
 dependencies = [
+    "bleach[css]",
     "boto3",
     "chartkick",
     "django",
@@ -11,7 +12,10 @@ dependencies = [
     "django-htmx",
     "django-htmx-autocomplete",
     "django-money",
+    "django-mptt",
+    "django-nyt",
     "django-rest-framework-condition",
+    "django-sekizai",
     "django-simple-bulma",
     "django-simple-history",
     "django-storages",
@@ -20,12 +24,13 @@ dependencies = [
     "gunicorn",
     "imagehash",
     "isbnlib",
+    "markdown",
     "pillow",
     "psycopg[binary,pool]",
+    "pymdown-extensions",
     "python-decouple",
     "redis",
     "sorl-thumbnail",
-    "wiki",
 ]
 
 [dependency-groups]
@@ -46,6 +51,7 @@ line-length = 100
 target-version = ["py314"]
 
 [tool.ruff]
+extend-exclude = ["wiki"]
 fix = true
 line-length = 100
 show-fixes = true

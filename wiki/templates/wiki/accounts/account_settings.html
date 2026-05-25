@@ -1,0 +1,14 @@
+{% extends "wiki/base.html" %}
+{% load i18n wiki_tags sekizai_tags %}
+
+{% block wiki_pagetitle %}{% trans "Account Settings" %}{% endblock %}
+
+{% block wiki_contents %}
+<h1 class="title">{% trans "Account Settings" %}</h1>
+<form action="" method="post">{% csrf_token %}
+    {% wiki_form form %}
+    <button type="submit" name="save_changes" class="button is-primary is-large">
+      {% trans "Update" %}
+    </button>
+</form>
+{% endblock %}

@@ -1,0 +1,59 @@
+{% extends "wiki/article.html" %}
+{% load wiki_tags i18n humanize %}
+
+
+{% block wiki_pagetitle %}{% trans "History of" %} "{{ attachment.current_revision.get_filename }}"{% endblock %}
+
+{% block wiki_contents_tab %}
+
+<h2 class="title is-4">{% trans "History of" %} "{{ attachment.current_revision.get_filename }}"</h2>
+<table class="table is-striped is-bordered is-fullwidth">
+  <thead>
+    <tr>
+      <th>{% trans "Date" %}</th>
+      <th>{% trans "User" %}</th>
+      <th>{% trans "Description" %}</th>
+      <th>{% trans "File" %}</th>
+      <th>{% trans "Size" %}</th>
+      <th style="text-align: right">{% trans "Action" %}</th>
+    </tr>
+  </thead>
+  <tbody>
+    {% for revision in revisions %}
+    <tr>
+      <td>
+        {{ revision.created }}
+        {% if revision.deleted %}<span class="tag is-danger">{% trans "deleted" %}</span>{% endif %}
+      </td>
+      <td>
+        {% include "wiki/includes/revision_info.html" with revision=attachment.current_revision hidedate=1 hidenumber=1 %}
+      </td>
+      <td>{% if revision.description %}{{ revision.description }}{% else %}<em>{% trans "No description" %}</em>{% endif %}</td>
+      <td>{{ revision.get_filename }}</td>
+      <td>{{ revision.get_size|filesizeformat }}</td>
+      <td style="text-align: right">
+        <form method="POST" action="{% url 'wiki:attachments_revision_change' path=urlpath.path article_id=article.id attachment_id=attachment.id revision_id=revision.id %}">
+          {% csrf_token %}
+          <div class="buttons are-small is-right">
+            <a href="{% url 'wiki:attachments_download' path=urlpath.path article_id=article.id attachment_id=attachment.id revision_id=revision.id %}" class="button is-primary">
+              <span class="icon"><i class="fa fa-download"></i></span>
+              <span>{% trans "Download" %}</span>
+            </a>
+            {% if revision.attachment.article|can_write:user %}
+              <button{% if revision == attachment.current_revision %} disabled{% endif %} class="button">
+                <span class="icon"><i class="fa fa-flag"></i></span>
+                <span>{% trans "Use this!" %}</span>
+              </button>
+            {% endif %}
+          </div>
+        </form>
+      </td>
+    </tr>
+    {% endfor %}
+  </tbody>
+</table>
+<a href="{% url 'wiki:attachments_index' path=urlpath.path article_id=article.id %}">
+  <span class="icon"><i class="fa fa-arrow-left"></i></span> {% trans "Go back" %}
+</a>
+
+{% endblock %}

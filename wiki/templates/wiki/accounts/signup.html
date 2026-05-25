@@ -1,0 +1,24 @@
+{% extends "wiki/base.html" %}
+{% load i18n wiki_tags sekizai_tags %}
+{% block wiki_pagetitle %}{% trans "Sign up" %}{% endblock %}
+
+{% block wiki_contents %}
+<h1 class="title">{% trans "Sign up" %}</h1>
+<form method="POST">
+{% wiki_form form %}
+<div class="form-actions">
+  <button type="submit" name="save_changes" class="button is-primary is-large">
+    <span class="icon"><i class="fa fa-plus"></i></span>
+    <span>{% trans "Sign me up..." %}</span>
+  </button>
+</div>
+</form>
+{% addtoblock "js" %}
+<script type="text/javascript">
+  function {{ honeypot_jsfunction }}() {
+    $('.{{ honeypot_class }}').parent().parent().parent().hide();
+  }
+  $(document).ready({{ honeypot_jsfunction }});
+</script>
+{% endaddtoblock %}
+{% endblock %}

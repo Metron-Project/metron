@@ -1,0 +1,34 @@
+{% extends "wiki/base.html" %}
+{% load i18n wiki_tags sekizai_tags %}
+
+{% block wiki_pagetitle %}{% trans "Log in" %}{% endblock %}
+
+{% block wiki_contents %}
+<div class="columns">
+  <div class="column is-3"></div>
+  <div class="column is-6">
+    <h1 class="title">{% trans "Please log in" %}</h1>
+    <form method="POST">
+    {% wiki_form form %}
+    <div class="form-actions">
+      <button type="submit" name="save_changes" class="button is-primary is-large">
+        <span class="icon"><i class="fa fa-lock"></i></span>
+        <span>{% trans "Log me in..." %}</span>
+      </button>
+    </div>
+    </form>
+
+    <p class="mt-4">
+      {% trans "Don't have an account?" %} <a href="{% url 'wiki:signup' %}">{% trans "Sign up" %} &raquo;</a>
+    </p>
+  </div>
+  <div class="column is-3"></div>
+</div>
+
+{% addtoblock "js" %}
+<script type="text/javascript">
+  $('#id_username').focus();
+</script>
+{% endaddtoblock %}
+
+{% endblock %}
