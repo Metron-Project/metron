@@ -6,19 +6,15 @@ from django.shortcuts import redirect
 from django.template.loader import render_to_string
 from django.urls import reverse
 
+from wiki import models
 from wiki.conf import settings
 from wiki.core.exceptions import NoRootURL
-
-from . import models
 
 
 def response_forbidden(request, article, urlpath, read_denied=False):
     if request.user.is_anonymous:
         qs = request.META.get("QUERY_STRING", "")
-        if qs:
-            qs = urlquote("?" + qs)
-        else:
-            qs = ""
+        qs = urlquote("?" + qs) if qs else ""
         return redirect(settings.LOGIN_URL + "?next=" + request.path + qs)
     return HttpResponseForbidden(
         render_to_string(
@@ -45,7 +41,7 @@ def which_article(path=None, article_id=None, **kwargs):
             # Be robust: Somehow article is gone but urlpath exists...
             # clean up
             urlpath.delete()
-            raise models.URLPath.DoesNotExist()
+            raise models.URLPath.DoesNotExist
 
     # fetch by article.id
     elif article_id is not None:
@@ -93,7 +89,8 @@ def get_article(  # noqa: max-complexity 19
 
     can_delete and can_moderate: Verifies with wiki.core.permissions
 
-    can_create: Same as can_write but adds an extra global setting for anonymous access (ANONYMOUS_CREATE)
+    can_create: Same as can_write but adds an extra global setting for anonymous access
+    (ANONYMOUS_CREATE)
 
     deleted_contents=True: Do not redirect if the article has been deleted.
 
@@ -110,7 +107,7 @@ def get_article(  # noqa: max-complexity 19
         except NoRootURL:
             return redirect("wiki:root_create")
         except models.Article.DoesNotExist:
-            raise Http404(f"Article id {article_id} not found")
+            raise Http404(f"Article id {article_id} not found") from None
         except models.URLPath.DoesNotExist:
             try:
                 pathlist = list(
@@ -123,7 +120,7 @@ def get_article(  # noqa: max-complexity 19
                 parent = models.URLPath.get_by_path(path)
                 return HttpResponseRedirect(
                     reverse("wiki:create", kwargs={"path": parent.path})
-                    + "?slug=%s" % pathlist[-1].lower()
+                    + f"?slug={pathlist[-1].lower()}"
                 )
             except models.URLPath.DoesNotExist:
                 return HttpResponseNotFound(
@@ -139,26 +136,19 @@ def get_article(  # noqa: max-complexity 19
             if urlpath:
                 if urlpath.is_deleted():  # This also checks all ancestors
                     return redirect("wiki:deleted", path=urlpath.path)
-            elif (
-                article.current_revision
-                and article.current_revision.deleted
-            ):
+            elif article.current_revision and article.current_revision.deleted:
                 return redirect("wiki:deleted", article_id=article.id)
 
         if article.current_revision.locked and not_locked:
             return response_forbidden(request, article, urlpath)
 
         if can_read and not article.can_read(request.user):
-            return response_forbidden(
-                request, article, urlpath, read_denied=True
-            )
+            return response_forbidden(request, article, urlpath, read_denied=True)
 
         if (can_write or can_create) and not article.can_write(request.user):
             return response_forbidden(request, article, urlpath)
 
-        if can_create and not (
-            request.user.is_authenticated or settings.ANONYMOUS_CREATE
-        ):
+        if can_create and not (request.user.is_authenticated or settings.ANONYMOUS_CREATE):
             return response_forbidden(request, article, urlpath)
 
         if can_delete and not article.can_delete(request.user):

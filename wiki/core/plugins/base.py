@@ -4,7 +4,8 @@ from django.utils.translation import gettext as _
 """Base classes for different plugin objects.
 
  * BasePlugin: Create a wiki_plugin.py with a class that inherits from BasePlugin.
- * PluginSidebarFormMixin: Mix in this class in the form that should be rendered in the editor sidebar
+ * PluginSidebarFormMixin: Mix in this class in the form that should be rendered in the editor
+   sidebar
  * PluginSettingsFormMixin: ..and this one for a form in the settings tab.
 
 Please have a look in wiki.models.pluginbase to see where to inherit your
@@ -13,7 +14,6 @@ plugin's models.
 
 
 class BasePlugin:
-
     """Plugins should inherit from this"""
 
     # Must fill in!
@@ -49,12 +49,8 @@ class BasePlugin:
 
 
 class PluginSidebarFormMixin(forms.ModelForm):
-    unsaved_article_title = forms.CharField(
-        widget=forms.HiddenInput(), required=True
-    )
-    unsaved_article_content = forms.CharField(
-        widget=forms.HiddenInput(), required=False
-    )
+    unsaved_article_title = forms.CharField(widget=forms.HiddenInput(), required=True)
+    unsaved_article_content = forms.CharField(widget=forms.HiddenInput(), required=False)
 
     def get_usermessage(self):
         pass

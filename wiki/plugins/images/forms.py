@@ -15,7 +15,8 @@ class SidebarForm(PluginSidebarFormMixin):
     def get_usermessage(self):
         return (
             gettext(
-                "New image %s was successfully uploaded. You can use it by selecting it from the list of available images."
+                "New image %s was successfully uploaded. You can use it by selecting it"
+                " from the list of available images."
             )
             % self.instance.get_filename()
         )

@@ -2,8 +2,7 @@ from django.urls import re_path
 
 from wiki.core.plugins import registry
 from wiki.core.plugins.base import BasePlugin
-
-from . import settings, views
+from wiki.plugins.notifications import settings, views
 
 
 class NotifyPlugin(BasePlugin):

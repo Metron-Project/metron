@@ -113,24 +113,14 @@ class UrlizePattern(markdown.inlinepatterns.Pattern):
 
         # If opening and ending character for URL are not the same,
         # return text unchanged.
-        if begin_url:
-            begin_delimeter = begin_url[-1]
-        else:
-            begin_delimeter = ""
-        if end_url:
-            end_delimeter = end_url[0]
-        else:
-            end_delimeter = ""
+        begin_delimeter = begin_url[-1] if begin_url else ""
+        end_delimeter = end_url[0] if end_url else ""
 
         if (
-            (begin_delimeter == "<"
-            and end_delimeter != ">")
-            or (begin_delimeter == "("
-            and end_delimeter != ")")
-            or (end_delimeter == ")"
-            and begin_delimeter != "(")
-            or (end_delimeter == ">"
-            and begin_delimeter != "<")
+            (begin_delimeter == "<" and end_delimeter != ">")
+            or (begin_delimeter == "(" and end_delimeter != ")")
+            or (end_delimeter == ")" and begin_delimeter != "(")
+            or (end_delimeter == ">" and begin_delimeter != "<")
         ):
             return url
 

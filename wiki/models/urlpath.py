@@ -27,7 +27,6 @@ log = logging.getLogger(__name__)
 
 
 class URLPath(MPTTModel):
-
     """
     Strategy: Very few fields go here, as most has to be managed through an
     article's revision. As a side-effect, the URL resolution remains slim and swift.
@@ -105,9 +104,7 @@ class URLPath(MPTTModel):
         if not self.pk or not self.get_ancestors().exists():
             self._cached_ancestors = []
         if not hasattr(self, "_cached_ancestors"):
-            self._cached_ancestors = list(
-                self.get_ancestors().select_related_common()
-            )
+            self._cached_ancestors = list(self.get_ancestors().select_related_common())
 
         return self._cached_ancestors
 
@@ -118,7 +115,7 @@ class URLPath(MPTTModel):
     cached_ancestors = property(__cached_ancestors, __cached_ancestors_setter)
 
     def set_cached_ancestors_from_parent(self, parent):
-        self.cached_ancestors = parent.cached_ancestors + [parent]
+        self.cached_ancestors = [*parent.cached_ancestors, parent]
 
     @property
     def path(self):
@@ -132,7 +129,7 @@ class URLPath(MPTTModel):
                 self.cached_ancestors,
             )
         )
-        slugs = [obj.slug if obj.slug else "" for obj in ancestors + [self]]
+        slugs = [obj.slug if obj.slug else "" for obj in [*ancestors, self]]
 
         return "/".join(slugs) + "/"
 
@@ -143,16 +140,14 @@ class URLPath(MPTTModel):
         return self.first_deleted_ancestor() is not None
 
     def first_deleted_ancestor(self):
-        for ancestor in self.cached_ancestors + [self]:
+        for ancestor in [*self.cached_ancestors, self]:
             if ancestor.article.current_revision.deleted:
                 return ancestor
         return None
 
     @transaction.atomic
     def _delete_subtree(self):
-        for descendant in self.get_descendants(include_self=True).order_by(
-            "-level"
-        ):
+        for descendant in self.get_descendants(include_self=True).order_by("-level"):
             descendant.article.delete()
 
     def delete_subtree(self):
@@ -165,20 +160,14 @@ class URLPath(MPTTModel):
     @classmethod
     def root(cls):
         site = Site.objects.get_current()
-        root_nodes = (
-            cls.objects.root_nodes().filter(site=site).select_related_common()
-        )
+        root_nodes = cls.objects.root_nodes().filter(site=site).select_related_common()
         # We fetch the nodes as a list and use len(), not count() because we need
         # to get the result out anyway. This only takes one sql query
         no_paths = len(root_nodes)
         if no_paths == 0:
-            raise NoRootURL(
-                "You need to create a root article on site '%s'" % site
-            )
+            raise NoRootURL(f"You need to create a root article on site '{site}'")
         if no_paths > 1:
-            raise MultipleRootURLs(
-                "Somehow you have multiple roots on %s" % site
-            )
+            raise MultipleRootURLs(f"Somehow you have multiple roots on {site}")
         return root_nodes[0]
 
     class MPTTMeta:
@@ -189,9 +178,9 @@ class URLPath(MPTTModel):
         return path if path else gettext("(root)")
 
     def delete(self, *args, **kwargs):
-        assert not (
-            self.parent and self.get_children()
-        ), "You cannot delete a root article with children."
+        assert not (self.parent and self.get_children()), (
+            "You cannot delete a root article with children."
+        )
         super().delete(*args, **kwargs)
 
     class Meta:
@@ -201,22 +190,13 @@ class URLPath(MPTTModel):
 
     def clean(self, *args, **kwargs):
         if self.slug and not self.parent:
-            raise ValidationError(
-                _("Sorry but you cannot have a root article with a slug.")
-            )
+            raise ValidationError(_("Sorry but you cannot have a root article with a slug."))
         if not self.slug and self.parent:
-            raise ValidationError(
-                _("A non-root note must always have a slug.")
-            )
-        if not self.parent:
-            if (
-                URLPath.objects.root_nodes()
-                .filter(site=self.site)
-                .exclude(id=self.id)
-            ):
-                raise ValidationError(
-                    _("There is already a root node on %s") % self.site
-                )
+            raise ValidationError(_("A non-root note must always have a slug."))
+        if not self.parent and (
+            URLPath.objects.root_nodes().filter(site=self.site).exclude(id=self.id)
+        ):
+            raise ValidationError(_("There is already a root node on %s") % self.site)
 
     @classmethod
     def get_by_path(cls, path, select_related=False):
@@ -241,20 +221,12 @@ class URLPath(MPTTModel):
         parent = cls.root()
         for slug in slugs:
             if settings.URL_CASE_SENSITIVE:
-                child = (
-                    parent.get_children()
-                    .select_related_common()
-                    .get(slug=slug)
-                )
-                child.cached_ancestors = parent.cached_ancestors + [parent]
+                child = parent.get_children().select_related_common().get(slug=slug)
+                child.cached_ancestors = [*parent.cached_ancestors, parent]
                 parent = child
             else:
-                child = (
-                    parent.get_children()
-                    .select_related_common()
-                    .get(slug__iexact=slug)
-                )
-                child.cached_ancestors = parent.cached_ancestors + [parent]
+                child = parent.get_children().select_related_common().get(slug__iexact=slug)
+                child.cached_ancestors = [*parent.cached_ancestors, parent]
                 parent = child
             level += 1
 
@@ -289,7 +261,7 @@ class URLPath(MPTTModel):
         slug,
         site=None,
         title="Root",
-        article_kwargs={},
+        article_kwargs=None,
         request=None,
         article_w_permissions=None,
         **revision_kwargs,
@@ -301,16 +273,14 @@ class URLPath(MPTTModel):
 
         :returns: A new URLPath instance
         """
+        if article_kwargs is None:
+            article_kwargs = {}
         if not site:
             site = Site.objects.get_current()
         article = Article(**article_kwargs)
-        article.add_revision(
-            ArticleRevision(title=title, **revision_kwargs), save=True
-        )
+        article.add_revision(ArticleRevision(title=title, **revision_kwargs), save=True)
         article.save()
-        newpath = cls.objects.create(
-            site=site, parent=parent, slug=slug, article=article
-        )
+        newpath = cls.objects.create(site=site, parent=parent, slug=slug, article=article)
         article.add_object_relation(newpath)
         return newpath
 
@@ -363,6 +333,7 @@ class URLPath(MPTTModel):
         warnings.warn(
             "Pending removal: URLPath.create_article renamed to create_urlpath",
             DeprecationWarning,
+            stacklevel=2,
         )
         return cls.create_urlpath(*args, **kwargs)
 
@@ -386,9 +357,7 @@ def on_article_relation_save(**kwargs):
     if not urlpath_content_type:
         urlpath_content_type = ContentType.objects.get_for_model(URLPath)
     if instance.content_type == urlpath_content_type:
-        URLPath.objects.filter(id=instance.object_id).update(
-            article=instance.article
-        )
+        URLPath.objects.filter(id=instance.object_id).update(article=instance.article)
 
 
 post_save.connect(on_article_relation_save, ArticleForObject)
@@ -433,7 +402,8 @@ def on_article_delete(instance, *args, **kwargs):
                     content=_(
                         "Articles who lost their parents\n"
                         "===============================\n\n"
-                        "The children of this article have had their parents deleted. You should probably find a new home for them."
+                        "The children of this article have had their parents deleted."
+                        " You should probably find a new home for them."
                     ),
                     title=_("Lost and found"),
                 )
@@ -447,9 +417,7 @@ def on_article_delete(instance, *args, **kwargs):
             article.add_object_relation(ns.lost_and_found)
         return ns.lost_and_found
 
-    for urlpath in URLPath.objects.filter(
-        articles__article=instance, site=site
-    ):
+    for urlpath in URLPath.objects.filter(articles__article=instance, site=site):
         # Delete the children
         for child in urlpath.get_children():
             child.move_to(get_lost_and_found())

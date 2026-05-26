@@ -29,9 +29,9 @@ class ImageView(ArticleMixin, ListView):
         return super().dispatch(request, article, *args, **kwargs)
 
     def get_queryset(self):
-        if self.article.can_moderate(
+        if self.article.can_moderate(self.request.user) or self.article.can_delete(
             self.request.user
-        ) or self.article.can_delete(self.request.user):
+        ):
             images = models.Image.objects.filter(article=self.article)
         else:
             images = models.Image.objects.filter(
@@ -50,20 +50,16 @@ class DeleteView(ArticleMixin, RedirectView):
 
     @method_decorator(get_article(can_write=True, not_locked=True))
     def dispatch(self, request, article, *args, **kwargs):
-        self.image = get_object_or_404(
-            models.Image, article=article, id=kwargs.get("image_id")
-        )
+        self.image = get_object_or_404(models.Image, article=article, id=kwargs.get("image_id"))
         self.restore = kwargs.get("restore", False)
         return ArticleMixin.dispatch(self, request, article, *args, **kwargs)
 
     def get_redirect_url(self, **kwargs):
         if not self.image.current_revision:
             logger.critical(
-                f"Encountered an image without current revision set, ID: {self.image.id}"
+                "Encountered an image without current revision set, ID: %s", self.image.id
             )
-            latest_revision = RevisionPluginRevision.objects.filter(
-                plugin=self.image
-            ).latest("pk")
+            latest_revision = RevisionPluginRevision.objects.filter(plugin=self.image).latest("pk")
             self.image.current_revision = latest_revision
 
         new_revision = models.ImageRevision()
@@ -84,16 +80,11 @@ class DeleteView(ArticleMixin, RedirectView):
         else:
             messages.info(
                 self.request,
-                _("%s has been marked as deleted")
-                % new_revision.get_filename(),
+                _("%s has been marked as deleted") % new_revision.get_filename(),
             )
         if self.urlpath:
-            return reverse(
-                "wiki:images_index", kwargs={"path": self.urlpath.path}
-            )
-        return reverse(
-            "wiki:images_index", kwargs={"article_id": self.article.id}
-        )
+            return reverse("wiki:images_index", kwargs={"path": self.urlpath.path})
+        return reverse("wiki:images_index", kwargs={"article_id": self.article.id})
 
 
 class PurgeView(ArticleMixin, FormView):
@@ -103,15 +94,11 @@ class PurgeView(ArticleMixin, FormView):
 
     @method_decorator(get_article(can_write=True, can_moderate=True))
     def dispatch(self, request, article, *args, **kwargs):
-        self.image = get_object_or_404(
-            models.Image, article=article, id=kwargs.get("image_id")
-        )
+        self.image = get_object_or_404(models.Image, article=article, id=kwargs.get("image_id"))
         return super().dispatch(request, article, *args, **kwargs)
 
     def form_valid(self, form):
-        for revision in self.image.revision_set.all().select_related(
-            "imagerevision"
-        ):
+        for revision in self.image.revision_set.all().select_related("imagerevision"):
             revision.imagerevision.image.delete(save=False)
             revision.imagerevision.delete()
 
@@ -134,9 +121,7 @@ class RevisionChangeView(ArticleMixin, RedirectView):
 
     @method_decorator(get_article(can_write=True, not_locked=True))
     def dispatch(self, request, article, *args, **kwargs):
-        self.image = get_object_or_404(
-            models.Image, article=article, id=kwargs.get("image_id")
-        )
+        self.image = get_object_or_404(models.Image, article=article, id=kwargs.get("image_id"))
         self.revision = get_object_or_404(
             models.ImageRevision,
             plugin__article=article,
@@ -156,12 +141,8 @@ class RevisionChangeView(ArticleMixin, RedirectView):
             },
         )
         if self.urlpath:
-            return reverse(
-                "wiki:images_index", kwargs={"path": self.urlpath.path}
-            )
-        return reverse(
-            "wiki:images_index", kwargs={"article_id": self.article.id}
-        )
+            return reverse("wiki:images_index", kwargs={"path": self.urlpath.path})
+        return reverse("wiki:images_index", kwargs={"article_id": self.article.id})
 
 
 class RevisionAddView(ArticleMixin, FormView):
@@ -170,9 +151,7 @@ class RevisionAddView(ArticleMixin, FormView):
 
     @method_decorator(get_article(can_write=True, not_locked=True))
     def dispatch(self, request, article, *args, **kwargs):
-        self.image = get_object_or_404(
-            models.Image, article=article, id=kwargs.get("image_id")
-        )
+        self.image = get_object_or_404(models.Image, article=article, id=kwargs.get("image_id"))
         if not self.image.can_write(request.user):
             return redirect(wiki_settings.LOGIN_URL)
         return ArticleMixin.dispatch(self, request, article, *args, **kwargs)
@@ -197,9 +176,7 @@ class RevisionAddView(ArticleMixin, FormView):
         messages.info(
             self.request,
             _("%(file)s has been saved.")
-            % {
-                "file": self.image.current_revision.imagerevision.get_filename()
-            },
+            % {"file": self.image.current_revision.imagerevision.get_filename()},
         )
         if self.urlpath:
             return redirect("wiki:edit", path=self.urlpath.path)

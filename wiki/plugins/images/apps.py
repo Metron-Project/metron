@@ -2,7 +2,7 @@ from django.apps import AppConfig
 from django.core.checks import register
 from django.utils.translation import gettext_lazy as _
 
-from . import checks
+from wiki.plugins.images import checks
 
 
 class ImagesConfig(AppConfig):

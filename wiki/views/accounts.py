@@ -8,6 +8,7 @@ settings.WIKI_SIGNUP_URL = '/your/signup/url'
 SETTINGS.LOGIN_URL
 SETTINGS.LOGOUT_URL
 """
+
 from django.conf import settings as django_settings
 from django.contrib import messages
 from django.contrib.auth import get_user_model, login as auth_login, logout as auth_logout
@@ -36,15 +37,8 @@ class Signup(CreateView):
         if not settings.ACCOUNT_HANDLING:
             return redirect(settings.SIGNUP_URL)
         # Allow superusers to use signup page...
-        if (
-            not request.user.is_superuser
-            and not settings.ACCOUNT_SIGNUP_ALLOWED
-        ):
-            c = {
-                "error_msg": _(
-                    "Account signup is only allowed for administrators."
-                )
-            }
+        if not request.user.is_superuser and not settings.ACCOUNT_SIGNUP_ALLOWED:
+            c = {"error_msg": _("Account signup is only allowed for administrators.")}
             return render(request, "wiki/error.html", context=c)
 
         return super().dispatch(request, *args, **kwargs)

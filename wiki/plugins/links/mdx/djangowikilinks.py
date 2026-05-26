@@ -16,8 +16,9 @@ Dependencies:
 * [Python 3.4+](https://python.org)
 * [Markdown 2.6+](https://pypi.python.org/pypi/Markdown)
 """
-from os import path as os_path
-from xml.etree import ElementTree as etree
+
+from pathlib import PurePosixPath
+from xml.etree import ElementTree as ET
 
 import markdown
 
@@ -35,7 +36,8 @@ class WikiPathExtension(markdown.extensions.Extension):
             "html_class": ["wikipath", "CSS hook. Leave blank for none."],
             "default_level": [
                 2,
-                "The level that most articles are created at. Relative links will tend to start at that level.",
+                "The level that most articles are created at."
+                " Relative links will tend to start at that level.",
             ],
         }
 
@@ -47,11 +49,14 @@ class WikiPathExtension(markdown.extensions.Extension):
         self.md = md
 
         # append to end of inline patterns
-        WIKI_RE = r"\[(?P<label>[^\]]+?)\]\(wiki:(?P<wikipath>[a-zA-Z0-9\./_-]*?)(?P<fragment>#[a-zA-Z0-9\./_-]*)?\)"
-        wikiPathPattern = WikiPath(WIKI_RE, self.config, md=md)
-        wikiPathPattern.md = md
+        wiki_re = (
+            r"\[(?P<label>[^\]]+?)\]\(wiki:(?P<wikipath>[a-zA-Z0-9\./_-]*?)"
+            r"(?P<fragment>#[a-zA-Z0-9\./_-]*)?\)"
+        )
+        wiki_path_pattern = WikiPath(wiki_re, self.config, md=md)
+        wiki_path_pattern.md = md
         md.inlinePatterns.register(
-            wikiPathPattern, "djangowikipath", 171
+            wiki_path_pattern, "djangowikipath", 171
         )  # 171 is hardcoded value to put it ahead of reference
 
 
@@ -75,7 +80,7 @@ class WikiPath(markdown.inlinepatterns.Pattern):
 
         if absolute:
             base_path = self.config["base_url"][0]
-            path_from_link = os_path.join(str(base_path), wiki_path)
+            path_from_link = str(PurePosixPath(str(base_path)) / wiki_path)
 
             urlpath = None
             path = path_from_link
@@ -94,13 +99,11 @@ class WikiPath(markdown.inlinepatterns.Pattern):
             starting_level = max(0, self.config["default_level"][0] - 1)
             starting_path = "/".join(source_components[:starting_level])
 
-            path_from_link = os_path.join(starting_path, wiki_path)
+            path_from_link = str(PurePosixPath(starting_path) / wiki_path)
 
             lookup = models.URLPath.objects.none()
             if urlpath.parent:
-                lookup = urlpath.parent.get_descendants().filter(
-                    slug=wiki_path
-                )
+                lookup = urlpath.parent.get_descendants().filter(slug=wiki_path)
             else:
                 lookup = urlpath.get_descendants().filter(slug=wiki_path)
 
@@ -121,7 +124,7 @@ class WikiPath(markdown.inlinepatterns.Pattern):
         elif href.endswith("/") and len(href) > 1:
             href = href[:-1]
 
-        a = etree.Element("a")
+        a = ET.Element("a")
         a.set("href", href)
         if not urlpath:
             a.set("class", self.config["html_class"][0] + " linknotfound")

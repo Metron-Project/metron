@@ -34,9 +34,8 @@ from wiki.conf import settings
 from wiki.core import permissions
 from wiki.core.diff import simple_merge
 from wiki.core.plugins.base import PluginSettingsFormMixin
-from wiki.editors import getEditor
-
-from .forms_account_handling import UserCreationForm, UserUpdateForm
+from wiki.editors import get_editor
+from wiki.forms_account_handling import UserCreationForm, UserUpdateForm
 
 validate_slug_numbers = RegexValidator(
     r"^[0-9]+$",
@@ -66,36 +65,23 @@ class WikiSlugField(forms.CharField):
 
 def _clean_slug(slug, urlpath):
     if slug.startswith("_"):
-        raise forms.ValidationError(
-            gettext("A slug may not begin with an underscore.")
-        )
+        raise forms.ValidationError(gettext("A slug may not begin with an underscore."))
     if slug == "admin":
-        raise forms.ValidationError(
-            gettext("'admin' is not a permitted slug name.")
-        )
+        raise forms.ValidationError(gettext("'admin' is not a permitted slug name."))
 
     if settings.URL_CASE_SENSITIVE:
-        already_existing_slug = models.URLPath.objects.filter(
-            slug=slug, parent=urlpath
-        )
+        already_existing_slug = models.URLPath.objects.filter(slug=slug, parent=urlpath)
     else:
         slug = slug.lower()
-        already_existing_slug = models.URLPath.objects.filter(
-            slug__iexact=slug, parent=urlpath
-        )
+        already_existing_slug = models.URLPath.objects.filter(slug__iexact=slug, parent=urlpath)
     if already_existing_slug:
         already_urlpath = already_existing_slug[0]
-        if (
-            already_urlpath.article
-            and already_urlpath.article.current_revision.deleted
-        ):
+        if already_urlpath.article and already_urlpath.article.current_revision.deleted:
             raise forms.ValidationError(
-                gettext('A deleted article with slug "%s" already exists.')
-                % already_urlpath.slug
+                gettext('A deleted article with slug "%s" already exists.') % already_urlpath.slug
             )
         raise forms.ValidationError(
-            gettext('A slug named "%s" already exists.')
-            % already_urlpath.slug
+            gettext('A slug named "%s" already exists.') % already_urlpath.slug
         )
 
     if settings.CHECK_SLUG_URL_AVAILABLE:
@@ -103,9 +89,7 @@ def _clean_slug(slug, urlpath):
             # Fail validation if URL resolves to non-wiki app
             match = resolve(urlpath.path + "/" + slug + "/")
             if match.app_name != "wiki":
-                raise forms.ValidationError(
-                    gettext("This slug conflicts with an existing URL.")
-                )
+                raise forms.ValidationError(gettext("This slug conflicts with an existing URL."))
         except Resolver404:
             pass
 
@@ -117,7 +101,6 @@ Group = apps.get_model(settings.GROUP_MODEL)
 
 
 class SpamProtectionMixin:
-
     """Check a form for spam. Only works if properties 'request' and 'revision_model' are set."""
 
     revision_model = models.ArticleRevision
@@ -135,21 +118,17 @@ class SpamProtectionMixin:
         if request.user.is_authenticated:
             user = request.user
         else:
-            ip_address = request.META.get(
-                "HTTP_X_REAL_IP", None
-            ) or request.META.get("REMOTE_ADDR", None)
+            ip_address = request.META.get("HTTP_X_REAL_IP", None) or request.META.get(
+                "REMOTE_ADDR", None
+            )
 
         if not (user or ip_address):
             raise forms.ValidationError(
-                gettext(
-                    "Spam protection failed to find both a logged in user and an IP address."
-                )
+                gettext("Spam protection failed to find both a logged in user and an IP address.")
             )
 
         def check_interval(from_time, max_count, interval_name):
-            from_time = timezone.now() - timedelta(
-                minutes=settings.REVISIONS_MINUTES_LOOKBACK
-            )
+            from_time = timezone.now() - timedelta(minutes=settings.REVISIONS_MINUTES_LOOKBACK)
             revisions = self.revision_model.objects.filter(
                 created__gte=from_time,
             )
@@ -161,7 +140,8 @@ class SpamProtectionMixin:
             if revisions >= max_count:
                 raise forms.ValidationError(
                     gettext(
-                        "Spam protection: You are only allowed to create or edit %(revisions)d article(s) per %(interval_name)s."
+                        "Spam protection: You are only allowed to create or edit"
+                        " %(revisions)d article(s) per %(interval_name)s."
                     )
                     % {"revisions": max_count, "interval_name": interval_name}
                 )
@@ -171,9 +151,7 @@ class SpamProtectionMixin:
         if request.user.has_perm("wiki.moderator"):
             return
 
-        from_time = timezone.now() - timedelta(
-            minutes=settings.REVISIONS_MINUTES_LOOKBACK
-        )
+        from_time = timezone.now() - timedelta(minutes=settings.REVISIONS_MINUTES_LOOKBACK)
         if request.user.is_authenticated:
             per_minute = settings.REVISIONS_PER_MINUTES
         else:
@@ -197,17 +175,16 @@ class SpamProtectionMixin:
 class CreateRootForm(forms.Form):
     title = forms.CharField(
         label=_("Title"),
-        help_text=_(
-            "Initial title of the article. May be overridden with revision titles."
-        ),
+        help_text=_("Initial title of the article. May be overridden with revision titles."),
     )
     content = forms.CharField(
         label=_("Type in some contents"),
         help_text=_(
-            "This is just the initial contents of your article. After creating it, you can use more complex features like adding plugins, meta data, related articles etc..."
+            "This is just the initial contents of your article. After creating it, you can"
+            " use more complex features like adding plugins, meta data, related articles etc..."
         ),
         required=False,
-        widget=getEditor().get_widget(),
+        widget=get_editor().get_widget(),
     )  # @UndefinedVariable
 
 
@@ -223,9 +200,7 @@ class MoveForm(forms.Form):
     def clean(self):
         cd = super().clean()
         if cd.get("slug"):
-            dest_path = get_object_or_404(
-                models.URLPath, pk=self.cleaned_data["destination"]
-            )
+            dest_path = get_object_or_404(models.URLPath, pk=self.cleaned_data["destination"])
             cd["slug"] = _clean_slug(cd["slug"], dest_path)
         return cd
 
@@ -234,21 +209,15 @@ class EditForm(forms.Form, SpamProtectionMixin):
     title = forms.CharField(
         label=_("Title"),
     )
-    content = forms.CharField(
-        label=_("Contents"), required=False
-    )  # @UndefinedVariable
+    content = forms.CharField(label=_("Contents"), required=False)  # @UndefinedVariable
 
     summary = forms.CharField(
         label=pgettext_lazy("Revision comment", "Summary"),
-        help_text=_(
-            "Give a short reason for your edit, which will be stated in the revision log."
-        ),
+        help_text=_("Give a short reason for your edit, which will be stated in the revision log."),
         required=False,
     )
 
-    current_revision = forms.IntegerField(
-        required=False, widget=forms.HiddenInput()
-    )
+    current_revision = forms.IntegerField(required=False, widget=forms.HiddenInput())
 
     def __init__(self, request, current_revision, *args, **kwargs):
         self.request = request
@@ -281,9 +250,7 @@ class EditForm(forms.Form, SpamProtectionMixin):
                 data = kwargs.get("data")
             if data:
                 self.presumed_revision = data.get("current_revision", None)
-                if not str(self.presumed_revision) == str(
-                    self.initial_revision.id
-                ):
+                if str(self.presumed_revision) != str(self.initial_revision.id):
                     newdata = {}
                     for k, v in data.items():
                         newdata[k] = v
@@ -292,9 +259,7 @@ class EditForm(forms.Form, SpamProtectionMixin):
                     if provided_content:
                         self.presumed_revision = self.initial_revision.id
                     else:
-                        newdata["content"] = simple_merge(
-                            content, data.get("content", "")
-                        )
+                        newdata["content"] = simple_merge(content, data.get("content", ""))
                     newdata["title"] = current_revision.title
                     kwargs["data"] = newdata
                 else:
@@ -304,17 +269,13 @@ class EditForm(forms.Form, SpamProtectionMixin):
             kwargs["initial"] = initial
 
         super().__init__(*args, **kwargs)
-        self.fields["content"].widget = getEditor().get_widget(
-            current_revision
-        )
+        self.fields["content"].widget = get_editor().get_widget(current_revision)
 
     def clean_title(self):
         title = self.cleaned_data.get("title", None)
         title = (title or "").strip()
         if not title:
-            raise forms.ValidationError(
-                gettext("Article is missing title or has an invalid title")
-            )
+            raise forms.ValidationError(gettext("Article is missing title or has an invalid title"))
         return title
 
     def clean(self):
@@ -327,7 +288,9 @@ class EditForm(forms.Form, SpamProtectionMixin):
         if not str(self.initial_revision.id) == str(self.presumed_revision):
             raise forms.ValidationError(
                 gettext(
-                    "While you were editing, someone else changed the revision. Your contents have been automatically merged with the new contents. Please review the text below."
+                    "While you were editing, someone else changed the revision. Your contents"
+                    " have been automatically merged with the new contents."
+                    " Please review the text below."
                 )
             )
         if (
@@ -335,9 +298,7 @@ class EditForm(forms.Form, SpamProtectionMixin):
             and self.cleaned_data["title"] == self.initial_revision.title
             and self.cleaned_data["content"] == self.initial_revision.content
         ):
-            raise forms.ValidationError(
-                gettext("No changes made. Nothing to save.")
-            )
+            raise forms.ValidationError(gettext("No changes made. Nothing to save."))
         self.check_spam()
         return self.cleaned_data
 
@@ -386,12 +347,14 @@ class CreateForm(forms.Form, SpamProtectionMixin):
     slug = WikiSlugField(
         label=_("Slug"),
         help_text=_(
-            "This will be the address where your article can be found. Use only alphanumeric characters and - or _.<br>Note: If you change the slug later on, links pointing to this article are <b>not</b> updated."
+            "This will be the address where your article can be found. Use only alphanumeric"
+            " characters and - or _.<br>Note: If you change the slug later on, links pointing"
+            " to this article are <b>not</b> updated."
         ),
         max_length=models.URLPath.SLUG_MAX_LENGTH,
     )
     content = forms.CharField(
-        label=_("Contents"), required=False, widget=getEditor().get_widget()
+        label=_("Contents"), required=False, widget=get_editor().get_widget()
     )  # @UndefinedVariable
 
     summary = forms.CharField(
@@ -420,7 +383,9 @@ class DeleteForm(forms.Form):
         required=False,
         label=_("Purge"),
         help_text=_(
-            "Purge the article: Completely remove it (and all its contents) with no undo. Purging is a good idea if you want to free the slug such that users can create new articles in its place."
+            "Purge the article: Completely remove it (and all its contents) with no undo."
+            " Purging is a good idea if you want to free the slug such that users can create"
+            " new articles in its place."
         ),
     )
     revision = forms.ModelChoiceField(
@@ -434,9 +399,7 @@ class DeleteForm(forms.Form):
             raise forms.ValidationError(gettext("You are not sure enough!"))
         if self.cleaned_data["revision"] != self.article.current_revision:
             raise forms.ValidationError(
-                gettext(
-                    "While you tried to delete this article, it was modified. TAKE CARE!"
-                )
+                gettext("While you tried to delete this article, it was modified. TAKE CARE!")
             )
         return self.cleaned_data
 
@@ -470,7 +433,8 @@ class PermissionsForm(PluginSettingsFormMixin, forms.ModelForm):
     recursive = forms.BooleanField(
         label=_("Inherit permissions"),
         help_text=_(
-            "Check here to apply the above permissions (excluding group and owner of the article) recursively to articles below this one."
+            "Check here to apply the above permissions (excluding group and owner of the"
+            " article) recursively to articles below this one."
         ),
         required=False,
     )
@@ -494,9 +458,7 @@ class PermissionsForm(PluginSettingsFormMixin, forms.ModelForm):
     def get_usermessage(self):
         if self.changed_data:
             return _("Permission settings for the article were updated.")
-        return _(
-            "Your permission settings were unchanged, so nothing saved."
-        )
+        return _("Your permission settings were unchanged, so nothing saved.")
 
     def __init__(self, article, request, *args, **kwargs):
         self.article = article
@@ -515,9 +477,7 @@ class PermissionsForm(PluginSettingsFormMixin, forms.ModelForm):
             self.can_change_groups = True
             self.fields["group"].queryset = Group.objects.all()
         elif permissions.can_assign_owner(article, request.user):
-            self.fields["group"].queryset = Group.objects.filter(
-                user=request.user
-            )
+            self.fields["group"].queryset = Group.objects.filter(user=request.user)
             self.can_change_groups = True
         else:
             # Quick-fix...
@@ -537,18 +497,14 @@ class PermissionsForm(PluginSettingsFormMixin, forms.ModelForm):
             self.fields["group_write"].widget = forms.HiddenInput()
 
         if not self.can_assign:
-            self.fields["owner_username"].widget = forms.TextInput(
-                attrs={"readonly": "true"}
-            )
+            self.fields["owner_username"].widget = forms.TextInput(attrs={"readonly": "true"})
             self.fields["recursive"].widget = forms.HiddenInput()
             self.fields["recursive_group"].widget = forms.HiddenInput()
             self.fields["recursive_owner"].widget = forms.HiddenInput()
             self.fields["locked"].widget = forms.HiddenInput()
 
         self.fields["owner_username"].initial = (
-            getattr(article.owner, User.USERNAME_FIELD)
-            if article.owner
-            else ""
+            getattr(article.owner, User.USERNAME_FIELD) if article.owner else ""
         )
 
     def clean_owner_username(self):
@@ -559,9 +515,7 @@ class PermissionsForm(PluginSettingsFormMixin, forms.ModelForm):
                     kwargs = {User.USERNAME_FIELD: username}
                     user = User.objects.get(**kwargs)
                 except User.DoesNotExist:
-                    raise forms.ValidationError(
-                        gettext("No user with that username")
-                    )
+                    raise forms.ValidationError(gettext("No user with that username")) from None
             else:
                 user = None
         else:
@@ -591,20 +545,14 @@ class PermissionsForm(PluginSettingsFormMixin, forms.ModelForm):
                 article.set_owner_recursive()
             if self.cleaned_data["recursive_group"]:
                 article.set_group_recursive()
-            if (
-                self.cleaned_data["locked"]
-                and not article.current_revision.locked
-            ):
+            if self.cleaned_data["locked"] and not article.current_revision.locked:
                 revision = models.ArticleRevision()
                 revision.inherit_predecessor(self.article)
                 revision.set_from_request(self.request)
                 revision.automatic_log = _("Article locked for editing")
                 revision.locked = True
                 self.article.add_revision(revision)
-            elif (
-                not self.cleaned_data["locked"]
-                and article.current_revision.locked
-            ):
+            elif not self.cleaned_data["locked"] and article.current_revision.locked:
                 revision = models.ArticleRevision()
                 revision.inherit_predecessor(self.article)
                 revision.set_from_request(self.request)
@@ -633,17 +581,13 @@ class PermissionsForm(PluginSettingsFormMixin, forms.ModelForm):
 
 class DirFilterForm(forms.Form):
     query = forms.CharField(
-        widget=forms.TextInput(
-            attrs={"placeholder": _("Filter..."), "class": "search-query"}
-        ),
+        widget=forms.TextInput(attrs={"placeholder": _("Filter..."), "class": "search-query"}),
         required=False,
     )
 
 
 class SearchForm(forms.Form):
     q = forms.CharField(
-        widget=forms.TextInput(
-            attrs={"placeholder": _("Search..."), "class": "search-query"}
-        ),
+        widget=forms.TextInput(attrs={"placeholder": _("Search..."), "class": "search-query"}),
         required=False,
     )

@@ -35,13 +35,9 @@ class ArticleMarkdown(markdown.Markdown):
         self.source = text
         html = super().convert(text, *args, **kwargs)
         if settings.MARKDOWN_SANITIZE_HTML:
-            tags = settings.MARKDOWN_HTML_WHITELIST.union(
-                plugin_registry.get_html_whitelist()
-            )
+            tags = settings.MARKDOWN_HTML_WHITELIST.union(plugin_registry.get_html_whitelist())
 
-            css_sanitizer = CSSSanitizer(
-                allowed_css_properties=settings.MARKDOWN_HTML_STYLES
-            )
+            css_sanitizer = CSSSanitizer(allowed_css_properties=settings.MARKDOWN_HTML_STYLES)
 
             attrs = {}
             attrs.update(settings.MARKDOWN_HTML_ATTRIBUTES)
@@ -91,28 +87,19 @@ def add_to_registry(processor, key, value, location):
         processor._sort()
         # Set priority 5 less than lowest existing priority
         priority = processor._priority[-1].priority - 5
-    elif location.startswith("<") or location.startswith(">"):
+    elif location.startswith(("<", ">")):
         # Set priority halfway between existing priorities.
         i = processor.get_index_for_name(location[1:])
         if location.startswith("<"):
             after = processor._priority[i].priority
-            if i > 0:
-                before = processor._priority[i - 1].priority
-            else:
-                # Location is first item`
-                before = after + 10
+            before = processor._priority[i - 1].priority if i > 0 else after + 10
         else:
             # location.startswith('>')
             before = processor._priority[i].priority
-            if i < len(processor) - 1:
-                after = processor._priority[i + 1].priority
-            else:
-                # location is last item
-                after = before - 10
+            after = processor._priority[i + 1].priority if i < len(processor) - 1 else before - 10
         priority = before - ((before - after) / 2)
     else:
         raise ValueError(
-            'Not a valid location: "%s". Location key '
-            'must start with a ">" or "<".' % location
+            f'Not a valid location: "{location}". Location key must start with a ">" or "<".'
         )
     processor.register(value, key, priority)

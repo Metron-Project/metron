@@ -102,6 +102,10 @@ combine-as-imports = true
 "tests/*/*.py" = ["PLR2004", "PT004", "S101", "PLR0913"]
 "users/apps.py" = ["PLC0415",]
 "users/migrations/*.py" = ["E501", "N806"]
+"wiki/**/mdx/*.py" = ["N802"]
+"wiki/**/markdown_extensions.py" = ["N802"]
+"wiki/migrations/*.py" = ["E501", "N806"]
+"wiki/plugins/*/migrations/*.py" = ["E501", "N806"]
 "wish_list/migrations/*.py" = ["E501", "N806"]
 
 [tool.coverage.html]

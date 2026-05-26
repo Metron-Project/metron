@@ -1,3 +1,5 @@
+import warnings
+
 from django.urls import include, re_path
 from django.utils.module_loading import import_string
 
@@ -12,7 +14,6 @@ urlpatterns = [
 
 
 class WikiURLPatterns:
-
     """
     configurator for wiki urls.
 
@@ -63,7 +64,7 @@ class WikiURLPatterns:
         return urlpatterns
 
     def get_root_urls(self):
-        urlpatterns = [
+        return [
             re_path(
                 r"^$",
                 self.article_view_class.as_view(),
@@ -80,26 +81,22 @@ class WikiURLPatterns:
                 article.MissingRootView.as_view(),
                 name="root_missing",
             ),
-            re_path(
-                r"^_search/$", self.search_view_class.as_view(), name="search"
-            ),
+            re_path(r"^_search/$", self.search_view_class.as_view(), name="search"),
             re_path(
                 r"^_revision/diff/(?P<revision_id>[0-9]+)/$",
                 self.article_diff_view_class.as_view(),
                 name="diff",
             ),
         ]
-        return urlpatterns
 
     def get_deleted_list_urls(self):
-        urlpatterns = [
+        return [
             re_path(
                 "^_admin/$",
                 self.deleted_list_view_class.as_view(),
                 name="deleted_list",
             ),
         ]
-        return urlpatterns
 
     def get_accounts_urls(self):
         if settings.ACCOUNT_HANDLING:
@@ -130,7 +127,7 @@ class WikiURLPatterns:
         return urlpatterns
 
     def get_revision_urls(self):
-        urlpatterns = [
+        return [
             # This one doesn't work because it don't know
             # where to redirect after...
             re_path(
@@ -149,10 +146,9 @@ class WikiURLPatterns:
                 name="merge_revision_preview",
             ),
         ]
-        return urlpatterns
 
     def get_article_urls(self):
-        urlpatterns = [
+        return [
             # Paths decided by article_ids
             re_path(
                 r"^(?P<article_id>[0-9]+)/$",
@@ -215,10 +211,9 @@ class WikiURLPatterns:
                 name="plugin",
             ),
         ]
-        return urlpatterns
 
     def get_article_path_urls(self):
-        urlpatterns = [
+        return [
             # Paths decided by URLs
             re_path(
                 r"^(?P<path>.+/|)_create/$",
@@ -297,7 +292,6 @@ class WikiURLPatterns:
                 name="get",
             ),
         ]
-        return urlpatterns
 
     @staticmethod
     def get_plugin_urls():
@@ -318,9 +312,7 @@ class WikiURLPatterns:
                 ]
                 root_urlpatterns = plugin.urlpatterns.get("root", [])
                 urlpatterns += [
-                    re_path(
-                        r"^_plugin/" + slug + "/", include(root_urlpatterns)
-                    ),
+                    re_path(r"^_plugin/" + slug + "/", include(root_urlpatterns)),
                 ]
         return urlpatterns
 
@@ -331,11 +323,11 @@ def get_pattern(app_name="wiki", namespace="wiki", url_config_class=None):
     single Django project.
     https://docs.djangoproject.com/en/stable/topics/http/urls/#topics-http-reversing-url-namespaces
     """
-    import warnings
-
     warnings.warn(
-        "wiki.urls.get_pattern is deprecated and will be removed in next version, just `include('wiki.urls')` in your urlconf",
+        "wiki.urls.get_pattern is deprecated and will be removed in next version,"
+        " just `include('wiki.urls')` in your urlconf",
         DeprecationWarning,
+        stacklevel=2,
     )
     if url_config_class is None:
         url_config_classname = getattr(settings, "URL_CONFIG_CLASS", None)
@@ -343,8 +335,10 @@ def get_pattern(app_name="wiki", namespace="wiki", url_config_class=None):
             url_config_class = WikiURLPatterns
         else:
             warnings.warn(
-                "URL_CONFIG_CLASS is deprecated and will be removed in next version, override `wiki.sites.WikiSite` instead",
+                "URL_CONFIG_CLASS is deprecated and will be removed in next version,"
+                " override `wiki.sites.WikiSite` instead",
                 DeprecationWarning,
+                stacklevel=2,
             )
             url_config_class = import_string(url_config_classname)
     urlpatterns = url_config_class().get_urls()

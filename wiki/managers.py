@@ -14,9 +14,7 @@ class ArticleQuerySet(QuerySet):
             q = self.filter(other_read=True)
         else:
             q = self.filter(
-                Q(other_read=True)
-                | Q(owner=user)
-                | (Q(group__user=user) & Q(group_read=True))
+                Q(other_read=True) | Q(owner=user) | (Q(group__user=user) & Q(group_read=True))
             ).annotate(Count("id"))
         return q
 
@@ -29,9 +27,7 @@ class ArticleQuerySet(QuerySet):
             q = self.filter(other_write=True)
         else:
             q = self.filter(
-                Q(other_write=True)
-                | Q(owner=user)
-                | (Q(group__user=user) & Q(group_write=True))
+                Q(other_write=True) | Q(owner=user) | (Q(group__user=user) & Q(group_write=True))
             )
         return q
 
@@ -150,9 +146,7 @@ class URLPathEmptyQuerySet(EmptyQuerySet, ArticleFkEmptyQuerySetMixin):
 
 class URLPathQuerySet(QuerySet, ArticleFkQuerySetMixin):
     def select_related_common(self):
-        return self.select_related(
-            "parent", "article__current_revision", "article__owner"
-        )
+        return self.select_related("parent", "article__current_revision", "article__owner")
 
     def default_order(self):
         """Returns elements by there article order"""

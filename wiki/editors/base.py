@@ -2,7 +2,6 @@ from django import forms
 
 
 class BaseEditor:
-
     """Editors should inherit from this. See wiki.editors for examples."""
 
     # The editor id can be used for conditional testing. If you write your

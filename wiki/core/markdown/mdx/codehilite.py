@@ -24,8 +24,7 @@ def highlight(code, config, tab_length, lang=None):
         lang=lang,
     )
     html = code.hilite()
-    html = f"""<div class="codehilite-wrap">{html}</div>"""
-    return html
+    return f"""<div class="codehilite-wrap">{html}</div>"""
 
 
 class WikiFencedBlockPreprocessor(Preprocessor):
@@ -42,7 +41,7 @@ class WikiFencedBlockPreprocessor(Preprocessor):
             ((\{(?P<attrs>[^\}\n]*)\})|                              # (optional {attrs} or
             (\.?(?P<lang>[\w#.+-]*)[ ]*)?                            # optional (.)lang
             (hl_lines=(?P<quot>"|')(?P<hl_lines>.*?)(?P=quot)[ ]*)?) # optional hl_lines)
-            \n                                                       # newline (end of opening fence)
+            \n                                                      # newline (end of opening fence)
             (?P<code>.*?)(?<=\n)                                     # the code block
             (?P=fence)[ ]*$                                          # closing fence
         """
@@ -67,9 +66,7 @@ class WikiFencedBlockPreprocessor(Preprocessor):
                 lang = ""
                 if m.group("lang"):
                     lang = m.group("lang")
-                html = highlight(
-                    m.group("code"), self.config, self.md.tab_length, lang=lang
-                )
+                html = highlight(m.group("code"), self.config, self.md.tab_length, lang=lang)
                 placeholder = self.md.htmlStash.store(html)
                 text = f"{text[: m.start()]}\n{placeholder}\n{text[m.end() :]}"
             else:
@@ -85,8 +82,7 @@ class HiliteTreeprocessor(Treeprocessor):
         text = text.replace("&amp;", "&")
         text = text.replace("&lt;", "<")
         text = text.replace("&gt;", ">")
-        text = text.replace("&quot;", '"')
-        return text
+        return text.replace("&quot;", '"')
 
     def run(self, root):
         """Find code blocks and store in htmlStash."""

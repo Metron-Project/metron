@@ -1,3 +1,4 @@
+import contextlib
 import re
 
 import markdown
@@ -8,34 +9,26 @@ from wiki.plugins.images import models, settings
 
 IMAGE_RE = (
     r"(?:"
-
     # Match '[image:N'
     r"\[image\:(?P<id>[0-9]+)"
-
     # Match optional 'align'
     r"(?:\s+align\:(?P<align>right|left))?"
-
     # Match optional 'size'
     r"(?:\s+size\:(?P<size>default|small|medium|large|orig))?"
-
     # Match ']' and rest of line.
     # Normally [^\n] could be replaced with a dot '.', since '.'
     # does not match newlines, but inline processors run with re.DOTALL.
     r"\s*\](?P<trailer>[^\n]*)$"
-
     # Match zero or more caption lines, each indented by four spaces.
     r"(?P<caption>(?:\n    [^\n]*)*))"
 )
 
 
 class ImageExtension(markdown.Extension):
-
     """Images plugin markdown extension for django-wiki."""
 
     def extendMarkdown(self, md):
-        add_to_registry(
-            md.inlinePatterns, "dw-images", ImagePattern(IMAGE_RE, md), ">link"
-        )
+        add_to_registry(md.inlinePatterns, "dw-images", ImagePattern(IMAGE_RE, md), ">link")
         add_to_registry(
             md.postprocessors,
             "dw-images-cleanup",
@@ -61,7 +54,7 @@ class ImagePattern(markdown.inlinepatterns.Pattern):
         """Override init in order to add IGNORECASE and MULTILINE flags"""
         super().__init__(pattern, md=md)
         self.compiled_re = re.compile(
-            r"^(.*?)%s(.*)$" % pattern,
+            rf"^(.*?){pattern}(.*)$",
             flags=re.DOTALL | re.UNICODE | re.IGNORECASE | re.MULTILINE,
         )
 
@@ -75,14 +68,12 @@ class ImagePattern(markdown.inlinepatterns.Pattern):
         alignment = m.group("align")
         if m.group("size"):
             size = settings.THUMBNAIL_SIZES[m.group("size")]
-        try:
+        with contextlib.suppress(models.Image.DoesNotExist):
             image = models.Image.objects.get(
                 article=self.md.article,
                 id=image_id,
                 current_revision__deleted=False,
             )
-        except models.Image.DoesNotExist:
-            pass
 
         caption = m.group("caption")
         trailer = m.group("trailer")
@@ -115,5 +106,4 @@ class ImagePostprocessor(markdown.postprocessors.Postprocessor):
         remove it again after.
         """
         text = text.replace("<p><figure", "<figure")
-        text = text.replace("</figure>\n</p>", "</figure>")
-        return text
+        return text.replace("</figure>\n</p>", "</figure>")

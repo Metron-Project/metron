@@ -1,6 +1,7 @@
 """
 Extend the shipped Markdown extension 'wikilinks'
 """
+
 import re
 import xml.etree.ElementTree
 
@@ -39,13 +40,11 @@ class WikiLinkExtension(Extension):
         self.md = md
 
         # append to end of inline patterns
-        WIKILINK_RE = r"\[\[([\w0-9_ -]+)\]\]"
-        wikilinkPattern = WikiLinks(WIKILINK_RE, self.getConfigs())
-        wikilinkPattern.md = md
+        wikilink_re = r"\[\[([\w0-9_ -]+)\]\]"
+        wikilink_pattern = WikiLinks(wikilink_re, self.getConfigs())
+        wikilink_pattern.md = md
 
-        add_to_registry(
-            md.inlinePatterns, "wikilink", wikilinkPattern, "<not_strong"
-        )
+        add_to_registry(md.inlinePatterns, "wikilink", wikilink_pattern, "<not_strong")
 
 
 class WikiLinks(wikilinks.WikiLinksInlineProcessor):

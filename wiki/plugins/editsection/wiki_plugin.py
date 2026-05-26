@@ -2,9 +2,8 @@ from django.urls import re_path as url
 
 from wiki.core.plugins import registry
 from wiki.core.plugins.base import BasePlugin
+from wiki.plugins.editsection import settings, views
 from wiki.plugins.editsection.markdown_extensions import EditSectionExtension
-
-from . import settings, views
 
 
 class EditSectionPlugin(BasePlugin):

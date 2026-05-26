@@ -4,7 +4,7 @@ from django.contrib.contenttypes.admin import GenericTabularInline
 from django.utils.translation import gettext_lazy as _
 from mptt.admin import MPTTModelAdmin
 
-from . import editors, models
+from wiki import editors, models
 
 
 class ArticleObjectAdmin(GenericTabularInline):
@@ -22,7 +22,7 @@ class ArticleRevisionForm(forms.ModelForm):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         # TODO: This pattern is too weird
-        editor = editors.getEditor()
+        editor = editors.get_editor()
         self.fields["content"].widget = editor.get_admin_widget(self.instance)
 
 
@@ -31,8 +31,8 @@ class ArticleRevisionAdmin(admin.ModelAdmin):
     list_display = ("title", "created", "modified", "user", "ip_address")
 
     class Media:
-        js = editors.getEditorClass().AdminMedia.js
-        css = editors.getEditorClass().AdminMedia.css
+        js = editors.get_editor_class().AdminMedia.js
+        css = editors.get_editor_class().AdminMedia.css
 
 
 class ArticleRevisionInline(admin.TabularInline):
@@ -48,8 +48,8 @@ class ArticleRevisionInline(admin.TabularInline):
     )
 
     class Media:
-        js = editors.getEditorClass().AdminMedia.js
-        css = editors.getEditorClass().AdminMedia.css
+        js = editors.get_editor_class().AdminMedia.js
+        css = editors.get_editor_class().AdminMedia.css
 
 
 class ArticleForm(forms.ModelForm):
@@ -60,14 +60,12 @@ class ArticleForm(forms.ModelForm):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         if self.instance.pk:
-            revisions = models.ArticleRevision.objects.select_related(
-                "article"
-            ).filter(article=self.instance)
+            revisions = models.ArticleRevision.objects.select_related("article").filter(
+                article=self.instance
+            )
             self.fields["current_revision"].queryset = revisions
         else:
-            self.fields[
-                "current_revision"
-            ].queryset = models.ArticleRevision.objects.none()
+            self.fields["current_revision"].queryset = models.ArticleRevision.objects.none()
             self.fields["current_revision"].widget = forms.HiddenInput()
 
 

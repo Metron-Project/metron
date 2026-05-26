@@ -44,8 +44,8 @@ def check_for_required_installed_apps(app_configs, **kwargs):
         if not apps.is_installed(app[0]):
             errors.append(
                 Error(
-                    "needs %s in INSTALLED_APPS" % app[1],
-                    id="wiki.%s" % app[2],
+                    f"needs {app[1]} in INSTALLED_APPS",
+                    id=f"wiki.{app[2]}",
                 )
             )
     return errors
@@ -57,9 +57,9 @@ def check_for_obsolete_installed_apps(app_configs, **kwargs):
         if apps.is_installed(app[0]):
             errors.append(
                 Error(
-                    "You need to change from %s to %s in INSTALLED_APPS and your urlconfig."
-                    % (app[0], app[1]),
-                    id="wiki.%s" % app[2],
+                    f"You need to change from {app[0]} to {app[1]}"
+                    " in INSTALLED_APPS and your urlconfig.",
+                    id=f"wiki.{app[2]}",
                 )
             )
     return errors
@@ -85,9 +85,9 @@ def check_for_context_processors(app_configs, **kwargs):
             if context_processor[0] not in context_processors:
                 errors.append(
                     Error(
-                        "needs %s in TEMPLATES[*]['OPTIONS']['context_processors']"
-                        % context_processor[0],
-                        id="wiki.%s" % context_processor[1],
+                        f"needs {context_processor[0]}"
+                        " in TEMPLATES[*]['OPTIONS']['context_processors']",
+                        id=f"wiki.{context_processor[1]}",
                     )
                 )
     return errors
@@ -95,15 +95,15 @@ def check_for_context_processors(app_configs, **kwargs):
 
 def check_for_fields_in_custom_user_model(app_configs, **kwargs):
     errors = []
-    from wiki.conf import settings
+    from wiki.conf import settings  # noqa: PLC0415
 
     if not settings.ACCOUNT_HANDLING:
         return errors
-    from django.contrib.auth import get_user_model
+    from django.contrib.auth import get_user_model  # noqa: PLC0415
 
-    import wiki.forms_account_handling
+    import wiki.forms_account_handling  # noqa: PLC0415
 
-    User = get_user_model()
+    user_model = get_user_model()
     for (
         check_function_name,
         field_fetcher,
@@ -111,19 +111,17 @@ def check_for_fields_in_custom_user_model(app_configs, **kwargs):
         error_code,
     ) in FIELDS_IN_CUSTOM_USER_MODEL:
         function = getattr(wiki.forms_account_handling, check_function_name)
-        if not function(User):
+        if not function(user_model):
             errors.append(
                 Error(
-                    "%s.%s.%s refers to a field that is not of type %s"
-                    % (
-                        User.__module__,
-                        User.__name__,
-                        field_fetcher,
-                        required_field_type,
+                    f"{user_model.__module__}.{user_model.__name__}.{field_fetcher}"
+                    f" refers to a field that is not of type {required_field_type}",
+                    hint=(
+                        "If you have your own login/logout views,"
+                        " turn off settings.WIKI_ACCOUNT_HANDLING"
                     ),
-                    hint="If you have your own login/logout views, turn off settings.WIKI_ACCOUNT_HANDLING",
-                    obj=User,
-                    id="wiki.%s" % error_code,
+                    obj=user_model,
+                    id=f"wiki.{error_code}",
                 )
             )
     return errors

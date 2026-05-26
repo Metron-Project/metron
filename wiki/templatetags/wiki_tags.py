@@ -26,15 +26,14 @@ _cache = {}
 def article_for_object(context, obj):
     if not isinstance(obj, Model):
         raise TypeError(
-            "A Wiki article can only be associated to a Django Model "
-            "instance, not %s" % type(obj)
+            f"A Wiki article can only be associated to a Django Model instance, not {type(obj)}"
         )
 
     content_type = ContentType.objects.get_for_model(obj)
 
     # TODO: This is disabled for now, as it should only fire once per request
     # Maybe store cache in the request object?
-    if True or obj not in _cache:
+    if True:
         try:
             article = models.ArticleForObject.objects.get(
                 content_type=content_type, object_id=obj.pk
@@ -70,9 +69,7 @@ def wiki_render(context, article, preview_content=None):
 @register.inclusion_tag("wiki/includes/form.html", takes_context=True)
 def wiki_form(context, form_obj):
     if not isinstance(form_obj, BaseForm):
-        raise TypeError(
-            "Error including form, it's not a form, it's a %s" % type(form_obj)
-        )
+        raise TypeError(f"Error including form, it's not a form, it's a {type(form_obj)}")
     context.update({"form": form_obj})
     return context
 
@@ -105,9 +102,7 @@ def get_content_snippet(content, keyword, max_words=30):
         # remove html tags
         content = striptags(content)
         # remove whitespace
-        words = content.split()
-
-        return words
+        return content.split()
 
     max_words = int(max_words)
 
@@ -130,7 +125,7 @@ def get_content_snippet(content, keyword, max_words=30):
         before = " ".join(before_words)
         after = " ".join(after_words)
         html = (f"{before} {striptags(match)} {after}").strip()
-        kw_p = re.compile(r"(\S*%s\S*)" % re.escape(keyword), re.IGNORECASE)
+        kw_p = re.compile(rf"(\S*{re.escape(keyword)}\S*)", re.IGNORECASE)
         html = kw_p.sub(r"<strong>\1</strong>", html)
 
         return mark_safe(html)
@@ -186,10 +181,7 @@ def is_locked(model):
 def login_url(context):
     request = context["request"]
     qs = request.META.get("QUERY_STRING", "")
-    if qs:
-        qs = urlquote("?" + qs)
-    else:
-        qs = ""
+    qs = urlquote("?" + qs) if qs else ""
     return settings.LOGIN_URL + "?next=" + request.path + qs
 
 

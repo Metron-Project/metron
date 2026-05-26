@@ -13,27 +13,19 @@ from wiki.plugins.macros.mdx import toc
 re_sq_short = r"'([^'\\]*(?:\\.[^'\\]*)*)'"
 
 
-MACRO_RE = (
-    r"""\[(?P<macro>\w+)(?P<kwargs>(\s+\w+\:([^\:\]\s]+|'[^']+'))+)*\]"""
-)
+MACRO_RE = r"""\[(?P<macro>\w+)(?P<kwargs>(\s+\w+\:([^\:\]\s]+|'[^']+'))+)*\]"""
 
-KWARG_RE = re.compile(
-    r"\s*(?P<arg>\w+)(:(?P<value>([^\']+|%s)))?" % re_sq_short, re.IGNORECASE
-)
+KWARG_RE = re.compile(rf"\s*(?P<arg>\w+)(:(?P<value>([^\']+|{re_sq_short})))?", re.IGNORECASE)
 
 
 class MacroExtension(markdown.Extension):
-
     """Macro plugin markdown extension for django-wiki."""
 
     def extendMarkdown(self, md):
-        add_to_registry(
-            md.inlinePatterns, "dw-macros", MacroPattern(MACRO_RE, md), ">link"
-        )
+        add_to_registry(md.inlinePatterns, "dw-macros", MacroPattern(MACRO_RE, md), ">link")
 
 
 class MacroPattern(markdown.inlinepatterns.Pattern):
-
     """django-wiki macro preprocessor - parse text for various [some_macro] and
     [some_macro (kw:arg)*] references."""
 
@@ -41,7 +33,7 @@ class MacroPattern(markdown.inlinepatterns.Pattern):
         """Override init in order to add IGNORECASE flag"""
         super().__init__(pattern, md=md)
         self.compiled_re = re.compile(
-            r"^(.*?)%s(.*)$" % pattern,
+            rf"^(.*?){pattern}(.*)$",
             flags=re.DOTALL | re.UNICODE | re.IGNORECASE,
         )
 
@@ -61,14 +53,11 @@ class MacroPattern(markdown.inlinepatterns.Pattern):
 
             if value is None:
                 value = True
-            if isinstance(value, str):
-                # If value is enclosed with ': Remove and
-                # remove escape sequences
-                if value.startswith("'") and len(value) > 2:
-                    value = value[1:-1]
-                    value = value.replace("\\\\", "¤KEEPME¤")
-                    value = value.replace("\\", "")
-                    value = value.replace("¤KEEPME¤", "\\")
+            if isinstance(value, str) and value.startswith("'") and len(value) > 2:
+                value = value[1:-1]
+                value = value.replace("\\\\", "¤KEEPME¤")
+                value = value.replace("\\", "")
+                value = value.replace("¤KEEPME¤", "\\")
             kwargs_dict[str(arg)] = value
         return getattr(self, macro)(**kwargs_dict)
 
@@ -100,9 +89,7 @@ class MacroPattern(markdown.inlinepatterns.Pattern):
         "help_text": _("Insert a table of contents matching the headings."),
         "example_code": "[TOC] or [TOC toc_depth:1]",
         "args": {
-            "title": _(
-                "Title to insert in the Table of Contents’ <div>. Defaults to Contents."
-            ),
+            "title": _("Title to insert in the Table of Contents’ <div>. Defaults to Contents."),
             "baselevel": _("Base level for headers. Defaults to 1."),
             "separator": _(
                 "Word separator. Character which replaces white space in id. Defaults to “-”."
@@ -110,22 +97,20 @@ class MacroPattern(markdown.inlinepatterns.Pattern):
             "anchorlink": _(
                 "Set to True to cause all headers to link to themselves. Default is False."
             ),
-            "anchorlink_class": _(
-                "CSS class(es) used for the link. Defaults to toclink."
-            ),
+            "anchorlink_class": _("CSS class(es) used for the link. Defaults to toclink."),
             "permalink": _(
-                "Set to True or a string to generate permanent links at the end of each header. Useful with Sphinx style sheets."
+                "Set to True or a string to generate permanent links at the end of each"
+                " header. Useful with Sphinx style sheets."
             ),
-            "permalink_class": _(
-                "CSS class(es) used for the link. Defaults to headerlink."
-            ),
+            "permalink_class": _("CSS class(es) used for the link. Defaults to headerlink."),
             "permalink_title": _(
                 "Title attribute of the permanent link. Defaults to Permanent link."
             ),
             "toc_depth": _(
-                "Define the range of section levels to include in the Table of Contents. A single integer (b) defines the bottom section "
-                "level (<h1>..<hb>) only. A string consisting of two digits separated by a hyphen in between ('2-5'), define the top (t) "
-                "and the bottom (b) (<ht>..<hb>). Defaults to 6 (bottom)."
+                "Define the range of section levels to include in the Table of Contents."
+                " A single integer (b) defines the bottom section level (<h1>..<hb>) only."
+                " A string consisting of two digits separated by a hyphen in between ('2-5'),"
+                " define the top (t) and the bottom (b) (<ht>..<hb>). Defaults to 6 (bottom)."
             ),
         },
     }
@@ -135,9 +120,7 @@ class MacroPattern(markdown.inlinepatterns.Pattern):
 
     wikilink.meta = {
         "short_description": _("WikiLinks"),
-        "help_text": _(
-            "Insert a link to another wiki page with a short notation."
-        ),
+        "help_text": _("Insert a link to another wiki page with a short notation."),
         "example_code": "[[WikiLink]]",
         "args": {},
     }

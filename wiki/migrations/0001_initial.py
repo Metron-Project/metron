@@ -8,7 +8,6 @@ from wiki.conf.settings import GROUP_MODEL
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
         ("sites", "0001_initial"),
         migrations.swappable_dependency(settings.AUTH_USER_MODEL),
@@ -47,21 +46,15 @@ class Migration(migrations.Migration):
                 ),
                 (
                     "group_write",
-                    models.BooleanField(
-                        default=True, verbose_name="group write access"
-                    ),
+                    models.BooleanField(default=True, verbose_name="group write access"),
                 ),
                 (
                     "other_read",
-                    models.BooleanField(
-                        default=True, verbose_name="others read access"
-                    ),
+                    models.BooleanField(default=True, verbose_name="others read access"),
                 ),
                 (
                     "other_write",
-                    models.BooleanField(
-                        default=True, verbose_name="others write access"
-                    ),
+                    models.BooleanField(default=True, verbose_name="others write access"),
                 ),
             ],
             options={
@@ -162,7 +155,8 @@ class Migration(migrations.Migration):
                     models.CharField(
                         max_length=512,
                         verbose_name="article title",
-                        help_text="Each revision contains a title field that must be filled out, even if the title has not changed",
+                        help_text="Each revision contains a title field that must be filled"
+                        " out, even if the title has not changed",
                     ),
                 ),
                 (
@@ -215,9 +209,7 @@ class Migration(migrations.Migration):
                 ),
                 (
                     "articles",
-                    models.ManyToManyField(
-                        related_name="shared_plugins_set", to="wiki.Article"
-                    ),
+                    models.ManyToManyField(related_name="shared_plugins_set", to="wiki.Article"),
                 ),
             ],
             options={},
@@ -319,9 +311,7 @@ class Migration(migrations.Migration):
                 ),
                 (
                     "article_revision",
-                    models.ForeignKey(
-                        to="wiki.ArticleRevision", on_delete=models.CASCADE
-                    ),
+                    models.ForeignKey(to="wiki.ArticleRevision", on_delete=models.CASCADE),
                 ),
             ],
             options={},
@@ -347,7 +337,8 @@ class Migration(migrations.Migration):
                 (
                     "article",
                     models.ForeignKey(
-                        help_text="This field is automatically updated, but you need to populate it when creating a new URL path.",
+                        help_text="This field is automatically updated, but you need to"
+                        " populate it when creating a new URL path.",
                         on_delete=django.db.models.deletion.CASCADE,
                         to="wiki.Article",
                         verbose_name="article",
@@ -366,9 +357,7 @@ class Migration(migrations.Migration):
                 ),
                 (
                     "site",
-                    models.ForeignKey(
-                        on_delete=django.db.models.deletion.CASCADE, to="sites.Site"
-                    ),
+                    models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, to="sites.Site"),
                 ),
             ],
             options={
@@ -387,7 +376,8 @@ class Migration(migrations.Migration):
             field=models.OneToOneField(
                 related_name="plugin_set",
                 null=True,
-                help_text="The revision being displayed for this plugin. If you need to do a roll-back, simply change the value of this field.",
+                help_text="The revision being displayed for this plugin. If you need to"
+                " do a roll-back, simply change the value of this field.",
                 blank=True,
                 to="wiki.RevisionPluginRevision",
                 verbose_name="current revision",
@@ -417,7 +407,8 @@ class Migration(migrations.Migration):
             field=models.OneToOneField(
                 related_name="current_set",
                 null=True,
-                help_text="The revision being displayed for this article. If you need to do a roll-back, simply change the value of this field.",
+                help_text="The revision being displayed for this article. If you need to"
+                " do a roll-back, simply change the value of this field.",
                 blank=True,
                 to="wiki.ArticleRevision",
                 verbose_name="current revision",
@@ -431,7 +422,9 @@ class Migration(migrations.Migration):
             field=models.ForeignKey(
                 null=True,
                 on_delete=django.db.models.deletion.SET_NULL,
-                help_text="Like in a UNIX file system, permissions can be given to a user according to group membership. Groups are handled through the Django auth system.",
+                help_text="Like in a UNIX file system, permissions can be given to a user"
+                " according to group membership. Groups are handled through the Django auth"
+                " system.",
                 blank=True,
                 to=GROUP_MODEL,
                 verbose_name="group",
@@ -445,7 +438,8 @@ class Migration(migrations.Migration):
                 related_name="owned_articles",
                 null=True,
                 on_delete=django.db.models.deletion.SET_NULL,
-                help_text="The owner of the article, usually the creator. The owner always has both read and write access.",
+                help_text="The owner of the article, usually the creator. The owner always"
+                " has both read and write access.",
                 blank=True,
                 to=settings.AUTH_USER_MODEL,
                 verbose_name="owner",

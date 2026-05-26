@@ -23,26 +23,19 @@ User = get_user_model()
 
 
 def check_user_field(user_model):
-    return isinstance(
-        _get_field(user_model, user_model.USERNAME_FIELD), CharField
-    )
+    return isinstance(_get_field(user_model, user_model.USERNAME_FIELD), CharField)
 
 
 def check_email_field(user_model):
-    return isinstance(
-        _get_field(user_model, user_model.get_email_field_name()), EmailField
-    )
+    return isinstance(_get_field(user_model, user_model.get_email_field_name()), EmailField)
 
 
-# django parses the ModelForm (and Meta classes) on class creation, which fails with custom models without expected fields.
-# We need to check this here, because if this module can't load then system checks can't run.
+# django parses the ModelForm (and Meta classes) on class creation, which fails with custom
+# models without expected fields. We need to check this here, because if this module can't
+# load then system checks can't run.
 CustomUser = (
     User
-    if (
-        settings.ACCOUNT_HANDLING
-        and check_user_field(User)
-        and check_email_field(User)
-    )
+    if (settings.ACCOUNT_HANDLING and check_user_field(User) and check_email_field(User))
     else django.contrib.auth.models.User
 )
 
@@ -56,12 +49,10 @@ class UserCreationForm(UserCreationForm):
         # Add honeypots
         self.honeypot_fieldnames = "address", "phone"
         self.honeypot_class = "".join(
-            random.choice(string.ascii_uppercase + string.digits)
-            for __ in range(10)
+            random.choice(string.ascii_uppercase + string.digits) for __ in range(10)
         )
         self.honeypot_jsfunction = "f" + "".join(
-            random.choice(string.ascii_uppercase + string.digits)
-            for __ in range(10)
+            random.choice(string.ascii_uppercase + string.digits) for __ in range(10)
         )
 
         for fieldname in self.honeypot_fieldnames:
@@ -85,9 +76,7 @@ class UserCreationForm(UserCreationForm):
 
 
 class UserUpdateForm(forms.ModelForm):
-    password1 = forms.CharField(
-        label="New password", widget=forms.PasswordInput(), required=False
-    )
+    password1 = forms.CharField(label="New password", widget=forms.PasswordInput(), required=False)
     password2 = forms.CharField(
         label="Confirm password", widget=forms.PasswordInput(), required=False
     )

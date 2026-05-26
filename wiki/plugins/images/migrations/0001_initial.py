@@ -4,7 +4,6 @@ import wiki.plugins.images.models
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
         ("wiki", "0001_initial"),
     ]

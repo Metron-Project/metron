@@ -29,7 +29,7 @@ class AttachmentForm(forms.ModelForm):
             try:
                 models.extension_allowed(uploaded_file.name)
             except IllegalFileExtension as e:
-                raise forms.ValidationError(e)
+                raise forms.ValidationError(e) from e
         return uploaded_file
 
     def save(self, *args, **kwargs):
@@ -65,10 +65,7 @@ class AttachmentForm(forms.ModelForm):
 class AttachmentReplaceForm(AttachmentForm):
     replace = forms.BooleanField(
         label=_("Remove previous"),
-        help_text=_(
-            "Remove previous attachment revisions and their files (to "
-            "save space)?"
-        ),
+        help_text=_("Remove previous attachment revisions and their files (to save space)?"),
         required=False,
     )
 
@@ -95,9 +92,9 @@ class AttachmentArchiveForm(AttachmentForm):
                     try:
                         models.extension_allowed(zipinfo.filename)
                     except IllegalFileExtension as e:
-                        raise forms.ValidationError(e)
+                        raise forms.ValidationError(e) from e
             except zipfile.BadZipfile:
-                raise forms.ValidationError(gettext("Not a zip file"))
+                raise forms.ValidationError(gettext("Not a zip file")) from None
         else:
             return super().clean_file()
         return uploaded_file
@@ -105,9 +102,7 @@ class AttachmentArchiveForm(AttachmentForm):
     def clean(self):
         super().clean()
         if not can_moderate(self.article, self.request.user):
-            raise forms.ValidationError(
-                gettext("User not allowed to moderate this article")
-            )
+            raise forms.ValidationError(gettext("User not allowed to moderate this article"))
         return self.cleaned_data
 
     def save(self, *args, **kwargs):
@@ -132,9 +127,7 @@ class AttachmentArchiveForm(AttachmentForm):
                         attachment.articles.add(self.article)
                         attachment_revision = models.AttachmentRevision()
                         attachment_revision.file = f
-                        attachment_revision.description = self.cleaned_data[
-                            "description"
-                        ]
+                        attachment_revision.description = self.cleaned_data["description"]
                         attachment_revision.attachment = attachment
                         attachment_revision.set_from_request(self.request)
                         attachment_revision.save()

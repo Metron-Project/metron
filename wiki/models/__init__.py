@@ -2,9 +2,16 @@ from django import shortcuts, urls
 from django.urls import base
 from django.utils.functional import lazy
 
-from .article import *  # noqa
-from .pluginbase import *  # noqa
-from .urlpath import *  # noqa
+from wiki.models.article import Article, ArticleForObject, ArticleRevision, BaseRevisionMixin
+from wiki.models.pluginbase import (
+    ArticlePlugin,
+    ReusablePlugin,
+    RevisionPlugin,
+    RevisionPluginRevision,
+    SimplePlugin,
+    SimplePluginCreateError,
+)
+from wiki.models.urlpath import URLPath
 
 original_django_reverse = urls.reverse
 

@@ -1,7 +1,7 @@
 from django import forms
 from django.contrib import admin
 
-from . import models
+from wiki.plugins.images import models
 
 
 class ImageForm(forms.ModelForm):
@@ -12,14 +12,10 @@ class ImageForm(forms.ModelForm):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         if self.instance.pk:
-            revisions = models.ImageRevision.objects.filter(
-                plugin=self.instance
-            )
+            revisions = models.ImageRevision.objects.filter(plugin=self.instance)
             self.fields["current_revision"].queryset = revisions
         else:
-            self.fields[
-                "current_revision"
-            ].queryset = models.ImageRevision.objects.none()
+            self.fields["current_revision"].queryset = models.ImageRevision.objects.none()
             self.fields["current_revision"].widget = forms.HiddenInput()
 
 

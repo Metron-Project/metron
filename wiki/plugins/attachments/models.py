@@ -1,4 +1,6 @@
-import os
+import hashlib
+import random
+from pathlib import Path
 
 from django.conf import settings as django_settings
 from django.db import models
@@ -7,16 +9,13 @@ from django.utils.translation import gettext, gettext_lazy as _
 
 from wiki import managers
 from wiki.decorators import disable_signal_for_loaddata
-from wiki.models.article import BaseRevisionMixin
+from wiki.models.article import Article, BaseRevisionMixin
 from wiki.models.pluginbase import ReusablePlugin
-
-from . import settings
+from wiki.plugins.attachments import settings
 
 
 class IllegalFileExtension(Exception):
-
     """File extension on upload is not allowed"""
-
 
 
 class Attachment(ReusablePlugin):
@@ -30,7 +29,8 @@ class Attachment(ReusablePlugin):
         related_name="current_set",
         on_delete=models.CASCADE,
         help_text=_(
-            "The revision of this attachment currently in use (on all articles using the attachment)"
+            "The revision of this attachment currently in use"
+            " (on all articles using the attachment)"
         ),
     )
 
@@ -56,8 +56,6 @@ class Attachment(ReusablePlugin):
         db_table = "wiki_attachments_attachment"
 
     def __str__(self):
-        from wiki.models import Article
-
         try:
             return f"{self.article.current_revision.title}: {self.original_filename}"
         except Article.DoesNotExist:
@@ -68,13 +66,10 @@ def extension_allowed(filename):
     try:
         extension = filename.split(".")[-1]
     except IndexError:
-        # No extension
         raise IllegalFileExtension(
             gettext("No file extension found in filename. That's not okay!")
-        )
-    if extension.lower() not in map(
-        lambda x: x.lower(), settings.FILE_EXTENSIONS
-    ):
+        ) from None
+    if extension.lower() not in (x.lower() for x in settings.FILE_EXTENSIONS):
         raise IllegalFileExtension(
             gettext(
                 "The following filename is illegal: {filename:s}. Extension "
@@ -92,38 +87,24 @@ def upload_path(instance, filename):
     extension = extension_allowed(filename)
 
     # Has to match original extension filename
-    if (
-        instance.id
-        and instance.attachment
-        and instance.attachment.original_filename
-    ):
-        original_extension = instance.attachment.original_filename.split(".")[
-            -1
-        ]
+    if instance.id and instance.attachment and instance.attachment.original_filename:
+        original_extension = instance.attachment.original_filename.split(".")[-1]
         if not extension.lower() == original_extension:
             raise IllegalFileExtension(
-                "File extension has to be '%s', not '%s'."
-                % (original_extension, extension.lower())
+                f"File extension has to be '{original_extension}', not '{extension.lower()}'."
             )
     elif instance.attachment:
         instance.attachment.original_filename = filename
 
     upload_path = settings.UPLOAD_PATH
-    upload_path = upload_path.replace(
-        "%aid", str(instance.attachment.article.id)
-    )
+    upload_path = upload_path.replace("%aid", str(instance.attachment.article.id))
     if settings.UPLOAD_PATH_OBSCURIFY:
-        import hashlib
-        import random
-
-        m = hashlib.md5(
-            str(random.randint(0, 100000000000000)).encode("ascii")
-        )
-        upload_path = os.path.join(upload_path, m.hexdigest())
+        m = hashlib.md5(str(random.randint(0, 100000000000000)).encode("ascii"))
+        upload_path = str(Path(upload_path) / m.hexdigest())
 
     if settings.APPEND_EXTENSION:
         filename += ".upload"
-    return os.path.join(upload_path, filename)
+    return str(Path(upload_path) / filename)
 
 
 class AttachmentRevision(BaseRevisionMixin, models.Model):
@@ -160,14 +141,13 @@ class AttachmentRevision(BaseRevisionMixin, models.Model):
         """Used to retrieve the file size and not cause exceptions."""
         try:
             return self.file.size
-        except (ValueError, OSError):
+        except ValueError, OSError:
             return None
 
     def __str__(self):
-        return "%s: %s (r%d)" % (
-            self.attachment.article.current_revision.title,
-            self.attachment.original_filename,
-            self.revision_number,
+        return (
+            f"{self.attachment.article.current_revision.title}: "
+            f"{self.attachment.original_filename} (r{self.revision_number})"
         )
 
 
@@ -184,25 +164,17 @@ def on_revision_delete(instance, *args, **kwargs):
 
     # Check for empty folders in the path. Delete the first two.
     max_depth = 1
-    if len(path) != 0:
-        if len(path[-1]) == 32:
-            # Path was (most likely) obscurified so we should look 2 levels down
-            max_depth = 2
+    if len(path) != 0 and len(path[-1]) == 32:
+        # Path was (most likely) obscurified so we should look 2 levels down
+        max_depth = 2
 
     for depth in range(max_depth):
         delete_path = "/".join(path[:-depth] if depth > 0 else path)
         try:
-            if (
-                len(
-                    os.listdir(
-                        os.path.join(django_settings.MEDIA_ROOT, delete_path)
-                    )
-                )
-                == 0
-            ):
-                os.rmdir(delete_path)
+            if not any((Path(django_settings.MEDIA_ROOT) / delete_path).iterdir()):
+                Path(delete_path).rmdir()
         except OSError:
-            # Raised by os.listdir if directory is missing
+            # Raised by iterdir if directory is missing
             pass
 
 
@@ -221,13 +193,11 @@ def on_attachment_revision_pre_save(**kwargs):
 
     if not instance.revision_number:
         try:
-            previous_revision = (
-                instance.attachment.attachmentrevision_set.latest()
-            )
+            previous_revision = instance.attachment.attachmentrevision_set.latest()
             instance.revision_number = previous_revision.revision_number + 1
         # NB! The above should not raise the below exception, but somehow
         # it does.
-        except (AttachmentRevision.DoesNotExist, Attachment.DoesNotExist):
+        except AttachmentRevision.DoesNotExist, Attachment.DoesNotExist:
             instance.revision_number = 1
 
 

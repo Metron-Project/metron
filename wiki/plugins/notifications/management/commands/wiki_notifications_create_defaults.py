@@ -1,10 +1,11 @@
+from django.conf import settings
 from django.contrib.auth import get_user_model
 from django.contrib.contenttypes.models import ContentType
 from django.core.management.base import BaseCommand
 from django.utils import translation
+
 from django_nyt.models import Settings
 from django_nyt.utils import subscribe
-
 from wiki.models import Article
 from wiki.plugins.notifications import models
 from wiki.plugins.notifications.settings import ARTICLE_EDIT
@@ -16,17 +17,13 @@ class Command(BaseCommand):
     help = "Import and parse messages directly from a CSV file."
 
     def handle(self, *args, **options):
-        from django.conf import settings
-
         with translation.override(language=settings.LANGUAGE_CODE):
             # User: Settings
             settings_map = {}
 
             def subscribe_to_article(article, user):
                 if user not in settings_map:
-                    settings_map[user], __ = Settings.objects.get_or_create(
-                        user=user
-                    )
+                    settings_map[user], __ = Settings.objects.get_or_create(user=user)
 
                 return subscribe(
                     settings_map[user],

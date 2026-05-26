@@ -12,35 +12,27 @@ class NotificationsConfig(AppConfig):
         """
         NOTIFICATIONS FOR PLUGINS
         """
-        from django_nyt.utils import notify
-
-        from wiki.core.plugins import registry
-        from wiki.decorators import disable_signal_for_loaddata
-
-        from . import models
+        from django_nyt.utils import notify  # noqa: PLC0415
+        from wiki.core.plugins import registry  # noqa: PLC0415
+        from wiki.decorators import disable_signal_for_loaddata  # noqa: PLC0415
+        from wiki.plugins.notifications import models  # noqa: PLC0415
 
         def get_receiver(notification_dict):
             @disable_signal_for_loaddata
             def plugin_notification(instance, **kwargs):
                 if notification_dict.get("ignore", lambda x: False)(instance):
                     return
-                if kwargs.get("created", False) == notification_dict.get(
-                    "created", True
-                ):
+                if kwargs.get("created", False) == notification_dict.get("created", True):
                     if "get_url" in notification_dict:
                         url = notification_dict["get_url"](instance)
                     else:
-                        url = models.default_url(
-                            notification_dict["get_article"](instance)
-                        )
+                        url = models.default_url(notification_dict["get_article"](instance))
 
                     message = notification_dict["message"](instance)
                     notify(
                         message,
                         notification_dict["key"],
-                        target_object=notification_dict["get_article"](
-                            instance
-                        ),
+                        target_object=notification_dict["get_article"](instance),
                         url=url,
                     )
 

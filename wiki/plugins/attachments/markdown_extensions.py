@@ -10,13 +10,14 @@ from wiki.core.permissions import can_read
 from wiki.plugins.attachments import models
 
 ATTACHMENT_RE = re.compile(
-    r"(?P<before>.*)\[( *((attachment\:(?P<id>[0-9]+))|(title\:\"(?P<title>[^\"]+)\")|(?P<size>size)))+\](?P<after>.*)",
+    r"(?P<before>.*)"
+    r"\[( *((attachment\:(?P<id>[0-9]+))|(title\:\"(?P<title>[^\"]+)\")|(?P<size>size)))+\]"
+    r"(?P<after>.*)",
     re.IGNORECASE,
 )
 
 
 class AttachmentExtension(markdown.Extension):
-
     """Abbreviation Extension for Python-Markdown."""
 
     def extendMarkdown(self, md):
@@ -31,7 +32,6 @@ class AttachmentExtension(markdown.Extension):
 
 
 class AttachmentPreprocessor(markdown.preprocessors.Preprocessor):
-
     """django-wiki attachment preprocessor - parse text for [attachment:id] references."""
 
     def run(self, lines):
@@ -86,14 +86,12 @@ class AttachmentPreprocessor(markdown.preprocessors.Preprocessor):
                         "attachment_can_read": attachment_can_read,
                     },
                 )
-                line = self.md.htmlStash.store(html)
+                result = self.md.htmlStash.store(html)
             except models.Attachment.DoesNotExist:
                 html = (
                     """<span class="attachment attachment-deleted">Attachment with ID """
                     f"""#{attachment_id} is deleted.</span>"""
                 )
-                line = line.replace(
-                    "[" + m.group(2) + "]", self.md.htmlStash.store(html)
-                )
-            new_text.append(before + line + after)
+                result = line.replace("[" + m.group(2) + "]", self.md.htmlStash.store(html))
+            new_text.append(before + result + after)
         return new_text

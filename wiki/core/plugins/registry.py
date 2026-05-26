@@ -9,17 +9,17 @@ _html_whitelist = []
 _html_attributes = {}
 
 
-def register(PluginClass):
+def register(plugin_class):
     """
     Register a plugin class. This function will call back your plugin's
     constructor.
     """
-    if PluginClass in _cache:
+    if plugin_class in _cache:
         raise Exception("Plugin class already registered")
-    plugin = PluginClass()
-    _cache[PluginClass] = plugin
+    plugin = plugin_class()
+    _cache[plugin_class] = plugin
 
-    settings_form = getattr(PluginClass, "settings_form", None)
+    settings_form = getattr(plugin_class, "settings_form", None)
     if settings_form:
         if isinstance(settings_form, str):
             klassname = settings_form.split(".")[-1]
@@ -28,19 +28,17 @@ def register(PluginClass):
             settings_form = getattr(form_module, klassname)
         _settings_forms.append(settings_form)
 
-    if getattr(PluginClass, "article_tab", None):
+    if getattr(plugin_class, "article_tab", None):
         _article_tabs.append(plugin)
 
-    if getattr(PluginClass, "sidebar", None):
+    if getattr(plugin_class, "sidebar", None):
         _sidebar.append(plugin)
 
-    _markdown_extensions.extend(
-        getattr(PluginClass, "markdown_extensions", [])
-    )
+    _markdown_extensions.extend(getattr(plugin_class, "markdown_extensions", []))
 
-    _html_whitelist.extend(getattr(PluginClass, "html_whitelist", []))
+    _html_whitelist.extend(getattr(plugin_class, "html_whitelist", []))
 
-    _html_attributes.update(getattr(PluginClass, "html_attributes", {}))
+    _html_attributes.update(getattr(plugin_class, "html_attributes", {}))
 
 
 def get_plugins():

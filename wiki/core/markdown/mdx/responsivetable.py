@@ -1,4 +1,4 @@
-from xml.etree import ElementTree as etree
+from xml.etree import ElementTree as ET
 
 import markdown
 from markdown.treeprocessors import Treeprocessor
@@ -35,7 +35,7 @@ class ResponsiveTableTree(Treeprocessor):
 
     def create_table_element(self):
         """Create table element with text and tail"""
-        element = etree.Element("table")
+        element = ET.Element("table")
         element.text = "\n"
         element.tail = "\n"
         return element

@@ -1,6 +1,6 @@
 import logging
 import re
-from xml.etree import ElementTree as etree
+from xml.etree import ElementTree as ET
 
 from django.urls import reverse
 from markdown import Extension
@@ -8,9 +8,8 @@ from markdown.blockprocessors import HashHeaderProcessor, SetextHeaderProcessor
 from markdown.treeprocessors import Treeprocessor
 
 from wiki.core.markdown import add_to_registry
+from wiki.plugins.editsection import settings
 from wiki.plugins.macros.mdx.toc import wiki_slugify
-
-from . import settings
 
 logger = logging.getLogger("MARKDOWN")
 
@@ -34,7 +33,7 @@ class CustomHashHeaderProcessor(HashHeaderProcessor):
                 # recursively parse this lines as a block.
                 self.parser.parseBlocks(parent, [before])
             # Create header using named groups from RE
-            h = etree.SubElement(parent, "h%d" % len(m.group("level")))
+            h = ET.SubElement(parent, f"h{len(m.group('level'))}")
             h.text = m.group("header").strip()
             h.attrib["data-block-source"] = m.group().strip()
             if after:
@@ -42,7 +41,7 @@ class CustomHashHeaderProcessor(HashHeaderProcessor):
                 blocks.insert(0, after)
         else:  # pragma: no cover
             # This should never happen, but just in case...
-            logger.warning("We've got a problem header: %r" % block)
+            logger.warning("We've got a problem header: %r", block)
 
 
 class CustomSetextHeaderProcessor(SetextHeaderProcessor):
@@ -55,11 +54,8 @@ class CustomSetextHeaderProcessor(SetextHeaderProcessor):
     def run(self, parent, blocks):
         lines = blocks.pop(0).split("\n")
         # Determine level. ``=`` is 1 and ``-`` is 2.
-        if lines[1].startswith("="):
-            level = 1
-        else:
-            level = 2
-        h = etree.SubElement(parent, "h%d" % level)
+        level = 1 if lines[1].startswith("=") else 2
+        h = ET.SubElement(parent, f"h{level}")
         h.text = lines[0].strip()
         h.attrib["data-block-source"] = "\r\n".join(lines)
         if len(lines) > 2:
@@ -79,9 +75,7 @@ class EditSectionExtension(Extension):
 
     def extendMarkdown(self, md):
         # replace HashHeader/SetextHeader processors with our custom variants
-        md.parser.blockprocessors.register(
-            CustomHashHeaderProcessor(md.parser), "hashheader", 70
-        )
+        md.parser.blockprocessors.register(CustomHashHeaderProcessor(md.parser), "hashheader", 70)
         md.parser.blockprocessors.register(
             CustomSetextHeaderProcessor(md.parser), "setextheader", 60
         )
@@ -144,16 +138,14 @@ class EditSectionProcessor(Treeprocessor):
                 slug = self.ensure_unique_id(child)
 
                 # Insert link to allow editing this section
-                link = etree.SubElement(child, "a")
+                link = ET.SubElement(child, "a")
                 link.text = settings.LINK_TEXT
                 link.attrib["class"] = "article-edit-title-link"
 
                 # Build the URL
                 url_kwargs = self.md.article.get_url_kwargs()
                 url_kwargs["header"] = child.attrib["id"]
-                link.attrib["href"] = reverse(
-                    "wiki:editsection", kwargs=url_kwargs
-                )
+                link.attrib["href"] = reverse("wiki:editsection", kwargs=url_kwargs)
 
                 headers.append(
                     {
@@ -169,9 +161,7 @@ class EditSectionProcessor(Treeprocessor):
         self.level = self.config.get("level")[0]
         self.article = self.md.article
         self.source = self.md.source
-        self.HEADER_RE = re.compile(
-            "^h([" + "".join(map(str, range(1, self.level + 1))) + "])"
-        )
+        self.HEADER_RE = re.compile("^h([" + "".join(map(str, range(1, self.level + 1))) + "])")
         headers = self.add_links(root)
         # store found headers at article, for use in edit view
         self.article._found_headers = headers

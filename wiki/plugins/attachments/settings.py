@@ -28,17 +28,13 @@ ANONYMOUS = getattr(
 #: You should NEVER enable directory indexing in ``MEDIA_ROOT/UPLOAD_PATH``!
 #: Actually, you can completely disable serving it, if you want. Files are
 #: sent to the user through a Django view that reads and streams a file.
-UPLOAD_PATH = getattr(
-    django_settings, "WIKI_ATTACHMENTS_PATH", "wiki/attachments/%aid/"
-)
+UPLOAD_PATH = getattr(django_settings, "WIKI_ATTACHMENTS_PATH", "wiki/attachments/%aid/")
 
 #: Should the upload path be obscurified? If so, a random hash will be
 #: added to the path such that someone can not guess the location of files
 #: (if you have restricted permissions and the files are still located
 #: within the web server's file system).
-UPLOAD_PATH_OBSCURIFY = getattr(
-    django_settings, "WIKI_ATTACHMENTS_PATH_OBSCURIFY", True
-)
+UPLOAD_PATH_OBSCURIFY = getattr(django_settings, "WIKI_ATTACHMENTS_PATH_OBSCURIFY", True)
 
 #: Allowed extensions for attachments, empty to disallow uploads completely.
 #: If ``WIKI_ATTACHMENTS_APPEND_EXTENSION`` files are saved with an appended
@@ -64,9 +60,7 @@ STORAGE_BACKEND = getattr(
 
 #: Store files always with an appended .upload extension to be sure that
 #: something nasty does not get executed on the server. SAFETY FIRST!
-APPEND_EXTENSION = getattr(
-    django_settings, "WIKI_ATTACHMENTS_APPEND_EXTENSION", True
-)
+APPEND_EXTENSION = getattr(django_settings, "WIKI_ATTACHMENTS_APPEND_EXTENSION", True)
 
 #: Important for e.g. S3 backends: If your storage backend does not have a .path
 #: attribute for the file, but only a .url attribute, you should use False.

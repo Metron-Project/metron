@@ -5,7 +5,7 @@ from django.utils.decorators import method_decorator
 from django.utils.translation import gettext as _
 from django.views.generic import FormView
 
-from . import forms, models
+from wiki.plugins.notifications import forms, models
 
 
 class NotificationSettings(FormView):
@@ -21,15 +21,10 @@ class NotificationSettings(FormView):
             settings = form.save()
             messages.info(
                 self.request,
-                _(
-                    "You will receive notifications %(interval)s for "
-                    "%(articles)d articles"
-                )
+                _("You will receive notifications %(interval)s for %(articles)d articles")
                 % {
                     "interval": settings.get_interval_display(),
-                    "articles": self.get_article_subscriptions(
-                        form.instance
-                    ).count(),
+                    "articles": self.get_article_subscriptions(form.instance).count(),
                 },
             )
         return redirect("wiki:notification_settings")
@@ -55,7 +50,5 @@ class NotificationSettings(FormView):
         context["formset"] = context["form"]
         for form in context["formset"]:
             if form.instance:
-                form.instance.articlesubscriptions = (
-                    self.get_article_subscriptions(form.instance)
-                )
+                form.instance.articlesubscriptions = self.get_article_subscriptions(form.instance)
         return context

@@ -1,6 +1,6 @@
 import mimetypes
-import os
 from datetime import datetime
+from pathlib import Path
 
 from django.http import HttpResponse
 from django.utils import dateformat
@@ -11,15 +11,15 @@ from wiki.conf import settings
 
 
 def django_sendfile_response(request, filepath):
-    from sendfile import sendfile
+    from sendfile import sendfile  # noqa: PLC0415
 
     return sendfile(request, filepath)
 
 
 def send_file(request, filepath, last_modified=None, filename=None):
-    fullpath = filepath
+    fullpath = Path(filepath)
     # Respect the If-Modified-Since header.
-    statobj = os.stat(fullpath)
+    statobj = fullpath.stat()
     if filename:
         mimetype, encoding = mimetypes.guess_type(filename)
     else:
@@ -30,9 +30,7 @@ def send_file(request, filepath, last_modified=None, filename=None):
     if settings.USE_SENDFILE:
         response = django_sendfile_response(request, filepath)
     else:
-        response = HttpResponse(
-            open(fullpath, "rb").read(), content_type=mimetype
-        )
+        response = HttpResponse(fullpath.open("rb").read(), content_type=mimetype)
 
     if not last_modified:
         response["Last-Modified"] = http_date(statobj.st_mtime)
@@ -49,12 +47,8 @@ def send_file(request, filepath, last_modified=None, filename=None):
     if filename:
         filename_escaped = filepath_to_uri(filename)
         if "pdf" in mimetype.lower():
-            response["Content-Disposition"] = (
-                "inline; filename=%s" % filename_escaped
-            )
+            response["Content-Disposition"] = f"inline; filename={filename_escaped}"
         else:
-            response["Content-Disposition"] = (
-                "attachment; filename=%s" % filename_escaped
-            )
+            response["Content-Disposition"] = f"attachment; filename={filename_escaped}"
 
     return response

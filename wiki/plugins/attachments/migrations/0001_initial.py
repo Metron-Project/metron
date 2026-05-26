@@ -7,7 +7,6 @@ import wiki.plugins.attachments.models
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
         ("wiki", "0001_initial"),
         migrations.swappable_dependency(settings.AUTH_USER_MODEL),
@@ -83,9 +82,7 @@ class Migration(migrations.Migration):
                 ("description", models.TextField(blank=True)),
                 (
                     "attachment",
-                    models.ForeignKey(
-                        to="wiki_attachments.Attachment", on_delete=models.CASCADE
-                    ),
+                    models.ForeignKey(to="wiki_attachments.Attachment", on_delete=models.CASCADE),
                 ),
                 (
                     "previous_revision",
@@ -123,7 +120,8 @@ class Migration(migrations.Migration):
                 blank=True,
                 verbose_name="current revision",
                 related_name="current_set",
-                help_text="The revision of this attachment currently in use (on all articles using the attachment)",
+                help_text="The revision of this attachment currently in use"
+                " (on all articles using the attachment)",
                 null=True,
                 on_delete=models.CASCADE,
             ),

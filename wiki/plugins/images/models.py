@@ -1,4 +1,5 @@
-import os.path
+import uuid
+from pathlib import Path
 
 from django.conf import settings as django_settings
 from django.db import models
@@ -6,22 +7,17 @@ from django.db.models import signals
 from django.utils.translation import gettext, gettext_lazy as _
 
 from wiki.models.pluginbase import RevisionPlugin, RevisionPluginRevision
-
-from . import settings
+from wiki.plugins.images import settings
 
 
 def upload_path(instance, filename):
     # Has to match original extension filename
 
     upload_path = settings.IMAGE_PATH
-    upload_path = upload_path.replace(
-        "%aid", str(instance.plugin.image.article.id)
-    )
+    upload_path = upload_path.replace("%aid", str(instance.plugin.image.article.id))
     if settings.IMAGE_PATH_OBSCURIFY:
-        import uuid
-
-        upload_path = os.path.join(upload_path, uuid.uuid4().hex)
-    return os.path.join(upload_path, filename)
+        upload_path = str(Path(upload_path) / uuid.uuid4().hex)
+    return str(Path(upload_path) / filename)
 
 
 class Image(RevisionPlugin):
@@ -43,10 +39,7 @@ class Image(RevisionPlugin):
 
     def __str__(self):
         if self.current_revision:
-            return (
-                gettext("Image: %s")
-                % self.current_revision.imagerevision.get_filename()
-            )
+            return gettext("Image: %s") % self.current_revision.imagerevision.get_filename()
         return gettext("Current revision not set!!")
 
 
@@ -76,7 +69,7 @@ class ImageRevision(RevisionPluginRevision):
         """Used to retrieve the file size and not cause exceptions."""
         try:
             return self.image.size
-        except (ValueError, OSError):
+        except ValueError, OSError:
             return None
 
     def inherit_predecessor(self, image, skip_image_file=False):
@@ -114,13 +107,13 @@ class ImageRevision(RevisionPluginRevision):
         return gettext("Current revision not set!!")
 
 
-def on_image_revision_delete(instance, *args, **kwargs):  # noqa: max-complexity=11
+def on_image_revision_delete(instance, *args, **kwargs):
     if not instance.image:
         return
 
     path = None
     try:
-        path = os.path.dirname(instance.image.path)
+        path = str(Path(instance.image.path).parent)
     except NotImplementedError:
         # This backend storage doesn't implement 'path' so there is no path to delete
         pass
@@ -140,22 +133,16 @@ def on_image_revision_delete(instance, *args, **kwargs):  # noqa: max-complexity
     # Clean up empty directories
 
     # Check for empty folders in the path. Delete the first two.
-    if len(path[-1]) == 32:
-        # Path was (most likely) obscurified so we should look 2 levels down
-        max_depth = 2
-    else:
-        max_depth = 1
+    max_depth = 2 if len(path[-1]) == 32 else 1
     for depth in range(max_depth):
         delete_path = "/".join(path[:-depth] if depth > 0 else path)
         try:
-            dir_list = os.listdir(
-                os.path.join(django_settings.MEDIA_ROOT, delete_path)
-            )
+            dir_list = list((Path(django_settings.MEDIA_ROOT) / delete_path).iterdir())
         except OSError:
             # Path does not exist, so let's not try to remove it...
             dir_list = None
         if dir_list is not None and len(dir_list) == 0:
-            os.rmdir(delete_path)
+            Path(delete_path).rmdir()
 
 
 signals.pre_delete.connect(on_image_revision_delete, ImageRevision)

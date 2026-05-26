@@ -38,13 +38,9 @@ STORAGE_BACKEND = getattr(
 #: to the path such that someone can not guess the location of files (if you
 #: have restricted permissions and the files are still located within the
 #: web server's file system).
-IMAGE_PATH_OBSCURIFY = getattr(
-    django_settings, "WIKI_IMAGES_PATH_OBSCURIFY", True
-)
+IMAGE_PATH_OBSCURIFY = getattr(django_settings, "WIKI_IMAGES_PATH_OBSCURIFY", True)
 
 #: Allow anonymous users upload access (not nice on an open network).
 #: ``WIKI_IMAGES_ANONYMOUS`` can override this, otherwise the default
 #: in ``wiki.conf.settings`` is used.
-ANONYMOUS = getattr(
-    django_settings, "WIKI_IMAGES_ANONYMOUS", wiki_settings.ANONYMOUS_UPLOAD
-)
+ANONYMOUS = getattr(django_settings, "WIKI_IMAGES_ANONYMOUS", wiki_settings.ANONYMOUS_UPLOAD)

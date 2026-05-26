@@ -43,9 +43,7 @@ def wiki_slugify(*args, **kwargs):
 
 
 class WikiTreeProcessorClass(TocTreeprocessor):
-    CACHED_KWARGS = (
-        dict()
-    )  # Used to cache arguments parsed by the MacroPattern
+    CACHED_KWARGS = {}  # Used to cache arguments parsed by the MacroPattern
     # Used to map the keyword arguments to the Class Objects attribute name.
     TOC_CONFIG_VALUES = {
         "title": "title",
@@ -67,13 +65,13 @@ class WikiTreeProcessorClass(TocTreeprocessor):
         if self.title:
             self.title = str(self.title)
 
-        tmp_kwargs = dict()
+        tmp_kwargs = {}
 
         def _helper_swap_values(key, value):
             # Saves the existing attribute value to a dictionary
-            tmp_kwargs[
-                WikiTreeProcessorClass.TOC_CONFIG_VALUES[key]
-            ] = getattr(self, WikiTreeProcessorClass.TOC_CONFIG_VALUES[key])
+            tmp_kwargs[WikiTreeProcessorClass.TOC_CONFIG_VALUES[key]] = getattr(
+                self, WikiTreeProcessorClass.TOC_CONFIG_VALUES[key]
+            )
             # This sets the value to a TocTreeprocessor attribute of its corresponding name
             setattr(
                 self,
@@ -85,7 +83,7 @@ class WikiTreeProcessorClass(TocTreeprocessor):
             )
 
         try:
-            # Iterator through CACHED_KWARGS to set attributes values and save defaults attribute values to tmp_kwargs
+            # Iterate through CACHED_KWARGS to set attribute values and save defaults to tmp_kwargs
             for k, v in WikiTreeProcessorClass.CACHED_KWARGS.items():
                 if (
                     k in WikiTreeProcessorClass.TOC_CONFIG_VALUES
@@ -96,9 +94,7 @@ class WikiTreeProcessorClass(TocTreeprocessor):
                         for (
                             tock,
                             tocv,
-                        ) in WikiTreeProcessorClass.TOC_CONFIG_VALUES[k](
-                            v
-                        ).items():
+                        ) in WikiTreeProcessorClass.TOC_CONFIG_VALUES[k](v).items():
                             _helper_swap_values(tock, tocv)
                     else:
                         _helper_swap_values(k, v)
@@ -109,7 +105,7 @@ class WikiTreeProcessorClass(TocTreeprocessor):
                 if hasattr(self, k):
                     setattr(self, k, v)
             # Unset cached kwargs
-            WikiTreeProcessorClass.CACHED_KWARGS = dict()
+            WikiTreeProcessorClass.CACHED_KWARGS = {}
 
 
 class WikiTocExtension(TocExtension):

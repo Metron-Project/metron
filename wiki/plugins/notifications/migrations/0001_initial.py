@@ -2,7 +2,6 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
         ("django_nyt", "0006_auto_20141229_1630"),
         ("wiki", "0001_initial"),
@@ -25,9 +24,7 @@ class Migration(migrations.Migration):
                 ),
                 (
                     "subscription",
-                    models.OneToOneField(
-                        to="django_nyt.Subscription", on_delete=models.CASCADE
-                    ),
+                    models.OneToOneField(to="django_nyt.Subscription", on_delete=models.CASCADE),
                 ),
             ],
             options={},

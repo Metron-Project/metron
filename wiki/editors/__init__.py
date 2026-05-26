@@ -6,15 +6,15 @@ _EditorClass = None
 _editor = None
 
 
-def getEditorClass():
+def get_editor_class():
     global _EditorClass
     if not _EditorClass:
         _EditorClass = get_callable(settings.EDITOR)
     return _EditorClass
 
 
-def getEditor():
+def get_editor():
     global _editor
     if not _editor:
-        _editor = getEditorClass()()
+        _editor = get_editor_class()()
     return _editor

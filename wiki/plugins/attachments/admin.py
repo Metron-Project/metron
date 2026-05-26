@@ -1,6 +1,6 @@
 from django.contrib import admin
 
-from . import models
+from wiki.plugins.attachments import models
 
 
 class AttachmentRevisionAdmin(admin.TabularInline):

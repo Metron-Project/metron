@@ -60,7 +60,7 @@ class LinkTreeprocessor(Treeprocessor):
             return self.external_class
 
         try:
-            article, urlpath = which_article(**target.kwargs)
+            _article, _urlpath = which_article(**target.kwargs)
         except (
             wiki.core.exceptions.NoRootURL,
             URLPath.DoesNotExist,

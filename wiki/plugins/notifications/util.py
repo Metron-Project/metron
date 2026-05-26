@@ -7,9 +7,9 @@ def get_title(article):
 
 
 def truncate_title(title):
-    """Truncate a title (of an article, file, image etc) to be displayed in notifications messages."""
+    """Truncate a title (of an article, file, image etc) for display in notification messages."""
     if not title:
         return _("(none)")
     if len(title) > 25:
-        return "%s..." % title[:22]
+        return f"{title[:22]}..."
     return title
