@@ -1,6 +1,7 @@
 """
 These are the available settings, accessed through ``django_nyt.conf.app_settings``.
-All attributes prefixed ``NYT_*`` can be overridden from your Django project's settings module by defining a setting with the same name.
+All attributes prefixed ``NYT_*`` can be overridden from your Django project's
+settings module by defining a setting with the same name.
 
 For instance, to enable the admin, add the following to your project settings:
 
@@ -11,8 +12,7 @@ For instance, to enable the admin, add the following to your project settings:
 from __future__ import annotations
 
 from collections import OrderedDict
-from dataclasses import dataclass
-from dataclasses import field
+from dataclasses import dataclass, field
 from typing import Any
 
 from django.conf import settings as django_settings
@@ -33,7 +33,8 @@ class AppSettings:
     """Access this instance as ``django_nyt.conf.app_settings``."""
 
     NYT_DB_TABLE_PREFIX: str = "nyt"
-    """The table prefix for tables in the database. Do not change this unless you know what you are doing."""
+    """The table prefix for tables in the database.
+    Do not change this unless you know what you are doing."""
 
     NYT_ENABLE_ADMIN: bool = False
     """Enable django-admin registration for django-nyt's ModelAdmin classes."""
@@ -55,19 +56,22 @@ class AppSettings:
     NYT_EMAIL_TEMPLATE_DEFAULT: str = "notifications/emails/default.txt"
     """Default template used for rendering email contents.
     Should contain a valid template name.
-    If a lookup in ``NYT_EMAIL_TEMPLATE_NAMES`` doesn't return a result, this fallback is used."""
+    If a lookup in ``NYT_EMAIL_TEMPLATE_NAMES`` doesn't return a result,
+    this fallback is used."""
 
     NYT_EMAIL_SUBJECT_TEMPLATE_DEFAULT: str = "notifications/emails/default_subject.txt"
     """Default template used for rendering the email subject.
     Should contain a valid template name.
-    If a lookup in ``NYT_EMAIL_SUBJECT_TEMPLATE_NAMES`` doesn't return a result, this fallback is used."""
+    If a lookup in ``NYT_EMAIL_SUBJECT_TEMPLATE_NAMES`` doesn't return a result,
+    this fallback is used."""
 
     NYT_EMAIL_TEMPLATE_NAMES: dict = field(default_factory=OrderedDict)
-    """Default dictionary, mapping notification keys to template names. Can be overwritten by database values.
+    """Default dictionary, mapping notification keys to template names.
+    Can be overwritten by database values.
     Keys can have a glob pattern, like ``USER_*`` or ``user/*``.
 
-    When notification emails are generated,
-    they are grouped by their templates such that notifications sharing the same template can be sent in a combined email.
+    When notification emails are generated, they are grouped by their templates
+    such that notifications sharing the same template can be sent in a combined email.
 
     Example:
 
@@ -82,12 +86,13 @@ class AppSettings:
     """
 
     NYT_EMAIL_SUBJECT_TEMPLATE_NAMES: dict = field(default_factory=OrderedDict)
-    """Default dictionary, mapping notification keys to template names. The templates are used to generate a single-line email subject.
+    """Default dictionary, mapping notification keys to template names.
+    The templates are used to generate a single-line email subject.
     Can be overwritten by database values.
     Keys can have a glob pattern, like ``USER_*`` or ``user/*``.
 
-    When notification emails are generated,
-    they are grouped by their templates such that notifications sharing the same template can be sent in a combined email.
+    When notification emails are generated, they are grouped by their templates
+    such that notifications sharing the same template can be sent in a combined email.
 
     Example:
 
@@ -112,7 +117,8 @@ class AppSettings:
     """Default selection for new subscriptions"""
 
     NYT_USER_MODEL: str = getattr(django_settings, "AUTH_USER_MODEL", "auth.User")
-    """The swappable user model of Django Nyt. The default is to use the contents of ``AUTH_USER_MODEL``."""
+    """The swappable user model of Django Nyt.
+    The default is to use the contents of ``AUTH_USER_MODEL``."""
 
     ############
     # CHANNELS #
@@ -129,17 +135,18 @@ class AppSettings:
     # is a new notification
     NYT_NOTIFICATION_CHANNEL: str = "nyt_all-{notification_key:s}"
 
-    def __getattribute__(self, __name: str) -> Any:
+    def __getattribute__(self, name: str, /) -> Any:
         """
         Check if a Django project settings should override the app default.
 
-        In order to avoid returning any random properties of the django settings, we inspect the prefix firstly.
+        In order to avoid returning any random properties of the django settings,
+        we inspect the prefix firstly.
         """
 
-        if __name.startswith(settings_prefix) and hasattr(django_settings, __name):
-            return getattr(django_settings, __name)
+        if name.startswith(settings_prefix) and hasattr(django_settings, name):
+            return getattr(django_settings, name)
 
-        return super().__getattribute__(__name)
+        return super().__getattribute__(name)
 
 
 app_settings = AppSettings()

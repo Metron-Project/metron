@@ -1,11 +1,10 @@
 import logging
 
 from channels import Group
-from channels.auth import channel_session_user
-from channels.auth import channel_session_user_from_http
+from channels.auth import channel_session_user, channel_session_user_from_http
 
-from . import models
-from .conf import app_settings
+from django_nyt import models
+from django_nyt.conf import app_settings
 
 logger = logging.getLogger(__name__)
 
@@ -16,8 +15,7 @@ def get_subscriptions(message):
     """
     if message.user.is_authenticated:
         return models.Subscription.objects.filter(settings__user=message.user)
-    else:
-        return models.Subscription.objects.none()
+    return models.Subscription.objects.none()
 
 
 @channel_session_user_from_http
@@ -25,7 +23,7 @@ def ws_connect(message):
     """
     Connected to websocket.connect
     """
-    logger.debug("Adding new connection for user {}".format(message.user))
+    logger.debug("Adding new connection for user %s", message.user)
     message.reply_channel.send({"accept": True})
 
     for subscription in get_subscriptions(message):
@@ -41,7 +39,7 @@ def ws_disconnect(message):
     """
     Connected to websocket.disconnect
     """
-    logger.debug("Removing connection for user {} (disconnect)".format(message.user))
+    logger.debug("Removing connection for user %s (disconnect)", message.user)
     for subscription in get_subscriptions(message):
         Group(
             app_settings.NOTIFICATION_CHANNEL.format(

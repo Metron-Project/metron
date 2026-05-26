@@ -2,8 +2,8 @@ import logging
 
 from channels import Group
 
-from . import models
-from .conf import app_settings
+from django_nyt import models
+from django_nyt.conf import app_settings
 
 logger = logging.getLogger(__name__)
 

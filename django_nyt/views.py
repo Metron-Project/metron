@@ -1,12 +1,10 @@
 from django.contrib.auth.decorators import login_required
 from django.db.models import Q
-from django.shortcuts import get_object_or_404
-from django.shortcuts import redirect
+from django.shortcuts import get_object_or_404, redirect
 from django.utils.translation import gettext as _
 
 from django_nyt import models
-from django_nyt.decorators import json_view
-from django_nyt.decorators import login_required_ajax
+from django_nyt.decorators import json_view, login_required_ajax
 
 
 @login_required_ajax
@@ -51,7 +49,7 @@ def get_notifications(request, latest_id=None, is_viewed=False, max_results=10):
         "subscription", "subscription__notification_type"
     )
 
-    from django.contrib.humanize.templatetags.humanize import naturaltime
+    from django.contrib.humanize.templatetags.humanize import naturaltime  # noqa: PLC0415
 
     return {
         "success": True,

@@ -68,11 +68,11 @@ class TestUnsubscribe:
     def test_raises_with_both_user_and_settings(
         self, subscription, nyt_user, nyt_settings
     ):
-        with pytest.raises(AssertionError):
+        with pytest.raises(ValueError):
             utils.unsubscribe("test/event", user=nyt_user, settings=nyt_settings)
 
     def test_raises_with_neither_user_nor_settings(self, subscription):
-        with pytest.raises(AssertionError):
+        with pytest.raises(ValueError):
             utils.unsubscribe("test/event")
 
     def test_only_removes_matching_subscription(self, nyt_settings, create_user):

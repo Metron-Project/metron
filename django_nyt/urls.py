@@ -1,7 +1,6 @@
-from django.urls import include
-from django.urls import re_path as url
+from django.urls import include, re_path as url
 
-from . import views
+from django_nyt import views
 
 app_name = "nyt"
 
@@ -24,11 +23,11 @@ def get_pattern(app_name=app_name, namespace="nyt"):
     """Every url resolution takes place as "nyt:view_name".
     https://docs.djangoproject.com/en/dev/topics/http/urls/#topics-http-reversing-url-namespaces
     """
-    import warnings
+    import warnings  # noqa: PLC0415
 
     warnings.warn(
         "django_nyt.urls.get_pattern is deprecated and will be removed in next version,"
         " just use include('django_nyt.urls')",
-        DeprecationWarning,
+        DeprecationWarning, stacklevel=2,
     )
     return include("django_nyt.urls")

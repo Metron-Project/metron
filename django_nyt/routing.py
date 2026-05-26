@@ -1,6 +1,6 @@
 from channels.routing import route
 
-from . import consumers
+from django_nyt import consumers
 
 channel_routing = [
     route("websocket.connect", consumers.ws_connect, path=r"^/nyt/?$"),

@@ -41,8 +41,7 @@ def login_required_ajax(f):
                     request, status=403
                 )
             return f(request, *args, **kwargs)
-        else:
-            return login_required(f)(request, *args, **kwargs)
+        return login_required(f)(request, *args, **kwargs)
 
     return wrapper
 

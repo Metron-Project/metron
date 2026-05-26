@@ -4,8 +4,7 @@ from django.contrib.contenttypes.models import ContentType
 from django.core.exceptions import ValidationError
 from django.db import models
 from django.db.models import Q
-from django.db.models.signals import post_delete
-from django.db.models.signals import post_save
+from django.db.models.signals import post_delete, post_save
 from django.dispatch import receiver
 from django.utils.translation import gettext_lazy as _
 
@@ -16,7 +15,8 @@ _notification_type_cache = {}
 
 def _glob_matches_path(glob_pattern, path):
     """
-    Matches a glob pattern with a string. This is apparently not something that's available in Python's stdlib.
+    Matches a glob pattern with a string. This is apparently not something
+    that's available in Python's stdlib.
 
     Examples::
 
@@ -26,7 +26,7 @@ def _glob_matches_path(glob_pattern, path):
     return bool(re.compile(_glob_to_re(glob_pattern)).match(path))
 
 
-def _glob_to_re(pat: str) -> str:  # noqa: max-complexity=15
+def _glob_to_re(pat: str) -> str:  # noqa: PLR0912
     """Translate a shell PATTERN to a regular expression.
 
     Copied from: https://stackoverflow.com/a/72400344/405682
@@ -92,10 +92,10 @@ def _glob_to_re(pat: str) -> str:  # noqa: max-complexity=15
                     # -------- CHANGE END ----------
                 elif stuff[0] in ("^", "["):
                     stuff = "\\" + stuff
-                res = "%s[%s]" % (res, stuff)
+                res = f"{res}[{stuff}]"
         else:
             res = res + re.escape(c)
-    return r"(?s:%s)\Z" % res
+    return rf"(?s:{res})\Z"
 
 
 class NotificationType(models.Model):
@@ -109,7 +109,7 @@ class NotificationType(models.Model):
     )
 
     # TODO: This isn't translatable
-    label = models.CharField(
+    label = models.CharField(  # noqa: DJ001
         max_length=128, verbose_name=_("optional label"), blank=True, null=True
     )
 
@@ -117,13 +117,13 @@ class NotificationType(models.Model):
         ContentType, blank=True, null=True, on_delete=models.SET_NULL
     )
 
-    def __str__(self):
-        return self.key
-
     class Meta:
         db_table = app_settings.NYT_DB_TABLE_PREFIX + "_notificationtype"
         verbose_name = _("type")
         verbose_name_plural = _("types")
+
+    def __str__(self):
+        return self.key
 
     @classmethod
     def get_by_key(cls, key, content_type=None):
@@ -156,8 +156,7 @@ class NotificationType(models.Model):
 
 @receiver([post_save, post_delete], sender=NotificationType)
 def clear_notification_type_cache(*args, **kwargs):
-    global _notification_type_cache
-    _notification_type_cache = {}
+    _notification_type_cache.clear()
 
 
 class Settings(models.Model):
@@ -194,14 +193,13 @@ class Settings(models.Model):
         verbose_name=_("modified"),
     )
 
-    def __str__(self):
-        obj_name = _("Settings for %s") % getattr(self.user, self.user.USERNAME_FIELD)
-        return obj_name
-
     class Meta:
         db_table = app_settings.NYT_DB_TABLE_PREFIX + "_settings"
         verbose_name = _("settings")
         verbose_name_plural = _("settings")
+
+    def __str__(self):
+        return _("Settings for %s") % getattr(self.user, self.user.USERNAME_FIELD)
 
     def clean(self):
         if not self.is_default and self.pk and self.user:
@@ -214,7 +212,7 @@ class Settings(models.Model):
                     _("At minimum one default setting must exist for the user")
                 )
 
-    def save(self, *args, **kwargs):
+    def save(self, *args, **kwargs):  # noqa: DJ012
         # We should check that it's the only default setting manually because
         # it's not possible to create a database constraint for this.
         # Instead of having a constraint, we unset all other is_default for
@@ -235,7 +233,7 @@ class Settings(models.Model):
                 non_default_settings[0].save()
             else:
                 raise ValueError("A user must have a default settings object")
-        super(Settings, self).save(*args, **kwargs)
+        super().save(*args, **kwargs)
 
     @classmethod
     def get_default_settings(cls, user):
@@ -258,7 +256,7 @@ class Subscription(models.Model):
         NotificationType, verbose_name=_("notification type"), on_delete=models.CASCADE
     )
 
-    object_id = models.CharField(
+    object_id = models.CharField(  # noqa: DJ001
         max_length=64,
         null=True,
         blank=True,
@@ -296,16 +294,15 @@ class Subscription(models.Model):
         verbose_name=_("last sent"),
     )
 
-    def __str__(self):
-        obj_name = _("Subscription for: %s") % (
-            getattr(self.settings.user, self.settings.user.USERNAME_FIELD)
-        )
-        return obj_name
-
     class Meta:
         db_table = app_settings.NYT_DB_TABLE_PREFIX + "_subscription"
         verbose_name = _("subscription")
         verbose_name_plural = _("subscriptions")
+
+    def __str__(self):
+        return _("Subscription for: %s") % (
+            getattr(self.settings.user, self.settings.user.USERNAME_FIELD)
+        )
 
 
 class Notification(models.Model):
@@ -333,7 +330,7 @@ class Notification(models.Model):
     message = models.TextField()
 
     # https://stackoverflow.com/a/417184/405682
-    url = models.CharField(
+    url = models.CharField(  # noqa: DJ001
         verbose_name=_("link for notification"),
         blank=True,
         null=True,
@@ -369,11 +366,21 @@ class Notification(models.Model):
         ),
     )
 
+    class Meta:
+        db_table = app_settings.NYT_DB_TABLE_PREFIX + "_notification"
+        verbose_name = _("notification")
+        verbose_name_plural = _("notifications")
+        ordering = ("-id",)
+
+    def __str__(self):
+        return f"{self.user}: {self.message}"
+
     def save(self, *args, **kwargs):
-        assert self.user or self.subscription
+        if not self.user and not self.subscription:
+            raise ValueError("Either user or subscription must be set.")
         if not self.user:
             self.user = self.subscription.settings.user
-        super(Notification, self).save(*args, **kwargs)
+        super().save(*args, **kwargs)
 
     @classmethod
     def create_notifications(
@@ -403,7 +410,7 @@ class Notification(models.Model):
             **filter_exclude
         )
 
-        # TODO: This query should include notification_type__content_type? Why was this not added?
+        # TODO: This query should include notification_type__content_type?
         if object_id:
             subscriptions = subscriptions.filter(
                 Q(object_id=object_id) | Q(object_id=None)
@@ -421,12 +428,8 @@ class Notification(models.Model):
         for subscription in subscriptions:
             # Don't alert the same user several times even though overlapping
             # subscriptions occur.
-            # TODO: This is problematic for users that have complex configurations.
-            # It should be made configurable.
-            # if subscription.settings.user == prev_user:
-            #     continue
 
-            # If this settings has already been notified in this loop, then continue.
+            # If this settings has already been notified in this loop, skip.
             # This happens when there are several overlapping subscriptions for the same key.
             seen_key_for_settings.setdefault(subscription.settings.id, [])
             if key in seen_key_for_settings[subscription.settings.id]:
@@ -437,8 +440,8 @@ class Notification(models.Model):
             # Check if it's the same as the previous message
             latest = subscription.latest
             if latest and (
-                latest.message == kwargs.get("message", None)
-                and latest.url == kwargs.get("url", None)
+                latest.message == kwargs.get("message")
+                and latest.url == kwargs.get("url")
                 and latest.is_viewed is False
             ):
                 # Both message and URL are the same, and it hasn't been viewed
@@ -454,12 +457,3 @@ class Notification(models.Model):
                 subscription.save()
 
         return objects_created
-
-    def __str__(self):
-        return "%s: %s" % (self.user, self.message)
-
-    class Meta:
-        db_table = app_settings.NYT_DB_TABLE_PREFIX + "_notification"
-        verbose_name = _("notification")
-        verbose_name_plural = _("notifications")
-        ordering = ("-id",)

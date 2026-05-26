@@ -4,15 +4,15 @@ import smtplib
 import sys
 import time
 from datetime import timedelta
+from pathlib import Path
 
 from django.conf import settings
 from django.core import mail
-from django.core.management.base import BaseCommand
+from django.core.management.base import BaseCommand, CommandError
 from django.db.models import Q
 from django.template.loader import render_to_string
 from django.utils import timezone
-from django.utils.translation import activate
-from django.utils.translation import deactivate
+from django.utils.translation import activate, deactivate
 
 from django_nyt import models
 from django_nyt.conf import app_settings
@@ -49,7 +49,7 @@ class Command(BaseCommand):
             action="store",
             dest="pid",
             help="Where to write PID before exiting",
-            default="/tmp/nyt_daemon.pid",
+            default="/tmp/nyt_daemon.pid",  # noqa: S108
         )
         parser.add_argument(
             "--domain",
@@ -70,7 +70,7 @@ class Command(BaseCommand):
             action="store",
             dest="log",
             help="Where daemon should write its log",
-            default="/tmp/nyt_daemon.log",
+            default="/tmp/nyt_daemon.log",  # noqa: S108
         )
         parser.add_argument(
             "--no-sys-exit",
@@ -113,7 +113,7 @@ class Command(BaseCommand):
             [context["user"].email],
             connection=connection,
         )
-        self.logger.info("Sending to: %s" % context["user"].email)
+        self.logger.info("Sending to: %s", context["user"].email)
         email.send(fail_silently=False)
 
     def _daemonize(self):
@@ -122,16 +122,16 @@ class Command(BaseCommand):
             fpid = os.fork()
             if fpid > 0:
                 # Running as daemon now. PID is fpid
-                self.logger.info("PID: %s" % str(fpid))
-                with open(self.options["pid"], "w") as pid_file:
+                self.logger.info("PID: %s", fpid)
+                with Path(self.options["pid"]).open("w") as pid_file:
                     pid_file.write(str(fpid))
                 if not self.options["no_sys_exit"]:
                     sys.exit(0)
         except OSError as e:
-            sys.stderr.write("fork failed: %d (%s)\n" % (e.errno, e.strerror))
+            sys.stderr.write(f"fork failed: {e.errno} ({e.strerror})\n")
             sys.exit(1)
 
-    def handle(self, *args, **options):  # noqa: max-complexity=12
+    def handle(self, *args, **options):
         # activate the language
         activate(settings.LANGUAGE_CODE)
 
@@ -144,7 +144,8 @@ class Command(BaseCommand):
         daemon = options["daemon"]
         cron = options["cron"]
 
-        assert not (daemon and cron), "You cannot both choose cron and daemon options"
+        if daemon and cron:
+            raise CommandError("You cannot both choose cron and daemon options")
 
         self.logger = logging.getLogger("django_nyt")
 
@@ -177,7 +178,7 @@ class Command(BaseCommand):
         if cron:
             if self.options.get("now"):
                 now = self.options.get("now")
-                self.logger.info(f"using now: {now}")
+                self.logger.info("using now: %s", now)
             else:
                 now = timezone.now()
 
@@ -201,7 +202,7 @@ class Command(BaseCommand):
         while True:
 
             started_sending_at = timezone.now()
-            self.logger.info("Starting send loop at %s" % str(started_sending_at))
+            self.logger.info("Starting send loop at %s", started_sending_at)
 
             # When we are looping, we don't want to iterate over user_settings that have
             # an interval greater than our last_sent marker.
@@ -211,8 +212,8 @@ class Command(BaseCommand):
                 ).order_by("user")
                 now = self.options.get("now") or timezone.now()
             else:
-                # TOD: This isn't perfect. If we are simulating a "now", we should also make a
-                # step-wise approach to incrementing it.
+                # TOD: This isn't perfect. If we are simulating a "now", we should also
+                # make a step-wise approach to incrementing it.
                 now = timezone.now()
                 user_settings = None
 
@@ -230,7 +231,6 @@ class Command(BaseCommand):
         """
         Loops through emails in a list of notifications and tries to send
         to each recipient
-
         """
         # STMP connection send loop
         notifications = context["notifications"]
@@ -241,7 +241,7 @@ class Command(BaseCommand):
         while True:
             notification_ids = [n.id for n in notifications]
             try:
-                self.logger.info(f"Sending to notification ids {notification_ids}")
+                self.logger.info("Sending to notification ids %s", notification_ids)
                 self._render_and_send(
                     template_name, subject_template_name, context, connection
                 )
@@ -256,36 +256,31 @@ class Command(BaseCommand):
                 break
             except smtplib.SMTPSenderRefused:
                 self.logger.error(
-                    ("E-mail refused by SMTP server ({}), " "skipping!").format(
-                        setting.user.email
-                    )
+                    "E-mail refused by SMTP server (%s), skipping!", setting.user.email
                 )
                 continue
             except smtplib.SMTPException as e:
                 self.logger.error(
-                    (
-                        "You have an error with your SMTP server "
-                        "connection, error is: {}"
-                    ).format(e)
+                    "You have an error with your SMTP server connection, error is: %s", e
                 )
                 self.logger.error("Sleeping for 30s then retrying...")
                 time.sleep(30)
             except Exception as e:
-                self.logger.error(
-                    ("Unhandled exception while sending, giving " "up: {}").format(e)
-                )
+                self.logger.error("Unhandled exception while sending, giving up: %s", e)
                 raise
 
-    def send_mails(  # noqa: max-complexity=12
+    def send_mails(
         self, connection, now, last_sent=None, user_settings=None
     ):
         """
         Does the lookups and sends out email digests to anyone who has them due.
-        Since the system may have different templates depending on which notification is being sent,
-        we will generate a call for each template.
+        Since the system may have different templates depending on which notification
+        is being sent, we will generate a call for each template.
         """
 
-        self.logger.debug(f"Entering send_mails(now={now}, last_sent={last_sent}, ...)")
+        self.logger.debug(
+            "Entering send_mails(now=%s, last_sent=%s, ...)", now, last_sent
+        )
 
         connection.open()
 
@@ -303,19 +298,14 @@ class Command(BaseCommand):
             site_object = None
             domain = self.options["domain"]
         else:
-            from django.contrib.sites.models import Site
+            from django.contrib.sites.models import Site  # noqa: PLC0415
 
             site_object = Site.objects.get_current()
             domain = site_object.domain
 
-        if self.options["http"]:
-            http_scheme = "http"
-        else:
-            http_scheme = "https"
+        http_scheme = "http" if self.options["http"] else "https"
 
         # We look up what to send for each user's Settings object
-        # TODO: Ideally, we should own a lock on each settings object to avoid any double-sending in case
-        # this job is running in parallel with another unfinished process. Or a global lock.
         for setting in user_settings:
 
             threshold = now - timedelta(minutes=setting.interval)
@@ -361,7 +351,8 @@ class Command(BaseCommand):
                     )
                 except models.NotificationType.DoesNotExist:
                     self.logger.warning(
-                        f"Subscription has non-existent notification type {subscription.notification_type_id}"
+                        "Subscription has non-existent notification type %s",
+                        subscription.notification_type_id,
                     )
                     continue
                 subject_template_name = (
@@ -372,11 +363,8 @@ class Command(BaseCommand):
                     (template_name, subject_template_name), []
                 )
 
-                # We assume that if we are sending a digest and we've missed sending it, we can
-                # still just summarize ALL notifications that haven't been emailed.
-                # Always, no matter what.
-                # This also means that if we are sending out emails every 5 minutes, and several
-                # notifications have been triggered meanwhile, they'll go into the same email.
+                # We assume that if we are sending a digest and we've missed sending it,
+                # we can still just summarize ALL notifications that haven't been emailed.
                 emails_per_template[(template_name, subject_template_name)] += list(
                     subscription.notification_set.filter(is_emailed=False),
                 )
