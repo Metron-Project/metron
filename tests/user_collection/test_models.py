@@ -242,7 +242,7 @@ class TestCollectionItemModel:
             created_by=user,
         )
 
-        read_date = date(2024, 3, 15)
+        read_date = datetime(2024, 3, 15, tzinfo=UTC)
         item = CollectionItem.objects.create(
             user=collection_user,
             issue=issue,
