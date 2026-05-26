@@ -6,14 +6,13 @@ dependencies = [
     "bleach[css]",
     "boto3",
     "chartkick",
-    "django",
+    "django>=5.2,<6.0",
     "django-countries",
     "django-filter",
     "django-htmx",
     "django-htmx-autocomplete",
     "django-money",
     "django-mptt",
-    "django-nyt>=1.4.2,<1.5",
     "django-rest-framework-condition",
     "django-sekizai",
     "django-simple-bulma",
@@ -51,7 +50,7 @@ line-length = 100
 target-version = ["py314"]
 
 [tool.ruff]
-extend-exclude = ["wiki"]
+extend-exclude = ["django_nyt", "wiki"]
 fix = true
 line-length = 100
 show-fixes = true
@@ -108,7 +107,7 @@ combine-as-imports = true
 directory = "test-results/coverage"
 
 [tool.coverage.run]
-source = ["comicsdb", "metron", "pull_list", "reading_lists", "users", "user_collection", "wiki", "wish_list"]
+source = ["comicsdb", "django_nyt","metron", "pull_list", "reading_lists", "users", "user_collection", "wiki", "wish_list"]
 branch = true
 concurrency = ["multiprocessing"]
 
