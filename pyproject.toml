@@ -6,7 +6,7 @@ dependencies = [
     "bleach[css]",
     "boto3",
     "chartkick",
-    "django>=5.2,<6.0",
+    "django",
     "django-countries",
     "django-filter",
     "django-htmx",
