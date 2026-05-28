@@ -1,0 +1,117 @@
+{% extends "wiki/base.html" %}
+{% load wiki_tags i18n humanize %}
+
+{% block wiki_pagetitle %}{% trans "Global history" %}{% endblock %}
+
+{% block wiki_contents %}
+
+<h1 class="title">{% trans "Global history" %}</h1>
+
+{% spaceless %}
+<div class="columns mb-4">
+  <div class="column">
+    <p class="subtitle">
+      {% with paginator.object_list.count as cnt %}
+        {% blocktrans count cnt=cnt trimmed %}
+          List of <strong>{{ cnt }} change</strong> in the wiki.
+          {% plural %}
+          List of <strong>{{ cnt }} changes</strong> in the wiki.
+        {% endblocktrans %}
+      {% endwith %}
+    </p>
+  </div>
+  <div class="column is-narrow">
+    <a class="button"
+       {% if only_last == "1" %}
+         href="{% url 'wiki:globalhistory' only_last=0 %}">
+         {% trans "Show all revisions of all articles" %}
+       {% else %}
+         href="{% url 'wiki:globalhistory' only_last=1 %}">
+         {% trans "Show last revision of every article" %}
+       {% endif %}
+    </a>
+  </div>
+</div>
+
+{% if revisions %}
+  <table class="table is-striped is-narrow is-hoverable is-fullwidth">
+    <thead>
+      <tr>
+        <th>{% trans "Revision ID" %}</th>
+        <th>{% trans "Article" %}</th>
+        <th>{% trans "Message" %}</th>
+        <th>{% trans "User" %}</th>
+        <th>{% trans "Date" %}</th>
+        <th></th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for article_revision in revisions %}
+        <tr>
+          <td>{{ article_revision.revision_number }}</td>
+          <td>
+            <a href="{% url 'wiki:get' article_revision.article.pk %}">
+              {{ article_revision.article }}
+            </a>
+          </td>
+          <td>
+            {% if article_revision.user_message %}
+              {{ article_revision.user_message }}
+            {% elif article_revision.automatic_log %}
+              {{ article_revision.automatic_log }}
+            {% else %}
+              ({% trans "no log message" %})
+            {% endif %}
+            {% if article_revision.deleted %}
+              <span class="tag is-danger">{% trans "deleted" %}</span>
+            {% endif %}
+            {% if article_revision.previous_revision.deleted and not article_revision.deleted %}
+              <span class="tag is-success">{% trans "restored" %}</span>
+            {% endif %}
+            {% if article_revision.locked %}
+              <span class="tag is-dark">{% trans "locked" %}</span>
+            {% endif %}
+            {% if article_revision.previous_revision.locked and not revision.locked %}
+              <span class="tag is-dark">{% trans "unlocked" %}</span>
+            {% endif %}
+          </td>
+          <td>
+            {% if article_revision.user %}
+              {{ article_revision.user }}
+            {% else %}
+              {% if article_revision.article|can_moderate:user %}
+                {{ article_revision.ip_address|default:"anonymous (IP not logged)" }}
+              {% else %}
+                {% trans "anonymous (IP logged)" %}
+              {% endif %}
+            {% endif %}
+          </td>
+          <td>{{ article_revision.modified }}</td>
+          <td class="is-narrow">
+            <div class="buttons are-small">
+              <a href="{% url 'wiki:history' article_revision.article.pk %}" class="button is-info">
+                {% trans "Go to article history" %}
+              </a>
+              <a href="{% url 'wiki:get' article_revision.article.pk %}" class="button is-primary">
+                {% trans "Go to article" %}
+              </a>
+            </div>
+          </td>
+        </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+{% else %}
+  <div class="notification is-info is-light">
+    {% if page %}
+      {% trans "No more changes to display !" %}
+      <a href="?page={{page|add:"-1"}}">{% trans "Go back to previous page" %}</a>
+    {% else %}
+      {% trans "No changes to display !" %}
+    {% endif %}
+  </div>
+{% endif %}
+
+{% include "wiki/includes/pagination.html" %}
+{% endspaceless %}
+{% endblock %}

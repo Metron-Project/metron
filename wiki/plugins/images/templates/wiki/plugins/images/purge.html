@@ -1,0 +1,32 @@
+{% extends "wiki/article.html" %}
+{% load wiki_tags i18n humanize wiki_thumbnails %}
+
+
+{% block wiki_pagetitle %}{% trans "Purge deletion" %}: {{ image }}{% endblock %}
+
+{% block wiki_contents_tab %}
+  {% thumbnail image.current_revision.imagerevision.image "250x250" as thumb %}
+    <figure class="image is-pulled-right mb-4">
+      <img src="{{ thumb.url }}" alt="{{ revision.get_filename }}" />
+    </figure>
+  {% endthumbnail %}
+  <p class="subtitle">
+    {% trans "Purge image: Completely remove image file and all revisions." %}
+  </p>
+  <form method="POST" enctype="multipart/form-data">
+    {% wiki_form form %}
+    <div class="form-actions">
+      <div class="buttons">
+        <a href="{% url 'wiki:images_index' path=urlpath.path article_id=article.id %}" class="button">
+          <span class="icon"><i class="fa fa-arrow-left"></i></span>
+          <span>{% trans "Go back" %}</span>
+        </a>
+        <button class="button is-primary">
+          <span class="icon"><i class="fa fa-trash"></i></span>
+          <span>{% trans "Remove it completely!" %}</span>
+        </button>
+      </div>
+    </div>
+  </form>
+
+{% endblock %}

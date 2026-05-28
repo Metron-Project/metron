@@ -1,0 +1,127 @@
+from django.apps import apps
+from django.core.checks import Error
+from django.template import Engine
+
+
+class Tags:
+    required_installed_apps = "required_installed_apps"
+    obsolete_installed_apps = "obsolete_installed_apps"
+    context_processors = "context_processors"
+    fields_in_custom_user_model = "fields_in_custom_user_model"
+
+
+REQUIRED_INSTALLED_APPS = (
+    # module name, package name, error code
+    ("mptt", "django-mptt", "E001"),
+    ("sekizai", "django-sekizai", "E002"),
+    ("django.contrib.humanize", "django.contrib.humanize", "E003"),
+    ("django.contrib.contenttypes", "django.contrib.contenttypes", "E004"),
+    ("django.contrib.sites", "django.contrib.sites", "E005"),
+)
+
+OBSOLETE_INSTALLED_APPS = (
+    # obsolete module name, new module name, error code
+    ("django_notify", "django_nyt", "E006"),
+)
+
+REQUIRED_CONTEXT_PROCESSORS = (
+    # context processor name, error code
+    ("django.contrib.auth.context_processors.auth", "E007"),
+    ("django.template.context_processors.request", "E008"),
+    ("sekizai.context_processors.sekizai", "E009"),
+)
+
+FIELDS_IN_CUSTOM_USER_MODEL = (
+    # check function, field fetcher, required field type, error code
+    ("check_user_field", "USERNAME_FIELD", "CharField", "E010"),
+    ("check_email_field", "get_email_field_name()", "EmailField", "E011"),
+)
+
+
+def check_for_required_installed_apps(app_configs, **kwargs):
+    errors = []
+    for app in REQUIRED_INSTALLED_APPS:
+        if not apps.is_installed(app[0]):
+            errors.append(
+                Error(
+                    f"needs {app[1]} in INSTALLED_APPS",
+                    id=f"wiki.{app[2]}",
+                )
+            )
+    return errors
+
+
+def check_for_obsolete_installed_apps(app_configs, **kwargs):
+    errors = []
+    for app in OBSOLETE_INSTALLED_APPS:
+        if apps.is_installed(app[0]):
+            errors.append(
+                Error(
+                    f"You need to change from {app[0]} to {app[1]}"
+                    " in INSTALLED_APPS and your urlconfig.",
+                    id=f"wiki.{app[2]}",
+                )
+            )
+    return errors
+
+
+def check_for_context_processors(app_configs, **kwargs):
+    errors = []
+    # Pattern from django.contrib.admin.checks
+    try:
+        default_template_engine = Engine.get_default()
+    except Exception:
+        # Skip this non-critical check:
+        # 1. if the user has a non-trivial TEMPLATES setting and Django
+        #    can't find a default template engine
+        # 2. if anything goes wrong while loading template engines, in
+        #    order to avoid raising an exception from a confusing location
+        # Catching ImproperlyConfigured suffices for 1. but 2. requires
+        # catching all exceptions.
+        pass
+    else:
+        context_processors = default_template_engine.context_processors
+        for context_processor in REQUIRED_CONTEXT_PROCESSORS:
+            if context_processor[0] not in context_processors:
+                errors.append(
+                    Error(
+                        f"needs {context_processor[0]}"
+                        " in TEMPLATES[*]['OPTIONS']['context_processors']",
+                        id=f"wiki.{context_processor[1]}",
+                    )
+                )
+    return errors
+
+
+def check_for_fields_in_custom_user_model(app_configs, **kwargs):
+    errors = []
+    from wiki.conf import settings  # noqa: PLC0415
+
+    if not settings.ACCOUNT_HANDLING:
+        return errors
+    from django.contrib.auth import get_user_model  # noqa: PLC0415
+
+    import wiki.forms_account_handling  # noqa: PLC0415
+
+    user_model = get_user_model()
+    for (
+        check_function_name,
+        field_fetcher,
+        required_field_type,
+        error_code,
+    ) in FIELDS_IN_CUSTOM_USER_MODEL:
+        function = getattr(wiki.forms_account_handling, check_function_name)
+        if not function(user_model):
+            errors.append(
+                Error(
+                    f"{user_model.__module__}.{user_model.__name__}.{field_fetcher}"
+                    f" refers to a field that is not of type {required_field_type}",
+                    hint=(
+                        "If you have your own login/logout views,"
+                        " turn off settings.WIKI_ACCOUNT_HANDLING"
+                    ),
+                    obj=user_model,
+                    id=f"wiki.{error_code}",
+                )
+            )
+    return errors
