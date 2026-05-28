@@ -13,8 +13,8 @@ from django.shortcuts import get_object_or_404, redirect, render
 from django.template.loader import render_to_string
 from django.urls import reverse, reverse_lazy
 from django.utils.encoding import force_bytes, force_str
-from django.utils.html import format_html
 from django.utils.http import urlsafe_base64_decode, urlsafe_base64_encode
+from django.utils.safestring import mark_safe
 from django.views.generic import DetailView, ListView
 
 # Import models for counting
@@ -66,7 +66,7 @@ def activate(request, uidb64, token):
     send_pushover(f"{user} activated their account on Metron.")
     logger.info("%s activated their account on Metron", user)
     # Add a message asking the user to star the repository.
-    msg = format_html(
+    msg = mark_safe(
         "If you are planning on adding new information to the database, please refer to the "
         "<a href='/wiki/editing-guidelines/'>Editing Guidelines</a>."
     )
