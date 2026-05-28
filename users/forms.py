@@ -30,6 +30,7 @@ class CustomUserCreationForm(UserCreationForm):
             "passmail.net",
             "officialwizard.xyz",
             "simplelogin.com",
+            "sixtimesnine.org",
             "usemx.de",
         }  # List of providers that provide temp email addresses.
         whitelist = {"gmail.com", "yahoo.com", "proton.me"}
