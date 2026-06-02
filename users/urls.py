@@ -19,6 +19,7 @@ urlpatterns = [
     ),
     path("password/", views.ChangePasswordView.as_view(), name="change_password"),
     path("update/", views.change_profile, name="change_profile"),
+    path("delete/", views.delete_account, name="delete_account"),
     path("users/", views.UserList.as_view(), name="user-list"),
     path("search/", views.SearchUserList.as_view(), name="user-search"),
     path("<int:pk>/", views.user_profile_redirect, name="user-detail-redirect"),

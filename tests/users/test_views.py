@@ -6,9 +6,11 @@ from django.urls import reverse
 from pytest_django.asserts import assertTemplateUsed
 
 from users.forms import CustomUserChangeForm
+from users.models import CustomUser
 from users.views import SUSTAINED_DURATION, SUSTAINED_LIMIT, get_rate_limit_usage
 
-HTML_REDIRECT_CODE = 301
+HTML_REDIRECT_MOVED_PERMAMENTLY_CODE = 301
+HTTP_REDIRECT_FOUND_CODE = 302
 HTML_OK_CODE = 200
 
 
@@ -58,7 +60,7 @@ def test_profile_view_url_exists_at_desired_location(auto_login_user):
 def test_profile_view_pk_redirects_to_username(auto_login_user):
     client, user = auto_login_user()
     resp = client.get(f"/accounts/{user.pk}/")
-    assert resp.status_code == HTML_REDIRECT_CODE
+    assert resp.status_code == HTML_REDIRECT_MOVED_PERMAMENTLY_CODE
     assert resp.url == f"/accounts/{user.username}/"
 
 
@@ -188,3 +190,45 @@ def test_profile_view_excludes_rate_limit_for_other_profile(auto_login_user, cre
     resp = client.get(reverse("user-detail", kwargs={"username": other.username}))
     assert resp.status_code == HTML_OK_CODE
     assert "rate_limit" not in resp.context
+
+
+# --- delete_account view tests ---
+
+
+def test_delete_account_get_unauthenticated(client):
+    resp = client.get(reverse("delete_account"))
+    assert resp.status_code == HTTP_REDIRECT_FOUND_CODE
+    assert "/accounts/login/" in resp.url
+
+
+def test_delete_account_get_authenticated(auto_login_user):
+    client, _ = auto_login_user()
+    resp = client.get(reverse("delete_account"))
+    assert resp.status_code == HTML_OK_CODE
+    assertTemplateUsed(resp, "users/delete_account.html")
+
+
+def test_delete_account_post_unauthenticated(client, create_user):
+    user = create_user()
+    user_pk = user.pk
+    resp = client.post(reverse("delete_account"))
+    assert resp.status_code == HTTP_REDIRECT_FOUND_CODE
+    assert "/accounts/login/" in resp.url
+    assert CustomUser.objects.filter(pk=user_pk).exists()
+
+
+def test_delete_account_post_deletes_user(auto_login_user):
+    client, user = auto_login_user()
+    user_pk = user.pk
+    resp = client.post(reverse("delete_account"))
+    assert resp.status_code == HTTP_REDIRECT_FOUND_CODE
+    assert resp.url == reverse("home")
+    assert not CustomUser.objects.filter(pk=user_pk).exists()
+
+
+def test_delete_account_post_logs_out_user(auto_login_user):
+    client, _ = auto_login_user()
+    client.post(reverse("delete_account"))
+    resp = client.get(reverse("change_profile"))
+    assert resp.status_code == HTTP_REDIRECT_FOUND_CODE
+    assert "/accounts/login/" in resp.url

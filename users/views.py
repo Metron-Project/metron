@@ -2,7 +2,7 @@ import logging
 import time
 
 from django.contrib import messages
-from django.contrib.auth import login, update_session_auth_hash
+from django.contrib.auth import login, logout, update_session_auth_hash
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.contrib.auth.views import PasswordChangeView
 from django.contrib.messages.views import SuccessMessageMixin
@@ -136,6 +136,18 @@ def change_profile(request):
     else:
         form = CustomUserChangeForm(instance=request.user)
     return render(request, "users/change_profile.html", {"form": form})
+
+
+def delete_account(request):
+    if not request.user.is_authenticated:
+        return redirect("login")
+    if request.method == "POST":
+        user = request.user
+        logout(request)
+        user.delete()
+        messages.success(request, "Your account has been deleted.")
+        return redirect("home")
+    return render(request, "users/delete_account.html")
 
 
 def user_profile_redirect(request, pk):
