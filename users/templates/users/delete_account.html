@@ -1,0 +1,51 @@
+{% extends parent_template|default:"base.html" %}
+{% block title %}
+    Delete Account - Metron
+{% endblock title %}
+{% block content %}
+    <div class="columns is-centered mt-5">
+        <div class="column is-half">
+            <div class="box">
+                <header class="has-text-centered mb-5">
+                    <span class="icon is-large has-text-danger">
+                        <i class="fas fa-exclamation-triangle fa-3x"></i>
+                    </span>
+                    <h1 class="title is-3 mt-4">Delete Your Account</h1>
+                    <p class="subtitle has-text-grey">This action cannot be undone</p>
+                </header>
+                <div class="notification is-danger is-light mb-5">
+                    <p class="has-text-weight-bold mb-2">Warning: Permanent deletion</p>
+                    <div class="content is-small">
+                        <ul>
+                            <li>Your account and all personal data will be permanently deleted</li>
+                            <li>Your reading list and collection data will be removed</li>
+                            <li>Database contributions (issues, creators, etc.) will remain but will no longer be attributed to you</li>
+                        </ul>
+                    </div>
+                </div>
+                <form method="post">
+                    {% csrf_token %}
+                    <div class="field is-grouped is-grouped-centered">
+                        <div class="control">
+                            <button class="button is-danger is-medium" type="submit">
+                                <span class="icon">
+                                    <i class="fas fa-trash-alt"></i>
+                                </span>
+                                <span>Delete My Account</span>
+                            </button>
+                        </div>
+                        <div class="control">
+                            <a class="button is-light is-medium"
+                               href="{% url 'user-detail' username=request.user.username %}">
+                                <span class="icon">
+                                    <i class="fas fa-times"></i>
+                                </span>
+                                <span>Cancel</span>
+                            </a>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+{% endblock %}

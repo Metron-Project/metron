@@ -30,6 +30,14 @@
                 </span>
                 <span>Change Password</span>
             </a>
+            <a class="button is-danger is-outlined"
+               href="{% url 'delete_account' %}"
+               title="Delete your account">
+                <span class="icon">
+                    <i class="fas fa-trash-alt"></i>
+                </span>
+                <span>Delete Account</span>
+            </a>
         </div>
     {% endif %}
     {# User Profile Card #}
