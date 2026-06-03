@@ -10,9 +10,9 @@ bots:
     user_agent_regex: ClickWhir
     action: DENY
 
-  # Deny comic-identifier-v2 scraper (kalenbb@gmail.com).
-  - name: deny-comic-identifier
-    user_agent_regex: comic-identifier-v2
+  # Deny cards_analize-local-comics-catalog scraper
+  - name: deny-comic-cards
+    user_agent_regex: cards_analize-local-comics-catalog
     action: DENY
 
   # Pass API requests through without a proof-of-work challenge.
