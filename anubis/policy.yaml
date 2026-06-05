@@ -10,6 +10,11 @@ bots:
     user_agent_regex: ClickWhir
     action: DENY
 
+  # Deny ComicShelf - another scraper hammering the API unauthenticated with rotating IPs.
+  - name: deny-comicshelf
+    user_agent_regex: comicshelf\.app
+    action: DENY
+
   # Deny cards_analize-local-comics-catalog scraper
   - name: deny-comic-cards
     user_agent_regex: cards_analize-local-comics-catalog
