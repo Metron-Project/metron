@@ -5,4 +5,4 @@ icon: fa fa-layer-group
 icon_color: pastel-purple
 ---
 
-Support for user wish lists and pull lists are added to the site.
+Users can now maintain a wish list of issues they want to acquire and a pull list of series they follow, with both features accessible through the REST API.
