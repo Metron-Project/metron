@@ -1,6 +1,9 @@
 {% extends parent_template|default:"base.html" %}
 {% load static %}
 {% load cache %}
+{% block headcss %}
+    <link rel="stylesheet" href="{% static 'site/css/home/index.css' %}">
+{% endblock %}
 {% block sitedesc %}
     <meta name="description"
           content="Metron is a community-based comic book database with a public REST API. Search and discover comic books with comprehensive metadata.">
@@ -223,5 +226,34 @@
             </div>
         </div>
     </div>
+</section>
+{# Timeline #}
+<section id="timeline" class="section has-text-centered">
+    <article class="box">
+
+        <header class="title">Interactive timeline</header>
+
+        <div class="mini-timeline">
+            <i class="fa fa-asterisk"></i>
+            <i class="fa fa-code"></i>
+            <i class="fab fa-lg fa-python"></i>
+            <i class="fa fa-sm fa-terminal"></i>
+            <i class="fa fa-bug"></i>
+        </div>
+
+        <p class="subtitle">
+            Discover the history of our community, and learn about the events that made our community what it is today.
+        </p>
+
+        <div class="buttons are-large is-centered">
+            <a href="" class="button is-primary">
+                <span>Check it out!</span>
+                <span class="icon">
+                    <i class="fas fa-arrow-right"></i>
+                </span>
+            </a>
+        </div>
+
+    </article>
 </section>
 {% endblock %}
