@@ -28,6 +28,7 @@ dependencies = [
     "psycopg[binary,pool]",
     "pymdown-extensions",
     "python-decouple",
+    "python-frontmatter>=1.3.0",
     "redis",
     "sorl-thumbnail",
 ]

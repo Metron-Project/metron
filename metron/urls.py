@@ -28,6 +28,7 @@ from comicsdb.urls import (
 from polls import urls as polls_urls
 from pull_list import urls as pull_list_urls
 from reading_lists import urls as reading_lists_urls
+from timeline import urls as timeline_urls
 from user_collection import urls as user_collection_urls
 from wish_list import urls as wish_list_urls
 
@@ -67,6 +68,7 @@ urlpatterns = [
     path("wish-list/", include(wish_list_urls)),
     path("series/", include(series_urls)),
     path("team/", include(team_urls)),
+    path("timeline/", include(timeline_urls)),
     path("universe/", include(universe_urls)),
     path("accounts/", include("users.urls")),
     path("accounts/", include("django.contrib.auth.urls")),

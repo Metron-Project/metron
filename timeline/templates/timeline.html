@@ -1,0 +1,17 @@
+{% extends parent_template|default:"base.html" %}
+{% load static %}
+
+{% block title %}Timeline{% endblock %}
+{% block headcss %}
+  <link rel="stylesheet" href="{% static "site/css/timeline/timeline.css" %}">
+{% endblock %}
+
+{% block content %}
+  <section class="timeline">
+    <div class="container">
+      {% for entry in entries %}
+        {% include "timeline_entry.html" with entry=entry revealed=False %}
+      {% endfor %}
+    </div>
+  </section>
+{% endblock %}
