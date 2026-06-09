@@ -79,6 +79,7 @@ INSTALLED_APPS = [
     "pull_list",
     "wish_list",
     "polls",
+    "timeline",
 ]
 
 MIDDLEWARE = [
