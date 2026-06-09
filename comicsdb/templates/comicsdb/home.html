@@ -224,22 +224,4 @@
         </div>
     </div>
 </section>
-{# Recently Edited Issues #}
-{% if recently_edited %}
-    <section class="section">
-        <div class="container">
-            <header class="block mb-4">
-                <h2 class="title is-3">Recently Edited Issues</h2>
-                <p class="subtitle is-6 has-text-grey">
-                    <time datetime="{{ updated|date:'c' }}">
-                        Last updated: {{ updated }}
-                    </time>
-                </p>
-            </header>
-            <hr class="mb-5">
-            {# Use the reusable issue card grid partial #}
-            {% include "comicsdb/partials/issue_card_grid.html" with items=recently_edited %}
-        </div>
-    </section>
-{% endif %}
 {% endblock %}
