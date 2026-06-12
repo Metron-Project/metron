@@ -76,6 +76,7 @@
         {% if user.is_authenticated %}
             <div class="level-right">
                 <div class="buttons">
+                    {% include "wish_list/partials/wish_list_button.html" with issue=issue on_wish_list=on_wish_list %}
                     <a class="button is-rounded is-primary"
                        href="{% url 'issue:create' %}"
                        title="Add a new issue">

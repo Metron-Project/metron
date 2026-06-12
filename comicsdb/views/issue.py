@@ -27,6 +27,7 @@ from comicsdb.models.variant import Variant
 from comicsdb.views.constants import DETAIL_PAGINATE_BY, PAGINATE_BY
 from comicsdb.views.history import HistoryListView
 from comicsdb.views.mixins import LazyLoadMixin, SlugRedirectView
+from wish_list.models import WishListItem
 
 TOTAL_WEEKS_YEAR = 52
 
@@ -170,6 +171,12 @@ class IssueDetail(DetailView):
         context["universes_count"] = universes_count
         if universes_count > 0:
             context["universes"] = universes[:DETAIL_PAGINATE_BY]
+
+        if self.request.user.is_authenticated:
+            context["on_wish_list"] = WishListItem.objects.filter(
+                wish_list__user=self.request.user,
+                issue=issue,
+            ).exists()
 
         return context
 
