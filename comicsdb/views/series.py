@@ -18,6 +18,7 @@ from comicsdb.views.mixins import (
     AttributionUpdateMixin,
     SlugRedirectView,
 )
+from pull_list.models import PullListSeries
 
 LOGGER = logging.getLogger(__name__)
 
@@ -129,6 +130,13 @@ class SeriesDetail(DetailView):
         }
         context["creators"] = creators
         context["characters"] = characters
+
+        if self.request.user.is_authenticated:
+            context["on_pull_list"] = PullListSeries.objects.filter(
+                pull_list__user=self.request.user,
+                series=series,
+            ).exists()
+
         return context
 
 

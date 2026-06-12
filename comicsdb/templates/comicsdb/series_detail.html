@@ -49,6 +49,7 @@
                     <span>Issue List</span>
                 </a>
                 {% if user.is_authenticated %}
+                    {% include "pull_list/partials/pull_list_button.html" with series=series on_pull_list=on_pull_list %}
                     <a class="button is-rounded is-primary"
                        href="{% url 'series:create' %}"
                        title="Add a new series">
