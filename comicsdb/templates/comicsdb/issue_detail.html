@@ -76,23 +76,12 @@
         {% if user.is_authenticated %}
             <div class="level-right">
                 <div class="buttons">
+                    {% include "wish_list/partials/wish_list_button.html" with issue=issue on_wish_list=on_wish_list %}
                     <a class="button is-rounded is-primary"
                        href="{% url 'issue:create' %}"
                        title="Add a new issue">
                         <span class="icon is-small"><i class="fas fa-plus" aria-hidden="true"></i></span>
                         <span>New</span>
-                    </a>
-                    <a class="button is-rounded is-info"
-                       href="{% url 'issue:update' issue.slug %}"
-                       title="Edit this issue">
-                        <span class="icon is-small"><i class="fas fa-edit" aria-hidden="true"></i></span>
-                        <span>Edit</span>
-                    </a>
-                    <a class="button is-rounded is-link"
-                       href="{% url 'issue:history' issue.slug %}"
-                       title="View edit history">
-                        <span class="icon is-small"><i class="fas fa-history" aria-hidden="true"></i></span>
-                        <span>History</span>
                     </a>
                     {% if issue.series.series_type.name != "Trade Paperback" and issue.series.series_type.name != "Omnibus" and issue.series.series_type.name != "Hardcover" and issue.series.publisher.name != "DC Comics" and issue.series.publisher.name != "Marvel" %}
                         {% if navigation.previous_issue and not issue.credits_set.exists %}
@@ -140,18 +129,51 @@
                             </button>
                         {% endif %}
                     {% endif %}
-                    {% if perms.comicsdb.delete_issue %}
-                        <a class="button is-rounded is-danger"
-                           href="{% url 'issue:delete' issue.slug %}"
-                           title="Delete this issue">
-                            <span class="icon is-small"><i class="fas fa-trash" aria-hidden="true"></i></span>
-                            <span>Delete</span>
-                        </a>
-                    {% endif %}
+                    <div class="dropdown is-right" id="issue-actions-dropdown">
+                        <div class="dropdown-trigger">
+                            <button class="button is-rounded"
+                                    aria-haspopup="true"
+                                    aria-controls="issue-actions-menu"
+                                    hx-on:click="document.getElementById('issue-actions-dropdown').classList.toggle('is-active')">
+                                <span>Actions</span>
+                                <span class="icon is-small"><i class="fas fa-angle-down" aria-hidden="true"></i></span>
+                            </button>
+                        </div>
+                        <div class="dropdown-menu" id="issue-actions-menu" role="menu">
+                            <div class="dropdown-content">
+                                <a class="dropdown-item"
+                                   href="{% url 'issue:update' issue.slug %}">
+                                    <span class="icon is-small"><i class="fas fa-edit" aria-hidden="true"></i></span>
+                                    <span>Edit</span>
+                                </a>
+                                <a class="dropdown-item"
+                                   href="{% url 'issue:history' issue.slug %}">
+                                    <span class="icon is-small"><i class="fas fa-history" aria-hidden="true"></i></span>
+                                    <span>History</span>
+                                </a>
+                                {% if perms.comicsdb.delete_issue %}
+                                    <hr class="dropdown-divider">
+                                    <a class="dropdown-item has-text-danger"
+                                       href="{% url 'issue:delete' issue.slug %}">
+                                        <span class="icon is-small"><i class="fas fa-trash" aria-hidden="true"></i></span>
+                                        <span>Delete</span>
+                                    </a>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </div>
         {% endif %}
     </nav>
+    <script>
+        document.addEventListener('click', function (e) {
+            var dropdown = document.getElementById('issue-actions-dropdown');
+            if (dropdown && !dropdown.contains(e.target)) {
+                dropdown.classList.remove('is-active');
+            }
+        });
+    </script>
     {# Main Content #}
     <div class="columns">
         {# Left Column - Covers #}

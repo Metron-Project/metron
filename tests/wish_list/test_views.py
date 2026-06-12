@@ -6,6 +6,55 @@ from user_collection.models import CollectionItem
 from wish_list.models import WishList, WishListItem
 
 
+# Toggle view
+def test_toggle_requires_login(client, wish_list_issue):
+    resp = client.post(reverse("wish-list:toggle", kwargs={"slug": wish_list_issue.slug}))
+    assert resp.status_code == 302
+    assert "/accounts/login" in resp["Location"]
+
+
+def test_toggle_get_not_allowed(client, wish_list_user, test_password, wish_list_issue):
+    client.login(username=wish_list_user.username, password=test_password)
+    resp = client.get(reverse("wish-list:toggle", kwargs={"slug": wish_list_issue.slug}))
+    assert resp.status_code == 405
+
+
+def test_toggle_adds_issue_to_wish_list(client, wish_list_user, test_password, wish_list_issue):
+    client.login(username=wish_list_user.username, password=test_password)
+    resp = client.post(reverse("wish-list:toggle", kwargs={"slug": wish_list_issue.slug}))
+    assert resp.status_code == 200
+    assert WishListItem.objects.filter(
+        wish_list__user=wish_list_user, issue=wish_list_issue
+    ).exists()
+
+
+def test_toggle_removes_issue_from_wish_list(
+    client, wish_list_user, test_password, wish_list_item, wish_list_issue
+):
+    client.login(username=wish_list_user.username, password=test_password)
+    resp = client.post(reverse("wish-list:toggle", kwargs={"slug": wish_list_issue.slug}))
+    assert resp.status_code == 200
+    assert not WishListItem.objects.filter(
+        wish_list__user=wish_list_user, issue=wish_list_issue
+    ).exists()
+
+
+def test_toggle_response_contains_button(client, wish_list_user, test_password, wish_list_issue):
+    client.login(username=wish_list_user.username, password=test_password)
+    resp = client.post(reverse("wish-list:toggle", kwargs={"slug": wish_list_issue.slug}))
+    assert resp.status_code == 200
+    assert b"wish-list-btn" in resp.content
+
+
+def test_toggle_creates_wish_list_if_missing(
+    client, wish_list_user, test_password, wish_list_issue
+):
+    client.login(username=wish_list_user.username, password=test_password)
+    assert not WishList.objects.filter(user=wish_list_user).exists()
+    client.post(reverse("wish-list:toggle", kwargs={"slug": wish_list_issue.slug}))
+    assert WishList.objects.filter(user=wish_list_user).exists()
+
+
 # Detail view — authentication
 def test_detail_view_requires_login(client):
     resp = client.get(reverse("wish-list:detail"))
@@ -21,7 +70,7 @@ def test_detail_view_authenticated_creates_wish_list(client, wish_list_user, tes
     assert WishList.objects.filter(user=wish_list_user).exists()
 
 
-def test_detail_view_shows_items(client, wish_list_user, test_password, wish_list_item, wish_list):
+def test_detail_view_shows_items(client, wish_list_user, test_password, wish_list_item):
     client.login(username=wish_list_user.username, password=test_password)
     resp = client.get(reverse("wish-list:detail"))
     assert resp.status_code == 200
@@ -53,9 +102,7 @@ def test_add_duplicate_item_shows_info(
 
 
 # Item update view
-def test_item_update_requires_owner(
-    client, other_wish_list_user, test_password, wish_list_item, wish_list_issue
-):
+def test_item_update_requires_owner(client, other_wish_list_user, test_password, wish_list_item):
     client.login(username=other_wish_list_user.username, password=test_password)
     resp = client.get(reverse("wish-list:item-update", kwargs={"pk": wish_list_item.pk}))
     assert resp.status_code == 403

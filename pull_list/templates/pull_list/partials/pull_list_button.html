@@ -1,0 +1,11 @@
+<button id="pull-list-btn"
+        class="button is-rounded {% if on_pull_list %}is-info{% else %}is-light{% endif %}"
+        hx-post="{% url 'pull-list:toggle' series.slug %}"
+        hx-target="#pull-list-btn"
+        hx-swap="outerHTML"
+        title="{% if on_pull_list %}Remove from pull list{% else %}Add to pull list{% endif %}">
+    <span class="icon is-small">
+        <i class="{% if on_pull_list %}fas{% else %}far{% endif %} fa-bookmark" aria-hidden="true"></i>
+    </span>
+    <span>Pull List</span>
+</button>

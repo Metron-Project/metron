@@ -1,11 +1,14 @@
 from django.contrib import messages
+from django.contrib.auth.decorators import login_required
 from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
-from django.shortcuts import get_object_or_404, redirect
+from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse, reverse_lazy
 from django.utils import timezone
+from django.views.decorators.http import require_POST
 from django.views.generic import DeleteView, FormView
 
 from comicsdb.models.issue import Issue
+from comicsdb.models.series import Series
 from pull_list.forms import AddSeriesToPullListForm
 from pull_list.models import PullList, PullListSeries
 
@@ -77,3 +80,23 @@ class RemoveSeriesFromPullListView(LoginRequiredMixin, UserPassesTestMixin, Dele
         result = super().form_valid(form)
         messages.success(self.request, f"Removed {series_name} from your pull list.")
         return result
+
+
+@login_required
+@require_POST
+def toggle_pull_list_series(request, slug):
+    series = get_object_or_404(Series, slug=slug)
+    pull_list, _ = PullList.objects.get_or_create(user=request.user)
+    pull_list_series, created = PullListSeries.objects.get_or_create(
+        pull_list=pull_list, series=series
+    )
+    if not created:
+        pull_list_series.delete()
+        on_pull_list = False
+    else:
+        on_pull_list = True
+    return render(
+        request,
+        "pull_list/partials/pull_list_button.html",
+        {"series": series, "on_pull_list": on_pull_list},
+    )

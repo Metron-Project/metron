@@ -5,6 +5,7 @@ from pytest_django.asserts import assertTemplateUsed
 from comicsdb.forms.series import SeriesForm
 from comicsdb.models import Genre, Imprint, Publisher, Series, SeriesType
 from comicsdb.models.attribution import Attribution
+from pull_list.models import PullList, PullListSeries
 
 HTML_OK_CODE = 200
 HTML_REDIRECT_CODE = 302
@@ -43,6 +44,22 @@ def test_series_redirect(sandman_series, auto_login_user):
     client, _ = auto_login_user()
     resp = client.get(f"/series/{sandman_series.pk}/")
     assert resp.status_code == HTML_REDIRECT_CODE
+
+
+def test_series_detail_on_pull_list_false_when_not_on_list(sandman_series, auto_login_user):
+    client, _ = auto_login_user()
+    resp = client.get(f"/series/{sandman_series.slug}/")
+    assert resp.status_code == HTML_OK_CODE
+    assert resp.context["on_pull_list"] is False
+
+
+def test_series_detail_on_pull_list_true_when_on_list(sandman_series, auto_login_user):
+    client, user = auto_login_user()
+    pull_list = PullList.objects.create(user=user)
+    PullListSeries.objects.create(pull_list=pull_list, series=sandman_series)
+    resp = client.get(f"/series/{sandman_series.slug}/")
+    assert resp.status_code == HTML_OK_CODE
+    assert resp.context["on_pull_list"] is True
 
 
 def test_series_search_view_url_exists_at_desired_location(auto_login_user):

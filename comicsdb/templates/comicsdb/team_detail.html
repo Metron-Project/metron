@@ -49,30 +49,51 @@
                         <span class="icon is-small"><i class="fas fa-plus" aria-hidden="true"></i></span>
                         <span>New</span>
                     </a>
-                    <a class="button is-rounded is-info"
-                       href="{% url 'team:update' team.slug %}"
-                       title="Edit this team">
-                        <span class="icon is-small"><i class="fas fa-edit" aria-hidden="true"></i></span>
-                        <span>Edit</span>
-                    </a>
-                    <a class="button is-rounded is-link"
-                       href="{% url 'team:history' team.slug %}"
-                       title="View edit history">
-                        <span class="icon is-small"><i class="fas fa-history" aria-hidden="true"></i></span>
-                        <span>History</span>
-                    </a>
-                    {% if perms.comicsdb.delete_team %}
-                        <a class="button is-rounded is-danger"
-                           href="{% url 'team:delete' team.slug %}"
-                           title="Delete this team">
-                            <span class="icon is-small"><i class="fas fa-trash" aria-hidden="true"></i></span>
-                            <span>Delete</span>
-                        </a>
-                    {% endif %}
+                    <div class="dropdown is-right" id="team-actions-dropdown">
+                        <div class="dropdown-trigger">
+                            <button class="button is-rounded"
+                                    aria-haspopup="true"
+                                    aria-controls="team-actions-menu"
+                                    hx-on:click="document.getElementById('team-actions-dropdown').classList.toggle('is-active')">
+                                <span>Actions</span>
+                                <span class="icon is-small"><i class="fas fa-angle-down" aria-hidden="true"></i></span>
+                            </button>
+                        </div>
+                        <div class="dropdown-menu" id="team-actions-menu" role="menu">
+                            <div class="dropdown-content">
+                                <a class="dropdown-item"
+                                   href="{% url 'team:update' team.slug %}">
+                                    <span class="icon is-small"><i class="fas fa-edit" aria-hidden="true"></i></span>
+                                    <span>Edit</span>
+                                </a>
+                                <a class="dropdown-item"
+                                   href="{% url 'team:history' team.slug %}">
+                                    <span class="icon is-small"><i class="fas fa-history" aria-hidden="true"></i></span>
+                                    <span>History</span>
+                                </a>
+                                {% if perms.comicsdb.delete_team %}
+                                    <hr class="dropdown-divider">
+                                    <a class="dropdown-item has-text-danger"
+                                       href="{% url 'team:delete' team.slug %}">
+                                        <span class="icon is-small"><i class="fas fa-trash" aria-hidden="true"></i></span>
+                                        <span>Delete</span>
+                                    </a>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </div>
         {% endif %}
     </nav>
+    <script>
+        document.addEventListener('click', function (e) {
+            var dropdown = document.getElementById('team-actions-dropdown');
+            if (dropdown && !dropdown.contains(e.target)) {
+                dropdown.classList.remove('is-active');
+            }
+        });
+    </script>
     {# Main Content #}
     <div class="columns">
         {# Team Image #}

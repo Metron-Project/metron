@@ -1,0 +1,11 @@
+<button id="wish-list-btn"
+        class="button is-rounded {% if on_wish_list %}is-warning{% else %}is-light{% endif %}"
+        hx-post="{% url 'wish-list:toggle' issue.slug %}"
+        hx-target="#wish-list-btn"
+        hx-swap="outerHTML"
+        title="{% if on_wish_list %}Remove from wish list{% else %}Add to wish list{% endif %}">
+    <span class="icon is-small">
+        <i class="{% if on_wish_list %}fas{% else %}far{% endif %} fa-bookmark" aria-hidden="true"></i>
+    </span>
+    <span>Wish List</span>
+</button>

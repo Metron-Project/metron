@@ -48,30 +48,51 @@
                         <span class="icon is-small"><i class="fas fa-plus" aria-hidden="true"></i></span>
                         <span>New</span>
                     </a>
-                    <a class="button is-rounded is-info"
-                       href="{% url 'arc:update' arc.slug %}"
-                       title="Edit this story arc">
-                        <span class="icon is-small"><i class="fas fa-edit" aria-hidden="true"></i></span>
-                        <span>Edit</span>
-                    </a>
-                    <a class="button is-rounded is-link"
-                       href="{% url 'arc:history' arc.slug %}"
-                       title="View edit history">
-                        <span class="icon is-small"><i class="fas fa-history" aria-hidden="true"></i></span>
-                        <span>History</span>
-                    </a>
-                    {% if perms.comicsdb.delete_arc %}
-                        <a class="button is-rounded is-danger"
-                           href="{% url 'arc:delete' arc.slug %}"
-                           title="Delete this story arc">
-                            <span class="icon is-small"><i class="fas fa-trash" aria-hidden="true"></i></span>
-                            <span>Delete</span>
-                        </a>
-                    {% endif %}
+                    <div class="dropdown is-right" id="arc-actions-dropdown">
+                        <div class="dropdown-trigger">
+                            <button class="button is-rounded"
+                                    aria-haspopup="true"
+                                    aria-controls="arc-actions-menu"
+                                    hx-on:click="document.getElementById('arc-actions-dropdown').classList.toggle('is-active')">
+                                <span>Actions</span>
+                                <span class="icon is-small"><i class="fas fa-angle-down" aria-hidden="true"></i></span>
+                            </button>
+                        </div>
+                        <div class="dropdown-menu" id="arc-actions-menu" role="menu">
+                            <div class="dropdown-content">
+                                <a class="dropdown-item"
+                                   href="{% url 'arc:update' arc.slug %}">
+                                    <span class="icon is-small"><i class="fas fa-edit" aria-hidden="true"></i></span>
+                                    <span>Edit</span>
+                                </a>
+                                <a class="dropdown-item"
+                                   href="{% url 'arc:history' arc.slug %}">
+                                    <span class="icon is-small"><i class="fas fa-history" aria-hidden="true"></i></span>
+                                    <span>History</span>
+                                </a>
+                                {% if perms.comicsdb.delete_arc %}
+                                    <hr class="dropdown-divider">
+                                    <a class="dropdown-item has-text-danger"
+                                       href="{% url 'arc:delete' arc.slug %}">
+                                        <span class="icon is-small"><i class="fas fa-trash" aria-hidden="true"></i></span>
+                                        <span>Delete</span>
+                                    </a>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </div>
         {% endif %}
     </nav>
+    <script>
+        document.addEventListener('click', function (e) {
+            var dropdown = document.getElementById('arc-actions-dropdown');
+            if (dropdown && !dropdown.contains(e.target)) {
+                dropdown.classList.remove('is-active');
+            }
+        });
+    </script>
     {# Main Content #}
     <div class="columns">
         {# Arc Image #}
