@@ -55,30 +55,51 @@
                         <span class="icon is-small"><i class="fas fa-plus" aria-hidden="true"></i></span>
                         <span>New</span>
                     </a>
-                    <a class="button is-rounded is-info"
-                       href="{% url 'imprint:update' imprint.slug %}"
-                       title="Edit this imprint">
-                        <span class="icon is-small"><i class="fas fa-edit" aria-hidden="true"></i></span>
-                        <span>Edit</span>
-                    </a>
-                    <a class="button is-rounded is-link"
-                       href="{% url 'imprint:history' imprint.slug %}"
-                       title="View edit history">
-                        <span class="icon is-small"><i class="fas fa-history" aria-hidden="true"></i></span>
-                        <span>History</span>
-                    </a>
-                    {% if perms.comicsdb.delete_imprint %}
-                        <a class="button is-rounded is-danger"
-                           href="{% url 'imprint:delete' imprint.slug %}"
-                           title="Delete this imprint">
-                            <span class="icon is-small"><i class="fas fa-trash" aria-hidden="true"></i></span>
-                            <span>Delete</span>
-                        </a>
-                    {% endif %}
+                    <div class="dropdown is-right" id="imprint-actions-dropdown">
+                        <div class="dropdown-trigger">
+                            <button class="button is-rounded"
+                                    aria-haspopup="true"
+                                    aria-controls="imprint-actions-menu"
+                                    hx-on:click="document.getElementById('imprint-actions-dropdown').classList.toggle('is-active')">
+                                <span>Actions</span>
+                                <span class="icon is-small"><i class="fas fa-angle-down" aria-hidden="true"></i></span>
+                            </button>
+                        </div>
+                        <div class="dropdown-menu" id="imprint-actions-menu" role="menu">
+                            <div class="dropdown-content">
+                                <a class="dropdown-item"
+                                   href="{% url 'imprint:update' imprint.slug %}">
+                                    <span class="icon is-small"><i class="fas fa-edit" aria-hidden="true"></i></span>
+                                    <span>Edit</span>
+                                </a>
+                                <a class="dropdown-item"
+                                   href="{% url 'imprint:history' imprint.slug %}">
+                                    <span class="icon is-small"><i class="fas fa-history" aria-hidden="true"></i></span>
+                                    <span>History</span>
+                                </a>
+                                {% if perms.comicsdb.delete_imprint %}
+                                    <hr class="dropdown-divider">
+                                    <a class="dropdown-item has-text-danger"
+                                       href="{% url 'imprint:delete' imprint.slug %}">
+                                        <span class="icon is-small"><i class="fas fa-trash" aria-hidden="true"></i></span>
+                                        <span>Delete</span>
+                                    </a>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
                 {% endif %}
             </div>
         </div>
     </nav>
+    <script>
+        document.addEventListener('click', function (e) {
+            var dropdown = document.getElementById('imprint-actions-dropdown');
+            if (dropdown && !dropdown.contains(e.target)) {
+                dropdown.classList.remove('is-active');
+            }
+        });
+    </script>
     {# Main Content #}
     <div class="columns">
         {# Imprint Logo #}
