@@ -1,3 +1,14 @@
+/* Alternating section background that adapts to dark mode */
+.has-background-section-alt {
+    background-color: hsl(0, 0%, 96%);
+}
+
+@media (prefers-color-scheme: dark) {
+    .has-background-section-alt {
+        background-color: hsl(0, 0%, 17%);
+    }
+}
+
 /* Timeline styles for the home page */
 #timeline {
     margin: 0 1em;
