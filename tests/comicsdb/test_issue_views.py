@@ -10,6 +10,7 @@ from comicsdb.models.credits import Role
 from comicsdb.models.issue import Issue
 from comicsdb.models.publisher import Publisher
 from comicsdb.models.series import Series, SeriesType
+from wish_list.models import WishList, WishListItem
 
 HTML_OK_CODE = 200
 HTML_REDIRECT_CODE = 302
@@ -29,6 +30,22 @@ def test_issue_redirect(basic_issue, auto_login_user):
     client, _ = auto_login_user()
     resp = client.get(f"/issue/{basic_issue.pk}/")
     assert resp.status_code == HTML_REDIRECT_CODE
+
+
+def test_issue_detail_on_wish_list_false_when_not_on_list(basic_issue, auto_login_user):
+    client, _ = auto_login_user()
+    resp = client.get(f"/issue/{basic_issue.slug}/")
+    assert resp.status_code == HTML_OK_CODE
+    assert resp.context["on_wish_list"] is False
+
+
+def test_issue_detail_on_wish_list_true_when_on_list(basic_issue, auto_login_user):
+    client, user = auto_login_user()
+    wish_list = WishList.objects.create(user=user)
+    WishListItem.objects.create(wish_list=wish_list, issue=basic_issue)
+    resp = client.get(f"/issue/{basic_issue.slug}/")
+    assert resp.status_code == HTML_OK_CODE
+    assert resp.context["on_wish_list"] is True
 
 
 # Issue Search

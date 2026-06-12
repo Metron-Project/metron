@@ -49,36 +49,58 @@
                     <span>Issue List</span>
                 </a>
                 {% if user.is_authenticated %}
+                    {% include "pull_list/partials/pull_list_button.html" with series=series on_pull_list=on_pull_list %}
                     <a class="button is-rounded is-primary"
                        href="{% url 'series:create' %}"
                        title="Add a new series">
                         <span class="icon is-small"><i class="fas fa-plus" aria-hidden="true"></i></span>
                         <span>New</span>
                     </a>
-                    <a class="button is-rounded is-info"
-                       href="{% url 'series:update' series.slug %}"
-                       title="Edit this series">
-                        <span class="icon is-small"><i class="fas fa-edit" aria-hidden="true"></i></span>
-                        <span>Edit</span>
-                    </a>
-                    <a class="button is-rounded is-link"
-                       href="{% url 'series:history' series.slug %}"
-                       title="View edit history">
-                        <span class="icon is-small"><i class="fas fa-history" aria-hidden="true"></i></span>
-                        <span>History</span>
-                    </a>
-                    {% if perms.comicsdb.delete_series %}
-                        <a class="button is-rounded is-danger"
-                           href="{% url 'series:delete' series.slug %}"
-                           title="Delete this series">
-                            <span class="icon is-small"><i class="fas fa-trash" aria-hidden="true"></i></span>
-                            <span>Delete</span>
-                        </a>
-                    {% endif %}
+                    <div class="dropdown is-right" id="series-actions-dropdown">
+                        <div class="dropdown-trigger">
+                            <button class="button is-rounded"
+                                    aria-haspopup="true"
+                                    aria-controls="series-actions-menu"
+                                    hx-on:click="document.getElementById('series-actions-dropdown').classList.toggle('is-active')">
+                                <span>Actions</span>
+                                <span class="icon is-small"><i class="fas fa-angle-down" aria-hidden="true"></i></span>
+                            </button>
+                        </div>
+                        <div class="dropdown-menu" id="series-actions-menu" role="menu">
+                            <div class="dropdown-content">
+                                <a class="dropdown-item"
+                                   href="{% url 'series:update' series.slug %}">
+                                    <span class="icon is-small"><i class="fas fa-edit" aria-hidden="true"></i></span>
+                                    <span>Edit</span>
+                                </a>
+                                <a class="dropdown-item"
+                                   href="{% url 'series:history' series.slug %}">
+                                    <span class="icon is-small"><i class="fas fa-history" aria-hidden="true"></i></span>
+                                    <span>History</span>
+                                </a>
+                                {% if perms.comicsdb.delete_series %}
+                                    <hr class="dropdown-divider">
+                                    <a class="dropdown-item has-text-danger"
+                                       href="{% url 'series:delete' series.slug %}">
+                                        <span class="icon is-small"><i class="fas fa-trash" aria-hidden="true"></i></span>
+                                        <span>Delete</span>
+                                    </a>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
                 {% endif %}
             </div>
         </div>
     </nav>
+    <script>
+        document.addEventListener('click', function (e) {
+            var dropdown = document.getElementById('series-actions-dropdown');
+            if (dropdown && !dropdown.contains(e.target)) {
+                dropdown.classList.remove('is-active');
+            }
+        });
+    </script>
     {# Main Content #}
     <div class="columns">
         {# Series Cover #}

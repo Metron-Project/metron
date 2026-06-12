@@ -1,9 +1,12 @@
 from django.contrib import messages
+from django.contrib.auth.decorators import login_required
 from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
-from django.shortcuts import get_object_or_404, redirect
+from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse, reverse_lazy
+from django.views.decorators.http import require_POST
 from django.views.generic import DeleteView, FormView, UpdateView
 
+from comicsdb.models.issue import Issue
 from user_collection.models import CollectionItem
 from wish_list.forms import AcquireWishListItemForm, WishListItemForm
 from wish_list.models import WishList, WishListItem
@@ -117,3 +120,21 @@ class AcquireWishListItemView(LoginRequiredMixin, UserPassesTestMixin, FormView)
         context = super().get_context_data(**kwargs)
         context["item"] = self.wish_list_item
         return context
+
+
+@login_required
+@require_POST
+def toggle_wish_list_item(request, slug):
+    issue = get_object_or_404(Issue, slug=slug)
+    wish_list, _ = WishList.objects.get_or_create(user=request.user)
+    item, created = WishListItem.objects.get_or_create(wish_list=wish_list, issue=issue)
+    if not created:
+        item.delete()
+        on_wish_list = False
+    else:
+        on_wish_list = True
+    return render(
+        request,
+        "wish_list/partials/wish_list_button.html",
+        {"issue": issue, "on_wish_list": on_wish_list},
+    )
