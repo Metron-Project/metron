@@ -149,11 +149,35 @@
                         <p>
                             <strong>Quick Scrobble:</strong> Mark issues as read instantly via our API — useful for comic servers!
                         </p>
-                        <p>Sign up for an account to start creating your own reading lists and collections today!</p>
                     </div>
                 </div>
             </div>
         </div>
+        <div class="columns is-desktop mt-5">
+            <div class="column is-half-desktop">
+                <h2 class="is-size-2">Wish List</h2>
+                <div class="content mt-4">
+                    <p>
+                        Keep track of issues you want to acquire with your personal <strong>Wish List</strong>.
+                        Add issues you're hunting for so you never lose track of them while shopping or trading.
+                    </p>
+                    <p>Wish list management is also available via the REST API at <code>/api/wish_list/</code>.</p>
+                </div>
+            </div>
+            <div class="column is-half-desktop">
+                <h2 class="is-size-2">Pull List</h2>
+                <div class="content mt-4">
+                    <p>
+                        Follow the series you love with your <strong>Pull List</strong>. Add ongoing titles
+                        you're collecting to get a consolidated view of everything you're currently following.
+                    </p>
+                    <p>Pull list management is also available via the REST API at <code>/api/pull_list/</code>.</p>
+                </div>
+            </div>
+        </div>
+        <p class="mt-5">
+            <a href="{% url 'signup' %}">Create an account</a> to start using these features today!
+        </p>
     </section>
     {# Timeline #}
     <section id="timeline" class="section has-text-centered">
