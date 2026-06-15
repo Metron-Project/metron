@@ -16,6 +16,8 @@
 .home-hero {
     background: linear-gradient(150deg, hsl(217, 60%, 18%) 0%, hsl(217, 55%, 30%) 100%);
     color: #fff;
+    clip-path: polygon(0 0, 100% 0, 100% 88%, 0 100%);
+    padding-bottom: 4rem;
 }
 
 .home-hero-body {
