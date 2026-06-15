@@ -13,11 +13,11 @@
           content="Comics,Comic Book Database,API,REST,Metron,Community,Open Source">
 {% endblock %}
 {% block title %}Metron - Comic Book Database{% endblock %}
-{% block content %}
+{% block hero %}
     {# Announcements #}
     {% cache 1800 announcements_cache %}
     {% if active_announcements %}
-        <div class="announcements mb-5">
+        <div class="announcements px-4 pt-4">
             {% for announcement in active_announcements %}
                 <div class="notification is-{{ announcement.display_type }} is-light"
                      role="alert">
@@ -30,16 +30,21 @@
         </div>
     {% endif %}
     {% endcache %}
-    {# Hero Header #}
-    <section class="hero is-medium is-link home-hero">
-        <div class="hero-body">
+    {# Hero Header — full-width, Fedora-inspired #}
+    <section class="home-hero">
+        <div class="home-hero-body">
             <div class="container has-text-centered">
-                <p class="hero-eyebrow">Open Source Comic Book Database</p>
-                <h1 class="title is-1 hero-title mt-2">Metron</h1>
-                <p class="subtitle is-4 hero-subtitle mt-3">
+                <img src="{% static 'site/img/metron-300.png' %}"
+                     alt="Metron logo"
+                     class="home-hero-logo"
+                     width="120"
+                     height="120">
+                <h1 class="home-hero-title">Metron</h1>
+                <p class="home-hero-tagline">Comic Book Database</p>
+                <p class="home-hero-subtitle">
                     Built by the community, for the community.
                 </p>
-                <div class="buttons are-medium is-centered mt-5">
+                <div class="buttons are-medium is-centered home-hero-buttons">
                     <a href="{% url 'issue:list' %}" class="button is-light is-outlined">
                         <span class="icon"><i class="fas fa-book-open"></i></span>
                         <span>Browse Comics</span>
@@ -48,7 +53,7 @@
                         <span class="icon"><i class="fas fa-book"></i></span>
                         <span>Read the Wiki</span>
                     </a>
-                    <a href="{% url 'signup' %}" class="button is-primary is-light">
+                    <a href="{% url 'signup' %}" class="button is-link is-light">
                         <span class="icon"><i class="fas fa-user-plus"></i></span>
                         <span>Sign Up Free</span>
                     </a>
@@ -56,6 +61,8 @@
             </div>
         </div>
     </section>
+{% endblock %}
+{% block content %}
     {# What is Metron #}
     <section id="about" class="section">
         <div class="container">

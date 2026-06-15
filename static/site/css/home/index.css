@@ -10,41 +10,67 @@
 }
 
 /* ========================================
-   Hero — Fedora-inspired large hero
+   Hero — full-width, Fedora-inspired
    ======================================== */
 
-.home-hero .hero-body {
+.home-hero {
+    background: linear-gradient(150deg, hsl(217, 60%, 18%) 0%, hsl(217, 55%, 30%) 100%);
+    color: #fff;
+}
+
+.home-hero-body {
     padding: 5rem 1.5rem;
 }
 
-.hero-eyebrow {
+.home-hero-logo {
+    display: block;
+    margin: 0 auto 1.5rem;
+    filter: drop-shadow(0 2px 8px rgba(0, 0, 0, 0.35));
+}
+
+.home-hero-title {
+    font-size: 4rem;
+    font-weight: 800;
+    letter-spacing: -1px;
+    color: #fff;
+    line-height: 1.1;
+}
+
+.home-hero-tagline {
     font-size: 0.8rem;
     font-weight: 700;
     text-transform: uppercase;
     letter-spacing: 3px;
-    opacity: 0.75;
+    opacity: 0.7;
+    margin-top: 0.5rem;
+    color: #fff;
 }
 
-.hero-title {
-    font-size: 4rem !important;
-    font-weight: 800;
-    letter-spacing: -1px;
-}
-
-.hero-subtitle {
-    opacity: 0.9;
+.home-hero-subtitle {
+    font-size: 1.25rem;
+    opacity: 0.85;
     max-width: 480px;
-    margin-left: auto !important;
-    margin-right: auto !important;
+    margin: 1rem auto 0;
+    color: #fff;
+    line-height: 1.6;
+}
+
+.home-hero-buttons {
+    margin-top: 2rem !important;
 }
 
 @media screen and (max-width: 768px) {
-    .home-hero .hero-body {
+    .home-hero-body {
         padding: 3rem 1.5rem;
     }
 
-    .hero-title {
-        font-size: 2.5rem !important;
+    .home-hero-title {
+        font-size: 2.5rem;
+    }
+
+    .home-hero-logo {
+        width: 80px;
+        height: 80px;
     }
 }
 

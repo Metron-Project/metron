@@ -44,6 +44,8 @@
           hx-headers='{"x-csrftoken": "{{ csrf_token }}"}'>
         {# Navigation #}
         {% include "partials/navbar.html" %}
+        {# Full-width hero block (outside container, for pages like home) #}
+        {% block hero %}{% endblock %}
         {# Main Content #}
         <main id="main-content" class="section is-flex-grow-1">
             <div class="container">
