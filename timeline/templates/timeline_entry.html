@@ -7,11 +7,7 @@
      {% endif %}>
   <div class="timeline-icon-date">
     <div class="timeline-icon {{ entry.icon_color }}{% if not revealed %} timeline-icon--hidden{% else %} timeline-icon--bounce-in{% endif %}">
-      {% if entry.icon == "pydis" %}
-        <img class="pydis" src="{% static "images/timeline/cd-icon-pydis.svg" %}" alt="">
-      {% else %}
-        <span class="icon"><i class="{{ entry.icon }}"></i></span>
-      {% endif %}
+      <span class="icon"><i class="{{ entry.icon }}"></i></span>
     </div>
     <span class="timeline-date{% if not revealed %} timeline-date--hidden{% else %} timeline-date--bounce-in{% endif %}">{{ entry.date }}</span>
   </div>

@@ -250,18 +250,6 @@
     height: var(--icon-image-width);
 }
 
-/* Icons that use the pydis logo */
-.timeline-icon img.pydis {
-    /* Visually centering the pydis logo requires a margin adjustment here
-     * due to the right and bottom box shadow on the logo which is not very
-     * visible on the page.
-     *
-     * XXX: Hardcoded; Unresponsive to actual image dimensions.
-     * */
-    margin-top: 1px;
-    margin-left: 1px;
-}
-
 .timeline-date {
     font-size: .9rem;
     color: var(--date-color);
