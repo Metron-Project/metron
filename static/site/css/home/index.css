@@ -9,7 +9,146 @@
     }
 }
 
-/* Timeline styles for the home page */
+/* ========================================
+   Hero — Fedora-inspired large hero
+   ======================================== */
+
+.home-hero .hero-body {
+    padding: 5rem 1.5rem;
+}
+
+.hero-eyebrow {
+    font-size: 0.8rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 3px;
+    opacity: 0.75;
+}
+
+.hero-title {
+    font-size: 4rem !important;
+    font-weight: 800;
+    letter-spacing: -1px;
+}
+
+.hero-subtitle {
+    opacity: 0.9;
+    max-width: 480px;
+    margin-left: auto !important;
+    margin-right: auto !important;
+}
+
+@media screen and (max-width: 768px) {
+    .home-hero .hero-body {
+        padding: 3rem 1.5rem;
+    }
+
+    .hero-title {
+        font-size: 2.5rem !important;
+    }
+}
+
+/* ========================================
+   Section headings — centered with divider accent
+   ======================================== */
+
+.home-section-intro {
+    max-width: 600px;
+    margin-left: auto !important;
+    margin-right: auto !important;
+}
+
+.home-section-divider {
+    width: 60px;
+    height: 4px;
+    background-color: hsl(217, 71%, 53%);
+    border-radius: 2px;
+    margin: 1.5rem auto 0;
+}
+
+/* ========================================
+   Feature & community cards
+   ======================================== */
+
+.home-feature-card,
+.home-community-card {
+    border: 1px solid hsl(0, 0%, 90%);
+    border-radius: 8px;
+    transition: box-shadow 0.2s ease, transform 0.2s ease;
+}
+
+.home-feature-card:hover,
+.home-community-card:hover {
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
+    transform: translateY(-2px);
+}
+
+.home-feature-icon {
+    color: hsl(217, 71%, 53%);
+}
+
+.home-feature-card .card-footer,
+.home-community-card .card-footer {
+    border-top: 1px solid hsl(0, 0%, 93%);
+}
+
+.home-feature-card .card-footer-item,
+.home-community-card .card-footer-item {
+    font-weight: 500;
+    color: hsl(217, 71%, 53%);
+    gap: 0.4rem;
+    transition: background-color 0.15s ease;
+}
+
+.home-feature-card .card-footer-item:hover,
+.home-community-card .card-footer-item:hover {
+    background-color: hsla(217, 71%, 53%, 0.06);
+    text-decoration: none;
+}
+
+@media (prefers-color-scheme: dark) {
+    .home-feature-card,
+    .home-community-card {
+        border-color: hsl(0, 0%, 25%);
+    }
+
+    .home-feature-card .card-footer,
+    .home-community-card .card-footer {
+        border-top-color: hsl(0, 0%, 25%);
+    }
+}
+
+/* ========================================
+   About section
+   ======================================== */
+
+.home-about-content {
+    max-width: 800px;
+    margin: 0 auto;
+    font-size: 1.05rem;
+    line-height: 1.8;
+}
+
+/* ========================================
+   Contact box
+   ======================================== */
+
+.home-contact-link {
+    display: block;
+    color: inherit;
+    transition: color 0.15s ease, transform 0.15s ease;
+}
+
+.home-contact-link:hover {
+    color: hsl(217, 71%, 53%);
+    transform: translateY(-2px);
+    text-decoration: none;
+}
+
+/* ========================================
+   Timeline styles
+   ======================================== */
+
 #timeline {
     margin: 0 1em;
 }
@@ -34,12 +173,12 @@
     background-color: #3EB2EF;
     color: white;
     line-height: 31px;
-    border:none;
-    box-shadow: 0 1px 3px rgba(0,0,0,0.12), 0 1px 2px rgba(0,0,0,0.24);
-    transition: all 0.3s cubic-bezier(.25,.8,.25,1);
+    border: none;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.12), 0 1px 2px rgba(0, 0, 0, 0.24);
+    transition: all 0.3s cubic-bezier(.25, .8, .25, 1);
 }
 
 #timeline .mini-timeline i:hover {
-    box-shadow: 0 2px 5px rgba(0,0,0,0.16), 0 2px 5px rgba(0,0,0,0.23);
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.16), 0 2px 5px rgba(0, 0, 0, 0.23);
     transform: scale(1.5);
 }
