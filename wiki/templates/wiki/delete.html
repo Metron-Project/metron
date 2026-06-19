@@ -9,7 +9,7 @@
         <p class="subtitle is-4">{% trans "You cannot delete a root article." %}</p>
         <p>
             <a href="{% url 'wiki:get' path=urlpath.path article_id=article.id %}"
-               class="button is-rounded is-link">{% trans "Go back" %}</a>
+               class="button is-link">{% trans "Go back" %}</a>
         </p>
     {% else %}
         {% if cannot_delete_children %}
@@ -43,7 +43,7 @@
                 <div class="field is-grouped">
                     <div class="control">
                         <a href="{% url 'wiki:get' path=urlpath.path article_id=article.id %}"
-                           class="button is-rounded">
+                           class="button">
                             <span class="icon">
                                 <i class="fa fa-arrow-left"></i>
                             </span>
@@ -51,7 +51,7 @@
                         </a>
                     </div>
                     <div class="control">
-                        <button type="submit" name="save_changes" class="button is-rounded is-danger">
+                        <button type="submit" name="save_changes" class="button is-danger">
                             <span class="icon">
                                 <i class="fa fa-trash-o"></i>
                             </span>

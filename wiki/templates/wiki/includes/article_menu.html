@@ -1,7 +1,7 @@
 {% load i18n wiki_tags %}
 {% with selected_tab as selected %}
     <a href="{% url 'wiki:get' article_id=article.id path=urlpath.path %}"
-       class="button is-rounded{% if selected == "view" %} is-link{% endif %}">
+       class="button{% if selected == "view" %} is-link{% endif %}">
         <span class="icon is-small">
             <i class="fa fa-home"></i>
         </span>
@@ -9,7 +9,7 @@
     </a>
     {% if article|can_write:user and not article.current_revision.locked %}
         <a href="{% url 'wiki:edit' article_id=article.id path=urlpath.path %}"
-           class="button is-rounded{% if selected == "edit" %} is-link{% endif %}">
+           class="button{% if selected == "edit" %} is-link{% endif %}">
             <span class="icon is-small">
                 <i class="fa fa-edit"></i>
             </span>
@@ -17,7 +17,7 @@
         </a>
     {% else %}
         <a href="{% url 'wiki:source' article_id=article.id path=urlpath.path %}"
-           class="button is-rounded{% if selected == "source" %} is-link{% endif %}">
+           class="button{% if selected == "source" %} is-link{% endif %}">
             <span class="icon is-small">
                 <i class="fa fa-lock"></i>
             </span>
@@ -25,7 +25,7 @@
         </a>
     {% endif %}
     <a href="{% url 'wiki:history' article_id=article.id path=urlpath.path %}"
-       class="button is-rounded{% if selected == "history" %} is-link{% endif %}">
+       class="button{% if selected == "history" %} is-link{% endif %}">
         <span class="icon is-small">
             <i class="fa fa-clock"></i>
         </span>
@@ -33,7 +33,7 @@
     </a>
     {% for plugin in article_tabs %}
         <a href="{% url 'wiki:plugin' slug=plugin.slug article_id=article.id path=urlpath.path %}"
-           class="button is-rounded{% if selected == plugin.slug %} is-link{% endif %}">
+           class="button{% if selected == plugin.slug %} is-link{% endif %}">
             <span class="icon is-small">
                 <i class="{{ plugin.article_tab.1 }}"></i>
             </span>
@@ -42,7 +42,7 @@
     {% endfor %}
     {% if not user.is_anonymous %}
         <a href="{% url 'wiki:settings' article_id=article.id path=urlpath.path %}"
-           class="button is-rounded{% if selected == "settings" %} is-link{% endif %}">
+           class="button{% if selected == "settings" %} is-link{% endif %}">
             <span class="icon is-small">
                 <i class="fa fa-wrench"></i>
             </span>

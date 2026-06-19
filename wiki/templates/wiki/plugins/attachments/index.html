@@ -60,13 +60,13 @@
                                         {% if not attachment.current_revision.deleted %}
                                             <div class="buttons are-small">
                                                 <a href="{% url 'wiki:attachments_replace' path=urlpath.path article_id=article.id attachment_id=attachment.id %}"
-                                                   class="button is-small is-rounded">{% trans "Replace" %}</a>
+                                                   class="button is-small ">{% trans "Replace" %}</a>
                                                 {% if attachment.article == article %}
                                                     <a href="{% url 'wiki:attachments_delete' path=urlpath.path article_id=article.id attachment_id=attachment.id %}"
-                                                       class="button is-small is-rounded is-danger">{% trans "Delete" %}</a>
+                                                       class="button is-small  is-danger">{% trans "Delete" %}</a>
                                                 {% else %}
                                                     <a href="{% url 'wiki:attachments_delete' path=urlpath.path article_id=article.id attachment_id=attachment.id %}"
-                                                       class="button is-small is-rounded">{% trans "Detach" %}</a>
+                                                       class="button is-small ">{% trans "Detach" %}</a>
                                                 {% endif %}
                                             </div>
                                         {% else %}
@@ -104,7 +104,7 @@
                             {% wiki_form form %}
                             <div class="field">
                                 <div class="control">
-                                    <button type="submit" name="save" value="1" class="button is-rounded is-link">{% trans "Upload file" %}</button>
+                                    <button type="submit" name="save" value="1" class="button is-link">{% trans "Upload file" %}</button>
                                 </div>
                             </div>
                         </form>
@@ -125,7 +125,7 @@
                         <div class="field has-addons">
                             <div class="control is-expanded">{{ search_form.query }}</div>
                             <div class="control">
-                                <button class="button is-rounded is-link" type="submit">
+                                <button class="button is-link" type="submit">
                                     <span class="icon"><i class="fa fa-search"></i></span>
                                 </button>
                             </div>
@@ -151,7 +151,7 @@
                                         <form method="POST"
                                               action="{% url 'wiki:attachments_revision_change' path=urlpath.path article_id=article.id attachment_id=attachment.id revision_id=attachment.current_revision.previous_revision.id %}">
                                             {% csrf_token %}
-                                            <button class="button is-rounded is-link">{% trans "Restore" %}</button>
+                                            <button class="button is-link">{% trans "Restore" %}</button>
                                         </form>
                                     </div>
                                 {% endif %}

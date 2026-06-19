@@ -14,27 +14,27 @@
     <nav class="level mb-5" aria-label="Series navigation">
         <div class="level-left">
             {% if navigation.previous_series %}
-                <a class="button is-rounded is-link"
+                <a class="button is-link"
                    href="{% url 'series:detail' navigation.previous_series.slug %}"
                    aria-label="Go to {{ navigation.previous_series }}">
                     <span class="icon is-small"><i class="fas fa-arrow-left" aria-hidden="true"></i></span>
                     <span>Previous Series</span>
                 </a>
             {% else %}
-                <button class="button is-rounded" disabled aria-disabled="true">
+                <button class="button" disabled aria-disabled="true">
                     <span class="icon is-small"><i class="fas fa-arrow-left" aria-hidden="true"></i></span>
                     <span>Previous Series</span>
                 </button>
             {% endif %}
             {% if navigation.next_series %}
-                <a class="button is-rounded is-link ml-2"
+                <a class="button is-link ml-2"
                    href="{% url 'series:detail' navigation.next_series.slug %}"
                    aria-label="Go to {{ navigation.next_series }}">
                     <span>Next Series</span>
                     <span class="icon is-small"><i class="fas fa-arrow-right" aria-hidden="true"></i></span>
                 </a>
             {% else %}
-                <button class="button is-rounded ml-2" disabled aria-disabled="true">
+                <button class="button ml-2" disabled aria-disabled="true">
                     <span>Next Series</span>
                     <span class="icon is-small"><i class="fas fa-arrow-right" aria-hidden="true"></i></span>
                 </button>
@@ -42,7 +42,7 @@
         </div>
         <div class="level-right">
             <div class="buttons">
-                <a class="button is-rounded is-link"
+                <a class="button is-link"
                    href="{% url 'series:issue' series.slug %}"
                    title="View issue list for this series">
                     <span class="icon is-small"><i class="fas fa-list" aria-hidden="true"></i></span>
@@ -50,7 +50,7 @@
                 </a>
                 {% if user.is_authenticated %}
                     {% include "pull_list/partials/pull_list_button.html" with series=series on_pull_list=on_pull_list %}
-                    <a class="button is-rounded is-primary"
+                    <a class="button is-primary"
                        href="{% url 'series:create' %}"
                        title="Add a new series">
                         <span class="icon is-small"><i class="fas fa-plus" aria-hidden="true"></i></span>
@@ -58,7 +58,7 @@
                     </a>
                     <div class="dropdown is-right" id="series-actions-dropdown">
                         <div class="dropdown-trigger">
-                            <button class="button is-rounded"
+                            <button class="button"
                                     aria-haspopup="true"
                                     aria-controls="series-actions-menu"
                                     hx-on:click="document.getElementById('series-actions-dropdown').classList.toggle('is-active')">

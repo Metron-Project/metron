@@ -20,7 +20,7 @@
                 {% endwith %}
                 <div class="field is-grouped is-grouped-multiline">
                     <div class="control">
-                        <button class="button is-rounded is-primary"
+                        <button class="button is-primary"
                                 type="submit"
                                 name="preview"
                                 value="1"
@@ -34,7 +34,7 @@
                         </button>
                     </div>
                     <div class="control">
-                        <button class="button is-rounded is-link"
+                        <button class="button is-link"
                                 type="submit"
                                 name="save"
                                 value="1"
@@ -48,7 +48,7 @@
                     {% if user.is_authenticated and urlpath.path %}
                         <div class="control">
                             <a href="{% url 'wiki:move' path=urlpath.path article_id=article.id %}"
-                               class="button is-rounded is-warning">
+                               class="button is-warning">
                                 <span class="icon">
                                     <i class="fas fa-random"></i>
                                 </span>
@@ -59,7 +59,7 @@
                     {% if article|can_delete:user %}
                         <div class="control">
                             <a href="{% url 'wiki:delete' path=urlpath.path article_id=article.id %}"
-                               class="button is-rounded is-danger">
+                               class="button is-danger">
                                 <span class="icon">
                                     <i class="fas fa-trash"></i>
                                 </span>
@@ -93,13 +93,13 @@
             <footer class="modal-card-foot has-background-light">
                 <div class="buttons is-flex is-justify-content-space-between"
                      style="width: 100%">
-                    <button class="button is-rounded is-light" id="closePreviewModalBtn">
+                    <button class="button is-light" id="closePreviewModalBtn">
                         <span class="icon">
                             <i class="fas fa-arrow-left"></i>
                         </span>
                         <span>{% trans "Back to editor" %}</span>
                     </button>
-                    <button class="button is-rounded is-link" id="id_preview_save_changes">
+                    <button class="button is-link" id="id_preview_save_changes">
                         <span class="icon">
                             <i class="fas fa-check"></i>
                         </span>

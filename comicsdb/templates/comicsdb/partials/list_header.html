@@ -38,7 +38,7 @@
                                aria-label="{{ search_placeholder }}">
                     </div>
                     <div class="control">
-                        <button class="button is-rounded" type="submit" aria-label="Search">
+                        <button class="button" type="submit" aria-label="Search">
                             <span class="icon" aria-hidden="true">
                                 <i class="fas fa-search"></i>
                             </span>
@@ -53,7 +53,7 @@
     {% if create_url and user.is_authenticated %}
         <div class="level-right">
             <div class="level-item">
-                <a class="button is-rounded is-primary"
+                <a class="button is-primary"
                    href="{% url create_url %}"
                    title="{{ create_title }}"
                    aria-label="{{ create_title }}">

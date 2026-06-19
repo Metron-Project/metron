@@ -10,7 +10,7 @@
                 {% wiki_form form %}
                 <div class="dropdown" id="dest_selector">
                     <div class="dropdown-trigger">
-                        <button class="button is-rounded"
+                        <button class="button"
                                 type="button"
                                 aria-haspopup="true"
                                 aria-controls="dropdown-menu-dest">
@@ -46,7 +46,7 @@
                 <div class="field is-grouped">
                     <div class="control">
                         <a href="{% url 'wiki:get' path=urlpath.path article_id=article.id %}"
-                           class="button is-rounded">
+                           class="button">
                             <span class="icon">
                                 <i class="fa fa-arrow-left"></i>
                             </span>
@@ -54,7 +54,7 @@
                         </a>
                     </div>
                     <div class="control">
-                        <button class="button is-rounded is-link"
+                        <button class="button is-link"
                                 type="submit"
                                 name="move"
                                 id="id_move">

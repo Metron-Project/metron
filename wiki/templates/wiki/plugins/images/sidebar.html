@@ -65,7 +65,7 @@ $(document).ready(function() {
                                     <p class="is-size-7 has-text-grey-dark mb-1">{% trans "Image id" %}: {{ image.id }}</p>
                                     <div class="buttons are-small">
                                         <a href="javascript:void(insert_image({{ image.id }}))"
-                                           class="button is-small is-rounded is-link">
+                                           class="button is-small  is-link">
                                             <span class="icon is-small">
                                                 <i class="fa fa-edit"></i>
                                             </span>
@@ -73,7 +73,7 @@ $(document).ready(function() {
                                         </a>
                                         {% if image|can_write:user %}
                                             <a href="{% url 'wiki:images_add_revision' path=urlpath.path article_id=article.id image_id=image.id %}"
-                                               class="button is-small is-rounded">
+                                               class="button is-small ">
                                                 <span class="icon is-small">
                                                     <i class="fa fa-upload"></i>
                                                 </span>
@@ -128,7 +128,7 @@ $(document).ready(function() {
                         onClick="add_image(this.form)"
                         name="{{ plugin.slug }}_save"
                         value="1"
-                        class="button is-rounded is-link is-small">
+                        class="button is-link is-small">
                     <span class="icon is-small">
                         <i class="fa fa-upload"></i>
                     </span>

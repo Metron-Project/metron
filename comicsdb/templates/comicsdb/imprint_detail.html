@@ -14,27 +14,27 @@
     <nav class="level mb-5" aria-label="Imprint navigation">
         <div class="level-left">
             {% if navigation.previous_imprint %}
-                <a class="button is-rounded is-link"
+                <a class="button is-link"
                    href="{% url 'imprint:detail' navigation.previous_imprint.slug %}"
                    aria-label="Go to {{ navigation.previous_imprint }}">
                     <span class="icon is-small"><i class="fas fa-arrow-left" aria-hidden="true"></i></span>
                     <span>Previous Imprint</span>
                 </a>
             {% else %}
-                <button class="button is-rounded" disabled aria-disabled="true">
+                <button class="button" disabled aria-disabled="true">
                     <span class="icon is-small"><i class="fas fa-arrow-left" aria-hidden="true"></i></span>
                     <span>Previous Imprint</span>
                 </button>
             {% endif %}
             {% if navigation.next_imprint %}
-                <a class="button is-rounded is-link ml-2"
+                <a class="button is-link ml-2"
                    href="{% url 'imprint:detail' navigation.next_imprint.slug %}"
                    aria-label="Go to {{ navigation.next_imprint }}">
                     <span>Next Imprint</span>
                     <span class="icon is-small"><i class="fas fa-arrow-right" aria-hidden="true"></i></span>
                 </a>
             {% else %}
-                <button class="button is-rounded ml-2" disabled aria-disabled="true">
+                <button class="button ml-2" disabled aria-disabled="true">
                     <span>Next Imprint</span>
                     <span class="icon is-small"><i class="fas fa-arrow-right" aria-hidden="true"></i></span>
                 </button>
@@ -42,14 +42,14 @@
         </div>
         <div class="level-right">
             <div class="buttons">
-                <a class="button is-rounded is-link"
+                <a class="button is-link"
                    href="{% url 'imprint:series' imprint.slug %}"
                    title="View series list for this imprint">
                     <span class="icon is-small"><i class="fas fa-list" aria-hidden="true"></i></span>
                     <span>Series List</span>
                 </a>
                 {% if user.is_authenticated %}
-                    <a class="button is-rounded is-primary"
+                    <a class="button is-primary"
                        href="{% url 'imprint:create' %}"
                        title="Add a new imprint">
                         <span class="icon is-small"><i class="fas fa-plus" aria-hidden="true"></i></span>
@@ -57,7 +57,7 @@
                     </a>
                     <div class="dropdown is-right" id="imprint-actions-dropdown">
                         <div class="dropdown-trigger">
-                            <button class="button is-rounded"
+                            <button class="button"
                                     aria-haspopup="true"
                                     aria-controls="imprint-actions-menu"
                                     hx-on:click="document.getElementById('imprint-actions-dropdown').classList.toggle('is-active')">

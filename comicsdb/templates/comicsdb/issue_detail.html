@@ -47,27 +47,27 @@
     <nav class="level mb-5" aria-label="Issue navigation">
         <div class="level-left">
             {% if navigation.previous_issue %}
-                <a class="button is-rounded is-link"
+                <a class="button is-link"
                    href="{% url 'issue:detail' navigation.previous_issue.slug %}"
                    aria-label="Go to {{ navigation.previous_issue }}">
                     <span class="icon is-small"><i class="fas fa-arrow-left" aria-hidden="true"></i></span>
                     <span>Previous Issue</span>
                 </a>
             {% else %}
-                <button class="button is-rounded" disabled aria-disabled="true">
+                <button class="button" disabled aria-disabled="true">
                     <span class="icon is-small"><i class="fas fa-arrow-left" aria-hidden="true"></i></span>
                     <span>Previous Issue</span>
                 </button>
             {% endif %}
             {% if navigation.next_issue %}
-                <a class="button is-rounded is-link ml-2"
+                <a class="button is-link ml-2"
                    href="{% url 'issue:detail' navigation.next_issue.slug %}"
                    aria-label="Go to {{ navigation.next_issue }}">
                     <span>Next Issue</span>
                     <span class="icon is-small"><i class="fas fa-arrow-right" aria-hidden="true"></i></span>
                 </a>
             {% else %}
-                <button class="button is-rounded ml-2" disabled aria-disabled="true">
+                <button class="button ml-2" disabled aria-disabled="true">
                     <span>Next Issue</span>
                     <span class="icon is-small"><i class="fas fa-arrow-right" aria-hidden="true"></i></span>
                 </button>
@@ -77,7 +77,7 @@
             <div class="level-right">
                 <div class="buttons">
                     {% include "wish_list/partials/wish_list_button.html" with issue=issue on_wish_list=on_wish_list %}
-                    <a class="button is-rounded is-primary"
+                    <a class="button is-primary"
                        href="{% url 'issue:create' %}"
                        title="Add a new issue">
                         <span class="icon is-small"><i class="fas fa-plus" aria-hidden="true"></i></span>
@@ -89,7 +89,7 @@
                                   action="{% url 'issue:duplicate-credits' slug=issue.slug %}"
                                   class="is-inline">
                                 {% csrf_token %}
-                                <button class="button is-rounded is-link"
+                                <button class="button is-link"
                                         type="submit"
                                         title="Duplicate credits from previous issue">
                                     <span class="icon is-small"><i class="fas fa-clone" aria-hidden="true"></i></span>
@@ -97,7 +97,7 @@
                                 </button>
                             </form>
                         {% else %}
-                            <button class="button is-rounded is-link"
+                            <button class="button is-link"
                                     disabled
                                     aria-disabled="true"
                                     title="No previous issue or credits already exist">
@@ -112,7 +112,7 @@
                                   action="{% url 'issue:sync-reprints' slug=issue.slug %}"
                                   class="is-inline">
                                 {% csrf_token %}
-                                <button class="button is-rounded is-link"
+                                <button class="button is-link"
                                         type="submit"
                                         title="Sync resources from reprints">
                                     <span class="icon is-small"><i class="fas fa-copy" aria-hidden="true"></i></span>
@@ -120,7 +120,7 @@
                                 </button>
                             </form>
                         {% else %}
-                            <button class="button is-rounded is-link"
+                            <button class="button is-link"
                                     disabled
                                     aria-disabled="true"
                                     title="No sync available">
@@ -131,7 +131,7 @@
                     {% endif %}
                     <div class="dropdown is-right" id="issue-actions-dropdown">
                         <div class="dropdown-trigger">
-                            <button class="button is-rounded"
+                            <button class="button"
                                     aria-haspopup="true"
                                     aria-controls="issue-actions-menu"
                                     hx-on:click="document.getElementById('issue-actions-dropdown').classList.toggle('is-active')">

@@ -14,27 +14,27 @@
     <nav class="level mb-5" aria-label="Publisher navigation">
         <div class="level-left">
             {% if navigation.previous_publisher %}
-                <a class="button is-rounded is-link"
+                <a class="button is-link"
                    href="{% url 'publisher:detail' navigation.previous_publisher.slug %}"
                    aria-label="Go to {{ navigation.previous_publisher }}">
                     <span class="icon is-small"><i class="fas fa-arrow-left" aria-hidden="true"></i></span>
                     <span>Previous Publisher</span>
                 </a>
             {% else %}
-                <button class="button is-rounded" disabled aria-disabled="true">
+                <button class="button" disabled aria-disabled="true">
                     <span class="icon is-small"><i class="fas fa-arrow-left" aria-hidden="true"></i></span>
                     <span>Previous Publisher</span>
                 </button>
             {% endif %}
             {% if navigation.next_publisher %}
-                <a class="button is-rounded is-link ml-2"
+                <a class="button is-link ml-2"
                    href="{% url 'publisher:detail' navigation.next_publisher.slug %}"
                    aria-label="Go to {{ navigation.next_publisher }}">
                     <span>Next Publisher</span>
                     <span class="icon is-small"><i class="fas fa-arrow-right" aria-hidden="true"></i></span>
                 </a>
             {% else %}
-                <button class="button is-rounded ml-2" disabled aria-disabled="true">
+                <button class="button ml-2" disabled aria-disabled="true">
                     <span>Next Publisher</span>
                     <span class="icon is-small"><i class="fas fa-arrow-right" aria-hidden="true"></i></span>
                 </button>
@@ -42,14 +42,14 @@
         </div>
         <div class="level-right">
             <div class="buttons">
-                <a class="button is-rounded is-link"
+                <a class="button is-link"
                    href="{% url 'publisher:series' publisher.slug %}"
                    title="View series list for this publisher">
                     <span class="icon is-small"><i class="fas fa-list" aria-hidden="true"></i></span>
                     <span>Series List</span>
                 </a>
                 {% if user.is_authenticated %}
-                    <a class="button is-rounded is-primary"
+                    <a class="button is-primary"
                        href="{% url 'publisher:create' %}"
                        title="Add a new publisher">
                         <span class="icon is-small"><i class="fas fa-plus" aria-hidden="true"></i></span>
@@ -57,7 +57,7 @@
                     </a>
                     <div class="dropdown is-right" id="publisher-actions-dropdown">
                         <div class="dropdown-trigger">
-                            <button class="button is-rounded"
+                            <button class="button"
                                     aria-haspopup="true"
                                     aria-controls="publisher-actions-menu"
                                     hx-on:click="document.getElementById('publisher-actions-dropdown').classList.toggle('is-active')">

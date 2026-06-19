@@ -13,7 +13,7 @@
     <nav class="level mb-5">
         <div class="level-left">
             <div class="level-item">
-                <a class="button is-rounded" href="{% url 'user_collection:list' %}">
+                <a class="button" href="{% url 'user_collection:list' %}">
                     <span class="icon"><i class="fas fa-arrow-left"></i></span>
                     <span>Back to Collection</span>
                 </a>
@@ -21,12 +21,12 @@
         </div>
         <div class="level-right">
             <div class="buttons">
-                <a class="button is-rounded is-info"
+                <a class="button is-info"
                    href="{% url 'user_collection:update' item.pk %}">
                     <span class="icon is-small"><i class="fas fa-edit"></i></span>
                     <span>Edit</span>
                 </a>
-                <a class="button is-rounded is-danger"
+                <a class="button is-danger"
                    href="{% url 'user_collection:delete' item.pk %}">
                     <span class="icon is-small"><i class="fas fa-trash"></i></span>
                     <span>Remove</span>

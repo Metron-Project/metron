@@ -14,27 +14,27 @@
     <nav class="level mb-5" aria-label="Character navigation">
         <div class="level-left">
             {% if navigation.previous_character %}
-                <a class="button is-rounded is-link"
+                <a class="button is-link"
                    href="{% url 'character:detail' navigation.previous_character.slug %}"
                    aria-label="Go to {{ navigation.previous_character }}">
                     <span class="icon is-small"><i class="fas fa-arrow-left" aria-hidden="true"></i></span>
                     <span>Previous Character</span>
                 </a>
             {% else %}
-                <button class="button is-rounded" disabled aria-disabled="true">
+                <button class="button" disabled aria-disabled="true">
                     <span class="icon is-small"><i class="fas fa-arrow-left" aria-hidden="true"></i></span>
                     <span>Previous Character</span>
                 </button>
             {% endif %}
             {% if navigation.next_character %}
-                <a class="button is-rounded is-link ml-2"
+                <a class="button is-link ml-2"
                    href="{% url 'character:detail' navigation.next_character.slug %}"
                    aria-label="Go to {{ navigation.next_character }}">
                     <span>Next Character</span>
                     <span class="icon is-small"><i class="fas fa-arrow-right" aria-hidden="true"></i></span>
                 </a>
             {% else %}
-                <button class="button is-rounded ml-2" disabled aria-disabled="true">
+                <button class="button ml-2" disabled aria-disabled="true">
                     <span>Next Character</span>
                     <span class="icon is-small"><i class="fas fa-arrow-right" aria-hidden="true"></i></span>
                 </button>
@@ -43,7 +43,7 @@
         {% if user.is_authenticated %}
             <div class="level-right">
                 <div class="buttons">
-                    <a class="button is-rounded is-primary"
+                    <a class="button is-primary"
                        href="{% url 'character:create' %}"
                        title="Add a new character">
                         <span class="icon is-small"><i class="fas fa-plus" aria-hidden="true"></i></span>
@@ -51,7 +51,7 @@
                     </a>
                     <div class="dropdown is-right" id="character-actions-dropdown">
                         <div class="dropdown-trigger">
-                            <button class="button is-rounded"
+                            <button class="button"
                                     aria-haspopup="true"
                                     aria-controls="character-actions-menu"
                                     hx-on:click="document.getElementById('character-actions-dropdown').classList.toggle('is-active')">

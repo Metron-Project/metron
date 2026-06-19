@@ -1,5 +1,5 @@
 <button id="pull-list-btn"
-        class="button is-rounded {% if on_pull_list %}is-info{% else %}is-light{% endif %}"
+        class="button {% if on_pull_list %}is-info{% else %}is-light{% endif %}"
         hx-post="{% url 'pull-list:toggle' series.slug %}"
         hx-target="#pull-list-btn"
         hx-swap="outerHTML"

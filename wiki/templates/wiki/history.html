@@ -85,7 +85,7 @@
                                 <div class="field is-grouped">
                                     {% if revision == article.current_revision %}
                                         <div class="control">
-                                            <button class="button is-rounded" disabled>
+                                            <button class="button" disabled>
                                                 <span class="icon">
                                                     <i class="fa fa-lock"></i>
                                                 </span>
@@ -95,7 +95,7 @@
                                     {% else %}
                                         <div class="control">
                                             <button type="submit"
-                                                    class="button is-rounded"
+                                                    class="button"
                                                     onclick="$('#previewModal').addClass('is-active'); this.form.target='previewWindow'; this.form.r.value='{{ revision.id }}'; this.form.action='{% url 'wiki:preview_revision' article.id %}'; $('#previewModal .switch-to-revision').attr('href', '{% url 'wiki:change_revision' path=urlpath.path article_id=article.id revision_id=revision.id %}'); setTimeout(function() { if (typeof resizeBulmaModalIframe === 'function') resizeBulmaModalIframe(); }, 150);">
                                                 <span class="icon">
                                                     <i class="fa fa-eye"></i>
@@ -150,7 +150,7 @@
                     <button type="submit"
                             name="preview"
                             value="1"
-                            class="button is-rounded"
+                            class="button"
                             onclick="$('#mergeModal').addClass('is-active'); this.form.target='mergeWindow'; this.form.action=$('input[type=radio]:checked').attr('merge-button-href'); $('.merge-revision-commit').attr('href', $('input[type=radio]:checked').attr('merge-button-commit-href')); setTimeout(function() { if (typeof resizeBulmaModalIframe === 'function') resizeBulmaModalIframe(); }, 150);">
                         <span class="icon">
                             <i class="fa fa-random"></i>
@@ -162,7 +162,7 @@
                     <button type="submit"
                             name="save"
                             value="1"
-                            class="button is-rounded is-link"
+                            class="button is-link"
                             onclick="this.form.target='_self'; this.form.action=$('input[type=radio]:checked').attr('switch-button-href')">
                         <span class="icon">
                             <i class="fa fa-flag"></i>
@@ -184,7 +184,7 @@
                                min-height: 400px"></iframe>
             </section>
             <footer class="modal-card-foot">
-                <button class="button is-rounded"
+                <button class="button"
                         onclick="$('#previewModal').removeClass('is-active')">
                     <span class="icon">
                         <i class="fa fa-arrow-circle-left"></i>
@@ -192,14 +192,14 @@
                     <span>{% trans "Back to history view" %}</span>
                 </button>
                 {% if article|can_write:user %}
-                    <a href="#" class="button is-rounded is-link switch-to-revision">
+                    <a href="#" class="button is-link switch-to-revision">
                         <span class="icon">
                             <i class="fa fa-flag"></i>
                         </span>
                         <span>{% trans "Switch to this version" %}</span>
                     </a>
                 {% else %}
-                    <button class="button is-rounded" disabled>
+                    <button class="button" disabled>
                         <span class="icon">
                             <i class="fa fa-lock"></i>
                         </span>
@@ -227,7 +227,7 @@
                                min-height: 200px"></iframe>
             </section>
             <footer class="modal-card-foot">
-                <button class="button is-rounded"
+                <button class="button"
                         onclick="$('#mergeModal').removeClass('is-active')">
                     <span class="icon">
                         <i class="fa fa-arrow-circle-left"></i>
@@ -235,14 +235,14 @@
                     <span>{% trans "Back to history view" %}</span>
                 </button>
                 {% if article|can_write:user %}
-                    <a href="#" class="button is-rounded is-link merge-revision-commit">
+                    <a href="#" class="button is-link merge-revision-commit">
                         <span class="icon">
                             <i class="fa fa-file"></i>
                         </span>
                         <span>{% trans "Create new merged version" %}</span>
                     </a>
                 {% else %}
-                    <button class="button is-rounded" disabled>
+                    <button class="button" disabled>
                         <span class="icon">
                             <i class="fa fa-lock"></i>
                         </span>

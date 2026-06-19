@@ -20,7 +20,7 @@
     <div class="buttons">
         {% if not read_denied %}
             <a href="{% url 'wiki:get' article_id=article.id path=urlpath.path %}"
-               class="button is-rounded is-link">
+               class="button is-link">
                 <span class="icon">
                     <i class="fas fa-arrow-left"></i>
                 </span>
@@ -28,7 +28,7 @@
             </a>
         {% elif urlpath.parent %}
             <a href="{% url 'wiki:get' path=urlpath.parent.path %}"
-               class="button is-rounded is-link">
+               class="button is-link">
                 <span class="icon">
                     <i class="fas fa-arrow-left"></i>
                 </span>

@@ -13,7 +13,7 @@
                         <div class="buttons">
                             {% if urlpath.parent %}
                                 <a href="{% url 'wiki:dir' path=urlpath.parent.path %}"
-                                   class="button is-rounded is-link">
+                                   class="button is-link">
                                     <span class="icon">
                                         <i class="fas fa-arrow-up"></i>
                                     </span>
@@ -21,7 +21,7 @@
                                 </a>
                             {% endif %}
                             <a href="{% url 'wiki:create' path=urlpath.path %}"
-                               class="button is-rounded is-success">
+                               class="button is-success">
                                 <span class="icon">
                                     <i class="fas fa-plus"></i>
                                 </span>
@@ -44,7 +44,7 @@
                                 </span>
                             </div>
                             <div class="control">
-                                <button type="submit" class="button is-rounded is-link">
+                                <button type="submit" class="button is-link">
                                     <span class="icon">
                                         <i class="fas fa-filter"></i>
                                     </span>
