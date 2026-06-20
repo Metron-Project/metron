@@ -202,7 +202,7 @@
         {# Left Column - Covers #}
         <div class="column is-one-quarter">
             {# Main Cover #}
-            <div class="box issue-cover-sticky">
+            <div class="box">
                 {% if issue.image %}
                     {% thumbnail issue.image "320x480" format="WEBP" as im %}
                         <figure class="image {% if im.width > im.height %}is-3by2{% else %}is-2by3{% endif %}">

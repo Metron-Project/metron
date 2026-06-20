@@ -15,6 +15,11 @@
     <section class="section">
         <div class="container">{% include "comicsdb/partials/issue_filter.html" %}</div>
     </section>
+    {% if active_filters %}
+        <section class="section pt-0 pb-0">
+            <div class="container">{% include "comicsdb/partials/active_filters.html" %}</div>
+        </section>
+    {% endif %}
     {% if issue_list %}
         <section class="section pt-0">
             <div class="container">
@@ -31,8 +36,11 @@
                             </p>
                         </div>
                     </div>
-                    {% if user.is_authenticated %}
-                        <div class="level-right">
+                    <div class="level-right">
+                        <div class="level-item">
+                            {% include "comicsdb/partials/issue_sort.html" %}
+                        </div>
+                        {% if user.is_authenticated %}
                             <div class="level-item">
                                 <a class="button is-primary"
                                    href="{% url 'issue:create' %}"
@@ -44,8 +52,8 @@
                                     <span>New</span>
                                 </a>
                             </div>
-                        </div>
-                    {% endif %}
+                        {% endif %}
+                    </div>
                 </nav>
                 {# Issue Cards #}
                 {% include "comicsdb/partials/issue_card_grid.html" with items=issue_list %}
