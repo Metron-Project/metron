@@ -1,0 +1,38 @@
+{% comment %}
+   Tier 2 — result sort control.
+   Submits on change (method="get", no action -> posts back to the current page).
+   Hidden inputs replay every active filter EXCEPT `sort` (replaced here) and
+   `page` (reset to 1 on re-sort). Context: `sort_options` (dict key->{label}),
+   `current_sort` (selected key). Progressive enhancement: a <noscript> submit
+   button keeps it usable without JS.
+{% endcomment %}
+<form method="get"
+      class="field is-grouped is-align-items-center mb-0"
+      aria-label="Sort issues">
+    {% for key, values in request.GET.lists %}
+        {% if key != "sort" and key != "page" %}
+            {% for value in values %}
+                <input type="hidden" name="{{ key }}" value="{{ value }}">
+            {% endfor %}
+        {% endif %}
+    {% endfor %}
+    <label class="label mb-0 mr-2" for="issue-sort-select">Sort</label>
+    <div class="control">
+        <div class="select">
+            <select id="issue-sort-select"
+                    name="sort"
+                    onchange="this.form.submit()"
+                    aria-label="Sort order">
+                {% for key, opt in sort_options.items %}
+                    <option value="{{ key }}"
+                            {% if key == current_sort %}selected{% endif %}>{{ opt.label }}</option>
+                {% endfor %}
+            </select>
+        </div>
+    </div>
+    <noscript>
+        <div class="control">
+            <button type="submit" class="button">Sort</button>
+        </div>
+    </noscript>
+</form>

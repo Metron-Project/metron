@@ -1,0 +1,30 @@
+{% comment %}
+   Tier 2 — active-filter chip bar.
+   Renders only when `active_filters` is non-empty (the including template guards
+   with `{% if active_filters %}`). Each chip is `{label, value, remove_url}`
+   built by views.issue_list_helpers.build_active_filters: `remove_url` is a
+   query string (e.g. "?series_name=Bat") that drops just that one param and
+   resets paging while preserving the rest + current sort. "Clear all" points at
+   `request.path`, wiping every filter in place on whichever list page is active.
+{% endcomment %}
+<div class="field is-grouped is-grouped-multiline is-align-items-center mb-0">
+    <div class="control">
+        <span class="is-size-7 has-text-grey has-text-weight-semibold">Active filters:</span>
+    </div>
+    {% for chip in active_filters %}
+        <div class="control">
+            <div class="tags has-addons mb-0">
+                <span class="tag is-info is-light">
+                    <span class="has-text-weight-semibold mr-1">{{ chip.label }}:</span>{{ chip.value }}
+                </span>
+                <a class="tag is-delete"
+                   href="{{ chip.remove_url }}"
+                   title="Remove {{ chip.label }} filter"
+                   aria-label="Remove {{ chip.label }} filter"></a>
+            </div>
+        </div>
+    {% endfor %}
+    <div class="control">
+        <a class="is-size-7" href="{{ request.path }}">Clear all</a>
+    </div>
+</div>
