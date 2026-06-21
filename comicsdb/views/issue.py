@@ -26,6 +26,11 @@ from comicsdb.models.series import SeriesType
 from comicsdb.models.variant import Variant
 from comicsdb.views.constants import DETAIL_PAGINATE_BY, PAGINATE_BY
 from comicsdb.views.history import HistoryListView
+from comicsdb.views.issue_list_helpers import (
+    SORT_OPTIONS,
+    apply_sort,
+    build_active_filters,
+)
 from comicsdb.views.mixins import LazyLoadMixin, SlugRedirectView
 from wish_list.models import WishListItem
 
@@ -39,16 +44,23 @@ class IssueList(ListView):
     paginate_by = PAGINATE_BY
 
     def get_queryset(self):
-        queryset = Issue.objects.select_related("series", "series__series_type")
+        queryset = Issue.objects.select_related(
+            "series", "series__series_type", "series__publisher"
+        )
         # Apply filters
         filtered = IssueViewFilter(self.request.GET, queryset=queryset)
-        return filtered.qs
+        return apply_sort(filtered.qs, self.request)
 
     def get_context_data(self, **kwargs: Any) -> dict[str, Any]:
         context = super().get_context_data(**kwargs)
-        context["series_type"] = SeriesType.objects.values("id", "name").order_by("name")
-        # Check if any filters are active (excluding page parameter)
-        context["has_active_filters"] = any(key != "page" for key in self.request.GET)
+        series_types = list(SeriesType.objects.values("id", "name").order_by("name"))
+        context["series_type"] = series_types
+        # Active filters = any GET param that isn't paging or sorting.
+        context["has_active_filters"] = any(key not in ("page", "sort") for key in self.request.GET)
+        type_names = {str(t["id"]): t["name"] for t in series_types}
+        context["active_filters"] = build_active_filters(self.request, type_names=type_names)
+        context["sort_options"] = SORT_OPTIONS
+        context["current_sort"] = self.request.GET.get("sort", "")
         return context
 
 
@@ -678,10 +690,10 @@ class WeekList(ListView):
 
         queryset = Issue.objects.filter(
             store_date__gte=week_start, store_date__lte=week_end
-        ).select_related("series", "series__series_type")
+        ).select_related("series", "series__series_type", "series__publisher")
         # Apply filters
         filtered = IssueViewFilter(self.request.GET, queryset=queryset)
-        return filtered.qs
+        return apply_sort(filtered.qs, self.request)
 
     def get_context_data(self, **kwargs):
         year, week = self.get_week_info()
@@ -690,9 +702,14 @@ class WeekList(ListView):
         context = super().get_context_data(**kwargs)
         context["release_day"] = release_day
         context["future"] = False
-        context["series_type"] = SeriesType.objects.values("id", "name").order_by("name")
-        # Check if any filters are active (excluding page parameter)
-        context["has_active_filters"] = any(key != "page" for key in self.request.GET)
+        series_types = list(SeriesType.objects.values("id", "name").order_by("name"))
+        context["series_type"] = series_types
+        # Active filters = any GET param that isn't paging or sorting.
+        context["has_active_filters"] = any(key not in ("page", "sort") for key in self.request.GET)
+        type_names = {str(t["id"]): t["name"] for t in series_types}
+        context["active_filters"] = build_active_filters(self.request, type_names=type_names)
+        context["sort_options"] = SORT_OPTIONS
+        context["current_sort"] = self.request.GET.get("sort", "")
         return context
 
 
@@ -721,10 +738,10 @@ class NextWeekList(ListView):
 
         queryset = Issue.objects.filter(
             store_date__gte=week_start, store_date__lte=week_end
-        ).select_related("series", "series__series_type")
+        ).select_related("series", "series__series_type", "series__publisher")
         # Apply filters
         filtered = IssueViewFilter(self.request.GET, queryset=queryset)
-        return filtered.qs
+        return apply_sort(filtered.qs, self.request)
 
     def get_context_data(self, **kwargs):
         year, week = self.get_week_info()
@@ -733,9 +750,14 @@ class NextWeekList(ListView):
         context = super().get_context_data(**kwargs)
         context["release_day"] = release_day
         context["future"] = False
-        context["series_type"] = SeriesType.objects.values("id", "name").order_by("name")
-        # Check if any filters are active (excluding page parameter)
-        context["has_active_filters"] = any(key != "page" for key in self.request.GET)
+        series_types = list(SeriesType.objects.values("id", "name").order_by("name"))
+        context["series_type"] = series_types
+        # Active filters = any GET param that isn't paging or sorting.
+        context["has_active_filters"] = any(key not in ("page", "sort") for key in self.request.GET)
+        type_names = {str(t["id"]): t["name"] for t in series_types}
+        context["active_filters"] = build_active_filters(self.request, type_names=type_names)
+        context["sort_options"] = SORT_OPTIONS
+        context["current_sort"] = self.request.GET.get("sort", "")
         return context
 
 
@@ -763,11 +785,11 @@ class FutureList(ListView):
 
         # Show all issues after next week
         queryset = Issue.objects.filter(store_date__gt=week_end).select_related(
-            "series", "series__series_type"
+            "series", "series__series_type", "series__publisher"
         )
         # Apply filters
         filtered = IssueViewFilter(self.request.GET, queryset=queryset)
-        return filtered.qs
+        return apply_sort(filtered.qs, self.request)
 
     def get_context_data(self, **kwargs):
         year, week = self.get_week_info()
@@ -776,9 +798,14 @@ class FutureList(ListView):
         context = super().get_context_data(**kwargs)
         context["release_day"] = release_day
         context["future"] = True
-        context["series_type"] = SeriesType.objects.values("id", "name").order_by("name")
-        # Check if any filters are active (excluding page parameter)
-        context["has_active_filters"] = any(key != "page" for key in self.request.GET)
+        series_types = list(SeriesType.objects.values("id", "name").order_by("name"))
+        context["series_type"] = series_types
+        # Active filters = any GET param that isn't paging or sorting.
+        context["has_active_filters"] = any(key not in ("page", "sort") for key in self.request.GET)
+        type_names = {str(t["id"]): t["name"] for t in series_types}
+        context["active_filters"] = build_active_filters(self.request, type_names=type_names)
+        context["sort_options"] = SORT_OPTIONS
+        context["current_sort"] = self.request.GET.get("sort", "")
         return context
 
 

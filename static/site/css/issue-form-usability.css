@@ -1,0 +1,124 @@
+/* ==========================================================================
+   Issue form usability enhancements
+   Bulma-compatible. No framework changes; layered on top of existing styles.
+   Used by: comicsdb/templates/comicsdb/issue_form.html
+   ========================================================================== */
+
+/* ---- Sticky action bar ---------------------------------------------------- */
+.usab-actionbar {
+    position: sticky;
+    top: var(--bulma-navbar-height, 3.25rem);
+    z-index: 20; /* Below Bulma navbar fixed z-index of 30 */
+    background: var(--bulma-scheme-main);
+    border: 1px solid var(--bulma-border);
+    border-radius: 6px;
+    box-shadow: 0 2px 8px rgba(10, 10, 10, 0.07);
+    padding: 0.75rem 1rem;
+    margin-bottom: 1.25rem;
+}
+
+@media (prefers-color-scheme: dark) {
+    .usab-actionbar {
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.4);
+    }
+}
+
+.usab-actionbar__top {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    flex-wrap: wrap;
+}
+
+.usab-actionbar__title {
+    font-size: 1.25rem;
+    font-weight: 700;
+    color: var(--bulma-text-strong);
+    margin: 0;
+}
+
+.usab-actionbar__actions {
+    margin-left: auto;
+    display: flex;
+    gap: 0.5rem;
+}
+
+/* ---- Section nav pills ----------------------------------------------------- */
+.usab-nav {
+    display: flex;
+    gap: 0.4rem;
+    flex-wrap: wrap;
+    margin-top: 0.65rem;
+    padding-top: 0.65rem;
+    border-top: 1px solid var(--bulma-border-weak);
+}
+
+.usab-nav a {
+    padding: 0.3rem 0.85rem;
+    font-size: 0.82rem;
+    font-weight: 600;
+    border-radius: 999px;
+    color: var(--bulma-text-weak);
+    text-decoration: none;
+    transition: background-color 0.12s ease, color 0.12s ease;
+}
+
+.usab-nav a:hover {
+    background: var(--bulma-background);
+    color: var(--bulma-text-strong);
+}
+
+.usab-nav a.is-active {
+    background: var(--bulma-link-soft);
+    color: var(--bulma-link);
+}
+
+/* ---- Sub-group labels inside the Primary section -------------------------- */
+.usab-group {
+    margin-bottom: 1.5rem;
+}
+
+.usab-group:last-child {
+    margin-bottom: 0;
+}
+
+.usab-group-label {
+    font-size: 0.72rem;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    font-weight: 700;
+    color: var(--bulma-text-weak);
+    margin: 0 0 0.85rem;
+    padding-bottom: 0.4rem;
+    border-bottom: 1px solid var(--bulma-border-weak);
+}
+
+/* The two-column grid uses Bulma .columns; keep field spacing tidy inside it */
+.usab-group .columns {
+    margin-bottom: 0;
+}
+
+.usab-group .column .field {
+    margin-bottom: 0;
+}
+
+/* Smooth scroll for section-nav anchor links */
+html {
+    scroll-behavior: smooth;
+}
+
+/* Sticky bar offset so anchored headings aren't hidden behind it */
+.box[id^="section-"] {
+    scroll-margin-top: 6.5rem;
+}
+
+/* Mobile: stack the action bar so buttons don't crowd the title */
+@media screen and (max-width: 768px) {
+    .usab-actionbar__actions {
+        margin-left: 0;
+        width: 100%;
+    }
+    .usab-actionbar__actions .button {
+        flex: 1;
+    }
+}

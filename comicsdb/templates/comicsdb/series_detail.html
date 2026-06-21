@@ -6,9 +6,27 @@
     {{ series.name }}
 {% endblock title %}
 {% block content %}
+    {# Breadcrumb #}
+    <nav class="breadcrumb" aria-label="breadcrumbs">
+        <ul>
+            <li>
+                <a href="{% url 'publisher:detail' series.publisher.slug %}">{{ series.publisher }}</a>
+            </li>
+            <li class="is-active">
+                <a href="#" aria-current="page">{{ series.name }}</a>
+            </li>
+        </ul>
+    </nav>
     {# Page Header #}
     <header class="block">
-        <h1 class="title">{{ series }}</h1>
+        <h1 class="title mb-2">{{ series }}</h1>
+        <p class="subtitle is-5">
+            <a href="{% url 'publisher:detail' series.publisher.slug %}">{{ series.publisher }}</a>
+            {% if series.imprint %}
+                <span class="has-text-grey">&middot;</span>
+                <a href="{% url 'imprint:detail' series.imprint.slug %}">{{ series.imprint }}</a>
+            {% endif %}
+        </p>
     </header>
     {# Navigation Bar #}
     <nav class="level mb-5" aria-label="Series navigation">
@@ -286,28 +304,66 @@
                         </ul>
                     {% endif %}
                 {% endwith %}
-                {# IDs #}
-                <h3 class="title is-6 mt-4">Identification Numbers</h3>
+            </div>
+            {# Identification Numbers #}
+            <div class="box">
+                <h2 class="title is-6">Identification Numbers</h2>
                 <dl>
                     <dt class="has-text-weight-bold">Metron:</dt>
-                    <dd class="mb-2">
-                        {{ series.id }}
+                    <dd class="mb-2 is-flex is-align-items-center is-justify-content-space-between">
+                        <span class="is-family-monospace">{{ series.id }}</span>
+                        <button type="button"
+                                class="button is-small is-light copy-id"
+                                data-copy="{{ series.id }}"
+                                title="Copy Metron ID"
+                                aria-label="Copy Metron ID">
+                            <span class="icon is-small"><i class="fas fa-copy"></i></span>
+                        </button>
                     </dd>
                     {% if series.cv_id %}
                         <dt class="has-text-weight-bold">Comic Vine:</dt>
-                        <dd class="mb-2">
-                            {{ series.cv_id }}
+                        <dd class="mb-2 is-flex is-align-items-center is-justify-content-space-between">
+                            <a class="is-family-monospace"
+                               href="https://comicvine.gamespot.com/volume/4050-{{ series.cv_id }}/"
+                               target="_blank"
+                               rel="noopener noreferrer">
+                                {{ series.cv_id }}
+                                <span class="icon is-small"><i class="fas fa-external-link-alt"></i></span>
+                            </a>
+                            <button type="button"
+                                    class="button is-small is-light copy-id"
+                                    data-copy="{{ series.cv_id }}"
+                                    title="Copy Comic Vine ID"
+                                    aria-label="Copy Comic Vine ID">
+                                <span class="icon is-small"><i class="fas fa-copy"></i></span>
+                            </button>
                         </dd>
                     {% endif %}
                     {% if series.gcd_id %}
-                        <dt class="has-text-weight-bold">GCD:</dt>
-                        <dd>
-                            {{ series.gcd_id }}
+                        <dt class="has-text-weight-bold">
+                            <abbr title="Grand Comics Database">GCD</abbr>:
+                        </dt>
+                        <dd class="is-flex is-align-items-center is-justify-content-space-between">
+                            <a class="is-family-monospace"
+                               href="https://www.comics.org/series/{{ series.gcd_id }}/"
+                               target="_blank"
+                               rel="noopener noreferrer">
+                                {{ series.gcd_id }}
+                                <span class="icon is-small"><i class="fas fa-external-link-alt"></i></span>
+                            </a>
+                            <button type="button"
+                                    class="button is-small is-light copy-id"
+                                    data-copy="{{ series.gcd_id }}"
+                                    title="Copy GCD ID"
+                                    aria-label="Copy GCD ID">
+                                <span class="icon is-small"><i class="fas fa-copy"></i></span>
+                            </button>
                         </dd>
                     {% endif %}
                 </dl>
             </div>
             {# Associated Series #}
+
             {% with assoc=series.associated.all %}
                 {% if assoc %}
                     <div class="box">
@@ -324,4 +380,23 @@
             {% endwith %}
         </div>
     </div>
+{% endblock %}
+{% block js %}
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const copyButtons = document.querySelectorAll('.copy-id');
+            copyButtons.forEach(button => {
+                button.addEventListener('click', function() {
+                    const id = this.getAttribute('data-copy');
+                    navigator.clipboard.writeText(id).then(() => {
+                        const originalText = this.innerHTML;
+                        this.innerHTML = '<span class="icon is-small"><i class="fas fa-check"></i></span>';
+                        setTimeout(() => {
+                            this.innerHTML = originalText;
+                        }, 2000);
+                    });
+                });
+            });
+        });
+    </script>
 {% endblock %}

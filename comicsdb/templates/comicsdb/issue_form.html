@@ -8,47 +8,104 @@
     {{ form.media.css }}
     <link rel="stylesheet"
           href="{% static 'site/css/bulma-calendar.min.css' %}">
+    {# Sticky bar, section nav, grouped fields #}
+    <link rel="stylesheet"
+          href="{% static 'site/css/issue-form-usability.css' %}">
 {% endblock %}
 {% block content %}
-    <header class="block has-text-centered">
-        <h1 class="title">Issue Form</h1>
-    </header>
     <form method="post" enctype="multipart/form-data" id="issueForm" novalidate>
         {% csrf_token %}
+        <!-- Sticky action bar — Save / Cancel always reachable + section nav -->
+        <div class="usab-actionbar">
+            <div class="usab-actionbar__top">
+                <h1 class="usab-actionbar__title">Issue Form</h1>
+                <div class="usab-actionbar__actions">
+                    <button type="button" class="button" onclick="history.back()">
+                        <span class="icon"><i class="fas fa-times"></i></span>
+                        <span>Cancel</span>
+                    </button>
+                    <button class="button is-info" type="submit">
+                        <span class="icon"><i class="fas fa-check"></i></span>
+                        <span>Save Issue</span>
+                    </button>
+                </div>
+            </div>
+            <nav class="usab-nav" aria-label="Form sections">
+                <a href="#section-primary" class="is-active">Primary</a>
+                <a href="#section-credits">Credits</a>
+                <a href="#section-variants">Variants</a>
+                <a href="#section-attribution">Attribution</a>
+            </nav>
+        </div>
         <!-- Primary Information Section -->
-        <div class="box">
+        <div class="box" id="section-primary">
             <h2 class="title is-5">Primary Information</h2>
             {% include "comicsdb/partials/form_errors.html" with form=form %}
             {% for field in form.hidden_fields %}{{ field }}{% endfor %}
-            {% for field in form.visible_fields %}
-                {% include "comicsdb/partials/form_field.html" with field=field %}
-            {% endfor %}
+
+            <div class="usab-group">
+                <h3 class="usab-group-label">Identity</h3>
+                <div class="columns is-multiline">
+                    <div class="column is-full">{% include "comicsdb/partials/form_field.html" with field=form.series %}</div>
+                    <div class="column is-half">{% include "comicsdb/partials/form_field.html" with field=form.number %}</div>
+                    <div class="column is-half">{% include "comicsdb/partials/form_field.html" with field=form.alt_number %}</div>
+                    <div class="column is-half">{% include "comicsdb/partials/form_field.html" with field=form.rating %}</div>
+                    <div class="column is-half">{% include "comicsdb/partials/form_field.html" with field=form.title %}</div>
+                    <div class="column is-full">{% include "comicsdb/partials/form_field.html" with field=form.name %}</div>
+                    <div class="column is-full">{% include "comicsdb/partials/form_field.html" with field=form.desc %}</div>
+                </div>
+            </div>
+
+            <div class="usab-group">
+                <h3 class="usab-group-label">Publication</h3>
+                <div class="columns is-multiline">
+                    <div class="column is-half">{% include "comicsdb/partials/form_field.html" with field=form.cover_date %}</div>
+                    <div class="column is-half">{% include "comicsdb/partials/form_field.html" with field=form.store_date %}</div>
+                    <div class="column is-half">{% include "comicsdb/partials/form_field.html" with field=form.foc_date %}</div>
+                    <div class="column is-half">{% include "comicsdb/partials/form_field.html" with field=form.price %}</div>
+                    <div class="column is-half">{% include "comicsdb/partials/form_field.html" with field=form.page %}</div>
+                </div>
+            </div>
+
+            <div class="usab-group">
+                <h3 class="usab-group-label">Codes &amp; IDs</h3>
+                <div class="columns is-multiline">
+                    <div class="column is-half">{% include "comicsdb/partials/form_field.html" with field=form.sku %}</div>
+                    <div class="column is-half">{% include "comicsdb/partials/form_field.html" with field=form.isbn %}</div>
+                    <div class="column is-half">{% include "comicsdb/partials/form_field.html" with field=form.upc %}</div>
+                    <div class="column is-half">{% include "comicsdb/partials/form_field.html" with field=form.cv_id %}</div>
+                    <div class="column is-half">{% include "comicsdb/partials/form_field.html" with field=form.gcd_id %}</div>
+                </div>
+            </div>
+
+            <div class="usab-group">
+                <h3 class="usab-group-label">Cover Image</h3>
+                {% include "comicsdb/partials/form_field.html" with field=form.image %}
+            </div>
+
+            <div class="usab-group">
+                <h3 class="usab-group-label">Relationships</h3>
+                {% include "comicsdb/partials/form_field.html" with field=form.characters %}
+                {% include "comicsdb/partials/form_field.html" with field=form.teams %}
+                {% include "comicsdb/partials/form_field.html" with field=form.arcs %}
+                {% include "comicsdb/partials/form_field.html" with field=form.universes %}
+                {% include "comicsdb/partials/form_field.html" with field=form.reprints %}
+            </div>
         </div>
         <!-- Credits Section -->
-        <div class="box">
+        <div class="box" id="section-credits">
             <h2 class="title is-5">Credits</h2>
             {% include "comicsdb/partials/credits_formset.html" with formset=credits %}
         </div>
         <!-- Variant Covers Section -->
-        <div class="box">
+        <div class="box" id="section-variants">
             <h2 class="title is-5">Variant Covers</h2>
             {% include "comicsdb/partials/variants_formset.html" with formset=variants %}
         </div>
         <!-- Attribution Section -->
-        <div class="box">
+        <div class="box" id="section-attribution">
             <h2 class="title is-5">Attribution</h2>
             {% include "comicsdb/partials/attribution_formset.html" with formset=attribution %}
-        </div>
-        <!-- Submit Button -->
-        <div class="field">
-            <div class="control">
-                <button class="button is-info" type="submit">
-                    <span class="icon">
-                        <i class="fas fa-check"></i>
-                    </span>
-                    <span>Submit</span>
-                </button>
-            </div>
         </div>
     </form>
 {% endblock %}
@@ -124,4 +181,6 @@ document.body.addEventListener('htmx:afterSwap', function(event) {
     }
 });
     </script>
+    {# Usability behaviour — section nav active-state #}
+    <script src="{% static 'site/js/issue-form-usability.js' %}"></script>
 {% endblock %}

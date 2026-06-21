@@ -18,6 +18,7 @@ from comicsdb.views.mixins import (
     AttributionUpdateMixin,
     SlugRedirectView,
 )
+from comicsdb.views.series_list_helpers import build_active_filters
 from pull_list.models import PullListSeries
 
 LOGGER = logging.getLogger(__name__)
@@ -46,11 +47,12 @@ class SeriesList(ListView):
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        # Add filter options for the template
-        context["series_types"] = SeriesType.objects.values("id", "name").order_by("name")
+        series_types = list(SeriesType.objects.values("id", "name").order_by("name"))
+        context["series_types"] = series_types
         context["status_choices"] = Series.Status.choices
-        # Check if any filters are active (excluding page parameter)
         context["has_active_filters"] = any(key != "page" for key in self.request.GET)
+        type_names = {str(t["id"]): t["name"] for t in series_types}
+        context["active_filters"] = build_active_filters(self.request, type_names=type_names)
         return context
 
 

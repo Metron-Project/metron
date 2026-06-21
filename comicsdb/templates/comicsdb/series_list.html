@@ -14,6 +14,11 @@
     <section class="section">
         <div class="container">{% include "comicsdb/partials/series_filter.html" %}</div>
     </section>
+    {% if active_filters %}
+        <section class="section pt-0 pb-0">
+            <div class="container">{% include "comicsdb/partials/active_filters.html" %}</div>
+        </section>
+    {% endif %}
     {% if series_list %}
         <section class="section pt-0">
             <div class="container">

@@ -1,4 +1,10 @@
 {% load range_tags %}
+{% comment %}
+    USABILITY CHANGE: the ~14 advanced filter fields are now organised
+    under labelled sub-sections (Series / Issue Numbers / Dates / Codes & IDs)
+    instead of a flat list separated by bare <hr> rules. Same fields, same
+    names, same values — purely a presentation regroup, no view changes needed.
+{% endcomment %}
 <div class="box mb-5" id="filter-panel">
     <form method="get" accept-charset="utf-8">
         <div class="is-flex is-justify-content-space-between is-align-items-center mb-4">
@@ -37,7 +43,7 @@
             <p class="help">Search series names (supports multi-word search)</p>
         </div>
         {# Collapsible Advanced Filters #}
-        <details {% if has_active_filters %}open{% endif %}>
+        <details>
             <summary class="has-text-weight-semibold is-clickable mt-4 mb-3">
                 <span class="icon-text">
                     <span class="icon">
@@ -46,6 +52,9 @@
                     <span>Advanced Filters</span>
                 </span>
             </summary>
+
+            {# ── Group: Series ───────────────────────────────────────────── #}
+            <h4 class="title is-6 has-text-grey mt-4 mb-3">Series</h4>
             <div class="columns is-multiline">
                 {# Series Name Filter #}
                 <div class="column is-half">
@@ -125,7 +134,11 @@
                         </div>
                     </div>
                 </div>
-                <hr class="my-4 column is-full">
+            </div>
+
+            {# ── Group: Issue Numbers ────────────────────────────────────── #}
+            <h4 class="title is-6 has-text-grey mt-4 mb-3">Issue Numbers</h4>
+            <div class="columns is-multiline">
                 {# Issue Number Filter #}
                 <div class="column is-half">
                     <div class="field">
@@ -162,7 +175,11 @@
                         </div>
                     </div>
                 </div>
-                <hr class="my-4 column is-full">
+            </div>
+
+            {# ── Group: Dates ────────────────────────────────────────────── #}
+            <h4 class="title is-6 has-text-grey mt-4 mb-3">Dates</h4>
+            <div class="columns is-multiline">
                 {# Cover Year Filter #}
                 <div class="column is-half">
                     <div class="field">
@@ -234,7 +251,6 @@
                         </div>
                     </div>
                 </div>
-                <hr class="my-4 column is-full">
                 {# Store Date From Filter #}
                 <div class="column is-half">
                     <div class="field">
@@ -303,7 +319,11 @@
                         </div>
                     </div>
                 </div>
-                <hr class="my-4 column is-full">
+            </div>
+
+            {# ── Group: Codes & IDs ──────────────────────────────────────── #}
+            <h4 class="title is-6 has-text-grey mt-4 mb-3">Codes &amp; IDs</h4>
+            <div class="columns is-multiline">
                 {# UPC Code Filter #}
                 <div class="column is-half">
                     <div class="field">
@@ -340,7 +360,6 @@
                         </div>
                     </div>
                 </div>
-                <hr class="my-4 column is-full">
                 {# Comic Vine ID Filter #}
                 <div class="column is-half">
                     <div class="field">
@@ -429,6 +448,14 @@ details[open] > summary::before {
 
 details > summary:hover {
     color: hsl(217, 71%, 53%);
+}
+
+/* Group sub-headings inside the advanced panel */
+#filter-panel details h4.title {
+    border-bottom: 1px solid hsl(0, 0%, 93%);
+    padding-bottom: 0.4rem;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
 }
 
 /* Mobile filter buttons styling */
