@@ -8,6 +8,7 @@ from autocomplete import ModelAutocomplete, register
 from django.db.models import Q
 
 from comicsdb.models import Arc, Character, Creator, Publisher, Series, Team, Universe
+from comicsdb.models.credits import Role
 from comicsdb.models.imprint import Imprint
 from comicsdb.models.issue import Issue
 
@@ -85,6 +86,26 @@ class CreatorAutocomplete(ModelAutocomplete):
             Q(name__unaccent__icontains=search),
             Q(alias__icontains=search),
         ]
+        condition_filter = reduce(operator.or_, conditions)
+        return queryset.filter(condition_filter)
+
+    @classmethod
+    def get_label_for_record(cls, record):
+        """Format the display name for autocomplete results."""
+        return str(record)
+
+
+class RoleAutocomplete(ModelAutocomplete):
+    """Autocomplete for searching creator roles."""
+
+    model = Role
+    search_attrs = ["name"]
+
+    @classmethod
+    def get_query_filtered_queryset(cls, search, context):
+        """Filter roles by name."""
+        queryset = cls.get_queryset()
+        conditions = [Q(**{f"{attr}__icontains": search}) for attr in cls.get_search_attrs()]
         condition_filter = reduce(operator.or_, conditions)
         return queryset.filter(condition_filter)
 
@@ -312,6 +333,7 @@ register(CreatorAutocomplete)
 register(ImprintAutocomplete)
 register(IssueAutocomplete)
 register(PublisherAutocomplete)
+register(RoleAutocomplete)
 register(SeriesAutocomplete)
 register(TeamAutocomplete)
 register(UniverseAutocomplete)

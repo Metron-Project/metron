@@ -1,8 +1,14 @@
-from django.forms import ModelChoiceField, ModelForm, SelectMultiple, inlineformset_factory
+from django.forms import (
+    ModelChoiceField,
+    ModelForm,
+    ModelMultipleChoiceField,
+    inlineformset_factory,
+)
 
-from comicsdb.autocomplete import CreatorAutocomplete
+from comicsdb.autocomplete import CreatorAutocomplete, RoleAutocomplete
 from comicsdb.forms.widgets import SafeAutocompleteWidget
 from comicsdb.models import Creator, Credits, Issue
+from comicsdb.models.credits import Role
 
 
 class CreditsForm(ModelForm):
@@ -15,11 +21,18 @@ class CreditsForm(ModelForm):
             },
         ),
     )
+    role = ModelMultipleChoiceField(
+        queryset=Role.objects.all(),
+        widget=SafeAutocompleteWidget(
+            ac_class=RoleAutocomplete,
+            attrs={"class": "input"},
+            options={"multiselect": True},
+        ),
+    )
 
     class Meta:
         model = Credits
         fields = ["issue", "creator", "role"]
-        widgets = {"role": SelectMultiple(attrs={"size": 5})}
 
 
 CreditsFormSet = inlineformset_factory(Issue, Credits, form=CreditsForm, extra=1, can_delete=True)
