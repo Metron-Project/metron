@@ -39,20 +39,24 @@
                 </div>
                 {# Card Footer #}
                 <footer class="card-footer">
+                    {% if series.publisher %}
+                        <a href="{% url 'publisher:detail' series.publisher.slug %}"
+                           class="card-footer-item is-size-7"
+                           title="{{ series.publisher }}"
+                           style="overflow: hidden; text-overflow: ellipsis; white-space: nowrap; display: block; text-align: center;"
+                           aria-label="View publisher {{ series.publisher }}">{{ series.publisher }}</a>
+                    {% endif %}
                     {% with count=series.issue_count %}
                         {% if count %}
                             <a href="{% url 'series:issue' series.slug %}"
-                               class="card-footer-item"
+                               class="card-footer-item is-size-7 has-text-weight-semibold"
                                aria-label="{{ count }} issue{{ count|pluralize }} for {{ series }}">
                                 {{ count|intcomma }} issue{{ count|pluralize }}
                             </a>
                         {% else %}
-                            <span class="card-footer-item" aria-label="No issues">0 issues</span>
+                            <span class="card-footer-item is-size-7" aria-label="No issues">0 issues</span>
                         {% endif %}
                     {% endwith %}
-                    <a href="{% url 'series:detail' series.slug %}"
-                       class="card-footer-item"
-                       aria-label="View information for {{ series }}">Info</a>
                 </footer>
             </article>
         </div>
