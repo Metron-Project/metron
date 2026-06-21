@@ -245,27 +245,81 @@
                         </ul>
                     {% endif %}
                 {% endwith %}
-                {# IDs #}
-                <h3 class="title is-6 mt-4">Identification Numbers</h3>
+            </div>
+            {# Identification Numbers #}
+            <div class="box">
+                <h2 class="title is-6">Identification Numbers</h2>
                 <dl>
                     <dt class="has-text-weight-bold">Metron:</dt>
-                    <dd class="mb-2">
-                        {{ character.id }}
+                    <dd class="mb-2 is-flex is-align-items-center is-justify-content-space-between">
+                        <span class="is-family-monospace">{{ character.id }}</span>
+                        <button type="button"
+                                class="button is-small is-light copy-id"
+                                data-copy="{{ character.id }}"
+                                title="Copy Metron ID"
+                                aria-label="Copy Metron ID">
+                            <span class="icon is-small"><i class="fas fa-copy"></i></span>
+                        </button>
                     </dd>
                     {% if character.cv_id %}
                         <dt class="has-text-weight-bold">Comic Vine:</dt>
-                        <dd class="mb-2">
-                            {{ character.cv_id }}
+                        <dd class="mb-2 is-flex is-align-items-center is-justify-content-space-between">
+                            <a class="is-family-monospace"
+                               href="https://comicvine.gamespot.com/character/4005-{{ character.cv_id }}/"
+                               target="_blank"
+                               rel="noopener noreferrer">
+                                {{ character.cv_id }}
+                                <span class="icon is-small"><i class="fas fa-external-link-alt"></i></span>
+                            </a>
+                            <button type="button"
+                                    class="button is-small is-light copy-id"
+                                    data-copy="{{ character.cv_id }}"
+                                    title="Copy Comic Vine ID"
+                                    aria-label="Copy Comic Vine ID">
+                                <span class="icon is-small"><i class="fas fa-copy"></i></span>
+                            </button>
                         </dd>
                     {% endif %}
                     {% if character.gcd_id %}
-                        <dt class="has-text-weight-bold">GCD:</dt>
-                        <dd>
-                            {{ character.gcd_id }}
+                        <dt class="has-text-weight-bold">
+                            <abbr title="Grand Comics Database">GCD</abbr>:
+                        </dt>
+                        <dd class="is-flex is-align-items-center is-justify-content-space-between">
+                            <a class="is-family-monospace"
+                               href="https://www.comics.org/character/{{ character.gcd_id }}/"
+                               target="_blank"
+                               rel="noopener noreferrer">
+                                {{ character.gcd_id }}
+                                <span class="icon is-small"><i class="fas fa-external-link-alt"></i></span>
+                            </a>
+                            <button type="button"
+                                    class="button is-small is-light copy-id"
+                                    data-copy="{{ character.gcd_id }}"
+                                    title="Copy GCD ID"
+                                    aria-label="Copy GCD ID">
+                                <span class="icon is-small"><i class="fas fa-copy"></i></span>
+                            </button>
                         </dd>
                     {% endif %}
                 </dl>
             </div>
         </div>
     </div>
+{% endblock %}
+{% block js %}
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const copyButtons = document.querySelectorAll('.copy-id');
+            copyButtons.forEach(button => {
+                button.addEventListener('click', function() {
+                    const id = this.getAttribute('data-copy');
+                    navigator.clipboard.writeText(id).then(() => {
+                        const originalText = this.innerHTML;
+                        this.innerHTML = '<span class="icon is-small"><i class="fas fa-check"></i></span>';
+                        setTimeout(() => { this.innerHTML = originalText; }, 2000);
+                    });
+                });
+            });
+        });
+    </script>
 {% endblock %}
