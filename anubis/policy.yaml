@@ -91,27 +91,22 @@ bots:
     action: ALLOW
 
   # Add weight to generic browser-like user agents. Combined with the
-  # thresholds below this triggers the proof-of-work challenge for browsers.
+  # thresholds below this triggers the mild-proof-of-work challenge (difficulty 4).
   - name: generic-browser
     user_agent_regex: >-
       Mozilla|Opera
     action: WEIGH
     weight:
-      adjust: 10
+      adjust: 20
 
   # Add extra weight to Chrome user agents. Chrome-spoofing bots are common,
-  # so Chrome requests get an additional +10 (total 20) which lands in the
-  # mild-proof-of-work band → fast difficulty 4 (vs difficulty 2 for other browsers).
+  # so Chrome requests get an additional +10 (total 30) which lands in the
+  # extreme-suspicion band → fast difficulty 6 (vs difficulty 4 for other browsers).
   - name: weigh-chrome
     user_agent_regex: Chrome/
     action: WEIGH
     weight:
       adjust: 10
-
-# OG passthrough is disabled. When enabled, Anubis fetches OG tags from Django
-# for every challenged request, which amplifies bot attacks by doubling Django
-# load. Social media link previews are handled instead by the allow-og-crawlers
-# rule below which lets known OG fetchers bypass the challenge entirely.
 
 # Weight thresholds that determine when to challenge a request.
 # The generic-browser rule above adds weight=10 to browser requests,
