@@ -8,15 +8,35 @@
     {{ form.media.css }}
     <link rel="stylesheet"
           href="{% static 'site/css/bulma-calendar.min.css' %}">
+    {# usability styles — shared with issue_form.html #}
+    <link rel="stylesheet"
+          href="{% static 'site/css/issue-form-usability.css' %}">
 {% endblock %}
 {% block content %}
-    <header class="block has-text-centered">
-        <h1 class="title">{{ title|default:"Form" }}</h1>
-    </header>
     <form method="post" enctype="multipart/form-data" id="mainForm" novalidate>
         {% csrf_token %}
+        <!-- Sticky action bar — Save / Cancel always reachable + section nav -->
+        <div class="usab-actionbar">
+            <div class="usab-actionbar__top">
+                <h1 class="usab-actionbar__title">{{ title|default:"Form" }}</h1>
+                <div class="usab-actionbar__actions">
+                    <button type="button" class="button" onclick="history.back()">
+                        <span class="icon"><i class="fas fa-times"></i></span>
+                        <span>Cancel</span>
+                    </button>
+                    <button class="button is-info" type="submit">
+                        <span class="icon"><i class="fas fa-check"></i></span>
+                        <span>Save</span>
+                    </button>
+                </div>
+            </div>
+            <nav class="usab-nav" aria-label="Form sections">
+                <a href="#section-primary" class="is-active">Primary</a>
+                <a href="#section-attribution">Attribution</a>
+            </nav>
+        </div>
         <!-- Primary Information Section -->
-        <div class="box">
+        <div class="box" id="section-primary">
             <h2 class="title is-5">Primary Information</h2>
             {% include "comicsdb/partials/form_errors.html" with form=form %}
             {% for field in form.hidden_fields %}{{ field }}{% endfor %}
@@ -25,20 +45,9 @@
             {% endfor %}
         </div>
         <!-- Attribution Section -->
-        <div class="box">
+        <div class="box" id="section-attribution">
             <h2 class="title is-5">Attribution</h2>
             {% include "comicsdb/partials/attribution_formset.html" with formset=attribution %}
-        </div>
-        <!-- Submit Button -->
-        <div class="field">
-            <div class="control">
-                <button class="button is-info" type="submit">
-                    <span class="icon">
-                        <i class="fas fa-check"></i>
-                    </span>
-                    <span>Submit</span>
-                </button>
-            </div>
         </div>
     </form>
 {% endblock %}
@@ -114,4 +123,6 @@ document.body.addEventListener('htmx:afterSwap', function(event) {
     }
 });
     </script>
+    {# Tier 3 usability behaviour — shared with issue_form.html (section nav; role chips no-op here) #}
+    <script src="{% static 'site/js/issue-form-usability.js' %}"></script>
 {% endblock %}
