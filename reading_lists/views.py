@@ -259,15 +259,53 @@ class ReadingListDetailView(DetailView):
 
         # Prefetch publishers efficiently
         if reading_list_items_count > 0:
-            # Get unique publishers from already-prefetched data
-            publishers = {}
+            # Display label + bar color for each ReadingListItem.IssueType
+            type_meta = {
+                "CORE": ("Core", "#3273dc"),
+                "TIE_IN": ("Tie-In", "#f5b400"),
+                "PROLOGUE": ("Prologue", "#3e8ed0"),
+                "EPILOGUE": ("Epilogue", "#48c78e"),
+            }
+
+            type_counts = {}
+            series_counts = {}
+            publisher_counts = {}
+
             for item in reading_list_items:
-                publisher = item.issue.series.publisher
-                if publisher and publisher.id not in publishers:
-                    publishers[publisher.id] = publisher
-            context["publishers"] = sorted(publishers.values(), key=lambda p: p.name)
-        else:
-            context["publishers"] = []
+                key = item.issue_type or ""
+                if key:
+                    type_counts[key] = type_counts.get(key, 0) + 1
+
+                series = item.issue.series
+                s_entry = series_counts.setdefault(series.id, {"series": series, "count": 0})
+                s_entry["count"] += 1
+
+                publisher = series.publisher
+                if publisher:
+                    p_entry = publisher_counts.setdefault(
+                        publisher.id, {"publisher": publisher, "count": 0}
+                    )
+                    p_entry["count"] += 1
+
+            context["issue_type_breakdown"] = [
+                {
+                    "key": k,
+                    "label": type_meta[k][0],
+                    "color": type_meta[k][1],
+                    "count": type_counts[k],
+                }
+                for k in ("CORE", "TIE_IN", "PROLOGUE", "EPILOGUE")
+                if type_counts.get(k)
+            ]
+
+            context["series_breakdown"] = sorted(
+                series_counts.values(),
+                key=lambda e: (-e["count"], e["series"].name),
+            )
+            context["publisher_breakdown"] = sorted(
+                publisher_counts.values(),
+                key=lambda e: (-e["count"], e["publisher"].name),
+            )
 
         return context
 
