@@ -180,9 +180,9 @@ class TestReadingListItemModel:
         assert ReadingList.objects.filter(id=reading_list_with_issues.id).exists()
 
     def test_reading_list_item_default_order(self, public_reading_list, reading_list_issue_1):
-        """Test that order defaults to 0."""
+        """Test that order defaults to 1."""
         item = ReadingListItem.objects.create(
             reading_list=public_reading_list,
             issue=reading_list_issue_1,
         )
-        assert item.order == 0
+        assert item.order == 1
