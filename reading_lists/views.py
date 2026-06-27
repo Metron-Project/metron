@@ -11,6 +11,9 @@ from django.views.decorators.http import require_POST
 from django.views.generic import CreateView, DeleteView, DetailView, FormView, ListView, UpdateView
 
 from comicsdb.filters.reading_list import ReadingListViewFilter
+from comicsdb.models.character import Character
+from comicsdb.models.creator import Creator
+from comicsdb.models.credits import Credits, Role
 from comicsdb.models.issue import Issue
 from comicsdb.views.mixins import LazyLoadMixin, SearchMixin
 from reading_lists.forms import (
@@ -61,6 +64,8 @@ class ReadingListListView(ListView):
             issue_count=Count("issues", distinct=True),
             average_rating=Avg("ratings__rating"),
             rating_count=Count("ratings", distinct=True),
+            start_year_annotated=Min("reading_list_items__issue__cover_date__year"),
+            end_year_annotated=Max("reading_list_items__issue__cover_date__year"),
         )
 
         if self.request.user.is_authenticated:
@@ -112,6 +117,8 @@ class SearchReadingListListView(SearchMixin, ReadingListListView):
             issue_count=Count("issues", distinct=True),
             average_rating=Avg("ratings__rating"),
             rating_count=Count("ratings", distinct=True),
+            start_year_annotated=Min("reading_list_items__issue__cover_date__year"),
+            end_year_annotated=Max("reading_list_items__issue__cover_date__year"),
         )
 
         if self.request.user.is_authenticated:
@@ -158,6 +165,8 @@ class UserReadingListListView(LoginRequiredMixin, ListView):
                 issue_count=Count("issues", distinct=True),
                 average_rating=Avg("ratings__rating"),
                 rating_count=Count("ratings", distinct=True),
+                start_year_annotated=Min("reading_list_items__issue__cover_date__year"),
+                end_year_annotated=Max("reading_list_items__issue__cover_date__year"),
             )
             .order_by("name", "attribution_source", "user")
         )
@@ -259,15 +268,97 @@ class ReadingListDetailView(DetailView):
 
         # Prefetch publishers efficiently
         if reading_list_items_count > 0:
-            # Get unique publishers from already-prefetched data
-            publishers = {}
+            # Display label + bar color for each ReadingListItem.IssueType
+            type_meta = {
+                "CORE": ("Core", "#3273dc"),
+                "TIE_IN": ("Tie-In", "#f5b400"),
+                "PROLOGUE": ("Prologue", "#3e8ed0"),
+                "EPILOGUE": ("Epilogue", "#48c78e"),
+            }
+
+            type_counts = {}
+            series_counts = {}
+            publisher_counts = {}
+
             for item in reading_list_items:
-                publisher = item.issue.series.publisher
-                if publisher and publisher.id not in publishers:
-                    publishers[publisher.id] = publisher
-            context["publishers"] = sorted(publishers.values(), key=lambda p: p.name)
-        else:
-            context["publishers"] = []
+                key = item.issue_type or ""
+                if key:
+                    type_counts[key] = type_counts.get(key, 0) + 1
+
+                series = item.issue.series
+                s_entry = series_counts.setdefault(series.id, {"series": series, "count": 0})
+                s_entry["count"] += 1
+
+                publisher = series.publisher
+                if publisher:
+                    p_entry = publisher_counts.setdefault(
+                        publisher.id, {"publisher": publisher, "count": 0}
+                    )
+                    p_entry["count"] += 1
+
+            context["issue_type_breakdown"] = [
+                {
+                    "key": k,
+                    "label": type_meta[k][0],
+                    "color": type_meta[k][1],
+                    "count": type_counts[k],
+                }
+                for k in ("CORE", "TIE_IN", "PROLOGUE", "EPILOGUE")
+                if type_counts.get(k)
+            ]
+
+            context["series_breakdown"] = sorted(
+                series_counts.values(),
+                key=lambda e: (-e["count"], e["series"].name),
+            )
+            context["publisher_breakdown"] = sorted(
+                publisher_counts.values(),
+                key=lambda e: (-e["count"], e["publisher"].name),
+            )
+
+            issue_ids = [item.issue_id for item in reading_list_items]
+            role_names = ["Artist", "Finishes", "Inker", "Penciller", "Script", "Story", "Writer"]
+            top6 = list(
+                Creator.objects.filter(
+                    credits__issue_id__in=issue_ids,
+                    credits__role__name__in=role_names,
+                )
+                .annotate(issue_count=Count("credits__issue", distinct=True))
+                .order_by("-issue_count", "name")[:6]
+            )
+            creator_ids = [c.id for c in top6]
+            role_map: dict[int, set[str]] = {}
+            for credit in Credits.objects.filter(
+                issue_id__in=issue_ids,
+                creator_id__in=creator_ids,
+                role__name__in=role_names,
+            ).prefetch_related(Prefetch("role", queryset=Role.objects.filter(name__in=role_names))):
+                for role in credit.role.all():
+                    role_map.setdefault(credit.creator_id, set()).add(role.name)
+            role_display = {
+                "Artist": "Artist",
+                "Finishes": "Artist",
+                "Inker": "Artist",
+                "Penciller": "Artist",
+                "Script": "Writer",
+                "Story": "Writer",
+                "Writer": "Writer",
+            }
+            context["featured_creators"] = [
+                {
+                    "creator": c,
+                    "roles": ", ".join(
+                        sorted({role_display.get(r, r) for r in role_map.get(c.id, [])})
+                    ),
+                }
+                for c in top6
+            ]
+
+            context["top_characters"] = (
+                Character.objects.filter(issues__in=issue_ids)
+                .annotate(appearance_count=Count("issues", distinct=True))
+                .order_by("-appearance_count", "name")[:12]
+            )
 
         return context
 

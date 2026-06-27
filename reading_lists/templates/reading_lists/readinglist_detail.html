@@ -2,65 +2,146 @@
 {% load static thumbnail %}
 {% block title %}{{ reading_list.name }} - Metron{% endblock %}
 {% block content %}
-    {% if reading_list.image %}
-        {% thumbnail reading_list.image "1200x500" crop="center" format="WEBP" as hero_img %}
-            <header class="block mb-5"
-                    style="position: relative; overflow: hidden; border-radius: 6px; min-height: 200px;">
-                <div style="position: absolute;
-                            inset: 0;
+    {# ============================ HERO ============================ #}
+    <header class="block"
+            style="position: relative; overflow: hidden; border-radius: 6px; background: linear-gradient(150deg, #122c52, #234a82);">
+        {% if reading_list.image %}
+            {% thumbnail reading_list.image "1600x520" crop="center" format="WEBP" as hero_img %}
+                <div style="position: absolute; inset: 0;
                             background-image: url('{{ hero_img.url }}');
-                            background-size: cover;
-                            background-position: center;
-                            opacity: 0.8;"></div>
-                <div style="position: relative; padding: 3rem 2rem;">
-                    <h1 class="title">
-                        {{ reading_list.name }}
-                        {% if reading_list.is_private %}<span class="tag is-warning">Private</span>{% endif %}
-                    </h1>
-                    <p class="subtitle is-6">
-                        Created by <strong>{{ reading_list.user.username }}</strong>
-                    </p>
-                </div>
-            </header>
-        {% endthumbnail %}
-    {% else %}
-        <header class="block">
-            <h1 class="title">
-                {{ reading_list.name }}
-                {% if reading_list.is_private %}<span class="tag is-warning">Private</span>{% endif %}
-            </h1>
-            <p class="subtitle is-6">
-                Created by <strong>{{ reading_list.user.username }}</strong>
+                            background-size: cover; background-position: center;
+                            opacity: 0.45;"></div>
+                <div style="position: absolute; inset: 0;
+                            background: linear-gradient(150deg, rgba(18,44,82,0.65), rgba(35,74,130,0.50));"></div>
+            {% endthumbnail %}
+        {% endif %}
+        <div style="position: relative; z-index: 2; padding: 3rem 2rem;">
+            <p style="text-transform: uppercase; letter-spacing: 3px; font-size: 0.75rem; font-weight: 600; color: #fff; opacity: 0.7; margin-bottom: 0.75rem;">
+                <span class="icon is-small"><i class="fas fa-layer-group"></i></span>
+                Reading List &middot; {{ reading_list.get_list_type_display }}
             </p>
-        </header>
-    {% endif %}
+            <h1 class="title is-1 has-text-white"
+                style="font-weight: 800; letter-spacing: -1px; margin-bottom: 0.75rem;">
+                {{ reading_list.name }}
+                {% if reading_list.is_private %}
+                    <span class="tag is-warning is-medium" style="vertical-align: middle;">Private</span>
+                {% endif %}
+            </h1>
+
+            <div class="is-flex is-align-items-center is-flex-wrap-wrap" style="gap: 1rem;">
+                <span class="has-text-white">
+                    Curated by
+                    <a href="{% url 'user-detail' username=reading_list.user.username %}"
+                       class="has-text-white has-text-weight-bold"
+                       style="border-bottom: 1px solid rgba(255,255,255,0.4);">{{ reading_list.user.username }}</a>
+                </span>
+                {% if not reading_list.is_private %}
+                    <span style="opacity: 0.4; color: #fff;">|</span>
+                    <span class="has-text-white">
+                        {% if average_rating %}
+                            <span style="color: #ffce54;">
+                                {% for star_num in "12345" %}
+                                    <i class="{% if star_num|add:'0' <= average_rating %}fas{% else %}far{% endif %} fa-star"></i>
+                                {% endfor %}
+                            </span>
+                            <span class="ml-1">{{ average_rating|floatformat:1 }} &middot; {{ rating_count }} rating{{ rating_count|pluralize }}</span>
+                        {% else %}
+                            <span style="opacity: 0.8;">No ratings yet</span>
+                        {% endif %}
+                    </span>
+                    <span style="opacity: 0.4; color: #fff;">|</span>
+                    <span class="tag is-success" style="background: rgba(72,199,142,0.22); color: #a8f0cd;">
+                        <span class="icon is-small"><i class="fas fa-globe"></i></span>
+                        <span>Public</span>
+                    </span>
+                {% endif %}
+            </div>
+
+            <div class="buttons mt-4">
+                <button class="button is-light"
+                        onclick="navigator.clipboard.writeText(window.location.href); var l=this.querySelector('.label-text'); var o=l.textContent; l.textContent='Link copied!'; setTimeout(function(){l.textContent=o;}, 1800);">
+                    <span class="icon is-small"><i class="fas fa-share-alt"></i></span>
+                    <span class="label-text">Share</span>
+                </button>
+                {% if not reading_list.is_private %}
+                    <a class="button is-light is-outlined"
+                       href="#reading-list-rating-{{ reading_list.pk }}"
+                       style="color: #fff; border-color: rgba(255,255,255,0.7);">
+                        <span class="icon is-small"><i class="fas fa-star"></i></span>
+                        <span>Rate this list</span>
+                    </a>
+                {% endif %}
+            </div>
+        </div>
+    </header>
+
+    {# ===================== AT-A-GLANCE SUMMARY ===================== #}
+    <div class="box" style="margin-top: -2.5rem; position: relative; z-index: 3;">
+        <div class="is-flex is-align-items-center is-flex-wrap-wrap" style="gap: 1.5rem;">
+            <div>
+                <p class="heading">Issues</p>
+                <p class="title is-4 mb-0">{{ reading_list_items_count }}</p>
+            </div>
+            <div style="border-left: 1px solid #ededed; padding-left: 1.5rem;">
+                <p class="heading">Reading span</p>
+                <p class="title is-4 mb-0">
+                    {% if start_year %}
+                        {{ start_year }}{% if end_year and end_year != start_year %}&ndash;{{ end_year }}{% endif %}
+                    {% else %}&mdash;{% endif %}
+                </p>
+            </div>
+            <div style="border-left: 1px solid #ededed; padding-left: 1.5rem;">
+                <p class="heading">Publishers</p>
+                <p class="title is-4 mb-0">{% if publisher_breakdown %}{{ publisher_breakdown|length }}{% else %}{{ publishers|length }}{% endif %}</p>
+            </div>
+            <div style="border-left: 1px solid #ededed; padding-left: 1.5rem;">
+                <p class="heading">Series</p>
+                <p class="title is-4 mb-0">{{ series_breakdown|length }}</p>
+            </div>
+            {% if issue_type_breakdown %}
+                <div class="is-flex-grow-1" style="min-width: 240px; border-left: 1px solid #ededed; padding-left: 1.5rem;">
+                    <p class="heading">Composition</p>
+                    <div style="display: flex; height: 10px; border-radius: 5px; overflow: hidden; background: #ededed;">
+                        {% for seg in issue_type_breakdown %}
+                            <div style="width: {% widthratio seg.count reading_list_items_count 100 %}%; background: {{ seg.color }};"></div>
+                        {% endfor %}
+                    </div>
+                    <div class="is-flex is-flex-wrap-wrap mt-2" style="gap: 0.9rem;">
+                        {% for seg in issue_type_breakdown %}
+                            <span class="is-flex is-align-items-center is-size-7" style="gap: 0.4em;">
+                                <span style="width: 9px; height: 9px; border-radius: 50%; background: {{ seg.color }}; display: inline-block;"></span>
+                                {{ seg.label }} <strong class="ml-1">{{ seg.count }}</strong>
+                            </span>
+                        {% endfor %}
+                    </div>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+
+    {# ===================== OWNER ACTION BAR ===================== #}
     {% if is_owner %}
         <nav class="level mb-5">
             <div class="level-left"></div>
             <div class="level-right">
                 <div class="buttons">
-                    <a class="button is-primary"
-                       href="{% url 'reading-list:add-issue' reading_list.slug %}">
+                    <a class="button is-primary" href="{% url 'reading-list:add-issue' reading_list.slug %}">
                         <span class="icon is-small"><i class="fas fa-plus"></i></span>
                         <span>Add Issues</span>
                     </a>
-                    <a class="button is-primary is-light"
-                       href="{% url 'reading-list:add-from-series' reading_list.slug %}">
+                    <a class="button is-primary is-light" href="{% url 'reading-list:add-from-series' reading_list.slug %}">
                         <span class="icon is-small"><i class="fas fa-layer-group"></i></span>
                         <span>Add from Series</span>
                     </a>
-                    <a class="button is-primary is-light"
-                       href="{% url 'reading-list:add-from-arc' reading_list.slug %}">
+                    <a class="button is-primary is-light" href="{% url 'reading-list:add-from-arc' reading_list.slug %}">
                         <span class="icon is-small"><i class="fas fa-book"></i></span>
                         <span>Add from Arc</span>
                     </a>
-                    <a class="button is-info"
-                       href="{% url 'reading-list:update' reading_list.slug %}">
+                    <a class="button is-info" href="{% url 'reading-list:update' reading_list.slug %}">
                         <span class="icon is-small"><i class="fas fa-edit"></i></span>
                         <span>Edit</span>
                     </a>
-                    <a class="button is-danger"
-                       href="{% url 'reading-list:delete' reading_list.slug %}">
+                    <a class="button is-danger" href="{% url 'reading-list:delete' reading_list.slug %}">
                         <span class="icon is-small"><i class="fas fa-trash"></i></span>
                         <span>Delete</span>
                     </a>
@@ -68,24 +149,40 @@
             </div>
         </nav>
     {% endif %}
+
+    {# ========================= COLUMNS ========================= #}
     <div class="columns">
         <div class="column is-three-quarters">
             {% if reading_list.desc %}
                 <div class="box">
-                    <h2 class="title is-5">Description</h2>
+                    <h2 class="title is-5">About this list</h2>
                     <div class="content">{{ reading_list.desc|linebreaksbr }}</div>
                 </div>
             {% endif %}
+
             <div class="box">
                 <h2 class="title is-5">Issues ({{ reading_list_items_count }})</h2>
                 {% if reading_list_items_count > 0 %}
-                    <div class="content">
-                        <ol id="items-container">
-                            {% for item in reading_list_items %}
-                                {% include "reading_lists/partials/readinglist_item.html" with item=item reading_list_slug=reading_list.slug is_owner=is_owner %}
+                    {# ---- Type filter chips ---- #}
+                    {% if issue_type_breakdown %}
+                        <div class="rl-filters mb-4" style="display: flex; flex-wrap: wrap; gap: 0.4rem;">
+                            <button class="button is-small is-rounded is-link rl-filter" data-filter="all">
+                                All <span class="ml-1 has-text-weight-bold">{{ reading_list_items_count }}</span>
+                            </button>
+                            {% for seg in issue_type_breakdown %}
+                                <button class="button is-small is-rounded rl-filter" data-filter="{{ seg.key }}">
+                                    {{ seg.label }} <span class="ml-1 has-text-weight-bold">{{ seg.count }}</span>
+                                </button>
                             {% endfor %}
-                        </ol>
-                    </div>
+                        </div>
+                    {% endif %}
+
+                    <ol id="items-container" style="list-style: none; margin: 0;">
+                        {% for item in reading_list_items %}
+                            {% include "reading_lists/partials/readinglist_item.html" with item=item reading_list_slug=reading_list.slug is_owner=is_owner %}
+                        {% endfor %}
+                    </ol>
+
                     {% if reading_list_items_count > 50 %}
                         <div id="items-load-more-wrapper" class="has-text-centered mt-4">
                             <button class="button is-link"
@@ -104,18 +201,15 @@
                     <p class="has-text-grey">No issues in this list yet.</p>
                     {% if is_owner %}
                         <div class="buttons mt-3">
-                            <a href="{% url 'reading-list:add-issue' reading_list.slug %}"
-                               class="button is-primary">
+                            <a href="{% url 'reading-list:add-issue' reading_list.slug %}" class="button is-primary">
                                 <span class="icon"><i class="fas fa-plus"></i></span>
                                 <span>Add Issues</span>
                             </a>
-                            <a href="{% url 'reading-list:add-from-series' reading_list.slug %}"
-                               class="button is-primary is-light">
+                            <a href="{% url 'reading-list:add-from-series' reading_list.slug %}" class="button is-primary is-light">
                                 <span class="icon"><i class="fas fa-layer-group"></i></span>
                                 <span>Add from Series</span>
                             </a>
-                            <a href="{% url 'reading-list:add-from-arc' reading_list.slug %}"
-                               class="button is-primary is-light">
+                            <a href="{% url 'reading-list:add-from-arc' reading_list.slug %}" class="button is-primary is-light">
                                 <span class="icon"><i class="fas fa-book"></i></span>
                                 <span>Add from Arc</span>
                             </a>
@@ -124,43 +218,18 @@
                 {% endif %}
             </div>
         </div>
+
+        {# ----------------------- SIDEBAR ----------------------- #}
         <div class="column">
             <div class="box">
-                <h2 class="title is-6">List Details</h2>
+                <h2 class="title is-6">List details</h2>
                 <dl>
                     <dt class="has-text-weight-bold">Owner:</dt>
                     <dd class="mb-3">
-                        {{ reading_list.user.username }}
+                        <a href="{% url 'user-detail' username=reading_list.user.username %}">{{ reading_list.user.username }}</a>
                     </dd>
-                    <dt class="has-text-weight-bold">Issues:</dt>
-                    <dd class="mb-3">
-                        {{ reading_list_items_count }}
-                    </dd>
-                    <dt class="has-text-weight-bold">Rating:</dt>
-                    <dd class="mb-3">
-                        {% include "reading_lists/partials/reading_list_rating.html" %}
-                    </dd>
-                    {% if start_year %}
-                        <dt class="has-text-weight-bold">Year Range:</dt>
-                        <dd class="mb-3">
-                            {% if start_year == end_year %}
-                                {{ start_year }}
-                            {% else %}
-                                {{ start_year }} - {{ end_year }}
-                            {% endif %}
-                        </dd>
-                    {% endif %}
-                    {% if publishers %}
-                        <dt class="has-text-weight-bold">Publishers:</dt>
-                        <dd class="mb-3">
-                            {% for publisher in publishers %}
-                                <a href="{% url 'publisher:detail' publisher.slug %}">{{ publisher.name }}</a>
-                                {% if not forloop.last %},{% endif %}
-                            {% endfor %}
-                        </dd>
-                    {% endif %}
                     <dt class="has-text-weight-bold">Type:</dt>
-                    <dd class="mb-3">{{ reading_list.get_list_type_display }}</dd>
+                    <dd class="mb-3"><span class="tag is-link is-light">{{ reading_list.get_list_type_display }}</span></dd>
                     <dt class="has-text-weight-bold">Visibility:</dt>
                     <dd class="mb-3">
                         {% if reading_list.is_private %}
@@ -169,17 +238,19 @@
                             <span class="tag is-success">Public</span>
                         {% endif %}
                     </dd>
+                    {% if start_year %}
+                        <dt class="has-text-weight-bold">Reading span:</dt>
+                        <dd class="mb-3">
+                            {% if start_year == end_year %}{{ start_year }}{% else %}{{ start_year }} &ndash; {{ end_year }}{% endif %}
+                        </dd>
+                    {% endif %}
                     {% if reading_list.attribution_source %}
                         <dt class="has-text-weight-bold">Source:</dt>
                         <dd class="mb-3">
                             {% if reading_list.attribution_url %}
-                                <a href="{{ reading_list.attribution_url }}"
-                                   target="_blank"
-                                   rel="noopener noreferrer">
+                                <a href="{{ reading_list.attribution_url }}" target="_blank" rel="noopener noreferrer">
                                     {{ reading_list.get_attribution_source_display }}
-                                    <span class="icon is-small">
-                                        <i class="fas fa-external-link-alt"></i>
-                                    </span>
+                                    <span class="icon is-small"><i class="fas fa-external-link-alt"></i></span>
                                 </a>
                             {% else %}
                                 {{ reading_list.get_attribution_source_display }}
@@ -187,15 +258,154 @@
                         </dd>
                     {% endif %}
                     <dt class="has-text-weight-bold">Created:</dt>
-                    <dd class="mb-3">
-                        {{ reading_list.created_on|date:"F d, Y" }}
-                    </dd>
-                    <dt class="has-text-weight-bold">Last Modified:</dt>
-                    <dd>
-                        {{ reading_list.modified|date:"F d, Y" }}
-                    </dd>
+                    <dd class="mb-3">{{ reading_list.created_on|date:"F d, Y" }}</dd>
+                    <dt class="has-text-weight-bold">Last modified:</dt>
+                    <dd class="mb-3">{{ reading_list.modified|date:"F d, Y" }}</dd>
                 </dl>
+                <hr>
+                {% include "reading_lists/partials/reading_list_rating.html" %}
             </div>
+
+            {% if series_breakdown %}
+                <div class="box">
+                    <h2 class="title is-6">Series in this list</h2>
+                    {% for entry in series_breakdown %}
+                        <div class="is-flex is-align-items-center mb-2" style="gap: 0.6rem;">
+                            <a href="{% url 'series:detail' entry.series.slug %}" class="is-flex-grow-1" style="min-width: 0;">
+                                <span class="is-size-7">{{ entry.series.name }}</span>
+                                <div style="height: 4px; border-radius: 2px; background: #ededed; margin-top: 4px; overflow: hidden;">
+                                    <div style="width: {% widthratio entry.count series_breakdown.0.count 100 %}%; height: 100%; background: #3273dc; opacity: 0.55;"></div>
+                                </div>
+                            </a>
+                            <span class="has-text-grey has-text-weight-bold is-size-7">{{ entry.count }}</span>
+                        </div>
+                    {% endfor %}
+                </div>
+            {% endif %}
+
+            {% if publisher_breakdown %}
+                <div class="box">
+                    <h2 class="title is-6">Publishers</h2>
+                    {% for entry in publisher_breakdown %}
+                        <div class="mb-3">
+                            <div class="is-flex is-justify-content-space-between is-align-items-baseline">
+                                <a href="{% url 'publisher:detail' entry.publisher.slug %}" class="has-text-weight-semibold">{{ entry.publisher.name }}</a>
+                                <span class="has-text-grey is-size-7">{{ entry.count }} issue{{ entry.count|pluralize }}</span>
+                            </div>
+                            <div style="height: 6px; border-radius: 3px; background: #ededed; margin-top: 6px; overflow: hidden;">
+                                <div style="width: {% widthratio entry.count reading_list_items_count 100 %}%; height: 100%; background: #3273dc;"></div>
+                            </div>
+                        </div>
+                    {% endfor %}
+                </div>
+            {% elif publishers %}
+                <div class="box">
+                    <h2 class="title is-6">Publishers</h2>
+                    <div class="content">
+                        {% for publisher in publishers %}
+                            <a href="{% url 'publisher:detail' publisher.slug %}">{{ publisher.name }}</a>{% if not forloop.last %}, {% endif %}
+                        {% endfor %}
+                    </div>
+                </div>
+            {% endif %}
+
+            {% if top_characters %}
+                <div class="box">
+                    <h2 class="title is-6">Top Characters</h2>
+                    {% for character in top_characters %}
+                        <article class="media{% if not forloop.last %} mb-4{% endif %}">
+                            <figure class="media-left">
+                                <div class="image is-48x48">
+                                    {% if character.image %}
+                                        {% thumbnail character.image "48x48" crop="top" format="WEBP" as im %}
+                                            <img class="is-rounded"
+                                                 src="{{ im.url }}"
+                                                 width="{{ im.width }}"
+                                                 height="{{ im.height }}"
+                                                 alt="{{ character.name }}"
+                                                 loading="lazy">
+                                        {% endthumbnail %}
+                                    {% else %}
+                                        <img class="is-rounded"
+                                             src="{% static 'site/img/image-not-found.webp' %}"
+                                             alt="{{ character.name }}"
+                                             loading="lazy">
+                                    {% endif %}
+                                </div>
+                            </figure>
+                            <div class="media-content" style="align-self: center;">
+                                <a href="{% url 'character:detail' character.slug %}"
+                                   class="has-text-weight-semibold is-size-7">{{ character.name }}</a>
+                                <p class="is-size-7 has-text-grey-light">{{ character.appearance_count }} issue{{ character.appearance_count|pluralize }}</p>
+                            </div>
+                        </article>
+                    {% endfor %}
+                </div>
+            {% endif %}
+
+            {% if featured_creators %}
+                <div class="box">
+                    <h2 class="title is-6">Featured Creators</h2>
+                    {% for entry in featured_creators %}
+                        <article class="media{% if not forloop.last %} mb-4{% endif %}">
+                            <figure class="media-left">
+                                <div class="image is-48x48">
+                                    {% if entry.creator.image %}
+                                        {% thumbnail entry.creator.image "48x48" crop="top" format="WEBP" as im %}
+                                            <img class="is-rounded"
+                                                 src="{{ im.url }}"
+                                                 width="{{ im.width }}"
+                                                 height="{{ im.height }}"
+                                                 alt="{{ entry.creator.name }}"
+                                                 loading="lazy">
+                                        {% endthumbnail %}
+                                    {% else %}
+                                        <img class="is-rounded"
+                                             src="{% static 'site/img/creator-not-found.webp' %}"
+                                             alt="{{ entry.creator.name }}"
+                                             loading="lazy">
+                                    {% endif %}
+                                </div>
+                            </figure>
+                            <div class="media-content">
+                                <a href="{% url 'creator:detail' entry.creator.slug %}"
+                                   class="has-text-weight-semibold is-size-7">{{ entry.creator.name }}</a>
+                                {% if entry.roles %}
+                                    <p class="is-size-7 has-text-grey">{{ entry.roles }}</p>
+                                {% endif %}
+                            </div>
+                        </article>
+                    {% endfor %}
+                </div>
+            {% endif %}
         </div>
     </div>
+{% endblock %}
+{% block js %}
+    <script>
+        (function () {
+            var current = 'all';
+
+            function apply() {
+                document.querySelectorAll('.rl-item').forEach(function (li) {
+                    var t = li.getAttribute('data-issue-type');
+                    li.style.display = (current === 'all' || t === current) ? '' : 'none';
+                });
+            }
+
+            document.querySelectorAll('.rl-filter').forEach(function (btn) {
+                btn.addEventListener('click', function () {
+                    current = btn.getAttribute('data-filter');
+                    document.querySelectorAll('.rl-filter').forEach(function (b) {
+                        b.classList.remove('is-link');
+                    });
+                    btn.classList.add('is-link');
+                    apply();
+                });
+            });
+
+            // Re-apply the active filter after HTMX appends more rows.
+            document.body.addEventListener('htmx:afterSwap', apply);
+        })();
+    </script>
 {% endblock %}

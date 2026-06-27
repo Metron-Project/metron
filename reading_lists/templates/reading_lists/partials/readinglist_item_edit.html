@@ -1,61 +1,75 @@
-<li id="item-{{ item.pk }}">
-    <div class="level">
-        <div class="level-left">
-            <div class="level-item">
-                <div>
-                    <a href="{% url 'issue:detail' item.issue.slug %}">{{ item.issue }}</a>
-                    <span class="has-text-grey-light">— {{ item.issue.cover_date|date:"M Y" }}</span>
+{% load static thumbnail %}
+<li id="item-{{ item.pk }}"
+    class="rl-item"
+    data-issue-type="{{ item.issue_type|default:'UNCATEGORIZED' }}">
+    <div style="display: flex; align-items: center; gap: 1rem; padding: 0.7rem 0.25rem; border-bottom: 1px solid #ededed;">
+        {# Reading-order position #}
+        <span style="width: 2rem; flex: none; text-align: center; font-weight: 700; color: #7a7a7a; font-variant-numeric: tabular-nums;">{{ item.order }}</span>
+
+        {# Cover thumbnail #}
+        <a href="{% url 'issue:detail' item.issue.slug %}" style="flex: none; width: 48px; display: block;">
+            {% if item.issue.image %}
+                {% thumbnail item.issue.image "96x144" format="WEBP" as im %}
+                    <img src="{{ im.url }}"
+                         width="48"
+                         alt="{{ item.issue }}"
+                         loading="lazy"
+                         style="display: block; width: 48px; border-radius: 4px; box-shadow: 0 1px 3px rgba(0,0,0,0.2);">
+                {% endthumbnail %}
+            {% else %}
+                <img src="{% static 'site/img/image-not-found.webp' %}"
+                     width="48"
+                     alt="No image for {{ item.issue }}"
+                     loading="lazy"
+                     style="display: block; width: 48px; border-radius: 4px;">
+            {% endif %}
+        </a>
+
+        {# Title + meta #}
+        <div style="flex: 1 1 0; min-width: 0;">
+            <a href="{% url 'issue:detail' item.issue.slug %}" class="has-text-weight-semibold">{{ item.issue }}</a>
+            <p class="is-size-7 has-text-grey mb-0">
+                {{ item.issue.cover_date|date:"M Y" }}
+                {% if item.issue.series.publisher %}
+                    &middot; <a href="{% url 'publisher:detail' item.issue.series.publisher.slug %}" class="has-text-grey">{{ item.issue.series.publisher }}</a>
+                {% endif %}
+            </p>
+        </div>
+
+        {# Inline tag edit form #}
+        <form hx-post="{% url 'reading-list:update-issue-type' reading_list_slug item.pk %}"
+              hx-target="#item-{{ item.pk }}"
+              hx-swap="outerHTML"
+              style="flex: none;">
+            {% csrf_token %}
+            <div class="field has-addons mb-0">
+                <div class="control">
+                    <div class="select is-small">
+                        <select name="issue_type">
+                            <option value="">-- No Type --</option>
+                            <option value="PROLOGUE" {% if item.issue_type == 'PROLOGUE' %}selected{% endif %}>Prologue</option>
+                            <option value="CORE" {% if item.issue_type == 'CORE' %}selected{% endif %}>Core</option>
+                            <option value="TIE_IN" {% if item.issue_type == 'TIE_IN' %}selected{% endif %}>Tie-In</option>
+                            <option value="EPILOGUE" {% if item.issue_type == 'EPILOGUE' %}selected{% endif %}>Epilogue</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="control">
+                    <button type="submit" class="button is-small is-success" title="Save">
+                        <span class="icon is-small"><i class="fas fa-check"></i></span>
+                    </button>
+                </div>
+                <div class="control">
+                    <button type="button"
+                            class="button is-small"
+                            hx-get="{% url 'reading-list:cancel-edit-issue-type' reading_list_slug item.pk %}"
+                            hx-target="#item-{{ item.pk }}"
+                            hx-swap="outerHTML"
+                            title="Cancel">
+                        <span class="icon is-small"><i class="fas fa-times"></i></span>
+                    </button>
                 </div>
             </div>
-            <div class="level-item">
-                <form hx-post="{% url 'reading-list:update-issue-type' reading_list_slug item.pk %}"
-                      hx-target="#item-{{ item.pk }}"
-                      hx-swap="outerHTML">
-                    {% csrf_token %}
-                    <div class="field has-addons">
-                        <div class="control">
-                            <div class="select is-small">
-                                <select name="issue_type">
-                                    <option value="">-- No Type --</option>
-                                    <option value="PROLOGUE" {% if item.issue_type == 'PROLOGUE' %}selected{% endif %}>Prologue</option>
-                                    <option value="CORE" {% if item.issue_type == 'CORE' %}selected{% endif %}>Core Issue</option>
-                                    <option value="TIE_IN" {% if item.issue_type == 'TIE_IN' %}selected{% endif %}>Tie-In</option>
-                                    <option value="EPILOGUE" {% if item.issue_type == 'EPILOGUE' %}selected{% endif %}>Epilogue</option>
-                                </select>
-                            </div>
-                        </div>
-                        <div class="control">
-                            <button type="submit" class="button is-small is-success">
-                                <span class="icon is-small">
-                                    <i class="fas fa-check"></i>
-                                </span>
-                            </button>
-                        </div>
-                        <div class="control">
-                            <button type="button"
-                                    class="button is-small"
-                                    hx-get="{% url 'reading-list:cancel-edit-issue-type' reading_list_slug item.pk %}"
-                                    hx-target="#item-{{ item.pk }}"
-                                    hx-swap="outerHTML">
-                                <span class="icon is-small">
-                                    <i class="fas fa-times"></i>
-                                </span>
-                            </button>
-                        </div>
-                    </div>
-                </form>
-            </div>
-        </div>
-        <div class="level-right">
-            <div class="level-item">
-                <a href="{% url 'reading-list:remove-issue' reading_list_slug item.pk %}"
-                   class="button is-small is-danger is-outlined"
-                   title="Remove from list">
-                    <span class="icon is-small">
-                        <i class="fas fa-times"></i>
-                    </span>
-                </a>
-            </div>
-        </div>
+        </form>
     </div>
 </li>

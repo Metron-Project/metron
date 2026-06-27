@@ -1,38 +1,62 @@
-<li id="item-{{ item.pk }}">
-    <div class="level">
-        <div class="level-left">
-            <div class="level-item">
-                <div>
-                    <a href="{% url 'issue:detail' item.issue.slug %}">{{ item.issue }}</a>
-                    <span class="has-text-grey-light">— {{ item.issue.cover_date|date:"M Y" }}</span>
-                    {% if item.issue_type %}
-                        <span class="tag is-info is-light ml-2">{{ item.get_issue_type_display }}</span>
-                    {% endif %}
-                </div>
-            </div>
+{% load static thumbnail %}
+<li id="item-{{ item.pk }}"
+    class="rl-item"
+    data-issue-type="{{ item.issue_type|default:'UNCATEGORIZED' }}">
+    <div style="display: flex; align-items: center; gap: 1rem; padding: 0.7rem 0.25rem; border-bottom: 1px solid #ededed;">
+        {# Reading-order position #}
+        <span style="width: 2rem; flex: none; text-align: center; font-weight: 700; color: #7a7a7a; font-variant-numeric: tabular-nums;">{{ item.order }}</span>
+
+        {# Cover thumbnail #}
+        <a href="{% url 'issue:detail' item.issue.slug %}" style="flex: none; width: 48px; display: block;">
+            {% if item.issue.image %}
+                {% thumbnail item.issue.image "96x144" format="WEBP" as im %}
+                    <img src="{{ im.url }}"
+                         width="48"
+                         alt="{{ item.issue }}"
+                         loading="lazy"
+                         style="display: block; width: 48px; border-radius: 4px; box-shadow: 0 1px 3px rgba(0,0,0,0.2);">
+                {% endthumbnail %}
+            {% else %}
+                <img src="{% static 'site/img/image-not-found.webp' %}"
+                     width="48"
+                     alt="No image for {{ item.issue }}"
+                     loading="lazy"
+                     style="display: block; width: 48px; border-radius: 4px;">
+            {% endif %}
+        </a>
+
+        {# Title + meta #}
+        <div style="flex: 1 1 0; min-width: 0;">
+            <a href="{% url 'issue:detail' item.issue.slug %}" class="has-text-weight-semibold">{{ item.issue }}</a>
+            <p class="is-size-7 has-text-grey mb-0">
+                {{ item.issue.cover_date|date:"M Y" }}
+                {% if item.issue.series.publisher %}
+                    &middot; <a href="{% url 'publisher:detail' item.issue.series.publisher.slug %}" class="has-text-grey">{{ item.issue.series.publisher }}</a>
+                {% endif %}
+            </p>
         </div>
+
+        {# Issue-type badge #}
+        {% if item.issue_type %}
+            <span class="tag is-light {% if item.issue_type == 'CORE' %}is-link{% elif item.issue_type == 'TIE_IN' %}is-warning{% elif item.issue_type == 'PROLOGUE' %}is-info{% elif item.issue_type == 'EPILOGUE' %}is-success{% endif %}"
+                  style="flex: none;">{{ item.get_issue_type_display }}</span>
+        {% endif %}
+
+        {# Owner controls #}
         {% if is_owner %}
-            <div class="level-right">
-                <div class="level-item">
-                    <div class="buttons has-addons">
-                        <button class="button is-small is-info is-outlined"
-                                hx-get="{% url 'reading-list:edit-issue-type' reading_list_slug item.pk %}"
-                                hx-target="#item-{{ item.pk }}"
-                                hx-swap="outerHTML"
-                                title="Edit issue type">
-                            <span class="icon is-small">
-                                <i class="fas fa-tag"></i>
-                            </span>
-                        </button>
-                        <a href="{% url 'reading-list:remove-issue' reading_list_slug item.pk %}"
-                           class="button is-small is-danger is-outlined"
-                           title="Remove from list">
-                            <span class="icon is-small">
-                                <i class="fas fa-times"></i>
-                            </span>
-                        </a>
-                    </div>
-                </div>
+            <div class="buttons has-addons mb-0" style="flex: none;">
+                <button class="button is-small is-info is-outlined"
+                        hx-get="{% url 'reading-list:edit-issue-type' reading_list_slug item.pk %}"
+                        hx-target="#item-{{ item.pk }}"
+                        hx-swap="outerHTML"
+                        title="Edit issue type">
+                    <span class="icon is-small"><i class="fas fa-tag"></i></span>
+                </button>
+                <a href="{% url 'reading-list:remove-issue' reading_list_slug item.pk %}"
+                   class="button is-small is-danger is-outlined"
+                   title="Remove from list">
+                    <span class="icon is-small"><i class="fas fa-times"></i></span>
+                </a>
             </div>
         {% endif %}
     </div>
