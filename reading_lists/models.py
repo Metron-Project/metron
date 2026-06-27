@@ -132,7 +132,7 @@ class ReadingListItem(models.Model):
         related_name="reading_list_items",
     )
     order = models.PositiveIntegerField(
-        default=0,
+        default=1,
         help_text="Position of this issue in the reading list",
     )
     issue_type = models.CharField(
