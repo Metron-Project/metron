@@ -64,6 +64,8 @@ class ReadingListListView(ListView):
             issue_count=Count("issues", distinct=True),
             average_rating=Avg("ratings__rating"),
             rating_count=Count("ratings", distinct=True),
+            start_year_annotated=Min("reading_list_items__issue__cover_date__year"),
+            end_year_annotated=Max("reading_list_items__issue__cover_date__year"),
         )
 
         if self.request.user.is_authenticated:
@@ -115,6 +117,8 @@ class SearchReadingListListView(SearchMixin, ReadingListListView):
             issue_count=Count("issues", distinct=True),
             average_rating=Avg("ratings__rating"),
             rating_count=Count("ratings", distinct=True),
+            start_year_annotated=Min("reading_list_items__issue__cover_date__year"),
+            end_year_annotated=Max("reading_list_items__issue__cover_date__year"),
         )
 
         if self.request.user.is_authenticated:
@@ -161,6 +165,8 @@ class UserReadingListListView(LoginRequiredMixin, ListView):
                 issue_count=Count("issues", distinct=True),
                 average_rating=Avg("ratings__rating"),
                 rating_count=Count("ratings", distinct=True),
+                start_year_annotated=Min("reading_list_items__issue__cover_date__year"),
+                end_year_annotated=Max("reading_list_items__issue__cover_date__year"),
             )
             .order_by("name", "attribution_source", "user")
         )

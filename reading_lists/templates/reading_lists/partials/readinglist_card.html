@@ -1,0 +1,68 @@
+{% load thumbnail %}
+<div class="column is-one-third-desktop is-half-tablet">
+    <a class="rlc" href="{% url 'reading-list:detail' reading_list.slug %}" data-type="{{ reading_list.list_type }}">
+        <div class="rlc__band">
+            {% thumbnail reading_list.image "640x320" crop="center" format="WEBP" as im %}
+                <span class="rlc__img" style="background-image: url('{{ im.url }}');"></span>
+                <span class="rlc__scrim"></span>
+            {% empty %}
+                <span class="rlc__watermark"><i class="fas fa-layer-group"></i></span>
+            {% endthumbnail %}
+            {% if reading_list.is_private %}
+                <span class="rlc__private">
+                    <span class="icon is-small"><i class="fas fa-lock"></i></span>
+                    <span>Private</span>
+                </span>
+            {% endif %}
+            {% if reading_list.average_rating %}
+                <span class="rlc__rating">
+                    <span class="icon is-small"><i class="fas fa-star"></i></span>
+                    <span>{{ reading_list.average_rating|floatformat:1 }}</span>
+                </span>
+            {% endif %}
+            <span class="rlc__issues">
+                <span class="icon is-small"><i class="fas fa-book"></i></span>
+                <span>{{ reading_list.issue_count }} issue{{ reading_list.issue_count|pluralize }}</span>
+            </span>
+        </div>
+        <div class="rlc__body">
+            <div class="rlc__top">
+                <span class="rlc__type-tag">
+                    <span class="rlc__dot"></span>{{ reading_list.get_list_type_display }}
+                </span>
+                {% if reading_list.start_year_annotated %}
+                    <span class="rlc__span">
+                        <span class="icon is-small"><i class="far fa-calendar"></i></span>
+                        <span>{{ reading_list.start_year_annotated }}{% if reading_list.end_year_annotated and reading_list.end_year_annotated != reading_list.start_year_annotated %}&ndash;{{ reading_list.end_year_annotated }}{% endif %}</span>
+                    </span>
+                {% endif %}
+            </div>
+            <h3 class="rlc__title">{{ reading_list.name }}</h3>
+            {% if reading_list.attribution_source %}
+                <span class="rlc__attr">
+                    <span class="icon is-small"><i class="fas fa-link"></i></span>
+                    <span>{{ reading_list.get_attribution_source_display }}</span>
+                </span>
+            {% endif %}
+            <div class="rlc__meta">
+                <span class="rlc__by">By <strong>{{ reading_list.user.username }}</strong></span>
+                {% if reading_list.average_rating %}
+                    <span class="rlc__stars">
+                        {% for star_num in "12345" %}
+                            <i class="{% if star_num|add:'0' <= reading_list.average_rating %}fas{% else %}far{% endif %} fa-star"></i>
+                        {% endfor %}
+                        <span class="rlc__count">({{ reading_list.rating_count }})</span>
+                    </span>
+                {% endif %}
+            </div>
+            <div class="rlc__foot">
+                {% if reading_list.desc %}
+                    <p class="rlc__desc">{{ reading_list.desc|truncatewords:18 }}</p>
+                {% else %}
+                    <p class="rlc__desc rlc__desc--empty">No description</p>
+                {% endif %}
+                <span class="rlc__updated">Updated {{ reading_list.modified|timesince }} ago</span>
+            </div>
+        </div>
+    </a>
+</div>
