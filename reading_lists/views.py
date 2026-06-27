@@ -11,6 +11,8 @@ from django.views.decorators.http import require_POST
 from django.views.generic import CreateView, DeleteView, DetailView, FormView, ListView, UpdateView
 
 from comicsdb.filters.reading_list import ReadingListViewFilter
+from comicsdb.models.creator import Creator
+from comicsdb.models.credits import Credits, Role
 from comicsdb.models.issue import Issue
 from comicsdb.views.mixins import LazyLoadMixin, SearchMixin
 from reading_lists.forms import (
@@ -306,6 +308,44 @@ class ReadingListDetailView(DetailView):
                 publisher_counts.values(),
                 key=lambda e: (-e["count"], e["publisher"].name),
             )
+
+            issue_ids = [item.issue_id for item in reading_list_items]
+            role_names = ["Artist", "Finishes", "Inker", "Penciller", "Script", "Story", "Writer"]
+            top6 = list(
+                Creator.objects.filter(
+                    credits__issue_id__in=issue_ids,
+                    credits__role__name__in=role_names,
+                )
+                .annotate(issue_count=Count("credits__issue", distinct=True))
+                .order_by("-issue_count", "name")[:6]
+            )
+            creator_ids = [c.id for c in top6]
+            role_map: dict[int, set[str]] = {}
+            for credit in Credits.objects.filter(
+                issue_id__in=issue_ids,
+                creator_id__in=creator_ids,
+                role__name__in=role_names,
+            ).prefetch_related(Prefetch("role", queryset=Role.objects.filter(name__in=role_names))):
+                for role in credit.role.all():
+                    role_map.setdefault(credit.creator_id, set()).add(role.name)
+            role_display = {
+                "Artist": "Artist",
+                "Finishes": "Artist",
+                "Inker": "Artist",
+                "Penciller": "Artist",
+                "Script": "Writer",
+                "Story": "Writer",
+                "Writer": "Writer",
+            }
+            context["featured_creators"] = [
+                {
+                    "creator": c,
+                    "roles": ", ".join(
+                        sorted({role_display.get(r, r) for r in role_map.get(c.id, [])})
+                    ),
+                }
+                for c in top6
+            ]
 
         return context
 

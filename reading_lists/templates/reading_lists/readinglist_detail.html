@@ -308,6 +308,42 @@
                     </div>
                 </div>
             {% endif %}
+
+            {% if featured_creators %}
+                <div class="box">
+                    <h2 class="title is-6">Featured Creators</h2>
+                    {% for entry in featured_creators %}
+                        <article class="media{% if not forloop.last %} mb-4{% endif %}">
+                            <figure class="media-left">
+                                <div class="image is-48x48">
+                                    {% if entry.creator.image %}
+                                        {% thumbnail entry.creator.image "48x48" crop="top" format="WEBP" as im %}
+                                            <img class="is-rounded"
+                                                 src="{{ im.url }}"
+                                                 width="{{ im.width }}"
+                                                 height="{{ im.height }}"
+                                                 alt="{{ entry.creator.name }}"
+                                                 loading="lazy">
+                                        {% endthumbnail %}
+                                    {% else %}
+                                        <img class="is-rounded"
+                                             src="{% static 'site/img/creator-not-found.webp' %}"
+                                             alt="{{ entry.creator.name }}"
+                                             loading="lazy">
+                                    {% endif %}
+                                </div>
+                            </figure>
+                            <div class="media-content">
+                                <a href="{% url 'creator:detail' entry.creator.slug %}"
+                                   class="has-text-weight-semibold is-size-7">{{ entry.creator.name }}</a>
+                                {% if entry.roles %}
+                                    <p class="is-size-7 has-text-grey">{{ entry.roles }}</p>
+                                {% endif %}
+                            </div>
+                        </article>
+                    {% endfor %}
+                </div>
+            {% endif %}
         </div>
     </div>
 {% endblock %}
