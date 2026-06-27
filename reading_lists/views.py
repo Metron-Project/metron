@@ -11,6 +11,7 @@ from django.views.decorators.http import require_POST
 from django.views.generic import CreateView, DeleteView, DetailView, FormView, ListView, UpdateView
 
 from comicsdb.filters.reading_list import ReadingListViewFilter
+from comicsdb.models.character import Character
 from comicsdb.models.creator import Creator
 from comicsdb.models.credits import Credits, Role
 from comicsdb.models.issue import Issue
@@ -346,6 +347,12 @@ class ReadingListDetailView(DetailView):
                 }
                 for c in top6
             ]
+
+            context["top_characters"] = (
+                Character.objects.filter(issues__in=issue_ids)
+                .annotate(appearance_count=Count("issues", distinct=True))
+                .order_by("-appearance_count", "name")[:12]
+            )
 
         return context
 

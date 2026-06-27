@@ -309,6 +309,40 @@
                 </div>
             {% endif %}
 
+            {% if top_characters %}
+                <div class="box">
+                    <h2 class="title is-6">Top Characters</h2>
+                    {% for character in top_characters %}
+                        <article class="media{% if not forloop.last %} mb-4{% endif %}">
+                            <figure class="media-left">
+                                <div class="image is-48x48">
+                                    {% if character.image %}
+                                        {% thumbnail character.image "48x48" crop="top" format="WEBP" as im %}
+                                            <img class="is-rounded"
+                                                 src="{{ im.url }}"
+                                                 width="{{ im.width }}"
+                                                 height="{{ im.height }}"
+                                                 alt="{{ character.name }}"
+                                                 loading="lazy">
+                                        {% endthumbnail %}
+                                    {% else %}
+                                        <img class="is-rounded"
+                                             src="{% static 'site/img/image-not-found.webp' %}"
+                                             alt="{{ character.name }}"
+                                             loading="lazy">
+                                    {% endif %}
+                                </div>
+                            </figure>
+                            <div class="media-content" style="align-self: center;">
+                                <a href="{% url 'character:detail' character.slug %}"
+                                   class="has-text-weight-semibold is-size-7">{{ character.name }}</a>
+                                <p class="is-size-7 has-text-grey-light">{{ character.appearance_count }} issue{{ character.appearance_count|pluralize }}</p>
+                            </div>
+                        </article>
+                    {% endfor %}
+                </div>
+            {% endif %}
+
             {% if featured_creators %}
                 <div class="box">
                     <h2 class="title is-6">Featured Creators</h2>
