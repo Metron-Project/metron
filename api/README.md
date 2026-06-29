@@ -1587,6 +1587,7 @@ This endpoint is read-only. Create, update, and delete operations are not availa
 
 **List Type Codes:**
 
+- `CREATOR` - Creator
 - `EVENT` - Event
 - `STORY` - Story
 - `CHARACTERS` - Characters
@@ -2250,6 +2251,10 @@ For questions, issues, or feature requests:
 ---
 
 ## Changelog
+
+### Version 1.7
+
+- Added `CREATOR` list type to Reading List endpoint
 
 ### Version 1.6
 - Added Wish List endpoints
