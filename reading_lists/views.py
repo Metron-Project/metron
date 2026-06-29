@@ -154,9 +154,14 @@ class UserReadingListListView(LoginRequiredMixin, ListView):
     """Display only the current user's reading lists."""
 
     model = ReadingList
-    template_name = "reading_lists/user_readinglist_list.html"
+    template_name = "reading_lists/readinglist_list.html"
     context_object_name = "reading_lists"
     paginate_by = 30
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context["is_user_view"] = True
+        return context
 
     def get_queryset(self):
         return (

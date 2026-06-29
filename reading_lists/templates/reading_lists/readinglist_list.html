@@ -1,18 +1,18 @@
 {% extends parent_template|default:"base.html" %}
 {% load static humanize %}
-{% block title %}Reading Lists - Metron{% endblock %}
+{% block title %}{% if is_user_view %}My Reading Lists{% else %}Reading Lists{% endif %} - Metron{% endblock %}
 {% block content %}
     <header class="block has-text-centered">
-        <h1 class="title">Reading Lists</h1>
+        <h1 class="title">{% if is_user_view %}My Reading Lists{% else %}Reading Lists{% endif %}</h1>
     </header>
-    {# Filter partial — unchanged; same composition pattern as issue_list.html #}
-    <section class="section">
-        <div class="container">{% include "reading_lists/partials/readinglist_filter.html" %}</div>
-    </section>
+    {% if not is_user_view %}
+        <section class="section">
+            <div class="container">{% include "reading_lists/partials/readinglist_filter.html" %}</div>
+        </section>
+    {% endif %}
     {% if reading_lists %}
         <section class="section pt-0">
             <div class="container">
-                {# Navigation Bar — mirrors issue_list.html: count on the left, actions on the right #}
                 <nav class="level" aria-label="Reading list navigation">
                     <div class="level-left">
                         <div class="level-item">
@@ -25,10 +25,17 @@
                         <div class="level-right">
                             <div class="level-item">
                                 <div class="buttons is-flex-direction-column-mobile">
-                                    <a href="{% url 'reading-list:my-lists' %}" class="button is-link">
-                                        <span class="icon"><i class="fas fa-user"></i></span>
-                                        <span>My Reading Lists</span>
-                                    </a>
+                                    {% if is_user_view %}
+                                        <a href="{% url 'reading-list:list' %}" class="button is-link">
+                                            <span class="icon"><i class="fas fa-list"></i></span>
+                                            <span>All Reading Lists</span>
+                                        </a>
+                                    {% else %}
+                                        <a href="{% url 'reading-list:my-lists' %}" class="button is-link">
+                                            <span class="icon"><i class="fas fa-user"></i></span>
+                                            <span>My Reading Lists</span>
+                                        </a>
+                                    {% endif %}
                                     <a href="{% url 'reading-list:create' %}" class="button is-primary">
                                         <span class="icon"><i class="fas fa-plus"></i></span>
                                         <span>Create Reading List</span>
@@ -49,7 +56,14 @@
     {% else %}
         <section class="section pt-0">
             <div class="container has-text-centered">
-                {% if has_active_filters %}
+                {% if is_user_view %}
+                    <p class="title is-4">You don't have any reading lists yet</p>
+                    <p class="subtitle">Create your first reading list!</p>
+                    <a href="{% url 'reading-list:create' %}" class="button is-primary is-large">
+                        <span class="icon"><i class="fas fa-plus"></i></span>
+                        <span>Create Reading List</span>
+                    </a>
+                {% elif has_active_filters %}
                     <p class="title is-4">No results found</p>
                     <p class="subtitle">Try adjusting your search filters</p>
                     <a href="{% url 'reading-list:list' %}" class="button is-light is-medium">

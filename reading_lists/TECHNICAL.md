@@ -300,7 +300,7 @@ The detail view is heavily optimized to reduce database queries:
 ```python
 class UserReadingListListView(LoginRequiredMixin, ListView):
     model = ReadingList
-    template_name = "reading_lists/user_readinglist_list.html"
+    template_name = "reading_lists/readinglist_list.html"
     paginate_by = 30
 
     def get_queryset(self):
@@ -950,8 +950,7 @@ The web interface provides a dropdown with:
 
 | Template | Purpose | Key Features |
 |----------|---------|--------------|
-| `readinglist_list.html` | List all public lists | Pagination, search link, issue counts |
-| `user_readinglist_list.html` | User's own lists | Create button, edit/delete links |
+| `readinglist_list.html` | List all public lists and user's own lists | Pagination, search/filter, issue counts, context-sensitive nav |
 | `readinglist_detail.html` | Single list detail | Ordered issues, add/remove controls, bulk add button |
 | `readinglist_form.html` | Create/edit form | Dynamic field visibility |
 | `readinglist_confirm_delete.html` | Delete confirmation | Issue count warning |
