@@ -1,3 +1,5 @@
+from urllib.parse import urlencode
+
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
@@ -31,6 +33,67 @@ READING_LIST_DETAIL_PAGINATE_BY = 50
 # Rating constants
 MIN_RATING = 1
 MAX_RATING = 5
+
+_NON_FILTER_PARAMS = {"page"}
+
+_FILTER_LABELS = {
+    "q": "Search",
+    "name": "Name",
+    "username": "Creator",
+    "publisher": "Publisher",
+    "list_type": "List Type",
+    "attribution_source": "Attribution",
+    "average_rating__gte": "Min Rating",
+    "is_private": "Privacy",
+}
+
+_RATING_DISPLAY = {
+    "1": "1+ Stars",
+    "2": "2+ Stars",
+    "3": "3+ Stars",
+    "4": "4+ Stars",
+    "5": "5 Stars",
+}
+
+_PRIVACY_DISPLAY = {"true": "Private", "false": "Public"}
+
+
+def build_active_filters(request):
+    """Build a list of ``{label, value, remove_url}`` dicts for the chip bar."""
+    get = request.GET
+    list_type_names = dict(ReadingList.ListType.choices)
+    attribution_names = dict(ReadingList.AttributionSource.choices)
+
+    chips = []
+    for key in get:
+        if key in _NON_FILTER_PARAMS:
+            continue
+        value = get.get(key)
+        if not value:
+            continue
+
+        if key == "list_type":
+            display = list_type_names.get(value, value)
+        elif key == "attribution_source":
+            display = attribution_names.get(value, value)
+        elif key == "average_rating__gte":
+            display = _RATING_DISPLAY.get(value, value)
+        elif key == "is_private":
+            display = _PRIVACY_DISPLAY.get(value, value)
+        else:
+            display = value
+
+        kept = [(k, v) for k, v in get.items() if k not in (key, "page")]
+        remove_url = f"?{urlencode(kept)}" if kept else "?"
+
+        chips.append(
+            {
+                "label": _FILTER_LABELS.get(key, key.replace("_", " ").title()),
+                "value": display,
+                "remove_url": remove_url,
+            }
+        )
+    return chips
 
 
 def can_manage_reading_list(user, reading_list):
@@ -96,11 +159,10 @@ class ReadingListListView(ListView):
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        # Add filter options for the template
         context["attribution_sources"] = ReadingList.AttributionSource.choices
         context["list_types"] = ReadingList.ListType.choices
-        # Check if any filters are active (excluding page parameter)
         context["has_active_filters"] = any(key != "page" for key in self.request.GET)
+        context["active_filters"] = build_active_filters(self.request)
         return context
 
 
