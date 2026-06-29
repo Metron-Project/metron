@@ -132,8 +132,8 @@ class IssueViewFilter(df.FilterSet):
     series_type = df.NumberFilter(
         label="Series Type", field_name="series__series_type__id", lookup_expr="exact"
     )
-    store_date_range = df.DateFromToRangeFilter("store_date")
-    foc_date_range = df.DateFromToRangeFilter("foc_date")
+    store_date = df.DateFromToRangeFilter("store_date")
+    foc_date = df.DateFromToRangeFilter("foc_date")
     series_year_began = df.NumberFilter(
         label="Series Beginning Year", field_name="series__year_began", lookup_expr="exact"
     )
@@ -148,4 +148,4 @@ class IssueViewFilter(df.FilterSet):
 
     class Meta:
         model = Issue
-        fields = ["q", "store_date", "foc_date"]
+        fields = ["q"]
