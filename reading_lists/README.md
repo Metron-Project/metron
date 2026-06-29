@@ -15,7 +15,7 @@ The Reading Lists feature allows you to create, manage, and share curated comic 
 ### Core Functionality
 
 - **Create Reading Lists**: Build your own custom reading orders
-- **List Type**: Classify your list as Event, Story, Characters, Teams, or Master
+- **List Type**: Classify your list as Creator, Event, Story, Characters, Teams, or Master
 - **Cover Image**: Upload a cover image that displays as a hero banner on the list detail page
 - **Issue Type Categorization**: Tag issues as Prologue, Core Issue, Tie-In, or Epilogue
 - **Public/Private Lists**: Share your lists with the community or keep them private
@@ -39,6 +39,7 @@ Reading lists automatically display:
 **Browse All Lists**
 - Visit `/reading-lists/` to see all public reading lists
 - If you're logged in, you'll also see your own private lists
+- Active filters appear as removable chips at the top of the list — click × on any chip to clear that filter
 
 **Search for Lists**
 - Use `/reading-lists/search/` to search by name, username, or source
@@ -53,7 +54,7 @@ Reading lists automatically display:
 2. Navigate to `/reading-lists/create/`
 3. Enter a name for your list (required)
 4. Add a description (optional but recommended)
-5. Choose a list type (Event, Story, Characters, Teams, or Master)
+5. Choose a list type (Creator, Event, Story, Characters, Teams, or Master)
 6. Upload a cover image (optional)
 7. Choose whether to make it public or private
 8. Click "Create"
@@ -66,6 +67,7 @@ Reading lists automatically display:
 2. Enter a name (required)
 3. Add a description (optional)
 4. Choose a list type:
+    - **Creator**: Issues focused on a particular creator's run or work
     - **Event**: A crossover or company-wide event (default)
     - **Story**: A self-contained story arc or run
     - **Characters**: Issues focused on a particular character
@@ -227,7 +229,7 @@ The search functionality allows you to find lists by:
 - **List name** (case-insensitive)
 - **Username** of the list owner
 - **Publisher** (e.g., "Marvel", "DC")
-- **List type** (Event, Story, Characters, Teams, or Master)
+- **List type** (Creator, Event, Story, Characters, Teams, or Master)
 - **Attribution source** (e.g., "Comic Book Reading Orders")
 - **Minimum rating** (filter by average rating)
 
@@ -243,7 +245,7 @@ Filter lists to show only those containing issues from a specific publisher.
 
 **List Type Filter:**
 
-Filter lists by their type to quickly find Events, Stories, character-focused lists, team-focused lists, or comprehensive Master reading orders.
+Filter lists by their type to quickly find creator-focused lists, Events, Stories, character-focused lists, team-focused lists, or comprehensive Master reading orders.
 
 **Rating Filter:**
 
@@ -358,7 +360,7 @@ Some reading lists are owned by a special "Metron" user account:
 
 1. **Use descriptive names**: "Secret Wars (2015)" is better than "My List"
 2. **Add descriptions**: Explain what the reading order covers
-3. **Choose the right list type**: Use Event for crossovers, Story for a single arc, Characters/Teams for focused runs, and Master for comprehensive orders spanning many events
+3. **Choose the right list type**: Use Creator for a writer or artist's run, Event for crossovers, Story for a single arc, Characters/Teams for focused runs, and Master for comprehensive orders spanning many events
 4. **Add a cover image**: A recognizable cover makes your list stand out in the browse view
 5. **Categorize with issue types**: Tag issues to help readers understand the story structure
 6. **Credit your sources**: If you got the order from a website, note it in the description

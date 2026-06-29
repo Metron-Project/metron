@@ -19,6 +19,7 @@ class ReadingList(CommonInfo):
     class ListType(models.TextChoices):
         """Reading list type choices."""
 
+        CREATOR = "CREATOR", "Creator"
         EVENT = "EVENT", "Event"
         STORY = "STORY", "Story"
         CHARACTERS = "CHARACTERS", "Characters"
