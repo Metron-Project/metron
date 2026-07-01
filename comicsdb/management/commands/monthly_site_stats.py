@@ -3,6 +3,7 @@ from datetime import date
 from django.core.management.base import BaseCommand
 
 from comicsdb.models import Character, Creator, Issue
+from reading_lists.models import ReadingList
 from users.models import CustomUser
 
 
@@ -28,7 +29,7 @@ class Command(BaseCommand):
         ]
 
         # Efficient counting for other models
-        models = [Character, Creator, Issue]
+        models = [Issue, Creator, Character, ReadingList]
         results.extend(
             {
                 "model": mod,
