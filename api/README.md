@@ -354,23 +354,23 @@ The Issue endpoint supports the most comprehensive filtering options:
 - `modified_gt` - Modified after datetime
 
 **List Response Fields:**
+
 ```json
 {
-  "id": 1,
+  "id": 50,
   "series": {
-    "id": 100,
-    "name": "Amazing Spider-Man",
+    "id": 15,
+    "name": "Asgardians of the Galaxy",
     "volume": 1,
-    "series_type": {
-      "id": 1,
-      "name": "Ongoing Series"
-    }
+    "year_began": 2018
   },
   "number": "1",
-  "cover_date": "1963-03-01",
-  "store_date": "1963-01-10",
-  "image": "https://example.com/covers/issue-1.jpg",
-  "modified": "2025-01-15T10:30:00Z"
+  "issue": "Asgardians of the Galaxy (2018) #1",
+  "cover_date": "2018-11-01",
+  "store_date": "2018-09-05",
+  "image": "https://static.metron.cloud/media/issue/2018/11/15/6594966-01.jpg",
+  "cover_hash": "c585eb18bf1e5423",
+  "modified": "2024-12-28T13:27:10.206628-05:00"
 }
 ```
 
