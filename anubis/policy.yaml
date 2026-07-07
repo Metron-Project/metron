@@ -10,7 +10,6 @@ bots:
     user_agent_regex: ClickWhir
     action: DENY
 
-
   # Deny cards_analize-local-comics-catalog scraper
   - name: deny-comic-cards
     user_agent_regex: cards_analize-local-comics-catalog
@@ -26,6 +25,11 @@ bots:
   # the API with failed requests.
   - name: deny-comicvault
     user_agent_regex: ComicVault/1\.0
+    action: DENY
+
+  # Deny CloneVine - Uses a rotating IP and multiple accounts to hammer the API with failed requests.
+  - name: deny-clonevine
+    user_agent_regex: CloneVine-Metron/1\.0
     action: DENY
 
   # Pass API requests through without a proof-of-work challenge.
