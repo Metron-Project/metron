@@ -4,6 +4,7 @@ from reading_lists.views import (
     AddIssuesFromArcView,
     AddIssuesFromSeriesView,
     AddIssueWithAutocompleteView,
+    AssignReadingListToMetronView,
     ReadingListCreateView,
     ReadingListDeleteView,
     ReadingListDetailView,
@@ -28,6 +29,11 @@ urlpatterns = [
     path("<slug:slug>/", ReadingListDetailView.as_view(), name="detail"),
     path("<slug:slug>/update/", ReadingListUpdateView.as_view(), name="update"),
     path("<slug:slug>/delete/", ReadingListDeleteView.as_view(), name="delete"),
+    path(
+        "<slug:slug>/assign-to-metron/",
+        AssignReadingListToMetronView.as_view(),
+        name="assign-to-metron",
+    ),
     path(
         "<slug:slug>/add-issue/",
         AddIssueWithAutocompleteView.as_view(),
