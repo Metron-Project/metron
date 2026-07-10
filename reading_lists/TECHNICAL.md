@@ -352,6 +352,35 @@ Uses same `test_func()` as UpdateView.
 
 **URL:** `/reading-lists/<slug>/delete/`
 
+#### AssignReadingListToMetronView
+
+```python
+class AssignReadingListToMetronView(LoginRequiredMixin, UserPassesTestMixin, View):
+    def test_func(self):
+        return can_assign_reading_list_to_metron(self.request.user)
+```
+
+**Purpose:** Reassigns a reading list's `user` foreign key to the "Metron" account, allowing curators to adopt community-submitted lists as official reading orders.
+
+**Permission Check:**
+
+Uses `can_assign_reading_list_to_metron()`, independent of `can_manage_reading_list()`/ownership — a user does **not** need to own or already be able to manage the list:
+
+```python
+def can_assign_reading_list_to_metron(user):
+    return user.is_staff or user.groups.filter(name="reading list editor").exists()
+```
+
+**Behavior:**
+
+1. `GET`: Renders a confirmation page (`readinglist_confirm_assign_metron.html`). If the list is already owned by Metron, redirects straight to the detail page instead.
+2. `POST`: Looks up the `CustomUser` with `username="Metron"`.
+    - If it doesn't exist, shows an error message and redirects (no exception raised).
+    - Otherwise reassigns `reading_list.user` to the Metron account, saves, and shows a success message.
+    - A no-op (but still a redirect) if the list is already Metron-owned.
+
+**URL:** `/reading-lists/<slug>/assign-to-metron/`
+
 #### AddIssueWithAutocompleteView
 ```python
 class AddIssueWithAutocompleteView(LoginRequiredMixin, UserPassesTestMixin, FormView):
@@ -592,6 +621,7 @@ urlpatterns = [
     path("<slug:slug>/", ReadingListDetailView.as_view(), name="detail"),
     path("<slug:slug>/update/", ReadingListUpdateView.as_view(), name="update"),
     path("<slug:slug>/delete/", ReadingListDeleteView.as_view(), name="delete"),
+    path("<slug:slug>/assign-to-metron/", AssignReadingListToMetronView.as_view(), name="assign-to-metron"),
     path("<slug:slug>/add-issue/", AddIssueWithAutocompleteView.as_view(), name="add-issue"),
     path("<slug:slug>/add-from-series/", AddIssuesFromSeriesView.as_view(), name="add-from-series"),
     path("<slug:slug>/add-from-arc/", AddIssuesFromArcView.as_view(), name="add-from-arc"),
@@ -735,6 +765,18 @@ A Django group created via migration that provides special permissions for manag
 - Provides elevated permissions without full admin access
 - Separates content curation from system administration
 
+### Assign-to-Metron Permission
+
+`AssignReadingListToMetronView` (used to reassign a list's ownership to the "Metron" account) uses a separate, standalone check rather than `can_manage_reading_list()`, since it must apply to lists the user does **not** already own or manage:
+
+```python
+def can_assign_reading_list_to_metron(user):
+    """Check if a user can reassign a reading list's owner to the Metron account."""
+    return user.is_staff or user.groups.filter(name="reading list editor").exists()
+```
+
+This is intentionally broader in scope (any reading list) but narrower in who qualifies (staff or Reading List Editor group members only — plain ownership does not grant this permission).
+
 ### Permission Levels
 
 **Unauthenticated Users:**
@@ -756,6 +798,7 @@ A Django group created via migration that provides special permissions for manag
 - All authenticated permissions
 - Can edit/delete Metron user's lists
 - Can view Metron's private lists
+- Can reassign any reading list (including other users' lists) to the Metron account
 - Cannot set attribution fields (admin-only)
 
 **Admin Users (is_staff=True):**
@@ -763,6 +806,7 @@ A Django group created via migration that provides special permissions for manag
 - All authenticated permissions
 - Can edit/delete Metron user's lists
 - Can view Metron's private lists
+- Can reassign any reading list (including other users' lists) to the Metron account
 - Can set attribution fields
 
 ### Visibility Rules
@@ -954,6 +998,7 @@ The web interface provides a dropdown with:
 | `readinglist_detail.html` | Single list detail | Ordered issues, add/remove controls, bulk add button |
 | `readinglist_form.html` | Create/edit form | Dynamic field visibility |
 | `readinglist_confirm_delete.html` | Delete confirmation | Issue count warning |
+| `readinglist_confirm_assign_metron.html` | Assign-to-Metron confirmation | Staff/editor-only, warns ownership change is not undoable from the UI |
 | `add_issue_autocomplete.html` | Add issues interface | Autocomplete, drag-drop, preview |
 | `add_issues_from_series.html` | Bulk add from series | Series autocomplete, HTMX range toggle, usage tips |
 | `add_issues_from_arc.html` | Bulk add from arc | Arc autocomplete, position selection, usage tips |
@@ -970,6 +1015,7 @@ The web interface provides a dropdown with:
 - `reading_list`: ReadingList instance
 - `reading_list_items`: Ordered queryset of ReadingListItem
 - `is_owner`: Boolean for edit permissions
+- `can_assign_to_metron`: Boolean; True when the current user is staff or a Reading List Editor group member and the list is not already Metron-owned. Controls visibility of the "Assign to Metron" button, independently of `is_owner`
 - `user`: Current user (from request)
 
 ### HTMX Integration
@@ -1447,13 +1493,15 @@ For complete API documentation including filtering, pagination, and response for
 - `tests/reading_lists/test_views.py`
 - `tests/reading_lists/test_forms.py`
 - `tests/reading_lists/test_models.py`
+- `tests/reading_lists/test_assign_to_metron.py`
+- `tests/reading_lists/test_reading_list_editor_group_permissions.py`
 - `tests/reading_lists/conftest.py`
 
 ### Current Test Coverage
 
 **Test Statistics:**
 
-- Total tests: 236 passing (2 skipped)
+- Total tests: 275 passing (2 skipped)
 - Forms: 100% coverage
 - Views: 94% coverage
 - Models: 99% coverage
@@ -1517,6 +1565,14 @@ For complete API documentation including filtering, pagination, and response for
     - Metron list permissions (regular users cannot edit)
     - Template rendering in display mode
     - Template rendering in edit mode
+- **Assign to Metron** (`test_assign_to_metron.py`):
+    - Permission checks (staff, Reading List Editor group, regular users, list owners without staff/editor status)
+    - Confirm-page rendering and redirect-when-already-Metron-owned behavior
+    - Ownership transfer on POST, and no-op behavior when already Metron-owned
+    - Anonymous users redirected to login
+    - Detail view `can_assign_to_metron` context flag and button visibility
+    - Graceful failure when the "Metron" account does not exist
+    - Direct tests of the `can_assign_reading_list_to_metron()` helper
 
 **Form Tests:**
 
@@ -1595,6 +1651,11 @@ class ReadingListModelTest(TestCase):
     - Reading List Editor group
     - Manage Metron user's lists without admin access
     - Curator role for official reading orders
+
+- ✅ **Assign to Metron** (Implemented)
+    - Staff and Reading List Editor group members can reassign any reading list's ownership to the "Metron" account
+    - Dedicated confirmation page before the (one-way) ownership change
+    - Standalone permission check independent of list ownership
 
 - ✅ **Import Management Command** (Implemented)
     - Bulk import from JSON files

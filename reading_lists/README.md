@@ -23,6 +23,7 @@ The Reading Lists feature allows you to create, manage, and share curated comic 
 - **Drag-and-Drop Ordering**: Easily reorder issues within your lists
 - **Smart Search**: Find issues quickly using autocomplete with series and issue number filters
 - **Attribution Tracking**: Credit sources for reading orders (admin feature)
+- **Assign to Metron**: Reassign a list's ownership to the official "Metron" account (staff / Reading List Editor feature)
 
 ### Automatic Information
 
@@ -220,6 +221,21 @@ You can rate public reading lists to help the community discover quality content
 3. Confirm the deletion
 4. The list and all its issue associations will be permanently removed
 
+### Assigning a Reading List to Metron
+
+Staff members and users in the "Reading List Editor" group can transfer ownership of any reading list (not already owned by Metron) to the official "Metron" account. This is useful for adopting community-submitted lists as official, curated reading orders.
+
+1. View the reading list's detail page
+2. Click "Assign to Metron" (only visible to staff / Reading List Editor group members, and only for lists not already owned by Metron)
+3. Confirm the ownership change on the confirmation page
+4. The list's owner is updated to "Metron"; this cannot be undone from the UI
+
+**Notes:**
+
+- This does not require being the current owner of the list
+- Once a list is owned by Metron, the "Assign to Metron" button no longer appears for it
+- After the transfer, Reading List Editor group members and staff can manage the list the same way they manage any other Metron list
+
 ## Search and Autocomplete
 
 ### Searching for Reading Lists
@@ -316,6 +332,7 @@ Admin users have additional capabilities:
 - Can set attribution sources and URLs
 - Can manage lists owned by the "Metron" user
 - Can view Metron's private lists
+- Can reassign any reading list's ownership to the "Metron" user
 
 ### Reading List Editor Group
 
@@ -323,6 +340,7 @@ Users in the "Reading List Editor" group have special permissions:
 
 - Can manage (create, edit, delete) reading lists owned by the "Metron" user
 - Can view Metron's private lists
+- Can reassign any reading list's ownership to the "Metron" user
 - Cannot set attribution sources (admin-only feature)
 - Designed for curators who maintain official reading orders
 
@@ -345,6 +363,7 @@ Some reading lists are owned by a special "Metron" user account:
 | `/reading-lists/create/` | Create a new list | Yes |
 | `/reading-lists/<slug>/update/` | Edit your list | Yes |
 | `/reading-lists/<slug>/delete/` | Delete your list | Yes |
+| `/reading-lists/<slug>/assign-to-metron/` | Reassign ownership to Metron (staff / Reading List Editor) | Yes |
 | `/reading-lists/<slug>/add-issue/` | Add issues individually | Yes |
 | `/reading-lists/<slug>/add-from-series/` | Add issues from series (bulk) | Yes |
 | `/reading-lists/<slug>/add-from-arc/` | Add issues from arc (bulk) | Yes |
