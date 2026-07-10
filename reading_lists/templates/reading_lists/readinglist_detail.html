@@ -120,31 +120,40 @@
     </div>
 
     {# ===================== OWNER ACTION BAR ===================== #}
-    {% if is_owner %}
+    {% if is_owner or can_assign_to_metron %}
         <nav class="level mb-5">
             <div class="level-left"></div>
             <div class="level-right">
                 <div class="buttons">
-                    <a class="button is-primary" href="{% url 'reading-list:add-issue' reading_list.slug %}">
-                        <span class="icon is-small"><i class="fas fa-plus"></i></span>
-                        <span>Add Issues</span>
-                    </a>
-                    <a class="button is-primary is-light" href="{% url 'reading-list:add-from-series' reading_list.slug %}">
-                        <span class="icon is-small"><i class="fas fa-layer-group"></i></span>
-                        <span>Add from Series</span>
-                    </a>
-                    <a class="button is-primary is-light" href="{% url 'reading-list:add-from-arc' reading_list.slug %}">
-                        <span class="icon is-small"><i class="fas fa-book"></i></span>
-                        <span>Add from Arc</span>
-                    </a>
-                    <a class="button is-info" href="{% url 'reading-list:update' reading_list.slug %}">
-                        <span class="icon is-small"><i class="fas fa-edit"></i></span>
-                        <span>Edit</span>
-                    </a>
-                    <a class="button is-danger" href="{% url 'reading-list:delete' reading_list.slug %}">
-                        <span class="icon is-small"><i class="fas fa-trash"></i></span>
-                        <span>Delete</span>
-                    </a>
+                    {% if is_owner %}
+                        <a class="button is-primary" href="{% url 'reading-list:add-issue' reading_list.slug %}">
+                            <span class="icon is-small"><i class="fas fa-plus"></i></span>
+                            <span>Add Issues</span>
+                        </a>
+                        <a class="button is-primary is-light" href="{% url 'reading-list:add-from-series' reading_list.slug %}">
+                            <span class="icon is-small"><i class="fas fa-layer-group"></i></span>
+                            <span>Add from Series</span>
+                        </a>
+                        <a class="button is-primary is-light" href="{% url 'reading-list:add-from-arc' reading_list.slug %}">
+                            <span class="icon is-small"><i class="fas fa-book"></i></span>
+                            <span>Add from Arc</span>
+                        </a>
+                        <a class="button is-info" href="{% url 'reading-list:update' reading_list.slug %}">
+                            <span class="icon is-small"><i class="fas fa-edit"></i></span>
+                            <span>Edit</span>
+                        </a>
+                        <a class="button is-danger" href="{% url 'reading-list:delete' reading_list.slug %}">
+                            <span class="icon is-small"><i class="fas fa-trash"></i></span>
+                            <span>Delete</span>
+                        </a>
+                    {% endif %}
+                    {% if can_assign_to_metron %}
+                        <a class="button is-warning is-outlined"
+                           href="{% url 'reading-list:assign-to-metron' reading_list.slug %}">
+                            <span class="icon is-small"><i class="fas fa-user-shield"></i></span>
+                            <span>Assign to Metron</span>
+                        </a>
+                    {% endif %}
                 </div>
             </div>
         </nav>

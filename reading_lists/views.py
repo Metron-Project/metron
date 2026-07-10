@@ -114,6 +114,14 @@ def can_manage_reading_list(user, reading_list):
     return is_owner
 
 
+def can_assign_reading_list_to_metron(user):
+    """Check if a user can reassign a reading list's owner to the Metron account.
+
+    Allowed for staff or members of the 'reading list editor' group.
+    """
+    return user.is_staff or user.groups.filter(name="reading list editor").exists()
+
+
 class ReadingListListView(ListView):
     """Display all public reading lists, plus user's own lists if authenticated."""
 
@@ -315,8 +323,12 @@ class ReadingListDetailView(DetailView):
         # Check if user can manage this reading list
         if self.request.user.is_authenticated:
             context["is_owner"] = can_manage_reading_list(self.request.user, reading_list)
+            context["can_assign_to_metron"] = reading_list.user.username != "Metron" and (
+                can_assign_reading_list_to_metron(self.request.user)
+            )
         else:
             context["is_owner"] = False
+            context["can_assign_to_metron"] = False
 
         # Get user's rating from prefetched data
         user_rating = None
@@ -507,6 +519,43 @@ class ReadingListDeleteView(LoginRequiredMixin, UserPassesTestMixin, DeleteView)
     def form_valid(self, form):
         messages.success(self.request, f"Reading list '{self.object.name}' deleted!")
         return super().form_valid(form)
+
+
+class AssignReadingListToMetronView(LoginRequiredMixin, UserPassesTestMixin, View):
+    """Reassign a reading list's owner to the Metron account."""
+
+    def dispatch(self, request, *args, **kwargs):
+        self.reading_list = get_object_or_404(ReadingList, slug=kwargs["slug"])
+        return super().dispatch(request, *args, **kwargs)
+
+    def test_func(self):
+        """Only allow staff or 'reading list editor' group members."""
+        return can_assign_reading_list_to_metron(self.request.user)
+
+    def get(self, request, *args, **kwargs):
+        if self.reading_list.user.username == "Metron":
+            return redirect(self.reading_list.get_absolute_url())
+        return render(
+            request,
+            "reading_lists/readinglist_confirm_assign_metron.html",
+            {"reading_list": self.reading_list},
+        )
+
+    def post(self, request, *args, **kwargs):
+        try:
+            metron_user = CustomUser.objects.get(username="Metron")
+        except CustomUser.DoesNotExist:
+            messages.error(request, "The 'Metron' user account does not exist.")
+            return redirect(self.reading_list.get_absolute_url())
+
+        if self.reading_list.user_id != metron_user.id:
+            self.reading_list.user = metron_user
+            self.reading_list.save()
+            messages.success(
+                request,
+                f"Ownership of '{self.reading_list.name}' has been reassigned to Metron.",
+            )
+        return redirect(self.reading_list.get_absolute_url())
 
 
 class RemoveIssueFromReadingListView(LoginRequiredMixin, UserPassesTestMixin, DeleteView):

@@ -1,0 +1,44 @@
+{% extends parent_template|default:"base.html" %}
+{% load static %}
+{% block title %}Assign {{ reading_list.name }} to Metron - Metron{% endblock %}
+{% block content %}
+    <header class="block has-text-centered">
+        <h1 class="title">Assign Reading List to Metron</h1>
+    </header>
+    <section class="section">
+        <div class="container">
+            <div class="columns is-centered">
+                <div class="column is-half">
+                    <div class="box">
+                        <article class="message is-warning">
+                            <div class="message-header">
+                                <p>Confirm ownership change</p>
+                            </div>
+                            <div class="message-body">
+                                <p class="mb-3">
+                                    Are you sure you want to reassign ownership of the reading list
+                                    <strong>"{{ reading_list.name }}"</strong> from
+                                    <strong>{{ reading_list.user.username }}</strong> to the
+                                    <strong>Metron</strong> account?
+                                </p>
+                                <p>This action cannot be undone from this page.</p>
+                            </div>
+                        </article>
+                        <form method="post">
+                            {% csrf_token %}
+                            <div class="field is-grouped is-grouped-right">
+                                <div class="control">
+                                    <a href="{% url 'reading-list:detail' reading_list.slug %}"
+                                       class="button">Cancel</a>
+                                </div>
+                                <div class="control">
+                                    <button type="submit" class="button is-warning">Assign to Metron</button>
+                                </div>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+{% endblock %}
