@@ -62,6 +62,25 @@ _RATING_DISPLAY = {
 
 _PRIVACY_DISPLAY = {"true": "Private", "false": "Public"}
 
+_ISSUE_TYPE_META = {
+    "CORE": ("Core", "#3273dc"),
+    "TIE_IN": ("Tie-In", "#f5b400"),
+    "PROLOGUE": ("Prologue", "#3e8ed0"),
+    "EPILOGUE": ("Epilogue", "#48c78e"),
+}
+
+_CREDIT_ROLE_NAMES = ["Artist", "Finishes", "Inker", "Penciller", "Script", "Story", "Writer"]
+
+_CREDIT_ROLE_DISPLAY = {
+    "Artist": "Artist",
+    "Finishes": "Artist",
+    "Inker": "Artist",
+    "Penciller": "Artist",
+    "Script": "Writer",
+    "Story": "Writer",
+    "Writer": "Writer",
+}
+
 
 def build_active_filters(request):
     """Build a list of ``{label, value, remove_url}`` dicts for the chip bar."""
@@ -282,6 +301,96 @@ class UserReadingListListView(LoginRequiredMixin, ListView):
         )
 
 
+def build_reading_list_breakdown_context(reading_list_items):
+    """Compute issue-type/series/publisher breakdowns and featured creators/characters.
+
+    ``reading_list_items`` must be a non-empty, pre-fetched sequence of
+    ReadingListItem rows (as built by ReadingListDetailView.get_queryset).
+    """
+    type_counts = {}
+    series_counts = {}
+    publisher_counts = {}
+
+    for item in reading_list_items:
+        key = item.issue_type or ""
+        if key:
+            type_counts[key] = type_counts.get(key, 0) + 1
+
+        series = item.issue.series
+        s_entry = series_counts.setdefault(series.id, {"series": series, "count": 0})
+        s_entry["count"] += 1
+
+        publisher = series.publisher
+        if publisher:
+            p_entry = publisher_counts.setdefault(
+                publisher.id, {"publisher": publisher, "count": 0}
+            )
+            p_entry["count"] += 1
+
+    issue_type_breakdown = [
+        {
+            "key": k,
+            "label": _ISSUE_TYPE_META[k][0],
+            "color": _ISSUE_TYPE_META[k][1],
+            "count": type_counts[k],
+        }
+        for k in ("CORE", "TIE_IN", "PROLOGUE", "EPILOGUE")
+        if type_counts.get(k)
+    ]
+
+    series_breakdown = sorted(
+        series_counts.values(),
+        key=lambda e: (-e["count"], e["series"].name),
+    )
+    publisher_breakdown = sorted(
+        publisher_counts.values(),
+        key=lambda e: (-e["count"], e["publisher"].name),
+    )
+
+    issue_ids = [item.issue_id for item in reading_list_items]
+    top6 = list(
+        Creator.objects.filter(
+            credits__issue_id__in=issue_ids,
+            credits__role__name__in=_CREDIT_ROLE_NAMES,
+        )
+        .annotate(issue_count=Count("credits__issue", distinct=True))
+        .order_by("-issue_count", "name")[:6]
+    )
+    creator_ids = [c.id for c in top6]
+    role_map: dict[int, set[str]] = {}
+    for credit in Credits.objects.filter(
+        issue_id__in=issue_ids,
+        creator_id__in=creator_ids,
+        role__name__in=_CREDIT_ROLE_NAMES,
+    ).prefetch_related(Prefetch("role", queryset=Role.objects.filter(name__in=_CREDIT_ROLE_NAMES))):
+        for role in credit.role.all():
+            role_map.setdefault(credit.creator_id, set()).add(role.name)
+
+    featured_creators = [
+        {
+            "creator": c,
+            "roles": ", ".join(
+                sorted({_CREDIT_ROLE_DISPLAY.get(r, r) for r in role_map.get(c.id, [])})
+            ),
+        }
+        for c in top6
+    ]
+
+    top_characters = (
+        Character.objects.filter(issues__in=issue_ids)
+        .annotate(appearance_count=Count("issues", distinct=True))
+        .order_by("-appearance_count", "name")[:12]
+    )
+
+    return {
+        "issue_type_breakdown": issue_type_breakdown,
+        "series_breakdown": series_breakdown,
+        "publisher_breakdown": publisher_breakdown,
+        "featured_creators": featured_creators,
+        "top_characters": top_characters,
+    }
+
+
 class ReadingListDetailView(DetailView):
     """Display a single reading list with its issues."""
 
@@ -359,99 +468,9 @@ class ReadingListDetailView(DetailView):
         context["start_year"] = reading_list.start_year_annotated
         context["end_year"] = reading_list.end_year_annotated
 
-        # Prefetch publishers efficiently
+        # Add issue-type/series/publisher breakdowns and featured creators/characters
         if reading_list_items_count > 0:
-            # Display label + bar color for each ReadingListItem.IssueType
-            type_meta = {
-                "CORE": ("Core", "#3273dc"),
-                "TIE_IN": ("Tie-In", "#f5b400"),
-                "PROLOGUE": ("Prologue", "#3e8ed0"),
-                "EPILOGUE": ("Epilogue", "#48c78e"),
-            }
-
-            type_counts = {}
-            series_counts = {}
-            publisher_counts = {}
-
-            for item in reading_list_items:
-                key = item.issue_type or ""
-                if key:
-                    type_counts[key] = type_counts.get(key, 0) + 1
-
-                series = item.issue.series
-                s_entry = series_counts.setdefault(series.id, {"series": series, "count": 0})
-                s_entry["count"] += 1
-
-                publisher = series.publisher
-                if publisher:
-                    p_entry = publisher_counts.setdefault(
-                        publisher.id, {"publisher": publisher, "count": 0}
-                    )
-                    p_entry["count"] += 1
-
-            context["issue_type_breakdown"] = [
-                {
-                    "key": k,
-                    "label": type_meta[k][0],
-                    "color": type_meta[k][1],
-                    "count": type_counts[k],
-                }
-                for k in ("CORE", "TIE_IN", "PROLOGUE", "EPILOGUE")
-                if type_counts.get(k)
-            ]
-
-            context["series_breakdown"] = sorted(
-                series_counts.values(),
-                key=lambda e: (-e["count"], e["series"].name),
-            )
-            context["publisher_breakdown"] = sorted(
-                publisher_counts.values(),
-                key=lambda e: (-e["count"], e["publisher"].name),
-            )
-
-            issue_ids = [item.issue_id for item in reading_list_items]
-            role_names = ["Artist", "Finishes", "Inker", "Penciller", "Script", "Story", "Writer"]
-            top6 = list(
-                Creator.objects.filter(
-                    credits__issue_id__in=issue_ids,
-                    credits__role__name__in=role_names,
-                )
-                .annotate(issue_count=Count("credits__issue", distinct=True))
-                .order_by("-issue_count", "name")[:6]
-            )
-            creator_ids = [c.id for c in top6]
-            role_map: dict[int, set[str]] = {}
-            for credit in Credits.objects.filter(
-                issue_id__in=issue_ids,
-                creator_id__in=creator_ids,
-                role__name__in=role_names,
-            ).prefetch_related(Prefetch("role", queryset=Role.objects.filter(name__in=role_names))):
-                for role in credit.role.all():
-                    role_map.setdefault(credit.creator_id, set()).add(role.name)
-            role_display = {
-                "Artist": "Artist",
-                "Finishes": "Artist",
-                "Inker": "Artist",
-                "Penciller": "Artist",
-                "Script": "Writer",
-                "Story": "Writer",
-                "Writer": "Writer",
-            }
-            context["featured_creators"] = [
-                {
-                    "creator": c,
-                    "roles": ", ".join(
-                        sorted({role_display.get(r, r) for r in role_map.get(c.id, [])})
-                    ),
-                }
-                for c in top6
-            ]
-
-            context["top_characters"] = (
-                Character.objects.filter(issues__in=issue_ids)
-                .annotate(appearance_count=Count("issues", distinct=True))
-                .order_by("-appearance_count", "name")[:12]
-            )
+            context.update(build_reading_list_breakdown_context(reading_list_items))
 
         return context
 
