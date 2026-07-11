@@ -13,6 +13,8 @@ Developer documentation for the `reading_lists` Django app.
 - [Filters](#filters)
 - [Templates](#templates)
 - [Database Optimization](#database-optimization)
+- [Dependencies](#dependencies)
+- [Management Commands](#management-commands)
 - [API Integration](#api-integration)
 - [Testing](#testing)
 - [Future Enhancements](#future-enhancements)
@@ -22,15 +24,18 @@ Developer documentation for the `reading_lists` Django app.
 The reading_lists app follows Django's MTV (Model-Template-View) pattern with:
 
 - **Models**: `ReadingList`, `ReadingListItem` (through model), and `ReadingListRating`
-- **Views**: Class-based views (CBVs) for all operations, plus HTMX-powered rating view
+- **Views**: Class-based views (CBVs) for most operations, plus several HTMX-powered function-based views
 - **Forms**: Django forms with autocomplete integration
-- **Permissions**: Mixin-based permission checks
+- **Permissions**: Shared helper functions (`can_manage_reading_list()`, `can_assign_reading_list_to_metron()`) used from `UserPassesTestMixin.test_func()` and from function-based views
+- **Filters**: `django-filter` FilterSets for both the API (`ReadingListFilter`) and the web UI (`ReadingListViewFilter`)
 
 **Key Dependencies:**
 
 - Django's class-based views
-- `autocomplete` package for issue search
-- `comicsdb` app for Issue and Publisher models
+- `autocomplete` package for issue, series, and arc search
+- `django-filter` for API and web filtering
+- `sorl-thumbnail` for cover image resizing
+- `comicsdb` app for Issue, Publisher, Character, Creator, Credits, and Role models
 - `users` app for CustomUser model
 
 ## Models
@@ -43,12 +48,18 @@ The main model for user-created reading lists.
 
 ```python
 class ReadingList(CommonInfo):
-    user = models.ForeignKey(CustomUser, on_delete=models.CASCADE)
+    user = models.ForeignKey(CustomUser, on_delete=models.CASCADE, related_name="reading_lists")
     is_private = models.BooleanField(default=False)
-    attribution_source = models.CharField(max_length=10, choices=AttributionSource.choices)
+    list_type = models.CharField(max_length=10, choices=ListType.choices, default=ListType.EVENT)
+    attribution_source = models.CharField(max_length=10, choices=AttributionSource.choices, blank=True)
     attribution_url = models.URLField(blank=True)
-    issues = models.ManyToManyField(Issue, through="ReadingListItem")
+    image = ImageField(upload_to="reading_list/%Y/%m/%d/", blank=True)
+    issues = models.ManyToManyField(
+        Issue, through="ReadingListItem", related_name="in_reading_lists", blank=True
+    )
 ```
+
+Cover images use `sorl.thumbnail.ImageField` (same pattern as issue covers) and are optional.
 
 **Inherited Fields from CommonInfo:**
 
@@ -60,7 +71,22 @@ class ReadingList(CommonInfo):
 - `created_on`: Auto-generated creation timestamp
 - `modified`: Auto-updated modification timestamp
 
+**List Types:**
+
+```python
+class ListType(models.TextChoices):
+    CREATOR = "CREATOR", "Creator"
+    EVENT = "EVENT", "Event"
+    STORY = "STORY", "Story"
+    CHARACTERS = "CHARACTERS", "Characters"
+    TEAMS = "TEAMS", "Teams"
+    MASTER = "MASTER", "Master"
+```
+
+Default is `EVENT`. Used for filtering/browsing and displayed as a tag on the list card.
+
 **Attribution Sources:**
+
 ```python
 class AttributionSource(models.TextChoices):
     CBRO = "CBRO", "Comic Book Reading Orders"
@@ -73,9 +99,17 @@ class AttributionSource(models.TextChoices):
     OTHER = "OTHER", "Other"
 ```
 
+**Meta Options:**
+
+```python
+class Meta:
+    ordering = ["name", "attribution_source", "user"]
+    unique_together = ["user", "name", "attribution_source"]
+```
+
 **Constraints:**
 
-- Unique together: `(user, name)` - prevents duplicate list names per user
+- Unique together: `(user, name, attribution_source)` - a user can reuse a list name across different attribution sources, but not within the same one
 - Index: Standard indexes on ForeignKey and slug fields
 
 **Computed Properties:**
@@ -129,9 +163,13 @@ class ReadingListItem(models.Model):
         TIE_IN = "TIE_IN", "Tie-In"
         EPILOGUE = "EPILOGUE", "Epilogue"
 
-    reading_list = models.ForeignKey(ReadingList, on_delete=models.CASCADE)
-    issue = models.ForeignKey(Issue, on_delete=models.CASCADE)
-    order = models.PositiveIntegerField(default=0)
+    reading_list = models.ForeignKey(
+        ReadingList, on_delete=models.CASCADE, related_name="reading_list_items"
+    )
+    issue = models.ForeignKey(Issue, on_delete=models.CASCADE, related_name="reading_list_items")
+    order = models.PositiveIntegerField(
+        default=1, help_text="Position of this issue in the reading list"
+    )
     issue_type = models.CharField(
         max_length=10,
         choices=IssueType.choices,
@@ -139,6 +177,8 @@ class ReadingListItem(models.Model):
         help_text="Optional categorization of this issue's role in the reading list",
     )
 ```
+
+`order` is 1-indexed (migrations `0008_fix_order_default.py` and `0009_renumber_order_from_zero.py` moved the default and existing data from a 0-based scheme to a 1-based one, since 0-based ordering caused ambiguity with "unset" values).
 
 **Issue Type Categorization:**
 
@@ -166,6 +206,7 @@ The `issue_type` field allows users to categorize issues within their reading li
 - Index: `(reading_list, order)` - optimizes ordering queries
 
 **Meta Options:**
+
 ```python
 class Meta:
     ordering = ["reading_list", "order"]
@@ -173,6 +214,17 @@ class Meta:
         models.Index(fields=["reading_list", "order"], name="reading_list_order_idx"),
     ]
 ```
+
+**Modified Timestamp Signal:**
+
+**File:** `reading_lists/signals.py` (connected in `reading_lists/apps.py::ReadingListsConfig.ready()`)
+
+```python
+def update_reading_list_modified_on_item_change(sender, instance, **kwargs):
+    ReadingList.objects.filter(pk=instance.reading_list_id).update(modified=timezone.now())
+```
+
+Connected to `post_save` and `post_delete` on `ReadingListItem` so that adding, reordering, or removing issues bumps the parent `ReadingList.modified` timestamp — important for the API's `modified_gt` filter and conditional-request support, since M2M/through-model changes don't otherwise touch the parent row's `auto_now` field.
 
 ### ReadingListRating
 
@@ -205,6 +257,7 @@ class ReadingListRating(models.Model):
 - Index: `(reading_list, user)` - optimizes rating lookups
 
 **Meta Options:**
+
 ```python
 class Meta:
     unique_together = ["reading_list", "user"]
@@ -224,92 +277,133 @@ class Meta:
 
 ## Views and URLs
 
-All views are class-based views (CBVs) inheriting from Django's generic views.
+Most views are class-based views (CBVs) inheriting from Django's generic views; several inline-editing/HTMX endpoints are plain function-based views decorated with `@login_required`/`@require_POST`.
 
 **File:** `reading_lists/views.py`
+
+### Permission Helpers
+
+```python
+def can_manage_reading_list(user, reading_list):
+    """Owner, or staff/'reading list editor' group member editing a Metron list."""
+    is_owner = reading_list.user == user
+    if reading_list.user.username == "Metron":
+        is_staff = user.is_staff
+        is_editor_group = user.groups.filter(name="reading list editor").exists()
+        return is_owner or is_staff or is_editor_group
+    return is_owner
+
+
+def can_assign_reading_list_to_metron(user):
+    """Staff or 'reading list editor' group members, regardless of ownership."""
+    return user.is_staff or user.groups.filter(name="reading list editor").exists()
+```
+
+Nearly every authenticated view/endpoint below delegates its `test_func()`/permission check to one of these two functions rather than duplicating the group/ownership logic. See [Permissions](#permissions) for the full breakdown.
 
 ### Public Views
 
 #### ReadingListListView
+
 ```python
 class ReadingListListView(ListView):
     model = ReadingList
     template_name = "reading_lists/readinglist_list.html"
+    context_object_name = "reading_lists"
     paginate_by = 30
 ```
 
 **Queryset Logic:**
 
 - Unauthenticated: Only public lists
-- Authenticated non-admin: Public lists + user's own lists
-- Admin: Public lists + user's own lists + Metron's lists
+- Authenticated, staff or "reading list editor" group: Public lists + user's own lists + Metron's lists
+- Authenticated, everyone else: Public lists + user's own lists
 
 **Annotations:**
 
-- `issue_count`: Count of issues in the list
-- `average_rating`: Average of all ratings for the list
-- `rating_count`: Total number of ratings for the list
+- `issue_count`: `Count("issues", distinct=True)`
+- `average_rating`: `Avg("ratings__rating")`
+- `rating_count`: `Count("ratings", distinct=True)`
+- `start_year_annotated` / `end_year_annotated`: `Min`/`Max` of `reading_list_items__issue__cover_date__year`, used by the list card to show a year range without per-row queries
+
+**Filtering:** Queryset is passed through `ReadingListViewFilter` (see [Filters](#filters)) before final ordering by `name, attribution_source, user`.
+
+**Context Data:**
+
+- `attribution_sources`, `list_types`: Choice lists for the filter form dropdowns
+- `has_active_filters`: True if any GET param besides `page` is present
+- `active_filters`: List of `{label, value, remove_url}` dicts built by `build_active_filters()`, powering the removable filter-chip bar above the results
 
 **URL:** `/reading-lists/`
 
 #### SearchReadingListListView
+
 ```python
 class SearchReadingListListView(SearchMixin, ReadingListListView):
     def get_search_fields(self):
         return ["name__icontains", "user__username__icontains", "attribution_source__icontains"]
 ```
 
-Inherits queryset filtering from `ReadingListListView`.
+Reimplements `get_queryset()` (rather than fully inheriting it) so that `q` is applied via `SearchMixin.get_search_queryset()` instead of through `ReadingListViewFilter` — the same visibility rules (public/own/Metron) are still applied first.
 
 **URL:** `/reading-lists/search/`
 
 #### ReadingListDetailView
+
 ```python
 class ReadingListDetailView(DetailView):
     model = ReadingList
     template_name = "reading_lists/readinglist_detail.html"
+    context_object_name = "reading_list"
 ```
 
 **Context Data:**
 
-- `reading_list_items`: Prefetched and ordered by `order` field (limited to first 50 for pagination)
-- `reading_list_items_count`: Total count of items in the list
-- `is_owner`: Boolean indicating if user can edit (owner or admin managing Metron)
-- `user_rating`: User's own rating (if authenticated and has rated)
-- `average_rating`: Average rating from all users (annotated)
-- `rating_count`: Total number of ratings (annotated)
-- `start_year`: Earliest cover date year (annotated, not property)
-- `end_year`: Latest cover date year (annotated, not property)
-- `publishers`: Unique publishers extracted from prefetched data
+- `reading_list_items`: Prefetched, ordered by `order`, limited to the first `READING_LIST_DETAIL_PAGINATE_BY` (50) — additional items are fetched via `ReadingListItemsLoadMore`
+- `reading_list_items_count`: Total count of items in the list (via `len()` on the prefetched queryset, not a separate `COUNT` query)
+- `is_owner`: Boolean from `can_manage_reading_list()`
+- `can_assign_to_metron`: True when the list is not already Metron-owned and `can_assign_reading_list_to_metron()` passes
+- `user_rating`: User's own rating, pulled from the prefetched `user_rating_list` (if authenticated and has rated)
+- `average_rating` / `rating_count`: From the annotated queryset
+- `start_year` / `end_year`: From the annotated queryset
+- `issue_type_breakdown`: Per-`issue_type` counts (Prologue/Core/Tie-In/Epilogue) with a display label and bar color, computed in Python from the already-prefetched items
+- `series_breakdown` / `publisher_breakdown`: Per-series and per-publisher issue counts, also computed from the prefetched items (no extra queries)
+- `featured_creators`: Top 6 creators by issue count across the list's issues (writer/artist roles only), with a `roles` string ("Writer", "Artist", or both)
+- `top_characters`: Top 12 characters by appearance count across the list's issues
 
 **Query Optimizations:**
 
 The detail view is heavily optimized to reduce database queries:
 
-1. **Prefetch reading list items** with related issue, series, publisher data
-2. **Annotate year ranges** instead of using expensive properties
-3. **Prefetch and annotate ratings** to avoid N+1 queries
-4. **Extract publishers from prefetched data** instead of separate query
-5. **Result**: Reduced from ~20 queries to 4-6 queries per page load
+1. **Prefetch reading list items** with related issue, series, series_type, and publisher data
+2. **Annotate year ranges and rating aggregates** instead of using expensive properties or separate queries
+3. **Prefetch ratings** (all ratings, plus the current user's own rating via a second `Prefetch` with `to_attr="user_rating_list"`) to avoid N+1 queries
+4. **Compute breakdowns/top creators/top characters from the already-prefetched `reading_list_items`** in Python where possible, and with small aggregate queries (`Creator`/`Character` annotated + sliced) otherwise — avoids re-querying `Publisher` separately
+5. Breakdown/creator/character computation only runs when `reading_list_items_count > 0`
 
 **URL:** `/reading-lists/<slug>/`
 
 ### Authenticated Views
 
 #### UserReadingListListView
+
 ```python
 class UserReadingListListView(LoginRequiredMixin, ListView):
     model = ReadingList
     template_name = "reading_lists/readinglist_list.html"
+    context_object_name = "reading_lists"
     paginate_by = 30
 
     def get_queryset(self):
-        return ReadingList.objects.filter(user=self.request.user)
+        return ReadingList.objects.filter(user=self.request.user).annotate(...)
 ```
+
+Same `issue_count`/`average_rating`/`rating_count`/`start_year_annotated`/`end_year_annotated` annotations as `ReadingListListView`, scoped to `user=self.request.user` (no visibility filtering needed — it's always the current user's own lists). Sets `is_user_view = True` in context so the template can adjust its empty-state messaging.
 
 **URL:** `/reading-lists/my-lists/`
 
 #### ReadingListCreateView
+
 ```python
 class ReadingListCreateView(LoginRequiredMixin, CreateView):
     model = ReadingList
@@ -324,31 +418,33 @@ class ReadingListCreateView(LoginRequiredMixin, CreateView):
 **URL:** `/reading-lists/create/`
 
 #### ReadingListUpdateView
+
 ```python
 class ReadingListUpdateView(LoginRequiredMixin, UserPassesTestMixin, UpdateView):
     model = ReadingList
     form_class = ReadingListForm
 
     def test_func(self):
-        reading_list = self.get_object()
-        is_owner = reading_list.user == self.request.user
-        is_admin_managing_metron = (
-            self.request.user.is_staff and
-            reading_list.user.username == "Metron"
-        )
-        return is_owner or is_admin_managing_metron
+        return can_manage_reading_list(self.request.user, self.get_object())
 ```
+
+**Form Customization:**
+
+- Non-admin users: Attribution fields removed from form (same `get_form()` override as `ReadingListCreateView`)
 
 **URL:** `/reading-lists/<slug>/update/`
 
 #### ReadingListDeleteView
+
 ```python
 class ReadingListDeleteView(LoginRequiredMixin, UserPassesTestMixin, DeleteView):
     model = ReadingList
+    template_name = "reading_lists/readinglist_confirm_delete.html"
     success_url = reverse_lazy("reading-list:my-lists")
-```
 
-Uses same `test_func()` as UpdateView.
+    def test_func(self):
+        return can_manage_reading_list(self.request.user, self.get_object())
+```
 
 **URL:** `/reading-lists/<slug>/delete/`
 
@@ -364,12 +460,7 @@ class AssignReadingListToMetronView(LoginRequiredMixin, UserPassesTestMixin, Vie
 
 **Permission Check:**
 
-Uses `can_assign_reading_list_to_metron()`, independent of `can_manage_reading_list()`/ownership — a user does **not** need to own or already be able to manage the list:
-
-```python
-def can_assign_reading_list_to_metron(user):
-    return user.is_staff or user.groups.filter(name="reading list editor").exists()
-```
+Uses `can_assign_reading_list_to_metron()` (see [Permission Helpers](#views-and-urls)), independent of `can_manage_reading_list()`/ownership — a user does **not** need to own or already be able to manage the list.
 
 **Behavior:**
 
@@ -382,6 +473,7 @@ def can_assign_reading_list_to_metron(user):
 **URL:** `/reading-lists/<slug>/assign-to-metron/`
 
 #### AddIssueWithAutocompleteView
+
 ```python
 class AddIssueWithAutocompleteView(LoginRequiredMixin, UserPassesTestMixin, FormView):
     form_class = AddIssueWithSearchForm
@@ -399,6 +491,7 @@ class AddIssueWithAutocompleteView(LoginRequiredMixin, UserPassesTestMixin, Form
 **URL:** `/reading-lists/<slug>/add-issue/`
 
 #### AddIssuesFromSeriesView
+
 ```python
 class AddIssuesFromSeriesView(LoginRequiredMixin, UserPassesTestMixin, FormView):
     form_class = AddIssuesFromSeriesForm
@@ -432,6 +525,7 @@ class AddIssuesFromSeriesView(LoginRequiredMixin, UserPassesTestMixin, FormView)
 **URL:** `/reading-lists/<slug>/add-from-series/`
 
 #### AddIssuesFromArcView
+
 ```python
 class AddIssuesFromArcView(LoginRequiredMixin, UserPassesTestMixin, FormView):
     form_class = AddIssuesFromArcForm
@@ -457,6 +551,7 @@ class AddIssuesFromArcView(LoginRequiredMixin, UserPassesTestMixin, FormView):
 **URL:** `/reading-lists/<slug>/add-from-arc/`
 
 #### RemoveIssueFromReadingListView
+
 ```python
 class RemoveIssueFromReadingListView(LoginRequiredMixin, UserPassesTestMixin, DeleteView):
     model = ReadingListItem
@@ -465,7 +560,30 @@ class RemoveIssueFromReadingListView(LoginRequiredMixin, UserPassesTestMixin, De
 
 **URL:** `/reading-lists/<slug>/remove-issue/<item_pk>/`
 
+#### ReadingListItemsLoadMore
+
+```python
+class ReadingListItemsLoadMore(LazyLoadMixin, View):
+    model = ReadingList
+    relation_name = "reading_list_items"
+    template_name = "reading_lists/partials/readinglist_item_list.html"
+    context_object_name = "reading_list_items"
+    slug_context_name = "reading_list_slug"
+```
+
+**Purpose:** HTMX "Load More" endpoint for reading list items beyond the first `READING_LIST_DETAIL_PAGINATE_BY` (50) shown on initial page load. Built on the shared `LazyLoadMixin` (`comicsdb/views/mixins.py`), which is also used by other detail pages (e.g. Universe, Team) for the same load-more pattern.
+
+**Behavior:**
+
+- Overrides `get()` to re-apply the same public/own/Metron visibility filtering as `ReadingListDetailView` before fetching the parent `ReadingList` by slug (`LazyLoadMixin`'s default `get()` doesn't filter by permission, since most consumers don't need it)
+- Paginates by `DETAIL_PAGINATE_BY` (30, from `comicsdb/views/constants.py` — **not** the 50 used for the initial detail-page load)
+- Adds `is_owner` (via `can_manage_reading_list()`) to context so the rendered items include working remove/edit-type buttons
+- Renders `partials/readinglist_item_list.html`, which also re-renders the "Load More" button (or omits it once `has_more` is `False`) via an out-of-band (`hx-swap-oob`) swap
+
+**URL:** `/reading-lists/<slug>/items-load-more/`
+
 #### update_reading_list_rating (Function-Based View)
+
 ```python
 @login_required
 @require_POST
@@ -521,6 +639,7 @@ Returns the `reading_list_rating.html` partial template with context:
 **URL:** `/reading-lists/<slug>/rate/`
 
 #### edit_issue_type (Function-Based View)
+
 ```python
 @login_required
 def edit_issue_type(request, slug, item_pk):
@@ -545,6 +664,7 @@ def edit_issue_type(request, slug, item_pk):
 **URL:** `/reading-lists/<slug>/item/<item_pk>/edit-type/`
 
 #### update_issue_type (Function-Based View)
+
 ```python
 @login_required
 @require_POST
@@ -562,6 +682,7 @@ def update_issue_type(request, slug, item_pk):
 4. Issue type value must be valid or empty
 
 **Issue Type Validation:**
+
 ```python
 issue_type = request.POST.get("issue_type", "")
 if issue_type in dict(ReadingListItem.IssueType.choices) or issue_type == "":
@@ -585,6 +706,7 @@ if issue_type in dict(ReadingListItem.IssueType.choices) or issue_type == "":
 **URL:** `/reading-lists/<slug>/item/<item_pk>/update-type/`
 
 #### cancel_edit_issue_type (Function-Based View)
+
 ```python
 @login_required
 def cancel_edit_issue_type(request, slug, item_pk):
@@ -626,6 +748,7 @@ urlpatterns = [
     path("<slug:slug>/add-from-series/", AddIssuesFromSeriesView.as_view(), name="add-from-series"),
     path("<slug:slug>/add-from-arc/", AddIssuesFromArcView.as_view(), name="add-from-arc"),
     path("<slug:slug>/remove-issue/<int:item_pk>/", RemoveIssueFromReadingListView.as_view(), name="remove-issue"),
+    path("<slug:slug>/items-load-more/", ReadingListItemsLoadMore.as_view(), name="items-load-more"),
     path("<slug:slug>/rate/", update_reading_list_rating, name="rate"),
     path("<slug:slug>/item/<int:item_pk>/edit-type/", edit_issue_type, name="edit-issue-type"),
     path("<slug:slug>/item/<int:item_pk>/update-type/", update_issue_type, name="update-issue-type"),
@@ -643,11 +766,21 @@ urlpatterns = [
 class ReadingListForm(forms.ModelForm):
     class Meta:
         model = ReadingList
-        fields = ("name", "desc", "is_private", "attribution_source", "attribution_url")
+        fields = (
+            "name",
+            "desc",
+            "image",
+            "is_private",
+            "list_type",
+            "attribution_source",
+            "attribution_url",
+        )
 ```
 
+`image` uses `forms.ClearableFileInput()` so an existing cover can be removed; `list_type` and `attribution_source` render as `Select` dropdowns. Custom labels and help text are set for `desc`, `is_private`, `list_type`, `attribution_source`, and `attribution_url` in `Meta`.
+
 **Dynamic Field Removal:**
-Attribution fields are removed in view's `get_form()` for non-admin users.
+Attribution fields (`attribution_source`, `attribution_url`) are removed in the view's `get_form()` for non-admin (non-`is_staff`) users — `list_type` and `image` remain available to all users.
 
 ### AddIssueWithSearchForm
 
@@ -694,6 +827,7 @@ class AddIssuesFromSeriesForm(forms.Form):
 - **Position control**: Add at beginning or end of list
 
 **Form Validation:**
+
 ```python
 def clean(self):
     if range_type == "range" and not start_number and not end_number:
@@ -732,30 +866,27 @@ Designed for adding complete story arcs that span multiple series (crossover eve
 
 ### Permission Strategy
 
-The app uses `UserPassesTestMixin` for permission checks rather than object-level permissions.
+The app uses `UserPassesTestMixin` for permission checks rather than object-level permissions. Rather than each view duplicating the ownership/group logic in its own `test_func()`, two shared functions in `reading_lists/views.py` are reused everywhere (see [Permission Helpers](#views-and-urls)):
 
-**Base Permission Check:**
 ```python
-def test_func(self):
-    reading_list = self.get_object()
-    is_owner = reading_list.user == self.request.user
+def can_manage_reading_list(user, reading_list):
+    is_owner = reading_list.user == user
+    if reading_list.user.username == "Metron":
+        is_staff = user.is_staff
+        is_editor_group = user.groups.filter(name="reading list editor").exists()
+        return is_owner or is_staff or is_editor_group
+    return is_owner
 
-    # Check if user is in Reading List Editor group
-    is_editor = self.request.user.groups.filter(name="Reading List Editor").exists()
-    can_manage_metron = is_editor and reading_list.user.username == "Metron"
 
-    # Admin can also manage Metron lists
-    is_admin_managing_metron = (
-        self.request.user.is_staff and
-        reading_list.user.username == "Metron"
-    )
-
-    return is_owner or can_manage_metron or is_admin_managing_metron
+def can_assign_reading_list_to_metron(user):
+    return user.is_staff or user.groups.filter(name="reading list editor").exists()
 ```
 
-**Reading List Editor Group:**
+`can_manage_reading_list()` backs `test_func()` on `ReadingListUpdateView`, `ReadingListDeleteView`, `RemoveIssueFromReadingListView`, `AddIssueWithAutocompleteView`, `AddIssuesFromSeriesView`, and `AddIssuesFromArcView`, and is also called directly (not via a mixin) inside `edit_issue_type`, `update_issue_type`, and `cancel_edit_issue_type` since those are function-based views.
 
-A Django group created via migration that provides special permissions for managing Metron user's reading lists.
+**"reading list editor" Group:**
+
+A Django group (note: **lowercase** name, matched exactly via `groups.filter(name="reading list editor")`) created via migration that provides special permissions for managing Metron user's reading lists.
 
 **Migration:** `0002_create_reading_list_editor_group.py`
 
@@ -767,15 +898,9 @@ A Django group created via migration that provides special permissions for manag
 
 ### Assign-to-Metron Permission
 
-`AssignReadingListToMetronView` (used to reassign a list's ownership to the "Metron" account) uses a separate, standalone check rather than `can_manage_reading_list()`, since it must apply to lists the user does **not** already own or manage:
+`AssignReadingListToMetronView` (used to reassign a list's ownership to the "Metron" account) uses `can_assign_reading_list_to_metron()` rather than `can_manage_reading_list()`, since it must apply to lists the user does **not** already own or manage.
 
-```python
-def can_assign_reading_list_to_metron(user):
-    """Check if a user can reassign a reading list's owner to the Metron account."""
-    return user.is_staff or user.groups.filter(name="reading list editor").exists()
-```
-
-This is intentionally broader in scope (any reading list) but narrower in who qualifies (staff or Reading List Editor group members only — plain ownership does not grant this permission).
+This is intentionally broader in scope (any reading list) but narrower in who qualifies (staff or "reading list editor" group members only — plain ownership does not grant this permission).
 
 ### Permission Levels
 
@@ -793,7 +918,7 @@ This is intentionally broader in scope (any reading list) but narrower in who qu
 - Can view own private lists
 - Cannot edit others' lists
 
-**Reading List Editor Group:**
+**"reading list editor" Group:**
 
 - All authenticated permissions
 - Can edit/delete Metron user's lists
@@ -811,7 +936,7 @@ This is intentionally broader in scope (any reading list) but narrower in who qu
 
 ### Visibility Rules
 
-Implemented in queryset filtering:
+Implemented as near-identical queryset filtering repeated across `ReadingListListView`, `SearchReadingListListView`, `ReadingListDetailView`, the API's `ReadingListViewSet`, and `ReadingListItemsLoadMore` (each needs it inline since it's blended with different annotations/prefetches, so there's no single shared helper):
 
 ```python
 def get_queryset(self):
@@ -820,7 +945,8 @@ def get_queryset(self):
     if not self.request.user.is_authenticated:
         return queryset.filter(is_private=False)
 
-    if self.request.user.is_staff:
+    is_editor = self.request.user.groups.filter(name="reading list editor").exists()
+    if self.request.user.is_staff or is_editor:
         try:
             metron_user = CustomUser.objects.get(username="Metron")
             return queryset.filter(
@@ -835,6 +961,8 @@ def get_queryset(self):
         Q(is_private=False) | Q(user=self.request.user)
     ).distinct()
 ```
+
+Note the web views (list/detail/lazy-load) include the "reading list editor" group in the Metron-visibility branch alongside `is_staff`; the API's `ReadingListViewSet.get_queryset()` currently only checks `is_staff` for that branch (editor-group members still see their own + public lists via the API, just not Metron's private ones).
 
 ## Autocomplete
 
@@ -889,6 +1017,7 @@ class SeriesAutocomplete(ModelAutocomplete):
 Used in `AddIssuesFromSeriesForm` for bulk addition feature.
 
 **Queryset:**
+
 ```python
 queryset = Series.objects.select_related("series_type").all()
 ```
@@ -920,63 +1049,96 @@ Used in `AddIssuesFromArcForm` for arc-based bulk addition feature.
 
 **File:** `comicsdb/filters/reading_list.py`
 
+Both filters share a `filter_reading_lists_by_publisher()` helper, defined at module level rather than duplicated as a method:
+
+```python
+def filter_reading_lists_by_publisher(queryset, value):
+    matching_ids = (
+        ReadingList.objects.filter(
+            reading_list_items__issue__series__publisher__name__icontains=value
+        )
+        .values("id")
+        .distinct()
+    )
+    return queryset.filter(id__in=matching_ids)
+```
+
+It runs as a subquery (`id__in=...`) specifically to avoid combining the `reading_list_items__issue__series__publisher` JOIN chain with the `COUNT`/`AVG` rating and issue-count aggregations on the outer queryset, which was measured to cause extreme slowness.
+
 ### ReadingListFilter (API Filter)
 
-Django filter for API endpoints.
+Django filter for API endpoints (`django_filters.rest_framework`).
 
 ```python
 class ReadingListFilter(filters.FilterSet):
-    name = filters.CharFilter(lookup_expr="icontains")
-    user = filters.NumberFilter(field_name="user__id")
+    name = filters.CharFilter(lookup_expr="unaccent__icontains")
+    user = filters.NumberFilter(field_name="user__id", lookup_expr="exact")
     username = filters.CharFilter(field_name="user__username", lookup_expr="icontains")
-    attribution_source = filters.CharFilter(lookup_expr="icontains")
+    attribution_source = filters.ChoiceFilter(choices=ReadingList.AttributionSource.choices)
+    list_type = filters.ChoiceFilter(choices=ReadingList.ListType.choices)
     is_private = filters.BooleanFilter()
     modified_gt = filters.DateTimeFilter(field_name="modified", lookup_expr="gt")
     average_rating__gte = filters.NumberFilter(
-        field_name="average_rating",
-        lookup_expr="gte",
-        label="Minimum Rating",
+        field_name="average_rating", lookup_expr="gte", label="Minimum Rating",
     )
+    publisher = filters.CharFilter(label="Publisher", method="filter_by_publisher")
 ```
 
 **Fields:**
 
-- `name`: Case-insensitive search on list name
-- `user`: Filter by user ID
+- `name`: Accent-insensitive, case-insensitive search on list name (`unaccent__icontains`)
+- `user`: Filter by exact user ID
 - `username`: Case-insensitive search on username
-- `attribution_source`: Filter by attribution source
+- `attribution_source`: Exact match against `AttributionSource` choices
+- `list_type`: Exact match against `ListType` choices
 - `is_private`: Filter by privacy status
-- `modified_gt`: Filter by modification date (greater than)
+- `modified_gt`: Filter by modification date (greater than) — used by clients to sync recently-changed lists
 - `average_rating__gte`: Filter by minimum average rating (1-5)
+- `publisher`: Free-text publisher name match via `filter_reading_lists_by_publisher()`
 
 ### ReadingListViewFilter (Web View Filter)
 
-Django filter for web views with search functionality.
+Django filter for web views (plain `django_filters`, not the REST variant), with a dedicated quick-search filter.
 
 ```python
+class QuickSearchFilter(df.CharFilter):
+    """Quick search by reading list name."""
+
+    def filter(self, qs, value):
+        if value:
+            query_list = value.split()
+            return qs.filter(
+                reduce(operator.and_, (Q(name__unaccent__icontains=q) for q in query_list))
+            )
+        return super().filter(qs, value)
+
+
 class ReadingListViewFilter(df.FilterSet):
-    q = df.CharFilter(method="filter_search", label="Search")
-    name = df.CharFilter(lookup_expr="icontains", label="Name")
-    username = df.CharFilter(field_name="user__username", lookup_expr="icontains", label="Username")
-    attribution_source = df.CharFilter(lookup_expr="icontains", label="Source")
+    q = QuickSearchFilter(label="Quick Search")
+    name = df.CharFilter(label="List Name", lookup_expr="unaccent__icontains")
+    username = df.CharFilter(label="Creator", field_name="user__username", lookup_expr="icontains")
+    attribution_source = df.ChoiceFilter(
+        label="Attribution Source", choices=ReadingList.AttributionSource.choices
+    )
+    list_type = df.ChoiceFilter(label="List Type", choices=ReadingList.ListType.choices)
     is_private = df.BooleanFilter(label="Private")
+    publisher = df.CharFilter(label="Publisher", method="filter_by_publisher")
     average_rating__gte = df.NumberFilter(
-        field_name="average_rating",
-        lookup_expr="gte",
-        label="Minimum Rating",
+        field_name="average_rating", lookup_expr="gte", label="Minimum Rating",
     )
 ```
 
 **Features:**
 
-- `q`: Global search across name, username, and attribution source
-- Individual field filters for precise searching
-- Rating filter for quality-based discovery
-- Integrated with `ReadingListListView` and `SearchReadingListListView`
+- `q` (`QuickSearchFilter`): Splits the query on whitespace and AND-matches every term against `name` (unaccent-aware) — distinct from `SearchReadingListListView`'s `SearchMixin`-based search, which also matches `username`/`attribution_source` and is used only on the dedicated `/search/` URL
+- Individual field filters (`name`, `username`, `attribution_source`, `list_type`, `publisher`, `is_private`, `average_rating__gte`) power the collapsible "Advanced Filters" panel
+- Integrated with `ReadingListListView` (applied via `filtered.qs` in `get_queryset()`) — **not** used by `SearchReadingListListView`, which applies `q` through `SearchMixin` instead
+- Removable filter chips are built separately in `build_active_filters()` (`reading_lists/views.py`), not by this FilterSet
 
 **Rating Filter Options:**
 
 The web interface provides a dropdown with:
+
 - All Ratings (no filter)
 - 1+ Stars
 - 2+ Stars
@@ -984,7 +1146,7 @@ The web interface provides a dropdown with:
 - 4+ Stars
 - 5 Stars
 
-**Filter Template:** `partials/readinglist_filter.html`
+**Filter Template:** `partials/readinglist_filter.html` — includes the quick-search field plus a `<details>`-collapsed "Advanced Filters" panel (name, creator, publisher, list type, attribution source, minimum rating, and — for authenticated users only — a privacy filter).
 
 ## Templates
 
@@ -993,20 +1155,22 @@ The web interface provides a dropdown with:
 ### Template Files
 
 | Template | Purpose | Key Features |
-|----------|---------|--------------|
-| `readinglist_list.html` | List all public lists and user's own lists | Pagination, search/filter, issue counts, context-sensitive nav |
-| `readinglist_detail.html` | Single list detail | Ordered issues, add/remove controls, bulk add button |
-| `readinglist_form.html` | Create/edit form | Dynamic field visibility |
+| ---------- | --------- | -------------- |
+| `readinglist_list.html` | List all public lists and user's own lists | Grid of `readinglist_card.html` cards, filter panel, pagination, context-sensitive nav |
+| `readinglist_detail.html` | Single list detail | Ordered issues (lazy-loaded past the first 50), add/remove controls, bulk add buttons, stats (breakdowns, featured creators, top characters) |
+| `readinglist_form.html` | Create/edit form | Dynamic field visibility, cover image upload |
 | `readinglist_confirm_delete.html` | Delete confirmation | Issue count warning |
 | `readinglist_confirm_assign_metron.html` | Assign-to-Metron confirmation | Staff/editor-only, warns ownership change is not undoable from the UI |
 | `add_issue_autocomplete.html` | Add issues interface | Autocomplete, drag-drop, preview |
 | `add_issues_from_series.html` | Bulk add from series | Series autocomplete, HTMX range toggle, usage tips |
 | `add_issues_from_arc.html` | Bulk add from arc | Arc autocomplete, position selection, usage tips |
 | `remove_issue_confirm.html` | Remove issue confirmation | Issue details |
+| `partials/readinglist_card.html` | List card (grid item) | Cover thumbnail, list type tag, year range, rating stars, privacy badge, truncated description |
+| `partials/readinglist_filter.html` | Filter/search panel | Quick search + collapsible advanced filters, active-filter tag |
 | `partials/reading_list_rating.html` | Rating component | HTMX-powered star rating, average display |
 | `partials/readinglist_item.html` | Single item display | Issue type badge, inline edit button, remove button |
 | `partials/readinglist_item_edit.html` | Single item edit form | Issue type dropdown, save/cancel buttons |
-| `partials/readinglist_item_list.html` | Item list wrapper | Used for load-more pagination |
+| `partials/readinglist_item_list.html` | Item list + load-more button | Rendered by `ReadingListItemsLoadMore`; re-renders itself and the load-more button via an out-of-band (`hx-swap-oob`) swap |
 
 ### Template Context
 
@@ -1015,7 +1179,7 @@ The web interface provides a dropdown with:
 - `reading_list`: ReadingList instance
 - `reading_list_items`: Ordered queryset of ReadingListItem
 - `is_owner`: Boolean for edit permissions
-- `can_assign_to_metron`: Boolean; True when the current user is staff or a Reading List Editor group member and the list is not already Metron-owned. Controls visibility of the "Assign to Metron" button, independently of `is_owner`
+- `can_assign_to_metron`: Boolean; True when the current user is staff or a "reading list editor" group member and the list is not already Metron-owned. Controls visibility of the "Assign to Metron" button, independently of `is_owner`
 - `user`: Current user (from request)
 
 ### HTMX Integration
@@ -1042,6 +1206,7 @@ The series bulk addition template uses HTMX for client-side interactivity:
 - Maintains progressive enhancement
 
 **Initialization:**
+
 ```javascript
 htmx.onLoad(function() {
     const selectedRadio = document.querySelector('input[name="range_type"]:checked');
@@ -1095,6 +1260,7 @@ This ensures all HTMX requests include the CSRF token for security.
 ### Issue Type Editing Partials
 
 **Files:**
+
 - `partials/readinglist_item.html` - Display mode
 - `partials/readinglist_item_edit.html` - Edit mode
 
@@ -1239,15 +1405,21 @@ The issue type editing system uses HTMX for inline, no-reload editing:
 ### QuerySet Optimizations
 
 **List Views:**
+
 ```python
 queryset = ReadingList.objects.select_related("user").annotate(
-    issue_count=Count("issues"),
+    issue_count=Count("issues", distinct=True),
     average_rating=Avg("ratings__rating"),
     rating_count=Count("ratings", distinct=True),
+    start_year_annotated=Min("reading_list_items__issue__cover_date__year"),
+    end_year_annotated=Max("reading_list_items__issue__cover_date__year"),
 )
 ```
 
+`issue_count` uses `distinct=True` because it's computed alongside the `ratings` join — without it, the `Count` would be inflated by the cross-join between `reading_list_items`/`issues` and `ratings`.
+
 **Detail View:**
+
 ```python
 queryset = (
     ReadingList.objects.select_related("user")
@@ -1290,12 +1462,13 @@ if request.user.is_authenticated:
 - `annotate()`: Computes counts, averages, and aggregates in database
 - `Prefetch()`: Fine-grained control over prefetch querysets
 - **Rating Optimizations**: All rating data fetched in initial query
-- **Year Range Annotations**: Replaces expensive property calls with database aggregation
-- **Publisher Extraction**: Extracted from prefetched data instead of separate query
+- **Year Range Annotations**: Replaces the `start_year`/`end_year` model properties with database aggregation for list/detail views (the properties still exist on the model and run their own queries if accessed directly, e.g. from a shell or the import command)
+- **Breakdown/Stats Extraction**: `issue_type_breakdown`, `series_breakdown`, and `publisher_breakdown` are all computed in Python from the already-prefetched `reading_list_items` in `ReadingListDetailView.get_context_data()` — avoids a separate query per breakdown and avoids the `publishers` property's own `Publisher.objects.filter(...).distinct()` query
 
 ### Indexes
 
 **ReadingListItem:**
+
 ```python
 class Meta:
     indexes = [
@@ -1304,6 +1477,7 @@ class Meta:
 ```
 
 **ReadingListRating:**
+
 ```python
 class Meta:
     indexes = [
@@ -1326,7 +1500,7 @@ class Meta:
 
 **Unique Constraints:**
 
-- `ReadingList`: `(user, name)` - prevents duplicate list names per user
+- `ReadingList`: `(user, name, attribution_source)` - prevents duplicate list names per user within the same attribution source
 - `ReadingListItem`: `(reading_list, issue)` - prevents duplicate issues in a list
 - `ReadingListRating`: `(reading_list, user)` - one rating per user per list
 
@@ -1337,40 +1511,68 @@ class Meta:
 - Data integrity enforcement
 - Enables `update_or_create()` for idempotent rating updates
 
-## API Integration
+## Dependencies
 
 ### Internal Dependencies
 
 **comicsdb.models.Issue:**
+
 ```python
 from comicsdb.models.issue import Issue
 ```
+
 Used for issue data and M2M relationship.
 
 **comicsdb.models.Publisher:**
+
 ```python
 from comicsdb.models.publisher import Publisher
 ```
-Used in `publishers` property for aggregation.
 
-**comicsdb.views.mixins.SearchMixin:**
+Used in the `ReadingList.publishers` model property (a separate query, not used by the detail view's `publisher_breakdown`, which is computed from prefetched data instead).
+
+**comicsdb.models.character.Character, comicsdb.models.creator.Creator, comicsdb.models.credits.Credits/Role:**
+
 ```python
-from comicsdb.views.mixins import SearchMixin
+from comicsdb.models.character import Character
+from comicsdb.models.creator import Creator
+from comicsdb.models.credits import Credits, Role
 ```
-Provides search functionality for `SearchReadingListListView`.
+
+Used by `ReadingListDetailView.get_context_data()` to compute `featured_creators` (top 6 by issue count, writer/artist roles only) and `top_characters` (top 12 by appearance count) across the list's issues.
+
+**comicsdb.views.mixins.SearchMixin, LazyLoadMixin:**
+
+```python
+from comicsdb.views.mixins import LazyLoadMixin, SearchMixin
+```
+
+`SearchMixin` provides search functionality for `SearchReadingListListView`; `LazyLoadMixin` backs `ReadingListItemsLoadMore`'s pagination logic.
+
+**comicsdb.filters.reading_list.ReadingListViewFilter:**
+
+```python
+from comicsdb.filters.reading_list import ReadingListViewFilter
+```
+
+Applied in `ReadingListListView.get_queryset()`.
 
 **users.models.CustomUser:**
+
 ```python
 from users.models import CustomUser
 ```
+
 Used for user ownership and permissions.
 
 ### External Dependencies
 
 **autocomplete package:**
+
 ```python
 from autocomplete import ModelAutocomplete, register, widgets
 ```
+
 Provides autocomplete functionality for issue and arc search.
 
 ## Management Commands
@@ -1379,72 +1581,75 @@ Provides autocomplete functionality for issue and arc search.
 
 **File:** `reading_lists/management/commands/import_reading_lists.py`
 
-**Purpose:** Import reading lists from JSON files for bulk data import.
+**Purpose:** Bulk-import reading lists from JSON files, always assigning ownership to the "Metron" user (this command is for seeding official/curated lists, not general-purpose user import).
 
 **Usage:**
+
 ```bash
-python manage.py import_reading_lists <json_file>
+python manage.py import_reading_lists <path> [<path> ...] [--dry-run] [--skip-missing]
 ```
 
-**JSON Format:**
+- `paths`: One or more JSON files and/or directories (directories are globbed for `*.json`)
+- `--dry-run`: Reports what would be created without writing to the database
+- `--skip-missing`: Skips issues not found in the database instead of raising a `CommandError`
+
+**JSON Format** (per file — issues are matched by numeric `Issue` primary key, not by series/number lookup):
+
 ```json
 {
-  "reading_lists": [
-    {
-      "name": "Secret Wars (2015)",
-      "description": "Complete reading order for Secret Wars event",
-      "is_private": false,
-      "attribution_source": "CBRO",
-      "attribution_url": "https://example.com/reading-order",
-      "issues": [
-        {"series": "Secret Wars", "number": "1"},
-        {"series": "Amazing Spider-Man", "number": "1"}
-      ]
-    }
+  "name": "[2015-2016] Secret Wars",
+  "source": "CBRO",
+  "books": [
+    {"index": 0, "database": {"id": 12345}},
+    {"index": 1, "database": {"id": 12346}}
   ]
 }
 ```
 
-**Features:**
+**Behavior:**
 
-- Batch import of multiple reading lists
-- Automatic issue matching by series name and number
-- Duplicate detection and skipping
-- Attribution source validation
-- Progress reporting
-- Error handling and validation
+1. Requires a `CustomUser` named `"Metron"` to already exist — raises `CommandError` immediately if not
+2. `name` is passed through `_sanitize_name()`, which strips a leading `[YYYY]`, `[YYYY-YYYY]`, `(YYYY)`, or `(YYYY-YYYY)` prefix (e.g. `"[2015-2016] Secret Wars"` → `"Secret Wars"`)
+3. `source` is mapped to an `AttributionSource` choice via `_get_attribution_source()` (accepts both `"LoCG"` and `"LOCG"` for the League of ComicGeeks source; unrecognized codes silently map to `""`)
+4. Skips the whole file (returns `"skipped"`) if a list with that `(user=Metron, name)` already exists
+5. Validates every `book["database"]["id"]` exists as an `Issue` via `_validate_issues()` before creating anything — controlled by `--skip-missing`
+6. Creates the `ReadingList` (always `is_private=False`) and its `ReadingListItem`s inside `transaction.atomic()`, using `bulk_create()`
+7. `order` is set directly from each book's `index` field (0-based, as supplied by the source JSON) — not renumbered to match the app's 1-based `order` convention used elsewhere
+8. Duplicate issue IDs within the same file are skipped and reported; does not set `list_type` or `image` (both retain model defaults)
 
 **Use Cases:**
 
-- Migrating reading lists from other systems
-- Bulk importing curated reading orders
-- Seeding database with official Metron reading lists
-- Backing up and restoring reading lists
+- Seeding the database with official Metron reading orders (from CBRO/CMRO/League of ComicGeeks/etc. exports)
+- Bulk-loading curated reading orders ahead of assigning "reading list editor" curation
 
 ## API Integration
 
 ### REST API Endpoints
 
-The reading lists feature provides read-only REST API endpoints. Complete API documentation is available in the main [API README](/api/README.md).
+The reading lists feature provides read-only REST API endpoints via `ReadingListViewSet` (`api/views.py`), registered at basename `reading_list`. Complete API documentation is available in the main [API README](/api/README.md).
 
 **Available Endpoints:**
 
-- `GET /api/reading_list/` - List reading lists
-- `GET /api/reading_list/{id}/` - Retrieve reading list details
-- `GET /api/reading_list/{id}/reading_list_item_list/` - Get reading list items
+- `GET /api/reading_list/` - List reading lists (`ReadingListListSerializer`)
+- `GET /api/reading_list/{id}/` - Retrieve reading list details (`ReadingListReadSerializer`); supports conditional requests (`Last-Modified`/`If-Modified-Since`) via `ConditionalRetrieveModelMixin`
+- `GET /api/reading_list/{id}/items/` - Paginated reading list items (`ReadingListItemSerializer`, via `@action(detail=True)` named `items`)
 
 **Authentication:**
 
 All reading list API endpoints require authentication.
 
-**Permissions:**
+**Permissions/Visibility (`ReadingListViewSet.get_queryset()`):**
 
-- Authenticated users can access public lists and their own lists
-- Admin and Reading List Editor users can access Metron's lists
+- Unauthenticated: no access (endpoints require authentication)
+- Authenticated, non-staff: public lists + own lists
+- Staff (`is_staff=True`): public lists + own lists + Metron's lists
 
-**API Serializers:**
+Note this differs slightly from the web views' visibility rules: the API queryset only special-cases `is_staff`, not the "reading list editor" group — editor-group members who aren't staff see public + own lists via the API but not Metron's private lists (the web views include the group in that check; see [Visibility Rules](#visibility-rules)).
+
+**API Serializers** (`api/v1_0/serializers/reading_list.py`):
 
 **ReadingListItemSerializer:**
+
 ```python
 class ReadingListItemSerializer(serializers.ModelSerializer):
     issue = ReadingListIssueSerializer(read_only=True)
@@ -1455,26 +1660,25 @@ class ReadingListItemSerializer(serializers.ModelSerializer):
         fields = ("id", "issue", "order", "issue_type")
 ```
 
-- Includes `issue_type` field (CharField, read-only)
-- Uses `get_issue_type_display()` to return human-readable labels
-- Returns "Prologue", "Core Issue", "Tie-In", "Epilogue", or empty string
+- `issue`: Nested `ReadingListIssueSerializer` (id, series, number, cover_date, store_date, cv_id, gcd_id, modified — deliberately excludes `image`/`cover_hash` to keep the payload light)
+- `issue_type`: Uses `get_issue_type_display()` to return human-readable labels ("Prologue", "Core Issue", "Tie-In", "Epilogue", or empty string)
 
-**ReadingListListSerializer:**
-- Includes `average_rating` (FloatField, read-only)
-- Includes `rating_count` (IntegerField, read-only)
+**ReadingListListSerializer:** `id`, `name`, `slug`, `user`, `list_type` (display label via `get_list_type_display`), `is_private`, `attribution_source`, `average_rating`, `rating_count`, `modified`
 
-**ReadingListReadSerializer:**
-- Includes `average_rating` (FloatField, read-only)
-- Includes `rating_count` (IntegerField, read-only)
+**ReadingListReadSerializer:** All of the above plus `desc`, `image`, `attribution_url`, `items_url` (absolute URL to the `items` action), `resource_url` (absolute URL to the web detail page). `attribution_source` here is the display label (`get_attribution_source_display`), unlike the raw code used elsewhere.
 
 **Filtering:**
 
-The API supports filtering by `average_rating__gte` (minimum rating):
+Backed by `ReadingListFilter` (see [Filters](#filters)) — supports `name`, `user`, `username`, `attribution_source`, `list_type`, `is_private`, `modified_gt`, `average_rating__gte`, and `publisher`:
+
 - `/api/reading_list/?average_rating__gte=4` - Lists with 4+ stars
+- `/api/reading_list/?list_type=EVENT` - Event-type lists only
+- `/api/reading_list/?modified_gt=2026-01-01T00:00:00Z` - Lists modified since a given timestamp
 
 **Query Annotations:**
 
-All API views annotate reading lists with:
+`ReadingListViewSet.get_queryset()` annotates:
+
 ```python
 .annotate(
     average_rating=Avg("ratings__rating"),
@@ -1482,7 +1686,7 @@ All API views annotate reading lists with:
 )
 ```
 
-For complete API documentation including filtering, pagination, and response formats, see the [main API documentation](/api/README.md#reading-list).
+For complete API documentation including pagination and response formats, see the [main API documentation](/api/README.md#reading-list).
 
 ## Testing
 
@@ -1493,18 +1697,19 @@ For complete API documentation including filtering, pagination, and response for
 - `tests/reading_lists/test_views.py`
 - `tests/reading_lists/test_forms.py`
 - `tests/reading_lists/test_models.py`
+- `tests/reading_lists/test_signals.py`
 - `tests/reading_lists/test_assign_to_metron.py`
 - `tests/reading_lists/test_reading_list_editor_group_permissions.py`
+- `tests/reading_lists/test_admin_metron_permissions.py`
+- `tests/reading_lists/test_api_reading_list.py`
+- `tests/reading_lists/test_import_command.py`
 - `tests/reading_lists/conftest.py`
 
 ### Current Test Coverage
 
 **Test Statistics:**
 
-- Total tests: 275 passing (2 skipped)
-- Forms: 100% coverage
-- Views: 94% coverage
-- Models: 99% coverage
+Run `pytest tests/reading_lists/ --cov` for current pass/fail counts and coverage percentages — they aren't reproduced here since they drift with every change to the app. As a rough sense of scale, the suite currently has on the order of 275+ test functions spread across the files above (`test_views.py` alone accounts for roughly 40% of that).
 
 ### Test Coverage by Feature
 
@@ -1522,72 +1727,85 @@ For complete API documentation including filtering, pagination, and response for
 - Form validation
 - Issue ordering logic
 - **Series bulk addition** (11 tests):
-    - Authentication and permissions
-    - Adding all issues from series
-    - Range filtering (start/end/both)
-    - Position handling (beginning/end)
-    - Duplicate detection
-    - Admin permissions for Metron lists
-    - Redirect and success messages
+  - Authentication and permissions
+  - Adding all issues from series
+  - Range filtering (start/end/both)
+  - Position handling (beginning/end)
+  - Duplicate detection
+  - Admin permissions for Metron lists
+  - Redirect and success messages
 - **Arc bulk addition** (10+ tests):
-    - Authentication and permissions
-    - Adding all issues from arc
-    - Position handling (beginning/end)
-    - Duplicate detection
-    - Reading List Editor group permissions
-    - Admin permissions for Metron lists
-- **Group permissions** (comprehensive test suite):
-    - Reading List Editor group creation
-    - Permission checks for Metron lists
-    - Editor permissions vs admin permissions
-    - Attribution field restrictions
+  - Authentication and permissions
+  - Adding all issues from arc
+  - Position handling (beginning/end)
+  - Duplicate detection
+  - "reading list editor" group permissions
+  - Admin permissions for Metron lists
+- **Group permissions** (`test_reading_list_editor_group_permissions.py`):
+  - "reading list editor" group creation (via migration `0002_create_reading_list_editor_group.py`)
+  - Permission checks for Metron lists
+  - Editor permissions vs admin permissions
+  - Attribution field restrictions
+- **Admin Metron permissions** (`test_admin_metron_permissions.py`):
+  - `ReadingListAdmin`/`ReadingListItemAdmin` behavior for staff vs non-staff/editor users
+- **API tests** (`test_api_reading_list.py`):
+  - `ReadingListViewSet` list/retrieve visibility rules (public/own/Metron)
+  - `items` action pagination
+  - Serializer field output (`list_type`, `image`, `items_url`, `resource_url`, display labels)
+  - `ReadingListFilter` filtering (`list_type`, `publisher`, `modified_gt`, `average_rating__gte`, etc.)
+- **Import command tests** (`test_import_command.py`):
+  - JSON parsing, name sanitization, attribution source mapping
+  - `--dry-run` and `--skip-missing` behavior
+  - Duplicate list and duplicate issue handling
+- **Signal tests** (`test_signals.py`):
+  - `update_reading_list_modified_on_item_change` bumps `ReadingList.modified` on `ReadingListItem` save and delete
 - **Rating system** (comprehensive test suite):
-    - Creating ratings (1-5 stars)
-    - Updating existing ratings
-    - Deleting/clearing ratings
-    - Permission checks (cannot rate own lists, private lists)
-    - Authentication requirements
-    - HTMX endpoint functionality
-    - Average rating calculations
-    - Rating count aggregations
-    - Template rendering with rating data
+  - Creating ratings (1-5 stars)
+  - Updating existing ratings
+  - Deleting/clearing ratings
+  - Permission checks (cannot rate own lists, private lists)
+  - Authentication requirements
+  - HTMX endpoint functionality
+  - Average rating calculations
+  - Rating count aggregations
+  - Template rendering with rating data
 - **Issue type editing** (13 comprehensive tests):
-    - Authentication requirements (login required for all operations)
-    - Permission checks (owner/admin/editor access control)
-    - Edit form display (HTMX GET endpoint)
-    - Setting issue types (all four types: Prologue, Core, Tie-In, Epilogue)
-    - Clearing issue types (empty string)
-    - Updating issue types (HTMX POST endpoint)
-    - Canceling edits (HTMX GET endpoint)
-    - Invalid value rejection (non-existent types ignored)
-    - Metron list permissions (admin can edit)
-    - Metron list permissions (reading list editors can edit)
-    - Metron list permissions (regular users cannot edit)
-    - Template rendering in display mode
-    - Template rendering in edit mode
+  - Authentication requirements (login required for all operations)
+  - Permission checks (owner/admin/editor access control)
+  - Edit form display (HTMX GET endpoint)
+  - Setting issue types (all four types: Prologue, Core, Tie-In, Epilogue)
+  - Clearing issue types (empty string)
+  - Updating issue types (HTMX POST endpoint)
+  - Canceling edits (HTMX GET endpoint)
+  - Invalid value rejection (non-existent types ignored)
+  - Metron list permissions (admin can edit)
+  - Metron list permissions (reading list editors can edit)
+  - Metron list permissions (regular users cannot edit)
+  - Template rendering in display mode
+  - Template rendering in edit mode
 - **Assign to Metron** (`test_assign_to_metron.py`):
-    - Permission checks (staff, Reading List Editor group, regular users, list owners without staff/editor status)
-    - Confirm-page rendering and redirect-when-already-Metron-owned behavior
-    - Ownership transfer on POST, and no-op behavior when already Metron-owned
-    - Anonymous users redirected to login
-    - Detail view `can_assign_to_metron` context flag and button visibility
-    - Graceful failure when the "Metron" account does not exist
-    - Direct tests of the `can_assign_reading_list_to_metron()` helper
+  - Permission checks (staff, "reading list editor" group, regular users, list owners without staff/editor status)
+  - Confirm-page rendering and redirect-when-already-Metron-owned behavior
+  - Ownership transfer on POST, and no-op behavior when already Metron-owned
+  - Anonymous users redirected to login
+  - Detail view `can_assign_to_metron` context flag and button visibility
+  - Graceful failure when the "Metron" account does not exist
+  - Direct tests of the `can_assign_reading_list_to_metron()` helper
 
 **Form Tests:**
 
 - **AddIssuesFromSeriesForm** (13 tests):
-    - All issues selection
-    - Range validation (with/without numbers)
-    - Start/end number combinations
-    - Missing required fields
-    - Field labels and help text
-    - Radio button choices
+  - All issues selection
+  - Range validation (with/without numbers)
+  - Start/end number combinations
+  - Missing required fields
+  - Field labels and help text
+  - Radio button choices
 - **AddIssuesFromArcForm** (5+ tests):
-    - Arc selection validation
-    - Position field validation
-    - Field labels and help text
-    - Radio button choices
+  - Arc selection validation
+  - Position field validation
+  - Field labels and help text
+  - Radio button choices
 
 **Autocomplete Tests:**
 
@@ -1604,7 +1822,8 @@ For complete API documentation including filtering, pagination, and response for
 - `arc_with_multiple_issues`: Creates an arc with 5 issues across multiple series
 - `reading_list_with_issues`: Reading list pre-populated with 3 issues
 - `metron_reading_list`: Lists owned by Metron user
-- `editor_user`: User in Reading List Editor group
+- `editor_user`: User in the "reading list editor" group
+- `reading_list_item`: A single `ReadingListItem` (used by signal tests)
 - Standard user fixtures for permission testing
 
 ### Example Test
@@ -1636,55 +1855,78 @@ class ReadingListModelTest(TestCase):
 ### Completed Features
 
 - ✅ **Series Bulk Addition** (Implemented)
-    - Add all issues or ranges from a series
-    - Chronological ordering by cover date
-    - Position control (beginning/end)
-    - Duplicate detection
+  - Add all issues or ranges from a series
+  - Chronological ordering by cover date
+  - Position control (beginning/end)
+  - Duplicate detection
 
 - ✅ **Arc Bulk Addition** (Implemented)
-    - Add all issues from a story arc
-    - Chronological ordering by cover date
-    - Position control (beginning/end)
-    - Duplicate detection
+  - Add all issues from a story arc
+  - Chronological ordering by cover date
+  - Position control (beginning/end)
+  - Duplicate detection
 
 - ✅ **Group-Based Permissions** (Implemented)
-    - Reading List Editor group
-    - Manage Metron user's lists without admin access
-    - Curator role for official reading orders
+  - "reading list editor" group
+  - Manage Metron user's lists without admin access
+  - Curator role for official reading orders
 
 - ✅ **Assign to Metron** (Implemented)
-    - Staff and Reading List Editor group members can reassign any reading list's ownership to the "Metron" account
-    - Dedicated confirmation page before the (one-way) ownership change
-    - Standalone permission check independent of list ownership
+  - Staff and "reading list editor" group members can reassign any reading list's ownership to the "Metron" account
+  - Dedicated confirmation page before the (one-way) ownership change
+  - Standalone permission check independent of list ownership
 
 - ✅ **Import Management Command** (Implemented)
-    - Bulk import from JSON files
-    - Issue matching and validation
-    - Progress reporting
+  - Bulk import from JSON files (always owned by "Metron")
+  - Issue matching by ID, name sanitization, attribution source mapping
+  - `--dry-run` and `--skip-missing` support
 
 - ✅ **REST API Endpoints** (Implemented)
-    - Read-only API access
-    - List and retrieve reading lists
-    - Access reading list items
-    - Permission-based filtering
+  - Read-only API access
+  - List and retrieve reading lists
+  - Access reading list items
+  - Permission-based filtering
 
 - ✅ **Community Rating System** (Implemented)
-    - 1-5 star ratings for public reading lists
-    - Users can rate lists (except their own)
-    - Average rating and count display
-    - HTMX-powered interactive star component
-    - Rating filter for discovery (minimum rating)
-    - API integration with rating fields
-    - Optimized queries with rating annotations
+  - 1-5 star ratings for public reading lists
+  - Users can rate lists (except their own)
+  - Average rating and count display
+  - HTMX-powered interactive star component
+  - Rating filter for discovery (minimum rating)
+  - API integration with rating fields
+  - Optimized queries with rating annotations
 
 - ✅ **Issue Type Categorization** (Implemented)
-    - Tag issues as Prologue, Core Issue, Tie-In, or Epilogue
-    - Optional field with four predefined choices
-    - HTMX-powered inline editing interface
-    - Colored badges display in web UI
-    - Exposed in API serializer
-    - Permission-based editing (owners, admins, reading list editors)
-    - Comprehensive test coverage (13 tests)
+  - Tag issues as Prologue, Core Issue, Tie-In, or Epilogue
+  - Optional field with four predefined choices
+  - HTMX-powered inline editing interface
+  - Colored badges display in web UI
+  - Exposed in API serializer
+  - Permission-based editing (owners, admins, reading list editors)
+
+- ✅ **List Type Categorization** (Implemented)
+  - `list_type` field (Creator, Event, Story, Characters, Teams, Master)
+  - Filterable in both the web UI and API
+  - Displayed as a tag on list cards
+
+- ✅ **Cover Images** (Implemented)
+  - Optional `image` field (`sorl-thumbnail`), same storage pattern as issue covers
+  - Displayed on list cards; falls back to a watermark icon when unset
+
+- ✅ **Advanced Search & Filtering** (Implemented)
+  - Quick search (`q`) plus a collapsible advanced-filters panel: name, creator/username, publisher, list type, attribution source, minimum rating, privacy
+  - Removable filter chips showing currently-active filters
+  - Publisher filter runs as a subquery to avoid slow JOIN/aggregate combinations
+
+- ✅ **Lazy-Loaded Item Pagination** (Implemented)
+  - Detail page shows the first 50 issues; `ReadingListItemsLoadMore` HTMX-loads 30 more at a time
+  - Built on the shared `LazyLoadMixin` used elsewhere in the project
+
+- ✅ **Detail-Page Analytics** (Implemented)
+  - Issue-type, series, and publisher breakdowns
+  - Featured creators (top 6 by issue count, writer/artist roles)
+  - Top characters (top 12 by appearance count)
+  - All computed from already-prefetched data, no extra queries
 
 ### Planned Features
 
@@ -1698,10 +1940,9 @@ class ReadingListModelTest(TestCase):
     - Reading progress percentage
     - Completion dates
 
-3. **Enhanced Statistics**
+3. **Further Statistics**
     - Estimated reading time
-    - Publisher breakdowns
-    - Year distribution charts
+    - Year distribution charts (beyond the current start/end year range)
 
 4. **Rating Enhancements**
     - Written reviews/comments on ratings
@@ -1726,12 +1967,10 @@ class ReadingListModelTest(TestCase):
     - Progress notifications
 
 3. **Search Enhancements**
-    - Full-text search with PostgreSQL
+    - Full-text search with PostgreSQL (`unaccent`/trigram indexes are used elsewhere in `comicsdb`, but not yet on `ReadingList.name`)
     - Elasticsearch integration
-    - Advanced filtering
 
 4. **Performance**
     - Denormalize issue counts
     - Materialized views for complex queries
     - Query result pagination improvements
-
