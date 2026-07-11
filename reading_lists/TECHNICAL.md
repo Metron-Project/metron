@@ -366,9 +366,15 @@ class ReadingListDetailView(DetailView):
 - `user_rating`: User's own rating, pulled from the prefetched `user_rating_list` (if authenticated and has rated)
 - `average_rating` / `rating_count`: From the annotated queryset
 - `start_year` / `end_year`: From the annotated queryset
-- `issue_type_breakdown`: Per-`issue_type` counts (Prologue/Core/Tie-In/Epilogue) with a display label and bar color, computed in Python from the already-prefetched items
-- `series_breakdown` / `publisher_breakdown`: Per-series and per-publisher issue counts, also computed from the prefetched items (no extra queries)
-- `featured_creators`: Top 6 creators by issue count across the list's issues (writer/artist roles only), with a `roles` string ("Writer", "Artist", or both)
+- `issue_type_breakdown`, `series_breakdown`, `publisher_breakdown`, `featured_creators`, `top_characters`: All five computed by `build_reading_list_breakdown_context(reading_list_items)`, a module-level function in `reading_lists/views.py` (not a view method) — see below
+
+**`build_reading_list_breakdown_context()`:**
+
+A standalone function, separate from `get_context_data()`, that takes the prefetched `reading_list_items` and returns a dict merged into context via `context.update(...)`:
+
+- `issue_type_breakdown`: Per-`issue_type` counts (Prologue/Core/Tie-In/Epilogue) with a display label and bar color (from module-level `_ISSUE_TYPE_META`), computed in Python from the items
+- `series_breakdown` / `publisher_breakdown`: Per-series and per-publisher issue counts, also computed from the items (no extra queries)
+- `featured_creators`: Top 6 creators by issue count across the list's issues (roles in module-level `_CREDIT_ROLE_NAMES`), with a `roles` string ("Writer", "Artist", or both) built from `_CREDIT_ROLE_DISPLAY`
 - `top_characters`: Top 12 characters by appearance count across the list's issues
 
 **Query Optimizations:**
@@ -378,8 +384,8 @@ The detail view is heavily optimized to reduce database queries:
 1. **Prefetch reading list items** with related issue, series, series_type, and publisher data
 2. **Annotate year ranges and rating aggregates** instead of using expensive properties or separate queries
 3. **Prefetch ratings** (all ratings, plus the current user's own rating via a second `Prefetch` with `to_attr="user_rating_list"`) to avoid N+1 queries
-4. **Compute breakdowns/top creators/top characters from the already-prefetched `reading_list_items`** in Python where possible, and with small aggregate queries (`Creator`/`Character` annotated + sliced) otherwise — avoids re-querying `Publisher` separately
-5. Breakdown/creator/character computation only runs when `reading_list_items_count > 0`
+4. **Compute breakdowns/top creators/top characters from the already-prefetched `reading_list_items`** in `build_reading_list_breakdown_context()` — Python for the breakdowns, small aggregate queries (`Creator`/`Character` annotated + sliced) for creators/characters — avoids re-querying `Publisher` separately
+5. `get_context_data()` only calls `build_reading_list_breakdown_context()` when `reading_list_items_count > 0`
 
 **URL:** `/reading-lists/<slug>/`
 
@@ -451,7 +457,9 @@ class ReadingListDeleteView(LoginRequiredMixin, UserPassesTestMixin, DeleteView)
 #### AssignReadingListToMetronView
 
 ```python
-class AssignReadingListToMetronView(LoginRequiredMixin, UserPassesTestMixin, View):
+class AssignReadingListToMetronView(
+    ReadingListFromSlugMixin, LoginRequiredMixin, UserPassesTestMixin, View
+):
     def test_func(self):
         return can_assign_reading_list_to_metron(self.request.user)
 ```
@@ -475,7 +483,9 @@ Uses `can_assign_reading_list_to_metron()` (see [Permission Helpers](#views-and-
 #### AddIssueWithAutocompleteView
 
 ```python
-class AddIssueWithAutocompleteView(LoginRequiredMixin, UserPassesTestMixin, FormView):
+class AddIssueWithAutocompleteView(
+    ManageReadingListMixin, LoginRequiredMixin, UserPassesTestMixin, FormView
+):
     form_class = AddIssueWithSearchForm
     template_name = "reading_lists/add_issue_autocomplete.html"
 ```
@@ -493,7 +503,9 @@ class AddIssueWithAutocompleteView(LoginRequiredMixin, UserPassesTestMixin, Form
 #### AddIssuesFromSeriesView
 
 ```python
-class AddIssuesFromSeriesView(LoginRequiredMixin, UserPassesTestMixin, FormView):
+class AddIssuesFromSeriesView(
+    ManageReadingListMixin, LoginRequiredMixin, UserPassesTestMixin, FormView
+):
     form_class = AddIssuesFromSeriesForm
     template_name = "reading_lists/add_issues_from_series.html"
 ```
@@ -503,11 +515,8 @@ class AddIssuesFromSeriesView(LoginRequiredMixin, UserPassesTestMixin, FormView)
 **Complex Logic:**
 
 1. Fetches all issues from selected series ordered by cover date
-2. Applies optional range filtering (start/end issue numbers)
-3. Filters out duplicate issues
-4. Positions new issues at beginning or end
-5. Uses `bulk_create()` for efficient database operations
-6. Handles reordering when inserting at beginning
+2. Applies optional range filtering via module-level `filter_issues_by_number_range()` (start/end issue numbers)
+3. Delegates duplicate-filtering, positioning, and `bulk_create()` to the shared `add_issues_to_reading_list()` helper (also used by `AddIssuesFromArcView`)
 
 **Range Filtering:**
 
@@ -527,7 +536,9 @@ class AddIssuesFromSeriesView(LoginRequiredMixin, UserPassesTestMixin, FormView)
 #### AddIssuesFromArcView
 
 ```python
-class AddIssuesFromArcView(LoginRequiredMixin, UserPassesTestMixin, FormView):
+class AddIssuesFromArcView(
+    ManageReadingListMixin, LoginRequiredMixin, UserPassesTestMixin, FormView
+):
     form_class = AddIssuesFromArcForm
     template_name = "reading_lists/add_issues_from_arc.html"
 ```
@@ -537,10 +548,7 @@ class AddIssuesFromArcView(LoginRequiredMixin, UserPassesTestMixin, FormView):
 **Complex Logic:**
 
 1. Fetches all issues from selected arc ordered by cover date
-2. Filters out duplicate issues
-3. Positions new issues at beginning or end
-4. Uses `bulk_create()` for efficient database operations
-5. Handles reordering when inserting at beginning
+2. Delegates duplicate-filtering, positioning, and `bulk_create()` to the same `add_issues_to_reading_list()` helper used by `AddIssuesFromSeriesView`
 
 **Performance Optimizations:**
 
@@ -553,7 +561,9 @@ class AddIssuesFromArcView(LoginRequiredMixin, UserPassesTestMixin, FormView):
 #### RemoveIssueFromReadingListView
 
 ```python
-class RemoveIssueFromReadingListView(LoginRequiredMixin, UserPassesTestMixin, DeleteView):
+class RemoveIssueFromReadingListView(
+    ManageReadingListMixin, LoginRequiredMixin, UserPassesTestMixin, DeleteView
+):
     model = ReadingListItem
     template_name = "reading_lists/remove_issue_confirm.html"
 ```
@@ -882,7 +892,42 @@ def can_assign_reading_list_to_metron(user):
     return user.is_staff or user.groups.filter(name="reading list editor").exists()
 ```
 
-`can_manage_reading_list()` backs `test_func()` on `ReadingListUpdateView`, `ReadingListDeleteView`, `RemoveIssueFromReadingListView`, `AddIssueWithAutocompleteView`, `AddIssuesFromSeriesView`, and `AddIssuesFromArcView`, and is also called directly (not via a mixin) inside `edit_issue_type`, `update_issue_type`, and `cancel_edit_issue_type` since those are function-based views.
+`can_manage_reading_list()` backs `test_func()` on `ReadingListUpdateView` and `ReadingListDeleteView` directly, and on `RemoveIssueFromReadingListView`, `AddIssueWithAutocompleteView`, `AddIssuesFromSeriesView`, and `AddIssuesFromArcView` via a shared `ManageReadingListMixin`. It's also called directly (not via a mixin) inside `edit_issue_type`, `update_issue_type`, and `cancel_edit_issue_type` since those are function-based views.
+
+**`ReadingListFromSlugMixin` / `ManageReadingListMixin`:**
+
+Several views need the same three things: fetch the parent `ReadingList` from the `slug` URL kwarg, gate access with `can_manage_reading_list()`, and redirect back to the detail page on success. Rather than repeating `dispatch()`/`test_func()`/`get_success_url()` per view, these are factored into two mixins in `reading_lists/views.py`:
+
+```python
+class ReadingListFromSlugMixin:
+    """Fetch the parent ReadingList named by the ``slug`` URL kwarg into ``self.reading_list``.
+
+    Must precede auth mixins (LoginRequiredMixin, UserPassesTestMixin) in the
+    base class list so self.reading_list is set before UserPassesTestMixin
+    calls test_func().
+    """
+
+    def dispatch(self, request, *args, **kwargs):
+        self.reading_list = get_object_or_404(ReadingList, slug=kwargs["slug"])
+        return super().dispatch(request, *args, **kwargs)
+
+
+class ManageReadingListMixin(ReadingListFromSlugMixin):
+    """Restrict access to users who can manage self.reading_list, and expose it."""
+
+    def test_func(self):
+        return can_manage_reading_list(self.request.user, self.reading_list)
+
+    def get_success_url(self):
+        return reverse("reading-list:detail", kwargs={"slug": self.reading_list.slug})
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context["reading_list"] = self.reading_list
+        return context
+```
+
+`AssignReadingListToMetronView` uses only `ReadingListFromSlugMixin` (it needs the slug lookup but has its own `test_func()` backed by `can_assign_reading_list_to_metron()` instead). The other four views listed above use `ManageReadingListMixin` and must list it **first** in their base classes, e.g. `class AddIssuesFromArcView(ManageReadingListMixin, LoginRequiredMixin, UserPassesTestMixin, FormView)` — `UserPassesTestMixin.dispatch()` calls `test_func()` before delegating further down the MRO, so `self.reading_list` has to already be set by that point. `RemoveIssueFromReadingListView` overrides `get_success_url()` itself (to attach a flash message) rather than using the mixin's default.
 
 **"reading list editor" Group:**
 
@@ -936,33 +981,23 @@ This is intentionally broader in scope (any reading list) but narrower in who qu
 
 ### Visibility Rules
 
-Implemented as near-identical queryset filtering repeated across `ReadingListListView`, `SearchReadingListListView`, `ReadingListDetailView`, the API's `ReadingListViewSet`, and `ReadingListItemsLoadMore` (each needs it inline since it's blended with different annotations/prefetches, so there's no single shared helper):
+Centralized in `ReadingListQuerySet.visible_to(user)` (`reading_lists/models.py`; see [QuerySet Optimizations](#database-optimization)) and used by every web view that needs it — `ReadingListListView`, `SearchReadingListListView`, `ReadingListDetailView`, and `ReadingListItemsLoadMore`:
 
 ```python
-def get_queryset(self):
-    queryset = ReadingList.objects.all()
+def visible_to(self, user):
+    if not user.is_authenticated:
+        return self.filter(is_private=False)
 
-    if not self.request.user.is_authenticated:
-        return queryset.filter(is_private=False)
+    is_editor = user.is_staff or user.groups.filter(name=READING_LIST_EDITOR_GROUP).exists()
+    if is_editor:
+        metron_user = CustomUser.objects.filter(username=METRON_USERNAME).first()
+        if metron_user:
+            return self.filter(Q(is_private=False) | Q(user=user) | Q(user=metron_user))
 
-    is_editor = self.request.user.groups.filter(name="reading list editor").exists()
-    if self.request.user.is_staff or is_editor:
-        try:
-            metron_user = CustomUser.objects.get(username="Metron")
-            return queryset.filter(
-                Q(is_private=False) |
-                Q(user=self.request.user) |
-                Q(user=metron_user)
-            ).distinct()
-        except CustomUser.DoesNotExist:
-            pass
-
-    return queryset.filter(
-        Q(is_private=False) | Q(user=self.request.user)
-    ).distinct()
+    return self.filter(Q(is_private=False) | Q(user=user))
 ```
 
-Note the web views (list/detail/lazy-load) include the "reading list editor" group in the Metron-visibility branch alongside `is_staff`; the API's `ReadingListViewSet.get_queryset()` currently only checks `is_staff` for that branch (editor-group members still see their own + public lists via the API, just not Metron's private ones).
+Note the web views include the "reading list editor" group in the Metron-visibility branch alongside `is_staff`; the API's `ReadingListViewSet.get_queryset()` (a separate, un-refactored implementation) currently only checks `is_staff` for that branch (editor-group members still see their own + public lists via the API, just not Metron's private ones).
 
 ## Autocomplete
 
@@ -1404,21 +1439,53 @@ The issue type editing system uses HTMX for inline, no-reload editing:
 
 ### QuerySet Optimizations
 
-**List Views:**
+**`ReadingListQuerySet` (`reading_lists/models.py`):**
+
+The privacy filtering and stat annotations previously duplicated across `ReadingListListView`, `SearchReadingListListView`, `UserReadingListListView`, `ReadingListDetailView`, and `ReadingListItemsLoadMore` now live on a custom queryset attached via `ReadingList.objects = ReadingListQuerySet.as_manager()`:
 
 ```python
-queryset = ReadingList.objects.select_related("user").annotate(
-    issue_count=Count("issues", distinct=True),
-    average_rating=Avg("ratings__rating"),
-    rating_count=Count("ratings", distinct=True),
-    start_year_annotated=Min("reading_list_items__issue__cover_date__year"),
-    end_year_annotated=Max("reading_list_items__issue__cover_date__year"),
-)
+class ReadingListQuerySet(models.QuerySet):
+    def visible_to(self, user):
+        """Public lists, the user's own lists, and (for staff/'reading list editor'
+        members) the Metron account's lists."""
+        if not user.is_authenticated:
+            return self.filter(is_private=False)
+
+        is_editor = user.is_staff or user.groups.filter(name=READING_LIST_EDITOR_GROUP).exists()
+        if is_editor:
+            metron_user = CustomUser.objects.filter(username=METRON_USERNAME).first()
+            if metron_user:
+                return self.filter(Q(is_private=False) | Q(user=user) | Q(user=metron_user))
+
+        return self.filter(Q(is_private=False) | Q(user=user))
+
+    def with_list_stats(self):
+        """issue_count, average_rating, rating_count, start_year_annotated, end_year_annotated."""
+        return self.annotate(
+            issue_count=Count("issues", distinct=True),
+            average_rating=Avg("ratings__rating"),
+            rating_count=Count("ratings", distinct=True),
+            start_year_annotated=Min("reading_list_items__issue__cover_date__year"),
+            end_year_annotated=Max("reading_list_items__issue__cover_date__year"),
+        )
 ```
 
 `issue_count` uses `distinct=True` because it's computed alongside the `ratings` join — without it, the `Count` would be inflated by the cross-join between `reading_list_items`/`issues` and `ratings`.
 
-**Detail View:**
+Every view now composes these two methods instead of repeating the filter/annotate logic inline, e.g. `ReadingListListView.get_queryset()`:
+
+```python
+queryset = (
+    ReadingList.objects.select_related("user")
+    .with_list_stats()
+    .visible_to(self.request.user)
+    .distinct()
+)
+```
+
+`ReadingListDetailView` uses the same `with_list_stats()`/`visible_to()` pair, so its annotated fields are named identically to the list views (`average_rating`, `rating_count`, `start_year_annotated`, `end_year_annotated`) — there's no separate `_annotated`-suffixed set for the detail view anymore.
+
+**Detail View Prefetching:**
 
 ```python
 queryset = (
@@ -1436,12 +1503,7 @@ queryset = (
             queryset=ReadingListRating.objects.select_related("user"),
         ),
     )
-    .annotate(
-        start_year_annotated=Min("reading_list_items__issue__cover_date__year"),
-        end_year_annotated=Max("reading_list_items__issue__cover_date__year"),
-        average_rating_annotated=Avg("ratings__rating"),
-        rating_count_annotated=Count("ratings", distinct=True),
-    )
+    .with_list_stats()
 )
 
 # For authenticated users, prefetch their own rating
@@ -1453,17 +1515,19 @@ if request.user.is_authenticated:
             to_attr="user_rating_list",
         )
     )
+
+return queryset.visible_to(request.user)
 ```
 
 **Benefits:**
 
 - `select_related()`: Reduces queries for ForeignKey relationships
 - `prefetch_related()`: Optimizes M2M and reverse ForeignKey queries
-- `annotate()`: Computes counts, averages, and aggregates in database
+- `with_list_stats()` / `annotate()`: Computes counts, averages, and aggregates in database
 - `Prefetch()`: Fine-grained control over prefetch querysets
 - **Rating Optimizations**: All rating data fetched in initial query
 - **Year Range Annotations**: Replaces the `start_year`/`end_year` model properties with database aggregation for list/detail views (the properties still exist on the model and run their own queries if accessed directly, e.g. from a shell or the import command)
-- **Breakdown/Stats Extraction**: `issue_type_breakdown`, `series_breakdown`, and `publisher_breakdown` are all computed in Python from the already-prefetched `reading_list_items` in `ReadingListDetailView.get_context_data()` — avoids a separate query per breakdown and avoids the `publishers` property's own `Publisher.objects.filter(...).distinct()` query
+- **Breakdown/Stats Extraction**: `issue_type_breakdown`, `series_breakdown`, `publisher_breakdown`, `featured_creators`, and `top_characters` are all computed by `build_reading_list_breakdown_context()` (module-level function in `reading_lists/views.py`) from the already-prefetched `reading_list_items`, called from `ReadingListDetailView.get_context_data()` — avoids a separate query per breakdown and avoids the `publishers` property's own `Publisher.objects.filter(...).distinct()` query
 
 ### Indexes
 
