@@ -4,7 +4,7 @@ from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
 from django.db import models
-from django.db.models import Avg, Count, Max, Min, Prefetch, Q
+from django.db.models import Avg, Count, Prefetch
 from django.http import HttpResponseForbidden
 from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse, reverse_lazy
@@ -24,7 +24,12 @@ from reading_lists.forms import (
     AddIssueWithSearchForm,
     ReadingListForm,
 )
-from reading_lists.models import ReadingList, ReadingListItem, ReadingListRating
+from reading_lists.models import (
+    READING_LIST_EDITOR_GROUP,
+    ReadingList,
+    ReadingListItem,
+    ReadingListRating,
+)
 from users.models import CustomUser
 
 # Pagination constant for reading list detail view
@@ -56,6 +61,25 @@ _RATING_DISPLAY = {
 }
 
 _PRIVACY_DISPLAY = {"true": "Private", "false": "Public"}
+
+_ISSUE_TYPE_META = {
+    "CORE": ("Core", "#3273dc"),
+    "TIE_IN": ("Tie-In", "#f5b400"),
+    "PROLOGUE": ("Prologue", "#3e8ed0"),
+    "EPILOGUE": ("Epilogue", "#48c78e"),
+}
+
+_CREDIT_ROLE_NAMES = ["Artist", "Finishes", "Inker", "Penciller", "Script", "Story", "Writer"]
+
+_CREDIT_ROLE_DISPLAY = {
+    "Artist": "Artist",
+    "Finishes": "Artist",
+    "Inker": "Artist",
+    "Penciller": "Artist",
+    "Script": "Writer",
+    "Story": "Writer",
+    "Writer": "Writer",
+}
 
 
 def build_active_filters(request):
@@ -108,7 +132,7 @@ def can_manage_reading_list(user, reading_list):
 
     if reading_list.user.username == "Metron":
         is_staff = user.is_staff
-        is_editor_group = user.groups.filter(name="reading list editor").exists()
+        is_editor_group = user.groups.filter(name=READING_LIST_EDITOR_GROUP).exists()
         return is_owner or is_staff or is_editor_group
 
     return is_owner
@@ -119,7 +143,89 @@ def can_assign_reading_list_to_metron(user):
 
     Allowed for staff or members of the 'reading list editor' group.
     """
-    return user.is_staff or user.groups.filter(name="reading list editor").exists()
+    return user.is_staff or user.groups.filter(name=READING_LIST_EDITOR_GROUP).exists()
+
+
+def filter_issues_by_number_range(issues, start_number, end_number):
+    """Restrict an ordered iterable of issues to the inclusive range of issue numbers.
+
+    Either bound may be omitted to mean "from the beginning" / "through the end".
+    Matching is by ``Issue.number`` string equality, in the given iteration order.
+    """
+    if not start_number and not end_number:
+        return list(issues)
+
+    filtered = []
+    in_range = not start_number
+    for issue in issues:
+        if start_number and issue.number == start_number:
+            in_range = True
+        if in_range:
+            filtered.append(issue)
+        if end_number and issue.number == end_number:
+            break
+    return filtered
+
+
+def add_issues_to_reading_list(reading_list, candidate_issues, position):
+    """Add issues not already in the list, ordered at the beginning or end.
+
+    Existing items are shifted down when inserting at the beginning; otherwise
+    new issues are appended after the current maximum order. Returns the number
+    of issues actually added (issues already in the list are skipped).
+    """
+    existing_issue_ids = set(reading_list.reading_list_items.values_list("issue_id", flat=True))
+    new_issues = [issue for issue in candidate_issues if issue.pk not in existing_issue_ids]
+
+    if not new_issues:
+        return 0
+
+    if position == "beginning":
+        start_order = 1
+        existing_items = reading_list.reading_list_items.order_by("order")
+        for idx, item in enumerate(existing_items, start=len(new_issues) + 1):
+            if item.order != idx:
+                item.order = idx
+                item.save()
+    else:
+        max_order = (
+            reading_list.reading_list_items.aggregate(models.Max("order"))["order__max"] or 0
+        )
+        start_order = max_order + 1
+
+    ReadingListItem.objects.bulk_create(
+        ReadingListItem(reading_list=reading_list, issue=issue, order=start_order + idx)
+        for idx, issue in enumerate(new_issues)
+    )
+    return len(new_issues)
+
+
+class ReadingListFromSlugMixin:
+    """Fetch the parent ReadingList named by the ``slug`` URL kwarg into ``self.reading_list``.
+
+    Must precede auth mixins (``LoginRequiredMixin``, ``UserPassesTestMixin``) in the
+    base class list so ``self.reading_list`` is set before ``UserPassesTestMixin``
+    calls ``test_func()``.
+    """
+
+    def dispatch(self, request, *args, **kwargs):
+        self.reading_list = get_object_or_404(ReadingList, slug=kwargs["slug"])
+        return super().dispatch(request, *args, **kwargs)
+
+
+class ManageReadingListMixin(ReadingListFromSlugMixin):
+    """Restrict access to users who can manage ``self.reading_list``, and expose it."""
+
+    def test_func(self):
+        return can_manage_reading_list(self.request.user, self.reading_list)
+
+    def get_success_url(self):
+        return reverse("reading-list:detail", kwargs={"slug": self.reading_list.slug})
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context["reading_list"] = self.reading_list
+        return context
 
 
 class ReadingListListView(ListView):
@@ -131,35 +237,12 @@ class ReadingListListView(ListView):
     paginate_by = 30
 
     def get_queryset(self):
-        queryset = ReadingList.objects.select_related("user").annotate(
-            issue_count=Count("issues", distinct=True),
-            average_rating=Avg("ratings__rating"),
-            rating_count=Count("ratings", distinct=True),
-            start_year_annotated=Min("reading_list_items__issue__cover_date__year"),
-            end_year_annotated=Max("reading_list_items__issue__cover_date__year"),
+        queryset = (
+            ReadingList.objects.select_related("user")
+            .with_list_stats()
+            .visible_to(self.request.user)
+            .distinct()
         )
-
-        if self.request.user.is_authenticated:
-            # If admin or reading list editor, show public lists + user's own lists + Metron's lists
-            is_editor = self.request.user.groups.filter(name="reading list editor").exists()
-            if self.request.user.is_staff or is_editor:
-                try:
-                    metron_user = CustomUser.objects.get(username="Metron")
-                    queryset = queryset.filter(
-                        Q(is_private=False) | Q(user=self.request.user) | Q(user=metron_user)
-                    ).distinct()
-                except CustomUser.DoesNotExist:
-                    queryset = queryset.filter(
-                        Q(is_private=False) | Q(user=self.request.user)
-                    ).distinct()
-            else:
-                # Show public lists + user's own lists (including private)
-                queryset = queryset.filter(
-                    Q(is_private=False) | Q(user=self.request.user)
-                ).distinct()
-        else:
-            # Show only public lists
-            queryset = queryset.filter(is_private=False)
 
         # Apply filters
         filtered = ReadingListViewFilter(self.request.GET, queryset=queryset)
@@ -183,35 +266,12 @@ class SearchReadingListListView(SearchMixin, ReadingListListView):
 
     def get_queryset(self):
         """Get queryset without applying the filter (SearchMixin handles search)."""
-        queryset = ReadingList.objects.select_related("user").annotate(
-            issue_count=Count("issues", distinct=True),
-            average_rating=Avg("ratings__rating"),
-            rating_count=Count("ratings", distinct=True),
-            start_year_annotated=Min("reading_list_items__issue__cover_date__year"),
-            end_year_annotated=Max("reading_list_items__issue__cover_date__year"),
+        queryset = (
+            ReadingList.objects.select_related("user")
+            .with_list_stats()
+            .visible_to(self.request.user)
+            .distinct()
         )
-
-        if self.request.user.is_authenticated:
-            # If admin or reading list editor, show public lists + user's own lists + Metron's lists
-            is_editor = self.request.user.groups.filter(name="reading list editor").exists()
-            if self.request.user.is_staff or is_editor:
-                try:
-                    metron_user = CustomUser.objects.get(username="Metron")
-                    queryset = queryset.filter(
-                        Q(is_private=False) | Q(user=self.request.user) | Q(user=metron_user)
-                    ).distinct()
-                except CustomUser.DoesNotExist:
-                    queryset = queryset.filter(
-                        Q(is_private=False) | Q(user=self.request.user)
-                    ).distinct()
-            else:
-                # Show public lists + user's own lists (including private)
-                queryset = queryset.filter(
-                    Q(is_private=False) | Q(user=self.request.user)
-                ).distinct()
-        else:
-            # Show only public lists
-            queryset = queryset.filter(is_private=False)
 
         # Apply SearchMixin search logic (not the filter)
         if query := self.request.GET.get("q"):
@@ -236,15 +296,99 @@ class UserReadingListListView(LoginRequiredMixin, ListView):
     def get_queryset(self):
         return (
             ReadingList.objects.filter(user=self.request.user)
-            .annotate(
-                issue_count=Count("issues", distinct=True),
-                average_rating=Avg("ratings__rating"),
-                rating_count=Count("ratings", distinct=True),
-                start_year_annotated=Min("reading_list_items__issue__cover_date__year"),
-                end_year_annotated=Max("reading_list_items__issue__cover_date__year"),
-            )
+            .with_list_stats()
             .order_by("name", "attribution_source", "user")
         )
+
+
+def build_reading_list_breakdown_context(reading_list_items):
+    """Compute issue-type/series/publisher breakdowns and featured creators/characters.
+
+    ``reading_list_items`` must be a non-empty, pre-fetched sequence of
+    ReadingListItem rows (as built by ReadingListDetailView.get_queryset).
+    """
+    type_counts = {}
+    series_counts = {}
+    publisher_counts = {}
+
+    for item in reading_list_items:
+        key = item.issue_type or ""
+        if key:
+            type_counts[key] = type_counts.get(key, 0) + 1
+
+        series = item.issue.series
+        s_entry = series_counts.setdefault(series.id, {"series": series, "count": 0})
+        s_entry["count"] += 1
+
+        publisher = series.publisher
+        if publisher:
+            p_entry = publisher_counts.setdefault(
+                publisher.id, {"publisher": publisher, "count": 0}
+            )
+            p_entry["count"] += 1
+
+    issue_type_breakdown = [
+        {
+            "key": k,
+            "label": _ISSUE_TYPE_META[k][0],
+            "color": _ISSUE_TYPE_META[k][1],
+            "count": type_counts[k],
+        }
+        for k in ("CORE", "TIE_IN", "PROLOGUE", "EPILOGUE")
+        if type_counts.get(k)
+    ]
+
+    series_breakdown = sorted(
+        series_counts.values(),
+        key=lambda e: (-e["count"], e["series"].name),
+    )
+    publisher_breakdown = sorted(
+        publisher_counts.values(),
+        key=lambda e: (-e["count"], e["publisher"].name),
+    )
+
+    issue_ids = [item.issue_id for item in reading_list_items]
+    top6 = list(
+        Creator.objects.filter(
+            credits__issue_id__in=issue_ids,
+            credits__role__name__in=_CREDIT_ROLE_NAMES,
+        )
+        .annotate(issue_count=Count("credits__issue", distinct=True))
+        .order_by("-issue_count", "name")[:6]
+    )
+    creator_ids = [c.id for c in top6]
+    role_map: dict[int, set[str]] = {}
+    for credit in Credits.objects.filter(
+        issue_id__in=issue_ids,
+        creator_id__in=creator_ids,
+        role__name__in=_CREDIT_ROLE_NAMES,
+    ).prefetch_related(Prefetch("role", queryset=Role.objects.filter(name__in=_CREDIT_ROLE_NAMES))):
+        for role in credit.role.all():
+            role_map.setdefault(credit.creator_id, set()).add(role.name)
+
+    featured_creators = [
+        {
+            "creator": c,
+            "roles": ", ".join(
+                sorted({_CREDIT_ROLE_DISPLAY.get(r, r) for r in role_map.get(c.id, [])})
+            ),
+        }
+        for c in top6
+    ]
+
+    top_characters = (
+        Character.objects.filter(issues__in=issue_ids)
+        .annotate(appearance_count=Count("issues", distinct=True))
+        .order_by("-appearance_count", "name")[:12]
+    )
+
+    return {
+        "issue_type_breakdown": issue_type_breakdown,
+        "series_breakdown": series_breakdown,
+        "publisher_breakdown": publisher_breakdown,
+        "featured_creators": featured_creators,
+        "top_characters": top_characters,
+    }
 
 
 class ReadingListDetailView(DetailView):
@@ -271,12 +415,7 @@ class ReadingListDetailView(DetailView):
                     queryset=ReadingListRating.objects.select_related("user"),
                 ),
             )
-            .annotate(
-                start_year_annotated=Min("reading_list_items__issue__cover_date__year"),
-                end_year_annotated=Max("reading_list_items__issue__cover_date__year"),
-                average_rating_annotated=Avg("ratings__rating"),
-                rating_count_annotated=Count("ratings", distinct=True),
-            )
+            .with_list_stats()
         )
 
         # If authenticated, prefetch user groups to avoid repeated queries
@@ -289,23 +428,7 @@ class ReadingListDetailView(DetailView):
                 )
             )
 
-        # If not authenticated, only show public lists
-        if not self.request.user.is_authenticated:
-            return queryset.filter(is_private=False)
-
-        # If admin or reading list editor, show public lists + user's own lists + Metron's lists
-        is_editor = self.request.user.groups.filter(name="reading list editor").exists()
-        if self.request.user.is_staff or is_editor:
-            try:
-                metron_user = CustomUser.objects.get(username="Metron")
-                return queryset.filter(
-                    Q(is_private=False) | Q(user=self.request.user) | Q(user=metron_user)
-                )
-            except CustomUser.DoesNotExist:
-                pass
-
-        # If authenticated, show public lists + user's own lists
-        return queryset.filter(Q(is_private=False) | Q(user=self.request.user))
+        return queryset.visible_to(self.request.user)
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
@@ -338,106 +461,16 @@ class ReadingListDetailView(DetailView):
 
         # Use annotated average rating (already calculated in get_queryset)
         context["user_rating"] = user_rating
-        context["average_rating"] = reading_list.average_rating_annotated
-        context["rating_count"] = reading_list.rating_count_annotated
+        context["average_rating"] = reading_list.average_rating
+        context["rating_count"] = reading_list.rating_count
 
         # Add annotated year data to context
         context["start_year"] = reading_list.start_year_annotated
         context["end_year"] = reading_list.end_year_annotated
 
-        # Prefetch publishers efficiently
+        # Add issue-type/series/publisher breakdowns and featured creators/characters
         if reading_list_items_count > 0:
-            # Display label + bar color for each ReadingListItem.IssueType
-            type_meta = {
-                "CORE": ("Core", "#3273dc"),
-                "TIE_IN": ("Tie-In", "#f5b400"),
-                "PROLOGUE": ("Prologue", "#3e8ed0"),
-                "EPILOGUE": ("Epilogue", "#48c78e"),
-            }
-
-            type_counts = {}
-            series_counts = {}
-            publisher_counts = {}
-
-            for item in reading_list_items:
-                key = item.issue_type or ""
-                if key:
-                    type_counts[key] = type_counts.get(key, 0) + 1
-
-                series = item.issue.series
-                s_entry = series_counts.setdefault(series.id, {"series": series, "count": 0})
-                s_entry["count"] += 1
-
-                publisher = series.publisher
-                if publisher:
-                    p_entry = publisher_counts.setdefault(
-                        publisher.id, {"publisher": publisher, "count": 0}
-                    )
-                    p_entry["count"] += 1
-
-            context["issue_type_breakdown"] = [
-                {
-                    "key": k,
-                    "label": type_meta[k][0],
-                    "color": type_meta[k][1],
-                    "count": type_counts[k],
-                }
-                for k in ("CORE", "TIE_IN", "PROLOGUE", "EPILOGUE")
-                if type_counts.get(k)
-            ]
-
-            context["series_breakdown"] = sorted(
-                series_counts.values(),
-                key=lambda e: (-e["count"], e["series"].name),
-            )
-            context["publisher_breakdown"] = sorted(
-                publisher_counts.values(),
-                key=lambda e: (-e["count"], e["publisher"].name),
-            )
-
-            issue_ids = [item.issue_id for item in reading_list_items]
-            role_names = ["Artist", "Finishes", "Inker", "Penciller", "Script", "Story", "Writer"]
-            top6 = list(
-                Creator.objects.filter(
-                    credits__issue_id__in=issue_ids,
-                    credits__role__name__in=role_names,
-                )
-                .annotate(issue_count=Count("credits__issue", distinct=True))
-                .order_by("-issue_count", "name")[:6]
-            )
-            creator_ids = [c.id for c in top6]
-            role_map: dict[int, set[str]] = {}
-            for credit in Credits.objects.filter(
-                issue_id__in=issue_ids,
-                creator_id__in=creator_ids,
-                role__name__in=role_names,
-            ).prefetch_related(Prefetch("role", queryset=Role.objects.filter(name__in=role_names))):
-                for role in credit.role.all():
-                    role_map.setdefault(credit.creator_id, set()).add(role.name)
-            role_display = {
-                "Artist": "Artist",
-                "Finishes": "Artist",
-                "Inker": "Artist",
-                "Penciller": "Artist",
-                "Script": "Writer",
-                "Story": "Writer",
-                "Writer": "Writer",
-            }
-            context["featured_creators"] = [
-                {
-                    "creator": c,
-                    "roles": ", ".join(
-                        sorted({role_display.get(r, r) for r in role_map.get(c.id, [])})
-                    ),
-                }
-                for c in top6
-            ]
-
-            context["top_characters"] = (
-                Character.objects.filter(issues__in=issue_ids)
-                .annotate(appearance_count=Count("issues", distinct=True))
-                .order_by("-appearance_count", "name")[:12]
-            )
+            context.update(build_reading_list_breakdown_context(reading_list_items))
 
         return context
 
@@ -521,12 +554,10 @@ class ReadingListDeleteView(LoginRequiredMixin, UserPassesTestMixin, DeleteView)
         return super().form_valid(form)
 
 
-class AssignReadingListToMetronView(LoginRequiredMixin, UserPassesTestMixin, View):
+class AssignReadingListToMetronView(
+    ReadingListFromSlugMixin, LoginRequiredMixin, UserPassesTestMixin, View
+):
     """Reassign a reading list's owner to the Metron account."""
-
-    def dispatch(self, request, *args, **kwargs):
-        self.reading_list = get_object_or_404(ReadingList, slug=kwargs["slug"])
-        return super().dispatch(request, *args, **kwargs)
 
     def test_func(self):
         """Only allow staff or 'reading list editor' group members."""
@@ -558,19 +589,13 @@ class AssignReadingListToMetronView(LoginRequiredMixin, UserPassesTestMixin, Vie
         return redirect(self.reading_list.get_absolute_url())
 
 
-class RemoveIssueFromReadingListView(LoginRequiredMixin, UserPassesTestMixin, DeleteView):
+class RemoveIssueFromReadingListView(
+    ManageReadingListMixin, LoginRequiredMixin, UserPassesTestMixin, DeleteView
+):
     """Remove an issue from a reading list."""
 
     model = ReadingListItem
     template_name = "reading_lists/remove_issue_confirm.html"
-
-    def dispatch(self, request, *args, **kwargs):
-        self.reading_list = get_object_or_404(ReadingList, slug=kwargs["slug"])
-        return super().dispatch(request, *args, **kwargs)
-
-    def test_func(self):
-        """Only allow authorized users to remove issues."""
-        return can_manage_reading_list(self.request.user, self.reading_list)
 
     def get_object(self):
         return get_object_or_404(
@@ -587,19 +612,13 @@ class RemoveIssueFromReadingListView(LoginRequiredMixin, UserPassesTestMixin, De
         return reverse("reading-list:detail", kwargs={"slug": self.reading_list.slug})
 
 
-class AddIssueWithAutocompleteView(LoginRequiredMixin, UserPassesTestMixin, FormView):
+class AddIssueWithAutocompleteView(
+    ManageReadingListMixin, LoginRequiredMixin, UserPassesTestMixin, FormView
+):
     """Add an issue to a reading list using autocomplete search."""
 
     form_class = AddIssueWithSearchForm
     template_name = "reading_lists/add_issue_autocomplete.html"
-
-    def dispatch(self, request, *args, **kwargs):
-        self.reading_list = get_object_or_404(ReadingList, slug=kwargs["slug"])
-        return super().dispatch(request, *args, **kwargs)
-
-    def test_func(self):
-        """Only allow authorized users to add issues."""
-        return can_manage_reading_list(self.request.user, self.reading_list)
 
     def form_valid(self, form):  # noqa: PLR0912
         new_issues = form.cleaned_data["issues"]
@@ -686,12 +705,8 @@ class AddIssueWithAutocompleteView(LoginRequiredMixin, UserPassesTestMixin, Form
 
         return redirect(self.get_success_url())
 
-    def get_success_url(self):
-        return reverse("reading-list:detail", kwargs={"slug": self.reading_list.slug})
-
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        context["reading_list"] = self.reading_list
         # Get existing issues in the reading list
         context["existing_items"] = self.reading_list.reading_list_items.select_related(
             "issue__series__series_type"
@@ -699,21 +714,15 @@ class AddIssueWithAutocompleteView(LoginRequiredMixin, UserPassesTestMixin, Form
         return context
 
 
-class AddIssuesFromSeriesView(LoginRequiredMixin, UserPassesTestMixin, FormView):
+class AddIssuesFromSeriesView(
+    ManageReadingListMixin, LoginRequiredMixin, UserPassesTestMixin, FormView
+):
     """Add multiple issues from a series to a reading list."""
 
     form_class = AddIssuesFromSeriesForm
     template_name = "reading_lists/add_issues_from_series.html"
 
-    def dispatch(self, request, *args, **kwargs):
-        self.reading_list = get_object_or_404(ReadingList, slug=kwargs["slug"])
-        return super().dispatch(request, *args, **kwargs)
-
-    def test_func(self):
-        """Only allow authorized users to add issues."""
-        return can_manage_reading_list(self.request.user, self.reading_list)
-
-    def form_valid(self, form):  # noqa: PLR0912, PLR0915
+    def form_valid(self, form):
         series = form.cleaned_data["series"]
         range_type = form.cleaned_data["range_type"]
         start_number = form.cleaned_data.get("start_number")
@@ -722,210 +731,60 @@ class AddIssuesFromSeriesView(LoginRequiredMixin, UserPassesTestMixin, FormView)
 
         # Get all issues from the series, ordered by cover date
         issues_queryset = Issue.objects.filter(series=series).order_by("cover_date", "number")
-
-        # Apply range filtering if specified
         if range_type == "range":
-            # Build filter conditions based on provided numbers
-            if start_number and end_number:
-                # Filter issues between start and end numbers
-                # Since number is a CharField, we need to handle this carefully
-                # We'll get all issues and filter in Python for flexibility
-                all_issues = list(issues_queryset)
-                filtered_issues = []
-                in_range = False
-
-                for issue in all_issues:
-                    # Check if this is the start issue
-                    if issue.number == start_number:
-                        in_range = True
-
-                    # If we're in range, add the issue
-                    if in_range:
-                        filtered_issues.append(issue)
-
-                    # Check if this is the end issue
-                    if issue.number == end_number:
-                        break
-
-                issues_to_add = filtered_issues
-            elif start_number:
-                # Start from a specific issue to the end
-                all_issues = list(issues_queryset)
-                filtered_issues = []
-                found_start = False
-
-                for issue in all_issues:
-                    if issue.number == start_number:
-                        found_start = True
-                    if found_start:
-                        filtered_issues.append(issue)
-
-                issues_to_add = filtered_issues
-            elif end_number:
-                # From beginning to a specific issue
-                all_issues = list(issues_queryset)
-                filtered_issues = []
-
-                for issue in all_issues:
-                    filtered_issues.append(issue)
-                    if issue.number == end_number:
-                        break
-
-                issues_to_add = filtered_issues
-            else:
-                issues_to_add = list(issues_queryset)
+            issues_to_add = filter_issues_by_number_range(issues_queryset, start_number, end_number)
         else:
-            # Add all issues
             issues_to_add = list(issues_queryset)
 
-        # Get existing issue IDs to avoid duplicates
-        existing_issue_ids = set(
-            self.reading_list.reading_list_items.values_list("issue_id", flat=True)
-        )
+        added_count = add_issues_to_reading_list(self.reading_list, issues_to_add, position)
 
-        # Filter out issues already in the reading list
-        new_issues = [issue for issue in issues_to_add if issue.pk not in existing_issue_ids]
-
-        if not new_issues:
+        if added_count == 0:
             messages.info(
                 self.request,
                 f"No new issues to add. All issues from {series} are already in the list.",
             )
             return redirect(self.get_success_url())
 
-        # Determine starting order based on position
-        if position == "beginning":
-            # Insert at the beginning - need to reorder existing items
-            start_order = 1
-            # Shift existing items down
-            existing_items = self.reading_list.reading_list_items.order_by("order")
-            for idx, item in enumerate(existing_items, start=len(new_issues) + 1):
-                if item.order != idx:
-                    item.order = idx
-                    item.save()
-        else:
-            # Add at the end
-            max_order = (
-                self.reading_list.reading_list_items.aggregate(models.Max("order"))["order__max"]
-                or 0
-            )
-            start_order = max_order + 1
-
-        # Create reading list items for new issues
-        items_to_create = [
-            ReadingListItem(
-                reading_list=self.reading_list,
-                issue=issue,
-                order=start_order + idx,
-            )
-            for idx, issue in enumerate(new_issues)
-        ]
-
-        ReadingListItem.objects.bulk_create(items_to_create)
-
-        # Provide feedback
         position_text = "at the beginning" if position == "beginning" else "at the end"
         messages.success(
             self.request,
-            f"Added {len(new_issues)} issue(s) from {series} {position_text} "
+            f"Added {added_count} issue(s) from {series} {position_text} "
             f"of '{self.reading_list.name}'!",
         )
 
         return redirect(self.get_success_url())
 
-    def get_success_url(self):
-        return reverse("reading-list:detail", kwargs={"slug": self.reading_list.slug})
 
-    def get_context_data(self, **kwargs):
-        context = super().get_context_data(**kwargs)
-        context["reading_list"] = self.reading_list
-        return context
-
-
-class AddIssuesFromArcView(LoginRequiredMixin, UserPassesTestMixin, FormView):
+class AddIssuesFromArcView(
+    ManageReadingListMixin, LoginRequiredMixin, UserPassesTestMixin, FormView
+):
     """Add all issues from a story arc to a reading list."""
 
     form_class = AddIssuesFromArcForm
     template_name = "reading_lists/add_issues_from_arc.html"
 
-    def dispatch(self, request, *args, **kwargs):
-        self.reading_list = get_object_or_404(ReadingList, slug=kwargs["slug"])
-        return super().dispatch(request, *args, **kwargs)
-
-    def test_func(self):
-        """Only allow authorized users to add issues."""
-        return can_manage_reading_list(self.request.user, self.reading_list)
-
     def form_valid(self, form):
         arc = form.cleaned_data["arc"]
         position = form.cleaned_data["position"]
 
-        # Get all issues from the arc, ordered by cover date
-        issues_queryset = arc.issues.order_by("cover_date", "number")
-        issues_to_add = list(issues_queryset)
+        issues_to_add = list(arc.issues.order_by("cover_date", "number"))
+        added_count = add_issues_to_reading_list(self.reading_list, issues_to_add, position)
 
-        # Get existing issue IDs to avoid duplicates
-        existing_issue_ids = set(
-            self.reading_list.reading_list_items.values_list("issue_id", flat=True)
-        )
-
-        # Filter out issues already in the reading list
-        new_issues = [issue for issue in issues_to_add if issue.pk not in existing_issue_ids]
-
-        if not new_issues:
+        if added_count == 0:
             messages.info(
                 self.request,
                 f"No new issues to add. All issues from {arc} are already in the list.",
             )
             return redirect(self.get_success_url())
 
-        # Determine starting order based on position
-        if position == "beginning":
-            # Insert at the beginning - need to reorder existing items
-            start_order = 1
-            # Shift existing items down
-            existing_items = self.reading_list.reading_list_items.order_by("order")
-            for idx, item in enumerate(existing_items, start=len(new_issues) + 1):
-                if item.order != idx:
-                    item.order = idx
-                    item.save()
-        else:
-            # Add at the end
-            max_order = (
-                self.reading_list.reading_list_items.aggregate(models.Max("order"))["order__max"]
-                or 0
-            )
-            start_order = max_order + 1
-
-        # Create reading list items for new issues
-        items_to_create = [
-            ReadingListItem(
-                reading_list=self.reading_list,
-                issue=issue,
-                order=start_order + idx,
-            )
-            for idx, issue in enumerate(new_issues)
-        ]
-
-        ReadingListItem.objects.bulk_create(items_to_create)
-
-        # Provide feedback
         position_text = "at the beginning" if position == "beginning" else "at the end"
         messages.success(
             self.request,
-            f"Added {len(new_issues)} issue(s) from {arc} {position_text} "
+            f"Added {added_count} issue(s) from {arc} {position_text} "
             f"of '{self.reading_list.name}'!",
         )
 
         return redirect(self.get_success_url())
-
-    def get_success_url(self):
-        return reverse("reading-list:detail", kwargs={"slug": self.reading_list.slug})
-
-    def get_context_data(self, **kwargs):
-        context = super().get_context_data(**kwargs)
-        context["reading_list"] = self.reading_list
-        return context
 
 
 class ReadingListItemsLoadMore(LazyLoadMixin, View):
@@ -940,25 +799,7 @@ class ReadingListItemsLoadMore(LazyLoadMixin, View):
     def get(self, request, slug):
         """Handle GET request with privacy filtering."""
         # Apply same privacy filtering as ReadingListDetailView
-        queryset = ReadingList.objects.all()
-
-        # If not authenticated, only show public lists
-        if not request.user.is_authenticated:
-            queryset = queryset.filter(is_private=False)
-        # If admin or reading list editor, show public lists + user's own lists + Metron's lists
-        elif (
-            request.user.is_staff or request.user.groups.filter(name="reading list editor").exists()
-        ):
-            try:
-                metron_user = CustomUser.objects.get(username="Metron")
-                queryset = queryset.filter(
-                    Q(is_private=False) | Q(user=request.user) | Q(user=metron_user)
-                )
-            except CustomUser.DoesNotExist:
-                queryset = queryset.filter(Q(is_private=False) | Q(user=request.user))
-        # If authenticated, show public lists + user's own lists
-        else:
-            queryset = queryset.filter(Q(is_private=False) | Q(user=request.user))
+        queryset = ReadingList.objects.visible_to(request.user)
 
         # Get the reading list with privacy filter applied
         parent_object = get_object_or_404(queryset, slug=slug)

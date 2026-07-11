@@ -1,4 +1,5 @@
 from django.db import models
+from django.db.models import Avg, Count, Max, Min, Q
 from django.db.models.signals import pre_save
 from django.urls import reverse
 from sorl.thumbnail import ImageField
@@ -8,6 +9,41 @@ from comicsdb.models.issue import Issue
 from comicsdb.models.publisher import Publisher
 from users.models import CustomUser
 
+READING_LIST_EDITOR_GROUP = "reading list editor"
+METRON_USERNAME = "Metron"
+
+
+class ReadingListQuerySet(models.QuerySet):
+    """Shared filtering/annotation logic used by multiple reading list views."""
+
+    def visible_to(self, user):
+        """Restrict to reading lists the given user is allowed to see.
+
+        Public lists are always visible. A user can also see their own lists.
+        Staff and 'reading list editor' group members can additionally see
+        lists owned by the shared 'Metron' account.
+        """
+        if not user.is_authenticated:
+            return self.filter(is_private=False)
+
+        is_editor = user.is_staff or user.groups.filter(name=READING_LIST_EDITOR_GROUP).exists()
+        if is_editor:
+            metron_user = CustomUser.objects.filter(username=METRON_USERNAME).first()
+            if metron_user:
+                return self.filter(Q(is_private=False) | Q(user=user) | Q(user=metron_user))
+
+        return self.filter(Q(is_private=False) | Q(user=user))
+
+    def with_list_stats(self):
+        """Annotate with issue count, rating stats, and cover-date year range."""
+        return self.annotate(
+            issue_count=Count("issues", distinct=True),
+            average_rating=Avg("ratings__rating"),
+            rating_count=Count("ratings", distinct=True),
+            start_year_annotated=Min("reading_list_items__issue__cover_date__year"),
+            end_year_annotated=Max("reading_list_items__issue__cover_date__year"),
+        )
+
 
 class ReadingList(CommonInfo):
     """Model for user-created reading lists of comic issues.
@@ -15,6 +51,8 @@ class ReadingList(CommonInfo):
     Each reading list is owned by a single user who has exclusive
     edit permissions for that list.
     """
+
+    objects = ReadingListQuerySet.as_manager()
 
     class ListType(models.TextChoices):
         """Reading list type choices."""
