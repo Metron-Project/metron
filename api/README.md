@@ -797,6 +797,8 @@ User comic book collections with tracking for ownership, grading, reading status
 
 - `GET /api/collection/` - List authenticated user's collection items
 - `GET /api/collection/{id}/` - Retrieve collection item details (must belong to user)
+- `PATCH /api/collection/{id}/` - Update a collection item's rating (must belong to user)
+- `PUT /api/collection/{id}/` - Update a collection item's rating (must belong to user)
 - `GET /api/collection/stats/` - Get collection statistics
 - `GET /api/collection/missing_series/` - Get series where user has incomplete runs
 - `GET /api/collection/missing_issues/{series_id}/` - Get specific missing issues for a series
@@ -804,7 +806,7 @@ User comic book collections with tracking for ownership, grading, reading status
 
 **Collection Management:**
 
-Most collection operations are managed through the web interface. The API provides read access plus the scrobble endpoint for marking issues as read.
+Most collection operations are managed through the web interface. The API provides read access, a rating-only update endpoint, and the scrobble endpoint for marking issues as read.
 
 **Authentication:**
 
@@ -1277,6 +1279,71 @@ curl -X POST https://metron.cloud/api/collection/scrobble/ \
 
 ---
 
+#### Update Rating Endpoint
+
+A minimal update endpoint for changing a collection item's personal rating without touching read-tracking data.
+
+**Endpoint:** `PATCH /api/collection/{id}/` (or `PUT /api/collection/{id}/`)
+
+**Purpose:**
+
+- Set or change the star rating on an existing collection item
+- Does not create, modify, or remove any `read_dates` entries
+- Does not affect `is_read` or `date_read` - use the [scrobble endpoint](#scrobble-endpoint) for read tracking
+
+**Request Body:**
+
+```json
+{
+  "rating": 5
+}
+```
+
+**Request Fields:**
+
+- `rating` - The only editable field. Star rating from 1-5, or `null` to clear the rating.
+
+Any other fields included in the request body (e.g. `is_read`, `date_read`, `quantity`) are ignored - this endpoint only accepts `rating`.
+
+**Response (200 OK):**
+
+```json
+{
+  "id": 789,
+  "rating": 5,
+  "modified": "2026-01-08T14:30:00Z"
+}
+```
+
+**Status Codes:**
+
+- `200 OK` - Rating was updated
+- `400 Bad Request` - Validation error (rating out of range)
+- `401 Unauthorized` - Authentication required
+- `404 Not Found` - Collection item doesn't exist or doesn't belong to the authenticated user
+
+**Examples:**
+
+```bash
+# Set a rating
+curl -X PATCH https://metron.cloud/api/collection/789/ \
+  -u "username:password" \
+  -H "Content-Type: application/json" \
+  -d '{"rating": 5}'
+
+# Clear a rating
+curl -X PATCH https://metron.cloud/api/collection/789/ \
+  -u "username:password" \
+  -H "Content-Type: application/json" \
+  -d '{"rating": null}'
+```
+
+**Validation:**
+
+- `rating` must be between 1 and 5 (inclusive), or `null`
+
+---
+
 **Notes:**
 
 - Collection items are private - each user can only access their own collection
@@ -1286,6 +1353,7 @@ curl -X POST https://metron.cloud/api/collection/scrobble/ \
 - Format counts in stats show the raw choice value (PRINT, DIGITAL, BOTH) not the display name
 - Multiple read dates are supported - comics can be re-read and each read is tracked separately
 - The `is_read` and `date_read` fields are automatically synchronized from the `read_dates` array
+- Read tracking (`is_read`, `date_read`, `read_dates`) is only writable through the [scrobble endpoint](#scrobble-endpoint); the collection update endpoint only accepts `rating`
 
 ---
 

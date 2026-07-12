@@ -62,6 +62,19 @@ class CollectionListSerializer(serializers.ModelSerializer):
         )
 
 
+class CollectionRatingUpdateSerializer(serializers.ModelSerializer):
+    """Update serializer for collection items - rating only.
+
+    Read-tracking (is_read/date_read) is handled exclusively through the
+    scrobble action, so this serializer intentionally excludes those fields.
+    """
+
+    class Meta:
+        model = CollectionItem
+        fields = ("id", "rating", "modified")
+        read_only_fields = ("id", "modified")
+
+
 class CollectionReadSerializer(serializers.ModelSerializer):
     """Read serializer for collection items - full detail view."""
 

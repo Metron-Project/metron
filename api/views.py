@@ -20,6 +20,7 @@ from api.v1_0.serializers import (
     CharacterReadSerializer,
     CharacterSerializer,
     CollectionListSerializer,
+    CollectionRatingUpdateSerializer,
     CollectionReadSerializer,
     CreatorListSerializer,
     CreatorSerializer,
@@ -707,6 +708,7 @@ class VariantViewset(
 class CollectionViewSet(
     ConditionalRetrieveModelMixin,
     mixins.ListModelMixin,
+    mixins.UpdateModelMixin,
     viewsets.GenericViewSet,
 ):
     """
@@ -716,6 +718,16 @@ class CollectionViewSet(
 
     retrieve:
     Returns details of a specific collection item (must belong to authenticated user).
+    Requires authentication.
+
+    partial_update:
+    Update the rating of a specific collection item (must belong to authenticated user).
+    Read-tracking fields (is_read/date_read) are not editable here; use scrobble instead.
+    Requires authentication.
+
+    update:
+    Update the rating of a specific collection item (must belong to authenticated user).
+    Read-tracking fields (is_read/date_read) are not editable here; use scrobble instead.
     Requires authentication.
     """
 
@@ -733,6 +745,8 @@ class CollectionViewSet(
     def get_serializer_class(self):
         if self.action == "list":
             return CollectionListSerializer
+        if self.action in ("update", "partial_update"):
+            return CollectionRatingUpdateSerializer
         return CollectionReadSerializer
 
     @extend_schema(
