@@ -4,7 +4,7 @@ from django.db.models.signals import pre_save
 from django.urls import reverse
 from sorl.thumbnail import ImageField
 
-from comicsdb.models.common import CommonInfo, pre_save_slug
+from comicsdb.models.common import AbstractRating, CommonInfo, pre_save_slug
 from comicsdb.models.issue import Issue
 from comicsdb.models.publisher import Publisher
 from users.models import CustomUser
@@ -192,7 +192,7 @@ class ReadingListItem(models.Model):
         return f"{self.reading_list.name} - {self.issue} (Order: {self.order})"
 
 
-class ReadingListRating(models.Model):
+class ReadingListRating(AbstractRating):
     """User ratings for reading lists."""
 
     reading_list = models.ForeignKey(
@@ -205,12 +205,6 @@ class ReadingListRating(models.Model):
         on_delete=models.CASCADE,
         related_name="reading_list_ratings",
     )
-    rating = models.PositiveSmallIntegerField(
-        choices=[(i, str(i)) for i in range(1, 6)],
-        help_text="Star rating (1-5) for this reading list",
-    )
-    created_on = models.DateTimeField(db_default=models.functions.Now())
-    modified = models.DateTimeField(auto_now=True)
 
     class Meta:
         unique_together = ["reading_list", "user"]

@@ -18,6 +18,7 @@ from comicsdb.models.creator import Creator
 from comicsdb.models.credits import Credits, Role
 from comicsdb.models.issue import Issue
 from comicsdb.views.mixins import LazyLoadMixin, SearchMixin
+from comicsdb.views.ratings import apply_rating_update
 from reading_lists.forms import (
     AddIssuesFromArcForm,
     AddIssuesFromSeriesForm,
@@ -34,10 +35,6 @@ from users.models import CustomUser
 
 # Pagination constant for reading list detail view
 READING_LIST_DETAIL_PAGINATE_BY = 50
-
-# Rating constants
-MIN_RATING = 1
-MAX_RATING = 5
 
 _NON_FILTER_PARAMS = {"page"}
 
@@ -463,6 +460,10 @@ class ReadingListDetailView(DetailView):
         context["user_rating"] = user_rating
         context["average_rating"] = reading_list.average_rating
         context["rating_count"] = reading_list.rating_count
+        context["show_ratings"] = not reading_list.is_private
+        context["can_rate"] = (
+            self.request.user.is_authenticated and reading_list.user != self.request.user
+        )
 
         # Add annotated year data to context
         context["start_year"] = reading_list.start_year_annotated
@@ -849,24 +850,11 @@ def update_reading_list_rating(request, slug):
     if reading_list.user == request.user:
         return HttpResponseForbidden("Cannot rate your own reading list")
 
-    rating_value = request.POST.get("rating")
-    if rating_value:
-        try:
-            rating = int(rating_value)
-            if MIN_RATING <= rating <= MAX_RATING:
-                # Update or create rating
-                ReadingListRating.objects.update_or_create(
-                    reading_list=reading_list,
-                    user=request.user,
-                    defaults={"rating": rating},
-                )
-            elif rating == 0:  # Allow clearing the rating
-                ReadingListRating.objects.filter(
-                    reading_list=reading_list,
-                    user=request.user,
-                ).delete()
-        except ValueError:
-            pass
+    apply_rating_update(
+        ReadingListRating,
+        {"reading_list": reading_list, "user": request.user},
+        request.POST.get("rating"),
+    )
 
     # Get user's current rating and average
     user_rating = ReadingListRating.objects.filter(
@@ -883,12 +871,16 @@ def update_reading_list_rating(request, slug):
     # Return the updated rating partial
     return render(
         request,
-        "reading_lists/partials/reading_list_rating.html",
+        "partials/rating_widget.html",
         {
-            "reading_list": reading_list,
+            "rated_object": reading_list,
+            "rate_url_name": "reading-list:rate",
+            "rate_url_arg": reading_list.slug,
             "user_rating": user_rating,
             "average_rating": avg_data["avg"],
             "rating_count": avg_data["count"],
+            "show_ratings": True,
+            "can_rate": True,
         },
     )
 

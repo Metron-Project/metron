@@ -101,6 +101,7 @@ combine-as-imports = true
 "django_nyt/migrations/*.py" = ["E501", "N806"]
 "issue_ratings/migrations/*.py" = ["E501", "N806"]
 "pull_list/migrations/*.py" = ["E501", "N806"]
+"reading_lists/migrations/*.py" = ["E501", "N806"]
 "tests/*/*.py" = ["PLR2004", "PT004", "S101", "PLR0913"]
 "users/apps.py" = ["PLC0415",]
 "users/migrations/*.py" = ["E501", "N806"]

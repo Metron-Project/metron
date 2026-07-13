@@ -272,7 +272,7 @@
                     <dd class="mb-3">{{ reading_list.modified|date:"F d, Y" }}</dd>
                 </dl>
                 <hr>
-                {% include "reading_lists/partials/reading_list_rating.html" %}
+                {% include "partials/rating_widget.html" with rated_object=reading_list rate_url_name="reading-list:rate" rate_url_arg=reading_list.slug user_rating=user_rating average_rating=average_rating rating_count=rating_count show_ratings=show_ratings can_rate=can_rate %}
             </div>
 
             {% if series_breakdown %}

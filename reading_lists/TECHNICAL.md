@@ -639,12 +639,14 @@ elif rating == 0:
 
 **Response:**
 
-Returns the `reading_list_rating.html` partial template with context:
+Returns the shared `partials/rating_widget.html` partial template (also used by `issue_ratings`) with context:
 
-- `reading_list`: The rated reading list
+- `rated_object`: The rated reading list
+- `rate_url_name` / `rate_url_arg`: URL name and argument used to build the rate/clear endpoint
 - `user_rating`: User's updated rating object
 - `average_rating`: Recalculated average rating
 - `rating_count`: Updated rating count
+- `show_ratings` / `can_rate`: Always `True` here, since the view already rejected private lists and self-rating before reaching this response
 
 **URL:** `/reading-lists/<slug>/rate/`
 
@@ -1202,7 +1204,7 @@ The web interface provides a dropdown with:
 | `remove_issue_confirm.html` | Remove issue confirmation | Issue details |
 | `partials/readinglist_card.html` | List card (grid item) | Cover thumbnail, list type tag, year range, rating stars, privacy badge, truncated description |
 | `partials/readinglist_filter.html` | Filter/search panel | Quick search + collapsible advanced filters, active-filter tag |
-| `partials/reading_list_rating.html` | Rating component | HTMX-powered star rating, average display |
+| `partials/rating_widget.html` (shared, in top-level `templates/partials/`) | Rating component | HTMX-powered star rating, average display; also used by `issue_ratings` |
 | `partials/readinglist_item.html` | Single item display | Issue type badge, inline edit button, remove button |
 | `partials/readinglist_item_edit.html` | Single item edit form | Issue type dropdown, save/cancel buttons |
 | `partials/readinglist_item_list.html` | Item list + load-more button | Rendered by `ReadingListItemsLoadMore`; re-renders itself and the load-more button via an out-of-band (`hx-swap-oob`) swap |
@@ -1253,16 +1255,16 @@ htmx.onLoad(function() {
 
 ### Rating Partial Template
 
-**File:** `partials/reading_list_rating.html`
+**File:** `partials/rating_widget.html` (shared with `issue_ratings`, lives in the top-level `templates/partials/` directory)
 
 The rating system uses HTMX for instant, no-reload rating updates:
 
 ```html
 <button type="button"
         class="star-button"
-        hx-post="{% url 'reading-list:rate' reading_list.slug %}"
+        hx-post="{% url rate_url_name rate_url_arg %}"
         hx-vals='{"rating": "{{ forloop.counter }}"}'
-        hx-target="#reading-list-rating-{{ reading_list.pk }}"
+        hx-target="#rating-widget-{{ rated_object.pk }}"
         hx-swap="outerHTML">
     <i class="fas fa-star"></i>
 </button>
