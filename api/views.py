@@ -355,31 +355,41 @@ class IssueViewSet(
 
     def get_queryset(self):
         if self.action == "list":
-            return Issue.objects.select_related("series", "series__series_type")
-        return Issue.objects.select_related(
-            "series",
-            "series__series_type",
-            "series__publisher",
-            "series__imprint",
-            "rating",
-        ).prefetch_related(
-            "series__genres",
-            "arcs",
-            "characters",
-            "teams",
-            "universes",
-            "variants",
-            Prefetch(
-                "credits_set",
-                queryset=Credits.objects.order_by("creator__name")
-                .distinct("creator__name")
-                .select_related("creator")
-                .prefetch_related("role"),
-            ),
-            Prefetch(
-                "reprints",
-                queryset=Issue.objects.select_related("series", "series__series_type"),
-            ),
+            return Issue.objects.select_related("series", "series__series_type").annotate(
+                average_rating=Avg("ratings__rating"),
+                rating_count=Count("ratings", distinct=True),
+            )
+        return (
+            Issue.objects.select_related(
+                "series",
+                "series__series_type",
+                "series__publisher",
+                "series__imprint",
+                "rating",
+            )
+            .prefetch_related(
+                "series__genres",
+                "arcs",
+                "characters",
+                "teams",
+                "universes",
+                "variants",
+                Prefetch(
+                    "credits_set",
+                    queryset=Credits.objects.order_by("creator__name")
+                    .distinct("creator__name")
+                    .select_related("creator")
+                    .prefetch_related("role"),
+                ),
+                Prefetch(
+                    "reprints",
+                    queryset=Issue.objects.select_related("series", "series__series_type"),
+                ),
+            )
+            .annotate(
+                average_rating=Avg("ratings__rating"),
+                rating_count=Count("ratings", distinct=True),
+            )
         )
 
     def get_serializer_class(self):

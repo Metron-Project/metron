@@ -66,6 +66,7 @@
             {% endif %}
         </p>
     </header>
+    {% include "issue_ratings/partials/issue_rating.html" with issue=issue user_rating=user_rating average_rating=average_rating rating_count=rating_count %}
     {# Navigation Bar #}
     <nav class="level mb-5" aria-label="Issue navigation">
         <div class="level-left">

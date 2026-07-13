@@ -6,7 +6,7 @@ from django.contrib import messages
 from django.contrib.auth.mixins import LoginRequiredMixin, PermissionRequiredMixin
 from django.core.exceptions import ObjectDoesNotExist
 from django.db import IntegrityError, transaction
-from django.db.models import Prefetch
+from django.db.models import Avg, Count, Prefetch
 from django.http import HttpResponse, HttpResponseRedirect
 from django.shortcuts import get_object_or_404
 from django.template.loader import render_to_string
@@ -32,6 +32,7 @@ from comicsdb.views.issue_list_helpers import (
     build_active_filters,
 )
 from comicsdb.views.mixins import LazyLoadMixin, SlugRedirectView
+from issue_ratings.models import IssueRating
 from wish_list.models import WishListItem
 
 TOTAL_WEEKS_YEAR = 52
@@ -189,6 +190,14 @@ class IssueDetail(DetailView):
                 wish_list__user=self.request.user,
                 issue=issue,
             ).exists()
+            context["user_rating"] = IssueRating.objects.filter(
+                issue=issue,
+                user=self.request.user,
+            ).first()
+
+        avg_data = issue.ratings.aggregate(avg=Avg("rating"), count=Count("id"))
+        context["average_rating"] = avg_data["avg"]
+        context["rating_count"] = avg_data["count"]
 
         return context
 

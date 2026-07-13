@@ -10,6 +10,7 @@ from comicsdb.models.credits import Role
 from comicsdb.models.issue import Issue
 from comicsdb.models.publisher import Publisher
 from comicsdb.models.series import Series, SeriesType
+from issue_ratings.models import IssueRating
 from wish_list.models import WishList, WishListItem
 
 HTML_OK_CODE = 200
@@ -46,6 +47,28 @@ def test_issue_detail_on_wish_list_true_when_on_list(basic_issue, auto_login_use
     resp = client.get(f"/issue/{basic_issue.slug}/")
     assert resp.status_code == HTML_OK_CODE
     assert resp.context["on_wish_list"] is True
+
+
+def test_issue_detail_rating_context_no_ratings(basic_issue, auto_login_user):
+    client, _ = auto_login_user()
+    resp = client.get(f"/issue/{basic_issue.slug}/")
+    assert resp.status_code == HTML_OK_CODE
+    assert resp.context["average_rating"] is None
+    assert resp.context["rating_count"] == 0
+    assert resp.context["user_rating"] is None
+
+
+def test_issue_detail_rating_context_with_ratings(basic_issue, auto_login_user, create_user):
+    client, user = auto_login_user()
+    other_user = create_user(username="other_rater")
+    IssueRating.objects.create(issue=basic_issue, user=user, rating=4)
+    IssueRating.objects.create(issue=basic_issue, user=other_user, rating=2)
+
+    resp = client.get(f"/issue/{basic_issue.slug}/")
+    assert resp.status_code == HTML_OK_CODE
+    assert resp.context["average_rating"] == 3.0
+    assert resp.context["rating_count"] == 2
+    assert resp.context["user_rating"].rating == 4
 
 
 # Issue Search

@@ -78,6 +78,7 @@ INSTALLED_APPS = [
     "user_collection",
     "pull_list",
     "wish_list",
+    "issue_ratings",
     "polls",
     "timeline",
 ]
