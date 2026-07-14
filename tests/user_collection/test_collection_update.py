@@ -3,6 +3,7 @@
 from django.urls import reverse
 from rest_framework import status
 
+from issue_ratings.models import IssueRating
 from user_collection.models import CollectionItem, ReadDate
 
 
@@ -28,6 +29,18 @@ def test_patch_updates_rating(api_client, collection_user, collection_item):
 
     collection_item.refresh_from_db()
     assert collection_item.rating == 4
+
+
+def test_patch_rating_syncs_to_issue_rating(api_client, collection_user, collection_item):
+    """PATCHing a collection item's rating syncs the community IssueRating too."""
+    api_client.force_authenticate(user=collection_user)
+
+    api_client.patch(
+        reverse("api:collection-detail", args=[collection_item.id]),
+        {"rating": 4},
+    )
+    rating = IssueRating.objects.get(issue=collection_item.issue, user=collection_user)
+    assert rating.rating == 4
 
 
 def test_patch_rating_creates_no_read_date_rows(api_client, collection_user, collection_item):

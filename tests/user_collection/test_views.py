@@ -8,6 +8,7 @@ from django.utils import timezone as django_timezone
 
 from comicsdb.models.issue import Issue
 from comicsdb.models.series import Series
+from issue_ratings.models import IssueRating
 from user_collection.models import CollectionItem, ReadDate
 
 HTTP_200_OK = 200
@@ -1129,6 +1130,22 @@ class TestUpdateRatingView:
         # Check that the rating was updated
         collection_item.refresh_from_db()
         assert collection_item.rating == 3
+
+    def test_update_rating_syncs_to_issue_rating(
+        self, client, collection_user, collection_item, test_password
+    ):
+        """Rating a collection item through the HTMX endpoint syncs the community IssueRating."""
+        client.login(username=collection_user.username, password=test_password)
+        url = reverse("user_collection:rate", kwargs={"pk": collection_item.pk})
+
+        client.post(url, {"rating": "4"})
+        rating = IssueRating.objects.get(issue=collection_item.issue, user=collection_user)
+        assert rating.rating == 4
+
+        client.post(url, {"rating": "0"})
+        assert not IssueRating.objects.filter(
+            issue=collection_item.issue, user=collection_user
+        ).exists()
 
     def test_update_rating_all_valid_values(
         self, client, collection_user, collection_item, test_password
