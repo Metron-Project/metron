@@ -385,6 +385,8 @@ The Issue endpoint supports the most comprehensive filtering options:
     - `upc` - UPC code
     - `page_count` - Number of pages
     - `rating` - Content rating object
+    - `average_rating` - Average community star rating (1.0 to 5.0, null if no ratings). Not included in the list endpoint.
+    - `rating_count` - Total number of community star ratings. Not included in the list endpoint.
     - `arcs` - Story arcs
     - `characters` - Characters appearing
     - `teams` - Teams appearing

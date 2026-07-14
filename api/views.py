@@ -355,10 +355,7 @@ class IssueViewSet(
 
     def get_queryset(self):
         if self.action == "list":
-            return Issue.objects.select_related("series", "series__series_type").annotate(
-                average_rating=Avg("ratings__rating"),
-                rating_count=Count("ratings", distinct=True),
-            )
+            return Issue.objects.select_related("series", "series__series_type")
         return (
             Issue.objects.select_related(
                 "series",

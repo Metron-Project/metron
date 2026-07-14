@@ -157,8 +157,6 @@ class IssueListSeriesSerializer(serializers.ModelSerializer):
 class IssueListSerializer(serializers.ModelSerializer):
     issue = serializers.CharField(source="__str__")
     series = IssueListSeriesSerializer(read_only=True)
-    average_rating = serializers.FloatField(read_only=True)
-    rating_count = serializers.IntegerField(read_only=True)
 
     class Meta:
         model = Issue
@@ -171,8 +169,6 @@ class IssueListSerializer(serializers.ModelSerializer):
             "store_date",
             "image",
             "cover_hash",
-            "average_rating",
-            "rating_count",
             "modified",
         )
 

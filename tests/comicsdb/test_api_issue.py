@@ -341,11 +341,12 @@ def test_filter_by_role_id_no_match(api_client_with_credentials, basic_issue: Is
     assert resp.data["count"] == 0
 
 
-def test_list_rating_fields_no_ratings(api_client_with_credentials, list_of_issues):
+def test_list_excludes_rating_fields(api_client_with_credentials, list_of_issues):
+    """The list endpoint is high-traffic; rating fields are only exposed on detail."""
     resp = api_client_with_credentials.get(reverse("api:issue-list"))
     assert resp.status_code == status.HTTP_200_OK
-    assert resp.data["results"][0]["average_rating"] is None
-    assert resp.data["results"][0]["rating_count"] == 0
+    assert "average_rating" not in resp.data["results"][0]
+    assert "rating_count" not in resp.data["results"][0]
 
 
 def test_detail_rating_fields_no_ratings(api_client_with_credentials, issue_with_arc: Issue):
