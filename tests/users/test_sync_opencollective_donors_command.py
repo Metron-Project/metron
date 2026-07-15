@@ -21,6 +21,14 @@ def _contribution(transaction_id, email, cents=500, created_at=None, frequency="
     }
 
 
+def _same_day_next_month(dt):
+    """Advance dt by one calendar month, preserving its day-of-month. Safe for any
+    day <= 28, since every month has at least that many days."""
+    month = dt.month % 12 + 1
+    year = dt.year + (dt.month // 12)
+    return dt.replace(year=year, month=month)
+
+
 @pytest.fixture
 def confirmed_user(create_user):
     return create_user(username="donor", email_confirmed=True)
@@ -247,6 +255,44 @@ class TestSyncOpenCollectiveDonorsCommand:
         assert abs((confirmed_user.supporter_until - expected_until).total_seconds()) < 1
         # Each period is evaluated independently, so the tier reflects only the
         # latest charge, not a cumulative total across all periods.
+        assert confirmed_user.supporter_tier == "friend"
+
+    def test_supporter_until_updates_after_every_monthly_charge_on_a_fixed_day(
+        self, confirmed_user
+    ):
+        """A donor recurring on the 27th of each month should see supporter_until
+        advance to (that specific charge's date + 31 days) after every single
+        charge, each processed in its own command run (as the real sync would be
+        invoked over time) - using real calendar months (28-31 days each), not a
+        fixed 30-day delta, and asserting after each run rather than only at the
+        end."""
+        charge_date = (timezone.now() - timedelta(days=120)).replace(
+            day=27, hour=9, minute=0, second=0, microsecond=0
+        )
+
+        for month_index in range(4):
+            with patch(
+                "users.management.commands.sync_opencollective_donors.fetch_recent_contributions",
+                return_value=[
+                    _contribution(
+                        f"txn-27th-{month_index}",
+                        confirmed_user.email,
+                        cents=200,
+                        created_at=charge_date,
+                    )
+                ],
+            ):
+                call_command("sync_opencollective_donors")
+
+            confirmed_user.refresh_from_db()
+            expected_until = charge_date + timedelta(days=31)
+            assert abs((confirmed_user.supporter_until - expected_until).total_seconds()) < 1, (
+                f"After month {month_index}'s charge ({charge_date.date()}), expected "
+                f"supporter_until {expected_until}, got {confirmed_user.supporter_until}"
+            )
+            assert confirmed_user.supporter_tier == "friend"
+
+            charge_date = _same_day_next_month(charge_date)
         assert confirmed_user.supporter_tier == "friend"
 
     def test_recurring_charge_and_later_onetime_topup_combine_within_the_same_period(
