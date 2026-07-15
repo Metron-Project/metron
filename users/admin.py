@@ -16,6 +16,7 @@ class CustomUserAdmin(UserAdmin):
         "is_active",
         "email_confirmed",
         "supporter_until",
+        "supporter_tier",
         "date_joined",
     )
     list_filter = (
@@ -23,6 +24,7 @@ class CustomUserAdmin(UserAdmin):
         "is_superuser",
         "is_active",
         "email_confirmed",
+        "supporter_tier",
         "date_joined",
         "groups",
     )
@@ -45,7 +47,7 @@ class CustomUserAdmin(UserAdmin):
                 )
             },
         ),
-        ("Supporter status", {"fields": ("supporter_until",)}),
+        ("Supporter status", {"fields": ("supporter_until", "supporter_tier")}),
     )
     add_fieldsets = (
         (

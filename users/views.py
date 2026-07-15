@@ -17,8 +17,6 @@ from django.utils.http import urlsafe_base64_decode, urlsafe_base64_encode
 from django.utils.safestring import mark_safe
 from django.views.generic import DetailView, ListView
 
-from api.throttle import SUPPORTER_SUSTAINED_LIMIT
-
 # Import models for counting
 from comicsdb.models import (
     Arc,
@@ -163,7 +161,7 @@ def user_profile_redirect(request, pk):
 
 
 def get_rate_limit_usage(user):
-    limit = SUPPORTER_SUSTAINED_LIMIT if user.is_supporter else SUSTAINED_LIMIT
+    limit = user.supporter_daily_limit or SUSTAINED_LIMIT
     cache_key = f"throttle_sustained_{user.pk}"
     history = cache.get(cache_key, [])
     now = time.time()
@@ -214,6 +212,7 @@ class UserProfile(LoginRequiredMixin, DetailView):
             context["rate_limit"] = get_rate_limit_usage(user)
             context["is_supporter"] = user.is_supporter
             context["supporter_until"] = user.supporter_until
+            context["supporter_tier_display"] = user.supporter_tier_display
 
         # Add recent reading history (last 10 items)
         context["recent_reads"] = (

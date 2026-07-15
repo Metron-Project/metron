@@ -3,7 +3,7 @@ from datetime import timedelta
 import pytest
 from django.utils import timezone
 
-from users.models import CustomUser, OpenCollectiveDonation
+from users.models import SUPPORTER_TIERS, CustomUser, OpenCollectiveDonation, tier_for_amount
 
 
 def test_user_creation(create_user):
@@ -88,3 +88,63 @@ def test_opencollective_donation_user_set_null_on_delete(create_user):
     user.delete()
     donation.refresh_from_db()
     assert donation.user is None
+
+
+@pytest.mark.parametrize(
+    ("cents", "expected_slug"),
+    [
+        (0, None),
+        (199, None),  # one cent below Friend
+        (200, "friend"),  # exact Friend threshold
+        (300, "friend"),  # $3 -> Friend (round down)
+        (499, "friend"),  # one cent below Backer
+        (500, "backer"),  # exact Backer threshold
+        (700, "backer"),  # $7 -> Backer (round down)
+        (999, "backer"),  # one cent below Sponsor
+        (1000, "sponsor"),  # exact Sponsor threshold
+        (1200, "sponsor"),  # $12 -> Sponsor (round down)
+        (2499, "sponsor"),  # one cent below Mega Sponsor
+        (2500, "mega_sponsor"),  # exact Mega Sponsor threshold
+        (3000, "mega_sponsor"),  # $30 -> Mega Sponsor
+        (100000, "mega_sponsor"),  # well above ceiling - flat, not scaling
+    ],
+)
+def test_tier_for_amount(cents, expected_slug):
+    assert tier_for_amount(cents) == expected_slug
+
+
+def test_supporter_daily_limit_and_display_none_when_not_supporter(create_user):
+    user = create_user()
+    user.supporter_tier = "backer"
+    assert user.is_supporter is False
+    assert user.supporter_daily_limit is None
+    assert user.supporter_tier_display is None
+
+
+@pytest.mark.parametrize(
+    ("slug", "expected_limit", "expected_display"),
+    [
+        ("friend", 7500, "Friend"),
+        ("backer", 10000, "Backer"),
+        ("sponsor", 15000, "Sponsor"),
+        ("mega_sponsor", 25000, "Mega Sponsor"),
+    ],
+)
+def test_supporter_daily_limit_and_display_by_tier(
+    create_user, slug, expected_limit, expected_display
+):
+    user = create_user()
+    user.supporter_until = timezone.now() + timedelta(days=1)
+    user.supporter_tier = slug
+    assert user.supporter_daily_limit == expected_limit
+    assert user.supporter_tier_display == expected_display
+
+
+def test_supporter_daily_limit_falls_back_to_lowest_tier_when_blank(create_user):
+    """Data-integrity fallback: is_supporter True but supporter_tier blank (e.g. a
+    row set before tiers existed)."""
+    user = create_user()
+    user.supporter_until = timezone.now() + timedelta(days=1)
+    assert user.supporter_tier == ""
+    assert user.supporter_daily_limit == SUPPORTER_TIERS[-1][3]
+    assert user.supporter_tier_display == SUPPORTER_TIERS[-1][2]

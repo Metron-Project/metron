@@ -4,6 +4,26 @@ from django.db import models
 from django.utils import timezone
 from sorl.thumbnail import ImageField
 
+# (min_cents, slug, display_name, daily_limit), ordered by descending threshold so
+# tier_for_amount can return on the first match ("round down to the nearest
+# qualifying tier"). Mega Sponsor is a flat ceiling at $25+, not a per-dollar formula.
+SUPPORTER_TIERS: tuple[tuple[int, str, str, int], ...] = (
+    (2500, "mega_sponsor", "Mega Sponsor", 25000),
+    (1000, "sponsor", "Sponsor", 15000),
+    (500, "backer", "Backer", 10000),
+    (200, "friend", "Friend", 7500),
+)
+
+_SUPPORTER_TIERS_BY_SLUG = {slug: (name, limit) for _, slug, name, limit in SUPPORTER_TIERS}
+
+
+def tier_for_amount(cents: int) -> str | None:
+    """Slug of the highest tier the amount qualifies for, or None if below Friend's minimum."""
+    for min_cents, slug, _name, _limit in SUPPORTER_TIERS:
+        if cents >= min_cents:
+            return slug
+    return None
+
 
 class CustomUserManager(BaseUserManager):
     def _create_user(self, username, email, password=None, **extra_fields):
@@ -38,6 +58,11 @@ class CustomUser(AbstractUser):
     bio = models.TextField(blank=True)
     image = ImageField(upload_to="user/", blank=True)
     supporter_until = models.DateTimeField(blank=True, null=True)
+    supporter_tier = models.CharField(
+        max_length=20,
+        blank=True,
+        choices=[(slug, name) for _, slug, name, _ in reversed(SUPPORTER_TIERS)],
+    )
 
     objects = CustomUserManager()
 
@@ -47,6 +72,23 @@ class CustomUser(AbstractUser):
     @property
     def is_supporter(self):
         return bool(self.supporter_until and self.supporter_until > timezone.now())
+
+    @property
+    def supporter_daily_limit(self) -> int | None:
+        if not self.is_supporter:
+            return None
+        tier = _SUPPORTER_TIERS_BY_SLUG.get(self.supporter_tier)
+        # Defensive fallback: is_supporter True but supporter_tier blank/unrecognized
+        # shouldn't normally happen (the sync command always sets both together), but
+        # fail open to the lowest tier (Friend) rather than silently granting nothing.
+        return tier[1] if tier else SUPPORTER_TIERS[-1][3]
+
+    @property
+    def supporter_tier_display(self) -> str | None:
+        if not self.is_supporter:
+            return None
+        tier = _SUPPORTER_TIERS_BY_SLUG.get(self.supporter_tier)
+        return tier[0] if tier else SUPPORTER_TIERS[-1][2]
 
 
 class OpenCollectiveDonation(models.Model):

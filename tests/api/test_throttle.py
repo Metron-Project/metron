@@ -111,6 +111,7 @@ def test_sustained_remaining_decrements_on_successive_requests(api_client_with_c
 def test_supporter_gets_elevated_sustained_limit(create_user, api_client):
     user = create_user()
     user.supporter_until = timezone.now() + timedelta(days=30)
+    user.supporter_tier = "backer"
     user.save()
     api_client.force_authenticate(user=user)
 
@@ -118,6 +119,40 @@ def test_supporter_gets_elevated_sustained_limit(create_user, api_client):
 
     assert resp.status_code == status.HTTP_200_OK
     assert resp["X-RateLimit-Sustained-Limit"] == "10000"
+
+
+@pytest.mark.django_db
+@pytest.mark.parametrize(
+    ("tier", "expected_limit"),
+    [("friend", "7500"), ("backer", "10000"), ("sponsor", "15000"), ("mega_sponsor", "25000")],
+)
+def test_supporter_tier_sets_expected_sustained_limit(
+    create_user, api_client, tier, expected_limit
+):
+    user = create_user()
+    user.supporter_until = timezone.now() + timedelta(days=30)
+    user.supporter_tier = tier
+    user.save()
+    api_client.force_authenticate(user=user)
+
+    resp = api_client.get(reverse("api:arc-list"))
+
+    assert resp.status_code == status.HTTP_200_OK
+    assert resp["X-RateLimit-Sustained-Limit"] == expected_limit
+
+
+@pytest.mark.django_db
+def test_supporter_with_blank_tier_falls_back_to_lowest_tier_limit(create_user, api_client):
+    user = create_user()
+    user.supporter_until = timezone.now() + timedelta(days=30)
+    # supporter_tier left blank on purpose
+    user.save()
+    api_client.force_authenticate(user=user)
+
+    resp = api_client.get(reverse("api:arc-list"))
+
+    assert resp.status_code == status.HTTP_200_OK
+    assert resp["X-RateLimit-Sustained-Limit"] == "7500"
 
 
 @pytest.mark.django_db

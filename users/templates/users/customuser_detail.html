@@ -372,7 +372,7 @@
                                     <i class="fas fa-heart has-text-danger"></i>
                                 </span>
                                 <strong>Supporter Status:</strong>
-                                <span class="tag is-success is-light">Active</span>
+                                <span class="tag is-success is-light">{{ supporter_tier_display }}</span>
                                 <span class="has-text-grey is-size-7">(elevated rate limit until {{ supporter_until|date:"N j, Y" }})</span>
                             </p>
                         {% endif %}
