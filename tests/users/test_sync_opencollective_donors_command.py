@@ -10,13 +10,14 @@ from django.utils import timezone
 from users.models import OpenCollectiveDonation
 
 
-def _contribution(transaction_id, email, cents=500, created_at=None):
+def _contribution(transaction_id, email, cents=500, created_at=None, frequency="MONTHLY"):
     created_at = created_at or timezone.now()
     return {
         "id": transaction_id,
         "createdAt": created_at.isoformat(),
         "amount": {"valueInCents": cents},
         "fromAccount": {"email": email},
+        "order": {"frequency": frequency},
     }
 
 
@@ -56,7 +57,7 @@ class TestSyncOpenCollectiveDonorsCommand:
         expected = donated_at + timedelta(days=31)
         assert abs((confirmed_user.supporter_until - expected).total_seconds()) < 1
 
-    def test_stacking_uses_donation_date_when_existing_status_expired(self, confirmed_user):
+    def test_fresh_donation_with_no_prior_history_starts_its_own_date(self, confirmed_user):
         confirmed_user.supporter_until = timezone.now() - timedelta(days=20)
         confirmed_user.save()
         donated_at = timezone.now() - timedelta(days=3)
@@ -68,6 +69,9 @@ class TestSyncOpenCollectiveDonorsCommand:
             call_command("sync_opencollective_donors")
 
         confirmed_user.refresh_from_db()
+        # supporter_until/tier are reconstructed purely from OpenCollectiveDonation
+        # history, not from whatever was previously (directly) stored on the user -
+        # with no prior recorded donation, this one starts fresh from its own date.
         expected = donated_at + timedelta(days=31)
         assert abs((confirmed_user.supporter_until - expected).total_seconds()) < 1
 
@@ -126,34 +130,45 @@ class TestSyncOpenCollectiveDonorsCommand:
         assert confirmed_user.is_supporter is False
         assert OpenCollectiveDonation.objects.filter(transaction_id="txn-5").exists() is False
 
-    def test_repeat_donation_stacks_on_existing_supporter_window(self, confirmed_user):
-        confirmed_user.supporter_until = timezone.now() + timedelta(days=10)
-        confirmed_user.save()
-        existing_until = confirmed_user.supporter_until
+    def test_repeat_recurring_donation_stacks_on_existing_supporter_window(self, confirmed_user):
+        first_donated_at = timezone.now() - timedelta(days=20)
+        with patch(
+            "users.management.commands.sync_opencollective_donors.fetch_recent_contributions",
+            return_value=[
+                _contribution("txn-6a", confirmed_user.email, created_at=first_donated_at)
+            ],
+        ):
+            call_command("sync_opencollective_donors")
+        confirmed_user.refresh_from_db()
+        first_until = confirmed_user.supporter_until
 
         with patch(
             "users.management.commands.sync_opencollective_donors.fetch_recent_contributions",
-            return_value=[_contribution("txn-6", confirmed_user.email)],
+            return_value=[_contribution("txn-6b", confirmed_user.email)],
         ):
             call_command("sync_opencollective_donors")
 
         confirmed_user.refresh_from_db()
-        assert confirmed_user.supporter_until > existing_until + timedelta(days=29)
+        assert confirmed_user.supporter_until > first_until
 
-    def test_multiple_donations_in_same_run_stack_on_each_other(self, confirmed_user):
+    def test_onetime_topup_within_active_window_upgrades_tier_without_extra_time(
+        self, confirmed_user
+    ):
         with patch(
             "users.management.commands.sync_opencollective_donors.fetch_recent_contributions",
             return_value=[
-                _contribution("txn-a", confirmed_user.email),
-                _contribution("txn-b", confirmed_user.email),
+                _contribution("txn-a", confirmed_user.email, frequency="MONTHLY"),
+                _contribution("txn-b", confirmed_user.email, frequency="ONETIME"),
             ],
         ):
             call_command("sync_opencollective_donors")
 
         confirmed_user.refresh_from_db()
-        assert confirmed_user.supporter_until > timezone.now() + timedelta(days=60)
-        # Two 500c donations combine to 1000c this month -> crosses into Sponsor.
+        # Two 500c donations combine to 1000c -> crosses into Sponsor, but the
+        # recurring charge is the only one that extends supporter_until - the
+        # one-time top-up only upgrades the tier.
         assert confirmed_user.supporter_tier == "sponsor"
+        assert confirmed_user.supporter_until < timezone.now() + timedelta(days=32)
 
     def test_already_processed_transaction_is_not_reprocessed(self, confirmed_user):
         OpenCollectiveDonation.objects.create(
@@ -162,6 +177,7 @@ class TestSyncOpenCollectiveDonorsCommand:
             email=confirmed_user.email,
             amount=500,
             donated_at=timezone.now(),
+            frequency="monthly",
         )
 
         with patch(
@@ -193,6 +209,8 @@ class TestSyncOpenCollectiveDonorsCommand:
             return_value=[_contribution("txn-month-1", confirmed_user.email)],
         ):
             call_command("sync_opencollective_donors")
+        confirmed_user.refresh_from_db()
+        first_until = confirmed_user.supporter_until
 
         with patch(
             "users.management.commands.sync_opencollective_donors.fetch_recent_contributions",
@@ -200,7 +218,72 @@ class TestSyncOpenCollectiveDonorsCommand:
         ):
             call_command("sync_opencollective_donors")
 
+        confirmed_user.refresh_from_db()
         assert OpenCollectiveDonation.objects.filter(user=confirmed_user).count() == 2
+        assert confirmed_user.supporter_until > first_until
+
+    def test_recurring_charges_keep_advancing_supporter_until_each_period(self, confirmed_user):
+        """Regression guard: a pure recurring monthly donor's supporter_until must
+        keep advancing every period, even though each charge lands well within the
+        previous period's 31 days (a $2/mo donor's charges are ~30 days apart) -
+        combining "anything within the rolling window" would otherwise freeze
+        supporter_until at the first charge forever."""
+        charge1 = timezone.now() - timedelta(days=60)
+        charge2 = charge1 + timedelta(days=30)
+        charge3 = charge2 + timedelta(days=30)
+
+        with patch(
+            "users.management.commands.sync_opencollective_donors.fetch_recent_contributions",
+            return_value=[
+                _contribution("txn-r1", confirmed_user.email, cents=200, created_at=charge1),
+                _contribution("txn-r2", confirmed_user.email, cents=200, created_at=charge2),
+                _contribution("txn-r3", confirmed_user.email, cents=200, created_at=charge3),
+            ],
+        ):
+            call_command("sync_opencollective_donors")
+
+        confirmed_user.refresh_from_db()
+        expected_until = charge3 + timedelta(days=31)
+        assert abs((confirmed_user.supporter_until - expected_until).total_seconds()) < 1
+        # Each period is evaluated independently, so the tier reflects only the
+        # latest charge, not a cumulative total across all periods.
+        assert confirmed_user.supporter_tier == "friend"
+
+    def test_recurring_charge_and_later_onetime_topup_combine_within_the_same_period(
+        self, confirmed_user
+    ):
+        """Mirrors the motivating example: a recurring monthly charge, followed by a
+        one-time top-up ~3 weeks later. Whether or not that crosses a calendar-month
+        boundary no longer matters, since combination is based on the donor's
+        rolling 31-day period, not the calendar."""
+        recurring_charge = timezone.now() - timedelta(days=10)
+        topup = recurring_charge + timedelta(days=20)
+
+        with patch(
+            "users.management.commands.sync_opencollective_donors.fetch_recent_contributions",
+            return_value=[
+                _contribution(
+                    "txn-recurring",
+                    confirmed_user.email,
+                    cents=200,
+                    created_at=recurring_charge,
+                    frequency="MONTHLY",
+                ),
+                _contribution(
+                    "txn-topup",
+                    confirmed_user.email,
+                    cents=800,
+                    created_at=topup,
+                    frequency="ONETIME",
+                ),
+            ],
+        ):
+            call_command("sync_opencollective_donors")
+
+        confirmed_user.refresh_from_db()
+        assert confirmed_user.supporter_tier == "sponsor"  # 200 + 800 = 1000c
+        expected_until = recurring_charge + timedelta(days=31)
+        assert abs((confirmed_user.supporter_until - expected_until).total_seconds()) < 1
 
     def test_since_option_overrides_default_lookback(self):
         with patch(
@@ -252,17 +335,26 @@ class TestSyncOpenCollectiveDonorsCommand:
         donation = OpenCollectiveDonation.objects.get(transaction_id="txn-low")
         assert donation.user == confirmed_user
 
-    def test_below_minimum_donations_combine_within_month_to_cross_threshold(self, confirmed_user):
-        day1 = timezone.now().replace(day=1, hour=12, minute=0, second=0, microsecond=0)
+    def test_below_minimum_onetime_donations_combine_within_period_to_cross_threshold(
+        self, confirmed_user
+    ):
+        day1 = timezone.now().replace(hour=12, minute=0, second=0, microsecond=0)
         with patch(
             "users.management.commands.sync_opencollective_donors.fetch_recent_contributions",
             return_value=[
-                _contribution("txn-part-1", confirmed_user.email, cents=100, created_at=day1),
+                _contribution(
+                    "txn-part-1",
+                    confirmed_user.email,
+                    cents=100,
+                    created_at=day1,
+                    frequency="ONETIME",
+                ),
                 _contribution(
                     "txn-part-2",
                     confirmed_user.email,
                     cents=150,
                     created_at=day1 + timedelta(days=1),
+                    frequency="ONETIME",
                 ),
             ],
         ):
@@ -272,51 +364,40 @@ class TestSyncOpenCollectiveDonorsCommand:
         # 100 + 150 = 250c -> crosses the 200c Friend minimum on the second donation.
         assert confirmed_user.is_supporter is True
         assert confirmed_user.supporter_tier == "friend"
+        expected_until = day1 + timedelta(days=31)
+        assert abs((confirmed_user.supporter_until - expected_until).total_seconds()) < 1
 
-    def test_same_month_donations_combine_to_reach_higher_tier(self, confirmed_user):
-        day1 = timezone.now().replace(day=1, hour=12, minute=0, second=0, microsecond=0)
+    def test_onetime_donations_more_than_31_days_apart_do_not_combine(self, confirmed_user):
+        day1 = timezone.now().replace(hour=12, minute=0, second=0, microsecond=0)
+        later = day1 + timedelta(days=40)
         with patch(
             "users.management.commands.sync_opencollective_donors.fetch_recent_contributions",
             return_value=[
-                _contribution("txn-c1", confirmed_user.email, cents=500, created_at=day1),
                 _contribution(
-                    "txn-c2",
+                    "txn-m1", confirmed_user.email, cents=150, created_at=day1, frequency="ONETIME"
+                ),
+                _contribution(
+                    "txn-m2",
                     confirmed_user.email,
-                    cents=2500,
-                    created_at=day1 + timedelta(days=15),
+                    cents=150,
+                    created_at=later,
+                    frequency="ONETIME",
                 ),
             ],
         ):
             call_command("sync_opencollective_donors")
 
         confirmed_user.refresh_from_db()
-        # 500 + 2500 = 3000c this month -> Mega Sponsor, not just the tier either
-        # donation alone would imply.
-        assert confirmed_user.supporter_tier == "mega_sponsor"
-
-    def test_different_calendar_months_do_not_combine(self, confirmed_user):
-        month1 = timezone.now().replace(day=1, hour=12, minute=0, second=0, microsecond=0)
-        next_month = (month1 + timedelta(days=32)).replace(day=1)
-        with patch(
-            "users.management.commands.sync_opencollective_donors.fetch_recent_contributions",
-            return_value=[
-                _contribution("txn-m1", confirmed_user.email, cents=150, created_at=month1),
-                _contribution("txn-m2", confirmed_user.email, cents=150, created_at=next_month),
-            ],
-        ):
-            call_command("sync_opencollective_donors")
-
-        confirmed_user.refresh_from_db()
-        # 150c alone in each of two separate months never crosses the 200c Friend
-        # minimum -> below_minimum both times, since months don't combine.
+        # 150c alone never crosses the 200c Friend minimum, and the two donations
+        # are more than 31 days apart -> below_minimum both times, never combined.
         assert confirmed_user.is_supporter is False
         assert confirmed_user.supporter_tier == ""
 
-    def test_later_month_with_lower_total_does_not_retroactively_change_earlier_grant(
+    def test_later_low_onetime_donation_does_not_retroactively_change_earlier_grant(
         self, confirmed_user
     ):
-        month1 = timezone.now().replace(day=1, hour=12, minute=0, second=0, microsecond=0)
-        next_month = (month1 + timedelta(days=32)).replace(day=1)
+        month1 = timezone.now().replace(hour=12, minute=0, second=0, microsecond=0)
+        later = month1 + timedelta(days=40)
 
         with patch(
             "users.management.commands.sync_opencollective_donors.fetch_recent_contributions",
@@ -331,13 +412,20 @@ class TestSyncOpenCollectiveDonorsCommand:
         with patch(
             "users.management.commands.sync_opencollective_donors.fetch_recent_contributions",
             return_value=[
-                _contribution("txn-lo", confirmed_user.email, cents=150, created_at=next_month)
+                _contribution(
+                    "txn-lo",
+                    confirmed_user.email,
+                    cents=150,
+                    created_at=later,
+                    frequency="ONETIME",
+                )
             ],
         ):
             call_command("sync_opencollective_donors")
         confirmed_user.refresh_from_db()
-        # The below-minimum next-month donation touches neither supporter_until nor
-        # tier; last month's mega_sponsor grant is untouched.
+        # The below-minimum later donation (a new, separate period, since it's more
+        # than 31 days after the first) touches neither supporter_until nor tier;
+        # the earlier mega_sponsor grant is untouched.
         assert confirmed_user.supporter_tier == "mega_sponsor"
 
     def test_summary_counts_below_minimum_outcome(self, confirmed_user, capsys):
@@ -350,17 +438,24 @@ class TestSyncOpenCollectiveDonorsCommand:
         captured = capsys.readouterr()
         assert "Below minimum tier (recorded only): 1" in captured.out
 
-    def test_dry_run_previews_month_combination_across_multiple_donations(self, confirmed_user):
-        day1 = timezone.now().replace(day=1, hour=12, minute=0, second=0, microsecond=0)
+    def test_dry_run_previews_period_combination_across_multiple_donations(self, confirmed_user):
+        day1 = timezone.now().replace(hour=12, minute=0, second=0, microsecond=0)
         with patch(
             "users.management.commands.sync_opencollective_donors.fetch_recent_contributions",
             return_value=[
-                _contribution("txn-dry-1", confirmed_user.email, cents=100, created_at=day1),
+                _contribution(
+                    "txn-dry-1",
+                    confirmed_user.email,
+                    cents=100,
+                    created_at=day1,
+                    frequency="ONETIME",
+                ),
                 _contribution(
                     "txn-dry-2",
                     confirmed_user.email,
                     cents=2500,
                     created_at=day1 + timedelta(days=2),
+                    frequency="ONETIME",
                 ),
             ],
         ):
@@ -372,10 +467,9 @@ class TestSyncOpenCollectiveDonorsCommand:
         assert OpenCollectiveDonation.objects.count() == 0
 
     def test_processing_order_is_ascending_regardless_of_api_response_order(self, confirmed_user):
-        """Regression test for the stacking-inflation bug: feed contributions in
-        descending (newest-first) order, exactly like the real OpenCollective API
-        does, and assert the CORRECT ascending-equivalent result, not the inflated
-        one a naive as-received loop would produce."""
+        """Regression test: feed contributions in descending (newest-first) order,
+        exactly like the real OpenCollective API does, and assert the CORRECT
+        ascending-equivalent result, not what reverse-order processing would give."""
         older = timezone.now() - timedelta(days=40)
         newer = older + timedelta(days=30)
 
@@ -389,9 +483,11 @@ class TestSyncOpenCollectiveDonorsCommand:
             call_command("sync_opencollective_donors")
 
         confirmed_user.refresh_from_db()
-        expected = older + timedelta(days=31) + timedelta(days=31)
+        # Correct (ascending-processed): the later recurring charge is the one that
+        # determines the final period, extending 31 days from its own date.
+        expected = newer + timedelta(days=31)
         assert abs((confirmed_user.supporter_until - expected).total_seconds()) < 1
-        # The inflated (buggy, descending-processed) result would be newer + 62 days,
-        # roughly 30 days later than the correct value - assert we're not there.
-        inflated = newer + timedelta(days=62)
-        assert (inflated - confirmed_user.supporter_until).total_seconds() > 25 * 86400
+        # If processed newest-first, the older donation would be applied LAST and
+        # incorrectly overwrite supporter_until with an earlier date.
+        wrong_if_reverse_processed = older + timedelta(days=31)
+        assert confirmed_user.supporter_until > wrong_if_reverse_processed

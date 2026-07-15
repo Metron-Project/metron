@@ -35,6 +35,9 @@ query Contributions($slug: String!, $dateFrom: DateTime, $limit: Int!, $offset: 
           email
         }
       }
+      order {
+        frequency
+      }
     }
   }
 }

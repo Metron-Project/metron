@@ -105,6 +105,12 @@ class OpenCollectiveDonation(models.Model):
     email = models.EmailField()
     amount = models.IntegerField(help_text="Donation amount in cents.")
     donated_at = models.DateTimeField()
+    frequency = models.CharField(
+        max_length=10,
+        blank=True,
+        choices=[("monthly", "Monthly"), ("yearly", "Yearly"), ("onetime", "One-time")],
+        help_text="The underlying OpenCollective order's frequency.",
+    )
     created_on = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):
