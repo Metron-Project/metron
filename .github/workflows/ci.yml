@@ -69,6 +69,7 @@ jobs:
       HCAPTCHA_SECRET_KEY: "dummy"
       RAPID_API_KEY: "dummy"
       RAPID_API_HOST: "dummy"
+      OPENCOLLECTIVE_API_KEY: "dummy"
       STATIC_ROOT: "/tmp/static"
       MEDIA_ROOT: "/tmp/media"
 

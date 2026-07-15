@@ -17,6 +17,8 @@ from django.utils.http import urlsafe_base64_decode, urlsafe_base64_encode
 from django.utils.safestring import mark_safe
 from django.views.generic import DetailView, ListView
 
+from api.throttle import SUPPORTER_SUSTAINED_LIMIT
+
 # Import models for counting
 from comicsdb.models import (
     Arc,
@@ -38,6 +40,10 @@ from users.tokens import account_activation_token
 from users.utils import send_pushover
 
 logger = logging.getLogger(__name__)
+
+PAGINATE_BY = 28
+SUSTAINED_LIMIT = 5000
+SUSTAINED_DURATION = 86400  # 1 day in seconds
 
 
 def is_activated(user, token):
@@ -156,21 +162,17 @@ def user_profile_redirect(request, pk):
     return redirect(reverse("user-detail", kwargs={"username": user.username}), permanent=True)
 
 
-PAGINATE_BY = 28
-SUSTAINED_LIMIT = 5000
-SUSTAINED_DURATION = 86400  # 1 day in seconds
-
-
 def get_rate_limit_usage(user):
+    limit = SUPPORTER_SUSTAINED_LIMIT if user.is_supporter else SUSTAINED_LIMIT
     cache_key = f"throttle_sustained_{user.pk}"
     history = cache.get(cache_key, [])
     now = time.time()
     used = sum(1 for ts in history if ts > now - SUSTAINED_DURATION)
     return {
-        "limit": SUSTAINED_LIMIT,
+        "limit": limit,
         "used": used,
-        "remaining": max(0, SUSTAINED_LIMIT - used),
-        "percent_used": round(used / SUSTAINED_LIMIT * 100, 1),
+        "remaining": max(0, limit - used),
+        "percent_used": round(used / limit * 100, 1),
     }
 
 
@@ -210,6 +212,8 @@ class UserProfile(LoginRequiredMixin, DetailView):
         # Add daily API rate limit usage (only visible to the user themselves)
         if user.pk == self.request.user.pk:
             context["rate_limit"] = get_rate_limit_usage(user)
+            context["is_supporter"] = user.is_supporter
+            context["supporter_until"] = user.supporter_until
 
         # Add recent reading history (last 10 items)
         context["recent_reads"] = (

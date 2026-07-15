@@ -366,6 +366,16 @@
                                 </progress>
                             </div>
                         {% endif %}
+                        {% if is_supporter %}
+                            <p class="mb-3 mt-4">
+                                <span class="icon" aria-hidden="true">
+                                    <i class="fas fa-heart has-text-danger"></i>
+                                </span>
+                                <strong>Supporter Status:</strong>
+                                <span class="tag is-success is-light">Active</span>
+                                <span class="has-text-grey is-size-7">(elevated rate limit until {{ supporter_until|date:"N j, Y" }})</span>
+                            </p>
+                        {% endif %}
                         <div class="buttons mt-4">
                             <a class="button is-small is-fullwidth"
                                href="{% url 'change_profile' %}">

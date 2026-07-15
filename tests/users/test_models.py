@@ -1,6 +1,9 @@
-import pytest
+from datetime import timedelta
 
-from users.models import CustomUser
+import pytest
+from django.utils import timezone
+
+from users.models import CustomUser, OpenCollectiveDonation
 
 
 def test_user_creation(create_user):
@@ -39,3 +42,49 @@ def test_superuser_creation_without_roles(superuser, staff, test_password, test_
             is_superuser=superuser,
             is_staff=staff,
         )
+
+
+def test_is_supporter_false_when_unset(create_user):
+    user = create_user()
+    assert user.supporter_until is None
+    assert user.is_supporter is False
+
+
+def test_is_supporter_true_when_in_future(create_user):
+    user = create_user()
+    user.supporter_until = timezone.now() + timedelta(days=1)
+    assert user.is_supporter is True
+
+
+def test_is_supporter_false_when_expired(create_user):
+    user = create_user()
+    user.supporter_until = timezone.now() - timedelta(days=1)
+    assert user.is_supporter is False
+
+
+@pytest.mark.django_db
+def test_opencollective_donation_str(create_user):
+    user = create_user()
+    donation = OpenCollectiveDonation.objects.create(
+        transaction_id="12345",
+        user=user,
+        email=user.email,
+        amount=500,
+        donated_at=timezone.now(),
+    )
+    assert str(donation) == f"{user.email} - 12345"
+
+
+@pytest.mark.django_db
+def test_opencollective_donation_user_set_null_on_delete(create_user):
+    user = create_user()
+    donation = OpenCollectiveDonation.objects.create(
+        transaction_id="12345",
+        user=user,
+        email=user.email,
+        amount=500,
+        donated_at=timezone.now(),
+    )
+    user.delete()
+    donation.refresh_from_db()
+    assert donation.user is None

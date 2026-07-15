@@ -2,6 +2,8 @@ import math
 
 from rest_framework.throttling import UserRateThrottle
 
+SUPPORTER_SUSTAINED_LIMIT = 10000
+
 
 class RateLimitHeadersMixin:
     def allow_request(self, request, view):
@@ -28,3 +30,10 @@ class BurstRateThrottle(RateLimitHeadersMixin, UserRateThrottle):
 
 class SustainedRateThrottle(RateLimitHeadersMixin, UserRateThrottle):
     scope = "sustained"
+    SUPPORTER_RATE = f"{SUPPORTER_SUSTAINED_LIMIT}/day"
+
+    def allow_request(self, request, view):
+        user = request.user
+        if user and user.is_authenticated and getattr(user, "is_supporter", False):
+            self.num_requests, self.duration = self.parse_rate(self.SUPPORTER_RATE)
+        return super().allow_request(request, view)

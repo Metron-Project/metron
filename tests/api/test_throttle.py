@@ -1,7 +1,10 @@
+from datetime import timedelta
+
 import pytest
 from django.http import HttpResponse
 from django.test import RequestFactory
 from django.urls import reverse
+from django.utils import timezone
 from rest_framework import status
 
 from api.middleware import RateLimitHeadersMiddleware
@@ -97,3 +100,42 @@ def test_sustained_remaining_decrements_on_successive_requests(api_client_with_c
     remaining1 = int(resp1["X-RateLimit-Sustained-Remaining"])
     remaining2 = int(resp2["X-RateLimit-Sustained-Remaining"])
     assert remaining2 == remaining1 - 1
+
+
+# ---------------------------------------------------------------------------
+# Supporter (OpenCollective donor) elevated rate limit
+# ---------------------------------------------------------------------------
+
+
+@pytest.mark.django_db
+def test_supporter_gets_elevated_sustained_limit(create_user, api_client):
+    user = create_user()
+    user.supporter_until = timezone.now() + timedelta(days=30)
+    user.save()
+    api_client.force_authenticate(user=user)
+
+    resp = api_client.get(reverse("api:arc-list"))
+
+    assert resp.status_code == status.HTTP_200_OK
+    assert resp["X-RateLimit-Sustained-Limit"] == "10000"
+
+
+@pytest.mark.django_db
+def test_non_supporter_gets_default_sustained_limit(api_client_with_credentials):
+    resp = api_client_with_credentials.get(reverse("api:arc-list"))
+
+    assert resp.status_code == status.HTTP_200_OK
+    assert resp["X-RateLimit-Sustained-Limit"] == "5000"
+
+
+@pytest.mark.django_db
+def test_expired_supporter_gets_default_sustained_limit(create_user, api_client):
+    user = create_user()
+    user.supporter_until = timezone.now() - timedelta(days=1)
+    user.save()
+    api_client.force_authenticate(user=user)
+
+    resp = api_client.get(reverse("api:arc-list"))
+
+    assert resp.status_code == status.HTTP_200_OK
+    assert resp["X-RateLimit-Sustained-Limit"] == "5000"
