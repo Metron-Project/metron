@@ -355,8 +355,8 @@
                                         <i class="fas fa-tachometer-alt"></i>
                                     </span>
                                     <strong>Daily API Usage:</strong>
-                                    {{ rate_limit.used }} / {{ rate_limit.limit }}
-                                    <span class="has-text-grey is-size-7">({{ rate_limit.remaining }} remaining)</span>
+                                    {{ rate_limit.used|intcomma }} / {{ rate_limit.limit|intcomma }}
+                                    <span class="has-text-grey is-size-7">({{ rate_limit.remaining|intcomma }} remaining)</span>
                                 </p>
                                 <progress class="progress {% if rate_limit.percent_used >= 90 %}is-danger{% elif rate_limit.percent_used >= 70 %}is-warning{% else %}is-info{% endif %} is-small"
                                           value="{{ rate_limit.used }}"
