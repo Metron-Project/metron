@@ -537,3 +537,161 @@ class TestSyncOpenCollectiveDonorsCommand:
         # incorrectly overwrite supporter_until with an earlier date.
         wrong_if_reverse_processed = older + timedelta(days=31)
         assert confirmed_user.supporter_until > wrong_if_reverse_processed
+
+    # -----------------------------------------------------------------------
+    # Retrying previously-unmatched donations
+    # -----------------------------------------------------------------------
+
+    def test_unmatched_donation_is_rematched_once_email_is_confirmed(self, create_user):
+        user = create_user(username="late-confirmer", email_confirmed=False)
+
+        with patch(
+            "users.management.commands.sync_opencollective_donors.fetch_recent_contributions",
+            return_value=[_contribution("txn-retry-1", user.email, cents=500)],
+        ):
+            call_command("sync_opencollective_donors")
+
+        user.refresh_from_db()
+        assert user.is_supporter is False
+        donation = OpenCollectiveDonation.objects.get(transaction_id="txn-retry-1")
+        assert donation.user is None
+
+        # Donor confirms their email after the fact.
+        user.email_confirmed = True
+        user.save()
+
+        with patch(
+            "users.management.commands.sync_opencollective_donors.fetch_recent_contributions",
+            return_value=[],
+        ):
+            call_command("sync_opencollective_donors")
+
+        user.refresh_from_db()
+        assert user.is_supporter is True
+        assert user.supporter_tier == "backer"
+        donation.refresh_from_db()
+        assert donation.user == user
+
+    def test_still_unmatched_donation_is_not_relogged_or_recounted(self, capsys):
+        with patch(
+            "users.management.commands.sync_opencollective_donors.fetch_recent_contributions",
+            return_value=[_contribution("txn-retry-2", "nobody@example.com", cents=500)],
+        ):
+            call_command("sync_opencollective_donors")
+
+        capsys.readouterr()  # discard the first run's (legitimate) output
+
+        with patch(
+            "users.management.commands.sync_opencollective_donors.fetch_recent_contributions",
+            return_value=[],
+        ):
+            call_command("sync_opencollective_donors")
+
+        captured = capsys.readouterr()
+        assert "txn-retry-2" not in captured.out
+        assert "Rematched" not in captured.out
+
+    def test_ambiguous_donation_is_rematched_once_duplicate_resolved(self, create_user):
+        # create_user always assigns the shared `test_email` fixture value, so both
+        # users below collide on email.
+        user_a = create_user(username="dup-a", email_confirmed=True)
+        user_b = create_user(username="dup-b", email_confirmed=True)
+
+        with patch(
+            "users.management.commands.sync_opencollective_donors.fetch_recent_contributions",
+            return_value=[_contribution("txn-retry-3", user_a.email, cents=500)],
+        ):
+            call_command("sync_opencollective_donors")
+
+        donation = OpenCollectiveDonation.objects.get(transaction_id="txn-retry-3")
+        assert donation.user is None
+
+        # Duplicate resolved - user_b no longer has a confirmed matching email.
+        user_b.email_confirmed = False
+        user_b.save()
+
+        with patch(
+            "users.management.commands.sync_opencollective_donors.fetch_recent_contributions",
+            return_value=[],
+        ):
+            call_command("sync_opencollective_donors")
+
+        donation.refresh_from_db()
+        assert donation.user == user_a
+        user_a.refresh_from_db()
+        assert user_a.is_supporter is True
+
+    def test_rematch_and_fresh_contribution_process_in_chronological_order(self, create_user):
+        user = create_user(username="late-fixer", email_confirmed=False)
+        old_donated_at = timezone.now() - timedelta(days=40)
+
+        with patch(
+            "users.management.commands.sync_opencollective_donors.fetch_recent_contributions",
+            return_value=[
+                _contribution("txn-old-unmatched", user.email, cents=500, created_at=old_donated_at)
+            ],
+        ):
+            call_command("sync_opencollective_donors")
+
+        user.email_confirmed = True
+        user.save()
+
+        new_donated_at = timezone.now()
+        with patch(
+            "users.management.commands.sync_opencollective_donors.fetch_recent_contributions",
+            return_value=[
+                _contribution("txn-new", user.email, cents=500, created_at=new_donated_at)
+            ],
+        ):
+            call_command("sync_opencollective_donors")
+
+        user.refresh_from_db()
+        # The rematched (old) donation must be applied first, then the new
+        # recurring charge extends further from its own (later) date - not the
+        # other way around.
+        expected_until = new_donated_at + timedelta(days=31)
+        assert abs((user.supporter_until - expected_until).total_seconds()) < 1
+        wrong_if_processed_new_then_old = old_donated_at + timedelta(days=31)
+        assert user.supporter_until > wrong_if_processed_new_then_old
+
+    def test_summary_includes_rematched_count(self, create_user, capsys):
+        user = create_user(username="late-confirmer-2", email_confirmed=False)
+        with patch(
+            "users.management.commands.sync_opencollective_donors.fetch_recent_contributions",
+            return_value=[_contribution("txn-retry-5", user.email, cents=500)],
+        ):
+            call_command("sync_opencollective_donors")
+
+        user.email_confirmed = True
+        user.save()
+
+        with patch(
+            "users.management.commands.sync_opencollective_donors.fetch_recent_contributions",
+            return_value=[],
+        ):
+            call_command("sync_opencollective_donors")
+
+        captured = capsys.readouterr()
+        assert "Rematched (previously unmatched): 1" in captured.out
+
+    def test_retry_respects_dry_run(self, create_user):
+        user = create_user(username="dry-retry", email_confirmed=False)
+        with patch(
+            "users.management.commands.sync_opencollective_donors.fetch_recent_contributions",
+            return_value=[_contribution("txn-retry-dry", user.email, cents=500)],
+        ):
+            call_command("sync_opencollective_donors")
+
+        user.email_confirmed = True
+        user.save()
+
+        with patch(
+            "users.management.commands.sync_opencollective_donors.fetch_recent_contributions",
+            return_value=[],
+        ):
+            call_command("sync_opencollective_donors", "--dry-run")
+
+        user.refresh_from_db()
+        assert user.is_supporter is False
+        donation = OpenCollectiveDonation.objects.get(transaction_id="txn-retry-dry")
+        assert donation.user is None

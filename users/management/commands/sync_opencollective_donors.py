@@ -45,102 +45,155 @@ class Command(BaseCommand):
         self.stdout.write(f"Fetching OpenCollective contributions since {since.isoformat()}")
         contributions = fetch_recent_contributions(since)
 
-        # OpenCollective returns newest-first; the supporter-period bucket walk below
-        # is only order-independent when applied oldest-first, so sort ascending.
-        contributions = sorted(contributions, key=self._contribution_sort_key)
-
         known_transaction_ids = set(
             OpenCollectiveDonation.objects.filter(
                 transaction_id__in=[str(c["id"]) for c in contributions]
             ).values_list("transaction_id", flat=True)
         )
 
+        # Previously-unmatched donations (e.g. the donor's OpenCollective email
+        # didn't match any confirmed Metron account at the time) are retried every
+        # run in case the donor has since confirmed a matching email - merged with
+        # this run's fresh contributions and sorted together, since the
+        # supporter-period bucket walk is only correct when a user's donations are
+        # processed in chronological order regardless of which source they came from.
+        items = self._build_items(contributions, known_transaction_ids)
+        items.sort(key=lambda item: item["donated_at"] or datetime.min.replace(tzinfo=UTC))
+
         counts = {
             "matched": 0,
+            "rematched": 0,
             "unmatched": 0,
             "ambiguous": 0,
             "already_processed": 0,
             "below_minimum": 0,
         }
         pending_history: dict[int, list[HistoryEntry]] = {}
-        for contribution in contributions:
-            result = self._process_contribution(
-                contribution, known_transaction_ids, dry_run, pending_history
-            )
-            counts[result] += 1
+        for item in items:
+            result = self._process_item(item, dry_run, pending_history)
+            if result is not None:
+                counts[result] += 1
 
         self._print_summary(dry_run, counts)
 
-    @staticmethod
-    def _contribution_sort_key(contribution: dict) -> datetime:
-        parsed = parse_datetime(contribution["createdAt"])
-        # Unparseable dates sort first; _process_contribution rejects them
-        # individually regardless of position, so this only affects their
-        # relative order among other bad rows, never a real one.
-        return parsed or datetime.min.replace(tzinfo=UTC)
+    def _build_items(
+        self, contributions: list[dict], known_transaction_ids: set[str]
+    ) -> list[dict]:
+        items = []
+        for contribution in contributions:
+            transaction_id = str(contribution["id"])
+            if transaction_id in known_transaction_ids:
+                items.append(
+                    {
+                        "transaction_id": transaction_id,
+                        "donated_at": None,
+                        "already_processed": True,
+                    }
+                )
+                continue
 
-    def _process_contribution(
-        self,
-        contribution: dict,
-        known_transaction_ids: set[str],
-        dry_run: bool,
-        pending_history: dict[int, list[HistoryEntry]],
-    ) -> str:
-        transaction_id = str(contribution["id"])
-        if transaction_id in known_transaction_ids:
+            frequency = ((contribution.get("order") or {}).get("frequency") or "onetime").lower()
+            items.append(
+                {
+                    "transaction_id": transaction_id,
+                    "email": (contribution.get("fromAccount") or {}).get("email"),
+                    "amount": contribution["amount"]["valueInCents"],
+                    "donated_at": parse_datetime(contribution["createdAt"]),
+                    "frequency": frequency,
+                    "existing_row": None,
+                    "already_processed": False,
+                    "is_retry": False,
+                }
+            )
+
+        for row in OpenCollectiveDonation.objects.filter(user__isnull=True):
+            items.append(
+                {
+                    "transaction_id": row.transaction_id,
+                    "email": row.email,
+                    "amount": row.amount,
+                    "donated_at": row.donated_at,
+                    "frequency": row.frequency,
+                    "existing_row": row,
+                    "already_processed": False,
+                    "is_retry": True,
+                }
+            )
+
+        return items
+
+    def _reject(self, transaction_id: str, is_retry: bool, message: str, result: str) -> str | None:
+        """Log a rejection and return its result category, unless this is a retry of
+        a previously-unmatched donation - in that case stay silent and return None,
+        so an unresolved donation isn't re-logged/re-counted on every run."""
+        if is_retry:
+            return None
+        self.stdout.write(self.style.WARNING(f"  Transaction {transaction_id}: {message}"))
+        return result
+
+    def _process_item(
+        self, item: dict, dry_run: bool, pending_history: dict[int, list[HistoryEntry]]
+    ) -> str | None:
+        transaction_id = item["transaction_id"]
+        if item["already_processed"]:
             return "already_processed"
 
-        email = (contribution.get("fromAccount") or {}).get("email")
+        is_retry = item["is_retry"]
+
+        email = item["email"]
         if not email:
-            self.stdout.write(
-                self.style.WARNING(
-                    f"  Transaction {transaction_id}: no donor email available - skipping"
-                )
+            return self._reject(
+                transaction_id, is_retry, "no donor email available - skipping", "unmatched"
             )
-            return "unmatched"
 
-        donated_at = parse_datetime(contribution["createdAt"])
+        donated_at = item["donated_at"]
         if donated_at is None:
-            self.stdout.write(
-                self.style.WARNING(f"  Transaction {transaction_id}: unparseable date - skipping")
+            return self._reject(
+                transaction_id, is_retry, "unparseable date - skipping", "unmatched"
             )
-            return "unmatched"
-
-        frequency = ((contribution.get("order") or {}).get("frequency") or "onetime").lower()
 
         donation = {
             "transaction_id": transaction_id,
             "email": email,
-            "amount": contribution["amount"]["valueInCents"],
+            "amount": item["amount"],
             "donated_at": donated_at,
-            "frequency": frequency,
+            "frequency": item["frequency"],
         }
+        existing_row = item["existing_row"]
 
         candidates = list(CustomUser.objects.filter(email__iexact=email, email_confirmed=True))
 
         if len(candidates) > 1:
-            self.stdout.write(
-                self.style.WARNING(
-                    f"  Transaction {transaction_id}: multiple confirmed accounts match "
-                    f"{email} - skipping"
-                )
+            result = self._reject(
+                transaction_id,
+                is_retry,
+                f"multiple confirmed accounts match {email} - skipping",
+                "ambiguous",
             )
-            if not dry_run:
-                self._record_donation(donation, user=None)
-            return "ambiguous"
+            if result and not dry_run:
+                self._record_donation(donation, user=None, existing=existing_row)
+            return result
 
         user = candidates[0] if candidates else None
         if user is None:
+            message = f"no confirmed Metron account matches {email}"
+            result = self._reject(transaction_id, is_retry, message, "unmatched")
+            if result and not dry_run:
+                self._record_donation(donation, user=None, existing=existing_row)
+            return result
+
+        if is_retry:
             self.stdout.write(
-                self.style.WARNING(
-                    f"  Transaction {transaction_id}: no confirmed Metron account matches {email}"
+                self.style.SUCCESS(
+                    f"  Transaction {transaction_id}: now matches a confirmed account "
+                    f"({user.username}) that didn't match when originally imported - reprocessing"
                 )
             )
-            if not dry_run:
-                self._record_donation(donation, user=None)
-            return "unmatched"
 
-        return self._grant_supporter_status(donation, user, dry_run, pending_history)
+        result = self._grant_supporter_status(
+            donation, user, dry_run, pending_history, existing_row
+        )
+        return "rematched" if is_retry else result
 
     def _grant_supporter_status(
         self,
@@ -148,6 +201,7 @@ class Command(BaseCommand):
         user: CustomUser,
         dry_run: bool,
         pending_history: dict[int, list[HistoryEntry]],
+        existing_row: OpenCollectiveDonation | None = None,
     ) -> str:
         transaction_id = donation["transaction_id"]
         donated_at = donation["donated_at"]
@@ -170,7 +224,7 @@ class Command(BaseCommand):
                 )
             )
             if not dry_run:
-                self._record_donation(donation, user=user)
+                self._record_donation(donation, user=user, existing=existing_row)
             return "below_minimum"
 
         new_until = bucket_start + SUPPORTER_DURATION
@@ -191,7 +245,7 @@ class Command(BaseCommand):
             user.supporter_until = new_until
             user.supporter_tier = tier
             user.save(update_fields=["supporter_until", "supporter_tier"])
-            self._record_donation(donation, user=user)
+            self._record_donation(donation, user=user, existing=existing_row)
 
         self.stdout.write(
             self.style.SUCCESS(
@@ -255,6 +309,10 @@ class Command(BaseCommand):
         if dry_run:
             self.stdout.write(self.style.WARNING("DRY RUN - No changes were made"))
         self.stdout.write(self.style.SUCCESS(f"Matched: {counts['matched']}"))
+        if counts["rematched"]:
+            self.stdout.write(
+                self.style.SUCCESS(f"Rematched (previously unmatched): {counts['rematched']}")
+            )
         if counts["below_minimum"]:
             self.stdout.write(
                 self.style.WARNING(f"Below minimum tier (recorded only): {counts['below_minimum']}")
@@ -287,5 +345,11 @@ class Command(BaseCommand):
         return timezone.now() - timedelta(days=DEFAULT_LOOKBACK_DAYS)
 
     @staticmethod
-    def _record_donation(donation: dict, user: CustomUser | None) -> None:
-        OpenCollectiveDonation.objects.create(user=user, **donation)
+    def _record_donation(
+        donation: dict, user: CustomUser | None, existing: OpenCollectiveDonation | None = None
+    ) -> None:
+        if existing is not None:
+            existing.user = user
+            existing.save(update_fields=["user"])
+        else:
+            OpenCollectiveDonation.objects.create(user=user, **donation)
