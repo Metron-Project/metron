@@ -31,7 +31,7 @@ EXPOSE 8000
 # Adjust --workers based on your droplet's CPU count.
 CMD ["gunicorn", "metron.wsgi:application", \
     "--bind", "0.0.0.0:8000", \
-    "--workers", "5", \
+    "--workers", "9", \
     "--timeout", "60", \
     "--max-requests", "1000", \
     "--max-requests-jitter", "50", \
