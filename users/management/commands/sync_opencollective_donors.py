@@ -1,4 +1,6 @@
+from dataclasses import dataclass
 from datetime import UTC, datetime, timedelta
+from typing import NamedTuple
 
 from django.core.management.base import BaseCommand, CommandError
 from django.db import transaction
@@ -16,6 +18,27 @@ RECURRING_FREQUENCIES = {"monthly", "yearly"}
 # (donated_at, amount_cents, is_recurring) history entries used to reconstruct a
 # donor's current "supporter period" bucket.
 HistoryEntry = tuple[datetime, int, bool]
+
+
+@dataclass
+class PendingItem:
+    """A single contribution to process, whether freshly fetched from OpenCollective
+    or a previously-unmatched donation being retried. `already_processed` items only
+    carry a transaction_id/donated_at - everything else is skipped for them."""
+
+    transaction_id: str
+    already_processed: bool = False
+    is_retry: bool = False
+    email: str | None = None
+    amount: int | None = None
+    donated_at: datetime | None = None
+    frequency: str = ""
+    existing_row: OpenCollectiveDonation | None = None
+
+
+class Grant(NamedTuple):
+    tier: str
+    new_until: datetime
 
 
 class Command(BaseCommand):
@@ -58,7 +81,7 @@ class Command(BaseCommand):
         # supporter-period bucket walk is only correct when a user's donations are
         # processed in chronological order regardless of which source they came from.
         items = self._build_items(contributions, known_transaction_ids)
-        items.sort(key=lambda item: item["donated_at"] or datetime.min.replace(tzinfo=UTC))
+        items.sort(key=lambda item: item.donated_at or datetime.min.replace(tzinfo=UTC))
 
         counts = {
             "matched": 0,
@@ -78,46 +101,36 @@ class Command(BaseCommand):
 
     def _build_items(
         self, contributions: list[dict], known_transaction_ids: set[str]
-    ) -> list[dict]:
+    ) -> list[PendingItem]:
         items = []
         for contribution in contributions:
             transaction_id = str(contribution["id"])
             if transaction_id in known_transaction_ids:
-                items.append(
-                    {
-                        "transaction_id": transaction_id,
-                        "donated_at": None,
-                        "already_processed": True,
-                    }
-                )
+                items.append(PendingItem(transaction_id=transaction_id, already_processed=True))
                 continue
 
             frequency = ((contribution.get("order") or {}).get("frequency") or "onetime").lower()
             items.append(
-                {
-                    "transaction_id": transaction_id,
-                    "email": (contribution.get("fromAccount") or {}).get("email"),
-                    "amount": contribution["amount"]["valueInCents"],
-                    "donated_at": parse_datetime(contribution["createdAt"]),
-                    "frequency": frequency,
-                    "existing_row": None,
-                    "already_processed": False,
-                    "is_retry": False,
-                }
+                PendingItem(
+                    transaction_id=transaction_id,
+                    email=(contribution.get("fromAccount") or {}).get("email"),
+                    amount=contribution["amount"]["valueInCents"],
+                    donated_at=parse_datetime(contribution["createdAt"]),
+                    frequency=frequency,
+                )
             )
 
         for row in OpenCollectiveDonation.objects.filter(user__isnull=True):
             items.append(
-                {
-                    "transaction_id": row.transaction_id,
-                    "email": row.email,
-                    "amount": row.amount,
-                    "donated_at": row.donated_at,
-                    "frequency": row.frequency,
-                    "existing_row": row,
-                    "already_processed": False,
-                    "is_retry": True,
-                }
+                PendingItem(
+                    transaction_id=row.transaction_id,
+                    email=row.email,
+                    amount=row.amount,
+                    donated_at=row.donated_at,
+                    frequency=row.frequency,
+                    existing_row=row,
+                    is_retry=True,
+                )
             )
 
         return items
@@ -131,69 +144,60 @@ class Command(BaseCommand):
         self.stdout.write(self.style.WARNING(f"  Transaction {transaction_id}: {message}"))
         return result
 
-    def _process_item(
-        self, item: dict, dry_run: bool, pending_history: dict[int, list[HistoryEntry]]
+    def _reject_and_record(
+        self, item: PendingItem, donation: dict, message: str, result: str, dry_run: bool
     ) -> str | None:
-        transaction_id = item["transaction_id"]
-        if item["already_processed"]:
+        outcome = self._reject(item.transaction_id, item.is_retry, message, result)
+        if outcome and not dry_run:
+            self._record_donation(donation, user=None, existing=item.existing_row)
+        return outcome
+
+    def _process_item(
+        self, item: PendingItem, dry_run: bool, pending_history: dict[int, list[HistoryEntry]]
+    ) -> str | None:
+        if item.already_processed:
             return "already_processed"
 
-        is_retry = item["is_retry"]
+        if not item.email:
+            message = "no donor email available - skipping"
+            return self._reject(item.transaction_id, item.is_retry, message, "unmatched")
 
-        email = item["email"]
-        if not email:
+        if item.donated_at is None:
             return self._reject(
-                transaction_id, is_retry, "no donor email available - skipping", "unmatched"
-            )
-
-        donated_at = item["donated_at"]
-        if donated_at is None:
-            return self._reject(
-                transaction_id, is_retry, "unparseable date - skipping", "unmatched"
+                item.transaction_id, item.is_retry, "unparseable date - skipping", "unmatched"
             )
 
         donation = {
-            "transaction_id": transaction_id,
-            "email": email,
-            "amount": item["amount"],
-            "donated_at": donated_at,
-            "frequency": item["frequency"],
+            "transaction_id": item.transaction_id,
+            "email": item.email,
+            "amount": item.amount,
+            "donated_at": item.donated_at,
+            "frequency": item.frequency,
         }
-        existing_row = item["existing_row"]
 
-        candidates = list(CustomUser.objects.filter(email__iexact=email, email_confirmed=True))
+        candidates = list(CustomUser.objects.filter(email__iexact=item.email, email_confirmed=True))
 
         if len(candidates) > 1:
-            result = self._reject(
-                transaction_id,
-                is_retry,
-                f"multiple confirmed accounts match {email} - skipping",
-                "ambiguous",
-            )
-            if result and not dry_run:
-                self._record_donation(donation, user=None, existing=existing_row)
-            return result
+            message = f"multiple confirmed accounts match {item.email} - skipping"
+            return self._reject_and_record(item, donation, message, "ambiguous", dry_run)
 
         user = candidates[0] if candidates else None
         if user is None:
-            message = f"no confirmed Metron account matches {email}"
-            result = self._reject(transaction_id, is_retry, message, "unmatched")
-            if result and not dry_run:
-                self._record_donation(donation, user=None, existing=existing_row)
-            return result
+            message = f"no confirmed Metron account matches {item.email}"
+            return self._reject_and_record(item, donation, message, "unmatched", dry_run)
 
-        if is_retry:
+        if item.is_retry:
             self.stdout.write(
                 self.style.SUCCESS(
-                    f"  Transaction {transaction_id}: now matches a confirmed account "
+                    f"  Transaction {item.transaction_id}: now matches a confirmed account "
                     f"({user.username}) that didn't match when originally imported - reprocessing"
                 )
             )
 
         result = self._grant_supporter_status(
-            donation, user, dry_run, pending_history, existing_row
+            donation, user, dry_run, pending_history, item.existing_row
         )
-        return "rematched" if is_retry else result
+        return "rematched" if item.is_retry else result
 
     def _grant_supporter_status(
         self,
@@ -233,7 +237,7 @@ class Command(BaseCommand):
         # only counts as extending time if the bucket it's joining wasn't already
         # granting a tier - otherwise it's just a same-period tier upgrade.
         extends_time = is_recurring or tier_for_amount(bucket_total_before) is None
-        grant = (tier, new_until)
+        grant = Grant(tier, new_until)
 
         if dry_run:
             self.stdout.write(
@@ -255,18 +259,24 @@ class Command(BaseCommand):
         return "matched"
 
     @staticmethod
-    def _grant_message(transaction_id, user, grant, extends_time, *, would=True):
-        tier, new_until = grant
+    def _grant_message(
+        transaction_id: str,
+        user: CustomUser,
+        grant: Grant,
+        extends_time: bool,
+        *,
+        would: bool = True,
+    ) -> str:
         if extends_time:
             verb = "would extend" if would else "extended"
             return (
                 f"  Transaction {transaction_id}: {verb} {user.username}'s supporter status "
-                f"to {new_until.isoformat()} at the {tier} tier"
+                f"to {grant.new_until.isoformat()} at the {grant.tier} tier"
             )
         upgrade_verb = "would upgrade" if would else "upgraded"
         return (
-            f"  Transaction {transaction_id}: {upgrade_verb} {user.username} to the {tier} tier "
-            "for the current period (no additional time added)"
+            f"  Transaction {transaction_id}: {upgrade_verb} {user.username} to the {grant.tier} "
+            "tier for the current period (no additional time added)"
         )
 
     @staticmethod
