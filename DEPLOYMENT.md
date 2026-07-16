@@ -30,6 +30,9 @@ with Quadlet (systemd-managed containers).
   - [Reserved IP (~zero downtime)](#reserved-ip-zero-downtime)
 - [Updating the application](#updating-the-application)
 - [History cleanup](#history-cleanup)
+- [OpenCollective donor sync](#opencollective-donor-sync)
+  - [Initial setup](#initial-setup)
+  - [Automated sync with a systemd timer](#automated-sync-with-a-systemd-timer)
 - [Database backups](#database-backups)
   - [One-time setup](#one-time-setup)
   - [Manual backup](#manual-backup)
@@ -582,6 +585,87 @@ systemctl --user enable --now metron-history-cleanup.timer
 
 # Verify it is scheduled
 systemctl --user list-timers metron-history-cleanup.timer
+```
+
+---
+
+## OpenCollective donor sync
+
+Metron rewards OpenCollective donors with a temporary elevated API rate limit
+(Friend/Backer/Sponsor/Mega Sponsor, based on donation amount). The
+`sync_opencollective_donors` management command pulls recent contributions from
+OpenCollective and matches donors to Metron accounts by **confirmed** email.
+Set up a systemd user timer to run it hourly.
+
+### Initial setup
+
+Add an OpenCollective personal token (needs the `orders` and `transactions`
+scopes on the collective) and the collective's slug to the env file:
+
+```bash
+vi ~/.config/containers/metron.env
+# Set OPENCOLLECTIVE_API_KEY and OPENCOLLECTIVE_SLUG
+```
+
+Run the command once manually with `--since` to set the initial import cutoff,
+so historical donations before that date aren't retroactively processed:
+
+```bash
+podman exec metron-web python manage.py sync_opencollective_donors --since YYYY-MM-DD
+```
+
+Subsequent runs — including the hourly timer below — automatically resume from
+the latest imported donation, so `--since` is only needed for this first run.
+Use `--dry-run` alongside it to preview what would happen without writing
+anything.
+
+### Automated sync with a systemd timer
+
+Create the service unit at
+`~/.config/systemd/user/metron-opencollective-sync.service`:
+
+```ini
+[Unit]
+Description=Sync OpenCollective donors and grant supporter rate limits
+After=metron-web.service
+Requires=metron-web.service
+
+[Service]
+Type=oneshot
+ExecStart=podman exec metron-web python manage.py sync_opencollective_donors
+```
+
+Create the timer unit at
+`~/.config/systemd/user/metron-opencollective-sync.timer`:
+
+```ini
+[Unit]
+Description=Hourly OpenCollective donor sync
+
+[Timer]
+OnCalendar=hourly
+RandomizedDelaySec=5m
+Persistent=true
+
+[Install]
+WantedBy=timers.target
+```
+
+Enable and start the timer:
+
+```bash
+systemctl --user daemon-reload
+systemctl --user enable --now metron-opencollective-sync.timer
+
+# Verify it is scheduled
+systemctl --user list-timers metron-opencollective-sync.timer
+```
+
+Test a manual run and check the output:
+
+```bash
+systemctl --user start metron-opencollective-sync
+journalctl _SYSTEMD_USER_UNIT=metron-opencollective-sync.service -n 20
 ```
 
 ---

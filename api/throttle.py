@@ -28,3 +28,11 @@ class BurstRateThrottle(RateLimitHeadersMixin, UserRateThrottle):
 
 class SustainedRateThrottle(RateLimitHeadersMixin, UserRateThrottle):
     scope = "sustained"
+
+    def allow_request(self, request, view):
+        user = request.user
+        if user and user.is_authenticated:
+            supporter_limit = getattr(user, "supporter_daily_limit", None)
+            if supporter_limit:
+                self.num_requests, self.duration = self.parse_rate(f"{supporter_limit}/day")
+        return super().allow_request(request, view)

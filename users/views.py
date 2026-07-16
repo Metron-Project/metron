@@ -39,6 +39,10 @@ from users.utils import send_pushover
 
 logger = logging.getLogger(__name__)
 
+PAGINATE_BY = 28
+SUSTAINED_LIMIT = 5000
+SUSTAINED_DURATION = 86400  # 1 day in seconds
+
 
 def is_activated(user, token):
     return user is not None and account_activation_token.check_token(user, token)
@@ -156,21 +160,17 @@ def user_profile_redirect(request, pk):
     return redirect(reverse("user-detail", kwargs={"username": user.username}), permanent=True)
 
 
-PAGINATE_BY = 28
-SUSTAINED_LIMIT = 5000
-SUSTAINED_DURATION = 86400  # 1 day in seconds
-
-
 def get_rate_limit_usage(user):
+    limit = user.supporter_daily_limit or SUSTAINED_LIMIT
     cache_key = f"throttle_sustained_{user.pk}"
     history = cache.get(cache_key, [])
     now = time.time()
     used = sum(1 for ts in history if ts > now - SUSTAINED_DURATION)
     return {
-        "limit": SUSTAINED_LIMIT,
+        "limit": limit,
         "used": used,
-        "remaining": max(0, SUSTAINED_LIMIT - used),
-        "percent_used": round(used / SUSTAINED_LIMIT * 100, 1),
+        "remaining": max(0, limit - used),
+        "percent_used": round(used / limit * 100, 1),
     }
 
 
@@ -210,6 +210,9 @@ class UserProfile(LoginRequiredMixin, DetailView):
         # Add daily API rate limit usage (only visible to the user themselves)
         if user.pk == self.request.user.pk:
             context["rate_limit"] = get_rate_limit_usage(user)
+            context["is_supporter"] = user.is_supporter
+            context["supporter_until"] = user.supporter_until
+            context["supporter_tier_display"] = user.supporter_tier_display
 
         # Add recent reading history (last 10 items)
         context["recent_reads"] = (

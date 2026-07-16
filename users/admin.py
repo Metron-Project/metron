@@ -2,7 +2,7 @@ from django.contrib import admin
 from django.contrib.auth.admin import UserAdmin
 
 from users.forms import CustomUserChangeForm, CustomUserCreationForm
-from users.models import CustomUser
+from users.models import CustomUser, OpenCollectiveDonation
 
 
 @admin.register(CustomUser)
@@ -10,12 +10,21 @@ class CustomUserAdmin(UserAdmin):
     add_form = CustomUserCreationForm
     form = CustomUserChangeForm
     model = CustomUser
-    list_display = ("username", "email", "is_active", "email_confirmed", "date_joined")
+    list_display = (
+        "username",
+        "email",
+        "is_active",
+        "email_confirmed",
+        "supporter_until",
+        "supporter_tier",
+        "date_joined",
+    )
     list_filter = (
         "is_staff",
         "is_superuser",
         "is_active",
         "email_confirmed",
+        "supporter_tier",
         "date_joined",
         "groups",
     )
@@ -38,6 +47,7 @@ class CustomUserAdmin(UserAdmin):
                 )
             },
         ),
+        ("Supporter status", {"fields": ("supporter_until", "supporter_tier")}),
     )
     add_fieldsets = (
         (
@@ -48,3 +58,11 @@ class CustomUserAdmin(UserAdmin):
             },
         ),
     )
+
+
+@admin.register(OpenCollectiveDonation)
+class OpenCollectiveDonationAdmin(admin.ModelAdmin):
+    list_display = ("transaction_id", "user", "email", "amount", "donated_at")
+    list_filter = ("donated_at",)
+    search_fields = ("transaction_id", "email", "user__username")
+    ordering = ("-donated_at",)
