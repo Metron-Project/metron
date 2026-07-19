@@ -70,6 +70,12 @@ class IssueFilter(df.rest_framework.FilterSet):
         label="Distributor SKU", field_name="sku", lookup_expr="iexact"
     )
     upc = df.rest_framework.CharFilter(label="UPC Code", field_name="upc", lookup_expr="iexact")
+    upc_starts_with = df.rest_framework.CharFilter(
+        label="UPC Code starts with (e.g. the 12-digit UPC-A read by a mobile scanner "
+        "that strips the 5-digit EAN supplemental)",
+        field_name="upc",
+        lookup_expr="startswith",
+    )
     cv_id = df.rest_framework.NumberFilter(
         label="Comic Vine ID", field_name="cv_id", lookup_expr="exact"
     )
