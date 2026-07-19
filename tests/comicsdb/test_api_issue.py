@@ -352,3 +352,24 @@ def test_filter_by_multiple_role_ids(
     assert resp.status_code == status.HTTP_200_OK
     assert resp.data["count"] == 1
     assert resp.data["results"][0]["id"] == basic_issue.id
+
+
+def test_filter_by_upc_starts_with(api_client_with_credentials, basic_issue: Issue):
+    basic_issue.upc = "76194137738400111"
+    basic_issue.save()
+    resp = api_client_with_credentials.get(
+        reverse("api:issue-list"), {"upc_starts_with": "761941377384"}
+    )
+    assert resp.status_code == status.HTTP_200_OK
+    assert resp.data["count"] == 1
+    assert resp.data["results"][0]["id"] == basic_issue.id
+
+
+def test_filter_by_upc_starts_with_no_match(api_client_with_credentials, basic_issue: Issue):
+    basic_issue.upc = "76194137738400111"
+    basic_issue.save()
+    resp = api_client_with_credentials.get(
+        reverse("api:issue-list"), {"upc_starts_with": "000000000000"}
+    )
+    assert resp.status_code == status.HTTP_200_OK
+    assert resp.data["count"] == 0

@@ -328,6 +328,7 @@ The Issue endpoint supports the most comprehensive filtering options:
 - `alt_number` - Alternate number (case-insensitive, exact match)
 - `sku` - Distributor SKU (exact match)
 - `upc` - UPC code (exact match)
+- `upc_starts_with` - UPC code prefix match. Useful for mobile barcode scanners (e.g. Google ML Kit, AVFoundation) that only read the 12-digit UPC-A and drop the 5-digit EAN supplemental — pass just those 12 digits to match issues whose stored `upc` begins with them.
 - `cv_id` - Comic Vine ID
 - `gcd_id` - Grand Comics Database ID
 - `missing_cv_id` - Boolean, issues without Comic Vine ID
@@ -429,6 +430,9 @@ GET /api/issue/?cover_year=2024&cover_month=12
 
 # Find by UPC
 GET /api/issue/?upc=75960609558200111
+
+# Find by the 12-digit UPC-A from a mobile barcode scanner (no EAN supplemental)
+GET /api/issue/?upc_starts_with=759606095582
 
 # Get all issues with a credit for a specific creator
 GET /api/issue/?creator_id=123
