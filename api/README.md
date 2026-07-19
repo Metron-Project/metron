@@ -2011,8 +2011,7 @@ GET /api/issue/?series_name=spider-man&page=3
 
 **Page Size:**
 
-- Default page size varies by endpoint (typically 25-100 items)
-- Some endpoints may allow custom page size via `?page_size=N`
+- Default page size varies by endpoint (100 items)
 
 ---
 
