@@ -64,15 +64,7 @@
                 <span class="tag is-warning is-light is-rounded ml-2"
                       title="{{ issue.rating.short_description }}">{{ issue.rating.name }}</span>
             {% endif %}
-            {% if average_rating %}
-                <span class="has-text-grey">&middot;</span>
-                <span style="color: #ffce54;">
-                    {% for star_num in "12345" %}
-                        <i class="{% if star_num|add:'0' <= average_rating %}fas{% else %}far{% endif %} fa-star"></i>
-                    {% endfor %}
-                </span>
-                <span class="has-text-grey ml-1">{{ average_rating|floatformat:1 }} ({{ rating_count }} rating{{ rating_count|pluralize }})</span>
-            {% endif %}
+            {% include "partials/rating_summary.html" with rated_object=issue average_rating=average_rating rating_count=rating_count %}
         </p>
     </header>
     {# Navigation Bar #}

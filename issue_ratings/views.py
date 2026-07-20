@@ -1,6 +1,8 @@
 from django.contrib.auth.decorators import login_required
 from django.db.models import Avg, Count
-from django.shortcuts import get_object_or_404, render
+from django.http import HttpResponse
+from django.shortcuts import get_object_or_404
+from django.template.loader import render_to_string
 from django.views.decorators.http import require_POST
 
 from comicsdb.models.issue import Issue
@@ -32,9 +34,9 @@ def update_issue_rating(request, pk):
         count=Count("id"),
     )
 
-    # Return the updated rating partial
-    return render(
-        request,
+    # Return the updated rating widget, plus an out-of-band update for the
+    # average-rating summary shown in the page header so the two stay in sync.
+    widget_html = render_to_string(
         "partials/rating_widget.html",
         {
             "rated_object": issue,
@@ -46,4 +48,16 @@ def update_issue_rating(request, pk):
             "show_ratings": True,
             "can_rate": True,
         },
+        request=request,
     )
+    summary_html = render_to_string(
+        "partials/rating_summary.html",
+        {
+            "rated_object": issue,
+            "average_rating": avg_data["avg"],
+            "rating_count": avg_data["count"],
+            "oob": True,
+        },
+        request=request,
+    )
+    return HttpResponse(widget_html + summary_html)
