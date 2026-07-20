@@ -2,14 +2,37 @@ from autocomplete import widgets
 from django import forms
 
 from comicsdb.autocomplete import ArcAutocomplete, IssueAutocomplete, SeriesAutocomplete
+from comicsdb.forms.widgets import SafeAutocompleteWidget
 from comicsdb.models.arc import Arc
 from comicsdb.models.issue import Issue
 from comicsdb.models.series import Series
+from reading_lists.autocomplete import ReadingListAutocomplete
 from reading_lists.models import ReadingList
 
 
 class ReadingListForm(forms.ModelForm):
     """Form for creating and editing reading lists."""
+
+    previous = forms.ModelChoiceField(
+        queryset=ReadingList.objects.all(),
+        required=False,
+        label="Previous List",
+        help_text="The reading list that comes before this one in a reading order (optional)",
+        widget=SafeAutocompleteWidget(
+            ac_class=ReadingListAutocomplete,
+            attrs={"placeholder": "Search for a reading list...", "class": "input"},
+        ),
+    )
+    next = forms.ModelChoiceField(
+        queryset=ReadingList.objects.all(),
+        required=False,
+        label="Next List",
+        help_text="The reading list that comes after this one in a reading order (optional)",
+        widget=SafeAutocompleteWidget(
+            ac_class=ReadingListAutocomplete,
+            attrs={"placeholder": "Search for a reading list...", "class": "input"},
+        ),
+    )
 
     class Meta:
         model = ReadingList
@@ -21,6 +44,8 @@ class ReadingListForm(forms.ModelForm):
             "list_type",
             "attribution_source",
             "attribution_url",
+            "previous",
+            "next",
         )
         widgets = {
             "name": forms.TextInput(attrs={"placeholder": "Enter a name for your reading list"}),
@@ -54,6 +79,15 @@ class ReadingListForm(forms.ModelForm):
             "attribution_source": "Where did you get this reading list from? (optional)",
             "attribution_url": "URL of the specific page for this reading list (optional)",
         }
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        # A reading list can't link to itself as its own previous/next entry.
+        queryset = ReadingList.objects.all()
+        if self.instance.pk:
+            queryset = queryset.exclude(pk=self.instance.pk)
+        self.fields["previous"].queryset = queryset
+        self.fields["next"].queryset = queryset
 
 
 class AddIssueWithSearchForm(forms.Form):

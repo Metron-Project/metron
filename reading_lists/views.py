@@ -401,7 +401,7 @@ class ReadingListDetailView(DetailView):
     def get_queryset(self):
         # Build the base queryset with all necessary prefetches and annotations
         queryset = (
-            ReadingList.objects.select_related("user")
+            ReadingList.objects.select_related("user", "previous", "next")
             .prefetch_related(
                 Prefetch(
                     "reading_list_items",

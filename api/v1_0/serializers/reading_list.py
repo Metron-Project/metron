@@ -41,6 +41,14 @@ class ReadingListItemSerializer(serializers.ModelSerializer):
         fields = ("id", "issue", "order", "issue_type")
 
 
+class ReadingListNavSerializer(serializers.ModelSerializer):
+    """Minimal representation of a reading list used for previous/next links."""
+
+    class Meta:
+        model = ReadingList
+        fields = ("id", "name")
+
+
 class ReadingListListSerializer(serializers.ModelSerializer):
     user = UserSerializer(read_only=True)
     list_type = serializers.CharField(source="get_list_type_display", read_only=True)
@@ -74,6 +82,8 @@ class ReadingListReadSerializer(serializers.ModelSerializer):
     average_rating = serializers.FloatField(read_only=True)
     rating_count = serializers.IntegerField(read_only=True)
     image = serializers.ImageField(read_only=True)
+    previous = ReadingListNavSerializer(read_only=True)
+    next = ReadingListNavSerializer(read_only=True)
 
     def get_resource_url(self, obj: ReadingList) -> str:
         return self.context["request"].build_absolute_uri(obj.get_absolute_url())
@@ -97,6 +107,8 @@ class ReadingListReadSerializer(serializers.ModelSerializer):
             "is_private",
             "attribution_source",
             "attribution_url",
+            "previous",
+            "next",
             "average_rating",
             "rating_count",
             "items_url",

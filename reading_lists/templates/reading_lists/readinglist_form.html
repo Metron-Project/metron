@@ -1,6 +1,9 @@
 {% extends parent_template|default:"base.html" %}
 {% load static bulma_tags %}
 {% block title %}{{ title }} - Metron{% endblock %}
+{% block headcss %}
+    {{ form.media.css }}
+{% endblock %}
 {% block content %}
     <header class="block has-text-centered">
         <h1 class="title">{{ title }}</h1>
@@ -88,7 +91,17 @@
                                                 {{ field.label }}
                                                 {% if field.field.required %}<span class="has-text-danger">*</span>{% endif %}
                                             </label>
-                                            <div class="control">{{ field|add_field_class:'input' }}</div>
+                                            <div class="control">
+                                                {{ field|add_field_class:'input' }}
+                                                {% if field.name == 'previous' or field.name == 'next' %}
+                                                    <button type="button"
+                                                            class="button is-small is-light mt-2"
+                                                            data-ac-clear="{{ field.name }}">
+                                                        <span class="icon is-small"><i class="fas fa-times"></i></span>
+                                                        <span>Clear selection</span>
+                                                    </button>
+                                                {% endif %}
+                                            </div>
                                             {% if field.help_text %}<p class="help">{{ field.help_text }}</p>{% endif %}
                                             {% for error in field.errors %}<p class="help is-danger">{{ error }}</p>{% endfor %}
                                         {% endif %}
@@ -110,4 +123,17 @@
             </div>
         </div>
     </section>
+{% endblock %}
+{% block js %}
+    {{ form.media.js }}
+    <script>
+        // The autocomplete widget has no built-in way to clear a single-select
+        // value once one is chosen, so we drive its public clear() API ourselves.
+        document.addEventListener('click', function (event) {
+            var btn = event.target.closest('[data-ac-clear]');
+            if (!btn) return;
+            event.preventDefault();
+            new PhacAutocomplete(btn.dataset.acClear).clear();
+        });
+    </script>
 {% endblock %}

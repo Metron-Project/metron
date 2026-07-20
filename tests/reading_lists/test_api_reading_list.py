@@ -321,6 +321,45 @@ def test_detail_response_structure(api_client_with_credentials, reading_list_wit
     assert "is_private" in resp.data
     assert "attribution_source" in resp.data
     assert "attribution_url" in resp.data
+    assert "previous" in resp.data
+    assert "next" in resp.data
+
+
+# Previous/Next Reading Order Tests
+def test_detail_response_previous_and_next_default_null(
+    api_client_with_credentials, public_reading_list
+):
+    """Test that previous and next are null when not set."""
+    resp = api_client_with_credentials.get(
+        reverse("api:reading_list-detail", kwargs={"pk": public_reading_list.pk})
+    )
+    assert resp.status_code == status.HTTP_200_OK
+    assert resp.data["previous"] is None
+    assert resp.data["next"] is None
+
+
+def test_detail_response_includes_previous_and_next(
+    api_client_with_credentials, reading_list_user, public_reading_list, other_user_reading_list
+):
+    """Test that previous and next are serialized with id, name, slug, resource_url."""
+    public_reading_list.next = other_user_reading_list
+    public_reading_list.save()
+    other_user_reading_list.previous = public_reading_list
+    other_user_reading_list.save()
+
+    resp = api_client_with_credentials.get(
+        reverse("api:reading_list-detail", kwargs={"pk": public_reading_list.pk})
+    )
+    assert resp.status_code == status.HTTP_200_OK
+    assert resp.data["next"]["id"] == other_user_reading_list.id
+    assert resp.data["next"]["name"] == other_user_reading_list.name
+    assert set(resp.data["next"].keys()) == {"id", "name"}
+
+    resp = api_client_with_credentials.get(
+        reverse("api:reading_list-detail", kwargs={"pk": other_user_reading_list.pk})
+    )
+    assert resp.status_code == status.HTTP_200_OK
+    assert resp.data["previous"]["id"] == public_reading_list.id
 
 
 def test_items_response_structure(api_client_with_credentials, reading_list_with_issues):

@@ -639,7 +639,7 @@ class ReadingListViewSet(
     def get_queryset(self):
         """Filter reading lists based on user permissions and visibility rules."""
         queryset = (
-            ReadingList.objects.select_related("user")
+            ReadingList.objects.select_related("user", "previous", "next")
             .annotate(
                 average_rating=Avg("ratings__rating"),
                 rating_count=Count("ratings", distinct=True),
