@@ -292,7 +292,9 @@ class IssueReadSerializer(serializers.ModelSerializer):
     series = IssueSeriesSerializer(read_only=True)
     reprints = ReprintSerializer(many=True, read_only=True)
     rating = RatingSerializer(read_only=True)
-    average_rating = serializers.FloatField(read_only=True)
+    average_rating = serializers.DecimalField(
+        max_digits=3, decimal_places=2, coerce_to_string=False, read_only=True
+    )
     rating_count = serializers.IntegerField(read_only=True)
     resource_url = serializers.SerializerMethodField("get_resource_url")
 

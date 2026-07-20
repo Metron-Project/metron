@@ -1,5 +1,16 @@
 from django.db import models
-from django.db.models import Avg, Case, Count, F, IntegerField, Prefetch, Q, Sum, When
+from django.db.models import (
+    Avg,
+    Case,
+    Count,
+    DecimalField,
+    F,
+    IntegerField,
+    Prefetch,
+    Q,
+    Sum,
+    When,
+)
 from django.http import Http404
 from django.shortcuts import get_object_or_404
 from django.utils import timezone
@@ -384,7 +395,9 @@ class IssueViewSet(
                 ),
             )
             .annotate(
-                average_rating=Avg("ratings__rating"),
+                average_rating=Avg(
+                    "ratings__rating", output_field=DecimalField(max_digits=3, decimal_places=2)
+                ),
                 rating_count=Count("ratings", distinct=True),
             )
         )
