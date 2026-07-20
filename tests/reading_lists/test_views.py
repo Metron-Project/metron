@@ -6,6 +6,7 @@ from datetime import date
 import pytest
 from django.db.models import Avg
 from django.urls import reverse
+from django.utils.html import escape
 
 from comicsdb.models.issue import Issue
 from reading_lists.models import ReadingList, ReadingListItem, ReadingListRating
@@ -365,6 +366,43 @@ class TestReadingListDetailView:
         assert resp.status_code == HTTP_200_OK
         assert len(resp.context["reading_list_items"]) == 3
 
+    def test_reading_list_detail_view_no_previous_next_nav(self, client, public_reading_list):
+        """Test that no reading order nav is shown when previous/next are unset."""
+        url = reverse("reading-list:detail", args=[public_reading_list.slug])
+        resp = client.get(url)
+        assert resp.status_code == HTTP_200_OK
+        assert resp.context["reading_list"].previous is None
+        assert resp.context["reading_list"].next is None
+        assert b"Previous</span>" not in resp.content
+        assert b"Next</span>" not in resp.content
+
+    def test_reading_list_detail_view_shows_previous_next_nav(
+        self, client, public_reading_list, other_user_reading_list
+    ):
+        """Test that previous/next links are rendered when set."""
+        public_reading_list.next = other_user_reading_list
+        public_reading_list.save()
+
+        url = reverse("reading-list:detail", args=[public_reading_list.slug])
+        resp = client.get(url)
+        assert resp.status_code == HTTP_200_OK
+        assert resp.context["reading_list"].next == other_user_reading_list
+        assert escape(other_user_reading_list.name).encode() in resp.content
+        assert other_user_reading_list.get_absolute_url().encode() in resp.content
+
+    def test_reading_list_detail_view_shows_synced_previous_nav(
+        self, client, public_reading_list, other_user_reading_list
+    ):
+        """Test that setting A.next = B automatically shows B's previous nav as A."""
+        public_reading_list.next = other_user_reading_list
+        public_reading_list.save()
+
+        url = reverse("reading-list:detail", args=[other_user_reading_list.slug])
+        resp = client.get(url)
+        assert resp.status_code == HTTP_200_OK
+        assert resp.context["reading_list"].previous == public_reading_list
+        assert escape(public_reading_list.name).encode() in resp.content
+
 
 class TestReadingListCreateView:
     """Tests for the ReadingListCreateView."""
@@ -426,6 +464,18 @@ class TestReadingListUpdateView:
         assert "form" in resp.context
         assert resp.context["title"] == "Edit Reading List"
         assert resp.context["button_text"] == "Update"
+
+    def test_reading_list_update_view_has_previous_next_clear_buttons(
+        self, client, reading_list_user, public_reading_list, test_password
+    ):
+        """Test that the edit form renders clear buttons for previous/next fields."""
+        client.login(username=reading_list_user.username, password=test_password)
+        url = reverse("reading-list:update", args=[public_reading_list.slug])
+        resp = client.get(url)
+        assert resp.status_code == HTTP_200_OK
+        assert b'data-ac-clear="previous"' in resp.content
+        assert b'data-ac-clear="next"' in resp.content
+        assert b"new PhacAutocomplete(btn.dataset.acClear).clear()" in resp.content
 
     def test_reading_list_update_view_not_owner(
         self, client, other_user, public_reading_list, test_password

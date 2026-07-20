@@ -20,10 +20,11 @@ class ReadingListAdmin(admin.ModelAdmin):
     list_filter = ("is_private", "created_on", "modified")
     search_fields = ("name", "desc", "user__username")
     readonly_fields = ("slug", "created_on", "modified")
-    autocomplete_fields = ["user"]
+    autocomplete_fields = ["user", "previous", "next"]
 
     fieldsets = (
         (None, {"fields": ("name", "slug", "desc", "user", "is_private")}),
+        ("Reading Order", {"fields": ("previous", "next")}),
         ("Attribution", {"fields": ("attribution_source", "attribution_url")}),
         ("Metadata", {"fields": ("cv_id", "gcd_id", "created_on", "modified")}),
     )

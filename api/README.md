@@ -1704,6 +1704,8 @@ This endpoint is read-only. Create, update, and delete operations are not availa
     - `list_type` - Human-readable list type (e.g., "Event", "Story")
     - `attribution_source` - Full attribution source name (e.g., "Comic Book Reading Orders")
     - `attribution_url` - URL to source
+    - `previous` - Reading list that comes before this one in a reading order (null if none), with `id` and `name`
+    - `next` - Reading list that comes after this one in a reading order (null if none), with `id` and `name`
     - `average_rating` - Average rating from all users (1.0 to 5.0, null if no ratings)
     - `rating_count` - Total number of user ratings
     - `items_url` - URL to fetch reading list items

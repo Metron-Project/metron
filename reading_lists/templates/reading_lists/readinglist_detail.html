@@ -119,6 +119,34 @@
         </div>
     </div>
 
+    {# ===================== READING ORDER NAV ===================== #}
+    {% if reading_list.previous or reading_list.next %}
+        <nav class="level box mb-5">
+            <div class="level-left">
+                {% if reading_list.previous %}
+                    <a class="level-item" href="{{ reading_list.previous.get_absolute_url }}">
+                        <span class="icon"><i class="fas fa-arrow-left"></i></span>
+                        <span>
+                            <span class="has-text-grey is-size-7 is-block">Previous</span>
+                            <span class="has-text-weight-semibold">{{ reading_list.previous.name }}</span>
+                        </span>
+                    </a>
+                {% endif %}
+            </div>
+            <div class="level-right">
+                {% if reading_list.next %}
+                    <a class="level-item has-text-right" href="{{ reading_list.next.get_absolute_url }}">
+                        <span>
+                            <span class="has-text-grey is-size-7 is-block">Next</span>
+                            <span class="has-text-weight-semibold">{{ reading_list.next.name }}</span>
+                        </span>
+                        <span class="icon"><i class="fas fa-arrow-right"></i></span>
+                    </a>
+                {% endif %}
+            </div>
+        </nav>
+    {% endif %}
+
     {# ===================== OWNER ACTION BAR ===================== #}
     {% if is_owner or can_assign_to_metron %}
         <nav class="level mb-5">

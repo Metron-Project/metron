@@ -80,6 +80,8 @@ class TestReadingListForm:
             "list_type",
             "attribution_source",
             "attribution_url",
+            "previous",
+            "next",
         ]
         assert list(form.fields.keys()) == expected_fields
 
@@ -151,6 +153,46 @@ class TestReadingListForm:
             "URL of the specific page for this reading list"
             in form.fields["attribution_url"].help_text
         )
+
+    def test_reading_list_form_previous_next_not_required(self):
+        """Test that previous and next fields are optional."""
+        form = ReadingListForm()
+        assert not form.fields["previous"].required
+        assert not form.fields["next"].required
+
+    def test_reading_list_form_valid_with_previous_and_next(
+        self, reading_list_user, public_reading_list, other_user_reading_list
+    ):
+        """Test form accepts distinct previous/next reading lists."""
+        form_data = {
+            "name": "Test Reading List",
+            "list_type": ReadingList.ListType.EVENT,
+            "previous": public_reading_list.pk,
+            "next": other_user_reading_list.pk,
+        }
+        form = ReadingListForm(data=form_data)
+        assert form.is_valid(), form.errors
+        assert form.cleaned_data["previous"] == public_reading_list
+        assert form.cleaned_data["next"] == other_user_reading_list
+
+    def test_reading_list_form_excludes_self_from_previous_next(self, public_reading_list):
+        """Test that editing a list excludes itself from previous/next choices."""
+        form = ReadingListForm(instance=public_reading_list)
+        assert public_reading_list not in form.fields["previous"].queryset
+        assert public_reading_list not in form.fields["next"].queryset
+
+    def test_reading_list_form_rejects_same_previous_and_next(
+        self, reading_list_user, public_reading_list
+    ):
+        """Test that the model-level clean() rejects previous == next via the form."""
+        form_data = {
+            "name": "Test Reading List",
+            "list_type": ReadingList.ListType.EVENT,
+            "previous": public_reading_list.pk,
+            "next": public_reading_list.pk,
+        }
+        form = ReadingListForm(data=form_data)
+        assert not form.is_valid()
 
     def test_reading_list_form_invalid_url(self):
         """Test form with invalid attribution URL."""

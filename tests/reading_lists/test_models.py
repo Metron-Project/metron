@@ -1,6 +1,7 @@
 """Tests for reading_lists models."""
 
 import pytest
+from django.core.exceptions import ValidationError
 from django.db import IntegrityError
 
 from reading_lists.models import ReadingList, ReadingListItem
@@ -123,6 +124,134 @@ class TestReadingListModel:
     def test_reading_list_publishers_empty(self, public_reading_list):
         """Test the publishers property with no issues."""
         assert public_reading_list.publishers.count() == 0
+
+    def test_reading_list_previous_next_default_none(self, public_reading_list):
+        """Test that previous and next default to None."""
+        assert public_reading_list.previous is None
+        assert public_reading_list.next is None
+
+    def test_reading_list_previous_next_assignment(self, reading_list_user):
+        """Test that previous and next can be linked to other reading lists."""
+        first = ReadingList.objects.create(user=reading_list_user, name="Part One")
+        second = ReadingList.objects.create(user=reading_list_user, name="Part Two", previous=first)
+        first.next = second
+        first.save()
+
+        assert second.previous == first
+        assert first.next == second
+
+    def test_reading_list_next_set_null_on_delete(self, reading_list_user):
+        """Test that next is set to null when the linked reading list is deleted."""
+        first = ReadingList.objects.create(user=reading_list_user, name="Part One")
+        second = ReadingList.objects.create(user=reading_list_user, name="Part Two", previous=first)
+        first.next = second
+        first.save()
+
+        second.delete()
+        first.refresh_from_db()
+        assert first.next is None
+
+    def test_reading_list_clean_rejects_self_as_previous(self, public_reading_list):
+        """Test that a reading list cannot be its own previous list."""
+        public_reading_list.previous = public_reading_list
+        with pytest.raises(ValidationError):
+            public_reading_list.clean()
+
+    def test_reading_list_clean_rejects_self_as_next(self, public_reading_list):
+        """Test that a reading list cannot be its own next list."""
+        public_reading_list.next = public_reading_list
+        with pytest.raises(ValidationError):
+            public_reading_list.clean()
+
+    def test_reading_list_clean_rejects_same_previous_and_next(self, reading_list_user):
+        """Test that previous and next cannot both point to the same reading list."""
+        other = ReadingList.objects.create(user=reading_list_user, name="Other List")
+        reading_list = ReadingList.objects.create(
+            user=reading_list_user, name="Test List", previous=other, next=other
+        )
+        with pytest.raises(ValidationError):
+            reading_list.clean()
+
+    def test_reading_list_clean_allows_valid_previous_and_next(self, reading_list_user):
+        """Test that clean() passes when previous and next are distinct lists."""
+        before = ReadingList.objects.create(user=reading_list_user, name="Before")
+        after = ReadingList.objects.create(user=reading_list_user, name="After")
+        middle = ReadingList.objects.create(
+            user=reading_list_user, name="Middle", previous=before, next=after
+        )
+        middle.clean()
+
+    def test_reading_list_setting_next_syncs_reverse_previous(self, reading_list_user):
+        """Test that setting A.next = B also sets B.previous = A."""
+        first = ReadingList.objects.create(user=reading_list_user, name="Part One")
+        second = ReadingList.objects.create(user=reading_list_user, name="Part Two")
+
+        first.next = second
+        first.save()
+
+        second.refresh_from_db()
+        assert second.previous == first
+
+    def test_reading_list_setting_previous_syncs_reverse_next(self, reading_list_user):
+        """Test that setting B.previous = A also sets A.next = B."""
+        first = ReadingList.objects.create(user=reading_list_user, name="Part One")
+        second = ReadingList.objects.create(user=reading_list_user, name="Part Two")
+
+        second.previous = first
+        second.save()
+
+        first.refresh_from_db()
+        assert first.next == second
+
+    def test_reading_list_setting_next_at_creation_syncs_reverse_previous(self, reading_list_user):
+        """Test that the reverse link is synced when next is set at creation time."""
+        first = ReadingList.objects.create(user=reading_list_user, name="Part One")
+        second = ReadingList.objects.create(user=reading_list_user, name="Part Two", previous=first)
+
+        first.refresh_from_db()
+        assert first.next == second
+
+    def test_reading_list_clearing_next_clears_reverse_previous(self, reading_list_user):
+        """Test that clearing A.next also clears B.previous."""
+        first = ReadingList.objects.create(user=reading_list_user, name="Part One")
+        second = ReadingList.objects.create(user=reading_list_user, name="Part Two")
+        first.next = second
+        first.save()
+
+        first.next = None
+        first.save()
+
+        second.refresh_from_db()
+        assert second.previous is None
+
+    def test_reading_list_reassigning_next_clears_old_reverse_previous(self, reading_list_user):
+        """Test that changing A.next from B to C clears B.previous and sets C.previous."""
+        first = ReadingList.objects.create(user=reading_list_user, name="Part One")
+        second = ReadingList.objects.create(user=reading_list_user, name="Part Two")
+        third = ReadingList.objects.create(user=reading_list_user, name="Part Three")
+        first.next = second
+        first.save()
+
+        first.next = third
+        first.save()
+
+        second.refresh_from_db()
+        third.refresh_from_db()
+        assert second.previous is None
+        assert third.previous == first
+
+    def test_reading_list_unrelated_save_does_not_disturb_links(self, reading_list_user):
+        """Test that saving unrelated field changes doesn't clear existing links."""
+        first = ReadingList.objects.create(user=reading_list_user, name="Part One")
+        second = ReadingList.objects.create(user=reading_list_user, name="Part Two")
+        first.next = second
+        first.save()
+
+        first.desc = "Updated description"
+        first.save()
+
+        second.refresh_from_db()
+        assert second.previous == first
 
 
 class TestReadingListItemModel:
