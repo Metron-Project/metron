@@ -6,7 +6,7 @@ from django.contrib import messages
 from django.contrib.auth.mixins import LoginRequiredMixin, PermissionRequiredMixin
 from django.core.exceptions import ObjectDoesNotExist
 from django.db import IntegrityError, transaction
-from django.db.models import Avg, Count, Prefetch
+from django.db.models import Avg, Count, DecimalField, Prefetch
 from django.http import HttpResponse, HttpResponseRedirect
 from django.shortcuts import get_object_or_404
 from django.template.loader import render_to_string
@@ -68,7 +68,9 @@ class IssueList(ListView):
 class IssueDetail(DetailView):
     model = Issue
     queryset = (
-        Issue.objects.select_related("series", "series__publisher", "series__series_type", "rating")
+        Issue.objects.select_related(
+            "series", "series__publisher", "series__series_type", "rating", "edited_by"
+        )
         .defer(
             "created_on",
             "cover_hash",
@@ -123,17 +125,31 @@ class IssueDetail(DetailView):
         )
     )
 
+    def get_queryset(self):
+        return (
+            super()
+            .get_queryset()
+            .annotate(
+                average_rating=Avg(
+                    "ratings__rating", output_field=DecimalField(max_digits=3, decimal_places=2)
+                ),
+                rating_count=Count("ratings", distinct=True),
+            )
+        )
+
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         issue = context["object"]
 
         try:
             next_issue = issue.get_next_by_cover_date(series=issue.series)
+            next_issue.series = issue.series
         except ObjectDoesNotExist:
             next_issue = None
 
         try:
             previous_issue = issue.get_previous_by_cover_date(series=issue.series)
+            previous_issue.series = issue.series
         except ObjectDoesNotExist:
             previous_issue = None
 
@@ -195,9 +211,8 @@ class IssueDetail(DetailView):
                 user=self.request.user,
             ).first()
 
-        avg_data = issue.ratings.aggregate(avg=Avg("rating"), count=Count("id"))
-        context["average_rating"] = avg_data["avg"]
-        context["rating_count"] = avg_data["count"]
+        context["average_rating"] = issue.average_rating
+        context["rating_count"] = issue.rating_count
 
         return context
 
