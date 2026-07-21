@@ -27,12 +27,9 @@ from comicsdb.models.credits import Credits
 from comicsdb.models.issue import Issue
 from comicsdb.models.publisher import Publisher
 from comicsdb.models.series import Series, SeriesType
+from comicsdb.views.ratings import parse_rating_action
 from user_collection.forms import AddIssuesFromSeriesForm, CollectionItemForm
 from user_collection.models import GRADE_CHOICES, CollectionItem, ReadDate
-
-# Rating constants
-MIN_RATING = 1
-MAX_RATING = 5
 
 
 class CollectionListView(LoginRequiredMixin, ListView):
@@ -481,18 +478,11 @@ def update_rating(request, pk):
     """HTMX view to update the rating of a collection item."""
     item = get_object_or_404(CollectionItem, pk=pk, user=request.user)
 
-    rating_value = request.POST.get("rating")
-    if rating_value:
-        try:
-            rating = int(rating_value)
-            # Allow ratings from MIN_RATING to MAX_RATING
-            if MIN_RATING <= rating <= MAX_RATING:
-                item.rating = rating
-            elif rating == 0:  # Allow clearing the rating
-                item.rating = None
-            item.save(update_fields=["rating"])
-        except ValueError:
-            pass
+    action = parse_rating_action(request.POST.get("rating"))
+    if action is not None:
+        kind, rating = action
+        item.rating = rating if kind == "set" else None
+        item.save(update_fields=["rating"])
 
     # Return the updated star rating partial
     return render(

@@ -1,5 +1,16 @@
 from django.db import models
-from django.db.models import Avg, Case, Count, F, IntegerField, Prefetch, Q, Sum, When
+from django.db.models import (
+    Avg,
+    Case,
+    Count,
+    DecimalField,
+    F,
+    IntegerField,
+    Prefetch,
+    Q,
+    Sum,
+    When,
+)
 from django.http import Http404
 from django.shortcuts import get_object_or_404
 from django.utils import timezone
@@ -356,30 +367,39 @@ class IssueViewSet(
     def get_queryset(self):
         if self.action == "list":
             return Issue.objects.select_related("series", "series__series_type")
-        return Issue.objects.select_related(
-            "series",
-            "series__series_type",
-            "series__publisher",
-            "series__imprint",
-            "rating",
-        ).prefetch_related(
-            "series__genres",
-            "arcs",
-            "characters",
-            "teams",
-            "universes",
-            "variants",
-            Prefetch(
-                "credits_set",
-                queryset=Credits.objects.order_by("creator__name")
-                .distinct("creator__name")
-                .select_related("creator")
-                .prefetch_related("role"),
-            ),
-            Prefetch(
-                "reprints",
-                queryset=Issue.objects.select_related("series", "series__series_type"),
-            ),
+        return (
+            Issue.objects.select_related(
+                "series",
+                "series__series_type",
+                "series__publisher",
+                "series__imprint",
+                "rating",
+            )
+            .prefetch_related(
+                "series__genres",
+                "arcs",
+                "characters",
+                "teams",
+                "universes",
+                "variants",
+                Prefetch(
+                    "credits_set",
+                    queryset=Credits.objects.order_by("creator__name")
+                    .distinct("creator__name")
+                    .select_related("creator")
+                    .prefetch_related("role"),
+                ),
+                Prefetch(
+                    "reprints",
+                    queryset=Issue.objects.select_related("series", "series__series_type"),
+                ),
+            )
+            .annotate(
+                average_rating=Avg(
+                    "ratings__rating", output_field=DecimalField(max_digits=3, decimal_places=2)
+                ),
+                rating_count=Count("ratings", distinct=True),
+            )
         )
 
     def get_serializer_class(self):

@@ -1,0 +1,25 @@
+{% comment %}
+Compact average-rating summary (stars + count), used in page headers.
+
+Shares state with partials/rating_widget.html. Pass oob=True when rendering
+from a rating-update view so this refreshes via HTMX out-of-band swap
+alongside the main rating widget, instead of going stale until reload.
+
+Required context:
+    rated_object   - the instance being rated
+    average_rating - float average, or None
+    rating_count   - int
+    oob            - bool, optional; adds hx-swap-oob
+{% endcomment %}
+<span id="rating-summary-{{ rated_object.pk }}"
+      {% if oob %}hx-swap-oob="true"{% endif %}>
+    {% if average_rating %}
+        <span class="has-text-grey">&middot;</span>
+        <span style="color: #ffce54;">
+            {% for star_num in "12345" %}
+                <i class="{% if star_num|add:'0' <= average_rating %}fas{% else %}far{% endif %} fa-star"></i>
+            {% endfor %}
+        </span>
+        <span class="has-text-grey ml-1">{{ average_rating|floatformat:1 }} ({{ rating_count }} rating{{ rating_count|pluralize }})</span>
+    {% endif %}
+</span>

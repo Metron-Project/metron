@@ -1,0 +1,115 @@
+{% comment %}
+Generic 1-5 star rating widget, shared by reading_lists and issue_ratings.
+
+Required context:
+    rated_object   - the instance being rated
+    rate_url_name  - namespaced view name, e.g. "reading-list:rate" or "issue-ratings:rate"
+    rate_url_arg   - the identifier the rate URL expects (slug, pk, ...)
+    user_rating    - the requesting user's rating instance, or None
+    average_rating - float average, or None
+    rating_count   - int
+    show_ratings   - bool; whole widget renders only if true
+    can_rate       - bool; gates the interactive "Your Rating" stars
+{% endcomment %}
+{% if show_ratings %}
+    <div id="rating-widget-{{ rated_object.pk }}" class="rating-widget" style="scroll-margin-top: 4rem;">
+        {# Display average rating #}
+        <div class="average-rating mb-2">
+            <span class="has-text-weight-bold">Average Rating:</span>
+            {% if average_rating %}
+                <span class="rating-stars">
+                    {% for star_num in "12345" %}
+                        <i class="{% if star_num|add:'0' <= average_rating %}fas{% else %}far{% endif %} fa-star"
+                           style="color: #ffd700"></i>
+                    {% endfor %}
+                </span>
+                <span class="rating-value">{{ average_rating|floatformat:1 }} ({{ rating_count }} rating{{ rating_count|pluralize }})</span>
+            {% else %}
+                <span class="has-text-grey-light">No ratings yet</span>
+            {% endif %}
+        </div>
+        {# User's rating (if allowed) #}
+        {% if can_rate %}
+            <div class="user-rating">
+                <span class="has-text-weight-bold">Your Rating:</span>
+                <div class="star-rating">
+                    {% for star_num in "12345" %}
+                        <button type="button"
+                                class="star-button {% if user_rating and forloop.counter <= user_rating.rating %}filled{% else %}empty{% endif %}"
+                                hx-post="{% url rate_url_name rate_url_arg %}"
+                                hx-vals='{"rating": "{{ forloop.counter }}"}'
+                                hx-target="#rating-widget-{{ rated_object.pk }}"
+                                hx-swap="outerHTML"
+                                title="Rate {{ forloop.counter }} star{% if forloop.counter > 1 %}s{% endif %}">
+                            <i class="{% if user_rating and forloop.counter <= user_rating.rating %}fas{% else %}far{% endif %} fa-star"></i>
+                        </button>
+                    {% endfor %}
+                    {% if user_rating %}
+                        <button type="button"
+                                class="star-clear"
+                                hx-post="{% url rate_url_name rate_url_arg %}"
+                                hx-vals='{"rating": "0"}'
+                                hx-target="#rating-widget-{{ rated_object.pk }}"
+                                hx-swap="outerHTML"
+                                title="Clear rating">
+                            <i class="fas fa-times-circle"></i>
+                        </button>
+                    {% endif %}
+                </div>
+            </div>
+        {% endif %}
+    </div>
+    <style>
+        .rating-widget .star-rating {
+            display: inline-flex;
+            gap: 4px;
+            align-items: center;
+        }
+
+        .rating-widget .star-button {
+            background: none;
+            border: none;
+            cursor: pointer;
+            padding: 0;
+            font-size: 1.2rem;
+            transition: transform 0.2s, filter 0.2s;
+        }
+
+        .rating-widget .star-button:hover {
+            transform: scale(1.2);
+            filter: brightness(1.2);
+        }
+
+        .rating-widget .star-button.filled i {
+            color: #ffd700;
+        }
+
+        .rating-widget .star-button.empty i {
+            color: #dbdbdb;
+        }
+
+        .rating-widget .star-clear {
+            background: none;
+            border: none;
+            cursor: pointer;
+            padding: 0;
+            margin-left: 8px;
+            font-size: 1rem;
+            color: #f14668;
+            transition: transform 0.2s;
+        }
+
+        .rating-widget .star-clear:hover {
+            transform: scale(1.2);
+        }
+
+        .rating-widget .average-rating {
+            margin-bottom: 0.5rem;
+        }
+
+        .rating-widget .rating-value {
+            margin-left: 0.5rem;
+            color: #4a4a4a;
+        }
+    </style>
+{% endif %}

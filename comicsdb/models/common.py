@@ -4,6 +4,10 @@ from django.db import models
 from django.db.models.functions import Now
 from django.utils.text import slugify
 
+MIN_RATING = 1
+MAX_RATING = 5
+RATING_CHOICES = [(i, str(i)) for i in range(MIN_RATING, MAX_RATING + 1)]
+
 
 def generate_slug_from_name(instance):
     base_slug = (
@@ -41,6 +45,20 @@ class CommonInfo(models.Model):
     gcd_id = models.PositiveIntegerField("GCD ID", null=True, blank=True, unique=True)
     modified = models.DateTimeField(auto_now=True)
     created_on = models.DateTimeField(db_default=Now())
+
+    class Meta:
+        abstract = True
+
+
+class AbstractRating(models.Model):
+    """Abstract base for a user's 1-5 star rating of a related object."""
+
+    rating = models.PositiveSmallIntegerField(
+        choices=RATING_CHOICES,
+        help_text="Star rating (1-5)",
+    )
+    created_on = models.DateTimeField(db_default=Now())
+    modified = models.DateTimeField(auto_now=True)
 
     class Meta:
         abstract = True

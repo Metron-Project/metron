@@ -6,7 +6,7 @@ from django.contrib import messages
 from django.contrib.auth.mixins import LoginRequiredMixin, PermissionRequiredMixin
 from django.core.exceptions import ObjectDoesNotExist
 from django.db import IntegrityError, transaction
-from django.db.models import Prefetch
+from django.db.models import Avg, Count, DecimalField, Prefetch
 from django.http import HttpResponse, HttpResponseRedirect
 from django.shortcuts import get_object_or_404
 from django.template.loader import render_to_string
@@ -32,6 +32,7 @@ from comicsdb.views.issue_list_helpers import (
     build_active_filters,
 )
 from comicsdb.views.mixins import LazyLoadMixin, SlugRedirectView
+from issue_ratings.models import IssueRating
 from wish_list.models import WishListItem
 
 TOTAL_WEEKS_YEAR = 52
@@ -67,7 +68,9 @@ class IssueList(ListView):
 class IssueDetail(DetailView):
     model = Issue
     queryset = (
-        Issue.objects.select_related("series", "series__publisher", "series__series_type", "rating")
+        Issue.objects.select_related(
+            "series", "series__publisher", "series__series_type", "rating", "edited_by"
+        )
         .defer(
             "created_on",
             "cover_hash",
@@ -122,17 +125,31 @@ class IssueDetail(DetailView):
         )
     )
 
+    def get_queryset(self):
+        return (
+            super()
+            .get_queryset()
+            .annotate(
+                average_rating=Avg(
+                    "ratings__rating", output_field=DecimalField(max_digits=3, decimal_places=2)
+                ),
+                rating_count=Count("ratings", distinct=True),
+            )
+        )
+
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         issue = context["object"]
 
         try:
             next_issue = issue.get_next_by_cover_date(series=issue.series)
+            next_issue.series = issue.series
         except ObjectDoesNotExist:
             next_issue = None
 
         try:
             previous_issue = issue.get_previous_by_cover_date(series=issue.series)
+            previous_issue.series = issue.series
         except ObjectDoesNotExist:
             previous_issue = None
 
@@ -189,6 +206,13 @@ class IssueDetail(DetailView):
                 wish_list__user=self.request.user,
                 issue=issue,
             ).exists()
+            context["user_rating"] = IssueRating.objects.filter(
+                issue=issue,
+                user=self.request.user,
+            ).first()
+
+        context["average_rating"] = issue.average_rating
+        context["rating_count"] = issue.rating_count
 
         return context
 

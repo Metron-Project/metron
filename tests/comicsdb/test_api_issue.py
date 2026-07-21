@@ -15,6 +15,7 @@ from comicsdb.models.credits import Role
 from comicsdb.models.series import Series
 from comicsdb.models.team import Team
 from comicsdb.models.universe import Universe
+from issue_ratings.models import IssueRating
 
 
 @pytest.fixture
@@ -338,6 +339,39 @@ def test_filter_by_role_id_no_match(api_client_with_credentials, basic_issue: Is
     resp = api_client_with_credentials.get(reverse("api:issue-list"), {"role_id": writer.id})
     assert resp.status_code == status.HTTP_200_OK
     assert resp.data["count"] == 0
+
+
+def test_list_excludes_rating_fields(api_client_with_credentials, list_of_issues):
+    """The list endpoint is high-traffic; rating fields are only exposed on detail."""
+    resp = api_client_with_credentials.get(reverse("api:issue-list"))
+    assert resp.status_code == status.HTTP_200_OK
+    assert "average_rating" not in resp.data["results"][0]
+    assert "rating_count" not in resp.data["results"][0]
+
+
+def test_detail_rating_fields_no_ratings(api_client_with_credentials, issue_with_arc: Issue):
+    resp = api_client_with_credentials.get(
+        reverse("api:issue-detail", kwargs={"pk": issue_with_arc.pk})
+    )
+    assert resp.status_code == status.HTTP_200_OK
+    assert resp.data["average_rating"] is None
+    assert resp.data["rating_count"] == 0
+
+
+def test_detail_rating_fields_with_ratings(
+    api_client_with_credentials, issue_with_arc: Issue, create_user
+):
+    user1 = create_user(username="api_rater_1")
+    user2 = create_user(username="api_rater_2")
+    IssueRating.objects.create(issue=issue_with_arc, user=user1, rating=5)
+    IssueRating.objects.create(issue=issue_with_arc, user=user2, rating=3)
+
+    resp = api_client_with_credentials.get(
+        reverse("api:issue-detail", kwargs={"pk": issue_with_arc.pk})
+    )
+    assert resp.status_code == status.HTTP_200_OK
+    assert resp.data["average_rating"] == 4.0
+    assert resp.data["rating_count"] == 2
 
 
 def test_filter_by_multiple_role_ids(

@@ -64,6 +64,7 @@
                 <span class="tag is-warning is-light is-rounded ml-2"
                       title="{{ issue.rating.short_description }}">{{ issue.rating.name }}</span>
             {% endif %}
+            {% include "partials/rating_summary.html" with rated_object=issue average_rating=average_rating rating_count=rating_count %}
         </p>
     </header>
     {# Navigation Bar #}
@@ -628,6 +629,8 @@
                         </ul>
                     {% endif %}
                 {% endwith %}
+                <hr>
+                {% include "partials/rating_widget.html" with rated_object=issue rate_url_name="issue-ratings:rate" rate_url_arg=issue.pk user_rating=user_rating average_rating=average_rating rating_count=rating_count show_ratings=True can_rate=user.is_authenticated %}
             </div>
             <div class="box">
                 <h2 class="title is-6">Identification Numbers</h2>
