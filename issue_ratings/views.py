@@ -16,11 +16,12 @@ def update_issue_rating(request, pk):
     """HTMX view to update the rating of an issue."""
     issue = get_object_or_404(Issue, pk=pk)
 
-    apply_rating_update(
-        IssueRating,
-        {"issue": issue, "user": request.user},
-        request.POST.get("rating"),
-    )
+    if issue.is_released:
+        apply_rating_update(
+            IssueRating,
+            {"issue": issue, "user": request.user},
+            request.POST.get("rating"),
+        )
 
     # Get user's current rating and average
     user_rating = IssueRating.objects.filter(
@@ -46,7 +47,7 @@ def update_issue_rating(request, pk):
             "average_rating": avg_data["avg"],
             "rating_count": avg_data["count"],
             "show_ratings": True,
-            "can_rate": True,
+            "can_rate": issue.is_released,
         },
         request=request,
     )

@@ -1,3 +1,5 @@
+from datetime import date
+
 from comicsdb.models import (
     Announcement,
     Arc,
@@ -153,6 +155,18 @@ def test_series_absolute_url(auto_login_user, fc_series):
 def test_issue_creation(issue_with_arc):
     assert isinstance(issue_with_arc, Issue)
     assert str(issue_with_arc) == "Final Crisis (1939) #1"
+
+
+def test_issue_is_released_no_store_date():
+    assert Issue(store_date=None).is_released is True
+
+
+def test_issue_is_released_past_store_date():
+    assert Issue(store_date=date(2000, 1, 1)).is_released is True
+
+
+def test_issue_is_released_future_store_date():
+    assert Issue(store_date=date(2999, 1, 1)).is_released is False
 
 
 def test_issue_verbose_name_plural(issue_with_arc):

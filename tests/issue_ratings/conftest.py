@@ -59,3 +59,18 @@ def rating_issue(create_user, rating_series):
         edited_by=user,
         created_by=user,
     )
+
+
+@pytest.fixture
+def future_rating_issue(create_user, rating_series):
+    """Create an issue with a future store_date for issue rating tests."""
+    user = create_user()
+    return Issue.objects.create(
+        series=rating_series,
+        number="2",
+        slug="rating-test-series-2",
+        cover_date=date(2999, 1, 1),
+        store_date=date(2999, 1, 1),
+        edited_by=user,
+        created_by=user,
+    )
