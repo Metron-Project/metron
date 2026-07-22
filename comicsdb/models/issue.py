@@ -102,6 +102,10 @@ class Issue(CommonInfo):
     def is_foc_past_due(self) -> bool:
         return self.foc_date is not None and date.today() > self.foc_date
 
+    @property
+    def is_released(self) -> bool:
+        return self.store_date is None or date.today() >= self.store_date
+
     def save(self, *args, **kwargs) -> None:
         # Let's delete the original image if we're replacing it by uploading a new one.
         with contextlib.suppress(ObjectDoesNotExist):

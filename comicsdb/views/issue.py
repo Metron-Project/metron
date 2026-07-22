@@ -211,6 +211,7 @@ class IssueDetail(DetailView):
                 user=self.request.user,
             ).first()
 
+        context["can_rate"] = self.request.user.is_authenticated and issue.is_released
         context["average_rating"] = issue.average_rating
         context["rating_count"] = issue.rating_count
 

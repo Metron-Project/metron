@@ -72,6 +72,17 @@ class TestIssueRating:
         assert resp.status_code == HTTP_200_OK
         assert not IssueRating.objects.filter(issue=rating_issue, user=rating_user).exists()
 
+    def test_update_rating_rejects_future_store_date(
+        self, client, future_rating_issue, test_password, rating_user
+    ):
+        """Test that rating an issue with a future store_date is a no-op."""
+        client.login(username=rating_user.username, password=test_password)
+        url = reverse("issue-ratings:rate", kwargs={"pk": future_rating_issue.pk})
+
+        resp = client.post(url, data={"rating": "5"})
+        assert resp.status_code == HTTP_200_OK
+        assert not IssueRating.objects.filter(issue=future_rating_issue, user=rating_user).exists()
+
     def test_average_rating_calculation(self, rating_issue, create_user):
         """Test that average rating is calculated correctly."""
         user1 = create_user(username="avg_user1")
