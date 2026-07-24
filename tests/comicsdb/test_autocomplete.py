@@ -736,6 +736,29 @@ class TestSeriesAutocomplete:
         assert len(series_ids) == 1
         assert bat_sups_series.id in series_ids
 
+    def test_search_by_alt_names(self, create_user, dc_comics, single_issue_type):
+        """Test searching series by alt_names field."""
+        user = create_user()
+        series = Series.objects.create(
+            name="Betty and Veronica Spectacular",
+            slug="betty-and-veronica-spectacular",
+            publisher=dc_comics,
+            volume="1",
+            year_began=1992,
+            series_type=single_issue_type,
+            status=Series.Status.CANCELLED,
+            alt_names=["Betty & Veronica Spectacular"],
+            edited_by=user,
+            created_by=user,
+        )
+
+        queryset = SeriesAutocomplete.get_query_filtered_queryset(
+            "Betty & Veronica Spectacular", context=None
+        )
+        series_ids = list(queryset.values_list("id", flat=True))
+
+        assert series.id in series_ids
+
     def test_search_no_match(self, fc_series, bat_sups_series):
         """Test searching with no matching results."""
         queryset = SeriesAutocomplete.get_query_filtered_queryset("spider-man", context=None)

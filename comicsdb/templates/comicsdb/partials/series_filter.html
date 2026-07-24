@@ -33,7 +33,7 @@
                     <i class="fas fa-search"></i>
                 </span>
             </div>
-            <p class="help">Search series names (supports multi-word search)</p>
+            <p class="help">Search series names and alternative names (supports multi-word search)</p>
         </div>
         {# Collapsible Advanced Filters #}
         <details>
@@ -58,6 +58,24 @@
                                    value="{{ request.GET.name }}"
                                    placeholder="e.g., Amazing Spider-Man"
                                    aria-label="Filter by series name">
+                            <span class="icon is-small is-left">
+                                <i class="fas fa-book-open"></i>
+                            </span>
+                        </div>
+                    </div>
+                </div>
+                {# Alternative Name Filter #}
+                <div class="column is-half">
+                    <div class="field">
+                        <label class="label" for="alt_names">Alternative Name</label>
+                        <div class="control has-icons-left">
+                            <input class="input"
+                                   type="text"
+                                   id="alt_names"
+                                   name="alt_names"
+                                   value="{{ request.GET.alt_names }}"
+                                   placeholder="e.g., Betty & Veronica Spectacular"
+                                   aria-label="Filter by alternative series name">
                             <span class="icon is-small is-left">
                                 <i class="fas fa-book-open"></i>
                             </span>

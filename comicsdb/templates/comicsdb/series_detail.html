@@ -294,6 +294,12 @@
                             {{ series.issue_count|intcomma }}
                         </dd>
                     {% endif %}
+                    {% if series.alt_names %}
+                        <dt class="has-text-weight-bold">Alternative Name{{ series.alt_names|pluralize }}:</dt>
+                        <dd class="mb-3">
+                            {{ series.alt_names|join:", " }}
+                        </dd>
+                    {% endif %}
                 </dl>
                 {# Genres #}
                 {% with genres=series.genres.all %}

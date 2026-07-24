@@ -2,6 +2,7 @@ import itertools
 from typing import TYPE_CHECKING
 
 from django.contrib.contenttypes.fields import GenericRelation
+from django.contrib.postgres.fields import ArrayField
 from django.contrib.postgres.indexes import GinIndex, OpClass
 from django.contrib.postgres.lookups import Unaccent
 from django.db import models
@@ -42,6 +43,9 @@ class Series(CommonInfo):
         ONGOING = 4
 
     sort_name = models.CharField(max_length=255)
+    alt_names = ArrayField(
+        models.CharField(max_length=255), blank=True, default=list, verbose_name="Alternative Names"
+    )
     volume = models.PositiveSmallIntegerField("Volume Number")
     year_began = models.PositiveSmallIntegerField("Year Began")
     year_end = models.PositiveSmallIntegerField("Year Ended", null=True, blank=True)
