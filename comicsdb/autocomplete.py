@@ -155,13 +155,13 @@ class SeriesAutocomplete(ModelAutocomplete):
         Filter series using unaccent search on name field.
 
         This allows searching for series without needing to match accents.
-        Note: alt_names field uses regular icontains as it's an ArrayField.
+        Note: alt_names uses the `joined` transform so the search can hit
+        the trigram index on ArrayField(alt_names) instead of a seq scan.
         """
         queryset = cls.get_queryset()
-        # Use unaccent for name, regular icontains for alt_names (ArrayField)
         conditions = [
             Q(name__unaccent__icontains=search),
-            Q(alt_names__icontains=search),
+            Q(alt_names__joined__icontains=search),
         ]
         condition_filter = reduce(operator.or_, conditions)
         return queryset.filter(condition_filter)

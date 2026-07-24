@@ -102,6 +102,36 @@ def test_view_url_includes_series_id(api_client_with_credentials, list_of_issues
     assert resp.data["results"][0]["series"]["id"] == fc_series.id
 
 
+def test_filter_by_series_alt_names(api_client_with_credentials, issue_with_arc, fc_series):
+    fc_series.alt_names = ["The Crisis"]
+    fc_series.save()
+
+    resp = api_client_with_credentials.get(
+        reverse("api:issue-list"), {"series_alt_names": "Crisis"}
+    )
+    assert resp.status_code == status.HTTP_200_OK
+    assert resp.data["count"] == 1
+    assert resp.data["results"][0]["id"] == issue_with_arc.id
+
+
+def test_filter_by_series_q(api_client_with_credentials, issue_with_arc, fc_series):
+    # Matches via the primary series name
+    resp = api_client_with_credentials.get(reverse("api:issue-list"), {"series_q": "final crisis"})
+    assert resp.status_code == status.HTTP_200_OK
+    assert resp.data["count"] == 1
+    assert resp.data["results"][0]["id"] == issue_with_arc.id
+
+    # Matches via the series alt_names
+    fc_series.alt_names = ["Crisis on Infinite Worlds"]
+    fc_series.save()
+    resp = api_client_with_credentials.get(
+        reverse("api:issue-list"), {"series_q": "infinite worlds"}
+    )
+    assert resp.status_code == status.HTTP_200_OK
+    assert resp.data["count"] == 1
+    assert resp.data["results"][0]["id"] == issue_with_arc.id
+
+
 def test_get_valid_single_arc(api_client_with_credentials, issue_with_arc):
     resp = api_client_with_credentials.get(
         reverse("api:issue-detail", kwargs={"pk": issue_with_arc.pk})

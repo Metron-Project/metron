@@ -31,7 +31,7 @@ class SeriesQuickSearchFilter(filters.CharFilter):
                 reduce(
                     operator.and_,
                     (
-                        Q(name__unaccent__icontains=q) | Q(alt_names__icontains=q)
+                        Q(name__unaccent__icontains=q) | Q(alt_names__joined__icontains=q)
                         for q in query_list
                     ),
                 )
@@ -41,7 +41,8 @@ class SeriesQuickSearchFilter(filters.CharFilter):
 
 class SeriesFilter(filters.FilterSet):
     name = SeriesNameFilter()
-    alt_names = filters.CharFilter(field_name="alt_names", lookup_expr="icontains")
+    alt_names = filters.CharFilter(field_name="alt_names", lookup_expr="joined__icontains")
+    q = SeriesQuickSearchFilter(label="Quick search across name and alternative names")
     publisher_id = filters.filters.NumberFilter(field_name="publisher__id", lookup_expr="exact")
     publisher_name = filters.CharFilter(field_name="publisher__name", lookup_expr="icontains")
     imprint_name = filters.CharFilter(field_name="imprint__name", lookup_expr="icontains")
@@ -109,7 +110,7 @@ class SeriesViewFilter(df.FilterSet):
 
     # Alternative name filter
     alt_names = df.CharFilter(
-        label="Alternative Name", field_name="alt_names", lookup_expr="icontains"
+        label="Alternative Name", field_name="alt_names", lookup_expr="joined__icontains"
     )
 
     # Series type filter

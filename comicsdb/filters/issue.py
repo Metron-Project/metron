@@ -17,6 +17,25 @@ class IssueSeriesName(df.rest_framework.CharFilter):
         return super().filter(qs, value)
 
 
+class IssueSeriesQuickSearch(df.rest_framework.CharFilter):
+    """Multi-word search across the issue's series name and alternative names."""
+
+    def filter(self, qs, value):
+        if value:
+            query_list = value.split()
+            return qs.filter(
+                reduce(
+                    operator.and_,
+                    (
+                        Q(series__name__unaccent__icontains=q)
+                        | Q(series__alt_names__joined__icontains=q)
+                        for q in query_list
+                    ),
+                )
+            )
+        return super().filter(qs, value)
+
+
 class NumberInFilter(df.rest_framework.BaseInFilter, df.rest_framework.NumberFilter):
     pass
 
@@ -49,6 +68,12 @@ class IssueFilter(df.rest_framework.FilterSet):
     series_name = IssueSeriesName(
         label="Series Name", field_name="series__name", lookup_expr="icontains"
     )
+    series_alt_names = df.rest_framework.CharFilter(
+        label="Series Alternative Name",
+        field_name="series__alt_names",
+        lookup_expr="joined__icontains",
+    )
+    series_q = IssueSeriesQuickSearch(label="Quick search across series name and alternative names")
     series_id = df.rest_framework.NumberFilter(
         label="Series Metron ID", field_name="series__id", lookup_expr="exact"
     )
