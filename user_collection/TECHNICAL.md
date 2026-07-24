@@ -94,6 +94,7 @@ class BookFormat(models.TextChoices):
     DIGITAL = "DIGITAL", "Digital"
     BOTH = "BOTH", "Both"
 
+
 class GradingCompany(models.TextChoices):
     CGC = "CGC", "CGC (Certified Guaranty Company)"
     CBCS = "CBCS", "CBCS (Comic Book Certification Service)"
@@ -357,15 +358,17 @@ class CollectionStatsView(LoginRequiredMixin, TemplateView):
             .order_by("-count")[:10]
         )
 
-        context.update({
-            "total_items": total_items,
-            "total_quantity": total_quantity,
-            "total_value": total_value or 0,
-            "read_count": read_count,
-            "unread_count": unread_count,
-            "format_counts": format_counts,
-            "top_series": top_series,
-        })
+        context.update(
+            {
+                "total_items": total_items,
+                "total_quantity": total_quantity,
+                "total_value": total_value or 0,
+                "read_count": read_count,
+                "unread_count": unread_count,
+                "format_counts": format_counts,
+                "top_series": top_series,
+            }
+        )
 ```
 
 **Statistics Provided:**
@@ -424,6 +427,7 @@ class AddIssuesFromSeriesView(LoginRequiredMixin, FormView):
 ```python
 # Example success messages:
 "Added 50 issues to your collection! Skipped 5 issues already in your collection."
+
 "Added 100 issues to your collection (marked as read)!"
 "All issues from this series are already in your collection."
 ```
@@ -599,11 +603,7 @@ def add_read_date(request, pk):
     # Use the helper method which handles synchronization
     item.add_read_date(read_date)
 
-    return render(
-        request,
-        "user_collection/partials/read_dates_list.html",
-        {"item": item}
-    )
+    return render(request, "user_collection/partials/read_dates_list.html", {"item": item})
 ```
 
 **Features:**
@@ -640,11 +640,7 @@ def delete_read_date(request, pk, read_date_id):
         item.date_read = None
     item.save(update_fields=["is_read", "date_read"])
 
-    return render(
-        request,
-        "user_collection/partials/read_dates_list.html",
-        {"item": item}
-    )
+    return render(request, "user_collection/partials/read_dates_list.html", {"item": item})
 ```
 
 **Features:**
@@ -692,9 +688,9 @@ def scrobble(self, request):
 
 ```python
 {
-    "issue_id": int,              # Required
-    "date_read": datetime,        # Optional, defaults to timezone.now()
-    "rating": int                 # Optional, 1-5
+    "issue_id": int,  # Required
+    "date_read": datetime,  # Optional, defaults to timezone.now()
+    "rating": int,  # Optional, 1-5
 }
 ```
 
@@ -711,7 +707,7 @@ def scrobble(self, request):
 When creating a new collection item via scrobble:
 
 ```python
-defaults={
+defaults = {
     "quantity": 1,
     "book_format": CollectionItem.BookFormat.DIGITAL,
     "is_read": True,
@@ -741,18 +737,14 @@ Uses `ScrobbleResponseSerializer` with additional `created` flag:
 ```python
 {
     "id": int,
-    "issue": {
-        "id": int,
-        "series_name": str,
-        "number": str
-    },
+    "issue": {"id": int, "series_name": str, "number": str},
     "is_read": bool,
     "date_read": datetime,
     "read_dates": [datetime, ...],  # Array of all read dates
-    "read_count": int,               # Total number of reads
-    "rating": int|null,
-    "created": bool,                 # True if new, False if updated
-    "modified": datetime
+    "read_count": int,  # Total number of reads
+    "rating": int | null,
+    "created": bool,  # True if new, False if updated
+    "modified": datetime,
 }
 ```
 
@@ -803,7 +795,9 @@ urlpatterns = [
     path("<int:pk>/delete/", CollectionDeleteView.as_view(), name="delete"),
     path("<int:pk>/rate/", update_rating, name="rate"),
     path("<int:pk>/add-read-date/", add_read_date, name="add-read-date"),
-    path("<int:pk>/delete-read-date/<int:read_date_id>/", delete_read_date, name="delete-read-date"),
+    path(
+        "<int:pk>/delete-read-date/<int:read_date_id>/", delete_read_date, name="delete-read-date"
+    ),
 ]
 ```
 
@@ -818,9 +812,16 @@ class CollectionItemForm(forms.ModelForm):
     class Meta:
         model = CollectionItem
         fields = (
-            "issue", "quantity", "book_format", "grade", "grading_company",
-            "purchase_date", "purchase_price", "purchase_store",
-            "storage_location", "notes",
+            "issue",
+            "quantity",
+            "book_format",
+            "grade",
+            "grading_company",
+            "purchase_date",
+            "purchase_price",
+            "purchase_store",
+            "storage_location",
+            "notes",
         )
 ```
 
@@ -843,8 +844,12 @@ def clean_issue(self):
     issue = self.cleaned_data.get("issue")
 
     # Only validate on create (not update)
-    if (not self.instance.pk and self.user and issue and
-        CollectionItem.objects.filter(user=self.user, issue=issue).exists()):
+    if (
+        not self.instance.pk
+        and self.user
+        and issue
+        and CollectionItem.objects.filter(user=self.user, issue=issue).exists()
+    ):
         raise forms.ValidationError("This issue is already in your collection.")
 
     return issue
@@ -1017,7 +1022,9 @@ class CollectionFilter(filters.FilterSet):
     storage_location = filters.CharFilter(lookup_expr="icontains")
     issue__series = filters.NumberFilter(field_name="issue__series__id")
     is_read = filters.BooleanFilter()
-    date_read = filters.DateFilter(field_name="date_read__date")  # Uses __date lookup for DateTimeField
+    date_read = filters.DateFilter(
+        field_name="date_read__date"
+    )  # Uses __date lookup for DateTimeField
     date_read_gt = filters.DateFilter(field_name="date_read__date", lookup_expr="gt")
     date_read_lt = filters.DateFilter(field_name="date_read__date", lookup_expr="lt")
     date_read_gte = filters.DateFilter(field_name="date_read__date", lookup_expr="gte")
@@ -1045,7 +1052,9 @@ class CollectionViewFilter(df.FilterSet):
     issue_number = df.CharFilter(field_name="issue__number", lookup_expr="iexact")
 
     # Publisher/Imprint filters
-    publisher_name = df.CharFilter(field_name="issue__series__publisher__name", lookup_expr="icontains")
+    publisher_name = df.CharFilter(
+        field_name="issue__series__publisher__name", lookup_expr="icontains"
+    )
     publisher_id = df.NumberFilter(field_name="issue__series__publisher__id")
     imprint_name = df.CharFilter(field_name="issue__series__imprint__name", lookup_expr="icontains")
     imprint_id = df.NumberFilter(field_name="issue__series__imprint__id")
@@ -1069,25 +1078,32 @@ class CollectionViewFilter(df.FilterSet):
 ```python
 class CollectionSeriesName(df.CharFilter):
     """Multi-word series name search (all words must match)."""
+
     def filter(self, qs, value):
         if value:
             query_list = value.split()
             return qs.filter(
-                reduce(operator.and_,
-                    (Q(issue__series__name__unaccent__icontains=q) for q in query_list)
+                reduce(
+                    operator.and_,
+                    (Q(issue__series__name__unaccent__icontains=q) for q in query_list),
                 )
             )
         return super().filter(qs, value)
 
+
 class QuickSearchFilter(df.CharFilter):
     """Search across series names and notes."""
+
     def filter(self, qs, value):
         if value:
             query_list = value.split()
             return qs.filter(
-                reduce(operator.and_,
-                    (Q(issue__series__name__unaccent__icontains=q) |
-                     Q(notes__icontains=q) for q in query_list)
+                reduce(
+                    operator.and_,
+                    (
+                        Q(issue__series__name__unaccent__icontains=q) | Q(notes__icontains=q)
+                        for q in query_list
+                    ),
                 )
             )
         return super().filter(qs, value)
@@ -1402,9 +1418,7 @@ format_counts = queryset.values("book_format").annotate(count=Count("id"))
 queryset = (
     Series.objects.annotate(
         total_issues=Count("issues", distinct=True),
-        owned_issues=Count(
-            "issues", filter=Q(issues__in_collections__user=user), distinct=True
-        ),
+        owned_issues=Count("issues", filter=Q(issues__in_collections__user=user), distinct=True),
     )
     .annotate(missing_count=F("total_issues") - F("owned_issues"))
     .filter(owned_issues__gt=0, missing_count__gt=0)
@@ -1417,9 +1431,9 @@ queryset = (
 
 ```python
 # Two-query strategy for efficiency
-owned_issue_ids = CollectionItem.objects.filter(
-    user=user, issue__series_id=series_id
-).values_list("issue_id", flat=True)
+owned_issue_ids = CollectionItem.objects.filter(user=user, issue__series_id=series_id).values_list(
+    "issue_id", flat=True
+)
 
 missing_issues = (
     Issue.objects.filter(series_id=series_id)
@@ -1771,17 +1785,11 @@ class MissingIssuesViewTest(TestCase):
 
         # Create a series with 5 issues
         self.series = Series.objects.create(name="Test Series")
-        self.issues = [
-            Issue.objects.create(series=self.series, number=str(i))
-            for i in range(1, 6)
-        ]
+        self.issues = [Issue.objects.create(series=self.series, number=str(i)) for i in range(1, 6)]
 
         # User owns issues 1, 2, and 4
         for issue_num in [0, 1, 3]:
-            CollectionItem.objects.create(
-                user=self.user,
-                issue=self.issues[issue_num]
-            )
+            CollectionItem.objects.create(user=self.user, issue=self.issues[issue_num])
 
     def test_missing_issues_list_shows_incomplete_series(self):
         """Test that series with missing issues appears in the list."""
@@ -1798,9 +1806,7 @@ class MissingIssuesViewTest(TestCase):
 
     def test_missing_issues_detail_shows_correct_issues(self):
         """Test that detail view shows only missing issues."""
-        response = self.client.get(
-            reverse("user_collection:missing-detail", args=[self.series.id])
-        )
+        response = self.client.get(reverse("user_collection:missing-detail", args=[self.series.id]))
 
         self.assertEqual(response.status_code, 200)
         missing = response.context["missing_issues"]
@@ -1817,9 +1823,7 @@ class MissingIssuesViewTest(TestCase):
 
     def test_completion_percentage_calculation(self):
         """Test that completion percentage is calculated correctly."""
-        response = self.client.get(
-            reverse("user_collection:missing-detail", args=[self.series.id])
-        )
+        response = self.client.get(reverse("user_collection:missing-detail", args=[self.series.id]))
 
         # 3 out of 5 = 60%
         self.assertEqual(response.context["completion_percentage"], 60.0)

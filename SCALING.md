@@ -152,6 +152,7 @@ File: `comicsdb/views/__init__.py` or a new `comicsdb/views/health.py`:
 ```python
 from django.http import HttpResponse
 
+
 def health(request):
     return HttpResponse("ok")
 ```
