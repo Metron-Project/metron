@@ -15,11 +15,13 @@ jobs:
 
       - uses: astral-sh/setup-uv@v5
 
+      # Keep this version in sync with the ruff pin in uv.lock, so CI matches
+      # what `ruff` resolves to locally instead of drifting to latest.
       - name: Check formatting
-        run: uvx ruff format --check .
+        run: uvx ruff@0.15.22 format --check .
 
       - name: Run linter
-        run: uvx ruff check .
+        run: uvx ruff@0.15.22 check .
 
   test:
     name: Test
