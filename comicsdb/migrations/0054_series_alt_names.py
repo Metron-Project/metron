@@ -6,7 +6,7 @@ from django.db import migrations, models
 
 class Migration(migrations.Migration):
     dependencies = [
-        ("comicsdb", "0052_alter_historicalissue_price_currency_and_more"),
+        ("comicsdb", "0053_fix_unaccent_trgm_index_case_folding"),
     ]
 
     operations = [
