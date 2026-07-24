@@ -381,6 +381,7 @@ The Issue endpoint supports the most comprehensive filtering options:
 
 - All list fields plus:
     - `desc` - Issue description
+    - `series` - Expanded compared to the list view, adding `sort_name`, `series_type` (object with `id`/`name`), `genres` (array of genre objects), and `alt_names` (array of alternate series names)
     - `price` - Cover price amount as a decimal string (e.g. `"3.99"`). See `price_currency` for the currency.
     - `price_currency` - ISO 4217 currency code for the cover price (e.g. `"USD"`, `"GBP"`).
     - `sku` - Distributor SKU

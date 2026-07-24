@@ -139,6 +139,19 @@ def test_get_valid_single_arc(api_client_with_credentials, issue_with_arc):
     assert resp.status_code == status.HTTP_200_OK
 
 
+def test_detail_view_includes_series_alt_names(
+    api_client_with_credentials, issue_with_arc, fc_series
+):
+    fc_series.alt_names = ["Crisis on Infinite Worlds"]
+    fc_series.save()
+
+    resp = api_client_with_credentials.get(
+        reverse("api:issue-detail", kwargs={"pk": issue_with_arc.pk})
+    )
+    assert resp.status_code == status.HTTP_200_OK
+    assert resp.data["series"]["alt_names"] == ["Crisis on Infinite Worlds"]
+
+
 def test_get_invalid_single_arc(api_client_with_credentials):
     resp = api_client_with_credentials.get(reverse("api:issue-detail", kwargs={"pk": "10"}))
     assert resp.status_code == status.HTTP_404_NOT_FOUND
