@@ -59,6 +59,17 @@ def test_admin_user_post_url(db, api_client_with_staff_credentials, create_serie
     assert resp.status_code == status.HTTP_201_CREATED
 
 
+def test_admin_user_post_url_with_alt_names(
+    db, api_client_with_staff_credentials, create_series_data
+):
+    create_series_data["alt_names"] = ["The Wasp Spectacular"]
+    resp = api_client_with_staff_credentials.post(
+        reverse("api:series-list"), data=create_series_data
+    )
+    assert resp.status_code == status.HTTP_201_CREATED
+    assert resp.data["alt_names"] == ["The Wasp Spectacular"]
+
+
 # Put Tests
 def test_unauthorized_put_url(db, api_client, fc_series, create_put_data):
     resp = api_client.put(
@@ -116,6 +127,39 @@ def test_series_search(api_client_with_credentials, bat_sups_series, fc_series):
     serializer = SeriesListSerializer(expected, many=True)
     assert resp.status_code == status.HTTP_200_OK
     assert resp.data["results"] == serializer.data
+
+
+def test_filter_by_alt_names(
+    api_client_with_credentials, fc_series: Series, bat_sups_series: Series
+):
+    fc_series.alt_names = ["The Crisis"]
+    fc_series.save()
+
+    resp = api_client_with_credentials.get("/api/series/?alt_names=Crisis")
+    assert resp.status_code == status.HTTP_200_OK
+    assert resp.data["count"] == 1
+    assert resp.data["results"][0]["series"] == str(fc_series)
+
+
+def test_filter_by_quick_search(
+    api_client_with_credentials, fc_series: Series, bat_sups_series: Series
+):
+    """Quick search (q) should match either the name or alt_names field."""
+    bat_sups_series.alt_names = ["World's Finest"]
+    bat_sups_series.save()
+
+    # Matches via the primary name field
+    resp = api_client_with_credentials.get(f"/api/series/?q={quote_plus('batman superman')}")
+    assert resp.status_code == status.HTTP_200_OK
+    assert resp.data["count"] == 1
+    assert resp.data["results"][0]["series"] == str(bat_sups_series)
+
+    # Matches via the alt_names field
+    alt_name_search = "world's finest"
+    resp = api_client_with_credentials.get(f"/api/series/?q={quote_plus(alt_name_search)}")
+    assert resp.status_code == status.HTTP_200_OK
+    assert resp.data["count"] == 1
+    assert resp.data["results"][0]["series"] == str(bat_sups_series)
 
 
 def test_filter_by_creator_id(

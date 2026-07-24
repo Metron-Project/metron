@@ -156,6 +156,27 @@ def test_valid_form(dc_comics, single_issue_type):
     assert form.is_valid() is True
 
 
+def test_valid_form_with_alt_names(dc_comics, single_issue_type):
+    """alt_names should be parsed as a semicolon-delimited list, tolerating commas in names."""
+    form = SeriesForm(
+        data={
+            "name": "Batman",
+            "sort_name": "Batman",
+            "slug": "batman",
+            "volume": 3,
+            "year_began": 2017,
+            "year_end": "",
+            "series_type": single_issue_type,
+            "status": Series.Status.ONGOING,
+            "publisher": dc_comics,
+            "desc": "The Dark Knight.",
+            "alt_names": "Batman, the Dark Knight; Batman & Robin",
+        }
+    )
+    assert form.is_valid() is True
+    assert form.cleaned_data["alt_names"] == ["Batman, the Dark Knight", "Batman & Robin"]
+
+
 def test_form_invalid(dc_comics, single_issue_type):
     form = SeriesForm(
         data={
@@ -434,6 +455,50 @@ def test_series_filter_multi_word_name_search(
     assert resp.status_code == HTML_OK_CODE
     assert len(resp.context["series_list"]) == 1
     assert resp.context["series_list"][0].name == "Amazing Spider-Man"
+
+
+def test_series_filter_by_alt_names(auto_login_user, create_user, dc_comics, single_issue_type):
+    """Test the dedicated alt_names filter and that quick search also matches it."""
+    user = create_user()
+    series = Series.objects.create(
+        name="Betty and Veronica Spectacular",
+        slug="betty-and-veronica-spectacular",
+        sort_name="Betty and Veronica Spectacular",
+        year_began=1992,
+        volume=1,
+        publisher=dc_comics,
+        series_type=single_issue_type,
+        status=Series.Status.ONGOING,
+        alt_names=["Betty & Veronica Spectacular"],
+        created_by=user,
+        edited_by=user,
+    )
+    Series.objects.create(
+        name="Superman",
+        slug="superman-1992",
+        sort_name="Superman",
+        year_began=1992,
+        volume=1,
+        publisher=dc_comics,
+        series_type=single_issue_type,
+        status=Series.Status.ONGOING,
+        created_by=user,
+        edited_by=user,
+    )
+
+    client, _ = auto_login_user()
+
+    # Dedicated alt_names filter
+    resp = client.get("/series/?alt_names=Veronica+Spectacular")
+    assert resp.status_code == HTML_OK_CODE
+    assert len(resp.context["series_list"]) == 1
+    assert resp.context["series_list"][0].id == series.id
+
+    # Quick search should also match alt_names
+    resp = client.get("/series/?q=Betty+%26+Veronica+Spectacular")
+    assert resp.status_code == HTML_OK_CODE
+    assert len(resp.context["series_list"]) == 1
+    assert resp.context["series_list"][0].id == series.id
 
 
 def test_series_filter_by_series_type(auto_login_user, create_user, dc_comics):

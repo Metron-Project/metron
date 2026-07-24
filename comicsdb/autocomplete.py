@@ -141,7 +141,7 @@ class SeriesAutocomplete(ModelAutocomplete):
     """Autocomplete for searching series."""
 
     model = Series
-    search_attrs = ["name"]
+    search_attrs = ["name", "alt_names"]
 
     @classmethod
     def get_queryset(cls):
@@ -151,10 +151,17 @@ class SeriesAutocomplete(ModelAutocomplete):
 
     @classmethod
     def get_query_filtered_queryset(cls, search, context):
-        """Filter series using unaccent search for accent-insensitive matching."""
+        """
+        Filter series using unaccent search on name field.
+
+        This allows searching for series without needing to match accents.
+        Note: alt_names uses the `joined` transform so the search can hit
+        the trigram index on ArrayField(alt_names) instead of a seq scan.
+        """
         queryset = cls.get_queryset()
         conditions = [
-            Q(**{f"{attr}__unaccent__icontains": search}) for attr in cls.get_search_attrs()
+            Q(name__unaccent__icontains=search),
+            Q(alt_names__joined__icontains=search),
         ]
         condition_filter = reduce(operator.or_, conditions)
         return queryset.filter(condition_filter)

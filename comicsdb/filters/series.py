@@ -21,8 +21,28 @@ class SeriesNameFilter(filters.CharFilter):
         return super().filter(qs, value)
 
 
+class SeriesQuickSearchFilter(filters.CharFilter):
+    """Multi-word search across a series' name and its alternative names."""
+
+    def filter(self, qs, value):
+        if value:
+            query_list = value.split()
+            return qs.filter(
+                reduce(
+                    operator.and_,
+                    (
+                        Q(name__unaccent__icontains=q) | Q(alt_names__joined__icontains=q)
+                        for q in query_list
+                    ),
+                )
+            )
+        return super().filter(qs, value)
+
+
 class SeriesFilter(filters.FilterSet):
     name = SeriesNameFilter()
+    alt_names = filters.CharFilter(field_name="alt_names", lookup_expr="joined__icontains")
+    q = SeriesQuickSearchFilter(label="Quick search across name and alternative names")
     publisher_id = filters.filters.NumberFilter(field_name="publisher__id", lookup_expr="exact")
     publisher_name = filters.CharFilter(field_name="publisher__name", lookup_expr="icontains")
     imprint_name = filters.CharFilter(field_name="imprint__name", lookup_expr="icontains")
@@ -82,11 +102,16 @@ class SeriesFilter(filters.FilterSet):
 class SeriesViewFilter(df.FilterSet):
     """Filter for series list views with search capabilities."""
 
-    # Quick search for series names
-    q = SeriesNameFilter(label="Quick Search")
+    # Quick search across series names and alternative names
+    q = SeriesQuickSearchFilter(label="Quick Search")
 
     # Series name with multi-word support
     name = SeriesNameFilter(label="Series Name")
+
+    # Alternative name filter
+    alt_names = df.CharFilter(
+        label="Alternative Name", field_name="alt_names", lookup_expr="joined__icontains"
+    )
 
     # Series type filter
     series_type = df.NumberFilter(
@@ -126,6 +151,7 @@ class SeriesViewFilter(df.FilterSet):
         fields = [
             "q",
             "name",
+            "alt_names",
             "series_type",
             "publisher_name",
             "publisher_id",

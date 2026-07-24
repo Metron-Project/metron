@@ -1,4 +1,5 @@
-from django.forms import ModelChoiceField, ModelForm, ValidationError
+from django.contrib.postgres.forms import SimpleArrayField
+from django.forms import CharField, ModelChoiceField, ModelForm, ValidationError
 
 from comicsdb.autocomplete import ImprintAutocomplete, PublisherAutocomplete, SeriesAutocomplete
 from comicsdb.forms.widgets import SafeAutocompleteWidget
@@ -34,12 +35,20 @@ class SeriesForm(ModelForm):
         widget=SafeAutocompleteWidget(ac_class=ImprintAutocomplete),
         required=False,
     )
+    alt_names = SimpleArrayField(
+        CharField(max_length=255),
+        delimiter=";",
+        label="Alternative Names",
+        help_text="Separate multiple alternative names by a semicolon",
+        required=False,
+    )
 
     class Meta:
         model = Series
         fields = [
             "name",
             "sort_name",
+            "alt_names",
             "volume",
             "year_began",
             "year_end",
@@ -81,6 +90,7 @@ class SeriesForm(ModelForm):
         field_order = [
             "name",
             "sort_name",
+            "alt_names",
             "volume",
             "year_began",
             "year_end",

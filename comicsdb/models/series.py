@@ -2,6 +2,7 @@ import itertools
 from typing import TYPE_CHECKING
 
 from django.contrib.contenttypes.fields import GenericRelation
+from django.contrib.postgres.fields import ArrayField
 from django.contrib.postgres.indexes import GinIndex, OpClass
 from django.contrib.postgres.lookups import Unaccent
 from django.db import models
@@ -11,6 +12,7 @@ from django.urls import reverse
 from django.utils.text import slugify
 from simple_history.models import HistoricalRecords
 
+from comicsdb.db_functions import ArrayToString
 from comicsdb.models.attribution import Attribution
 from comicsdb.models.common import CommonInfo
 from comicsdb.models.genre import Genre
@@ -42,6 +44,9 @@ class Series(CommonInfo):
         ONGOING = 4
 
     sort_name = models.CharField(max_length=255)
+    alt_names = ArrayField(
+        models.CharField(max_length=255), blank=True, default=list, verbose_name="Alternative Names"
+    )
     volume = models.PositiveSmallIntegerField("Volume Number")
     year_began = models.PositiveSmallIntegerField("Year Began")
     year_end = models.PositiveSmallIntegerField("Year Ended", null=True, blank=True)
@@ -96,6 +101,10 @@ class Series(CommonInfo):
             GinIndex(
                 OpClass(Upper(Unaccent("name")), name="gin_trgm_ops"),
                 name="series_name_unaccent_trgm_idx",
+            ),
+            GinIndex(
+                OpClass(Upper(ArrayToString("alt_names")), name="gin_trgm_ops"),
+                name="series_alt_names_trgm_idx",
             ),
             models.Index(fields=["cv_id"], name="series_cv_id_idx"),
             models.Index(fields=["gcd_id"], name="series_gcd_id_idx"),

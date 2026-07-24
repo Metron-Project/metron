@@ -311,6 +311,8 @@ The Issue endpoint supports the most comprehensive filtering options:
 **Series Filters:**
 
 - `series_name` - Series name (searches all words, case-insensitive)
+- `series_alt_names` - Series alternative name (partial match)
+- `series_q` - Quick search across both series name and alternative names (searches all words, case-insensitive)
 - `series_id` - Series Metron ID
 - `series_volume` - Series volume number
 - `series_year_began` - Series start year
@@ -582,6 +584,8 @@ Comic book series.
 **Basic Filters:**
 
 - `name` - Series name (searches all words, case-insensitive)
+- `alt_names` - Alternative series name (partial match)
+- `q` - Quick search across both `name` and `alt_names` (searches all words, case-insensitive)
 - `volume` - Volume number
 - `year_began` - Year series started
 - `year_end` - Year series ended
@@ -639,6 +643,7 @@ Comic book series.
 - All list fields plus:
     - `imprint` - Imprint object (if applicable)
     - `status` - Series status (continuing, completed, cancelled, hiatus)
+    - `alt_names` - Array of alternative series names
     - `desc` - Description
     - `genres` - Array of genre objects
     - `associated` - Associated series
@@ -657,6 +662,12 @@ Comic book series.
 ```bash
 # Search for series by name (all words must match)
 GET /api/series/?name=amazing spider-man
+
+# Quick search by name or alternative name
+GET /api/series/?q=betty veronica
+
+# Search for series by alternative name only
+GET /api/series/?alt_names=veronica spectacular
 
 # Get Marvel ongoing series
 GET /api/series/?publisher_name=marvel&status=continuing

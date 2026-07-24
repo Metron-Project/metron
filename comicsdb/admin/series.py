@@ -8,7 +8,7 @@ from comicsdb.models import Issue, Series, SeriesType
 
 @admin.register(Series)
 class SeriesAdmin(SimpleHistoryAdmin):
-    search_fields = ("name",)
+    search_fields = ("name", "alt_names")
     list_display = ("name", "year_began", "created_by")
     list_filter = (CreatedOnDateListFilter, "modified", "series_type", "status", "publisher")
     prepopulated_fields = {"slug": ("name", "year_began")}
@@ -23,6 +23,7 @@ class SeriesAdmin(SimpleHistoryAdmin):
                     "name",
                     "slug",
                     "sort_name",
+                    "alt_names",
                     "publisher",
                     "imprint",
                     "volume",

@@ -13,6 +13,7 @@ _NON_FILTER_PARAMS = {"page"}
 FILTER_LABELS = {
     "q": "Search",
     "name": "Name",
+    "alt_names": "Alternative Name",
     "series_type": "Type",
     "publisher_name": "Publisher",
     "publisher_id": "Publisher ID",
