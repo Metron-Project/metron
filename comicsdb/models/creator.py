@@ -7,6 +7,7 @@ from django.contrib.postgres.indexes import GinIndex, OpClass
 from django.contrib.postgres.lookups import Unaccent
 from django.core.exceptions import ObjectDoesNotExist
 from django.db import models
+from django.db.models.functions import Upper
 from django.db.models.signals import pre_save
 from django.urls import reverse
 from simple_history.models import HistoricalRecords
@@ -66,7 +67,7 @@ class Creator(CommonInfo):
     class Meta:
         indexes = [
             GinIndex(
-                OpClass(Unaccent("name"), name="gin_trgm_ops"),
+                OpClass(Upper(Unaccent("name")), name="gin_trgm_ops"),
                 name="creator_name_unaccent_trgm_idx",
             ),
             models.Index(fields=["cv_id"], name="creator_cv_id_idx"),

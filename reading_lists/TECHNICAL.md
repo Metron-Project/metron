@@ -51,7 +51,9 @@ class ReadingList(CommonInfo):
     user = models.ForeignKey(CustomUser, on_delete=models.CASCADE, related_name="reading_lists")
     is_private = models.BooleanField(default=False)
     list_type = models.CharField(max_length=10, choices=ListType.choices, default=ListType.EVENT)
-    attribution_source = models.CharField(max_length=10, choices=AttributionSource.choices, blank=True)
+    attribution_source = models.CharField(
+        max_length=10, choices=AttributionSource.choices, blank=True
+    )
     attribution_url = models.URLField(blank=True)
     image = ImageField(upload_to="reading_list/%Y/%m/%d/", blank=True)
     issues = models.ManyToManyField(
@@ -119,21 +121,19 @@ class Meta:
 def start_year(self) -> int | None:
     """Get the earliest year from the reading list's issues."""
     earliest_issue = (
-        self.reading_list_items.select_related("issue")
-        .order_by("issue__cover_date")
-        .first()
+        self.reading_list_items.select_related("issue").order_by("issue__cover_date").first()
     )
     return earliest_issue.issue.cover_date.year if earliest_issue else None
+
 
 @property
 def end_year(self) -> int | None:
     """Get the latest year from the reading list's issues."""
     latest_issue = (
-        self.reading_list_items.select_related("issue")
-        .order_by("-issue__cover_date")
-        .first()
+        self.reading_list_items.select_related("issue").order_by("-issue__cover_date").first()
     )
     return latest_issue.issue.cover_date.year if latest_issue else None
+
 
 @property
 def publishers(self):
@@ -158,6 +158,7 @@ Through model for the M2M relationship between ReadingList and Issue.
 class ReadingListItem(models.Model):
     class IssueType(models.TextChoices):
         """Issue type choices for reading list items."""
+
         PROLOGUE = "PROLOGUE", "Prologue"
         CORE = "CORE", "Core Issue"
         TIE_IN = "TIE_IN", "Tie-In"
@@ -235,7 +236,9 @@ Model for community ratings of public reading lists.
 ```python
 class ReadingListRating(models.Model):
     reading_list = models.ForeignKey(ReadingList, on_delete=models.CASCADE, related_name="ratings")
-    user = models.ForeignKey(CustomUser, on_delete=models.CASCADE, related_name="reading_list_ratings")
+    user = models.ForeignKey(
+        CustomUser, on_delete=models.CASCADE, related_name="reading_list_ratings"
+    )
     rating = models.PositiveSmallIntegerField(
         choices=[(i, str(i)) for i in range(1, 6)],
         help_text="Star rating (1-5) for this reading list",
@@ -755,16 +758,32 @@ urlpatterns = [
     path("<slug:slug>/", ReadingListDetailView.as_view(), name="detail"),
     path("<slug:slug>/update/", ReadingListUpdateView.as_view(), name="update"),
     path("<slug:slug>/delete/", ReadingListDeleteView.as_view(), name="delete"),
-    path("<slug:slug>/assign-to-metron/", AssignReadingListToMetronView.as_view(), name="assign-to-metron"),
+    path(
+        "<slug:slug>/assign-to-metron/",
+        AssignReadingListToMetronView.as_view(),
+        name="assign-to-metron",
+    ),
     path("<slug:slug>/add-issue/", AddIssueWithAutocompleteView.as_view(), name="add-issue"),
     path("<slug:slug>/add-from-series/", AddIssuesFromSeriesView.as_view(), name="add-from-series"),
     path("<slug:slug>/add-from-arc/", AddIssuesFromArcView.as_view(), name="add-from-arc"),
-    path("<slug:slug>/remove-issue/<int:item_pk>/", RemoveIssueFromReadingListView.as_view(), name="remove-issue"),
-    path("<slug:slug>/items-load-more/", ReadingListItemsLoadMore.as_view(), name="items-load-more"),
+    path(
+        "<slug:slug>/remove-issue/<int:item_pk>/",
+        RemoveIssueFromReadingListView.as_view(),
+        name="remove-issue",
+    ),
+    path(
+        "<slug:slug>/items-load-more/", ReadingListItemsLoadMore.as_view(), name="items-load-more"
+    ),
     path("<slug:slug>/rate/", update_reading_list_rating, name="rate"),
     path("<slug:slug>/item/<int:item_pk>/edit-type/", edit_issue_type, name="edit-issue-type"),
-    path("<slug:slug>/item/<int:item_pk>/update-type/", update_issue_type, name="update-issue-type"),
-    path("<slug:slug>/item/<int:item_pk>/cancel-edit-type/", cancel_edit_issue_type, name="cancel-edit-issue-type"),
+    path(
+        "<slug:slug>/item/<int:item_pk>/update-type/", update_issue_type, name="update-issue-type"
+    ),
+    path(
+        "<slug:slug>/item/<int:item_pk>/cancel-edit-type/",
+        cancel_edit_issue_type,
+        name="cancel-edit-issue-type",
+    ),
 ]
 ```
 
@@ -1116,7 +1135,9 @@ class ReadingListFilter(filters.FilterSet):
     is_private = filters.BooleanFilter()
     modified_gt = filters.DateTimeFilter(field_name="modified", lookup_expr="gt")
     average_rating__gte = filters.NumberFilter(
-        field_name="average_rating", lookup_expr="gte", label="Minimum Rating",
+        field_name="average_rating",
+        lookup_expr="gte",
+        label="Minimum Rating",
     )
     publisher = filters.CharFilter(label="Publisher", method="filter_by_publisher")
 ```
@@ -1161,7 +1182,9 @@ class ReadingListViewFilter(df.FilterSet):
     is_private = df.BooleanFilter(label="Private")
     publisher = df.CharFilter(label="Publisher", method="filter_by_publisher")
     average_rating__gte = df.NumberFilter(
-        field_name="average_rating", lookup_expr="gte", label="Minimum Rating",
+        field_name="average_rating",
+        lookup_expr="gte",
+        label="Minimum Rating",
     )
 ```
 
@@ -1898,18 +1921,12 @@ Run `pytest tests/reading_lists/ --cov` for current pass/fail counts and coverag
 class ReadingListModelTest(TestCase):
     def setUp(self):
         self.user = CustomUser.objects.create_user(username="testuser")
-        self.reading_list = ReadingList.objects.create(
-            user=self.user,
-            name="Test List"
-        )
+        self.reading_list = ReadingList.objects.create(user=self.user, name="Test List")
 
     def test_unique_constraint(self):
         """Test that users cannot create duplicate list names."""
         with self.assertRaises(IntegrityError):
-            ReadingList.objects.create(
-                user=self.user,
-                name="Test List"
-            )
+            ReadingList.objects.create(user=self.user, name="Test List")
 
     def test_start_year_with_no_issues(self):
         """Test start_year returns None when list is empty."""

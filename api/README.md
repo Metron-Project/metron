@@ -2227,17 +2227,14 @@ The API supports mapping to external databases:
 ```python
 import requests
 
+
 class MetronAPI:
     def __init__(self, base_url, username, password):
         self.base_url = base_url
         self.auth = (username, password)
 
     def get_issues(self, **filters):
-        response = requests.get(
-            f"{self.base_url}/issue/",
-            auth=self.auth,
-            params=filters
-        )
+        response = requests.get(f"{self.base_url}/issue/", auth=self.auth, params=filters)
         response.raise_for_status()
         return response.json()
 
@@ -2250,11 +2247,12 @@ class MetronAPI:
             response = requests.get(url, auth=self.auth, params=filters)
             response.raise_for_status()
             data = response.json()
-            results.extend(data['results'])
-            url = data['next']
+            results.extend(data["results"])
+            url = data["next"]
             filters = {}  # Clear params after first request
 
         return results
+
 
 # Usage
 api = MetronAPI("https://metron.cloud/api", "your-username", "your-password")
