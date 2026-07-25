@@ -1,7 +1,7 @@
 bots:
   # Deny lovable.app — hammers the API unauthenticated with rotating IPs.
   # Must appear before the api ALLOW rule so the deny fires first.
-  - name: deny-comicvault
+  - name: deny-lovable-app
     user_agent_regex: lovable\.app
     action: DENY
 
@@ -40,6 +40,11 @@ bots:
   # Deny LinkupBot scraper.
   - name: deny-linkupbot
     user_agent_regex: LinkupBot
+    action: DENY
+
+  # Deny f-read-metron-dump scraper.
+  - name: deny-f-read-metron-dump
+    user_agent_regex: f-read-metron-dump
     action: DENY
 
   # Pass API requests through without a proof-of-work challenge.
