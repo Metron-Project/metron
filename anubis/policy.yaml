@@ -72,6 +72,12 @@ bots:
   # rules so crawlers can always fetch these regardless of user-agent.
   - import: (data)/common/keep-internet-working.yaml
 
+  # Deny curl scraping the site pages. This comes after the `api` ALLOW rule
+  # above, so curl/script access to /api/ is still permitted.
+  - name: deny-curl
+    user_agent_regex: curl/
+    action: DENY
+
   # Deny Meta/Facebook crawlers (meta-externalagent, facebookexternalhit, FacebookBot).
   - name: deny-meta-crawlers
     user_agent_regex: meta-externalagent|meta-webindexer|FacebookBot
