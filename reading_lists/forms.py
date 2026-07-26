@@ -1,4 +1,3 @@
-from autocomplete import widgets
 from django import forms
 
 from comicsdb.autocomplete import ArcAutocomplete, IssueAutocomplete, SeriesAutocomplete
@@ -96,7 +95,7 @@ class AddIssueWithSearchForm(forms.Form):
     issues = forms.ModelMultipleChoiceField(
         queryset=Issue.objects.select_related("series", "series__series_type").all(),
         required=False,
-        widget=widgets.AutocompleteWidget(
+        widget=SafeAutocompleteWidget(
             ac_class=IssueAutocomplete,
             attrs={
                 "placeholder": "Search for issues...",
@@ -127,7 +126,7 @@ class AddIssuesFromSeriesForm(forms.Form):
     series = forms.ModelChoiceField(
         queryset=Series.objects.select_related("series_type").all(),
         required=True,
-        widget=widgets.AutocompleteWidget(
+        widget=SafeAutocompleteWidget(
             ac_class=SeriesAutocomplete,
             attrs={
                 "placeholder": "Search for a series...",
@@ -194,7 +193,7 @@ class AddIssuesFromArcForm(forms.Form):
     arc = forms.ModelChoiceField(
         queryset=Arc.objects.all(),
         required=True,
-        widget=widgets.AutocompleteWidget(
+        widget=SafeAutocompleteWidget(
             ac_class=ArcAutocomplete,
             attrs={
                 "placeholder": "Search for a story arc...",

@@ -1,9 +1,8 @@
-from autocomplete import widgets
 from django import forms
 from djmoney.forms.fields import MoneyField
 
 from comicsdb.autocomplete import IssueAutocomplete
-from comicsdb.forms.widgets import BulmaMoneyWidget
+from comicsdb.forms.widgets import BulmaMoneyWidget, SafeAutocompleteWidget
 from wish_list.models import WishListItem
 
 
@@ -19,7 +18,7 @@ class WishListItemForm(forms.ModelForm):
             "notes",
         )
         widgets = {
-            "issue": widgets.AutocompleteWidget(
+            "issue": SafeAutocompleteWidget(
                 ac_class=IssueAutocomplete,
                 attrs={
                     "placeholder": "Search for an issue...",
