@@ -111,6 +111,20 @@ def api_client_with_staff_credentials(db, create_staff_user, api_client):
     api_client.force_authenticate(user=None)
 
 
+@pytest.fixture
+def api_client_with_token_credentials(db, create_user, api_client):
+    """Authenticates via a real Authorization header, unlike force_authenticate()
+    (which bypasses DEFAULT_AUTHENTICATION_CLASSES entirely).
+    """
+    from users.models import ApiToken
+
+    user = create_user()
+    _instance, token = ApiToken.objects.create(user=user, name="test token")
+    api_client.credentials(HTTP_AUTHORIZATION=f"Bearer {token}")
+    yield api_client, user
+    api_client.credentials()
+
+
 @pytest.fixture(scope="session")
 def django_db_setup(django_db_setup, django_db_blocker):
     with django_db_blocker.unblock():

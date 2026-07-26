@@ -2,6 +2,7 @@ from django.contrib.auth.base_user import BaseUserManager
 from django.contrib.auth.models import AbstractUser
 from django.db import models
 from django.utils import timezone
+from knox.models import AbstractAuthToken
 from sorl.thumbnail import ImageField
 
 # (min_cents, slug, display_name, daily_limit), ordered by descending threshold so
@@ -89,6 +90,19 @@ class CustomUser(AbstractUser):
             return None
         tier = _SUPPORTER_TIERS_BY_SLUG.get(self.supporter_tier)
         return tier[0] if tier else SUPPORTER_TIERS[-1][2]
+
+
+class ApiToken(AbstractAuthToken):
+    """Knox auth token, swapped in via KNOX_TOKEN_MODEL to add a user-facing name.
+
+    Lets a user tell apart e.g. "Mokkari script" from "phone app" in their token
+    list, since stock knox.AuthToken has no label field of its own.
+    """
+
+    name = models.CharField(max_length=64, blank=True)
+
+    def __str__(self) -> str:
+        return self.name or f"Token created {self.created:%Y-%m-%d}"
 
 
 class OpenCollectiveDonation(models.Model):

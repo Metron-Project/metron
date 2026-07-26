@@ -33,7 +33,7 @@ from comicsdb.views.mixins import SearchMixin
 from metron.utils import get_recaptcha_auth
 from user_collection.models import CollectionItem
 from users.forms import CustomUserChangeForm, CustomUserCreationForm
-from users.models import CustomUser
+from users.models import ApiToken, CustomUser
 from users.tokens import account_activation_token
 from users.utils import send_pushover
 
@@ -152,6 +152,35 @@ def delete_account(request):
         messages.success(request, "Your account has been deleted.")
         return redirect("home")
     return render(request, "users/delete_account.html")
+
+
+def api_tokens(request):
+    if not request.user.is_authenticated:
+        return redirect("login")
+
+    new_token = None
+    if request.method == "POST":
+        name = request.POST.get("name", "").strip()
+        _instance, new_token = ApiToken.objects.create(user=request.user, name=name)
+        messages.success(
+            request, "New API token created. Copy it now — you won't be able to see it again."
+        )
+
+    context = {
+        "tokens": request.user.auth_token_set.order_by("-created"),
+        "new_token": new_token,
+    }
+    return render(request, "users/api_token.html", context)
+
+
+def revoke_api_token(request, digest):
+    if not request.user.is_authenticated:
+        return redirect("login")
+    token = get_object_or_404(ApiToken, digest=digest, user=request.user)
+    if request.method == "POST":
+        token.delete()
+        messages.success(request, "API token revoked.")
+    return redirect("api_tokens")
 
 
 def user_profile_redirect(request, pk):
