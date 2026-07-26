@@ -1,8 +1,7 @@
-from autocomplete import widgets
 from django import forms
 
 from comicsdb.autocomplete import IssueAutocomplete, SeriesAutocomplete
-from comicsdb.forms.widgets import BulmaMoneyWidget
+from comicsdb.forms.widgets import BulmaMoneyWidget, SafeAutocompleteWidget
 from comicsdb.models.series import Series
 from user_collection.models import CollectionItem
 
@@ -26,7 +25,7 @@ class CollectionItemForm(forms.ModelForm):
             "is_read",
         )
         widgets = {
-            "issue": widgets.AutocompleteWidget(
+            "issue": SafeAutocompleteWidget(
                 ac_class=IssueAutocomplete,
                 attrs={
                     "placeholder": "Search for an issue...",
@@ -122,7 +121,7 @@ class AddIssuesFromSeriesForm(forms.Form):
     series = forms.ModelChoiceField(
         queryset=Series.objects.select_related("series_type").all(),
         required=True,
-        widget=widgets.AutocompleteWidget(
+        widget=SafeAutocompleteWidget(
             ac_class=SeriesAutocomplete,
             attrs={
                 "placeholder": "Search for a series...",
