@@ -6,8 +6,10 @@ from django.urls import reverse
 from pytest_django.asserts import assertTemplateUsed
 
 from users.forms import CustomUserChangeForm
-from users.models import CustomUser
+from users.models import ApiToken, CustomUser
 from users.views import SUSTAINED_DURATION, SUSTAINED_LIMIT, get_rate_limit_usage
+
+HTTP_NOT_FOUND_CODE = 404
 
 HTML_REDIRECT_MOVED_PERMAMENTLY_CODE = 301
 HTTP_REDIRECT_FOUND_CODE = 302
@@ -232,3 +234,73 @@ def test_delete_account_post_logs_out_user(auto_login_user):
     resp = client.get(reverse("change_profile"))
     assert resp.status_code == HTTP_REDIRECT_FOUND_CODE
     assert "/accounts/login/" in resp.url
+
+
+# --- api_tokens view tests ---
+
+
+def test_api_tokens_get_unauthenticated(client):
+    resp = client.get(reverse("api_tokens"))
+    assert resp.status_code == HTTP_REDIRECT_FOUND_CODE
+    assert "/accounts/login/" in resp.url
+
+
+def test_api_tokens_get_authenticated(auto_login_user):
+    client, _ = auto_login_user()
+    resp = client.get(reverse("api_tokens"))
+    assert resp.status_code == HTML_OK_CODE
+    assertTemplateUsed(resp, "users/api_token.html")
+
+
+def test_api_tokens_post_creates_token(auto_login_user):
+    client, user = auto_login_user()
+    resp = client.post(reverse("api_tokens"), {"name": "Mokkari script"})
+    assert resp.status_code == HTML_OK_CODE
+    assert user.auth_token_set.count() == 1
+    assert user.auth_token_set.get().name == "Mokkari script"
+    assert resp.context["new_token"]
+
+
+def test_api_tokens_post_name_is_optional(auto_login_user):
+    client, user = auto_login_user()
+    resp = client.post(reverse("api_tokens"), {"name": ""})
+    assert resp.status_code == HTML_OK_CODE
+    assert user.auth_token_set.get().name == ""
+
+
+def test_api_tokens_new_token_not_shown_after_reload(auto_login_user):
+    client, _user = auto_login_user()
+    client.post(reverse("api_tokens"), {"name": "test"})
+    resp = client.get(reverse("api_tokens"))
+    assert resp.context["new_token"] is None
+
+
+# --- revoke_api_token view tests ---
+
+
+def test_revoke_api_token_unauthenticated(client):
+    resp = client.post(reverse("revoke_api_token", kwargs={"digest": "abc"}))
+    assert resp.status_code == HTTP_REDIRECT_FOUND_CODE
+    assert "/accounts/login/" in resp.url
+
+
+def test_revoke_api_token_deletes_own_token(auto_login_user):
+    client, user = auto_login_user()
+    instance, _token = ApiToken.objects.create(user=user, name="test")
+
+    resp = client.post(reverse("revoke_api_token", kwargs={"digest": instance.digest}))
+
+    assert resp.status_code == HTTP_REDIRECT_FOUND_CODE
+    assert resp.url == reverse("api_tokens")
+    assert not ApiToken.objects.filter(digest=instance.digest).exists()
+
+
+def test_revoke_api_token_cannot_delete_other_users_token(auto_login_user, create_user):
+    client, _user = auto_login_user()
+    other_user = create_user()
+    instance, _token = ApiToken.objects.create(user=other_user, name="test")
+
+    resp = client.post(reverse("revoke_api_token", kwargs={"digest": instance.digest}))
+
+    assert resp.status_code == HTTP_NOT_FOUND_CODE
+    assert ApiToken.objects.filter(digest=instance.digest).exists()

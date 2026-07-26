@@ -78,6 +78,19 @@ All API endpoints require authentication.
 - Or use `-u username:password` with curl
 - Suitable for programmatic access
 
+**2. Token Authentication** (recommended for scripts and third-party apps)
+
+- Generate a token from your account page's **API Tokens** section (never share it, and never commit it to source control)
+- Include in request header: `Authorization: Bearer <token>`
+- You can create multiple tokens (e.g. one per application) and revoke any of them individually without changing your password
+- Tokens don't expire by default
+
+```bash
+# Get a list of issues using a token
+curl -X GET https://metron.cloud/api/issue/ \
+  -H "Authorization: Bearer <your-token>"
+```
+
 ### Permissions
 
 - **Authenticated Users:** Full read access to all data
@@ -2336,6 +2349,10 @@ For questions, issues, or feature requests:
 ---
 
 ## Changelog
+
+### Version 1.8
+
+- Added token authentication (`Authorization: Bearer <token>`) as an alternative to Basic Authentication; manage tokens from your account page's API Tokens section
 
 ### Version 1.7
 

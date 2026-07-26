@@ -71,6 +71,7 @@ INSTALLED_APPS = [
     "wiki.plugins.macros.apps.MacrosConfig",
     "django_htmx",
     "autocomplete",
+    "knox",
     "api",
     "comicsdb",
     "users",
@@ -197,6 +198,7 @@ REST_FRAMEWORK = {
     "DEFAULT_AUTHENTICATION_CLASSES": (
         "rest_framework.authentication.BasicAuthentication",
         "rest_framework.authentication.SessionAuthentication",
+        "knox.auth.TokenAuthentication",
     ),
     "DEFAULT_THROTTLE_CLASSES": [
         "api.throttle.BurstRateThrottle",
@@ -207,6 +209,16 @@ REST_FRAMEWORK = {
     "DEFAULT_PAGINATION_CLASS": "rest_framework.pagination.PageNumberPagination",
     "PAGE_SIZE": 100,
     "DEFAULT_SCHEMA_CLASS": "drf_spectacular.openapi.AutoSchema",
+}
+
+# Knox token authentication settings.
+# Long-lived API integrations shouldn't be silently logged out, so tokens
+# never expire by default; users revoke them manually from their account page.
+KNOX_TOKEN_MODEL = "users.ApiToken"  # noqa: S105 (model path, not a secret)
+REST_KNOX = {
+    "TOKEN_TTL": None,
+    "AUTO_REFRESH": False,
+    "AUTH_HEADER_PREFIX": "Bearer",
 }
 
 # Logging settings

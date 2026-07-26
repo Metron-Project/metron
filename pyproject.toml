@@ -14,6 +14,7 @@ dependencies = [
     "django-money",
     "django-mptt",
     "django-rest-framework-condition",
+    "django-rest-knox>=5.1.0",
     "django-sekizai",
     "django-simple-bulma",
     "django-simple-history",

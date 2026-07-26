@@ -1,0 +1,126 @@
+{% extends parent_template|default:"base.html" %}
+{% block title %}
+    API Tokens - Metron
+{% endblock title %}
+{% block content %}
+    {# Page Header #}
+    <header class="block has-text-centered mt-5">
+        <span class="icon is-large has-text-info">
+            <i class="fas fa-key fa-3x"></i>
+        </span>
+        <h1 class="title is-3 mt-4">API Tokens</h1>
+        <p class="subtitle has-text-grey">Manage the tokens used to authenticate scripts and apps against the Metron API</p>
+    </header>
+    <div class="columns is-centered">
+        <div class="column is-two-thirds">
+            {# One-time reveal of a freshly created token #}
+            {% if new_token %}
+                <div class="notification is-success is-light">
+                    <p class="has-text-weight-bold mb-2">
+                        <span class="icon">
+                            <i class="fas fa-exclamation-circle"></i>
+                        </span>
+                        Copy your new token now — it won't be shown again
+                    </p>
+                    <div class="field has-addons">
+                        <div class="control is-expanded">
+                            <input class="input is-family-monospace"
+                                   type="text"
+                                   id="new-token-value"
+                                   value="{{ new_token }}"
+                                   readonly
+                                   onclick="this.select();">
+                        </div>
+                        <div class="control">
+                            <button type="button"
+                                    class="button"
+                                    onclick="navigator.clipboard.writeText(document.getElementById('new-token-value').value);">
+                                <span class="icon">
+                                    <i class="fas fa-copy"></i>
+                                </span>
+                                <span>Copy</span>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            {% endif %}
+            {# Create Token Form #}
+            <div class="box">
+                <h2 class="title is-5">Generate a New Token</h2>
+                <form method="post">
+                    {% csrf_token %}
+                    <div class="field has-addons">
+                        <div class="control is-expanded">
+                            <input class="input"
+                                   type="text"
+                                   name="name"
+                                   maxlength="64"
+                                   placeholder="Optional label, e.g. &quot;Mokkari script&quot;">
+                        </div>
+                        <div class="control">
+                            <button class="button is-primary" type="submit">
+                                <span class="icon">
+                                    <i class="fas fa-plus"></i>
+                                </span>
+                                <span>Generate Token</span>
+                            </button>
+                        </div>
+                    </div>
+                </form>
+                <p class="help">
+                    Send it as <code>Authorization: Bearer &lt;token&gt;</code>. Tokens don't expire by default — revoke one below if you no longer need it.
+                </p>
+            </div>
+            {# Existing Tokens #}
+            <div class="box">
+                <h2 class="title is-5">Your Tokens</h2>
+                {% if tokens %}
+                    <table class="table is-fullwidth is-hoverable">
+                        <thead>
+                            <tr>
+                                <th>Name</th>
+                                <th>Created</th>
+                                <th>Expires</th>
+                                <th></th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for token in tokens %}
+                                <tr>
+                                    <td>{{ token.name|default:"—" }}</td>
+                                    <td>{{ token.created|date:"N j, Y" }}</td>
+                                    <td>{{ token.expiry|date:"N j, Y"|default:"Never" }}</td>
+                                    <td class="has-text-right">
+                                        <form method="post"
+                                              action="{% url 'revoke_api_token' digest=token.digest %}"
+                                              onsubmit="return confirm('Revoke this token? Any application using it will stop working immediately.');">
+                                            {% csrf_token %}
+                                            <button class="button is-small is-danger is-outlined" type="submit">
+                                                <span class="icon">
+                                                    <i class="fas fa-trash-alt"></i>
+                                                </span>
+                                                <span>Revoke</span>
+                                            </button>
+                                        </form>
+                                    </td>
+                                </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                {% else %}
+                    <p class="has-text-grey">You don't have any API tokens yet.</p>
+                {% endif %}
+            </div>
+            {# Cancel Link #}
+            <p class="has-text-centered">
+                <a href="{% url 'user-detail' username=request.user.username %}"
+                   class="has-text-link">
+                    <span class="icon is-small">
+                        <i class="fas fa-arrow-left"></i>
+                    </span>
+                    <span>Back to Profile</span>
+                </a>
+            </p>
+        </div>
+    </div>
+{% endblock %}

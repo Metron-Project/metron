@@ -30,6 +30,14 @@
                 </span>
                 <span>Change Password</span>
             </a>
+            <a class="button is-light"
+               href="{% url 'api_tokens' %}"
+               title="Manage your API tokens">
+                <span class="icon">
+                    <i class="fas fa-key"></i>
+                </span>
+                <span>API Tokens</span>
+            </a>
             <a class="button is-danger is-outlined"
                href="{% url 'delete_account' %}"
                title="Delete your account">
