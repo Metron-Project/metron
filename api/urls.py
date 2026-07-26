@@ -18,7 +18,6 @@ from api.views import (
     TeamViewSet,
     UniverseViewSet,
     VariantViewset,
-    WhoAmIView,
     WishListViewSet,
 )
 
@@ -42,7 +41,4 @@ ROUTER.register("universe", UniverseViewSet)
 ROUTER.register("variant", VariantViewset)
 
 app_name = "api"
-urlpatterns = [
-    path("whoami/", WhoAmIView.as_view(), name="whoami"),
-    path("", include(ROUTER.urls)),
-]
+urlpatterns = [path("", include(ROUTER.urls))]

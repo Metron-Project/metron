@@ -91,28 +91,6 @@ curl -X GET https://metron.cloud/api/issue/ \
   -H "Authorization: Bearer <your-token>"
 ```
 
-### Checking Your Authentication Status
-
-`GET /api/whoami/` returns your authenticated username, your current token's expiration date (`null` if you authenticated another way, or if the token has no expiration), and your current rate limit usage — useful for confirming a token works and checking your status without querying a business-data endpoint (issue, series, etc.). Note this still counts as one request against your rate limit, same as any other endpoint.
-
-```bash
-curl -X GET https://metron.cloud/api/whoami/ \
-  -H "Authorization: Bearer <your-token>"
-```
-
-```json
-{
-  "username": "your-username",
-  "token_expiry": null,
-  "rate_limit": {
-    "limit": 5000,
-    "used": 12,
-    "remaining": 4988,
-    "percent_used": 0.2
-  }
-}
-```
-
 ### Permissions
 
 - **Authenticated Users:** Full read access to all data
@@ -2375,7 +2353,6 @@ For questions, issues, or feature requests:
 ### Version 1.8
 
 - Added token authentication (`Authorization: Bearer <token>`) as an alternative to Basic Authentication; manage tokens from your account page's API Tokens section
-- Added `GET /api/whoami/` endpoint to check your authenticated username, token expiration, and rate limit usage
 
 ### Version 1.7
 

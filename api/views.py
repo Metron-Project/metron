@@ -22,7 +22,6 @@ from rest_framework.pagination import PageNumberPagination
 from rest_framework.parsers import FormParser, JSONParser, MultiPartParser
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
-from rest_framework.views import APIView
 from rest_framework_condition import last_modified
 
 from api.v1_0.serializers import (
@@ -100,27 +99,8 @@ from comicsdb.models.variant import Variant
 from pull_list.models import PullList, PullListSeries
 from reading_lists.models import ReadingList
 from user_collection.models import CollectionItem
-from users.models import ApiToken, CustomUser
-from users.views import get_rate_limit_usage
+from users.models import CustomUser
 from wish_list.models import WishList, WishListItem
-
-
-class WhoAmIView(APIView):
-    """Self-service check of who you're authenticated as, your token's expiry (if any),
-    and your current rate limit usage — without guessing from response headers alone.
-    """
-
-    permission_classes = [IsAuthenticated]
-
-    def get(self, request, *args, **kwargs):
-        token_expiry = request.auth.expiry if isinstance(request.auth, ApiToken) else None
-        return Response(
-            {
-                "username": request.user.username,
-                "token_expiry": token_expiry,
-                "rate_limit": get_rate_limit_usage(request.user),
-            }
-        )
 
 
 class ReadingListItemsPagination(PageNumberPagination):
