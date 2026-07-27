@@ -2,6 +2,9 @@ import math
 
 from rest_framework.throttling import UserRateThrottle
 
+from api.authentication import record_auth_method_usage
+from api.client_health import record_throttled_request
+
 
 class RateLimitHeadersMixin:
     def allow_request(self, request, view):
@@ -19,6 +22,8 @@ class RateLimitHeadersMixin:
             django_request._throttle_headers[f"X-RateLimit-{scope}-Limit"] = str(self.num_requests)
             django_request._throttle_headers[f"X-RateLimit-{scope}-Remaining"] = str(remaining)
             django_request._throttle_headers[f"X-RateLimit-{scope}-Reset"] = str(reset_time)
+        if not result:
+            record_throttled_request(request, getattr(self, "scope", "default"))
         return result
 
 
@@ -35,4 +40,5 @@ class SustainedRateThrottle(RateLimitHeadersMixin, UserRateThrottle):
             supporter_limit = getattr(user, "supporter_daily_limit", None)
             if supporter_limit:
                 self.num_requests, self.duration = self.parse_rate(f"{supporter_limit}/day")
+            record_auth_method_usage(request, user)
         return super().allow_request(request, view)

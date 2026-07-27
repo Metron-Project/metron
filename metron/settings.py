@@ -251,6 +251,12 @@ logging.config.dictConfig(
                 # Avoid double logging because of root logger
                 "propagate": False,
             },
+            "api": {
+                "level": LOGLEVEL,
+                "handlers": ["console"],
+                # Avoid double logging because of root logger
+                "propagate": False,
+            },
             # "django.db.backends": {
             #     "level": "DEBUG",
             #     "handlers": ["console"],
