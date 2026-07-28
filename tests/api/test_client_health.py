@@ -1,5 +1,5 @@
 import uuid
-from datetime import UTC, datetime
+from datetime import UTC, datetime, timedelta
 
 import pytest
 from django.core.cache import cache
@@ -7,9 +7,18 @@ from django.test import RequestFactory
 from django.urls import reverse
 from rest_framework import status
 
-from api.client_health import record_throttled_request
+from api.client_health import find_repeat_offenders, record_throttled_request
 
 TODAY = datetime.now(UTC).date().isoformat()
+
+
+def _date_str(days_ago: int) -> str:
+    return (datetime.now(UTC) - timedelta(days=days_ago)).date().isoformat()
+
+
+def _set_count(scope: str, identity: str, days_ago: int, count: int) -> None:
+    key = f"throttled:{scope}:{identity}:{_date_str(days_ago)}"
+    cache.set(key, count, timeout=60 * 60 * 24 * 35)
 
 
 class DummyUser:
@@ -90,3 +99,76 @@ def test_exceeding_burst_limit_returns_429_and_is_tracked(create_user, api_clien
         # Don't leave this pk's burst history exhausted for whatever test/run
         # recycles it next.
         cache.delete(burst_key)
+
+
+# ---------------------------------------------------------------------------
+# find_repeat_offenders — unit tests. Each test uses a unique username so it's
+# safe against the real (shared) cache backend without needing isolation.
+# ---------------------------------------------------------------------------
+
+
+def test_finds_user_throttled_on_min_days():
+    username = _unique()
+    for days_ago in (0, 1, 2):
+        _set_count("burst", f"user:{username}", days_ago, 5)
+
+    offenders = find_repeat_offenders(lookback_days=7, min_days=3, single_day_threshold=1000)
+
+    matches = [o for o in offenders if o.username == username]
+    assert len(matches) == 1
+    assert matches[0].days_throttled == 3
+    assert matches[0].total_count == 15
+    assert matches[0].worst_day_count == 5
+
+
+def test_ignores_user_below_both_thresholds():
+    username = _unique()
+    for days_ago in (0, 1):
+        _set_count("burst", f"user:{username}", days_ago, 2)
+
+    offenders = find_repeat_offenders(lookback_days=7, min_days=3, single_day_threshold=1000)
+
+    assert all(o.username != username for o in offenders)
+
+
+def test_single_day_threshold_flags_even_one_day():
+    username = _unique()
+    _set_count("sustained", f"user:{username}", 0, 100)
+
+    offenders = find_repeat_offenders(lookback_days=7, min_days=3, single_day_threshold=50)
+
+    matches = [o for o in offenders if o.username == username]
+    assert len(matches) == 1
+    assert matches[0].days_throttled == 1
+    assert matches[0].worst_day_count == 100
+
+
+def test_ignores_dates_outside_lookback_window():
+    username = _unique()
+    _set_count("burst", f"user:{username}", 40, 1000)
+
+    offenders = find_repeat_offenders(lookback_days=7, min_days=1, single_day_threshold=1)
+
+    assert all(o.username != username for o in offenders)
+
+
+def test_ignores_ip_identities():
+    ip = f"203.0.113.{uuid.uuid4().int % 255}"
+    _set_count("burst", f"ip:{ip}", 0, 1000)
+
+    offenders = find_repeat_offenders(lookback_days=7, min_days=1, single_day_threshold=1)
+
+    assert all(ip not in o.username for o in offenders)
+
+
+def test_sums_counts_across_scopes_for_the_same_day():
+    username = _unique()
+    _set_count("burst", f"user:{username}", 0, 3)
+    _set_count("sustained", f"user:{username}", 0, 4)
+
+    offenders = find_repeat_offenders(lookback_days=7, min_days=1, single_day_threshold=1)
+
+    matches = [o for o in offenders if o.username == username]
+    assert len(matches) == 1
+    assert matches[0].days_throttled == 1
+    assert matches[0].total_count == 7

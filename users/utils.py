@@ -41,18 +41,22 @@ def check_email_domain(email: str):
 
 
 def send_pushover(message):
-    context = ssl.create_default_context()
-    conn = http.client.HTTPSConnection("api.pushover.net:443", context=context)
-    conn.request(
-        "POST",
-        "/1/messages.json",
-        urllib.parse.urlencode(
-            {
-                "token": settings.PUSHOVER_TOKEN,
-                "user": settings.PUSHOVER_USER_KEY,
-                "message": message,
-            }
-        ),
-        {"Content-type": "application/x-www-form-urlencoded"},
-    )
-    conn.getresponse()
+    # PUSHOVER_USER_KEY may be a comma-separated list of user/group keys - Pushover's
+    # API only accepts one recipient per request, so notify each in turn.
+    user_keys = [key.strip() for key in settings.PUSHOVER_USER_KEY.split(",") if key.strip()]
+    for user_key in user_keys:
+        context = ssl.create_default_context()
+        conn = http.client.HTTPSConnection("api.pushover.net:443", context=context)
+        conn.request(
+            "POST",
+            "/1/messages.json",
+            urllib.parse.urlencode(
+                {
+                    "token": settings.PUSHOVER_TOKEN,
+                    "user": user_key,
+                    "message": message,
+                }
+            ),
+            {"Content-type": "application/x-www-form-urlencoded"},
+        )
+        conn.getresponse()
