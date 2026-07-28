@@ -45,6 +45,9 @@ with Quadlet (systemd-managed containers).
   - [Thresholds](#thresholds)
   - [Useful fail2ban commands](#useful-fail2ban-commands)
   - [Updating filters or jail config](#updating-filters-or-jail-config)
+- [API observability](#api-observability)
+  - [Logs](#logs)
+  - [Redis counters](#redis-counters)
 - [Useful commands](#useful-commands)
 - [File locations on the droplet](#file-locations-on-the-droplet)
 
@@ -911,6 +914,55 @@ sudo sh -c 'cp /home/metron/metron/fail2ban/action.d/* /etc/fail2ban/action.d/'
 sudo sh -c 'cp /home/metron/metron/fail2ban/filter.d/* /etc/fail2ban/filter.d/'
 sudo sh -c 'cp /home/metron/metron/fail2ban/jail.d/metron.conf /etc/fail2ban/jail.d/'
 sudo systemctl restart fail2ban
+```
+
+---
+
+## API observability
+
+The API logs and counts (via Redis) two things per request: which authentication method was used, and which clients are hitting rate limits without backing off. See `api/authentication.py` and `api/client_health.py`.
+
+### Logs
+
+```bash
+# Auth-method adoption (INFO) — which method (Basic/Session/Token) each request used
+journalctl _SYSTEMD_USER_UNIT=metron-web.service | grep "authenticated via"
+
+# Throttled requests (WARNING) — clients hitting a 429, with a running daily count
+journalctl _SYSTEMD_USER_UNIT=metron-web.service | grep "Request throttled"
+
+# Follow both live
+journalctl _SYSTEMD_USER_UNIT=metron-web.service -f | grep --line-buffered "authenticated via\|Request throttled"
+```
+
+### Redis counters
+
+Counters are keyed per day (`authmethod:<method>:<date>`, `throttled:<scope>:<identity>:<date>`), using the **UTC** date, and expire after ~35 days. Django's cache framework prefixes every key with `:1:` (version 1, empty key prefix) — don't forget it when querying directly, or `KEYS`/`GET` will silently find nothing.
+
+```bash
+# Open a redis-cli shell
+podman exec -it metron-redis redis-cli
+
+# See what's tracked today (substitute today's UTC date)
+127.0.0.1:6379> KEYS *authmethod*
+127.0.0.1:6379> KEYS *throttled*
+127.0.0.1:6379> GET :1:authmethod:token:2026-07-27
+127.0.0.1:6379> GET :1:throttled:burst:user:someuser:2026-07-27
+```
+
+Rolling total per auth method across whatever days are still alive:
+
+```bash
+podman exec metron-redis sh -c '
+for method in basic session token other; do
+  total=0
+  for key in $(redis-cli --scan --pattern ":1:authmethod:${method}:*"); do
+    val=$(redis-cli get "$key")
+    total=$((total + val))
+  done
+  echo "$method: $total"
+done
+'
 ```
 
 ---
