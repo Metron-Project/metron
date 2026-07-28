@@ -1,0 +1,163 @@
+{% autoescape off %}
+    <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+    <html xmlns="http://www.w3.org/1999/xhtml">
+        <head>
+            <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+            <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+            <title>Your Metron API client is being rate-limited</title>
+        </head>
+        <body style="margin: 0;
+                     padding: 0;
+                     font-family: Arial, Helvetica, sans-serif;
+                     line-height: 1.6;
+                     color: #363636;
+                     background-color: #f5f5f5">
+            <!-- Wrapper table -->
+            <table border="0"
+                   cellpadding="0"
+                   cellspacing="0"
+                   width="100%"
+                   style="background-color: #f5f5f5">
+                <tr>
+                    <td align="center" style="padding: 20px 10px;">
+                        <!-- Email container -->
+                        <table border="0"
+                               cellpadding="0"
+                               cellspacing="0"
+                               width="600"
+                               style="max-width: 600px;
+                                      background-color: #ffffff">
+                            <!-- Header -->
+                            <tr>
+                                <td align="center" style="background-color: #3273dc; padding: 40px 20px;">
+                                    <h1 style="margin: 0;
+                                               color: #ffffff;
+                                               font-size: 32px;
+                                               font-weight: bold;
+                                               font-family: Arial, Helvetica, sans-serif">Metron</h1>
+                                </td>
+                            </tr>
+                            <!-- Main Content -->
+                            <tr>
+                                <td style="padding: 40px 30px;">
+                                    <h2 style="margin: 0 0 20px 0;
+                                               font-size: 24px;
+                                               color: #363636;
+                                               font-weight: 600;
+                                               font-family: Arial, Helvetica, sans-serif">
+                                        Hi {{ user.username }},
+                                    </h2>
+                                    <p style="margin: 0 0 20px 0;
+                                              font-size: 16px;
+                                              color: #4a4a4a;
+                                              font-family: Arial, Helvetica, sans-serif">
+                                        We've noticed that your Metron API client has repeatedly hit our rate
+                                        limits over the past several days. When a client keeps retrying
+                                        immediately after a 429 response instead of backing off, it adds
+                                        unnecessary load to the site for everyone.
+                                    </p>
+                                    <!-- Info Box -->
+                                    <table border="0"
+                                           cellpadding="0"
+                                           cellspacing="0"
+                                           width="100%"
+                                           style="margin: 0 0 30px 0;
+                                                  background-color: #eff5fb;
+                                                  border-left: 4px solid #3273dc">
+                                        <tr>
+                                            <td style="padding: 20px;">
+                                                <p style="margin: 0;
+                                                          font-size: 14px;
+                                                          color: #4a4a4a;
+                                                          font-family: Arial, Helvetica, sans-serif">
+                                                    Every API response includes <code>X-RateLimit-*</code> headers
+                                                    showing your current limit, remaining requests, and when the
+                                                    window resets. A 429 response means you've exceeded that limit
+                                                    for the current window - the fix is to slow down and wait
+                                                    before retrying, rather than retrying immediately.
+                                                </p>
+                                            </td>
+                                        </tr>
+                                    </table>
+                                    <p style="margin: 0 0 30px 0;
+                                              font-size: 16px;
+                                              color: #4a4a4a;
+                                              font-family: Arial, Helvetica, sans-serif">
+                                        For details on our current rate limits and how to implement a backoff
+                                        strategy, see our
+                                        <a href="https://github.com/Metron-Project/metron/blob/master/api/README.md#rate-limiting"
+                                           style="color: #3273dc;">Rate Limiting documentation</a>.
+                                    </p>
+                                    <!-- Warning Box -->
+                                    <table border="0"
+                                           cellpadding="0"
+                                           cellspacing="0"
+                                           width="100%"
+                                           style="margin: 0 0 30px 0;
+                                                  background-color: #fff9e6;
+                                                  border-left: 4px solid #ffdd57">
+                                        <tr>
+                                            <td style="padding: 15px;">
+                                                <p style="margin: 0;
+                                                          font-size: 14px;
+                                                          color: #4a4a4a;
+                                                          font-family: Arial, Helvetica, sans-serif">
+                                                    <strong>Important:</strong> If this behavior continues, we may
+                                                    revoke API access for this account to protect the site for
+                                                    other users.
+                                                </p>
+                                            </td>
+                                        </tr>
+                                    </table>
+                                    <p style="margin: 0;
+                                              font-size: 16px;
+                                              color: #4a4a4a;
+                                              font-family: Arial, Helvetica, sans-serif">
+                                        If you have any questions, or believe you're seeing this in error, just
+                                        reply to this email.
+                                    </p>
+                                </td>
+                            </tr>
+                            <!-- Footer -->
+                            <tr>
+                                <td style="background-color: #363636; padding: 30px; text-align: center;">
+                                    <p style="margin: 0 0 10px 0;
+                                              font-size: 14px;
+                                              color: #ffffff;
+                                              font-family: Arial, Helvetica, sans-serif">
+                                        <strong>Metron Comic Book Database</strong>
+                                    </p>
+                                    <p style="margin: 0 0 15px 0;
+                                              font-size: 14px;
+                                              color: #b5b5b5;
+                                              font-family: Arial, Helvetica, sans-serif">
+                                        A community-driven project for comic book enthusiasts
+                                    </p>
+                                    <p style="margin: 0 0 10px 0;
+                                              font-size: 14px;
+                                              font-family: Arial, Helvetica, sans-serif">
+                                        <a href="https://metron.cloud"
+                                           style="color: #3273dc;
+                                                  text-decoration: none">Visit Website</a> &#8226;
+                                        <a href="https://github.com/Metron-Project/metron"
+                                           style="color: #3273dc;
+                                                  text-decoration: none">GitHub</a> &#8226;
+                                        <a href="mailto:admin@metron.cloud"
+                                           style="color: #3273dc;
+                                                  text-decoration: none">Contact Us</a>
+                                    </p>
+                                    <p style="margin: 15px 0 0 0;
+                                              font-size: 12px;
+                                              color: #7a7a7a;
+                                              font-family: Arial, Helvetica, sans-serif">
+                                        &copy; {% now "Y" %} Metron Project. All rights reserved.
+                                    </p>
+                                </td>
+                            </tr>
+                        </table>
+                    </td>
+                </tr>
+            </table>
+        </body>
+    </html>
+{% endautoescape %}

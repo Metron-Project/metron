@@ -1,0 +1,33 @@
+{% autoescape off %}Hi {{ user.username }},
+
+We've noticed that your Metron API client has repeatedly hit our rate limits over
+the past several days. When a client keeps retrying immediately after a 429
+response instead of backing off, it adds unnecessary load to the site for
+everyone.
+
+Every API response includes X-RateLimit-* headers showing your current limit,
+remaining requests, and when the window resets. A 429 response also means you've
+exceeded that limit for the current window - the fix is to slow down and wait
+before retrying, rather than retrying immediately.
+
+For details on our current rate limits and how to implement a backoff strategy,
+see:
+
+https://github.com/Metron-Project/metron/blob/master/api/README.md#rate-limiting
+
+IMPORTANT: If this behavior continues, we may revoke API access for this account
+to protect the site for other users.
+
+If you have any questions, or believe you're seeing this in error, just reply to
+this email.
+
+---
+Metron Comic Book Database
+A community-driven project for comic book enthusiasts
+
+Website: https://metron.cloud
+GitHub: https://github.com/Metron-Project/metron
+Contact: admin@metron.cloud
+
+(c) {% now "Y" %} Metron Project. All rights reserved.
+{% endautoescape %}
