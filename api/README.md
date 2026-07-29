@@ -2214,6 +2214,8 @@ The API implements rate limiting to ensure fair usage. Rate limit details:
 
 If you exceed the rate limit, you'll receive a `429 Too Many Requests` response.
 
+**See [RATELIMIT.md](RATELIMIT.md) for a full guide to the rate limit headers, the 429 response, and client examples in Python, Go, C#, and JavaScript.**
+
 ---
 
 ## Additional Resources
