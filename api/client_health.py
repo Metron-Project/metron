@@ -62,13 +62,22 @@ class RepeatOffender:
 
 
 def find_repeat_offenders(
-    lookback_days: int = 7, min_days: int = 3, single_day_threshold: int = 50
+    lookback_days: int = 7,
+    min_days: int = 3,
+    single_day_threshold: int = 50,
+    extreme_day_threshold: int = 100,
 ) -> list[RepeatOffender]:
     """Scan the throttled-request counters for accounts that keep getting
-    rate-limited without backing off: throttled on `min_days`+ distinct UTC days,
-    or with any single day's count at or above `single_day_threshold`, within the
-    last `lookback_days` days. IP-only identities (unauthenticated requests) are
-    skipped - there's no account to contact.
+    rate-limited without backing off. Flags an account if either is true, within
+    the last `lookback_days`:
+
+    - it has at least `min_days` distinct UTC days whose daily count is at or
+      above `single_day_threshold` (sustained high-volume throttling), or
+    - any single day's count is at or above `extreme_day_threshold` on its own
+      (a client hammering the API with no backoff at all).
+
+    IP-only identities (unauthenticated requests) are skipped - there's no
+    account to contact.
 
     Django's cache framework has no key-scanning API, so this drops to the
     underlying redis-py client (the same one the cache backend itself uses) to
@@ -103,15 +112,16 @@ def find_repeat_offenders(
 
     offenders = []
     for username, daily_counts in daily_counts_by_user.items():
-        days_throttled = len(daily_counts)
+        bad_days = [count for count in daily_counts.values() if count >= single_day_threshold]
         worst_day_count = max(daily_counts.values())
-        if days_throttled >= min_days or worst_day_count >= single_day_threshold:
-            offenders.append(
-                RepeatOffender(
-                    username=username,
-                    days_throttled=days_throttled,
-                    total_count=sum(daily_counts.values()),
-                    worst_day_count=worst_day_count,
-                )
+        if len(bad_days) < min_days and worst_day_count < extreme_day_threshold:
+            continue
+        offenders.append(
+            RepeatOffender(
+                username=username,
+                days_throttled=len(bad_days),
+                total_count=sum(daily_counts.values()),
+                worst_day_count=worst_day_count,
             )
+        )
     return offenders
