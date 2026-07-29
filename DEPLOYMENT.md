@@ -967,24 +967,25 @@ done
 
 ### Contacting repeat offenders
 
-`python manage.py notify_throttled_clients` scans the `throttled:*` counters above for
-accounts hitting rate limits without backing off (3+ distinct days throttled in the last 7,
-or 50+ in a single day, by default - see `--help` for all thresholds) and reports candidates
+`notify_throttled_clients` scans the `throttled:*` counters above for
+accounts hitting rate limits without backing off (50+ throttled requests on 3+ separate days
+within the last 7, or 100+ in a single day on its own, by default - see `--help` for all
+thresholds) and reports candidates
 (stdout + a Pushover ping to `PUSHOVER_USER_KEY`, which can be a comma-separated list to
 reach multiple admins). It never sends anything on its own:
 
 ```bash
 # Report only - no emails sent, no state changed
-python manage.py notify_throttled_clients
+podman exec metron-web python manage.py notify_throttled_clients
 
 # Actually email eligible candidates (email_confirmed accounts only) and record a
 # ThrottleNotice so the same account isn't re-emailed within --cooldown-days (default 7)
-python manage.py notify_throttled_clients --send
+podman exec metron-web python manage.py notify_throttled_clients --send
 ```
 
 Sent notices are visible (read-only) in Django admin under API > Throttle notices. There's
 no timer wired up for this yet - run it by hand, or add a systemd timer in report-only mode
-the same way as `metron-opencollective-sync.timer` below if periodic review is wanted.
+the same way as `metron-opencollective-sync.timer` above if periodic review is wanted.
 
 ---
 

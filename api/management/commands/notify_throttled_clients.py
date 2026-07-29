@@ -13,6 +13,7 @@ from users.utils import send_pushover
 DEFAULT_LOOKBACK_DAYS = 7
 DEFAULT_MIN_DAYS = 3
 DEFAULT_SINGLE_DAY_THRESHOLD = 50
+DEFAULT_EXTREME_DAY_THRESHOLD = 100
 DEFAULT_COOLDOWN_DAYS = 7
 
 
@@ -33,13 +34,22 @@ class Command(BaseCommand):
             "--min-days",
             type=int,
             default=DEFAULT_MIN_DAYS,
-            help="Flag accounts throttled on at least this many distinct days",
+            help=(
+                "Flag accounts with at least this many days whose throttled count "
+                "reaches --single-day-threshold"
+            ),
         )
         parser.add_argument(
             "--single-day-threshold",
             type=int,
             default=DEFAULT_SINGLE_DAY_THRESHOLD,
-            help="Flag accounts with any single day's throttled count at or above this",
+            help="A day only counts toward --min-days if its throttled count is at least this",
+        )
+        parser.add_argument(
+            "--extreme-day-threshold",
+            type=int,
+            default=DEFAULT_EXTREME_DAY_THRESHOLD,
+            help="Flag an account outright if any single day's throttled count reaches this",
         )
         parser.add_argument(
             "--cooldown-days",
@@ -61,6 +71,7 @@ class Command(BaseCommand):
             lookback_days=options["lookback_days"],
             min_days=options["min_days"],
             single_day_threshold=options["single_day_threshold"],
+            extreme_day_threshold=options["extreme_day_threshold"],
         )
 
         candidates = []

@@ -107,40 +107,71 @@ def test_exceeding_burst_limit_returns_429_and_is_tracked(create_user, api_clien
 # ---------------------------------------------------------------------------
 
 
-def test_finds_user_throttled_on_min_days():
+def test_finds_user_with_min_days_at_or_above_threshold():
     username = _unique()
     for days_ago in (0, 1, 2):
-        _set_count("burst", f"user:{username}", days_ago, 5)
-
-    offenders = find_repeat_offenders(lookback_days=7, min_days=3, single_day_threshold=1000)
-
-    matches = [o for o in offenders if o.username == username]
-    assert len(matches) == 1
-    assert matches[0].days_throttled == 3
-    assert matches[0].total_count == 15
-    assert matches[0].worst_day_count == 5
-
-
-def test_ignores_user_below_both_thresholds():
-    username = _unique()
-    for days_ago in (0, 1):
-        _set_count("burst", f"user:{username}", days_ago, 2)
-
-    offenders = find_repeat_offenders(lookback_days=7, min_days=3, single_day_threshold=1000)
-
-    assert all(o.username != username for o in offenders)
-
-
-def test_single_day_threshold_flags_even_one_day():
-    username = _unique()
-    _set_count("sustained", f"user:{username}", 0, 100)
+        _set_count("burst", f"user:{username}", days_ago, 60)
 
     offenders = find_repeat_offenders(lookback_days=7, min_days=3, single_day_threshold=50)
 
     matches = [o for o in offenders if o.username == username]
     assert len(matches) == 1
+    assert matches[0].days_throttled == 3
+    assert matches[0].total_count == 180
+    assert matches[0].worst_day_count == 60
+
+
+def test_ignores_user_with_too_few_days_at_threshold():
+    username = _unique()
+    # Only 2 of the 3 required days reach the threshold.
+    for days_ago in (0, 1):
+        _set_count("burst", f"user:{username}", days_ago, 60)
+    _set_count("burst", f"user:{username}", 2, 5)
+
+    offenders = find_repeat_offenders(lookback_days=7, min_days=3, single_day_threshold=50)
+
+    assert all(o.username != username for o in offenders)
+
+
+def test_ignores_user_with_many_low_volume_days():
+    # A user throttled on min_days+ days, but never at the per-day threshold,
+    # shouldn't be flagged - low-volume repeated throttling isn't worth an email.
+    username = _unique()
+    for days_ago in (0, 1, 2):
+        _set_count("burst", f"user:{username}", days_ago, 3)
+
+    offenders = find_repeat_offenders(lookback_days=7, min_days=3, single_day_threshold=50)
+
+    assert all(o.username != username for o in offenders)
+
+
+def test_single_bad_day_below_extreme_threshold_does_not_trigger_alone():
+    # A single day above single_day_threshold but below extreme_day_threshold
+    # shouldn't flag an account on its own - it takes min_days separate days.
+    username = _unique()
+    _set_count("sustained", f"user:{username}", 0, 90)
+
+    offenders = find_repeat_offenders(
+        lookback_days=7, min_days=3, single_day_threshold=50, extreme_day_threshold=100
+    )
+
+    assert all(o.username != username for o in offenders)
+
+
+def test_extreme_single_day_triggers_alone():
+    # A single day at or above extreme_day_threshold flags the account outright,
+    # even though it's only one day (well short of min_days).
+    username = _unique()
+    _set_count("sustained", f"user:{username}", 0, 150)
+
+    offenders = find_repeat_offenders(
+        lookback_days=7, min_days=3, single_day_threshold=50, extreme_day_threshold=100
+    )
+
+    matches = [o for o in offenders if o.username == username]
+    assert len(matches) == 1
     assert matches[0].days_throttled == 1
-    assert matches[0].worst_day_count == 100
+    assert matches[0].worst_day_count == 150
 
 
 def test_ignores_dates_outside_lookback_window():
