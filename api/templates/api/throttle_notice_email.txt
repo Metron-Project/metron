@@ -13,7 +13,7 @@ before retrying, rather than retrying immediately.
 For details on our current rate limits and how to implement a backoff strategy,
 see:
 
-https://github.com/Metron-Project/metron/blob/master/api/README.md#rate-limiting
+https://metron.cloud/wiki/api/handling-rate-limits/
 
 IMPORTANT: If this behavior continues, we may revoke API access for this account
 to protect the site for other users.
