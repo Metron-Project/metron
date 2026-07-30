@@ -1,0 +1,147 @@
+{% autoescape off %}
+    <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+    <html xmlns="http://www.w3.org/1999/xhtml">
+        <head>
+            <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+            <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+            <title>Your Metron API access has been restricted</title>
+        </head>
+        <body style="margin: 0;
+                     padding: 0;
+                     font-family: Arial, Helvetica, sans-serif;
+                     line-height: 1.6;
+                     color: #363636;
+                     background-color: #f5f5f5">
+            <!-- Wrapper table -->
+            <table border="0"
+                   cellpadding="0"
+                   cellspacing="0"
+                   width="100%"
+                   style="background-color: #f5f5f5">
+                <tr>
+                    <td align="center" style="padding: 20px 10px;">
+                        <!-- Email container -->
+                        <table border="0"
+                               cellpadding="0"
+                               cellspacing="0"
+                               width="600"
+                               style="max-width: 600px;
+                                      background-color: #ffffff">
+                            <!-- Header -->
+                            <tr>
+                                <td align="center" style="background-color: #3273dc; padding: 40px 20px;">
+                                    <h1 style="margin: 0;
+                                               color: #ffffff;
+                                               font-size: 32px;
+                                               font-weight: bold;
+                                               font-family: Arial, Helvetica, sans-serif">Metron</h1>
+                                </td>
+                            </tr>
+                            <!-- Main Content -->
+                            <tr>
+                                <td style="padding: 40px 30px;">
+                                    <h2 style="margin: 0 0 20px 0;
+                                               font-size: 24px;
+                                               color: #363636;
+                                               font-weight: 600;
+                                               font-family: Arial, Helvetica, sans-serif">
+                                        Hi {{ user.username }},
+                                    </h2>
+                                    <p style="margin: 0 0 20px 0;
+                                              font-size: 16px;
+                                              color: #4a4a4a;
+                                              font-family: Arial, Helvetica, sans-serif">
+                                        We previously warned you that your Metron API client was repeatedly
+                                        hitting our rate limits without backing off. Since that behavior has
+                                        continued, we've had to take action on this account:
+                                    </p>
+                                    <!-- Action Box -->
+                                    <table border="0"
+                                           cellpadding="0"
+                                           cellspacing="0"
+                                           width="100%"
+                                           style="margin: 0 0 30px 0;
+                                                  background-color: #feecf0;
+                                                  border-left: 4px solid #ff3860">
+                                        <tr>
+                                            <td style="padding: 20px;">
+                                                <p style="margin: 0;
+                                                          font-size: 14px;
+                                                          color: #4a4a4a;
+                                                          font-family: Arial, Helvetica, sans-serif">
+                                                    {% if account_disabled %}
+                                                        <strong>This account has been disabled.</strong> You won't
+                                                        be able to log in or use the API until an administrator
+                                                        reinstates it.
+                                                    {% else %}
+                                                        <strong>All API tokens for this account have been
+                                                        revoked.</strong> You'll need to generate a new token before
+                                                        you can use the API again.
+                                                    {% endif %}
+                                                </p>
+                                            </td>
+                                        </tr>
+                                    </table>
+                                    <p style="margin: 0 0 30px 0;
+                                              font-size: 16px;
+                                              color: #4a4a4a;
+                                              font-family: Arial, Helvetica, sans-serif">
+                                        Before using the API again, please make sure your client respects the
+                                        <code>X-RateLimit-*</code> response headers and backs off after a 429
+                                        response instead of retrying immediately. For details on our rate limits
+                                        and how to implement a backoff strategy, see our
+                                        <a href="https://metron.cloud/wiki/api/handling-rate-limits/"
+                                           style="color: #3273dc;">Rate Limiting documentation</a>.
+                                    </p>
+                                    <p style="margin: 0;
+                                              font-size: 16px;
+                                              color: #4a4a4a;
+                                              font-family: Arial, Helvetica, sans-serif">
+                                        If you have any questions, or believe this was done in error, please reply
+                                        to this email so we can review it.
+                                    </p>
+                                </td>
+                            </tr>
+                            <!-- Footer -->
+                            <tr>
+                                <td style="background-color: #363636; padding: 30px; text-align: center;">
+                                    <p style="margin: 0 0 10px 0;
+                                              font-size: 14px;
+                                              color: #ffffff;
+                                              font-family: Arial, Helvetica, sans-serif">
+                                        <strong>Metron Comic Book Database</strong>
+                                    </p>
+                                    <p style="margin: 0 0 15px 0;
+                                              font-size: 14px;
+                                              color: #b5b5b5;
+                                              font-family: Arial, Helvetica, sans-serif">
+                                        A community-driven project for comic book enthusiasts
+                                    </p>
+                                    <p style="margin: 0 0 10px 0;
+                                              font-size: 14px;
+                                              font-family: Arial, Helvetica, sans-serif">
+                                        <a href="https://metron.cloud"
+                                           style="color: #3273dc;
+                                                  text-decoration: none">Visit Website</a> &#8226;
+                                        <a href="https://github.com/Metron-Project/metron"
+                                           style="color: #3273dc;
+                                                  text-decoration: none">GitHub</a> &#8226;
+                                        <a href="mailto:admin@metron.cloud"
+                                           style="color: #3273dc;
+                                                  text-decoration: none">Contact Us</a>
+                                    </p>
+                                    <p style="margin: 15px 0 0 0;
+                                              font-size: 12px;
+                                              color: #7a7a7a;
+                                              font-family: Arial, Helvetica, sans-serif">
+                                        &copy; {% now "Y" %} Metron Project. All rights reserved.
+                                    </p>
+                                </td>
+                            </tr>
+                        </table>
+                    </td>
+                </tr>
+            </table>
+        </body>
+    </html>
+{% endautoescape %}

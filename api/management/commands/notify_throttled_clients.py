@@ -15,12 +15,16 @@ DEFAULT_MIN_DAYS = 3
 DEFAULT_SINGLE_DAY_THRESHOLD = 50
 DEFAULT_EXTREME_DAY_THRESHOLD = 100
 DEFAULT_COOLDOWN_DAYS = 7
+DEFAULT_ENFORCE_AFTER = 2
 
 
 class Command(BaseCommand):
     help = (
         "Find accounts whose API client keeps getting rate-limited without backing off, "
-        "and (with --send) email them. Without --send, only reports candidates."
+        "and (with --send) email them. Without --send, only reports candidates. With "
+        "--enforce, an account that's already had --enforce-after prior notices gets its "
+        "API tokens revoked (or, if it has none, the account disabled) instead of another "
+        "plain warning - add --send to actually do it, or leave it off to preview."
     )
 
     def add_arguments(self, parser) -> None:
@@ -62,9 +66,28 @@ class Command(BaseCommand):
             action="store_true",
             help="Actually send emails and record ThrottleNotice rows (default: report only)",
         )
+        parser.add_argument(
+            "--enforce",
+            action="store_true",
+            help=(
+                "Escalate instead of warning again once an account already has "
+                "--enforce-after prior notices. Combine with --send to actually revoke "
+                "tokens/disable the account; without --send, only previews the action."
+            ),
+        )
+        parser.add_argument(
+            "--enforce-after",
+            type=int,
+            default=DEFAULT_ENFORCE_AFTER,
+            help=(
+                "Number of prior notices an account must already have before --enforce "
+                "escalates its next one (default 2, so the 3rd notice escalates)"
+            ),
+        )
 
     def handle(self, *args, **options) -> None:
         send = options["send"]
+        enforce = options["enforce"]
         cooldown_cutoff = timezone.now() - timedelta(days=options["cooldown_days"])
 
         offenders = find_repeat_offenders(
@@ -87,7 +110,10 @@ class Command(BaseCommand):
                 continue
             if ThrottleNotice.objects.filter(user=user, sent_at__gte=cooldown_cutoff).exists():
                 continue
-            candidates.append((user, offender))
+
+            prior_notices = ThrottleNotice.objects.filter(user=user).count()
+            will_enforce = enforce and prior_notices >= options["enforce_after"]
+            candidates.append((user, offender, will_enforce))
 
         self._print_summary(candidates, send)
 
@@ -95,16 +121,23 @@ class Command(BaseCommand):
             send_pushover(self._pushover_message(candidates, send))
 
         if send:
-            for user, offender in candidates:
-                self._notify(user, offender)
+            for user, offender, will_enforce in candidates:
+                if will_enforce:
+                    self._enforce_and_notify(user, offender)
+                else:
+                    self._notify(user, offender)
 
     def _print_summary(self, candidates, send: bool) -> None:
         if not candidates:
             self.stdout.write("No candidates found.")
             return
 
-        verb = "Emailing" if send else "Would email"
-        for user, offender in candidates:
+        for user, offender, will_enforce in candidates:
+            if will_enforce:
+                action = self._predict_enforcement_action(user)
+                verb = f"Enforcing ({action})" if send else f"Would enforce ({action})"
+            else:
+                verb = "Emailing" if send else "Would email"
             self.stdout.write(
                 f"{verb} {user.username} <{user.email}>: throttled on "
                 f"{offender.days_throttled} day(s), {offender.total_count} total, "
@@ -118,9 +151,13 @@ class Command(BaseCommand):
             )
 
     @staticmethod
+    def _predict_enforcement_action(user: CustomUser) -> str:
+        return "revoke tokens" if user.auth_token_set.exists() else "disable account"
+
+    @staticmethod
     def _pushover_message(candidates, send: bool) -> str:
         verb = "Emailed" if send else "Found"
-        names = ", ".join(user.username for user, _ in candidates)
+        names = ", ".join(user.username for user, _, _ in candidates)
         return f"{verb} {len(candidates)} throttled API client(s) on Metron: {names}"
 
     @staticmethod
@@ -130,6 +167,37 @@ class Command(BaseCommand):
         text_message = render_to_string("api/throttle_notice_email.txt", context)
         email = EmailMultiAlternatives(
             subject="Your Metron API client is being rate-limited",
+            body=text_message,
+            to=[user.email],
+        )
+        email.attach_alternative(html_message, "text/html")
+        email.send()
+
+        ThrottleNotice.objects.create(
+            user=user,
+            days_throttled=offender.days_throttled,
+            total_count=offender.total_count,
+            worst_day_count=offender.worst_day_count,
+        )
+
+    @staticmethod
+    def _enforce_and_notify(user: CustomUser, offender) -> None:
+        # Revoke tokens if the account has any - that alone stops a token-based
+        # client. Only disable the account outright once there's nothing left to
+        # revoke, since disabling also blocks Basic/Session auth for this user.
+        if user.auth_token_set.exists():
+            user.auth_token_set.all().delete()
+            account_disabled = False
+        else:
+            user.is_active = False
+            user.save(update_fields=["is_active"])
+            account_disabled = True
+
+        context = {"user": user, "account_disabled": account_disabled}
+        html_message = render_to_string("api/throttle_enforcement_email.html", context)
+        text_message = render_to_string("api/throttle_enforcement_email.txt", context)
+        email = EmailMultiAlternatives(
+            subject="Your Metron API access has been restricted",
             body=text_message,
             to=[user.email],
         )
