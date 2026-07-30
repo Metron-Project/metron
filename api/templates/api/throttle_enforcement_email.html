@@ -4,7 +4,7 @@
         <head>
             <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
             <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-            <title>Your Metron API client is being rate-limited</title>
+            <title>Your Metron API access has been restricted</title>
         </head>
         <body style="margin: 0;
                      padding: 0;
@@ -51,10 +51,9 @@
                                               font-size: 16px;
                                               color: #4a4a4a;
                                               font-family: Arial, Helvetica, sans-serif">
-                                        We've noticed that your Metron API client has repeatedly hit our rate
-                                        limits over the past several days. When a client keeps retrying
-                                        immediately after a 429 response instead of backing off, it adds
-                                        unnecessary load to the site for everyone.
+                                        We previously warned you that your Metron API client was repeatedly
+                                        hitting our rate limits without backing off. Since that behavior has
+                                        continued, we've had to take action on this account:
                                     </p>
                                     <!-- Stats Box -->
                                     <table border="0"
@@ -70,7 +69,7 @@
                                                           font-size: 14px;
                                                           color: #4a4a4a;
                                                           font-family: Arial, Helvetica, sans-serif">
-                                                    Your client received
+                                                    Most recently, your client received
                                                     <strong>{{ total_count }} rate-limited (429) response{{ total_count|pluralize }}</strong>
                                                     across <strong>{{ days_throttled }} day{{ days_throttled|pluralize }}</strong>,
                                                     including <strong>{{ worst_day_count }}</strong> in a single day.
@@ -78,25 +77,29 @@
                                             </td>
                                         </tr>
                                     </table>
-                                    <!-- Info Box -->
+                                    <!-- Action Box -->
                                     <table border="0"
                                            cellpadding="0"
                                            cellspacing="0"
                                            width="100%"
                                            style="margin: 0 0 30px 0;
-                                                  background-color: #eff5fb;
-                                                  border-left: 4px solid #3273dc">
+                                                  background-color: #feecf0;
+                                                  border-left: 4px solid #ff3860">
                                         <tr>
                                             <td style="padding: 20px;">
                                                 <p style="margin: 0;
                                                           font-size: 14px;
                                                           color: #4a4a4a;
                                                           font-family: Arial, Helvetica, sans-serif">
-                                                    Every API response includes <code>X-RateLimit-*</code> headers
-                                                    showing your current limit, remaining requests, and when the
-                                                    window resets. A 429 response means you've exceeded that limit
-                                                    for the current window - the fix is to slow down and wait
-                                                    before retrying, rather than retrying immediately.
+                                                    {% if account_disabled %}
+                                                        <strong>This account has been disabled.</strong> You won't
+                                                        be able to log in or use the API until an administrator
+                                                        reinstates it.
+                                                    {% else %}
+                                                        <strong>All API tokens for this account have been
+                                                        revoked.</strong> You'll need to generate a new token before
+                                                        you can use the API again.
+                                                    {% endif %}
                                                 </p>
                                             </td>
                                         </tr>
@@ -105,38 +108,19 @@
                                               font-size: 16px;
                                               color: #4a4a4a;
                                               font-family: Arial, Helvetica, sans-serif">
-                                        For details on our current rate limits and how to implement a backoff
-                                        strategy, see our
+                                        Before using the API again, please make sure your client respects the
+                                        <code>X-RateLimit-*</code> response headers and backs off after a 429
+                                        response instead of retrying immediately. For details on our rate limits
+                                        and how to implement a backoff strategy, see our
                                         <a href="https://metron.cloud/wiki/api/handling-rate-limits/"
                                            style="color: #3273dc;">Rate Limiting documentation</a>.
                                     </p>
-                                    <!-- Warning Box -->
-                                    <table border="0"
-                                           cellpadding="0"
-                                           cellspacing="0"
-                                           width="100%"
-                                           style="margin: 0 0 30px 0;
-                                                  background-color: #fff9e6;
-                                                  border-left: 4px solid #ffdd57">
-                                        <tr>
-                                            <td style="padding: 15px;">
-                                                <p style="margin: 0;
-                                                          font-size: 14px;
-                                                          color: #4a4a4a;
-                                                          font-family: Arial, Helvetica, sans-serif">
-                                                    <strong>Important:</strong> If this behavior continues, we may
-                                                    revoke API access for this account to protect the site for
-                                                    other users.
-                                                </p>
-                                            </td>
-                                        </tr>
-                                    </table>
                                     <p style="margin: 0;
                                               font-size: 16px;
                                               color: #4a4a4a;
                                               font-family: Arial, Helvetica, sans-serif">
-                                        If you have any questions, or believe you're seeing this in error, just
-                                        reply to this email.
+                                        If you have any questions, or believe this was done in error, please reply
+                                        to this email so we can review it.
                                     </p>
                                 </td>
                             </tr>

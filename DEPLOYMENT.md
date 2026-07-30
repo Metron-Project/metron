@@ -987,6 +987,32 @@ Sent notices are visible (read-only) in Django admin under API > Throttle notice
 no timer wired up for this yet - run it by hand, or add a systemd timer in report-only mode
 the same way as `metron-opencollective-sync.timer` above if periodic review is wanted.
 
+### Escalating to enforcement
+
+Add `--enforce` to escalate instead of sending another plain warning once an account
+already has `--enforce-after` prior notices (default 2, so its 3rd notice escalates, its
+4th escalates again, and so on for as long as it keeps qualifying):
+
+- If the account has any API tokens (`ApiToken`/knox), they're all revoked.
+- Otherwise (no tokens left to revoke), the account is disabled (`is_active=False`) -
+  this blocks Basic, Session, and Token auth all at once, so a disabled account drops
+  out of future candidate lists on its own.
+
+Like `--send`, `--enforce` gates the actual mutation - pass `--enforce` alone (without
+`--send`) to preview what it *would* do for each candidate (revoke tokens vs. disable)
+without changing anything:
+
+```bash
+# Preview who would be enforced vs. just warned, without sending anything
+podman exec metron-web python manage.py notify_throttled_clients --enforce
+
+# Actually warn first-and-second-time offenders, and enforce on the 3rd+
+podman exec metron-web python manage.py notify_throttled_clients --send --enforce
+```
+
+There's no self-service or automatic re-enable - a disabled account has to be manually
+flipped back to `is_active=True` in Django admin after review.
+
 ---
 
 ## Useful commands

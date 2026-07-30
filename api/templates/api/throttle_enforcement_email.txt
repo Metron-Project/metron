@@ -1,0 +1,34 @@
+{% autoescape off %}Hi {{ user.username }},
+
+We previously warned you that your Metron API client was repeatedly hitting our
+rate limits without backing off. Since that behavior has continued, we've had
+to take action on this account:
+
+Most recently, your client received {{ total_count }} rate-limited (429) response{{ total_count|pluralize }}
+across {{ days_throttled }} day{{ days_throttled|pluralize }}, including {{ worst_day_count }}
+in a single day.
+
+{% if account_disabled %}This account has been disabled. You won't be able to log in or use the API
+until an administrator reinstates it.{% else %}All API tokens for this account have been revoked. You'll need to generate a
+new token before you can use the API again.{% endif %}
+
+Before using the API again, please make sure your client respects the
+X-RateLimit-* response headers and backs off after a 429 response instead of
+retrying immediately. For details on our rate limits and how to implement a
+backoff strategy, see:
+
+https://metron.cloud/wiki/api/handling-rate-limits/
+
+If you have any questions, or believe this was done in error, please reply to
+this email so we can review it.
+
+---
+Metron Comic Book Database
+A community-driven project for comic book enthusiasts
+
+Website: https://metron.cloud
+GitHub: https://github.com/Metron-Project/metron
+Contact: admin@metron.cloud
+
+(c) {% now "Y" %} Metron Project. All rights reserved.
+{% endautoescape %}
