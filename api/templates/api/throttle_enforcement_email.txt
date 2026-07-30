@@ -4,6 +4,10 @@ We previously warned you that your Metron API client was repeatedly hitting our
 rate limits without backing off. Since that behavior has continued, we've had
 to take action on this account:
 
+Most recently, your client received {{ total_count }} rate-limited (429) response{{ total_count|pluralize }}
+across {{ days_throttled }} day{{ days_throttled|pluralize }}, including {{ worst_day_count }}
+in a single day.
+
 {% if account_disabled %}This account has been disabled. You won't be able to log in or use the API
 until an administrator reinstates it.{% else %}All API tokens for this account have been revoked. You'll need to generate a
 new token before you can use the API again.{% endif %}

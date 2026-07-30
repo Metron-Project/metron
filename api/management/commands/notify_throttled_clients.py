@@ -162,7 +162,12 @@ class Command(BaseCommand):
 
     @staticmethod
     def _notify(user: CustomUser, offender) -> None:
-        context = {"user": user}
+        context = {
+            "user": user,
+            "days_throttled": offender.days_throttled,
+            "total_count": offender.total_count,
+            "worst_day_count": offender.worst_day_count,
+        }
         html_message = render_to_string("api/throttle_notice_email.html", context)
         text_message = render_to_string("api/throttle_notice_email.txt", context)
         email = EmailMultiAlternatives(
@@ -193,7 +198,13 @@ class Command(BaseCommand):
             user.save(update_fields=["is_active"])
             account_disabled = True
 
-        context = {"user": user, "account_disabled": account_disabled}
+        context = {
+            "user": user,
+            "account_disabled": account_disabled,
+            "days_throttled": offender.days_throttled,
+            "total_count": offender.total_count,
+            "worst_day_count": offender.worst_day_count,
+        }
         html_message = render_to_string("api/throttle_enforcement_email.html", context)
         text_message = render_to_string("api/throttle_enforcement_email.txt", context)
         email = EmailMultiAlternatives(

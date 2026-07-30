@@ -5,6 +5,10 @@ the past several days. When a client keeps retrying immediately after a 429
 response instead of backing off, it adds unnecessary load to the site for
 everyone.
 
+Your client received {{ total_count }} rate-limited (429) response{{ total_count|pluralize }}
+across {{ days_throttled }} day{{ days_throttled|pluralize }}, including {{ worst_day_count }}
+in a single day.
+
 Every API response includes X-RateLimit-* headers showing your current limit,
 remaining requests, and when the window resets. A 429 response also means you've
 exceeded that limit for the current window - the fix is to slow down and wait

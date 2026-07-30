@@ -66,6 +66,8 @@ def test_send_flag_emails_eligible_candidate_and_records_notice(
 
     assert len(mailoutbox) == 1
     assert mailoutbox[0].to == [user.email]
+    assert "15 rate-limited (429) responses" in mailoutbox[0].body
+    assert "3 days" in mailoutbox[0].body
     notice = ThrottleNotice.objects.get(user=user)
     assert notice.days_throttled == 3
     assert notice.total_count == 15
@@ -136,6 +138,7 @@ def test_enforce_revokes_tokens_when_present(create_user, mailoutbox, mock_send_
     assert user.auth_token_set.count() == 0
     assert len(mailoutbox) == 1
     assert "restricted" in mailoutbox[0].subject
+    assert "15 rate-limited (429) responses" in mailoutbox[0].body
     assert ThrottleNotice.objects.filter(user=user).count() == 3
 
 
