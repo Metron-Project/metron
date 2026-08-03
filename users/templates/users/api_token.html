@@ -33,8 +33,10 @@
                         </div>
                         <div class="control">
                             <button type="button"
-                                    class="button"
-                                    onclick="navigator.clipboard.writeText(document.getElementById('new-token-value').value);">
+                                    class="button copy-id"
+                                    data-copy="{{ new_token }}"
+                                    title="Copy token"
+                                    aria-label="Copy token">
                                 <span class="icon">
                                     <i class="fas fa-copy"></i>
                                 </span>
@@ -123,4 +125,23 @@
             </p>
         </div>
     </div>
+{% endblock %}
+{% block js %}
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const copyButtons = document.querySelectorAll('.copy-id');
+            copyButtons.forEach(button => {
+                button.addEventListener('click', function() {
+                    const value = this.getAttribute('data-copy');
+                    navigator.clipboard.writeText(value).then(() => {
+                        const originalText = this.innerHTML;
+                        this.innerHTML = '<span class="icon"><i class="fas fa-check"></i></span><span>Copied</span>';
+                        setTimeout(() => {
+                            this.innerHTML = originalText;
+                        }, 2000);
+                    });
+                });
+            });
+        });
+    </script>
 {% endblock %}
