@@ -71,14 +71,14 @@ All API endpoints require authentication.
 
 ### Authentication Methods
 
-**1. Basic Authentication**
+#### 1. Basic Authentication
 
 - Use your username and password
 - Include in request header: `Authorization: Basic <base64-encoded-credentials>`
 - Or use `-u username:password` with curl
 - Suitable for programmatic access
 
-**2. Token Authentication** (recommended for scripts and third-party apps)
+#### 2. Token Authentication** (recommended for scripts and third-party apps)
 
 - Generate a token from your account page's **API Tokens** section (never share it, and never commit it to source control)
 - Include in request header: `Authorization: Bearer <token>`
@@ -99,7 +99,7 @@ curl -X GET https://metron.cloud/api/issue/ \
 
 ## Base URL
 
-```
+```bash
 https://metron.cloud/api/
 ```
 
@@ -157,6 +157,7 @@ Story arcs that span multiple issues, often across different series.
 - `modified_gt` - Modified after datetime
 
 **List Response Fields:**
+
 ```json
 {
   "id": 1,
@@ -176,6 +177,7 @@ Story arcs that span multiple issues, often across different series.
     - `resource_url` - Link to web UI
 
 **Example:**
+
 ```bash
 # Get all arcs with "secret" in the name
 GET /api/arc/?name=secret
@@ -208,6 +210,7 @@ Comic book characters appearing in issues.
 - `modified_gt` - Modified after datetime
 
 **List Response Fields:**
+
 ```json
 {
   "id": 1,
@@ -231,6 +234,7 @@ Comic book characters appearing in issues.
     - `resource_url` - Link to web UI
 
 **Example:**
+
 ```bash
 # Find Spider-Man
 GET /api/character/?name=spider-man
@@ -262,6 +266,7 @@ Writers, artists, and other comic book creators.
 - `modified_gt` - Modified after datetime
 
 **List Response Fields:**
+
 ```json
 {
   "id": 1,
@@ -283,6 +288,7 @@ Writers, artists, and other comic book creators.
     - `resource_url` - Link to web UI
 
 **Example:**
+
 ```bash
 # Find creators by name
 GET /api/creator/?name=lee
@@ -430,6 +436,7 @@ Supported currencies: `USD`, `GBP`. Unsupported currency codes will return a `40
 The `cover_hash` field contains a perceptual hash generated using [ImageHash](https://github.com/JohannesBuchner/imagehash). This allows for finding similar or duplicate covers.
 
 **Examples:**
+
 ```bash
 # Get issues from January 2025
 GET /api/issue/?store_date_range_after=2025-01-01&store_date_range_before=2025-01-31
@@ -495,6 +502,7 @@ Comic book publishers.
 - `modified_gt` - Modified after datetime
 
 **List Response Fields:**
+
 ```json
 {
   "id": 1,
@@ -520,6 +528,7 @@ Comic book publishers.
 The `country` field on POST/PATCH accepts ISO 3166-1 alpha-2 codes. Currently supported values are `"US"` (United States) and `"GB"` (United Kingdom). Other values will return a `400 Bad Request`.
 
 **Example:**
+
 ```bash
 # Get all publishers
 GET /api/publisher/
@@ -551,6 +560,7 @@ Publisher imprints (e.g., Vertigo, MAX).
 - `modified_gt` - Modified after datetime
 
 **List Response Fields:**
+
 ```json
 {
   "id": 1,
@@ -572,6 +582,7 @@ Publisher imprints (e.g., Vertigo, MAX).
     - `resource_url` - Link to web UI
 
 **Example:**
+
 ```bash
 # Find imprints
 GET /api/imprint/?name=vertigo
@@ -640,6 +651,7 @@ Comic book series.
 - `modified_gt` - Modified after datetime
 
 **List Response Fields:**
+
 ```json
 {
   "id": 1,
@@ -673,6 +685,7 @@ Comic book series.
 - `hiatus` - On hiatus
 
 **Examples:**
+
 ```bash
 # Search for series by name (all words must match)
 GET /api/series/?name=amazing spider-man
@@ -741,6 +754,7 @@ Superhero teams and groups.
 - `modified_gt` - Modified after datetime
 
 **List Response Fields:**
+
 ```json
 {
   "id": 1,
@@ -762,6 +776,7 @@ Superhero teams and groups.
     - `resource_url` - Link to web UI
 
 **Example:**
+
 ```bash
 # Find teams
 GET /api/team/?name=avengers
@@ -792,6 +807,7 @@ Comic book universes (e.g., Earth-616, Earth-1).
 - `modified_gt` - Modified after datetime
 
 **List Response Fields:**
+
 ```json
 {
   "id": 1,
@@ -811,6 +827,7 @@ Comic book universes (e.g., Earth-616, Earth-1).
     - `resource_url` - Link to web UI
 
 **Example:**
+
 ```bash
 # Find universes by designation
 GET /api/universe/?designation=616
@@ -830,6 +847,8 @@ User comic book collections with tracking for ownership, grading, reading status
 - `GET /api/collection/{id}/` - Retrieve collection item details (must belong to user)
 - `PATCH /api/collection/{id}/` - Update a collection item's rating (must belong to user)
 - `PUT /api/collection/{id}/` - Update a collection item's rating (must belong to user)
+- `DELETE /api/collection/{id}/` - Remove a collection item (must belong to user)
+- `POST /api/collection/add/` - Add an issue to the collection
 - `GET /api/collection/stats/` - Get collection statistics
 - `GET /api/collection/missing_series/` - Get series where user has incomplete runs
 - `GET /api/collection/missing_issues/{series_id}/` - Get specific missing issues for a series
@@ -837,7 +856,7 @@ User comic book collections with tracking for ownership, grading, reading status
 
 **Collection Management:**
 
-Most collection operations are managed through the web interface. The API provides read access, a rating-only update endpoint, and the scrobble endpoint for marking issues as read.
+The API provides read access, endpoints for adding and removing items, a rating-only update endpoint, and the scrobble endpoint for marking issues as read.
 
 **Authentication:**
 
@@ -1060,6 +1079,111 @@ GET /api/collection/123/
 
 ---
 
+#### Add Item Endpoint
+
+Adds an issue to your collection without affecting read status. To add and mark as read in one call, use the [scrobble endpoint](#scrobble-endpoint) instead.
+
+**Endpoint:** `POST /api/collection/add/`
+
+**Purpose:**
+
+- Add an issue to your collection with optional quantity, format, grading, purchase, and storage details
+- Idempotent: adding an issue already in your collection returns the existing item unchanged (no fields are updated)
+
+**Request Body:**
+
+```json
+{
+  "issue_id": 12345,
+  "quantity": 1,
+  "book_format": "PRINT",
+  "grade": "9.8",
+  "grading_company": "CGC",
+  "purchase_date": "2024-01-15",
+  "purchase_price": "4.99",
+  "purchase_store": "Local Comic Shop",
+  "storage_location": "Long Box 3",
+  "notes": "First printing"
+}
+```
+
+**Request Fields:**
+
+- `issue_id` - Required. The Metron issue ID to add
+- `quantity` - Optional. Number of copies owned (default: `1`)
+- `book_format` - Optional. `PRINT`, `DIGITAL`, or `BOTH` (default: `PRINT`)
+- `grade` - Optional. CGC-scale grade (`0.5` to `10.0`)
+- `grading_company` - Optional. `CGC`, `CBCS`, or `PGX` (leave blank for a user-assessed grade)
+- `purchase_date` - Optional. Date the issue was purchased
+- `purchase_price` - Optional. Price paid
+- `purchase_price_currency` - Optional. ISO currency code (default: `USD`)
+- `purchase_store` - Optional. Store or vendor where purchased
+- `storage_location` - Optional. Physical storage location
+- `notes` - Optional. Free-text notes
+
+**Response (201 Created / 200 OK):**
+
+Returns the full collection item detail (same shape as `GET /api/collection/{id}/`).
+
+**Status Codes:**
+
+- `201 Created` - Issue was added to the collection
+- `200 OK` - Issue was already in the collection; the existing item is returned unchanged
+- `400 Bad Request` - Validation error (invalid `issue_id`, out-of-range grade, etc.)
+- `401 Unauthorized` - Authentication required
+
+**Examples:**
+
+```bash
+# Add an issue with no extra detail
+curl -X POST https://metron.cloud/api/collection/add/ \
+  -u "username:password" \
+  -H "Content-Type: application/json" \
+  -d '{"issue_id": 12345}'
+
+# Add a graded, purchased issue
+curl -X POST https://metron.cloud/api/collection/add/ \
+  -u "username:password" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "issue_id": 12345,
+    "grade": "9.8",
+    "grading_company": "CGC",
+    "purchase_price": "49.99",
+    "purchase_store": "Local Comic Shop"
+  }'
+```
+
+---
+
+#### Remove Item Endpoint
+
+**Endpoint:** `DELETE /api/collection/{id}/`
+
+**Purpose:**
+
+- Permanently remove an item from your collection
+
+**Status Codes:**
+
+- `204 No Content` - Item was removed
+- `401 Unauthorized` - Authentication required
+- `404 Not Found` - Collection item doesn't exist or doesn't belong to the authenticated user
+
+**Examples:**
+
+```bash
+curl -X DELETE https://metron.cloud/api/collection/789/ \
+  -u "username:password"
+```
+
+**Notes:**
+
+- `{id}` is the collection item ID (not the issue ID) — see the `id` field in list/detail responses
+- Removal is permanent; there is no way to recover a deleted collection item via the API
+
+---
+
 #### Missing Issues Tracking
 
 The Collection API includes endpoints to help identify gaps in your series runs.
@@ -1071,6 +1195,7 @@ The Collection API includes endpoints to help identify gaps in your series runs.
 Returns series where you own some issues but are missing others. This helps identify incomplete series runs in your collection.
 
 **Response Fields:**
+
 ```json
 {
   "id": 123,
@@ -1111,6 +1236,7 @@ Results are ordered by `missing_count` (descending) then `sort_name` (ascending)
 Returns specific issues from a series that you don't own. Use this to see exactly which issues you're missing from a particular series.
 
 **Response Fields:**
+
 ```json
 {
   "id": 5432,
@@ -1130,6 +1256,7 @@ Returns specific issues from a series that you don't own. Use this to see exactl
 ```
 
 **Examples:**
+
 ```bash
 # Get all incomplete series in your collection
 GET /api/collection/missing_series/
@@ -1177,6 +1304,7 @@ The scrobble endpoint provides a quick way to mark issues as read via the API, p
 - Optionally set a rating when scrobbling
 
 **Request Body:**
+
 ```json
 {
   "issue_id": 12345,
@@ -1192,6 +1320,7 @@ The scrobble endpoint provides a quick way to mark issues as read via the API, p
 - `rating` - Optional. Star rating from 1-5
 
 **Response (201 Created - New Item):**
+
 ```json
 {
   "id": 789,
@@ -1213,6 +1342,7 @@ The scrobble endpoint provides a quick way to mark issues as read via the API, p
 ```
 
 **Response (200 OK - Updated Existing):**
+
 ```json
 {
   "id": 456,
@@ -1267,6 +1397,7 @@ When scrobbling an issue not in your collection, a new collection item is automa
 - Perfect for tracking re-reads over time
 
 **Examples:**
+
 ```bash
 # Mark issue as read right now
 curl -X POST https://metron.cloud/api/collection/scrobble/ \
@@ -1378,6 +1509,8 @@ curl -X PATCH https://metron.cloud/api/collection/789/ \
 **Notes:**
 
 - Collection items are private - each user can only access their own collection
+- Adding an issue via the [add endpoint](#add-item-endpoint) does not mark it as read; use the [scrobble endpoint](#scrobble-endpoint) to add and mark read in one call
+- Removing an item via `DELETE /api/collection/{id}/` is permanent and cannot be undone via the API
 - The `grading_company` field can be empty for user-assessed grades (non-professionally graded comics)
 - The `quantity` field allows tracking multiple copies of the same issue
 - Statistics are calculated in real-time from the user's current collection
@@ -1408,6 +1541,7 @@ Track ongoing comic book series a user is following — the digital equivalent o
 - **Access:** Users can only access their own pull list
 
 **List Response Fields (`GET /api/pull_list/`):**
+
 ```json
 {
   "id": 1,
@@ -1418,6 +1552,7 @@ Track ongoing comic book series a user is following — the digital equivalent o
 ```
 
 **Series Response Fields (`GET /api/pull_list/series/`):**
+
 ```json
 {
   "count": 12,
@@ -1449,6 +1584,7 @@ Track ongoing comic book series a user is following — the digital equivalent o
 **Add Series (`POST /api/pull_list/series/add`):**
 
 Request body:
+
 ```json
 {
   "series_id": 123
@@ -1477,6 +1613,7 @@ Query parameters:
 | `store_date_before` | `YYYY-MM-DD` | Return issues with a store date on or before this date (inclusive) |
 
 Example response:
+
 ```json
 {
   "count": 3,
@@ -1531,6 +1668,7 @@ Track specific comic book issues a user wants to acquire, with priority, conditi
 - **Access:** Users can only access their own wish list
 
 **List Response Fields (`GET /api/wish_list/`):**
+
 ```json
 {
   "id": 1,
@@ -1541,6 +1679,7 @@ Track specific comic book issues a user wants to acquire, with priority, conditi
 ```
 
 **Item Response Fields (`GET /api/wish_list/items/`):**
+
 ```json
 {
   "count": 8,
@@ -1571,6 +1710,7 @@ Track specific comic book issues a user wants to acquire, with priority, conditi
 **Add Item (`POST /api/wish_list/items/add`):**
 
 Request body:
+
 ```json
 {
   "issue_id": 5001,
@@ -1585,6 +1725,7 @@ Request body:
 All fields except `issue_id` are optional. Priority defaults to `3` and `max_price_currency` defaults to `USD` if omitted.
 
 The response includes the full item fields:
+
 ```json
 {
   "id": 42,
@@ -1610,6 +1751,7 @@ The response includes the full item fields:
 Marks the item as acquired, records purchase details, and creates a `CollectionItem` for the user.
 
 Request body (all fields optional):
+
 ```json
 {
   "purchase_date": "2026-05-17",
@@ -1623,6 +1765,7 @@ Request body (all fields optional):
 - `purchase_price_currency` accepts `USD` or `GBP` and defaults to `USD` if omitted
 
 Response:
+
 ```json
 {
   "wish_list_item_id": 42,
@@ -1643,7 +1786,7 @@ Response:
 **Status Values:**
 
 | Value | Meaning |
-|-------|---------|
+| ------- | --------- |
 | `Wanted` | Actively looking for this issue |
 | `Found` | Located a copy but not yet purchased |
 | `Acquired` | Purchased; collection item created |
@@ -1705,6 +1848,7 @@ This endpoint is read-only. Create, update, and delete operations are not availa
 - `OTHER` - Other
 
 **List Response Fields:**
+
 ```json
 {
   "id": 1,
@@ -1739,6 +1883,7 @@ This endpoint is read-only. Create, update, and delete operations are not availa
     - `resource_url` - Link to web UI
 
 **Items Response Fields:**
+
 ```json
 {
   "id": 101,
@@ -1808,6 +1953,7 @@ Access denied returns `404 Not Found`.
 - Items are ordered by the `order` field
 
 **Examples:**
+
 ```bash
 # List all accessible reading lists
 GET /api/reading_list/
@@ -1879,6 +2025,7 @@ Creator roles (e.g., Writer, Penciller, Inker).
 - `modified_gt` - Modified after datetime
 
 **Response Fields:**
+
 ```json
 {
   "id": 1,
@@ -1904,6 +2051,7 @@ Types of comic series (e.g., Ongoing, Mini-Series, One-Shot).
 - `modified_gt` - Modified after datetime
 
 **Response Fields:**
+
 ```json
 {
   "id": 1,
@@ -1924,6 +2072,7 @@ Creator credits for issues.
 - `POST /api/credit/` - Create new credits (requires editor or admin, bulk creation supported)
 
 **Request Format:**
+
 ```json
 [
   {
@@ -1999,6 +2148,7 @@ Variant covers for issues.
 
 **Combining Filters:**
 Multiple filters can be combined with `&`:
+
 ```bash
 GET /api/issue/?series_name=spider-man&cover_year=2024&publisher_name=marvel
 ```
@@ -2010,6 +2160,7 @@ GET /api/issue/?series_name=spider-man&cover_year=2024&publisher_name=marvel
 All list endpoints return paginated responses.
 
 **Response Structure:**
+
 ```json
 {
   "count": 1500,
@@ -2027,6 +2178,7 @@ All list endpoints return paginated responses.
 - `results` - Array of items for current page
 
 **Navigation:**
+
 ```bash
 # First page (default)
 GET /api/issue/
@@ -2075,6 +2227,7 @@ GET /api/issue/?series_name=spider-man&page=3
 ```
 
 **Field Validation Errors:**
+
 ```json
 {
   "field_name": ["Error message for this field"],
@@ -2085,27 +2238,33 @@ GET /api/issue/?series_name=spider-man&page=3
 ### Common Errors
 
 **401 Unauthorized:**
+
 ```json
 {
   "detail": "Authentication credentials were not provided."
 }
 ```
+
 Solution: Include authentication credentials in your request.
 
 **403 Forbidden:**
+
 ```json
 {
   "detail": "You do not have permission to perform this action."
 }
 ```
+
 Solution: Ensure you have the required permissions for this operation.
 
 **404 Not Found:**
+
 ```json
 {
   "detail": "Not found."
 }
 ```
+
 Solution: Check that the resource ID is correct.
 
 ---
@@ -2251,6 +2410,7 @@ The API supports mapping to external databases:
 ### Example Client Code
 
 **Python:**
+
 ```python
 import requests
 
@@ -2287,6 +2447,7 @@ issues = api.get_issues(series_name="spider-man", cover_year=2024)
 ```
 
 **JavaScript:**
+
 ```javascript
 class MetronAPI {
   constructor(baseUrl, username, password) {
@@ -2352,6 +2513,11 @@ For questions, issues, or feature requests:
 
 ## Changelog
 
+### Version 1.9
+
+- Added `POST /api/collection/add/` to add an issue to the collection without marking it as read
+- Added `DELETE /api/collection/{id}/` to remove an item from the collection
+
 ### Version 1.8
 
 - Added token authentication (`Authorization: Bearer <token>`) as an alternative to Basic Authentication; manage tokens from your account page's API Tokens section
@@ -2361,33 +2527,39 @@ For questions, issues, or feature requests:
 - Added `CREATOR` list type to Reading List endpoint
 
 ### Version 1.6
+
 - Added Wish List endpoints
 - Added Pull List endpoints
 
 ### Version 1.5
+
 - Added `character_id`, `team_id`, and `universe_id` filters to Issue endpoint
 - Added `role_id` filter to Issue and Series endpoints (accepts a single ID or multiple comma-separated IDs)
 - Added `imprint_id`, `character_id`, `team_id`, and `universe_id` filters to Series endpoint
 
 ### Version 1.4
+
 - Added `year_end` field to Series list endpoint (nullable; present when a series has ended)
 
 ### Version 1.3
+
 - Added `creator_id` filter to Issue endpoint (filters issues with a credit for the given creator)
 - Added `creator_id` filter to Series endpoint (filters series containing at least one issue credited to the given creator)
 
 ### Version 1.2
+
 - UK publisher support: `country` field on Publisher now accepts `"GB"` in addition to `"US"`
 - Issue `price` field now accepts GBP via `{"amount": 3.99, "currency": "GBP"}` on write
 - Issue detail response now includes `price_currency` field
 
 ### Version 1.1
+
 - Conditional request support (`If-Modified-Since` / `Last-Modified`) on all detail endpoints
 
 ### Version 1.0
+
 - Initial API release
 - Support for all major comic book resources
 - Advanced filtering and pagination
 - Image upload support
 - External ID mapping
-

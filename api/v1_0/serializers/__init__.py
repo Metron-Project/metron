@@ -53,6 +53,7 @@ from api.v1_0.serializers.reading_list import (
     ReadingListReadSerializer,
 )
 from api.v1_0.serializers.collection import (
+    CollectionAddItemSerializer,
     CollectionListSerializer,
     CollectionRatingUpdateSerializer,
     CollectionReadSerializer,
@@ -71,6 +72,7 @@ __all__ = [
     "CharacterListSerializer",
     "CharacterReadSerializer",
     "CharacterSerializer",
+    "CollectionAddItemSerializer",
     "CollectionListSerializer",
     "CollectionRatingUpdateSerializer",
     "CollectionReadSerializer",
