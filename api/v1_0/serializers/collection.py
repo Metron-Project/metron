@@ -5,6 +5,7 @@ from api.v1_0.serializers.publisher import BasicPublisherSerializer
 from api.v1_0.serializers.reading_list import UserSerializer
 from api.v1_0.serializers.series import SeriesTypeSerializer
 from comicsdb.models import Issue, Series
+from metron.choices import CURRENCY_CHOICES
 from user_collection.models import CollectionItem, ReadDate
 
 
@@ -60,6 +61,40 @@ class CollectionListSerializer(serializers.ModelSerializer):
             "rating",
             "modified",
         )
+
+
+class CollectionAddItemSerializer(serializers.Serializer):
+    """Serializer for adding an issue to the authenticated user's collection."""
+
+    issue_id = serializers.IntegerField()
+    quantity = serializers.IntegerField(required=False, min_value=1, default=1)
+    book_format = serializers.ChoiceField(
+        choices=CollectionItem.BookFormat.choices,
+        required=False,
+        default=CollectionItem.BookFormat.PRINT,
+    )
+    grade = serializers.DecimalField(
+        required=False, allow_null=True, max_digits=3, decimal_places=1
+    )
+    grading_company = serializers.ChoiceField(
+        choices=CollectionItem.GradingCompany.choices, required=False, allow_blank=True, default=""
+    )
+    purchase_date = serializers.DateField(required=False, allow_null=True)
+    purchase_price = serializers.DecimalField(
+        required=False, allow_null=True, max_digits=7, decimal_places=2
+    )
+    purchase_price_currency = serializers.ChoiceField(
+        choices=CURRENCY_CHOICES, required=False, default="USD"
+    )
+    purchase_store = serializers.CharField(required=False, allow_blank=True, default="")
+    storage_location = serializers.CharField(required=False, allow_blank=True, default="")
+    notes = serializers.CharField(required=False, allow_blank=True, default="")
+
+    def validate_issue_id(self, value):
+        """Verify issue exists."""
+        if not Issue.objects.filter(pk=value).exists():
+            raise serializers.ValidationError(f"Issue with id {value} does not exist.")
+        return value
 
 
 class CollectionRatingUpdateSerializer(serializers.ModelSerializer):

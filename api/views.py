@@ -30,6 +30,7 @@ from api.v1_0.serializers import (
     CharacterListSerializer,
     CharacterReadSerializer,
     CharacterSerializer,
+    CollectionAddItemSerializer,
     CollectionListSerializer,
     CollectionRatingUpdateSerializer,
     CollectionReadSerializer,
@@ -729,6 +730,7 @@ class CollectionViewSet(
     ConditionalRetrieveModelMixin,
     mixins.ListModelMixin,
     mixins.UpdateModelMixin,
+    mixins.DestroyModelMixin,
     viewsets.GenericViewSet,
 ):
     """
@@ -749,6 +751,10 @@ class CollectionViewSet(
     Update the rating of a specific collection item (must belong to authenticated user).
     Read-tracking fields (is_read/date_read) are not editable here; use scrobble instead.
     Requires authentication.
+
+    destroy:
+    Remove a specific collection item (must belong to authenticated user).
+    Requires authentication.
     """
 
     permission_classes = [IsAuthenticated]
@@ -768,6 +774,48 @@ class CollectionViewSet(
         if self.action in ("update", "partial_update"):
             return CollectionRatingUpdateSerializer
         return CollectionReadSerializer
+
+    @extend_schema(
+        request=CollectionAddItemSerializer,
+        responses={201: CollectionReadSerializer, 200: CollectionReadSerializer},
+        description="Add an issue to the authenticated user's collection.",
+    )
+    @action(detail=False, methods=["post"])
+    def add(self, request):
+        """Add an issue to the authenticated user's collection.
+
+        If the issue is already in the collection, the existing item is
+        returned unchanged.
+        """
+        serializer = CollectionAddItemSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        data = serializer.validated_data
+
+        issue = Issue.objects.get(pk=data["issue_id"])
+        purchase_price = data.get("purchase_price")
+        purchase_price_currency = data.get("purchase_price_currency", "USD")
+        item, created = CollectionItem.objects.get_or_create(
+            user=request.user,
+            issue=issue,
+            defaults={
+                "quantity": data.get("quantity", 1),
+                "book_format": data.get("book_format", CollectionItem.BookFormat.PRINT),
+                "grade": data.get("grade"),
+                "grading_company": data.get("grading_company", ""),
+                "purchase_date": data.get("purchase_date"),
+                "purchase_price": Money(purchase_price, purchase_price_currency)
+                if purchase_price
+                else None,
+                "purchase_store": data.get("purchase_store", ""),
+                "storage_location": data.get("storage_location", ""),
+                "notes": data.get("notes", ""),
+            },
+        )
+        response_serializer = CollectionReadSerializer(item, context={"request": request})
+        return Response(
+            response_serializer.data,
+            status=status.HTTP_201_CREATED if created else status.HTTP_200_OK,
+        )
 
     @extend_schema(
         responses={
