@@ -2,6 +2,7 @@ from datetime import timedelta
 
 from django.core.mail import EmailMultiAlternatives
 from django.core.management.base import BaseCommand
+from django.db.models import Max
 from django.template.loader import render_to_string
 from django.utils import timezone
 
@@ -90,11 +91,22 @@ class Command(BaseCommand):
         enforce = options["enforce"]
         cooldown_cutoff = timezone.now() - timedelta(days=options["cooldown_days"])
 
+        # A username's most recent notice date, so a spike that already triggered
+        # a notice can't trigger another purely because the trailing lookback
+        # window still happens to overlap it.
+        exclude_through = {
+            row["user__username"]: row["latest"].date()
+            for row in ThrottleNotice.objects.values("user__username").annotate(
+                latest=Max("sent_at")
+            )
+        }
+
         offenders = find_repeat_offenders(
             lookback_days=options["lookback_days"],
             min_days=options["min_days"],
             single_day_threshold=options["single_day_threshold"],
             extreme_day_threshold=options["extreme_day_threshold"],
+            exclude_through=exclude_through,
         )
 
         candidates = []

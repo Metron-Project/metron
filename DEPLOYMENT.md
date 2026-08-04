@@ -987,6 +987,14 @@ Sent notices are visible (read-only) in Django admin under API > Throttle notice
 no timer wired up for this yet - run it by hand, or add a systemd timer in report-only mode
 the same way as `metron-opencollective-sync.timer` above if periodic review is wanted.
 
+The trigger only looks at the trailing `--lookback-days` window (default 7, and since the
+cutoff is inclusive it's really an 8-day span), so a spike could otherwise still be inside
+that window on a later run and get reported again for the same data. To prevent that, any
+Redis day on or before a user's most recent `ThrottleNotice` date is excluded from every
+later run for that user - only new throttling after that date can trigger a subsequent
+notice. This is what makes it safe to eventually run on a daily (or any) timer without
+double-reporting the same spike.
+
 ### Escalating to enforcement
 
 Add `--enforce` to escalate instead of sending another plain warning once an account
