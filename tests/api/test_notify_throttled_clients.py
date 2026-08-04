@@ -117,6 +117,53 @@ def test_no_candidates_does_not_notify_pushover(mailoutbox, mock_send_pushover):
 
 
 # ---------------------------------------------------------------------------
+# exclude_through wiring - prevents re-reporting a spike a prior notice
+# already covered, purely because the lookback window still overlaps it.
+# ---------------------------------------------------------------------------
+
+
+@pytest.mark.django_db
+def test_passes_latest_notice_date_per_user_as_exclude_through(
+    create_user, mailoutbox, mock_send_pushover
+):
+    user = create_user(email_confirmed=True)
+    older_notice = ThrottleNotice.objects.create(
+        user=user, days_throttled=1, total_count=100, worst_day_count=100
+    )
+    ThrottleNotice.objects.filter(pk=older_notice.pk).update(
+        sent_at=timezone.now() - timedelta(days=20)
+    )
+    latest_notice = ThrottleNotice.objects.create(
+        user=user, days_throttled=1, total_count=200, worst_day_count=200
+    )
+    ThrottleNotice.objects.filter(pk=latest_notice.pk).update(
+        sent_at=timezone.now() - timedelta(days=10)
+    )
+    latest_notice.refresh_from_db()
+
+    with patch(
+        "api.management.commands.notify_throttled_clients.find_repeat_offenders",
+        return_value=[],
+    ) as mock_find:
+        call_command(COMMAND)
+
+    assert mock_find.call_args.kwargs["exclude_through"] == {
+        user.username: latest_notice.sent_at.date()
+    }
+
+
+@pytest.mark.django_db
+def test_exclude_through_omits_users_with_no_prior_notices(mock_send_pushover):
+    with patch(
+        "api.management.commands.notify_throttled_clients.find_repeat_offenders",
+        return_value=[],
+    ) as mock_find:
+        call_command(COMMAND)
+
+    assert mock_find.call_args.kwargs["exclude_through"] == {}
+
+
+# ---------------------------------------------------------------------------
 # --enforce
 # ---------------------------------------------------------------------------
 

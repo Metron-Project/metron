@@ -10,7 +10,7 @@ import logging
 import re
 from collections import defaultdict
 from dataclasses import dataclass
-from datetime import UTC, datetime, timedelta
+from datetime import UTC, date, datetime, timedelta
 
 from django.core.cache import cache
 
@@ -66,6 +66,7 @@ def find_repeat_offenders(
     min_days: int = 3,
     single_day_threshold: int = 50,
     extreme_day_threshold: int = 100,
+    exclude_through: dict[str, date] | None = None,
 ) -> list[RepeatOffender]:
     """Scan the throttled-request counters for accounts that keep getting
     rate-limited without backing off. Flags an account if either is true, within
@@ -79,10 +80,18 @@ def find_repeat_offenders(
     IP-only identities (unauthenticated requests) are skipped - there's no
     account to contact.
 
+    `exclude_through` optionally maps username -> a date; any counter dated on
+    or before that date is ignored for that user. Pass each user's most recent
+    ThrottleNotice date here so a spike that already triggered a notice can't
+    trigger a second one purely because the trailing lookback window still
+    happens to overlap it (e.g. a weekly run 7 days after a spike, or any run
+    the same day a notice was just sent).
+
     Django's cache framework has no key-scanning API, so this drops to the
     underlying redis-py client (the same one the cache backend itself uses) to
     SCAN for matching keys.
     """
+    exclude_through = exclude_through or {}
     cutoff = (datetime.now(UTC) - timedelta(days=lookback_days)).date()
     client = cache._cache.get_client(write=False)
 
@@ -101,11 +110,15 @@ def find_repeat_offenders(
         if day < cutoff:
             continue
 
+        username = match["username"]
+        already_notified_through = exclude_through.get(username)
+        if already_notified_through is not None and day <= already_notified_through:
+            continue
+
         value = client.get(raw_key)
         if value is None:
             continue
 
-        username = match["username"]
         daily_counts_by_user[username][date_str] = daily_counts_by_user[username].get(
             date_str, 0
         ) + int(value)

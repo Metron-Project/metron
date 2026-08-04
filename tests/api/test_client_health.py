@@ -203,3 +203,53 @@ def test_sums_counts_across_scopes_for_the_same_day():
     assert len(matches) == 1
     assert matches[0].days_throttled == 1
     assert matches[0].total_count == 7
+
+
+def test_exclude_through_hides_a_day_already_covered_by_a_prior_notice():
+    # Reproduces the real bug: a spike from 7 days ago still sits inside a later
+    # run's lookback window and would otherwise get reported a second time.
+    username = _unique()
+    spike_day = (datetime.now(UTC) - timedelta(days=7)).date()
+    _set_count("sustained", f"user:{username}", days_ago=7, count=1000)
+
+    offenders = find_repeat_offenders(
+        lookback_days=7,
+        min_days=1,
+        single_day_threshold=1,
+        exclude_through={username: spike_day},
+    )
+
+    assert all(o.username != username for o in offenders)
+
+
+def test_exclude_through_does_not_hide_days_after_the_cutoff():
+    username = _unique()
+    _set_count("sustained", f"user:{username}", days_ago=0, count=1000)
+    # Notice cutoff is yesterday, so today's spike is still new and unreported.
+    yesterday = (datetime.now(UTC) - timedelta(days=1)).date()
+
+    offenders = find_repeat_offenders(
+        lookback_days=7,
+        min_days=1,
+        single_day_threshold=1,
+        exclude_through={username: yesterday},
+    )
+
+    matches = [o for o in offenders if o.username == username]
+    assert len(matches) == 1
+
+
+def test_exclude_through_only_affects_the_named_user():
+    username = _unique()
+    other_username = _unique()
+    _set_count("sustained", f"user:{username}", days_ago=0, count=1000)
+
+    offenders = find_repeat_offenders(
+        lookback_days=7,
+        min_days=1,
+        single_day_threshold=1,
+        exclude_through={other_username: datetime.now(UTC).date()},
+    )
+
+    matches = [o for o in offenders if o.username == username]
+    assert len(matches) == 1
