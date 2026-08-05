@@ -92,6 +92,33 @@ class CustomUser(AbstractUser):
         return tier[0] if tier else SUPPORTER_TIERS[-1][2]
 
 
+class SignupSettings(models.Model):
+    """Singleton toggle controlling whether new account signups are open."""
+
+    signups_enabled = models.BooleanField(default=True)
+    disabled_message = models.CharField(
+        max_length=255,
+        blank=True,
+        default="New account signups are temporarily disabled. Please check back later.",
+    )
+
+    class Meta:
+        verbose_name = "Signup settings"
+        verbose_name_plural = "Signup settings"
+
+    def __str__(self):
+        return "Signup settings"
+
+    def save(self, *args, **kwargs):
+        self.pk = 1
+        super().save(*args, **kwargs)
+
+    @classmethod
+    def get_solo(cls):
+        obj, _ = cls.objects.get_or_create(pk=1)
+        return obj
+
+
 class ApiToken(AbstractAuthToken):
     """Knox auth token, swapped in via KNOX_TOKEN_MODEL to add a user-facing name.
 

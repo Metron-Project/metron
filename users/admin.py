@@ -2,7 +2,7 @@ from django.contrib import admin
 from django.contrib.auth.admin import UserAdmin
 
 from users.forms import CustomUserChangeForm, CustomUserCreationForm
-from users.models import CustomUser, OpenCollectiveDonation
+from users.models import CustomUser, OpenCollectiveDonation, SignupSettings
 
 
 @admin.register(CustomUser)
@@ -58,6 +58,17 @@ class CustomUserAdmin(UserAdmin):
             },
         ),
     )
+
+
+@admin.register(SignupSettings)
+class SignupSettingsAdmin(admin.ModelAdmin):
+    list_display = ("signups_enabled",)
+
+    def has_add_permission(self, request):
+        return not SignupSettings.objects.exists()
+
+    def has_delete_permission(self, request, obj=None):
+        return False
 
 
 @admin.register(OpenCollectiveDonation)
