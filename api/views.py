@@ -22,6 +22,7 @@ from rest_framework.pagination import PageNumberPagination
 from rest_framework.parsers import FormParser, JSONParser, MultiPartParser
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
+from rest_framework.views import APIView
 from rest_framework_condition import last_modified
 
 from api.v1_0.serializers import (
@@ -64,6 +65,7 @@ from api.v1_0.serializers import (
     UniverseReadSerializer,
     UniverseSerializer,
     VariantSerializer,
+    WhoAmISerializer,
 )
 from api.v1_0.serializers.pull_list import (
     PullListIssueSerializer,
@@ -1262,3 +1264,17 @@ class WishListViewSet(
         item = get_object_or_404(WishListItem, pk=item_pk, wish_list=wish_list)
         item.delete()
         return Response(status=status.HTTP_204_NO_CONTENT)
+
+
+class WhoAmIView(APIView):
+    """
+    get:
+    Returns the username of the currently authenticated user.
+    """
+
+    permission_classes = [IsAuthenticated]
+
+    @extend_schema(responses=WhoAmISerializer)
+    def get(self, request):
+        serializer = WhoAmISerializer(request.user)
+        return Response(serializer.data)

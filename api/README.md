@@ -2113,6 +2113,26 @@ Variant covers for issues.
 
 ---
 
+#### WhoAmI
+
+Returns the username of the currently authenticated user.
+
+**Base Path:** `/api/whoami/`
+
+**Actions:**
+
+- `GET /api/whoami/` - Return the authenticated user's username
+
+**Response Fields:**
+
+```json
+{
+  "username": "wanda"
+}
+```
+
+---
+
 ## Filtering
 
 ### Common Filter Patterns
@@ -2512,6 +2532,10 @@ For questions, issues, or feature requests:
 ---
 
 ## Changelog
+
+### Version 1.10
+
+- Added `GET /api/whoami/` to return the authenticated user's username
 
 ### Version 1.9
 

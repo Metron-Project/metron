@@ -62,6 +62,7 @@ from api.v1_0.serializers.collection import (
     ScrobbleRequestSerializer,
     ScrobbleResponseSerializer,
 )
+from api.v1_0.serializers.user import WhoAmISerializer
 
 __all__ = [
     "ArcListSerializer",
@@ -113,4 +114,5 @@ __all__ = [
     "UniverseSerializer",
     "VariantSerializer",
     "VariantsIssueSerializer",
+    "WhoAmISerializer",
 ]
