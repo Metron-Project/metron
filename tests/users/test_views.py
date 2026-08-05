@@ -6,7 +6,7 @@ from django.urls import reverse
 from pytest_django.asserts import assertTemplateUsed
 
 from users.forms import CustomUserChangeForm
-from users.models import ApiToken, CustomUser
+from users.models import ApiToken, CustomUser, SignupSettings
 from users.views import SUSTAINED_DURATION, SUSTAINED_LIMIT, get_rate_limit_usage
 
 HTTP_NOT_FOUND_CODE = 404
@@ -51,6 +51,38 @@ def test_signup_view_uses_correct_template(auto_login_user, url):
     resp = client.get(reverse(url))
     assert resp.status_code == HTML_OK_CODE
     assertTemplateUsed(resp, f"registration/{url}.html")
+
+
+def test_signup_settings_get_solo_creates_default(db):
+    assert not SignupSettings.objects.exists()
+    settings_obj = SignupSettings.get_solo()
+    assert settings_obj.pk == 1
+    assert settings_obj.signups_enabled is True
+
+
+def test_signup_view_disabled_renders_disabled_template(db, client):
+    SignupSettings.objects.create(pk=1, signups_enabled=False, disabled_message="No signups.")
+    resp = client.get(reverse("signup"))
+    assert resp.status_code == HTML_OK_CODE
+    assertTemplateUsed(resp, "registration/signups_disabled.html")
+    assert b"No signups." in resp.content
+
+
+def test_signup_view_disabled_blocks_post(db, client):
+    SignupSettings.objects.create(pk=1, signups_enabled=False)
+    user_count_before = CustomUser.objects.count()
+    resp = client.post(
+        reverse("signup"),
+        {
+            "username": "newuser",
+            "email": "newuser@example.com",
+            "password1": "some-strong-password-1",
+            "password2": "some-strong-password-1",
+        },
+    )
+    assert resp.status_code == HTML_OK_CODE
+    assertTemplateUsed(resp, "registration/signups_disabled.html")
+    assert CustomUser.objects.count() == user_count_before
 
 
 def test_profile_view_url_exists_at_desired_location(auto_login_user):

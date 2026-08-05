@@ -33,7 +33,7 @@ from comicsdb.views.mixins import SearchMixin
 from metron.utils import get_recaptcha_auth
 from user_collection.models import CollectionItem
 from users.forms import CustomUserChangeForm, CustomUserCreationForm
-from users.models import ApiToken, CustomUser
+from users.models import ApiToken, CustomUser, SignupSettings
 from users.tokens import account_activation_token
 from users.utils import send_pushover
 
@@ -80,6 +80,14 @@ def activate(request, uidb64, token):
 
 
 def signup(request):  # sourcery skip: extract-method
+    settings_obj = SignupSettings.get_solo()
+    if not settings_obj.signups_enabled:
+        return render(
+            request,
+            "registration/signups_disabled.html",
+            {"message": settings_obj.disabled_message},
+        )
+
     if request.method == "POST":
         form = CustomUserCreationForm(request.POST)
         if form.is_valid():
