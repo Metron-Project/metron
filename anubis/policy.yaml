@@ -138,6 +138,19 @@ bots:
     weight:
       adjust: 10
 
+  # Catch-all: anything that reaches this point already passed every named
+  # DENY/ALLOW rule above (including the /api/ exemption and known-good
+  # crawlers) and doesn't look like a real browser. Rather than naming every
+  # HTTP client library one at a time (Go-http-client, python-requests,
+  # okhttp, ...), presumptively treat "doesn't claim to be Mozilla/Opera" as
+  # suspicious and force a real proof-of-work challenge - something no
+  # non-JS script can solve, regardless of what language it's written in.
+  - name: weigh-unidentified-non-browser-clients
+    action: WEIGH
+    expression: '!userAgent.matches("(?i)(Mozilla|Opera)")'
+    weight:
+      adjust: 30
+
 # Weight thresholds that determine when to challenge a request.
 # The generic-browser rule above adds weight=10 to browser requests,
 # which lands in the moderate-suspicion band → proof-of-work challenge.
