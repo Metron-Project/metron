@@ -1,0 +1,36 @@
+{% extends parent_template|default:"base.html" %}
+{% block title %}
+    Too Many Signups - Metron
+{% endblock title %}
+{% block content %}
+    <header class="block has-text-centered mt-6">
+        <span class="icon is-large has-text-warning">
+            <i class="fas fa-hourglass-half fa-4x"></i>
+        </span>
+        <h1 class="title is-3 mt-4">Too Many Signups</h1>
+    </header>
+    <div class="columns is-centered">
+        <div class="column is-half">
+            <div class="box">
+                <article class="message is-warning">
+                    <div class="message-body">
+                        <p>
+                            Too many accounts have recently been created from your network. Please try again later.
+                        </p>
+                    </div>
+                </article>
+                <div class="content has-text-centered mt-5">
+                    <div class="buttons is-centered">
+                        <a class="button is-link is-medium" href="{% url 'login' %}">Log In</a>
+                        <a class="button is-link is-medium is-outlined" href="{% url 'home' %}">
+                            <span class="icon">
+                                <i class="fas fa-home"></i>
+                            </span>
+                            <span>Go to Home</span>
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+{% endblock %}

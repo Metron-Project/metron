@@ -1,5 +1,6 @@
 import logging
 import time
+from datetime import date
 
 from django.contrib import messages
 from django.contrib.auth import login, logout, update_session_auth_hash
@@ -42,6 +43,53 @@ logger = logging.getLogger(__name__)
 PAGINATE_BY = 28
 SUSTAINED_LIMIT = 5000
 SUSTAINED_DURATION = 86400  # 1 day in seconds
+SIGNUP_IP_LIMIT = 1
+SIGNUP_IP_WINDOW = 60 * 60 * 25  # 1 day + an hour of cleanup headroom
+
+
+def _client_ip(request):
+    # nginx (nginx/nginx.conf) always overwrites X-Real-IP with its own
+    # observed connecting address, so it's safe to trust - unlike
+    # X-Forwarded-For, which nginx appends to rather than replaces, so it can
+    # carry a client-supplied prefix. Falls back to REMOTE_ADDR for local dev
+    # (runserver with no proxy in front, where there's no X-Real-IP header).
+    return request.META.get("HTTP_X_REAL_IP") or request.META.get("REMOTE_ADDR", "unknown")
+
+
+def _signup_ip_key(prefix, request):
+    return f"{prefix}:ip:{_client_ip(request)}:{date.today().isoformat()}"
+
+
+def _signup_ip_count(request):
+    return cache.get(_signup_ip_key("signup_count", request), 0)
+
+
+def _record_signup(request, username):
+    key = _signup_ip_key("signup_count", request)
+    cache.add(key, 0, timeout=SIGNUP_IP_WINDOW)
+    cache.incr(key)
+    # Only the first signup from this IP/day wins - cache.add is a no-op if
+    # a username is already recorded.
+    cache.add(_signup_ip_key("signup_first_user", request), username, timeout=SIGNUP_IP_WINDOW)
+
+
+def _notify_signup_rate_limit_hit(request):
+    ip = _client_ip(request)
+    count = _signup_ip_count(request)
+    first_user = cache.get(_signup_ip_key("signup_first_user", request), "unknown")
+    # cache.add only succeeds the first time per IP/day, so repeated blocked
+    # retries from the same client don't spam a pushover notice each time.
+    notified_key = _signup_ip_key("signup_rate_limit_notified", request)
+    if cache.add(notified_key, True, timeout=SIGNUP_IP_WINDOW):
+        logger.warning(
+            "Signup rate limit hit for IP %s (%d accounts today, first: %s)",
+            ip,
+            count,
+            first_user,
+        )
+        send_pushover(
+            f"Signup rate limit hit for {ip} ({count} accounts created today, first: {first_user})."
+        )
 
 
 def is_activated(user, token):
@@ -89,6 +137,10 @@ def signup(request):  # sourcery skip: extract-method
         )
 
     if request.method == "POST":
+        if _signup_ip_count(request) >= SIGNUP_IP_LIMIT:
+            _notify_signup_rate_limit_hit(request)
+            return render(request, "registration/signup_rate_limited.html", status=429)
+
         form = CustomUserCreationForm(request.POST)
         if form.is_valid():
             result = get_recaptcha_auth(request)
@@ -97,6 +149,7 @@ def signup(request):  # sourcery skip: extract-method
                 user: CustomUser = form.save(commit=False)
                 user.is_active = False
                 user.save()
+                _record_signup(request, user.username)
                 current_site = get_current_site(request)
                 subject = "Activate Your Metron Account"
                 context = {
