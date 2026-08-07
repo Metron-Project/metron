@@ -48,6 +48,8 @@ with Quadlet (systemd-managed containers).
 - [API observability](#api-observability)
   - [Logs](#logs)
   - [Redis counters](#redis-counters)
+- [Account observability](#account-observability)
+  - [Finding duplicate accounts by IP](#finding-duplicate-accounts-by-ip)
 - [Useful commands](#useful-commands)
 - [File locations on the droplet](#file-locations-on-the-droplet)
 
@@ -1020,6 +1022,38 @@ podman exec metron-web python manage.py notify_throttled_clients --send --enforc
 
 There's no self-service or automatic re-enable - a disabled account has to be manually
 flipped back to `is_active=True` in Django admin after review.
+
+---
+
+## Account observability
+
+Signup and account-activation views log the username and client IP (see
+`_client_ip` in `users/views.py`), in the same `(user=..., ip=...)` format used
+by the `authenticated via` API auth logs (see `api/authentication.py`). Because
+the format is shared, all three log lines can be mined together to spot one IP
+behind multiple usernames.
+
+### Finding duplicate accounts by IP
+
+```bash
+# IPs that signed up for more than one account
+journalctl _SYSTEMD_USER_UNIT=metron-web.service | grep "signed up for an account" \
+  | grep -oP 'ip=\K\S+' | sort | uniq -c | sort -rn | awk '$1 > 1'
+
+# IPs seen under more than one username, across signups, activations, and
+# authenticated API requests
+journalctl _SYSTEMD_USER_UNIT=metron-web.service \
+  | grep -E "signed up for an account|activated their account|authenticated via" \
+  | grep -oP '\(user=[^,]+, ip=[^)]+\)' \
+  | sed -E 's/\(user=([^,]+), ip=([^)]+)\)/\2 \1/' \
+  | sort -u \
+  | awk '{ users[$1] = users[$1]" "$2 } END { for (ip in users) if (split(users[ip], a, " ") > 1) print ip":"users[ip] }'
+
+# All signup/activation/API-auth log lines for a specific IP
+journalctl _SYSTEMD_USER_UNIT=metron-web.service \
+  | grep -E "signed up for an account|activated their account|authenticated via" \
+  | grep "ip=<ip-address>"
+```
 
 ---
 
