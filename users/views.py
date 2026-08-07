@@ -116,7 +116,13 @@ def activate(request, uidb64, token):
     login(request, user)
     # Send pushover notification tha user activated account
     send_pushover(f"{user} activated their account on Metron.")
-    logger.info("%s activated their account on Metron", user)
+    ip = _client_ip(request)
+    logger.info(
+        "User activated their account on Metron (user=%s, ip=%s)",
+        user.username,
+        ip,
+        extra={"username": user.username, "ip": ip},
+    )
     # Add a message asking the user to star the repository.
     msg = mark_safe(
         "If you are planning on adding new information to the database, please refer to the "
@@ -173,7 +179,13 @@ def signup(request):  # sourcery skip: extract-method
                 email.send()
                 # Let's send a pushover notice that a user requested an account.
                 send_pushover(f"{user} signed up for an account on Metron.")
-                logger.info("%s signed up for an account on Metron", user)
+                ip = _client_ip(request)
+                logger.info(
+                    "User signed up for an account on Metron (user=%s, ip=%s)",
+                    user.username,
+                    ip,
+                    extra={"username": user.username, "ip": ip},
+                )
 
             return redirect("account_activation_sent")
     else:
