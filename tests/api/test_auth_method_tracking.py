@@ -27,6 +27,7 @@ class DummyUser:
 class DummyRequest:
     def __init__(self, authenticator=None):
         self.successful_authenticator = authenticator
+        self.META = {"HTTP_X_REAL_IP": "203.0.113.1"}
 
 
 class _UnrecognizedAuthenticator(BaseAuthentication):
