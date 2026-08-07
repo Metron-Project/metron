@@ -13,6 +13,7 @@ from comicsdb.models import Series, SeriesType
 from comicsdb.models.issue import Issue
 from comicsdb.views.constants import PAGINATE_BY
 from comicsdb.views.history import HistoryListView
+from comicsdb.views.issue_list_helpers import SORT_OPTIONS, apply_sort
 from comicsdb.views.mixins import (
     AttributionCreateMixin,
     AttributionUpdateMixin,
@@ -62,11 +63,14 @@ class SeriesIssueList(ListView):
 
     def get_queryset(self):
         self.series = get_object_or_404(Series, slug=self.kwargs["slug"])
-        return self.series.issues.all()
+        queryset = self.series.issues.all()
+        return apply_sort(queryset, self.request)
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         context["title"] = self.series
+        context["sort_options"] = SORT_OPTIONS
+        context["current_sort"] = self.request.GET.get("sort", "")
         return context
 
 
