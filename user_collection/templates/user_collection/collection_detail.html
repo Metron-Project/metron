@@ -199,10 +199,16 @@
     <script src="{% static 'extensions/bulma-calendar/dist/js/bulma-calendar.min.js' %}"></script>
     <script>
         // Initialize Bulma Calendar for datetime inputs
-        function initializeDateTimePickers() {
-            var calendarInputs = document.querySelectorAll('input[data-bulma-calendar="on"]');
+        function initializeDateTimePickers(root) {
+            var calendarInputs = (root || document).querySelectorAll('input[data-bulma-calendar="on"]');
 
             calendarInputs.forEach(function(input) {
+                // bulmaCalendar's own "already attached" guard is broken, so
+                // skip inputs we've already initialized ourselves.
+                if (input.bulmaCalendar) {
+                    return;
+                }
+
                 var dataType = input.getAttribute('data-type');
                 var isDateTime = dataType === 'datetime';
 
@@ -227,9 +233,13 @@
         }
 
         // Initialize on page load
-        document.addEventListener('DOMContentLoaded', initializeDateTimePickers);
+        document.addEventListener('DOMContentLoaded', function() {
+            initializeDateTimePickers(document);
+        });
 
-        // Re-initialize after HTMX swaps content
-        document.body.addEventListener('htmx:afterSwap', initializeDateTimePickers);
+        // Re-initialize only the content HTMX just swapped in
+        document.body.addEventListener('htmx:afterSwap', function(evt) {
+            initializeDateTimePickers(evt.detail.target);
+        });
     </script>
 {% endblock %}
