@@ -17,6 +17,15 @@ logger = logging.getLogger(__name__)
 AUTH_METHOD_COUNTER_TTL = 60 * 60 * 24 * 35
 
 
+def _client_ip(request):
+    # nginx (nginx/nginx.conf) always overwrites X-Real-IP with its own
+    # observed connecting address, so it's safe to trust - unlike
+    # X-Forwarded-For, which nginx appends to rather than replaces, so it can
+    # carry a client-supplied prefix. Falls back to REMOTE_ADDR for local dev
+    # (runserver with no proxy in front, where there's no X-Real-IP header).
+    return request.META.get("HTTP_X_REAL_IP") or request.META.get("REMOTE_ADDR", "unknown")
+
+
 def _classify_authenticator(authenticator):
     # isinstance, not class-name matching, so any future authenticator subclasses
     # are still classified correctly.
@@ -42,9 +51,12 @@ def record_auth_method_usage(request, user):
     cache.add(cache_key, 0, timeout=AUTH_METHOD_COUNTER_TTL)
     cache.incr(cache_key)
 
+    ip = _client_ip(request)
+
     logger.info(
-        "API request authenticated via %s (user=%s)",
+        "API request authenticated via %s (user=%s, ip=%s)",
         slug,
         user.username,
-        extra={"username": user.username, "auth_method": slug},
+        ip,
+        extra={"username": user.username, "auth_method": slug, "ip": ip},
     )
