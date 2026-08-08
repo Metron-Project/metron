@@ -85,7 +85,7 @@ bots:
 
   # Deny Meta/Facebook crawlers (meta-externalagent, facebookexternalhit, FacebookBot).
   - name: deny-meta-crawlers
-    user_agent_regex: meta-externalagent|meta-webindexer|FacebookBot
+    user_agent_regex: meta-externalagent|meta-webindexer|FacebookBot|facebookexternalhit
     action: DENY
 
   # Deny PHP exploit scanners. Metron is a Django app — .php paths will never
@@ -115,9 +115,10 @@ bots:
   # Allow social media OG tag fetchers so link previews work when users share
   # Metron URLs. These bypass the challenge entirely rather than using the
   # openGraph passthrough, which would amplify bot attacks by hitting Django
-  # for every challenged request.
+  # for every challenged request. facebookexternalhit is excluded here since
+  # it's now denied by deny-meta-crawlers above.
   - name: allow-og-crawlers
-    user_agent_regex: facebookexternalhit|Twitterbot|LinkedInBot|Slackbot|Discordbot|TelegramBot
+    user_agent_regex: Twitterbot|LinkedInBot|Slackbot|Discordbot|TelegramBot
     action: ALLOW
 
   # Add weight to generic browser-like user agents. Combined with the
