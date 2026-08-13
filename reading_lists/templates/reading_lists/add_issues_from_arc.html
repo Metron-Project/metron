@@ -1,12 +1,12 @@
 {% extends parent_template|default:"base.html" %}
-{% load static %}
-{% block title %}Add from Story Arc - {{ reading_list.name }} - Metron{% endblock %}
+{% load static i18n %}
+{% block title %}{% blocktrans with name=reading_list.name %}Add from Story Arc - {{ name }} - Metron{% endblocktrans %}{% endblock %}
 {% block js %}
     {{ form.media }}
 {% endblock js %}
 {% block content %}
     <header class="block has-text-centered">
-        <h1 class="title">Add Issues from Story Arc</h1>
+        <h1 class="title">{% trans "Add Issues from Story Arc" %}</h1>
         <p class="subtitle">{{ reading_list.name }}</p>
     </header>
     <section class="section">
@@ -40,30 +40,30 @@
                             <div class="field is-grouped is-grouped-right mt-5">
                                 <div class="control">
                                     <a href="{% url 'reading-list:detail' reading_list.slug %}"
-                                       class="button">Cancel</a>
+                                       class="button">{% trans "Cancel" %}</a>
                                 </div>
                                 <div class="control">
-                                    <button type="submit" class="button is-primary">Add Issues</button>
+                                    <button type="submit" class="button is-primary">{% trans "Add Issues" %}</button>
                                 </div>
                             </div>
                         </form>
                     </div>
                     <div class="content mt-5">
-                        <h3 class="title is-5">How to use:</h3>
+                        <h3 class="title is-5">{% trans "How to use:" %}</h3>
                         <ul>
                             <li>
-                                <strong>Select a story arc:</strong> Start typing in the search box to find a story arc by name
+                                <strong>{% trans "Select a story arc:" %}</strong> {% trans "Start typing in the search box to find a story arc by name" %}
                             </li>
                             <li>
-                                <strong>All issues from the arc will be added:</strong> Issues are added in chronological order by cover date
+                                <strong>{% trans "All issues from the arc will be added:" %}</strong> {% trans "Issues are added in chronological order by cover date" %}
                             </li>
                             <li>
-                                <strong>Choose position:</strong> Add issues at the beginning or end of your reading list
+                                <strong>{% trans "Choose position:" %}</strong> {% trans "Add issues at the beginning or end of your reading list" %}
                             </li>
-                            <li>Issues already in your reading list will be automatically skipped</li>
+                            <li>{% trans "Issues already in your reading list will be automatically skipped" %}</li>
                         </ul>
                         <div class="notification is-info is-light mt-4">
-                            <strong>Tip:</strong> Story arcs are perfect for reading major crossover events in order! You can combine multiple arcs to build comprehensive reading orders.
+                            <strong>{% trans "Tip:" %}</strong> {% trans "Story arcs are perfect for reading major crossover events in order! You can combine multiple arcs to build comprehensive reading orders." %}
                         </div>
                     </div>
                 </div>

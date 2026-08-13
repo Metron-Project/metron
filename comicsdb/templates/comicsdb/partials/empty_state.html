@@ -1,9 +1,11 @@
+{% load i18n %}
 {% comment %}
     Empty state message with optional create button
     Usage: {% include "comicsdb/partials/empty_state.html" with item_type="Character" ... %}
-    
+
     Parameters:
-    - item_type: Type of item (e.g., "Character", "Publisher")
+    - item_type: Type of item, singular (e.g., "Character", "Publisher")
+    - item_type_plural: Type of item, plural (e.g., "Characters", "Publishers")
     - create_url: URL name for create action (optional)
     - create_title: Title for create button
 {% endcomment %}
@@ -14,17 +16,12 @@
                 <span class="icon is-large has-text-grey-light" aria-hidden="true">
                     <i class="fas fa-inbox fa-3x"></i>
                 </span>
-                <h2 class="title is-4">
-                    No {{ item_type }}{% if item_type|lower != "series" %}s{% endif %}
-                    Available
-                </h2>
+                <h2 class="title is-4">{% blocktrans %}No {{ item_type_plural }} Available{% endblocktrans %}</h2>
                 <p class="subtitle is-6 has-text-grey">
                     {% if user.is_authenticated and create_url %}
-                        Get started by creating your first {{ item_type|lower }}.
+                        {% blocktrans with item_type_lower=item_type|lower %}Get started by creating your first {{ item_type_lower }}.{% endblocktrans %}
                     {% else %}
-                        No {{ item_type|lower }}
-                        {% if item_type|lower != "series" %}s{% endif %}
-                        have been added yet.
+                        {% blocktrans %}No {{ item_type_plural }} have been added yet.{% endblocktrans %}
                     {% endif %}
                 </p>
                 {% if user.is_authenticated and create_url %}
@@ -35,7 +32,7 @@
                         <span class="icon" aria-hidden="true">
                             <i class="fas fa-plus"></i>
                         </span>
-                        <span>Create {{ item_type }}</span>
+                        <span>{% blocktrans %}Create {{ item_type }}{% endblocktrans %}</span>
                     </a>
                 {% endif %}
             </div>

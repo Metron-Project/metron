@@ -1,42 +1,44 @@
-{% autoescape off %}Hi {{ user.username }},
+{% load i18n %}{% autoescape off %}{% blocktrans with username=user.username %}Hi {{ username }},{% endblocktrans %}
 
-{% if days_throttled == 1 %}We've noticed that your Metron API client hit our rate limits hard, with
-{{ worst_day_count }} rate-limited (429) responses in a single day. When a client keeps
+{% if days_throttled == 1 %}{% blocktrans with count=worst_day_count %}We've noticed that your Metron API client hit our rate limits hard, with
+{{ count }} rate-limited (429) responses in a single day. When a client keeps
 retrying immediately after a 429 response instead of backing off, it adds
-unnecessary load to the site for everyone.{% else %}We've noticed that your Metron API client has repeatedly hit our rate limits over
+unnecessary load to the site for everyone.{% endblocktrans %}{% else %}{% blocktrans %}We've noticed that your Metron API client has repeatedly hit our rate limits over
 the past several days. When a client keeps retrying immediately after a 429
 response instead of backing off, it adds unnecessary load to the site for
-everyone.{% endif %}
+everyone.{% endblocktrans %}{% endif %}
 
-{% if days_throttled == 1 %}{% if total_count == worst_day_count %}Your client received {{ worst_day_count }} rate-limited (429) response{{ worst_day_count|pluralize }}
-in a single day.{% else %}Your client received {{ total_count }} rate-limited (429) response{{ total_count|pluralize }}
-recently, including {{ worst_day_count }} in a single day.{% endif %}{% else %}Your client received {{ total_count }} rate-limited (429) response{{ total_count|pluralize }}
-across {{ days_throttled }} day{{ days_throttled|pluralize }}, including {{ worst_day_count }}
-in a single day.{% endif %}
+{% if days_throttled == 1 %}{% if total_count == worst_day_count %}{% blocktrans count counter=worst_day_count %}Your client received {{ counter }} rate-limited (429) response
+in a single day.{% plural %}Your client received {{ counter }} rate-limited (429) responses
+in a single day.{% endblocktrans %}{% else %}{% blocktrans count counter=total_count %}Your client received {{ counter }} rate-limited (429) response{% plural %}Your client received {{ counter }} rate-limited (429) responses{% endblocktrans %}
+{% blocktrans with worst=worst_day_count %}recently, including {{ worst }} in a single day.{% endblocktrans %}{% endif %}{% else %}{% blocktrans count counter=total_count %}Your client received {{ counter }} rate-limited (429) response{% plural %}Your client received {{ counter }} rate-limited (429) responses{% endblocktrans %}
+{% blocktrans count counter=days_throttled %}across {{ counter }} day{% plural %}across {{ counter }} days{% endblocktrans %}, {% blocktrans with worst=worst_day_count %}including {{ worst }}
+in a single day.{% endblocktrans %}{% endif %}
 
-Every API response includes X-RateLimit-* headers showing your current limit,
+{% blocktrans %}Every API response includes X-RateLimit-* headers showing your current limit,
 remaining requests, and when the window resets. A 429 response also means you've
 exceeded that limit for the current window - the fix is to slow down and wait
-before retrying, rather than retrying immediately.
+before retrying, rather than retrying immediately.{% endblocktrans %}
 
-For details on our current rate limits and how to implement a backoff strategy,
-see:
+{% blocktrans %}For details on our current rate limits and how to implement a backoff strategy,
+see:{% endblocktrans %}
 
 https://metron.cloud/wiki/api/handling-rate-limits/
 
-IMPORTANT: If this behavior continues, we may revoke API access for this account
-to protect the site for other users.
+{% blocktrans %}IMPORTANT: If this behavior continues, we may revoke API access for this account
+to protect the site for other users.{% endblocktrans %}
 
-If you have any questions, or believe you're seeing this in error, just reply to
-this email.
+{% blocktrans %}If you have any questions, or believe you're seeing this in error, just reply to
+this email.{% endblocktrans %}
 
 ---
-Metron Comic Book Database
-A community-driven project for comic book enthusiasts
+{% trans "Metron Comic Book Database" %}
+{% trans "A community-driven project for comic book enthusiasts" %}
 
-Website: https://metron.cloud
+{% trans "Website:" %} https://metron.cloud
 GitHub: https://github.com/Metron-Project/metron
-Contact: admin@metron.cloud
+{% trans "Contact:" %} admin@metron.cloud
 
-(c) {% now "Y" %} Metron Project. All rights reserved.
+{% now "Y" as current_year %}
+{% blocktrans %}(c) {{ current_year }} Metron Project. All rights reserved.{% endblocktrans %}
 {% endautoescape %}

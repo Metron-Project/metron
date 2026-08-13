@@ -1,19 +1,19 @@
 {% extends parent_template|default:"base.html" %}
-{% load static %}
+{% load i18n static %}
 {% block title %}
     {% if future %}
-        Future Releases - Metron
+        {% trans "Future Releases - Metron" %}
     {% else %}
-        New Comics - {{ release_day|date:'F d, Y' }} - Metron
+        {% blocktrans with release_date=release_day|date:'F d, Y' %}New Comics - {{ release_date }} - Metron{% endblocktrans %}
     {% endif %}
 {% endblock %}
 {% block content %}
     <header class="block has-text-centered">
         <h1 class="title">
             {% if not future %}
-                Comics Released the Week of {{ release_day|date:'F d, Y' }}
+                {% blocktrans with release_date=release_day|date:'F d, Y' %}Comics Released the Week of {{ release_date }}{% endblocktrans %}
             {% else %}
-                Future Releases
+                {% trans "Future Releases" %}
             {% endif %}
         </h1>
     </header>
@@ -29,14 +29,14 @@
         <section class="section pt-0">
             <div class="container">
                 {# Navigation Bar #}
-                <nav class="level" aria-label="Weekly releases navigation">
+                <nav class="level" aria-label="{% trans 'Weekly releases navigation' %}">
                     <div class="level-left">
                         <div class="level-item">
                             <p class="subtitle is-5">
                                 {% if page_obj.paginator %}
-                                    <strong>{{ page_obj.paginator.count }}</strong> Issue{{ page_obj.paginator.count|pluralize }}
+                                    {% blocktrans count counter=page_obj.paginator.count %}<strong>{{ counter }}</strong> Issue{% plural %}<strong>{{ counter }}</strong> Issues{% endblocktrans %}
                                 {% else %}
-                                    <strong>{{ issue_list.count }}</strong> Issue{{ issue_list.count|pluralize }}
+                                    {% blocktrans count counter=issue_list.count %}<strong>{{ counter }}</strong> Issue{% plural %}<strong>{{ counter }}</strong> Issues{% endblocktrans %}
                                 {% endif %}
                             </p>
                         </div>
@@ -49,12 +49,12 @@
                             <div class="level-item">
                                 <a class="button is-primary"
                                    href="{% url 'issue:create' %}"
-                                   title="Add a new issue"
-                                   aria-label="Add a new issue">
+                                   title="{% trans 'Add a new issue' %}"
+                                   aria-label="{% trans 'Add a new issue' %}">
                                     <span class="icon is-small" aria-hidden="true">
                                         <i class="fas fa-plus"></i>
                                     </span>
-                                    <span>New</span>
+                                    <span>{% trans "New" %}</span>
                                 </a>
                             </div>
                         {% endif %}
@@ -68,34 +68,34 @@
         <section class="section pt-0">
             <div class="container has-text-centered">
                 {% if has_active_filters %}
-                    <p class="title is-4">No results found</p>
-                    <p class="subtitle">Try adjusting your search filters</p>
+                    <p class="title is-4">{% trans "No results found" %}</p>
+                    <p class="subtitle">{% trans "Try adjusting your search filters" %}</p>
                     <a href="{{ request.path }}" class="button is-light is-medium">
                         <span class="icon"><i class="fas fa-times"></i></span>
-                        <span>Clear All Filters</span>
+                        <span>{% trans "Clear All Filters" %}</span>
                     </a>
                 {% else %}
                     <div class="content">
                         <span class="icon is-large has-text-grey-light" aria-hidden="true">
                             <i class="fas fa-calendar-times fa-3x"></i>
                         </span>
-                        <h2 class="title is-4">No Releases Found</h2>
+                        <h2 class="title is-4">{% trans "No Releases Found" %}</h2>
                         <p class="subtitle is-6 has-text-grey">
                             {% if future %}
-                                No future releases have been scheduled yet.
+                                {% trans "No future releases have been scheduled yet." %}
                             {% else %}
-                                No issues were released this week.
+                                {% trans "No issues were released this week." %}
                             {% endif %}
                         </p>
                         {% if user.is_authenticated %}
                             <a class="button is-primary is-medium"
                                href="{% url 'issue:create' %}"
-                               title="Add a new issue"
-                               aria-label="Add a new issue">
+                               title="{% trans 'Add a new issue' %}"
+                               aria-label="{% trans 'Add a new issue' %}">
                                 <span class="icon" aria-hidden="true">
                                     <i class="fas fa-plus"></i>
                                 </span>
-                                <span>Add Issue</span>
+                                <span>{% trans "Add Issue" %}</span>
                             </a>
                         {% endif %}
                     </div>

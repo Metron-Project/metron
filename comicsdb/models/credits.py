@@ -1,4 +1,5 @@
 from django.db import models
+from django.utils.translation import gettext_lazy as _
 
 from comicsdb.models.creator import Creator
 from comicsdb.models.issue import Issue
@@ -27,7 +28,7 @@ class Credits(models.Model):
         indexes = [models.Index(fields=["issue", "creator"], name="issue_creator_idx")]
         ordering = ["issue", "creator__name"]
         unique_together = ["issue", "creator"]
-        verbose_name_plural = "Credits"
+        verbose_name_plural = _("Credits")
 
     def __str__(self) -> str:
         return f"{self.issue}: {self.creator}"

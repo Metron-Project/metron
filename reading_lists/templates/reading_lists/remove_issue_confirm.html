@@ -1,9 +1,9 @@
 {% extends parent_template|default:"base.html" %}
-{% load static %}
-{% block title %}Remove Issue - Metron{% endblock %}
+{% load static i18n %}
+{% block title %}{% trans "Remove Issue - Metron" %}{% endblock %}
 {% block content %}
     <header class="block has-text-centered">
-        <h1 class="title">Remove Issue from Reading List</h1>
+        <h1 class="title">{% trans "Remove Issue from Reading List" %}</h1>
     </header>
     <section class="section">
         <div class="container">
@@ -13,8 +13,7 @@
                         <article class="message is-warning">
                             <div class="message-body">
                                 <p>
-                                    Remove <strong>{{ readinglistitem.issue }}</strong> from
-                                    <strong>{{ readinglistitem.reading_list.name }}</strong>?
+                                    {% blocktrans with issue=readinglistitem.issue name=readinglistitem.reading_list.name %}Remove <strong>{{ issue }}</strong> from <strong>{{ name }}</strong>?{% endblocktrans %}
                                 </p>
                             </div>
                         </article>
@@ -23,10 +22,10 @@
                             <div class="field is-grouped is-grouped-right">
                                 <div class="control">
                                     <a href="{% url 'reading-list:detail' readinglistitem.reading_list.slug %}"
-                                       class="button">Cancel</a>
+                                       class="button">{% trans "Cancel" %}</a>
                                 </div>
                                 <div class="control">
-                                    <button type="submit" class="button is-danger">Remove</button>
+                                    <button type="submit" class="button is-danger">{% trans "Remove" %}</button>
                                 </div>
                             </div>
                         </form>

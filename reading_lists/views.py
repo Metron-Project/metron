@@ -8,6 +8,7 @@ from django.db.models import Avg, Count, Prefetch
 from django.http import HttpResponseForbidden
 from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse, reverse_lazy
+from django.utils.translation import gettext_lazy as _, ngettext
 from django.views import View
 from django.views.decorators.http import require_POST
 from django.views.generic import CreateView, DeleteView, DetailView, FormView, ListView, UpdateView
@@ -39,43 +40,44 @@ READING_LIST_DETAIL_PAGINATE_BY = 50
 _NON_FILTER_PARAMS = {"page"}
 
 _FILTER_LABELS = {
-    "q": "Search",
-    "name": "Name",
-    "username": "Creator",
-    "publisher": "Publisher",
-    "list_type": "List Type",
-    "attribution_source": "Attribution",
-    "average_rating__gte": "Min Rating",
-    "is_private": "Privacy",
+    "q": _("Search"),
+    "name": _("Name"),
+    "username": _("Creator"),
+    "publisher": _("Publisher"),
+    "list_type": _("List Type"),
+    "attribution_source": _("Attribution"),
+    "average_rating__gte": _("Min Rating"),
+    "is_private": _("Privacy"),
 }
 
 _RATING_DISPLAY = {
-    "1": "1+ Stars",
-    "2": "2+ Stars",
-    "3": "3+ Stars",
-    "4": "4+ Stars",
-    "5": "5 Stars",
+    "1": _("1+ Stars"),
+    "2": _("2+ Stars"),
+    "3": _("3+ Stars"),
+    "4": _("4+ Stars"),
+    "5": _("5 Stars"),
 }
 
-_PRIVACY_DISPLAY = {"true": "Private", "false": "Public"}
+_PRIVACY_DISPLAY = {"true": _("Private"), "false": _("Public")}
 
 _ISSUE_TYPE_META = {
-    "CORE": ("Core", "#3273dc"),
-    "TIE_IN": ("Tie-In", "#f5b400"),
-    "PROLOGUE": ("Prologue", "#3e8ed0"),
-    "EPILOGUE": ("Epilogue", "#48c78e"),
+    "CORE": (_("Core"), "#3273dc"),
+    "TIE_IN": (_("Tie-In"), "#f5b400"),
+    "PROLOGUE": (_("Prologue"), "#3e8ed0"),
+    "EPILOGUE": (_("Epilogue"), "#48c78e"),
 }
 
+# These keys must match Role.name values in the database exactly - do not translate.
 _CREDIT_ROLE_NAMES = ["Artist", "Finishes", "Inker", "Penciller", "Script", "Story", "Writer"]
 
 _CREDIT_ROLE_DISPLAY = {
-    "Artist": "Artist",
-    "Finishes": "Artist",
-    "Inker": "Artist",
-    "Penciller": "Artist",
-    "Script": "Writer",
-    "Story": "Writer",
-    "Writer": "Writer",
+    "Artist": _("Artist"),
+    "Finishes": _("Artist"),
+    "Inker": _("Artist"),
+    "Penciller": _("Artist"),
+    "Script": _("Writer"),
+    "Story": _("Writer"),
+    "Writer": _("Writer"),
 }
 
 
@@ -367,7 +369,7 @@ def build_reading_list_breakdown_context(reading_list_items):
         {
             "creator": c,
             "roles": ", ".join(
-                sorted({_CREDIT_ROLE_DISPLAY.get(r, r) for r in role_map.get(c.id, [])})
+                sorted({str(_CREDIT_ROLE_DISPLAY.get(r, r)) for r in role_map.get(c.id, [])})
             ),
         }
         for c in top6
@@ -495,13 +497,15 @@ class ReadingListCreateView(LoginRequiredMixin, CreateView):
     def form_valid(self, form):
         # Set the user to the current user
         form.instance.user = self.request.user
-        messages.success(self.request, f"Reading list '{form.instance.name}' created!")
+        messages.success(
+            self.request, _("Reading list '%(name)s' created!") % {"name": form.instance.name}
+        )
         return super().form_valid(form)
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        context["title"] = "Create Reading List"
-        context["button_text"] = "Create"
+        context["title"] = _("Create Reading List")
+        context["button_text"] = _("Create")
         return context
 
 
@@ -528,13 +532,15 @@ class ReadingListUpdateView(LoginRequiredMixin, UserPassesTestMixin, UpdateView)
 
     def form_valid(self, form):
         # Update the edited_by field (via the modified timestamp)
-        messages.success(self.request, f"Reading list '{form.instance.name}' updated!")
+        messages.success(
+            self.request, _("Reading list '%(name)s' updated!") % {"name": form.instance.name}
+        )
         return super().form_valid(form)
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        context["title"] = "Edit Reading List"
-        context["button_text"] = "Update"
+        context["title"] = _("Edit Reading List")
+        context["button_text"] = _("Update")
         return context
 
 
@@ -551,7 +557,9 @@ class ReadingListDeleteView(LoginRequiredMixin, UserPassesTestMixin, DeleteView)
         return can_manage_reading_list(self.request.user, reading_list)
 
     def form_valid(self, form):
-        messages.success(self.request, f"Reading list '{self.object.name}' deleted!")
+        messages.success(
+            self.request, _("Reading list '%(name)s' deleted!") % {"name": self.object.name}
+        )
         return super().form_valid(form)
 
 
@@ -577,7 +585,7 @@ class AssignReadingListToMetronView(
         try:
             metron_user = CustomUser.objects.get(username="Metron")
         except CustomUser.DoesNotExist:
-            messages.error(request, "The 'Metron' user account does not exist.")
+            messages.error(request, _("The 'Metron' user account does not exist."))
             return redirect(self.reading_list.get_absolute_url())
 
         if self.reading_list.user_id != metron_user.id:
@@ -585,7 +593,8 @@ class AssignReadingListToMetronView(
             self.reading_list.save()
             messages.success(
                 request,
-                f"Ownership of '{self.reading_list.name}' has been reassigned to Metron.",
+                _("Ownership of '%(name)s' has been reassigned to Metron.")
+                % {"name": self.reading_list.name},
             )
         return redirect(self.reading_list.get_absolute_url())
 
@@ -608,7 +617,8 @@ class RemoveIssueFromReadingListView(
     def get_success_url(self):
         messages.success(
             self.request,
-            f"Removed {self.object.issue} from '{self.reading_list.name}'!",
+            _("Removed %(issue)s from '%(name)s'!")
+            % {"issue": self.object.issue, "name": self.reading_list.name},
         )
         return reverse("reading-list:detail", kwargs={"slug": self.reading_list.slug})
 
@@ -679,30 +689,53 @@ class AddIssueWithAutocompleteView(
                     continue
 
         # Provide feedback
-        messages_to_show = []
+        message_parts = []
         if added_count > 0:
             if added_count == 1:
-                messages_to_show.append(f"Added {added_issues[0]}")
+                message_parts.append(_("Added %(issue)s") % {"issue": added_issues[0]})
             else:
-                messages_to_show.append(f"Added {added_count} issue(s)")
+                message_parts.append(
+                    ngettext("Added %(count)d issue", "Added %(count)d issues", added_count)
+                    % {"count": added_count}
+                )
 
         if reordered_count > 0:
-            messages_to_show.append(f"reordered {reordered_count} existing issue(s)")
+            message_parts.append(
+                ngettext(
+                    "reordered %(count)d existing issue",
+                    "reordered %(count)d existing issues",
+                    reordered_count,
+                )
+                % {"count": reordered_count}
+            )
 
-        if messages_to_show:
+        if message_parts:
+            if len(message_parts) > 1:
+                summary = _("%(first)s and %(second)s") % {
+                    "first": message_parts[0],
+                    "second": message_parts[1],
+                }
+            else:
+                summary = message_parts[0]
             messages.success(
                 self.request,
-                f"{', '.join(messages_to_show)} in '{self.reading_list.name}'!",
+                _("%(summary)s in '%(name)s'!")
+                % {"summary": summary, "name": self.reading_list.name},
             )
 
         if skipped_count > 0:
             messages.info(
                 self.request,
-                f"Skipped {skipped_count} duplicate issue(s).",
+                ngettext(
+                    "Skipped %(count)d duplicate issue.",
+                    "Skipped %(count)d duplicate issues.",
+                    skipped_count,
+                )
+                % {"count": skipped_count},
             )
 
         if added_count == 0 and reordered_count == 0 and skipped_count == 0:
-            messages.info(self.request, "No changes were made.")
+            messages.info(self.request, _("No changes were made."))
 
         return redirect(self.get_success_url())
 
@@ -742,15 +775,26 @@ class AddIssuesFromSeriesView(
         if added_count == 0:
             messages.info(
                 self.request,
-                f"No new issues to add. All issues from {series} are already in the list.",
+                _("No new issues to add. All issues from %(series)s are already in the list.")
+                % {"series": series},
             )
             return redirect(self.get_success_url())
 
-        position_text = "at the beginning" if position == "beginning" else "at the end"
+        if position == "beginning":
+            message = ngettext(
+                "Added %(count)d issue from %(series)s at the beginning of '%(name)s'!",
+                "Added %(count)d issues from %(series)s at the beginning of '%(name)s'!",
+                added_count,
+            )
+        else:
+            message = ngettext(
+                "Added %(count)d issue from %(series)s at the end of '%(name)s'!",
+                "Added %(count)d issues from %(series)s at the end of '%(name)s'!",
+                added_count,
+            )
         messages.success(
             self.request,
-            f"Added {added_count} issue(s) from {series} {position_text} "
-            f"of '{self.reading_list.name}'!",
+            message % {"count": added_count, "series": series, "name": self.reading_list.name},
         )
 
         return redirect(self.get_success_url())
@@ -774,15 +818,26 @@ class AddIssuesFromArcView(
         if added_count == 0:
             messages.info(
                 self.request,
-                f"No new issues to add. All issues from {arc} are already in the list.",
+                _("No new issues to add. All issues from %(arc)s are already in the list.")
+                % {"arc": arc},
             )
             return redirect(self.get_success_url())
 
-        position_text = "at the beginning" if position == "beginning" else "at the end"
+        if position == "beginning":
+            message = ngettext(
+                "Added %(count)d issue from %(arc)s at the beginning of '%(name)s'!",
+                "Added %(count)d issues from %(arc)s at the beginning of '%(name)s'!",
+                added_count,
+            )
+        else:
+            message = ngettext(
+                "Added %(count)d issue from %(arc)s at the end of '%(name)s'!",
+                "Added %(count)d issues from %(arc)s at the end of '%(name)s'!",
+                added_count,
+            )
         messages.success(
             self.request,
-            f"Added {added_count} issue(s) from {arc} {position_text} "
-            f"of '{self.reading_list.name}'!",
+            message % {"count": added_count, "arc": arc, "name": self.reading_list.name},
         )
 
         return redirect(self.get_success_url())

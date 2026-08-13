@@ -1,4 +1,4 @@
-{% load bulma_tags %}
+{% load bulma_tags i18n %}
 {% comment %}
     Attribution formset table
     Usage: {% include "comicsdb/partials/attribution_formset.html" with formset=attribution %}
@@ -13,9 +13,9 @@
     {% endif %}
     <thead>
         <tr>
-            <th scope="col">Source</th>
-            <th scope="col">URL</th>
-            <th scope="col" class="has-text-centered" style="width: 80px;">Delete</th>
+            <th scope="col">{% trans "Source" %}</th>
+            <th scope="col">{% trans "URL" %}</th>
+            <th scope="col" class="has-text-centered" style="width: 80px;">{% trans "Delete" %}</th>
         </tr>
     </thead>
     <tbody id="attributionTableBody">
@@ -62,7 +62,7 @@
                         <button type="button"
                                 class="button is-small is-danger delete-row"
                                 onclick="const checkbox = this.parentElement.querySelector('input[type=checkbox]'); checkbox.checked = !checkbox.checked; const row = this.closest('tr'); row.style.opacity = checkbox.checked ? '0.5' : '1'; row.style.textDecoration = checkbox.checked ? 'line-through' : 'none';"
-                                title="Mark for deletion">
+                                title="{% trans 'Mark for deletion' %}">
                             <span class="icon is-small">
                                 <i class="fas fa-times"></i>
                             </span>
@@ -72,7 +72,7 @@
                         <button type="button"
                                 class="button is-small is-danger delete-row"
                                 onclick="this.closest('tr').remove(); updateFormsetManagement('attribution');"
-                                title="Remove this row">
+                                title="{% trans 'Remove this row' %}">
                             <span class="icon is-small">
                                 <i class="fas fa-times"></i>
                             </span>
@@ -93,5 +93,5 @@
     <span class="icon">
         <i class="fas fa-plus"></i>
     </span>
-    <span>Add another attribution</span>
+    <span>{% trans "Add another attribution" %}</span>
 </button>

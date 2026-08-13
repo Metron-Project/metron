@@ -2,13 +2,13 @@
 {% load bulma_tags %}
 {% load humanize %}
 {% load thumbnail %}
-{% load static %}
+{% load static i18n %}
 {% block title %}
-    {{ customuser.username }} - Metron
+    {% blocktrans with username=customuser.username %}{{ username }} - Metron{% endblocktrans %}
 {% endblock title %}
 {% block sitedesc %}
     <meta name="description"
-          content="Profile page for {{ customuser.username }} on Metron Comic Book Database.">
+          content="{% blocktrans with username=customuser.username %}Profile page for {{ username }} on Metron Comic Book Database.{% endblocktrans %}">
 {% endblock %}
 {% block content %}
     {# Action Buttons #}
@@ -16,35 +16,35 @@
         <div class="buttons is-right mb-5">
             <a class="button is-primary"
                href="{% url 'change_profile' %}"
-               title="Edit your profile">
+               title="{% trans 'Edit your profile' %}">
                 <span class="icon">
                     <i class="fas fa-edit"></i>
                 </span>
-                <span>Edit Profile</span>
+                <span>{% trans "Edit Profile" %}</span>
             </a>
             <a class="button is-light"
                href="{% url 'change_password' %}"
-               title="Change your password">
+               title="{% trans 'Change your password' %}">
                 <span class="icon">
                     <i class="fas fa-lock"></i>
                 </span>
-                <span>Change Password</span>
+                <span>{% trans "Change Password" %}</span>
             </a>
             <a class="button is-light"
                href="{% url 'api_tokens' %}"
-               title="Manage your API tokens">
+               title="{% trans 'Manage your API tokens' %}">
                 <span class="icon">
                     <i class="fas fa-key"></i>
                 </span>
-                <span>API Tokens</span>
+                <span>{% trans "API Tokens" %}</span>
             </a>
             <a class="button is-danger is-outlined"
                href="{% url 'delete_account' %}"
-               title="Delete your account">
+               title="{% trans 'Delete your account' %}">
                 <span class="icon">
                     <i class="fas fa-trash-alt"></i>
                 </span>
-                <span>Delete Account</span>
+                <span>{% trans "Delete Account" %}</span>
             </a>
         </div>
     {% endif %}
@@ -60,13 +60,13 @@
                                  src="{{ im.url }}"
                                  width="{{ im.width }}"
                                  height="{{ im.height }}"
-                                 alt="Profile picture of {{ customuser.username }}"
+                                 alt="{% blocktrans with username=customuser.username %}Profile picture of {{ username }}{% endblocktrans %}"
                                  loading="lazy">
                         {% endthumbnail %}
                     {% else %}
                         <img class="is-rounded"
                              src="{% static 'site/img/user-not-found.webp' %}"
-                             alt="Default profile picture for {{ customuser.username }}"
+                             alt="{% blocktrans with username=customuser.username %}Default profile picture for {{ username }}{% endblocktrans %}"
                              loading="lazy">
                     {% endif %}
                 </figure>
@@ -80,27 +80,27 @@
                             <span class="is-block-mobile">{{ customuser.get_full_name }}</span>
                             <span class="is-block-mobile mt-2-mobile">
                                 {% if customuser.is_superuser %}
-                                    <span class="tag is-primary" title="Site Administrator">
+                                    <span class="tag is-primary" title="{% trans 'Site Administrator' %}">
                                         <span class="icon is-small">
                                             <i class="fas fa-crown"></i>
                                         </span>
-                                        <span>Admin</span>
+                                        <span>{% trans "Admin" %}</span>
                                     </span>
                                 {% endif %}
                                 {% for group in customuser.groups.all %}
                                     {% if group.name == "editor" %}
-                                        <span class="tag is-info" title="Database Editor">
+                                        <span class="tag is-info" title="{% trans 'Database Editor' %}">
                                             <span class="icon is-small">
                                                 <i class="fas fa-pen"></i>
                                             </span>
-                                            <span>Editor</span>
+                                            <span>{% trans "Editor" %}</span>
                                         </span>
                                     {% elif group.name == "reading list editor" %}
-                                        <span class="tag is-success" title="Reading List Editor">
+                                        <span class="tag is-success" title="{% trans 'Reading List Editor' %}">
                                             <span class="icon is-small">
                                                 <i class="fas fa-book-reader"></i>
                                             </span>
-                                            <span>List Editor</span>
+                                            <span>{% trans "List Editor" %}</span>
                                         </span>
                                     {% endif %}
                                 {% endfor %}
@@ -112,27 +112,27 @@
                             <span class="is-block-mobile">{{ customuser.username }}</span>
                             <span class="is-block-mobile mt-2-mobile">
                                 {% if customuser.is_superuser %}
-                                    <span class="tag is-primary" title="Site Administrator">
+                                    <span class="tag is-primary" title="{% trans 'Site Administrator' %}">
                                         <span class="icon is-small">
                                             <i class="fas fa-crown"></i>
                                         </span>
-                                        <span>Admin</span>
+                                        <span>{% trans "Admin" %}</span>
                                     </span>
                                 {% endif %}
                                 {% for group in customuser.groups.all %}
                                     {% if group.name == "editor" %}
-                                        <span class="tag is-info" title="Database Editor">
+                                        <span class="tag is-info" title="{% trans 'Database Editor' %}">
                                             <span class="icon is-small">
                                                 <i class="fas fa-pen"></i>
                                             </span>
-                                            <span>Editor</span>
+                                            <span>{% trans "Editor" %}</span>
                                         </span>
                                     {% elif group.name == "reading list editor" %}
-                                        <span class="tag is-success" title="Reading List Editor">
+                                        <span class="tag is-success" title="{% trans 'Reading List Editor' %}">
                                             <span class="icon is-small">
                                                 <i class="fas fa-book-reader"></i>
                                             </span>
-                                            <span>List Editor</span>
+                                            <span>{% trans "List Editor" %}</span>
                                         </span>
                                     {% endif %}
                                 {% endfor %}
@@ -143,7 +143,7 @@
                     <div class="level is-mobile mb-4">
                         <div class="level-item has-text-centered">
                             <div>
-                                <p class="heading is-size-7-mobile">Member Since</p>
+                                <p class="heading is-size-7-mobile">{% trans "Member Since" %}</p>
                                 <p class="title is-6 is-size-7-mobile">
                                     <span class="icon has-text-grey is-small" aria-hidden="true">
                                         <i class="fas fa-calendar-alt"></i>
@@ -156,7 +156,7 @@
                         {% if customuser.last_login %}
                             <div class="level-item has-text-centered">
                                 <div>
-                                    <p class="heading is-size-7-mobile">Last Active</p>
+                                    <p class="heading is-size-7-mobile">{% trans "Last Active" %}</p>
                                     <p class="title is-6 is-size-7-mobile">
                                         <span class="icon has-text-grey is-small" aria-hidden="true">
                                             <i class="fas fa-clock"></i>
@@ -175,7 +175,7 @@
                                 <span class="icon has-text-info" aria-hidden="true">
                                     <i class="fas fa-user"></i>
                                 </span>
-                                About
+                                {% trans "About" %}
                             </p>
                             <p class="has-text-dark">{{ customuser.bio }}</p>
                         </div>
@@ -186,8 +186,8 @@
                                     <span class="icon" aria-hidden="true">
                                         <i class="fas fa-info-circle"></i>
                                     </span>
-                                    You haven't added a bio yet.
-                                    <a href="{% url 'change_profile' %}">Add one now</a> to tell others about yourself!
+                                    {% trans "You haven't added a bio yet." %}
+                                    <a href="{% url 'change_profile' %}">{% trans "Add one now" %}</a> {% trans "to tell others about yourself!" %}
                                 </p>
                             </div>
                         {% endif %}
@@ -204,9 +204,9 @@
                     <span class="icon has-text-primary" aria-hidden="true">
                         <i class="fas fa-chart-line"></i>
                     </span>
-                    Database Contributions
+                    {% trans "Database Contributions" %}
                 </h3>
-                <p class="subtitle is-7 has-text-grey mb-4">Items created by this user</p>
+                <p class="subtitle is-7 has-text-grey mb-4">{% trans "Items created by this user" %}</p>
                 {% if stats %}
                     <div class="content">
                         <table class="table is-fullwidth is-hoverable is-narrow-mobile">
@@ -216,7 +216,7 @@
                                         <span class="icon has-text-info" aria-hidden="true">
                                             <i class="fas fa-building"></i>
                                         </span>
-                                        <strong>Publishers</strong>
+                                        <strong>{% trans "Publishers" %}</strong>
                                     </td>
                                     <td class="has-text-right">
                                         <span class="tag is-info is-light stat-tag">{{ stats.publishers|intcomma }}</span>
@@ -227,7 +227,7 @@
                                         <span class="icon has-text-info" aria-hidden="true">
                                             <i class="fas fa-list"></i>
                                         </span>
-                                        <strong>Series</strong>
+                                        <strong>{% trans "Series" %}</strong>
                                     </td>
                                     <td class="has-text-right">
                                         <span class="tag is-info is-light stat-tag">{{ stats.series|intcomma }}</span>
@@ -238,7 +238,7 @@
                                         <span class="icon has-text-info" aria-hidden="true">
                                             <i class="fas fa-book"></i>
                                         </span>
-                                        <strong>Issues</strong>
+                                        <strong>{% trans "Issues" %}</strong>
                                     </td>
                                     <td class="has-text-right">
                                         <span class="tag is-info is-light stat-tag">{{ stats.issues|intcomma }}</span>
@@ -249,7 +249,7 @@
                                         <span class="icon has-text-info" aria-hidden="true">
                                             <i class="fas fa-mask"></i>
                                         </span>
-                                        <strong>Characters</strong>
+                                        <strong>{% trans "Characters" %}</strong>
                                     </td>
                                     <td class="has-text-right">
                                         <span class="tag is-info is-light stat-tag">{{ stats.characters|intcomma }}</span>
@@ -260,7 +260,7 @@
                                         <span class="icon has-text-info" aria-hidden="true">
                                             <i class="fas fa-pencil-alt"></i>
                                         </span>
-                                        <strong>Creators</strong>
+                                        <strong>{% trans "Creators" %}</strong>
                                     </td>
                                     <td class="has-text-right">
                                         <span class="tag is-info is-light stat-tag">{{ stats.creators|intcomma }}</span>
@@ -271,7 +271,7 @@
                                         <span class="icon has-text-info" aria-hidden="true">
                                             <i class="fas fa-users"></i>
                                         </span>
-                                        <strong>Teams</strong>
+                                        <strong>{% trans "Teams" %}</strong>
                                     </td>
                                     <td class="has-text-right">
                                         <span class="tag is-info is-light stat-tag">{{ stats.teams|intcomma }}</span>
@@ -282,7 +282,7 @@
                                         <span class="icon has-text-info" aria-hidden="true">
                                             <i class="fas fa-bookmark"></i>
                                         </span>
-                                        <strong>Imprints</strong>
+                                        <strong>{% trans "Imprints" %}</strong>
                                     </td>
                                     <td class="has-text-right">
                                         <span class="tag is-info is-light stat-tag">{{ stats.imprints|intcomma }}</span>
@@ -293,7 +293,7 @@
                                         <span class="icon has-text-info" aria-hidden="true">
                                             <i class="fas fa-project-diagram"></i>
                                         </span>
-                                        <strong>Arcs</strong>
+                                        <strong>{% trans "Arcs" %}</strong>
                                     </td>
                                     <td class="has-text-right">
                                         <span class="tag is-info is-light stat-tag">{{ stats.arcs|intcomma }}</span>
@@ -304,7 +304,7 @@
                                         <span class="icon has-text-info" aria-hidden="true">
                                             <i class="fas fa-globe"></i>
                                         </span>
-                                        <strong>Universes</strong>
+                                        <strong>{% trans "Universes" %}</strong>
                                     </td>
                                     <td class="has-text-right">
                                         <span class="tag is-info is-light stat-tag">{{ stats.universes|intcomma }}</span>
@@ -320,7 +320,7 @@
                                 <i class="fas fa-chart-bar fa-2x"></i>
                             </span>
                         </p>
-                        <p class="mt-3">No contribution statistics available.</p>
+                        <p class="mt-3">{% trans "No contribution statistics available." %}</p>
                     </div>
                 {% endif %}
             </div>
@@ -332,14 +332,14 @@
                         <span class="icon has-text-info" aria-hidden="true">
                             <i class="fas fa-cog"></i>
                         </span>
-                        Account Settings
+                        {% trans "Account Settings" %}
                     </h3>
                     <div class="content">
                         <p class="mb-3">
                             <span class="icon" aria-hidden="true">
                                 <i class="fas fa-envelope"></i>
                             </span>
-                            <strong>Email:</strong> {{ customuser.email }}
+                            <strong>{% trans "Email:" %}</strong> {{ customuser.email }}
                         </p>
                         <p class="mb-3">
                             <span class="icon" aria-hidden="true">
@@ -349,11 +349,11 @@
                                     <i class="fas fa-exclamation-circle has-text-warning"></i>
                                 {% endif %}
                             </span>
-                            <strong>Email Status:</strong>
+                            <strong>{% trans "Email Status:" %}</strong>
                             {% if customuser.email_confirmed %}
-                                <span class="tag is-success is-light">Confirmed</span>
+                                <span class="tag is-success is-light">{% trans "Confirmed" %}</span>
                             {% else %}
-                                <span class="tag is-warning is-light">Not Confirmed</span>
+                                <span class="tag is-warning is-light">{% trans "Not Confirmed" %}</span>
                             {% endif %}
                         </p>
                         {% if rate_limit %}
@@ -362,14 +362,14 @@
                                     <span class="icon" aria-hidden="true">
                                         <i class="fas fa-tachometer-alt"></i>
                                     </span>
-                                    <strong>Daily API Usage:</strong>
+                                    <strong>{% trans "Daily API Usage:" %}</strong>
                                     {{ rate_limit.used|intcomma }} / {{ rate_limit.limit|intcomma }}
-                                    <span class="has-text-grey is-size-7">({{ rate_limit.remaining|intcomma }} remaining)</span>
+                                    <span class="has-text-grey is-size-7">{% blocktrans with remaining=rate_limit.remaining|intcomma %}({{ remaining }} remaining){% endblocktrans %}</span>
                                 </p>
                                 <progress class="progress {% if rate_limit.percent_used >= 90 %}is-danger{% elif rate_limit.percent_used >= 70 %}is-warning{% else %}is-info{% endif %} is-small"
                                           value="{{ rate_limit.used }}"
                                           max="{{ rate_limit.limit }}"
-                                          title="{{ rate_limit.percent_used }}% used">
+                                          title="{% blocktrans with pct=rate_limit.percent_used %}{{ pct }}% used{% endblocktrans %}">
                                     {{ rate_limit.percent_used }}%
                                 </progress>
                             </div>
@@ -379,9 +379,9 @@
                                 <span class="icon" aria-hidden="true">
                                     <i class="fas fa-heart has-text-danger"></i>
                                 </span>
-                                <strong>Supporter Status:</strong>
+                                <strong>{% trans "Supporter Status:" %}</strong>
                                 <span class="tag is-success is-light">{{ supporter_tier_display }}</span>
-                                <span class="has-text-grey is-size-7">(elevated rate limit until {{ supporter_until|date:"N j, Y" }})</span>
+                                <span class="has-text-grey is-size-7">{% blocktrans with until=supporter_until|date:"N j, Y" %}(elevated rate limit until {{ until }}){% endblocktrans %}</span>
                             </p>
                         {% endif %}
                         <div class="buttons mt-4">
@@ -390,7 +390,7 @@
                                 <span class="icon">
                                     <i class="fas fa-user-cog"></i>
                                 </span>
-                                <span>Manage Settings</span>
+                                <span>{% trans "Manage Settings" %}</span>
                             </a>
                         </div>
                     </div>
@@ -408,7 +408,7 @@
                             <span class="icon has-text-info" aria-hidden="true">
                                 <i class="fas fa-book-open"></i>
                             </span>
-                            Recent Reading Activity
+                            {% trans "Recent Reading Activity" %}
                         </h3>
                     </div>
                 </div>
@@ -420,7 +420,7 @@
                                 <span class="icon is-small">
                                     <i class="fas fa-history"></i>
                                 </span>
-                                <span>View Full History</span>
+                                <span>{% trans "View Full History" %}</span>
                             </a>
                         </div>
                     </div>
@@ -439,7 +439,7 @@
                                             {% endthumbnail %}
                                         {% else %}
                                             <img src="{% static 'site/img/image-not-found.webp' %}"
-                                                 alt="No cover available"
+                                                 alt="{% trans 'No cover available' %}"
                                                  loading="lazy">
                                         {% endif %}
                                     </a>
@@ -483,24 +483,24 @@
     {% if customuser.pk == request.user.pk and not customuser.bio %}
         <div class="notification is-primary is-light">
             <button class="delete"
-                    aria-label="close"
+                    aria-label="{% trans 'close' %}"
                     onclick="this.parentElement.remove();"></button>
             <p class="has-text-weight-bold mb-2">
                 <span class="icon">
                     <i class="fas fa-star"></i>
                 </span>
-                Welcome to Metron!
+                {% trans "Welcome to Metron!" %}
             </p>
             <div class="content">
-                <p>Here are some helpful resources to get you started:</p>
+                <p>{% trans "Here are some helpful resources to get you started:" %}</p>
                 <ul>
                     <li>
-                        <a href="{% url 'wiki:root' %}">Wiki</a> - Learn how to contribute to the database and explore our developer API
+                        <a href="{% url 'wiki:root' %}">{% trans "Wiki" %}</a> - {% trans "Learn how to contribute to the database and explore our developer API" %}
                     </li>
                     <li>
                         <a href="https://github.com/Metron-Project/metron/discussions"
                            target="_blank"
-                           rel="noopener noreferrer">Community Discussions</a> - Join the conversation
+                           rel="noopener noreferrer">{% trans "Community Discussions" %}</a> - {% trans "Join the conversation" %}
                     </li>
                 </ul>
             </div>

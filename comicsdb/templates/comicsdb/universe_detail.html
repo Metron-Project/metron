@@ -1,6 +1,6 @@
 {% extends parent_template|default:"base.html" %}
 {% load thumbnail %}
-{% load static %}
+{% load i18n static %}
 {% load humanize %}
 {% block title %}
     {{ universe.name }}
@@ -11,31 +11,31 @@
         <h1 class="title">{{ universe }}</h1>
     </header>
     {# Navigation Bar #}
-    <nav class="level mb-5" aria-label="Universe navigation">
+    <nav class="level mb-5" aria-label="{% trans 'Universe navigation' %}">
         <div class="level-left">
             {% if navigation.previous_universe %}
                 <a class="button is-link"
                    href="{% url 'universe:detail' navigation.previous_universe.slug %}"
-                   aria-label="Go to {{ navigation.previous_universe }}">
+                   aria-label="{% blocktrans with previous_universe=navigation.previous_universe %}Go to {{ previous_universe }}{% endblocktrans %}">
                     <span class="icon is-small"><i class="fas fa-arrow-left" aria-hidden="true"></i></span>
-                    <span>Previous Universe</span>
+                    <span>{% trans "Previous Universe" %}</span>
                 </a>
             {% else %}
                 <button class="button" disabled aria-disabled="true">
                     <span class="icon is-small"><i class="fas fa-arrow-left" aria-hidden="true"></i></span>
-                    <span>Previous Universe</span>
+                    <span>{% trans "Previous Universe" %}</span>
                 </button>
             {% endif %}
             {% if navigation.next_universe %}
                 <a class="button is-link ml-2"
                    href="{% url 'universe:detail' navigation.next_universe.slug %}"
-                   aria-label="Go to {{ navigation.next_universe }}">
-                    <span>Next Universe</span>
+                   aria-label="{% blocktrans with next_universe=navigation.next_universe %}Go to {{ next_universe }}{% endblocktrans %}">
+                    <span>{% trans "Next Universe" %}</span>
                     <span class="icon is-small"><i class="fas fa-arrow-right" aria-hidden="true"></i></span>
                 </a>
             {% else %}
                 <button class="button ml-2" disabled aria-disabled="true">
-                    <span>Next Universe</span>
+                    <span>{% trans "Next Universe" %}</span>
                     <span class="icon is-small"><i class="fas fa-arrow-right" aria-hidden="true"></i></span>
                 </button>
             {% endif %}
@@ -45,9 +45,9 @@
                 <div class="buttons">
                     <a class="button is-primary"
                        href="{% url 'universe:create' %}"
-                       title="Add a new universe">
+                       title="{% trans 'Add a new universe' %}">
                         <span class="icon is-small"><i class="fas fa-plus" aria-hidden="true"></i></span>
-                        <span>New</span>
+                        <span>{% trans "New" %}</span>
                     </a>
                     <div class="dropdown is-right" id="universe-actions-dropdown">
                         <div class="dropdown-trigger">
@@ -55,7 +55,7 @@
                                     aria-haspopup="true"
                                     aria-controls="universe-actions-menu"
                                     hx-on:click="document.getElementById('universe-actions-dropdown').classList.toggle('is-active')">
-                                <span>Actions</span>
+                                <span>{% trans "Actions" %}</span>
                                 <span class="icon is-small"><i class="fas fa-angle-down" aria-hidden="true"></i></span>
                             </button>
                         </div>
@@ -64,19 +64,19 @@
                                 <a class="dropdown-item"
                                    href="{% url 'universe:update' universe.slug %}">
                                     <span class="icon is-small"><i class="fas fa-edit" aria-hidden="true"></i></span>
-                                    <span>Edit</span>
+                                    <span>{% trans "Edit" %}</span>
                                 </a>
                                 <a class="dropdown-item"
                                    href="{% url 'universe:history' universe.slug %}">
                                     <span class="icon is-small"><i class="fas fa-history" aria-hidden="true"></i></span>
-                                    <span>History</span>
+                                    <span>{% trans "History" %}</span>
                                 </a>
                                 {% if perms.comicsdb.delete_universe %}
                                     <hr class="dropdown-divider">
                                     <a class="dropdown-item has-text-danger"
                                        href="{% url 'universe:delete' universe.slug %}">
                                         <span class="icon is-small"><i class="fas fa-trash" aria-hidden="true"></i></span>
-                                        <span>Delete</span>
+                                        <span>{% trans "Delete" %}</span>
                                     </a>
                                 {% endif %}
                             </div>
@@ -110,7 +110,7 @@
                         {% endthumbnail %}
                     {% else %}
                         <img src="{% static 'site/img/image-not-found.webp' %}"
-                             alt="No image for {{ universe.name }}"
+                             alt="{% blocktrans %}No image for {{ universe.name }}{% endblocktrans %}"
                              loading="lazy">
                     {% endif %}
                 </figure>
@@ -120,21 +120,21 @@
         <div class="column">
             {# Summary #}
             <div class="box">
-                <h2 class="title is-5">Summary</h2>
+                <h2 class="title is-5">{% trans "Summary" %}</h2>
                 {% if universe.desc %}
                     <div class="content">{{ universe.desc|linebreaksbr }}</div>
                 {% else %}
-                    <p class="has-text-grey">No information available.</p>
+                    <p class="has-text-grey">{% trans "No information available." %}</p>
                 {% endif %}
                 <footer class="content is-small is-italic mt-4">
-                    Last edited on <time datetime="{{ universe.modified|date:'c' }}">{{ universe.modified }}</time> by
+                    {% blocktrans with modified_time=universe.modified %}Last edited on <time datetime="{{ modified_time|date:'c' }}">{{ modified_time }}</time> by{% endblocktrans %}
                     <a href="{% url 'user-detail' username=universe.edited_by.username %}">{{ universe.edited_by.username }}</a>
                 </footer>
             </div>
             {# Characters #}
             {% if universe.character_count > 0 %}
                 <div class="box">
-                    <h2 class="title is-5">Character{{ universe.character_count|pluralize }} ({{ universe.character_count }})</h2>
+                    <h2 class="title is-5">{% blocktrans count counter=universe.character_count %}Character ({{ counter }}){% plural %}Characters ({{ counter }}){% endblocktrans %}</h2>
                     <div class="columns is-multiline" id="characters-container">
                         {% for character in universe.characters.all|slice:":30" %}
                             <div class="column is-4">
@@ -153,7 +153,7 @@
                                             {% else %}
                                                 <img class="is-rounded"
                                                      src="{% static 'site/img/creator-not-found.webp' %}"
-                                                     alt="No image for {{ character }}"
+                                                     alt="{% blocktrans %}No image for {{ character }}{% endblocktrans %}"
                                                      loading="lazy">
                                             {% endif %}
                                         </div>
@@ -173,7 +173,7 @@
                                     hx-target="#characters-container"
                                     hx-swap="beforeend"
                                     hx-indicator="#characters-spinner">
-                                <span>Load More Characters</span>
+                                <span>{% trans "Load More Characters" %}</span>
                             </button>
                             <span id="characters-spinner" class="htmx-indicator ml-2">
                                 <i class="fas fa-spinner fa-spin"></i>
@@ -185,7 +185,7 @@
             {# Teams #}
             {% if universe.team_count > 0 %}
                 <div class="box">
-                    <h2 class="title is-5">Team{{ universe.team_count|pluralize }} ({{ universe.team_count }})</h2>
+                    <h2 class="title is-5">{% blocktrans count counter=universe.team_count %}Team ({{ counter }}){% plural %}Teams ({{ counter }}){% endblocktrans %}</h2>
                     <div class="columns is-multiline" id="teams-container">
                         {% for team in universe.teams.all|slice:":30" %}
                             <div class="column is-4">
@@ -204,7 +204,7 @@
                                             {% else %}
                                                 <img class="is-rounded"
                                                      src="{% static 'site/img/creator-not-found.webp' %}"
-                                                     alt="No image for {{ team }}"
+                                                     alt="{% blocktrans %}No image for {{ team }}{% endblocktrans %}"
                                                      loading="lazy">
                                             {% endif %}
                                         </div>
@@ -224,7 +224,7 @@
                                     hx-target="#teams-container"
                                     hx-swap="beforeend"
                                     hx-indicator="#teams-spinner">
-                                <span>Load More Teams</span>
+                                <span>{% trans "Load More Teams" %}</span>
                             </button>
                             <span id="teams-spinner" class="htmx-indicator ml-2">
                                 <i class="fas fa-spinner fa-spin"></i>
@@ -236,7 +236,7 @@
             {# Series Appearances #}
             {% if appearances %}
                 <div class="box">
-                    <h2 class="title is-5">Series Appearances ({{ series_count }})</h2>
+                    <h2 class="title is-5">{% blocktrans %}Series Appearances ({{ series_count }}){% endblocktrans %}</h2>
                     <div class="content">
                         <ul id="series-list">
                             {% for series in appearances %}
@@ -250,12 +250,12 @@
                                         {% elif series.issues__series__series_type == 8 %}
                                             HC
                                         {% elif series.issues__series__series_type == 12 %}
-                                            Digital
+                                            {% trans "Digital" %}
                                         {% endif %}
                                         ({{ series.issues__series__year_began }})
                                     </a>:
                                     <a href="{% url 'universe:series' universe=universe.slug series=series.issues__series__slug %}">
-                                        {{ series.issues__count }} issue{{ series.issues__count|pluralize }}
+                                        {% blocktrans count counter=series.issues__count %}{{ counter }} issue{% plural %}{{ counter }} issues{% endblocktrans %}
                                     </a>
                                 </li>
                             {% endfor %}
@@ -267,7 +267,7 @@
                                         hx-target="#series-list"
                                         hx-swap="beforeend"
                                         hx-indicator="#series-spinner">
-                                    <span>Load More Series</span>
+                                    <span>{% trans "Load More Series" %}</span>
                                 </button>
                                 <span id="series-spinner" class="htmx-indicator ml-2">
                                     <i class="fas fa-spinner fa-spin"></i>
@@ -287,19 +287,19 @@
         {# Metadata Sidebar #}
         <div class="column is-one-fifth">
             <div class="box">
-                <h2 class="title is-6">Universe Details</h2>
+                <h2 class="title is-6">{% trans "Universe Details" %}</h2>
                 <dl>
-                    <dt class="has-text-weight-bold">Publisher:</dt>
+                    <dt class="has-text-weight-bold">{% trans "Publisher:" %}</dt>
                     <dd class="mb-3">
                         <a href="{% url 'publisher:detail' universe.publisher.slug %}">{{ universe.publisher }}</a>
                     </dd>
                     {% if universe.total_issue_count > 0 %}
-                        <dt class="has-text-weight-bold">Number of Issues:</dt>
+                        <dt class="has-text-weight-bold">{% trans "Number of Issues:" %}</dt>
                         <dd class="mb-3">
                             {{ universe.total_issue_count|intcomma }}
                         </dd>
                         {% with first=universe.first_appearance %}
-                            <dt class="has-text-weight-bold">First Appearance:</dt>
+                            <dt class="has-text-weight-bold">{% trans "First Appearance:" %}</dt>
                             <dd class="mb-3">
                                 <a href="{% url 'issue:detail' first.slug %}">{{ first }}</a>
                             </dd>
@@ -309,22 +309,22 @@
             </div>
             {# Identification Numbers #}
             <div class="box">
-                <h2 class="title is-6">Identification Numbers</h2>
+                <h2 class="title is-6">{% trans "Identification Numbers" %}</h2>
                 <dl>
-                    <dt class="has-text-weight-bold">Metron:</dt>
+                    <dt class="has-text-weight-bold">{% trans "Metron:" %}</dt>
                     <dd class="mb-2 is-flex is-align-items-center is-justify-content-space-between">
                         <span class="is-family-monospace">{{ universe.id }}</span>
                         <button type="button"
                                 class="button is-small is-light copy-id"
                                 data-copy="{{ universe.id }}"
-                                title="Copy Metron ID"
-                                aria-label="Copy Metron ID">
+                                title="{% trans 'Copy Metron ID' %}"
+                                aria-label="{% trans 'Copy Metron ID' %}">
                             <span class="icon is-small"><i class="fas fa-copy"></i></span>
                         </button>
                     </dd>
                     {% if universe.gcd_id %}
                         <dt class="has-text-weight-bold">
-                            <abbr title="Grand Comics Database">GCD</abbr>:
+                            <abbr title="{% trans 'Grand Comics Database' %}">GCD</abbr>:
                         </dt>
                         <dd class="is-flex is-align-items-center is-justify-content-space-between">
                             <a class="is-family-monospace"
@@ -337,8 +337,8 @@
                             <button type="button"
                                     class="button is-small is-light copy-id"
                                     data-copy="{{ universe.gcd_id }}"
-                                    title="Copy GCD ID"
-                                    aria-label="Copy GCD ID">
+                                    title="{% trans 'Copy GCD ID' %}"
+                                    aria-label="{% trans 'Copy GCD ID' %}">
                                 <span class="icon is-small"><i class="fas fa-copy"></i></span>
                             </button>
                         </dd>

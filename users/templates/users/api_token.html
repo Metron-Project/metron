@@ -1,6 +1,7 @@
 {% extends parent_template|default:"base.html" %}
+{% load i18n %}
 {% block title %}
-    API Tokens - Metron
+    {% trans "API Tokens - Metron" %}
 {% endblock title %}
 {% block content %}
     {# Page Header #}
@@ -8,8 +9,8 @@
         <span class="icon is-large has-text-info">
             <i class="fas fa-key fa-3x"></i>
         </span>
-        <h1 class="title is-3 mt-4">API Tokens</h1>
-        <p class="subtitle has-text-grey">Manage the tokens used to authenticate scripts and apps against the Metron API</p>
+        <h1 class="title is-3 mt-4">{% trans "API Tokens" %}</h1>
+        <p class="subtitle has-text-grey">{% trans "Manage the tokens used to authenticate scripts and apps against the Metron API" %}</p>
     </header>
     <div class="columns is-centered">
         <div class="column is-two-thirds">
@@ -20,7 +21,7 @@
                         <span class="icon">
                             <i class="fas fa-exclamation-circle"></i>
                         </span>
-                        Copy your new token now — it won't be shown again
+                        {% trans "Copy your new token now — it won't be shown again" %}
                     </p>
                     <div class="field has-addons">
                         <div class="control is-expanded">
@@ -35,12 +36,12 @@
                             <button type="button"
                                     class="button copy-id"
                                     data-copy="{{ new_token }}"
-                                    title="Copy token"
-                                    aria-label="Copy token">
+                                    title="{% trans 'Copy token' %}"
+                                    aria-label="{% trans 'Copy token' %}">
                                 <span class="icon">
                                     <i class="fas fa-copy"></i>
                                 </span>
-                                <span>Copy</span>
+                                <span>{% trans "Copy" %}</span>
                             </button>
                         </div>
                     </div>
@@ -48,7 +49,7 @@
             {% endif %}
             {# Create Token Form #}
             <div class="box">
-                <h2 class="title is-5">Generate a New Token</h2>
+                <h2 class="title is-5">{% trans "Generate a New Token" %}</h2>
                 <form method="post">
                     {% csrf_token %}
                     <div class="field has-addons">
@@ -57,32 +58,33 @@
                                    type="text"
                                    name="name"
                                    maxlength="64"
-                                   placeholder="Optional label, e.g. &quot;Mokkari script&quot;">
+                                   placeholder="{% trans 'Optional label, e.g. &quot;Mokkari script&quot;' %}">
                         </div>
                         <div class="control">
                             <button class="button is-primary" type="submit">
                                 <span class="icon">
                                     <i class="fas fa-plus"></i>
                                 </span>
-                                <span>Generate Token</span>
+                                <span>{% trans "Generate Token" %}</span>
                             </button>
                         </div>
                     </div>
                 </form>
                 <p class="help">
-                    Send it as <code>Authorization: Bearer &lt;token&gt;</code>. Tokens don't expire by default — revoke one below if you no longer need it.
+                    {% blocktrans %}Send it as <code>Authorization: Bearer &lt;token&gt;</code>. Tokens don't expire by default — revoke one below if you no longer need it.{% endblocktrans %}
                 </p>
             </div>
             {# Existing Tokens #}
             <div class="box">
-                <h2 class="title is-5">Your Tokens</h2>
+                <h2 class="title is-5">{% trans "Your Tokens" %}</h2>
                 {% if tokens %}
+                    {% trans "Never" as never_text %}
                     <table class="table is-fullwidth is-hoverable">
                         <thead>
                             <tr>
-                                <th>Name</th>
-                                <th>Created</th>
-                                <th>Expires</th>
+                                <th>{% trans "Name" %}</th>
+                                <th>{% trans "Created" %}</th>
+                                <th>{% trans "Expires" %}</th>
                                 <th></th>
                             </tr>
                         </thead>
@@ -91,17 +93,17 @@
                                 <tr>
                                     <td>{{ token.name|default:"—" }}</td>
                                     <td>{{ token.created|date:"N j, Y" }}</td>
-                                    <td>{{ token.expiry|date:"N j, Y"|default:"Never" }}</td>
+                                    <td>{{ token.expiry|date:"N j, Y"|default:never_text }}</td>
                                     <td class="has-text-right">
                                         <form method="post"
                                               action="{% url 'revoke_api_token' digest=token.digest %}"
-                                              onsubmit="return confirm('Revoke this token? Any application using it will stop working immediately.');">
+                                              onsubmit="return confirm('{% filter escapejs %}{% trans "Revoke this token? Any application using it will stop working immediately." %}{% endfilter %}');">
                                             {% csrf_token %}
                                             <button class="button is-small is-danger is-outlined" type="submit">
                                                 <span class="icon">
                                                     <i class="fas fa-trash-alt"></i>
                                                 </span>
-                                                <span>Revoke</span>
+                                                <span>{% trans "Revoke" %}</span>
                                             </button>
                                         </form>
                                     </td>
@@ -110,7 +112,7 @@
                         </tbody>
                     </table>
                 {% else %}
-                    <p class="has-text-grey">You don't have any API tokens yet.</p>
+                    <p class="has-text-grey">{% trans "You don't have any API tokens yet." %}</p>
                 {% endif %}
             </div>
             {# Cancel Link #}
@@ -120,7 +122,7 @@
                     <span class="icon is-small">
                         <i class="fas fa-arrow-left"></i>
                     </span>
-                    <span>Back to Profile</span>
+                    <span>{% trans "Back to Profile" %}</span>
                 </a>
             </p>
         </div>
@@ -135,7 +137,7 @@
                     const value = this.getAttribute('data-copy');
                     navigator.clipboard.writeText(value).then(() => {
                         const originalText = this.innerHTML;
-                        this.innerHTML = '<span class="icon"><i class="fas fa-check"></i></span><span>Copied</span>';
+                        this.innerHTML = '<span class="icon"><i class="fas fa-check"></i></span><span>{% filter escapejs %}{% trans "Copied" %}{% endfilter %}</span>';
                         setTimeout(() => {
                             this.innerHTML = originalText;
                         }, 2000);

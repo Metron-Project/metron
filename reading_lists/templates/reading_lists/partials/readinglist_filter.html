@@ -1,3 +1,4 @@
+{% load i18n %}
 <div class="box mb-5" id="filter-panel">
     <form method="get" accept-charset="utf-8">
         <div class="is-flex is-justify-content-space-between is-align-items-center mb-4">
@@ -6,7 +7,7 @@
                     <span class="icon has-text-link">
                         <i class="fas fa-search"></i>
                     </span>
-                    <span>Search Reading Lists</span>
+                    <span>{% trans "Search Reading Lists" %}</span>
                 </span>
             </h2>
             {% if has_active_filters %}
@@ -14,26 +15,26 @@
                     <span class="icon">
                         <i class="fas fa-filter"></i>
                     </span>
-                    <span>Filters Active</span>
+                    <span>{% trans "Filters Active" %}</span>
                 </span>
             {% endif %}
         </div>
         {# Quick Search Field #}
         <div class="field">
-            <label class="label" for="q">Quick Search</label>
+            <label class="label" for="q">{% trans "Quick Search" %}</label>
             <div class="control has-icons-left">
                 <input class="input"
                        type="text"
                        id="q"
                        name="q"
                        value="{{ request.GET.q }}"
-                       placeholder="Search by list name..."
-                       aria-label="Quick search">
+                       placeholder="{% trans 'Search by list name...' %}"
+                       aria-label="{% trans 'Quick search' %}">
                 <span class="icon is-small is-left">
                     <i class="fas fa-search"></i>
                 </span>
             </div>
-            <p class="help">Search by reading list name</p>
+            <p class="help">{% trans "Search by reading list name" %}</p>
         </div>
         {# Collapsible Advanced Filters #}
         <details>
@@ -42,22 +43,22 @@
                     <span class="icon">
                         <i class="fas fa-sliders-h"></i>
                     </span>
-                    <span>Advanced Filters</span>
+                    <span>{% trans "Advanced Filters" %}</span>
                 </span>
             </summary>
             <div class="columns is-multiline">
                 {# List Name Filter #}
                 <div class="column is-half">
                     <div class="field">
-                        <label class="label" for="name">List Name</label>
+                        <label class="label" for="name">{% trans "List Name" %}</label>
                         <div class="control has-icons-left">
                             <input class="input"
                                    type="text"
                                    id="name"
                                    name="name"
                                    value="{{ request.GET.name }}"
-                                   placeholder="e.g., Marvel Reading Order"
-                                   aria-label="Filter by list name">
+                                   placeholder="{% trans 'e.g., Marvel Reading Order' %}"
+                                   aria-label="{% trans 'Filter by list name' %}">
                             <span class="icon is-small is-left">
                                 <i class="fas fa-list"></i>
                             </span>
@@ -67,15 +68,15 @@
                 {# Creator/Username Filter #}
                 <div class="column is-half">
                     <div class="field">
-                        <label class="label" for="username">Creator</label>
+                        <label class="label" for="username">{% trans "Creator" %}</label>
                         <div class="control has-icons-left">
                             <input class="input"
                                    type="text"
                                    id="username"
                                    name="username"
                                    value="{{ request.GET.username }}"
-                                   placeholder="e.g., Metron"
-                                   aria-label="Filter by creator username">
+                                   placeholder="{% trans 'e.g., Metron' %}"
+                                   aria-label="{% trans 'Filter by creator username' %}">
                             <span class="icon is-small is-left">
                                 <i class="fas fa-user"></i>
                             </span>
@@ -85,15 +86,15 @@
                 {# Publisher Filter #}
                 <div class="column is-half">
                     <div class="field">
-                        <label class="label" for="publisher">Publisher</label>
+                        <label class="label" for="publisher">{% trans "Publisher" %}</label>
                         <div class="control has-icons-left">
                             <input class="input"
                                    type="text"
                                    id="publisher"
                                    name="publisher"
                                    value="{{ request.GET.publisher }}"
-                                   placeholder="e.g., Marvel"
-                                   aria-label="Filter by publisher">
+                                   placeholder="{% trans 'e.g., Marvel' %}"
+                                   aria-label="{% trans 'Filter by publisher' %}">
                             <span class="icon is-small is-left">
                                 <i class="fas fa-building"></i>
                             </span>
@@ -103,11 +104,11 @@
                 {# List Type Filter #}
                 <div class="column is-half">
                     <div class="field">
-                        <label class="label" for="list_type">List Type</label>
+                        <label class="label" for="list_type">{% trans "List Type" %}</label>
                         <div class="control has-icons-left">
                             <div class="select is-fullwidth">
-                                <select id="list_type" name="list_type" aria-label="Filter by list type">
-                                    <option value="">All Types</option>
+                                <select id="list_type" name="list_type" aria-label="{% trans 'Filter by list type' %}">
+                                    <option value="">{% trans "All Types" %}</option>
                                     {% for value, label in list_types %}
                                         <option value="{{ value }}"
                                                 {% if request.GET.list_type == value %}selected{% endif %}>
@@ -125,13 +126,13 @@
                 {# Attribution Source Filter #}
                 <div class="column is-half">
                     <div class="field">
-                        <label class="label" for="attribution_source">Attribution Source</label>
+                        <label class="label" for="attribution_source">{% trans "Attribution Source" %}</label>
                         <div class="control has-icons-left">
                             <div class="select is-fullwidth">
                                 <select id="attribution_source"
                                         name="attribution_source"
-                                        aria-label="Filter by attribution source">
-                                    <option value="">All Sources</option>
+                                        aria-label="{% trans 'Filter by attribution source' %}">
+                                    <option value="">{% trans "All Sources" %}</option>
                                     {% for value, label in attribution_sources %}
                                         <option value="{{ value }}"
                                                 {% if request.GET.attribution_source == value %}selected{% endif %}>
@@ -149,32 +150,32 @@
                 {# Minimum Rating Filter #}
                 <div class="column is-half">
                     <div class="field">
-                        <label class="label" for="average_rating__gte">Minimum Rating</label>
+                        <label class="label" for="average_rating__gte">{% trans "Minimum Rating" %}</label>
                         <div class="control has-icons-left">
                             <div class="select is-fullwidth">
                                 <select id="average_rating__gte"
                                         name="average_rating__gte"
-                                        aria-label="Filter by minimum rating">
-                                    <option value="">All Ratings</option>
+                                        aria-label="{% trans 'Filter by minimum rating' %}">
+                                    <option value="">{% trans "All Ratings" %}</option>
                                     <option value="1"
                                             {% if request.GET.average_rating__gte == "1" %}selected{% endif %}>
-                                        1+ Stars
+                                        {% trans "1+ Stars" %}
                                     </option>
                                     <option value="2"
                                             {% if request.GET.average_rating__gte == "2" %}selected{% endif %}>
-                                        2+ Stars
+                                        {% trans "2+ Stars" %}
                                     </option>
                                     <option value="3"
                                             {% if request.GET.average_rating__gte == "3" %}selected{% endif %}>
-                                        3+ Stars
+                                        {% trans "3+ Stars" %}
                                     </option>
                                     <option value="4"
                                             {% if request.GET.average_rating__gte == "4" %}selected{% endif %}>
-                                        4+ Stars
+                                        {% trans "4+ Stars" %}
                                     </option>
                                     <option value="5"
                                             {% if request.GET.average_rating__gte == "5" %}selected{% endif %}>
-                                        5 Stars
+                                        {% trans "5 Stars" %}
                                     </option>
                                 </select>
                             </div>
@@ -188,18 +189,18 @@
                 {% if user.is_authenticated %}
                     <div class="column is-half">
                         <div class="field">
-                            <label class="label" for="is_private">Privacy</label>
+                            <label class="label" for="is_private">{% trans "Privacy" %}</label>
                             <div class="control has-icons-left">
                                 <div class="select is-fullwidth">
-                                    <select id="is_private" name="is_private" aria-label="Filter by privacy">
-                                        <option value="">All Lists</option>
+                                    <select id="is_private" name="is_private" aria-label="{% trans 'Filter by privacy' %}">
+                                        <option value="">{% trans "All Lists" %}</option>
                                         <option value="false"
                                                 {% if request.GET.is_private == "false" %}selected{% endif %}>
-                                            Public
+                                            {% trans "Public" %}
                                         </option>
                                         <option value="true"
                                                 {% if request.GET.is_private == "true" %}selected{% endif %}>
-                                            Private
+                                            {% trans "Private" %}
                                         </option>
                                     </select>
                                 </div>
@@ -219,17 +220,17 @@
                     <span class="icon">
                         <i class="fas fa-search"></i>
                     </span>
-                    <span>Apply Filters</span>
+                    <span>{% trans "Apply Filters" %}</span>
                 </button>
             </div>
             <div class="control">
                 <a class="button is-light"
                    href="{% url 'reading-list:list' %}"
-                   title="Clear all filters">
+                   title="{% trans 'Clear all filters' %}">
                     <span class="icon">
                         <i class="fas fa-times"></i>
                     </span>
-                    <span>Clear Filters</span>
+                    <span>{% trans "Clear Filters" %}</span>
                 </a>
             </div>
         </div>

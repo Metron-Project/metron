@@ -1,3 +1,4 @@
+{% load i18n %}
 {% comment %}
    result sort control.
    Submits on change (method="get", no action -> posts back to the current page).
@@ -8,7 +9,7 @@
 {% endcomment %}
 <form method="get"
       class="field is-grouped is-align-items-center mb-0"
-      aria-label="Sort issues">
+      aria-label="{% trans 'Sort issues' %}">
     {% for key, values in request.GET.lists %}
         {% if key != "sort" and key != "page" %}
             {% for value in values %}
@@ -16,13 +17,13 @@
             {% endfor %}
         {% endif %}
     {% endfor %}
-    <label class="label mb-0 mr-2" for="issue-sort-select">Sort</label>
+    <label class="label mb-0 mr-2" for="issue-sort-select">{% trans "Sort" %}</label>
     <div class="control">
         <div class="select">
             <select id="issue-sort-select"
                     name="sort"
                     onchange="this.form.submit()"
-                    aria-label="Sort order">
+                    aria-label="{% trans 'Sort order' %}">
                 {% for key, opt in sort_options.items %}
                     <option value="{{ key }}"
                             {% if key == current_sort %}selected{% endif %}>{{ opt.label }}</option>
@@ -32,7 +33,7 @@
     </div>
     <noscript>
         <div class="control">
-            <button type="submit" class="button">Sort</button>
+            <button type="submit" class="button">{% trans "Sort" %}</button>
         </div>
     </noscript>
 </form>

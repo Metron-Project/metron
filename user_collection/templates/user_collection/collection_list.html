@@ -1,9 +1,9 @@
 {% extends parent_template|default:"base.html" %}
-{% load static %}
-{% block title %}My Collection - Metron{% endblock %}
+{% load static i18n %}
+{% block title %}{% trans "My Collection - Metron" %}{% endblock %}
 {% block content %}
     <header class="block has-text-centered">
-        <h1 class="title">My Comic Collection</h1>
+        <h1 class="title">{% trans "My Comic Collection" %}</h1>
     </header>
     <section class="section">
         <div class="container">
@@ -11,7 +11,7 @@
                 <div class="level-left">
                     <div class="level-item">
                         <p class="subtitle is-5">
-                            <strong>{{ page_obj.paginator.count }}</strong> item{{ page_obj.paginator.count|pluralize }} in your collection
+                            {% blocktrans count counter=page_obj.paginator.count %}<strong>{{ counter }}</strong> item in your collection{% plural %}<strong>{{ counter }}</strong> items in your collection{% endblocktrans %}
                         </p>
                     </div>
                 </div>
@@ -21,27 +21,27 @@
                             <a href="{% url 'user_collection:stats' %}"
                                class="button is-info ">
                                 <span class="icon"><i class="fas fa-chart-bar"></i></span>
-                                <span>View Statistics</span>
+                                <span>{% trans "View Statistics" %}</span>
                             </a>
                             <a href="{% url 'user_collection:history' %}"
                                class="button is-success ">
                                 <span class="icon"><i class="fas fa-book-open"></i></span>
-                                <span>Reading History</span>
+                                <span>{% trans "Reading History" %}</span>
                             </a>
                             <a href="{% url 'user_collection:missing-list' %}"
                                class="button is-warning ">
                                 <span class="icon"><i class="fas fa-th-list"></i></span>
-                                <span>Missing Issues</span>
+                                <span>{% trans "Missing Issues" %}</span>
                             </a>
                             <a href="{% url 'user_collection:add-from-series' %}"
                                class="button is-link ">
                                 <span class="icon"><i class="fas fa-layer-group"></i></span>
-                                <span>Add from Series</span>
+                                <span>{% trans "Add from Series" %}</span>
                             </a>
                             <a href="{% url 'user_collection:create' %}"
                                class="button is-primary ">
                                 <span class="icon"><i class="fas fa-plus"></i></span>
-                                <span>Add Issue</span>
+                                <span>{% trans "Add Issue" %}</span>
                             </a>
                         </div>
                     </div>
@@ -59,15 +59,15 @@
                     <table class="table is-fullwidth is-striped is-hoverable">
                         <thead>
                             <tr>
-                                <th>Issue</th>
-                                <th>Cover Date</th>
-                                <th>Format</th>
-                                <th>Grade</th>
-                                <th>Read</th>
-                                <th>Rating</th>
-                                <th>Quantity</th>
-                                <th>Price Paid</th>
-                                <th>Actions</th>
+                                <th>{% trans "Issue" %}</th>
+                                <th>{% trans "Cover Date" %}</th>
+                                <th>{% trans "Format" %}</th>
+                                <th>{% trans "Grade" %}</th>
+                                <th>{% trans "Read" %}</th>
+                                <th>{% trans "Rating" %}</th>
+                                <th>{% trans "Quantity" %}</th>
+                                <th>{% trans "Price Paid" %}</th>
+                                <th>{% trans "Actions" %}</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -85,7 +85,7 @@
                                     <td>
                                         {% if item.grade %}
                                             <span class="tag is-primary is-small"
-                                                  title="{% if item.grading_company %}{{ item.get_grading_company_display }}{% else %}User-assessed{% endif %}">
+                                                  title="{% if item.grading_company %}{{ item.get_grading_company_display }}{% else %}{% trans 'User-assessed' %}{% endif %}">
                                                 {{ item.grade }}
                                                 {% if item.grading_company %}
                                                     <span class="icon is-small ml-1">
@@ -100,11 +100,11 @@
                                     <td>
                                         {% if item.is_read %}
                                             <span class="icon has-text-success"
-                                                  title="Read{% if item.date_read %} on {{ item.date_read|date:'M d, Y' }}{% endif %}">
+                                                  title="{% if item.date_read %}{% blocktrans with read_date=item.date_read|date:'M d, Y' %}Read on {{ read_date }}{% endblocktrans %}{% else %}{% trans 'Read' %}{% endif %}">
                                                 <i class="fas fa-check-circle"></i>
                                             </span>
                                         {% else %}
-                                            <span class="icon has-text-grey-light" title="Unread">
+                                            <span class="icon has-text-grey-light" title="{% trans 'Unread' %}">
                                                 <i class="far fa-circle"></i>
                                             </span>
                                         {% endif %}
@@ -122,21 +122,21 @@
                                         <div class="buttons are-small">
                                             <a href="{% url 'user_collection:detail' item.pk %}"
                                                class="button is-info is-outlined"
-                                               title="View Details">
+                                               title="{% trans 'View Details' %}">
                                                 <span class="icon is-small">
                                                     <i class="fas fa-eye"></i>
                                                 </span>
                                             </a>
                                             <a href="{% url 'user_collection:update' item.pk %}"
                                                class="button is-primary is-outlined"
-                                               title="Edit">
+                                               title="{% trans 'Edit' %}">
                                                 <span class="icon is-small">
                                                     <i class="fas fa-edit"></i>
                                                 </span>
                                             </a>
                                             <a href="{% url 'user_collection:delete' item.pk %}"
                                                class="button is-danger is-outlined"
-                                               title="Remove">
+                                               title="{% trans 'Remove' %}">
                                                 <span class="icon is-small">
                                                     <i class="fas fa-trash"></i>
                                                 </span>
@@ -154,20 +154,20 @@
         <section class="section pt-0">
             <div class="container has-text-centered">
                 {% if has_active_filters %}
-                    <p class="title is-4">No results found</p>
-                    <p class="subtitle">Try adjusting your search filters</p>
+                    <p class="title is-4">{% trans "No results found" %}</p>
+                    <p class="subtitle">{% trans "Try adjusting your search filters" %}</p>
                     <a href="{% url 'user_collection:list' %}"
                        class="button is-light is-medium">
                         <span class="icon"><i class="fas fa-times"></i></span>
-                        <span>Clear All Filters</span>
+                        <span>{% trans "Clear All Filters" %}</span>
                     </a>
                 {% else %}
-                    <p class="title is-4">Your collection is empty</p>
-                    <p class="subtitle">Start adding issues to track your comic collection!</p>
+                    <p class="title is-4">{% trans "Your collection is empty" %}</p>
+                    <p class="subtitle">{% trans "Start adding issues to track your comic collection!" %}</p>
                     <a href="{% url 'user_collection:create' %}"
                        class="button is-primary is-large">
                         <span class="icon"><i class="fas fa-plus"></i></span>
-                        <span>Add Your First Issue</span>
+                        <span>{% trans "Add Your First Issue" %}</span>
                     </a>
                 {% endif %}
             </div>

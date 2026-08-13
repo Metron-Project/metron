@@ -1,10 +1,10 @@
 {% extends parent_template|default:"base.html" %}
 {% load thumbnail %}
-{% load static %}
-{% block title %}Reading History - Metron{% endblock %}
+{% load static i18n %}
+{% block title %}{% trans "Reading History - Metron" %}{% endblock %}
 {% block content %}
     <header class="block has-text-centered">
-        <h1 class="title">My Reading History</h1>
+        <h1 class="title">{% trans "My Reading History" %}</h1>
     </header>
     <section class="section">
         <div class="container">
@@ -12,7 +12,7 @@
                 <div class="level-left">
                     <div class="level-item">
                         <p class="subtitle is-5">
-                            <strong>{{ page_obj.paginator.count }}</strong> issue{{ page_obj.paginator.count|pluralize }} read
+                            {% blocktrans count counter=page_obj.paginator.count %}<strong>{{ counter }}</strong> issue read{% plural %}<strong>{{ counter }}</strong> issues read{% endblocktrans %}
                         </p>
                     </div>
                 </div>
@@ -22,12 +22,12 @@
                             <a href="{% url 'user_collection:stats' %}"
                                class="button is-info ">
                                 <span class="icon"><i class="fas fa-chart-bar"></i></span>
-                                <span>View Statistics</span>
+                                <span>{% trans "View Statistics" %}</span>
                             </a>
                             <a href="{% url 'user_collection:list' %}"
                                class="button is-link ">
                                 <span class="icon"><i class="fas fa-th-list"></i></span>
-                                <span>My Collection</span>
+                                <span>{% trans "My Collection" %}</span>
                             </a>
                         </div>
                     </div>
@@ -52,7 +52,7 @@
                                             <b>{{ first_item.date_read|date:"l" }}</b> {{ first_item.date_read|date:"F j, Y" }}
                                         {% endwith %}
                                     {% else %}
-                                        Date Unknown
+                                        {% trans "Date Unknown" %}
                                     {% endif %}
                                 </span>
                             </span>
@@ -70,7 +70,7 @@
                                                         {% endthumbnail %}
                                                     {% else %}
                                                         <img src="{% static 'site/img/image-not-found.webp' %}"
-                                                             alt="No cover available"
+                                                             alt="{% trans 'No cover available' %}"
                                                              loading="lazy">
                                                     {% endif %}
                                                 </a>
@@ -80,7 +80,7 @@
                                                       style="position: absolute;
                                                              top: 0.5rem;
                                                              right: 0.5rem"
-                                                      title="Read {{ item.read_count }} times">
+                                                      title="{% blocktrans count counter=item.read_count %}Read {{ counter }} time{% plural %}Read {{ counter }} times{% endblocktrans %}">
                                                     <span class="icon is-small"><i class="fas fa-book-reader"></i></span>
                                                     <span>&times;{{ item.read_count }}</span>
                                                 </span>
@@ -118,11 +118,11 @@
                                             </div>
                                             <a href="{% url 'user_collection:detail' item.pk %}"
                                                class="button is-small is-info is-outlined is-fullwidth"
-                                               title="View Details">
+                                               title="{% trans 'View Details' %}">
                                                 <span class="icon is-small">
                                                     <i class="fas fa-eye"></i>
                                                 </span>
-                                                <span>Details</span>
+                                                <span>{% trans "Details" %}</span>
                                             </a>
                                         </div>
                                     </div>
@@ -136,12 +136,12 @@
     {% else %}
         <section class="section pt-0">
             <div class="container has-text-centered">
-                <p class="title is-4">No reading history yet</p>
-                <p class="subtitle">Start reading and marking issues as read to build your reading history!</p>
+                <p class="title is-4">{% trans "No reading history yet" %}</p>
+                <p class="subtitle">{% trans "Start reading and marking issues as read to build your reading history!" %}</p>
                 <a href="{% url 'user_collection:list' %}"
                    class="button is-primary is-large">
                     <span class="icon"><i class="fas fa-book-open"></i></span>
-                    <span>Go to My Collection</span>
+                    <span>{% trans "Go to My Collection" %}</span>
                 </a>
             </div>
         </section>

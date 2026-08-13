@@ -1,9 +1,9 @@
 {% extends parent_template|default:"base.html" %}
-{% load static bulma_tags %}
-{% block title %}Edit Wish List Item - Metron{% endblock %}
+{% load static bulma_tags i18n %}
+{% block title %}{% trans "Edit Wish List Item - Metron" %}{% endblock %}
 {% block content %}
     <header class="block has-text-centered">
-        <h1 class="title">Edit Wish List Item</h1>
+        <h1 class="title">{% trans "Edit Wish List Item" %}</h1>
     </header>
     <section class="section">
         <div class="container">
@@ -47,10 +47,10 @@
                             {% endfor %}
                             <div class="field is-grouped is-grouped-right mt-5">
                                 <div class="control">
-                                    <a href="{% url 'wish-list:detail' %}" class="button">Cancel</a>
+                                    <a href="{% url 'wish-list:detail' %}" class="button">{% trans "Cancel" %}</a>
                                 </div>
                                 <div class="control">
-                                    <button type="submit" class="button is-primary">Save Changes</button>
+                                    <button type="submit" class="button is-primary">{% trans "Save Changes" %}</button>
                                 </div>
                             </div>
                         </form>

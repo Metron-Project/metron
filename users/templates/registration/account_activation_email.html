@@ -1,10 +1,10 @@
-{% autoescape off %}
+{% load i18n %}{% autoescape off %}
     <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
     <html xmlns="http://www.w3.org/1999/xhtml">
         <head>
             <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
             <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-            <title>Activate Your Metron Account</title>
+            <title>{% trans "Activate Your Metron Account" %}</title>
         </head>
         <body style="margin: 0;
                      padding: 0;
@@ -45,19 +45,19 @@
                                                color: #363636;
                                                font-weight: 600;
                                                font-family: Arial, Helvetica, sans-serif">
-                                        Welcome to Metron, {{ user.username }}!
+                                        {% blocktrans with username=user.username %}Welcome to Metron, {{ username }}!{% endblocktrans %}
                                     </h2>
                                     <p style="margin: 0 0 20px 0;
                                               font-size: 16px;
                                               color: #4a4a4a;
                                               font-family: Arial, Helvetica, sans-serif">
-                                        Thank you for joining the Metron Comic Book Database community! We're excited to have you as part of our growing community of comic book enthusiasts.
+                                        {% blocktrans %}Thank you for joining the Metron Comic Book Database community! We're excited to have you as part of our growing community of comic book enthusiasts.{% endblocktrans %}
                                     </p>
                                     <p style="margin: 0 0 30px 0;
                                               font-size: 16px;
                                               color: #4a4a4a;
                                               font-family: Arial, Helvetica, sans-serif">
-                                        To complete your registration and activate your account, please click the button below:
+                                        {% trans "To complete your registration and activate your account, please click the button below:" %}
                                     </p>
                                     <!-- Button -->
                                     <table border="0" cellpadding="0" cellspacing="0" width="100%">
@@ -74,7 +74,7 @@
                                                                       font-weight: 600;
                                                                       color: #ffffff;
                                                                       text-decoration: none;
-                                                                      font-family: Arial, Helvetica, sans-serif">Activate My Account</a>
+                                                                      font-family: Arial, Helvetica, sans-serif">{% trans "Activate My Account" %}</a>
                                                         </td>
                                                     </tr>
                                                 </table>
@@ -94,7 +94,7 @@
                                                           font-size: 14px;
                                                           color: #4a4a4a;
                                                           font-family: Arial, Helvetica, sans-serif">
-                                                    <strong>Button not working?</strong> Copy and paste this link into your browser:
+                                                    <strong>{% trans "Button not working?" %}</strong> {% trans "Copy and paste this link into your browser:" %}
                                                 </p>
                                                 <p style="margin: 0;
                                                           font-size: 13px;
@@ -120,7 +120,7 @@
                                                            font-size: 16px;
                                                            color: #3273dc;
                                                            font-family: Arial, Helvetica, sans-serif">
-                                                    What you can do with your Metron account:
+                                                    {% trans "What you can do with your Metron account:" %}
                                                 </h3>
                                                 <table border="0"
                                                        cellpadding="0"
@@ -131,7 +131,7 @@
                                                                    font-size: 14px;
                                                                    color: #4a4a4a;
                                                                    font-family: Arial, Helvetica, sans-serif">
-                                                            &#8226; Contribute to the comic book database by adding and editing information
+                                                            &#8226; {% trans "Contribute to the comic book database by adding and editing information" %}
                                                         </td>
                                                     </tr>
                                                     <tr>
@@ -139,7 +139,7 @@
                                                                    font-size: 14px;
                                                                    color: #4a4a4a;
                                                                    font-family: Arial, Helvetica, sans-serif">
-                                                            &#8226; Access our comprehensive API for developers
+                                                            &#8226; {% trans "Access our comprehensive API for developers" %}
                                                         </td>
                                                     </tr>
                                                     <tr>
@@ -147,7 +147,7 @@
                                                                    font-size: 14px;
                                                                    color: #4a4a4a;
                                                                    font-family: Arial, Helvetica, sans-serif">
-                                                            &#8226; Join discussions with fellow comic book fans
+                                                            &#8226; {% trans "Join discussions with fellow comic book fans" %}
                                                         </td>
                                                     </tr>
                                                     <tr>
@@ -155,7 +155,7 @@
                                                                    font-size: 14px;
                                                                    color: #4a4a4a;
                                                                    font-family: Arial, Helvetica, sans-serif">
-                                                            &#8226; Help build the most accurate comic book database
+                                                            &#8226; {% trans "Help build the most accurate comic book database" %}
                                                         </td>
                                                     </tr>
                                                 </table>
@@ -187,7 +187,7 @@
                                                           font-size: 14px;
                                                           color: #4a4a4a;
                                                           font-family: Arial, Helvetica, sans-serif">
-                                                    <strong>This link expires in 24 hours.</strong> If you don't activate your account within this time, you'll need to sign up again.
+                                                    <strong>{% trans "This link expires in 24 hours." %}</strong> {% trans "If you don't activate your account within this time, you'll need to sign up again." %}
                                                 </p>
                                             </td>
                                         </tr>
@@ -196,7 +196,7 @@
                                               font-size: 16px;
                                               color: #4a4a4a;
                                               font-family: Arial, Helvetica, sans-serif">
-                                        If you didn't create an account with Metron, you can safely ignore this email.
+                                        {% trans "If you didn't create an account with Metron, you can safely ignore this email." %}
                                     </p>
                                 </td>
                             </tr>
@@ -207,32 +207,33 @@
                                               font-size: 14px;
                                               color: #ffffff;
                                               font-family: Arial, Helvetica, sans-serif">
-                                        <strong>Metron Comic Book Database</strong>
+                                        <strong>{% trans "Metron Comic Book Database" %}</strong>
                                     </p>
                                     <p style="margin: 0 0 15px 0;
                                               font-size: 14px;
                                               color: #b5b5b5;
                                               font-family: Arial, Helvetica, sans-serif">
-                                        A community-driven project for comic book enthusiasts
+                                        {% trans "A community-driven project for comic book enthusiasts" %}
                                     </p>
                                     <p style="margin: 0 0 10px 0;
                                               font-size: 14px;
                                               font-family: Arial, Helvetica, sans-serif">
                                         <a href="https://metron.cloud"
                                            style="color: #3273dc;
-                                                  text-decoration: none">Visit Website</a> &#8226;
+                                                  text-decoration: none">{% trans "Visit Website" %}</a> &#8226;
                                         <a href="https://github.com/Metron-Project/metron"
                                            style="color: #3273dc;
                                                   text-decoration: none">GitHub</a> &#8226;
                                         <a href="mailto:admin@metron.cloud"
                                            style="color: #3273dc;
-                                                  text-decoration: none">Contact Us</a>
+                                                  text-decoration: none">{% trans "Contact Us" %}</a>
                                     </p>
                                     <p style="margin: 15px 0 0 0;
                                               font-size: 12px;
                                               color: #7a7a7a;
                                               font-family: Arial, Helvetica, sans-serif">
-                                        &copy; {% now "Y" %} Metron Project. All rights reserved.
+                                        {% now "Y" as current_year %}
+                                        {% blocktrans %}&copy; {{ current_year }} Metron Project. All rights reserved.{% endblocktrans %}
                                     </p>
                                 </td>
                             </tr>

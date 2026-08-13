@@ -1,13 +1,14 @@
 {% extends parent_template|default:"base.html" %}
+{% load i18n %}
 {% block title %}
-    Signups Disabled - Metron
+    {% trans "Signups Disabled - Metron" %}
 {% endblock title %}
 {% block content %}
     <header class="block has-text-centered mt-6">
         <span class="icon is-large has-text-warning">
             <i class="fas fa-user-slash fa-4x"></i>
         </span>
-        <h1 class="title is-3 mt-4">Signups Disabled</h1>
+        <h1 class="title is-3 mt-4">{% trans "Signups Disabled" %}</h1>
     </header>
     <div class="columns is-centered">
         <div class="column is-half">
@@ -19,12 +20,12 @@
                 </article>
                 <div class="content has-text-centered mt-5">
                     <div class="buttons is-centered">
-                        <a class="button is-link is-medium" href="{% url 'login' %}">Log In</a>
+                        <a class="button is-link is-medium" href="{% url 'login' %}">{% trans "Log In" %}</a>
                         <a class="button is-link is-medium is-outlined" href="{% url 'home' %}">
                             <span class="icon">
                                 <i class="fas fa-home"></i>
                             </span>
-                            <span>Go to Home</span>
+                            <span>{% trans "Go to Home" %}</span>
                         </a>
                     </div>
                 </div>

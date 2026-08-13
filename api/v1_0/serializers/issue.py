@@ -1,6 +1,7 @@
 import json
 from decimal import Decimal
 
+from django.utils.translation import gettext as _
 from djmoney.money import Money
 from drf_spectacular.utils import extend_schema_field
 from rest_framework import serializers
@@ -108,16 +109,19 @@ class PriceField(serializers.Field):
             if amount in (None, ""):
                 return None
 
-            valid_currencies = [c for c, _ in CURRENCY_CHOICES]
+            valid_currencies = [c for c, _name in CURRENCY_CHOICES]
             if currency not in valid_currencies:
                 raise serializers.ValidationError(
-                    f"Invalid currency '{currency}'. Supported: {', '.join(valid_currencies)}"
+                    _("Invalid currency '%(currency)s'. Supported: %(valid)s")
+                    % {"currency": currency, "valid": ", ".join(valid_currencies)}
                 )
 
             try:
                 return Money(Decimal(str(amount)), currency)
             except (ValueError, TypeError) as e:
-                raise serializers.ValidationError(f"Invalid price format: {e}") from e
+                raise serializers.ValidationError(
+                    _("Invalid price format: %(error)s") % {"error": e}
+                ) from e
 
         # Handle simple decimal/string format (backward compatible)
         # Convert to string and strip whitespace
@@ -128,7 +132,9 @@ class PriceField(serializers.Field):
         try:
             return Money(Decimal(data_str), "USD")
         except (ValueError, TypeError) as e:
-            raise serializers.ValidationError(f"Invalid price format: {e}") from e
+            raise serializers.ValidationError(
+                _("Invalid price format: %(error)s") % {"error": e}
+            ) from e
 
 
 class VariantsIssueSerializer(serializers.ModelSerializer):

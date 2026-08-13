@@ -6,25 +6,27 @@ params exposed by SeriesViewFilter.
 
 from urllib.parse import urlencode
 
+from django.utils.translation import gettext_lazy as _
+
 from comicsdb.models import Series, SeriesType
 
 _NON_FILTER_PARAMS = {"page"}
 
 FILTER_LABELS = {
-    "q": "Search",
-    "name": "Name",
-    "alt_names": "Alternative Name",
-    "series_type": "Type",
-    "publisher_name": "Publisher",
-    "publisher_id": "Publisher ID",
-    "imprint_name": "Imprint",
-    "imprint_id": "Imprint ID",
-    "year_began": "Year Began",
-    "year_began_gte": "Year Began (from)",
-    "year_began_lte": "Year Began (to)",
-    "year_end": "Year Ended",
-    "status": "Status",
-    "volume": "Volume",
+    "q": _("Search"),
+    "name": _("Name"),
+    "alt_names": _("Alternative Name"),
+    "series_type": _("Type"),
+    "publisher_name": _("Publisher"),
+    "publisher_id": _("Publisher ID"),
+    "imprint_name": _("Imprint"),
+    "imprint_id": _("Imprint ID"),
+    "year_began": _("Year Began"),
+    "year_began_gte": _("Year Began (from)"),
+    "year_began_lte": _("Year Began (to)"),
+    "year_end": _("Year Ended"),
+    "status": _("Status"),
+    "volume": _("Volume"),
 }
 
 _STATUS_LABELS = {str(k): v for k, v in Series.Status.choices}

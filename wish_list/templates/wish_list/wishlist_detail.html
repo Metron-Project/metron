@@ -1,13 +1,13 @@
 {% extends parent_template|default:"base.html" %}
-{% load static %}
-{% block title %}{{ wish_list }} - Metron{% endblock %}
+{% load static i18n %}
+{% block title %}{% blocktrans with name=wish_list %}{{ name }} - Metron{% endblocktrans %}{% endblock %}
 {% block content %}
     <header class="block">
         <h1 class="title">{{ wish_list }}</h1>
     </header>
     {% if is_owner %}
         <div class="box mb-5">
-            <h2 class="title is-5">Add an Issue</h2>
+            <h2 class="title is-5">{% trans "Add an Issue" %}</h2>
             <form method="post">
                 {% csrf_token %}
                 {% if form.non_field_errors %}
@@ -61,7 +61,7 @@
                     <div class="control">
                         <button type="submit" class="button is-primary ">
                             <span class="icon is-small"><i class="fas fa-plus"></i></span>
-                            <span>Add to Wish List</span>
+                            <span>{% trans "Add to Wish List" %}</span>
                         </button>
                     </div>
                 </div>
@@ -70,18 +70,20 @@
     {% endif %}
 
     <div class="box">
-        <h2 class="title is-5">Items ({{ wish_list_items|length }})</h2>
+        <h2 class="title is-5">
+            {% blocktrans with count=wish_list_items|length %}Items ({{ count }}){% endblocktrans %}
+        </h2>
         {% if wish_list_items %}
             <div class="table-container">
                 <table class="table is-fullwidth is-striped is-hoverable">
                     <thead>
                         <tr>
-                            <th>Priority</th>
-                            <th>Issue</th>
-                            <th>Series</th>
-                            <th>Status</th>
-                            <th>Min Grade</th>
-                            <th>Max Price</th>
+                            <th>{% trans "Priority" %}</th>
+                            <th>{% trans "Issue" %}</th>
+                            <th>{% trans "Series" %}</th>
+                            <th>{% trans "Status" %}</th>
+                            <th>{% trans "Min Grade" %}</th>
+                            <th>{% trans "Max Price" %}</th>
                             {% if is_owner %}<th></th>{% endif %}
                         </tr>
                     </thead>
@@ -112,18 +114,18 @@
                                             {% if item.status != 'ACQUIRED' %}
                                                 <a href="{% url 'wish-list:item-acquire' item.pk %}"
                                                    class="button is-success is-outlined"
-                                                   title="Acquire">
+                                                   title="{% trans 'Acquire' %}">
                                                     <span class="icon is-small"><i class="fas fa-shopping-cart"></i></span>
                                                 </a>
                                             {% endif %}
                                             <a href="{% url 'wish-list:item-update' item.pk %}"
                                                class="button is-primary is-outlined"
-                                               title="Edit">
+                                               title="{% trans 'Edit' %}">
                                                 <span class="icon is-small"><i class="fas fa-edit"></i></span>
                                             </a>
                                             <a href="{% url 'wish-list:item-delete' item.pk %}"
                                                class="button is-danger is-outlined"
-                                               title="Remove">
+                                               title="{% trans 'Remove' %}">
                                                 <span class="icon is-small"><i class="fas fa-trash"></i></span>
                                             </a>
                                         </div>
@@ -135,7 +137,7 @@
                 </table>
             </div>
         {% else %}
-            <p class="has-text-grey">No items on this wish list yet.</p>
+            <p class="has-text-grey">{% trans "No items on this wish list yet." %}</p>
         {% endif %}
     </div>
 {% endblock %}

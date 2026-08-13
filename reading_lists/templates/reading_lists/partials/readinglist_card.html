@@ -1,4 +1,4 @@
-{% load thumbnail %}
+{% load thumbnail i18n %}
 <div class="column is-one-third-desktop is-half-tablet">
     <a class="rlc" href="{% url 'reading-list:detail' reading_list.slug %}" data-type="{{ reading_list.list_type }}">
         <div class="rlc__band">
@@ -11,7 +11,7 @@
             {% if reading_list.is_private %}
                 <span class="rlc__private">
                     <span class="icon is-small"><i class="fas fa-lock"></i></span>
-                    <span>Private</span>
+                    <span>{% trans "Private" %}</span>
                 </span>
             {% endif %}
             {% if reading_list.average_rating %}
@@ -22,7 +22,7 @@
             {% endif %}
             <span class="rlc__issues">
                 <span class="icon is-small"><i class="fas fa-book"></i></span>
-                <span>{{ reading_list.issue_count }} issue{{ reading_list.issue_count|pluralize }}</span>
+                <span>{% blocktrans count counter=reading_list.issue_count %}{{ counter }} issue{% plural %}{{ counter }} issues{% endblocktrans %}</span>
             </span>
         </div>
         <div class="rlc__body">
@@ -45,7 +45,7 @@
                 </span>
             {% endif %}
             <div class="rlc__meta">
-                <span class="rlc__by">By <strong>{{ reading_list.user.username }}</strong></span>
+                <span class="rlc__by">{% blocktrans with username=reading_list.user.username %}By <strong>{{ username }}</strong>{% endblocktrans %}</span>
                 {% if reading_list.average_rating %}
                     <span class="rlc__stars">
                         {% for star_num in "12345" %}
@@ -59,9 +59,9 @@
                 {% if reading_list.desc %}
                     <p class="rlc__desc">{{ reading_list.desc|truncatewords:18 }}</p>
                 {% else %}
-                    <p class="rlc__desc rlc__desc--empty">No description</p>
+                    <p class="rlc__desc rlc__desc--empty">{% trans "No description" %}</p>
                 {% endif %}
-                <span class="rlc__updated">Updated {{ reading_list.modified|timesince }} ago</span>
+                <span class="rlc__updated">{% blocktrans with timesince=reading_list.modified|timesince %}Updated {{ timesince }} ago{% endblocktrans %}</span>
             </div>
         </div>
     </a>

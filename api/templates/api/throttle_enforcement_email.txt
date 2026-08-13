@@ -1,36 +1,38 @@
-{% autoescape off %}Hi {{ user.username }},
+{% load i18n %}{% autoescape off %}{% blocktrans with username=user.username %}Hi {{ username }},{% endblocktrans %}
 
-We previously warned you that your Metron API client was repeatedly hitting our
+{% blocktrans %}We previously warned you that your Metron API client was repeatedly hitting our
 rate limits without backing off. Since that behavior has continued, we've had
-to take action on this account:
+to take action on this account:{% endblocktrans %}
 
-{% if days_throttled == 1 %}{% if total_count == worst_day_count %}Most recently, your client received {{ worst_day_count }} rate-limited (429) response{{ worst_day_count|pluralize }}
-in a single day.{% else %}Most recently, your client received {{ total_count }} rate-limited (429) response{{ total_count|pluralize }}
-recently, including {{ worst_day_count }} in a single day.{% endif %}{% else %}Most recently, your client received {{ total_count }} rate-limited (429) response{{ total_count|pluralize }}
-across {{ days_throttled }} day{{ days_throttled|pluralize }}, including {{ worst_day_count }}
-in a single day.{% endif %}
+{% if days_throttled == 1 %}{% if total_count == worst_day_count %}{% blocktrans count counter=worst_day_count %}Most recently, your client received {{ counter }} rate-limited (429) response
+in a single day.{% plural %}Most recently, your client received {{ counter }} rate-limited (429) responses
+in a single day.{% endblocktrans %}{% else %}{% blocktrans count counter=total_count %}Most recently, your client received {{ counter }} rate-limited (429) response{% plural %}Most recently, your client received {{ counter }} rate-limited (429) responses{% endblocktrans %}
+{% blocktrans with worst=worst_day_count %}recently, including {{ worst }} in a single day.{% endblocktrans %}{% endif %}{% else %}{% blocktrans count counter=total_count %}Most recently, your client received {{ counter }} rate-limited (429) response{% plural %}Most recently, your client received {{ counter }} rate-limited (429) responses{% endblocktrans %}
+{% blocktrans count counter=days_throttled %}across {{ counter }} day{% plural %}across {{ counter }} days{% endblocktrans %}, {% blocktrans with worst=worst_day_count %}including {{ worst }}
+in a single day.{% endblocktrans %}{% endif %}
 
-{% if account_disabled %}This account has been disabled. You won't be able to log in or use the API
-until an administrator reinstates it.{% else %}All API tokens for this account have been revoked. You'll need to generate a
-new token before you can use the API again.{% endif %}
+{% if account_disabled %}{% blocktrans %}This account has been disabled. You won't be able to log in or use the API
+until an administrator reinstates it.{% endblocktrans %}{% else %}{% blocktrans %}All API tokens for this account have been revoked. You'll need to generate a
+new token before you can use the API again.{% endblocktrans %}{% endif %}
 
-Before using the API again, please make sure your client respects the
+{% blocktrans %}Before using the API again, please make sure your client respects the
 X-RateLimit-* response headers and backs off after a 429 response instead of
 retrying immediately. For details on our rate limits and how to implement a
-backoff strategy, see:
+backoff strategy, see:{% endblocktrans %}
 
 https://metron.cloud/wiki/api/handling-rate-limits/
 
-If you have any questions, or believe this was done in error, please reply to
-this email so we can review it.
+{% blocktrans %}If you have any questions, or believe this was done in error, please reply to
+this email so we can review it.{% endblocktrans %}
 
 ---
-Metron Comic Book Database
-A community-driven project for comic book enthusiasts
+{% trans "Metron Comic Book Database" %}
+{% trans "A community-driven project for comic book enthusiasts" %}
 
-Website: https://metron.cloud
+{% trans "Website:" %} https://metron.cloud
 GitHub: https://github.com/Metron-Project/metron
-Contact: admin@metron.cloud
+{% trans "Contact:" %} admin@metron.cloud
 
-(c) {% now "Y" %} Metron Project. All rights reserved.
+{% now "Y" as current_year %}
+{% blocktrans %}(c) {{ current_year }} Metron Project. All rights reserved.{% endblocktrans %}
 {% endautoescape %}

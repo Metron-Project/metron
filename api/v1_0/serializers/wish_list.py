@@ -1,3 +1,4 @@
+from django.utils.translation import gettext as _
 from rest_framework import serializers
 
 from api.v1_0.serializers.collection import CollectionIssueSerializer
@@ -74,7 +75,9 @@ class WishListAddItemSerializer(serializers.Serializer):
 
     def validate_issue_id(self, value):
         if not Issue.objects.filter(pk=value).exists():
-            raise serializers.ValidationError(f"Issue with id {value} does not exist.")
+            raise serializers.ValidationError(
+                _("Issue with id %(id)s does not exist.") % {"id": value}
+            )
         return value
 
 

@@ -1,6 +1,7 @@
 {% load thumbnail %}
 {% load static %}
 {% load humanize %}
+{% load i18n %}
 {% comment %}
     Series-specific card grid (uses first_issue_cover instead of series.image)
     Usage: {% include "comicsdb/partials/series_card_grid.html" with items=series_list %}
@@ -18,7 +19,7 @@
                 <div class="card-image">
                     <figure class="image is-2by3">
                         <a href="{% url 'series:detail' series.slug %}"
-                           aria-label="View details for {{ series }}">
+                           aria-label="{% blocktrans %}View details for {{ series }}{% endblocktrans %}">
                             {% with cover=series.first_issue_cover %}
                                 {% if cover %}
                                     {% thumbnail cover "320x480" crop="center" format="WEBP" as im %}
@@ -30,7 +31,7 @@
                                     {% endthumbnail %}
                                 {% else %}
                                     <img src="{% static 'site/img/image-not-found.webp' %}"
-                                         alt="No image available for {{ series }}"
+                                         alt="{% blocktrans %}No image available for {{ series }}{% endblocktrans %}"
                                          loading="lazy">
                                 {% endif %}
                             {% endwith %}
@@ -44,17 +45,17 @@
                            class="card-footer-item is-size-7"
                            title="{{ series.publisher }}"
                            style="overflow: hidden; text-overflow: ellipsis; white-space: nowrap; display: block; text-align: center;"
-                           aria-label="View publisher {{ series.publisher }}">{{ series.publisher }}</a>
+                           aria-label="{% blocktrans with publisher=series.publisher %}View publisher {{ publisher }}{% endblocktrans %}">{{ series.publisher }}</a>
                     {% endif %}
                     {% with count=series.issue_count %}
                         {% if count %}
                             <a href="{% url 'series:issue' series.slug %}"
                                class="card-footer-item is-size-7 has-text-weight-semibold"
-                               aria-label="{{ count }} issue{{ count|pluralize }} for {{ series }}">
-                                {{ count|intcomma }} issue{{ count|pluralize }}
+                               aria-label="{% blocktrans count counter=count with counter_fmt=count|intcomma %}{{ counter_fmt }} issue for {{ series }}{% plural %}{{ counter_fmt }} issues for {{ series }}{% endblocktrans %}">
+                                {% blocktrans count counter=count with counter_fmt=count|intcomma %}{{ counter_fmt }} issue{% plural %}{{ counter_fmt }} issues{% endblocktrans %}
                             </a>
                         {% else %}
-                            <span class="card-footer-item is-size-7" aria-label="No issues">0 issues</span>
+                            <span class="card-footer-item is-size-7" aria-label="{% trans 'No issues' %}">{% trans "0 issues" %}</span>
                         {% endif %}
                     {% endwith %}
                 </footer>

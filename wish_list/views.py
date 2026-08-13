@@ -3,6 +3,7 @@ from django.contrib.auth.decorators import login_required
 from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
 from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse, reverse_lazy
+from django.utils.translation import gettext as _
 from django.views.decorators.http import require_POST
 from django.views.generic import DeleteView, FormView, UpdateView
 
@@ -13,7 +14,7 @@ from wish_list.models import WishList, WishListItem
 
 
 def get_or_create_wish_list(user):
-    wish_list, _ = WishList.objects.get_or_create(user=user)
+    wish_list, _created = WishList.objects.get_or_create(user=user)
     return wish_list
 
 
@@ -30,12 +31,14 @@ class WishListDetailView(LoginRequiredMixin, FormView):
         wish_list = self.get_wish_list()
         issue = form.cleaned_data["issue"]
         if WishListItem.objects.filter(wish_list=wish_list, issue=issue).exists():
-            messages.info(self.request, f"{issue} is already on your wish list.")
+            messages.info(
+                self.request, _("%(issue)s is already on your wish list.") % {"issue": issue}
+            )
             return redirect(self.get_success_url())
         item = form.save(commit=False)
         item.wish_list = wish_list
         item.save()
-        messages.success(self.request, f"Added {issue} to your wish list.")
+        messages.success(self.request, _("Added %(issue)s to your wish list.") % {"issue": issue})
         return redirect(self.get_success_url())
 
     def get_success_url(self):
@@ -63,7 +66,7 @@ class WishListItemUpdateView(LoginRequiredMixin, UserPassesTestMixin, UpdateView
         return self.get_object().wish_list.user == self.request.user
 
     def form_valid(self, form):
-        messages.success(self.request, f"Updated {self.object.issue}.")
+        messages.success(self.request, _("Updated %(issue)s.") % {"issue": self.object.issue})
         return super().form_valid(form)
 
 
@@ -76,7 +79,10 @@ class WishListItemDeleteView(LoginRequiredMixin, UserPassesTestMixin, DeleteView
         return self.get_object().wish_list.user == self.request.user
 
     def form_valid(self, form):
-        messages.success(self.request, f"Removed {self.object.issue} from your wish list.")
+        messages.success(
+            self.request,
+            _("Removed %(issue)s from your wish list.") % {"issue": self.object.issue},
+        )
         return super().form_valid(form)
 
 
@@ -93,7 +99,7 @@ class AcquireWishListItemView(LoginRequiredMixin, UserPassesTestMixin, FormView)
 
     def form_valid(self, form):
         item = self.wish_list_item
-        _, created = CollectionItem.objects.get_or_create(
+        _obj, created = CollectionItem.objects.get_or_create(
             user=self.request.user,
             issue=item.issue,
             defaults={
@@ -106,11 +112,15 @@ class AcquireWishListItemView(LoginRequiredMixin, UserPassesTestMixin, FormView)
         )
         item.status = WishListItem.Status.ACQUIRED
         item.save(update_fields=["status", "modified"])
-        action = "Added to" if created else "Already in"
-        messages.success(
-            self.request,
-            f"{item.issue} marked as acquired! {action} your collection.",
-        )
+        if created:
+            message = _("%(issue)s marked as acquired! Added to your collection.") % {
+                "issue": item.issue
+            }
+        else:
+            message = _("%(issue)s marked as acquired! Already in your collection.") % {
+                "issue": item.issue
+            }
+        messages.success(self.request, message)
         return redirect(self.get_success_url())
 
     def get_success_url(self):
@@ -126,7 +136,7 @@ class AcquireWishListItemView(LoginRequiredMixin, UserPassesTestMixin, FormView)
 @require_POST
 def toggle_wish_list_item(request, slug):
     issue = get_object_or_404(Issue, slug=slug)
-    wish_list, _ = WishList.objects.get_or_create(user=request.user)
+    wish_list, _created = WishList.objects.get_or_create(user=request.user)
     item, created = WishListItem.objects.get_or_create(wish_list=wish_list, issue=issue)
     if not created:
         item.delete()

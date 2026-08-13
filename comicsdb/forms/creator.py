@@ -1,4 +1,5 @@
 from django.forms import ClearableFileInput, DateInput, ModelForm
+from django.utils.translation import gettext_lazy as _
 
 from comicsdb.autocomplete import CreatorAutocomplete
 from comicsdb.forms.widgets import SafeAutocompleteWidget
@@ -30,5 +31,5 @@ class CreatorForm(ModelForm):
             "image": ClearableFileInput(),
         }
         help_texts = {
-            "alias": "Separate multiple aliases by a comma",
+            "alias": _("Separate multiple aliases by a comma"),
         }

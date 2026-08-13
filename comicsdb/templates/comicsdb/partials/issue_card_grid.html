@@ -1,6 +1,7 @@
 {% load thumbnail %}
 {% load static %}
 {% load is_new %}
+{% load i18n %}
 {% comment %}
     Issue-specific card grid with "New!" tags, publisher, and cover date.
     Usage: {% include "comicsdb/partials/issue_card_grid.html" with items=issue_list %}
@@ -20,7 +21,7 @@
                         <h2 id="card-title-{{ issue.slug }}"
                             class="card-header-title is-centered">
                             {{ issue }}
-                            {% if is_new %}&nbsp;<span class="tag is-primary is-rounded" aria-label="Recently added">New!</span>{% endif %}
+                            {% if is_new %}&nbsp;<span class="tag is-primary is-rounded" aria-label="{% trans 'Recently added' %}">{% trans "New!" %}</span>{% endif %}
                         </h2>
                     {% endwith %}
                 </header>
@@ -30,7 +31,7 @@
                         {% thumbnail issue.image "320x480" format="WEBP" as im %}
                             <figure class="image {% if im.width > im.height %}is-3by2{% else %}is-2by3{% endif %}">
                                 <a href="{% url 'issue:detail' issue.slug %}"
-                                   aria-label="View details for {{ issue }}">
+                                   aria-label="{% blocktrans %}View details for {{ issue }}{% endblocktrans %}">
                                     <img src="{{ im.url }}"
                                          width="{{ im.width }}"
                                          height="{{ im.height }}"
@@ -42,9 +43,9 @@
                     {% else %}
                         <figure class="image is-2by3">
                             <a href="{% url 'issue:detail' issue.slug %}"
-                               aria-label="View details for {{ issue }}">
+                               aria-label="{% blocktrans %}View details for {{ issue }}{% endblocktrans %}">
                                 <img src="{% static 'site/img/image-not-found.webp' %}"
-                                     alt="No image available for {{ issue }}"
+                                     alt="{% blocktrans %}No image available for {{ issue }}{% endblocktrans %}"
                                      loading="lazy">
                             </a>
                         </figure>

@@ -1,13 +1,13 @@
 {% extends parent_template|default:"base.html" %}
-{% load static %}
-{% block title %}Manage Issues - {{ reading_list.name }} - Metron{% endblock %}
+{% load static i18n %}
+{% block title %}{% blocktrans with name=reading_list.name %}Manage Issues - {{ name }} - Metron{% endblocktrans %}{% endblock %}
 {% block js %}
     {{ form.media }}
     <script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.0/Sortable.min.js"></script>
 {% endblock js %}
 {% block content %}
     <header class="block has-text-centered">
-        <h1 class="title">Manage Reading List</h1>
+        <h1 class="title">{% trans "Manage Reading List" %}</h1>
         <p class="subtitle">{{ reading_list.name }}</p>
     </header>
     <section class="section">
@@ -27,8 +27,8 @@
                             <!-- Draggable issue order area -->
                             <div class="field" id="selected-issues-container" style="display: none;">
                                 <label class="label">
-                                    Selected Issues
-                                    <span class="help">Drag to reorder</span>
+                                    {% trans "Selected Issues" %}
+                                    <span class="help">{% trans "Drag to reorder" %}</span>
                                 </label>
                                 <div id="selected-issues-list" class="box" style="min-height: 100px">
                                     <!-- Selected issues will appear here as draggable items -->
@@ -39,22 +39,22 @@
                             <div class="field is-grouped is-grouped-right mt-5">
                                 <div class="control">
                                     <a href="{% url 'reading-list:detail' reading_list.slug %}"
-                                       class="button">Cancel</a>
+                                       class="button">{% trans "Cancel" %}</a>
                                 </div>
                                 <div class="control">
-                                    <button type="submit" class="button is-primary">Save Changes</button>
+                                    <button type="submit" class="button is-primary">{% trans "Save Changes" %}</button>
                                 </div>
                             </div>
                         </form>
                     </div>
                     <div class="content mt-5">
-                        <h3 class="title is-5">How to use:</h3>
+                        <h3 class="title is-5">{% trans "How to use:" %}</h3>
                         <ul>
-                            <li>To add new issues: Start typing in the search box to find issues by series name, issue number, or story title</li>
-                            <li>Select multiple issues from the dropdown (they will appear as chips)</li>
-                            <li>All issues (existing and new) will appear below in a draggable list</li>
-                            <li>Drag and drop the issues to set your preferred reading order</li>
-                            <li>Click "Save Changes" to add new issues and/or save the reordered list</li>
+                            <li>{% trans "To add new issues: Start typing in the search box to find issues by series name, issue number, or story title" %}</li>
+                            <li>{% trans "Select multiple issues from the dropdown (they will appear as chips)" %}</li>
+                            <li>{% trans "All issues (existing and new) will appear below in a draggable list" %}</li>
+                            <li>{% trans "Drag and drop the issues to set your preferred reading order" %}</li>
+                            <li>{% blocktrans %}Click "Save Changes" to add new issues and/or save the reordered list{% endblocktrans %}</li>
                         </ul>
                     </div>
                 </div>
@@ -186,13 +186,13 @@
                 // Rebuild the list
                 selectedIssuesList.innerHTML = '';
                 finalOrder.forEach(issueId => {
-                    const issueLabel = issueData[issueId] || `Issue #${issueId}`;
+                    const issueLabel = issueData[issueId] || `{% filter escapejs %}{% trans "Issue #" %}{% endfilter %}${issueId}`;
                     const isExisting = existingIssueIds.has(issueId);
                     const div = document.createElement('div');
                     div.className = `draggable-issue box mb-2 p-3 ${isExisting ? 'is-existing-issue' : 'is-new-issue'}`;
                     div.dataset.issueId = issueId;
 
-                    const badge = isExisting ? '<span class="tag is-info is-light ml-2">Current</span>' : '<span class="tag is-success is-light ml-2">New</span>';
+                    const badge = isExisting ? '<span class="tag is-info is-light ml-2">{% filter escapejs %}{% trans "Current" %}{% endfilter %}</span>' : '<span class="tag is-success is-light ml-2">{% filter escapejs %}{% trans "New" %}{% endfilter %}</span>';
 
                     div.innerHTML = `
                         <span class="icon is-small" style="vertical-align: middle;">

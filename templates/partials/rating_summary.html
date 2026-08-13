@@ -1,3 +1,4 @@
+{% load i18n %}
 {% comment %}
 Compact average-rating summary (stars + count), used in page headers.
 
@@ -20,6 +21,8 @@ Required context:
                 <i class="{% if star_num|add:'0' <= average_rating %}fas{% else %}far{% endif %} fa-star"></i>
             {% endfor %}
         </span>
-        <span class="has-text-grey ml-1">{{ average_rating|floatformat:1 }} ({{ rating_count }} rating{{ rating_count|pluralize }})</span>
+        <span class="has-text-grey ml-1">
+            {% blocktrans count counter=rating_count with avg=average_rating|floatformat:1 %}{{ avg }} ({{ counter }} rating){% plural %}{{ avg }} ({{ counter }} ratings){% endblocktrans %}
+        </span>
     {% endif %}
 </span>

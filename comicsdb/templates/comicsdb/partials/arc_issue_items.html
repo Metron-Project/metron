@@ -1,3 +1,4 @@
+{% load i18n %}
 {% for issue in issues %}
     <li>
         <a href="{% url 'issue:detail' issue.slug %}">{{ issue }}</a>
@@ -13,7 +14,7 @@
                 hx-target="#issues-list"
                 hx-swap="beforeend"
                 hx-indicator="#issues-spinner">
-            <span>Load More Issues</span>
+            <span>{% trans "Load More Issues" %}</span>
         </button>
         <span id="issues-spinner" class="htmx-indicator ml-2">
             <i class="fas fa-spinner fa-spin"></i>

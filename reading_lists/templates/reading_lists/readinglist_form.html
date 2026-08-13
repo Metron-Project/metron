@@ -1,6 +1,6 @@
 {% extends parent_template|default:"base.html" %}
-{% load static bulma_tags %}
-{% block title %}{{ title }} - Metron{% endblock %}
+{% load static bulma_tags i18n %}
+{% block title %}{% blocktrans %}{{ title }} - Metron{% endblocktrans %}{% endblock %}
 {% block headcss %}
     {{ form.media.css }}
 {% endblock %}
@@ -98,7 +98,7 @@
                                                             class="button is-small is-light mt-2"
                                                             data-ac-clear="{{ field.name }}">
                                                         <span class="icon is-small"><i class="fas fa-times"></i></span>
-                                                        <span>Clear selection</span>
+                                                        <span>{% trans "Clear selection" %}</span>
                                                     </button>
                                                 {% endif %}
                                             </div>
@@ -111,7 +111,7 @@
                             <div class="field is-grouped is-grouped-right mt-5">
                                 <div class="control">
                                     <a href="{% if object %}{% url 'reading-list:detail' object.slug %}{% else %}{% url 'reading-list:my-lists' %}{% endif %}"
-                                       class="button">Cancel</a>
+                                       class="button">{% trans "Cancel" %}</a>
                                 </div>
                                 <div class="control">
                                     <button type="submit" class="button is-primary">{{ button_text }}</button>

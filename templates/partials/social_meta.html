@@ -1,3 +1,4 @@
+{% load i18n %}
 {% comment %}
     Social media meta tags for Twitter and Open Graph
     Can be overridden in child templates by redefining the social_meta block
@@ -6,20 +7,20 @@
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:site" content="@MetronDB">
 <meta name="twitter:title"
-      content="{% block twitter_title %}Metron Comic Book Database{% endblock %}">
+      content="{% block twitter_title %}{% trans 'Metron Comic Book Database' %}{% endblock %}">
 <meta name="twitter:description"
-      content="{% block twitter_description %}A community-based comic book database.{% endblock %}">
+      content="{% block twitter_description %}{% trans 'A community-based comic book database.' %}{% endblock %}">
 <meta name="twitter:image"
       content="{% block twitter_image %}https://metron-static.nyc3.digitaloceanspaces.com/misc/metron-twitter-card.jpg{% endblock %}">
 <meta name="twitter:image:alt"
-      content="{% block twitter_image_alt %}An image of the New God Metron seated and pondering the universe.{% endblock %}">
+      content="{% block twitter_image_alt %}{% trans 'An image of the New God Metron seated and pondering the universe.' %}{% endblock %}">
 {# Open Graph Meta Tags #}
 <meta property="og:type" content="website">
 <meta property="og:site_name" content="Metron Comic Book Database">
 <meta property="og:title"
-      content="{% block og_title %}Metron Comic Book Database{% endblock %}">
+      content="{% block og_title %}{% trans 'Metron Comic Book Database' %}{% endblock %}">
 <meta property="og:description"
-      content="{% block og_description %}A community-based comic book database.{% endblock %}">
+      content="{% block og_description %}{% trans 'A community-based comic book database.' %}{% endblock %}">
 <meta property="og:url"
       content="{% block og_url %}https://metron.cloud/{% endblock %}">
 <meta property="og:image"

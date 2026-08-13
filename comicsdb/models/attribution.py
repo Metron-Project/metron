@@ -1,14 +1,15 @@
 from django.contrib.contenttypes.fields import GenericForeignKey
 from django.contrib.contenttypes.models import ContentType
 from django.db import models
+from django.utils.translation import gettext_lazy as _
 
 
 class Attribution(models.Model):
     class Source(models.TextChoices):
-        MARVEL = "M", "Marvel"
-        WIKIPEDIA = "W", "Wikipedia"
-        GCD = "G", "Grand Comics Database"
-        DC = "D", "DC"
+        MARVEL = "M", _("Marvel")
+        WIKIPEDIA = "W", _("Wikipedia")
+        GCD = "G", _("Grand Comics Database")
+        DC = "D", _("DC")
 
     source = models.CharField(max_length=1, choices=Source.choices, default=Source.WIKIPEDIA)
     url = models.URLField()

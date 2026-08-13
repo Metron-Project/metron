@@ -1,4 +1,4 @@
-{% load pagination_tags %}
+{% load i18n pagination_tags %}
 {% comment %}
     Generic pagination component that preserves all query parameters.
     Works with any list view that uses Django's pagination.
@@ -17,23 +17,23 @@
         {% if page_obj.has_previous %}
             <a class="pagination-previous"
                href="?{% url_replace page=page_obj.previous_page_number %}"
-               aria-label="Go to previous page">Previous</a>
+               aria-label="{% trans 'Go to previous page' %}">{% trans "Previous" %}</a>
         {% else %}
             <span class="pagination-previous"
-                  title="This is the first page"
+                  title="{% trans 'This is the first page' %}"
                   disabled
-                  aria-disabled="true">Previous</span>
+                  aria-disabled="true">{% trans "Previous" %}</span>
         {% endif %}
         {# Next Page Button #}
         {% if page_obj.has_next %}
             <a class="pagination-next"
                href="?{% url_replace page=page_obj.next_page_number %}"
-               aria-label="Go to next page">Next page</a>
+               aria-label="{% trans 'Go to next page' %}">{% trans "Next page" %}</a>
         {% else %}
             <span class="pagination-next"
-                  title="This is the last page"
+                  title="{% trans 'This is the last page' %}"
                   disabled
-                  aria-disabled="true">Next page</span>
+                  aria-disabled="true">{% trans "Next page" %}</span>
         {% endif %}
         {# Page Numbers #}
         <ul class="pagination-list">
@@ -47,14 +47,14 @@
                     <li>
                         <a class="pagination-link is-current"
                            href="?{% url_replace page=page_num %}"
-                           aria-label="Page {{ page_num }}"
+                           aria-label="{% blocktrans %}Page {{ page_num }}{% endblocktrans %}"
                            aria-current="page">{{ page_num }}</a>
                     </li>
                 {% else %}
                     <li>
                         <a class="pagination-link"
                            href="?{% url_replace page=page_num %}"
-                           aria-label="Go to page {{ page_num }}">{{ page_num }}</a>
+                           aria-label="{% blocktrans %}Go to page {{ page_num }}{% endblocktrans %}">{{ page_num }}</a>
                     </li>
                 {% endif %}
             {% endfor %}

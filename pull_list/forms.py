@@ -1,4 +1,5 @@
 from django import forms
+from django.utils.translation import gettext_lazy as _
 
 from comicsdb.autocomplete import SeriesAutocomplete
 from comicsdb.forms.widgets import SafeAutocompleteWidget
@@ -12,10 +13,10 @@ class AddSeriesToPullListForm(forms.Form):
         widget=SafeAutocompleteWidget(
             ac_class=SeriesAutocomplete,
             attrs={
-                "placeholder": "Search for a series...",
+                "placeholder": _("Search for a series..."),
                 "class": "input",
             },
         ),
-        label="Series",
-        help_text="Select a series to add to your pull list",
+        label=_("Series"),
+        help_text=_("Select a series to add to your pull list"),
     )

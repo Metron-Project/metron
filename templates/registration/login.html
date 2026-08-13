@@ -1,8 +1,8 @@
 {% extends "base.html" %}
 {% load bulma_tags %}
-{% load static %}
+{% load static i18n %}
 {% block title %}
-    Login - Metron
+    {% trans "Login - Metron" %}
 {% endblock title %}
 {% block content %}
     {# Page Header #}
@@ -10,8 +10,8 @@
         <span class="icon is-large has-text-link">
             <i class="fas fa-sign-in-alt fa-3x"></i>
         </span>
-        <h1 class="title is-3 mt-4">Login to Metron</h1>
-        <p class="subtitle has-text-grey">Access your account to contribute to the database</p>
+        <h1 class="title is-3 mt-4">{% trans "Login to Metron" %}</h1>
+        <p class="subtitle has-text-grey">{% trans "Access your account to contribute to the database" %}</p>
     </header>
     {# Login Form #}
     <div class="columns is-centered">
@@ -23,7 +23,7 @@
                     {% if form.non_field_errors %}
                         <div class="notification is-danger is-light">
                             <button class="delete"
-                                    aria-label="close"
+                                    aria-label="{% trans 'close' %}"
                                     onclick="this.parentElement.remove();"></button>
                             {% for error in form.non_field_errors %}<p>{{ error }}</p>{% endfor %}
                         </div>
@@ -54,7 +54,7 @@
                                 <span class="icon">
                                     <i class="fas fa-sign-in-alt"></i>
                                 </span>
-                                <span>Login</span>
+                                <span>{% trans "Login" %}</span>
                             </button>
                         </div>
                     </div>
@@ -65,7 +65,7 @@
                                 <span class="icon is-small">
                                     <i class="fas fa-question-circle"></i>
                                 </span>
-                                <span>Forgot your password?</span>
+                                <span>{% trans "Forgot your password?" %}</span>
                             </a>
                         </p>
                     </div>
@@ -74,8 +74,8 @@
             {# Sign Up Prompt #}
             <div class="notification is-info is-light has-text-centered">
                 <p>
-                    Don't have an account?
-                    <a href="{% url 'signup' %}" class="has-text-weight-bold">Sign up here</a>
+                    {% trans "Don't have an account?" %}
+                    <a href="{% url 'signup' %}" class="has-text-weight-bold">{% trans "Sign up here" %}</a>
                 </p>
             </div>
         </div>

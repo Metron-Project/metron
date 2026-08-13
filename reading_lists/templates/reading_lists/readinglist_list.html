@@ -1,9 +1,9 @@
 {% extends parent_template|default:"base.html" %}
-{% load static humanize %}
-{% block title %}{% if is_user_view %}My Reading Lists{% else %}Reading Lists{% endif %} - Metron{% endblock %}
+{% load static humanize i18n %}
+{% block title %}{% if is_user_view %}{% trans "My Reading Lists" %}{% else %}{% trans "Reading Lists" %}{% endif %} - Metron{% endblock %}
 {% block content %}
     <header class="block has-text-centered">
-        <h1 class="title">{% if is_user_view %}My Reading Lists{% else %}Reading Lists{% endif %}</h1>
+        <h1 class="title">{% if is_user_view %}{% trans "My Reading Lists" %}{% else %}{% trans "Reading Lists" %}{% endif %}</h1>
     </header>
     {% if not is_user_view %}
         <section class="section">
@@ -18,11 +18,11 @@
     {% if reading_lists %}
         <section class="section pt-0">
             <div class="container">
-                <nav class="level" aria-label="Reading list navigation">
+                <nav class="level" aria-label="{% trans 'Reading list navigation' %}">
                     <div class="level-left">
                         <div class="level-item">
                             <p class="subtitle is-5">
-                                <strong>{{ page_obj.paginator.count|intcomma }}</strong> reading list{{ page_obj.paginator.count|pluralize }}
+                                {% blocktrans count counter=page_obj.paginator.count with formatted_count=page_obj.paginator.count|intcomma %}<strong>{{ formatted_count }}</strong> reading list{% plural %}<strong>{{ formatted_count }}</strong> reading lists{% endblocktrans %}
                             </p>
                         </div>
                     </div>
@@ -33,17 +33,17 @@
                                     {% if is_user_view %}
                                         <a href="{% url 'reading-list:list' %}" class="button is-link">
                                             <span class="icon"><i class="fas fa-list"></i></span>
-                                            <span>All Reading Lists</span>
+                                            <span>{% trans "All Reading Lists" %}</span>
                                         </a>
                                     {% else %}
                                         <a href="{% url 'reading-list:my-lists' %}" class="button is-link">
                                             <span class="icon"><i class="fas fa-user"></i></span>
-                                            <span>My Reading Lists</span>
+                                            <span>{% trans "My Reading Lists" %}</span>
                                         </a>
                                     {% endif %}
                                     <a href="{% url 'reading-list:create' %}" class="button is-primary">
                                         <span class="icon"><i class="fas fa-plus"></i></span>
-                                        <span>Create Reading List</span>
+                                        <span>{% trans "Create Reading List" %}</span>
                                     </a>
                                 </div>
                             </div>
@@ -62,29 +62,29 @@
         <section class="section pt-0">
             <div class="container has-text-centered">
                 {% if is_user_view %}
-                    <p class="title is-4">You don't have any reading lists yet</p>
-                    <p class="subtitle">Create your first reading list!</p>
+                    <p class="title is-4">{% trans "You don't have any reading lists yet" %}</p>
+                    <p class="subtitle">{% trans "Create your first reading list!" %}</p>
                     <a href="{% url 'reading-list:create' %}" class="button is-primary is-large">
                         <span class="icon"><i class="fas fa-plus"></i></span>
-                        <span>Create Reading List</span>
+                        <span>{% trans "Create Reading List" %}</span>
                     </a>
                 {% elif has_active_filters %}
-                    <p class="title is-4">No results found</p>
-                    <p class="subtitle">Try adjusting your search filters</p>
+                    <p class="title is-4">{% trans "No results found" %}</p>
+                    <p class="subtitle">{% trans "Try adjusting your search filters" %}</p>
                     <a href="{% url 'reading-list:list' %}" class="button is-light is-medium">
                         <span class="icon"><i class="fas fa-times"></i></span>
-                        <span>Clear All Filters</span>
+                        <span>{% trans "Clear All Filters" %}</span>
                     </a>
                 {% else %}
-                    <p class="title is-4">No reading lists found</p>
+                    <p class="title is-4">{% trans "No reading lists found" %}</p>
                     {% if user.is_authenticated %}
-                        <p class="subtitle">Create your first reading list!</p>
+                        <p class="subtitle">{% trans "Create your first reading list!" %}</p>
                         <a href="{% url 'reading-list:create' %}" class="button is-primary is-large">
                             <span class="icon"><i class="fas fa-plus"></i></span>
-                            <span>Create Reading List</span>
+                            <span>{% trans "Create Reading List" %}</span>
                         </a>
                     {% else %}
-                        <p class="subtitle">Login to create your own reading lists</p>
+                        <p class="subtitle">{% trans "Login to create your own reading lists" %}</p>
                     {% endif %}
                 {% endif %}
             </div>

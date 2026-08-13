@@ -5,6 +5,8 @@ from django.core.cache import cache
 from django.db.models import Count
 from django.db.models.functions import TruncDate, TruncMonth, TruncYear
 from django.shortcuts import render
+from django.utils.dateformat import format as date_format
+from django.utils.translation import gettext as _
 
 from comicsdb.models import Arc, Character, Creator, Issue, Publisher, Series, Team
 
@@ -47,7 +49,7 @@ def _create_monthly_issue_dict() -> dict[str, int]:
         )
         cache.set("monthly_issues", monthly_issues, CACHE_TTL)
 
-    return {issue["month"].strftime("%b"): issue["c"] for issue in monthly_issues[::-1]}
+    return {date_format(issue["month"], "M"): issue["c"] for issue in monthly_issues[::-1]}
 
 
 def _create_daily_issue_dict() -> dict[str, int]:
@@ -75,7 +77,7 @@ def _create_creator_dict() -> dict[str, int]:
         )
         cache.set("creators", creators, CACHE_TTL)
 
-    return {creator["month"].strftime("%b"): creator["c"] for creator in creators[::-1]}
+    return {date_format(creator["month"], "M"): creator["c"] for creator in creators[::-1]}
 
 
 def _create_character_dict() -> dict[str, int]:
@@ -89,7 +91,7 @@ def _create_character_dict() -> dict[str, int]:
         )
         cache.set("characters", characters, CACHE_TTL)
 
-    return {character["month"].strftime("%b"): character["c"] for character in characters[::-1]}
+    return {date_format(character["month"], "M"): character["c"] for character in characters[::-1]}
 
 
 def statistics(request):
@@ -131,29 +133,29 @@ def statistics(request):
     # Time based statistics
     pub_chart = PieChart(
         _create_pub_dict(),
-        title="Percentage of Issues by Publisher",
+        title=_("Percentage of Issues by Publisher"),
         thousands=",",
         legend=False,
     )
     year_chart = PieChart(
-        _create_year_count_dict(), title="Number of Issues Added per Year", thousands=","
+        _create_year_count_dict(), title=_("Number of Issues Added per Year"), thousands=","
     )
     daily_chart = ColumnChart(
         _create_daily_issue_dict(),
-        title="Number of Issues for the last 30 days",
+        title=_("Number of Issues for the last 30 days"),
         thousands=",",
     )
     monthly_chart = ColumnChart(
-        _create_monthly_issue_dict(), title="Number of Issues Added by Month", thousands=","
+        _create_monthly_issue_dict(), title=_("Number of Issues Added by Month"), thousands=","
     )
     creator_chart = ColumnChart(
         _create_creator_dict(),
-        title="Number of Creators Added by Month",
+        title=_("Number of Creators Added by Month"),
         thousands=",",
     )
     character_chart = ColumnChart(
         _create_character_dict(),
-        title="Number of Characters Added by Month",
+        title=_("Number of Characters Added by Month"),
         thousands=",",
     )
 

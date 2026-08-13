@@ -4,6 +4,7 @@ from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
 from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse, reverse_lazy
 from django.utils import timezone
+from django.utils.translation import gettext as _
 from django.views.decorators.http import require_POST
 from django.views.generic import DeleteView, FormView
 
@@ -14,7 +15,7 @@ from pull_list.models import PullList, PullListSeries
 
 
 def get_or_create_pull_list(user):
-    pull_list, _ = PullList.objects.get_or_create(user=user)
+    pull_list, _created = PullList.objects.get_or_create(user=user)
     return pull_list
 
 
@@ -30,11 +31,16 @@ class PullListDetailView(LoginRequiredMixin, FormView):
     def form_valid(self, form):
         pull_list = self.get_pull_list()
         series = form.cleaned_data["series"]
-        _, created = PullListSeries.objects.get_or_create(pull_list=pull_list, series=series)
+        _obj, created = PullListSeries.objects.get_or_create(pull_list=pull_list, series=series)
         if created:
-            messages.success(self.request, f"Added {series} to your pull list.")
+            messages.success(
+                self.request, _("Added %(series)s to your pull list.") % {"series": series}
+            )
         else:
-            messages.info(self.request, f"{series} is already on your pull list.")
+            messages.info(
+                self.request,
+                _("%(series)s is already on your pull list.") % {"series": series},
+            )
         return redirect(self.get_success_url())
 
     def get_success_url(self):
@@ -78,7 +84,10 @@ class RemoveSeriesFromPullListView(LoginRequiredMixin, UserPassesTestMixin, Dele
     def form_valid(self, form):
         series_name = str(self.get_object().series)
         result = super().form_valid(form)
-        messages.success(self.request, f"Removed {series_name} from your pull list.")
+        messages.success(
+            self.request,
+            _("Removed %(series)s from your pull list.") % {"series": series_name},
+        )
         return result
 
 
@@ -86,7 +95,7 @@ class RemoveSeriesFromPullListView(LoginRequiredMixin, UserPassesTestMixin, Dele
 @require_POST
 def toggle_pull_list_series(request, slug):
     series = get_object_or_404(Series, slug=slug)
-    pull_list, _ = PullList.objects.get_or_create(user=request.user)
+    pull_list, _created = PullList.objects.get_or_create(user=request.user)
     pull_list_series, created = PullListSeries.objects.get_or_create(
         pull_list=pull_list, series=series
     )

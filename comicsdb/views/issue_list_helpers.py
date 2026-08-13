@@ -7,6 +7,8 @@ diff to ``views/issue.py`` stays small. No new dependencies.
 
 from urllib.parse import urlencode
 
+from django.utils.translation import gettext_lazy as _
+
 from comicsdb.models.series import SeriesType
 
 # ---------------------------------------------------------------------------
@@ -18,19 +20,19 @@ from comicsdb.models.series import SeriesType
 # ordering) and renders first / selected when no sort is chosen.
 SORT_OPTIONS = {
     "": {
-        "label": "Series A\u2013Z",
+        "label": _("Series A\u2013Z"),
         "order": ["series__sort_name", "cover_date", "store_date", "number"],
     },
     "cover_new": {
-        "label": "Cover date (newest)",
+        "label": _("Cover date (newest)"),
         "order": ["-cover_date", "series__sort_name", "number"],
     },
     "cover_old": {
-        "label": "Cover date (oldest)",
+        "label": _("Cover date (oldest)"),
         "order": ["cover_date", "series__sort_name", "number"],
     },
     "added": {
-        "label": "Recently added",
+        "label": _("Recently added"),
         "order": ["-created_on", "series__sort_name", "number"],
     },
 }
@@ -53,38 +55,38 @@ _NON_FILTER_PARAMS = {"page", "sort"}
 
 # Human-readable labels for each filter param the issue browse exposes.
 FILTER_LABELS = {
-    "q": "Search",
-    "series_name": "Series",
-    "series_type": "Type",
-    "series_volume": "Volume",
-    "publisher_name": "Publisher",
-    "number": "Number",
-    "alt_number": "Alt number",
-    "cover_year": "Cover year",
-    "cover_month": "Cover month",
-    "store_date_after": "Store date from",
-    "store_date_before": "Store date to",
-    "foc_date_after": "FOC date from",
-    "foc_date_before": "FOC date to",
-    "upc": "UPC",
-    "sku": "SKU",
-    "cv_id": "Comic Vine ID",
-    "gcd_id": "GCD ID",
+    "q": _("Search"),
+    "series_name": _("Series"),
+    "series_type": _("Type"),
+    "series_volume": _("Volume"),
+    "publisher_name": _("Publisher"),
+    "number": _("Number"),
+    "alt_number": _("Alt number"),
+    "cover_year": _("Cover year"),
+    "cover_month": _("Cover month"),
+    "store_date_after": _("Store date from"),
+    "store_date_before": _("Store date to"),
+    "foc_date_after": _("FOC date from"),
+    "foc_date_before": _("FOC date to"),
+    "upc": _("UPC"),
+    "sku": _("SKU"),
+    "cv_id": _("Comic Vine ID"),
+    "gcd_id": _("GCD ID"),
 }
 
 _MONTHS = {
-    "1": "January",
-    "2": "February",
-    "3": "March",
-    "4": "April",
-    "5": "May",
-    "6": "June",
-    "7": "July",
-    "8": "August",
-    "9": "September",
-    "10": "October",
-    "11": "November",
-    "12": "December",
+    "1": _("January"),
+    "2": _("February"),
+    "3": _("March"),
+    "4": _("April"),
+    "5": _("May"),
+    "6": _("June"),
+    "7": _("July"),
+    "8": _("August"),
+    "9": _("September"),
+    "10": _("October"),
+    "11": _("November"),
+    "12": _("December"),
 }
 
 

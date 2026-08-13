@@ -1,65 +1,65 @@
 {% extends parent_template|default:"base.html" %}
-{% load static %}
+{% load i18n static %}
 {% load humanize %}
 {% block headscripts %}
     <script src="{% static 'chartkick/Chart.bundle.js' %}"></script>
     <script src="{% static 'chartkick/chartkick.js' %}"></script>
 {% endblock %}
 {% block title %}
-    Statistics - Metron
+    {% trans "Statistics - Metron" %}
 {% endblock title %}
 {% block content %}
     {# Page Header #}
     <header class="block has-text-centered">
-        <h1 class="title is-3">Metron Database Statistics</h1>
+        <h1 class="title is-3">{% trans "Metron Database Statistics" %}</h1>
         <p class="subtitle is-6 has-text-grey">
-            Last Updated: <time datetime="{{ update_time|date:'c' }}">{{ update_time }}</time>
+            {% blocktrans with update_time_value=update_time %}Last Updated: <time datetime="{{ update_time_value|date:'c' }}">{{ update_time_value }}</time>{% endblocktrans %}
         </p>
     </header>
     {# Summary Totals #}
     <section class="section">
         <div class="box has-background-light">
-            <h2 class="title is-4 has-text-centered has-text-dark mb-5">Database Totals</h2>
+            <h2 class="title is-4 has-text-centered has-text-dark mb-5">{% trans "Database Totals" %}</h2>
             <div class="columns is-multiline">
                 <div class="column is-3">
                     <div class="box has-text-centered">
-                        <p class="heading">Publishers</p>
+                        <p class="heading">{% trans "Publishers" %}</p>
                         <p class="title is-3 has-text-primary">{{ publishers_total|intcomma }}</p>
                     </div>
                 </div>
                 <div class="column is-3">
                     <div class="box has-text-centered">
-                        <p class="heading">Series</p>
+                        <p class="heading">{% trans "Series" %}</p>
                         <p class="title is-3 has-text-info">{{ series_total|intcomma }}</p>
                     </div>
                 </div>
                 <div class="column is-3">
                     <div class="box has-text-centered">
-                        <p class="heading">Issues</p>
+                        <p class="heading">{% trans "Issues" %}</p>
                         <p class="title is-3 has-text-link">{{ issues_total|intcomma }}</p>
                     </div>
                 </div>
                 <div class="column is-3">
                     <div class="box has-text-centered">
-                        <p class="heading">Characters</p>
+                        <p class="heading">{% trans "Characters" %}</p>
                         <p class="title is-3 has-text-success">{{ characters_total|intcomma }}</p>
                     </div>
                 </div>
                 <div class="column is-3">
                     <div class="box has-text-centered">
-                        <p class="heading">Creators</p>
+                        <p class="heading">{% trans "Creators" %}</p>
                         <p class="title is-3 has-text-warning">{{ creators_total|intcomma }}</p>
                     </div>
                 </div>
                 <div class="column is-3">
                     <div class="box has-text-centered">
-                        <p class="heading">Teams</p>
+                        <p class="heading">{% trans "Teams" %}</p>
                         <p class="title is-3 has-text-danger">{{ teams_total|intcomma }}</p>
                     </div>
                 </div>
                 <div class="column is-3">
                     <div class="box has-text-centered">
-                        <p class="heading">Story Arcs</p>
+                        <p class="heading">{% trans "Story Arcs" %}</p>
                         <p class="title is-3 has-text-grey-dark">{{ arcs_total|intcomma }}</p>
                     </div>
                 </div>
@@ -68,7 +68,7 @@
     </section>
     {# Charts Section #}
     <section class="section">
-        <h2 class="title is-4 has-text-centered mb-5">Statistical Analysis</h2>
+        <h2 class="title is-4 has-text-centered mb-5">{% trans "Statistical Analysis" %}</h2>
         {# Issues by Year #}
         <div class="box mb-5">
             <div class="content">{{ year_count }}</div>
@@ -108,10 +108,9 @@
     <section class="section">
         <div class="notification is-info is-light">
             <div class="content">
-                <p class="has-text-weight-bold">About These Statistics</p>
+                <p class="has-text-weight-bold">{% trans "About These Statistics" %}</p>
                 <p>
-                    These statistics are automatically generated from the Metron database and are updated every 30 minutes.
-                    They represent the collective efforts of our community in building a comprehensive comic book database.
+                    {% blocktrans %}These statistics are automatically generated from the Metron database and are updated every 30 minutes. They represent the collective efforts of our community in building a comprehensive comic book database.{% endblocktrans %}
                 </p>
             </div>
         </div>

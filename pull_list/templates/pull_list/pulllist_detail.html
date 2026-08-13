@@ -1,13 +1,13 @@
 {% extends parent_template|default:"base.html" %}
-{% load static %}
-{% block title %}{{ pull_list }} - Metron{% endblock %}
+{% load static i18n %}
+{% block title %}{% blocktrans with name=pull_list %}{{ name }} - Metron{% endblocktrans %}{% endblock %}
 {% block content %}
     <header class="block">
         <h1 class="title">{{ pull_list }}</h1>
     </header>
     {% if is_owner %}
         <div class="box mb-5">
-            <h2 class="title is-5">Add a Series</h2>
+            <h2 class="title is-5">{% trans "Add a Series" %}</h2>
             <form method="post">
                 {% csrf_token %}
                 {% if form.non_field_errors %}
@@ -25,7 +25,7 @@
                     <div class="control">
                         <button type="submit" class="button is-primary ">
                             <span class="icon is-small"><i class="fas fa-plus"></i></span>
-                            <span>Add</span>
+                            <span>{% trans "Add" %}</span>
                         </button>
                     </div>
                 </div>
@@ -36,15 +36,17 @@
     <div class="columns">
         <div class="column is-two-thirds">
             <div class="box">
-                <h2 class="title is-5">Series on Pull List ({{ series_on_list|length }})</h2>
+                <h2 class="title is-5">
+                    {% blocktrans with count=series_on_list|length %}Series on Pull List ({{ count }}){% endblocktrans %}
+                </h2>
                 {% if series_on_list %}
                     <div class="table-container">
                         <table class="table is-fullwidth is-striped is-hoverable">
                             <thead>
                                 <tr>
-                                    <th>Series</th>
-                                    <th>Publisher</th>
-                                    <th>Type</th>
+                                    <th>{% trans "Series" %}</th>
+                                    <th>{% trans "Publisher" %}</th>
+                                    <th>{% trans "Type" %}</th>
                                     {% if is_owner %}<th></th>{% endif %}
                                 </tr>
                             </thead>
@@ -63,7 +65,7 @@
                                                 <a href="{% url 'pull-list:remove-series' pls.series.pk %}"
                                                    class="button is-danger is-small is-outlined">
                                                     <span class="icon is-small"><i class="fas fa-times"></i></span>
-                                                    <span>Remove</span>
+                                                    <span>{% trans "Remove" %}</span>
                                                 </a>
                                             </td>
                                         {% endif %}
@@ -73,21 +75,21 @@
                         </table>
                     </div>
                 {% else %}
-                    <p class="has-text-grey">No series on this pull list yet.</p>
+                    <p class="has-text-grey">{% trans "No series on this pull list yet." %}</p>
                 {% endif %}
             </div>
         </div>
 
         <div class="column">
             <div class="box">
-                <h2 class="title is-5">Upcoming Issues</h2>
+                <h2 class="title is-5">{% trans "Upcoming Issues" %}</h2>
                 {% if upcoming_issues %}
                     <div class="table-container">
                         <table class="table is-fullwidth is-striped is-hoverable">
                             <thead>
                                 <tr>
-                                    <th>Issue</th>
-                                    <th>Store Date</th>
+                                    <th>{% trans "Issue" %}</th>
+                                    <th>{% trans "Store Date" %}</th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -103,7 +105,7 @@
                         </table>
                     </div>
                 {% else %}
-                    <p class="has-text-grey">No upcoming issues found for series on this pull list.</p>
+                    <p class="has-text-grey">{% trans "No upcoming issues found for series on this pull list." %}</p>
                 {% endif %}
             </div>
         </div>

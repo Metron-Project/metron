@@ -1,10 +1,10 @@
 {% extends parent_template|default:"base.html" %}
-{% load static bulma_tags %}
-{% block title %}Acquire {{ item.issue }} - Metron{% endblock %}
+{% load static bulma_tags i18n %}
+{% block title %}{% blocktrans with issue=item.issue %}Acquire {{ issue }} - Metron{% endblocktrans %}{% endblock %}
 {% block content %}
     <header class="block has-text-centered">
-        <h1 class="title">Acquire Item</h1>
-        <p class="subtitle">Mark <strong>{{ item.issue }}</strong> as acquired</p>
+        <h1 class="title">{% trans "Acquire Item" %}</h1>
+        <p class="subtitle">{% blocktrans with issue=item.issue %}Mark <strong>{{ issue }}</strong> as acquired{% endblocktrans %}</p>
     </header>
     <section class="section">
         <div class="container">
@@ -12,8 +12,7 @@
                 <div class="column is-half">
                     <div class="box">
                         <p class="mb-4">
-                            This will mark <strong>{{ item.issue }}</strong> as acquired on your wish list
-                            and add it to your collection. You can optionally record purchase details below.
+                            {% blocktrans with issue=item.issue %}This will mark <strong>{{ issue }}</strong> as acquired on your wish list and add it to your collection. You can optionally record purchase details below.{% endblocktrans %}
                         </p>
                         <form method="post">
                             {% csrf_token %}
@@ -35,10 +34,10 @@
                             {% endfor %}
                             <div class="field is-grouped is-grouped-right mt-5">
                                 <div class="control">
-                                    <a href="{% url 'wish-list:detail' %}" class="button">Cancel</a>
+                                    <a href="{% url 'wish-list:detail' %}" class="button">{% trans "Cancel" %}</a>
                                 </div>
                                 <div class="control">
-                                    <button type="submit" class="button is-success">Mark as Acquired</button>
+                                    <button type="submit" class="button is-success">{% trans "Mark as Acquired" %}</button>
                                 </div>
                             </div>
                         </form>

@@ -1,4 +1,5 @@
 from django import forms
+from django.utils.translation import gettext_lazy as _
 
 from comicsdb.autocomplete import IssueAutocomplete, SeriesAutocomplete
 from comicsdb.forms.widgets import BulmaMoneyWidget, SafeAutocompleteWidget
@@ -28,7 +29,7 @@ class CollectionItemForm(forms.ModelForm):
             "issue": SafeAutocompleteWidget(
                 ac_class=IssueAutocomplete,
                 attrs={
-                    "placeholder": "Search for an issue...",
+                    "placeholder": _("Search for an issue..."),
                     "class": "input",
                 },
             ),
@@ -51,42 +52,42 @@ class CollectionItemForm(forms.ModelForm):
             ),
             "purchase_store": forms.TextInput(
                 attrs={
-                    "placeholder": "Local Comic Shop",
+                    "placeholder": _("Local Comic Shop"),
                 }
             ),
             "storage_location": forms.TextInput(
                 attrs={
-                    "placeholder": "Long Box 3",
+                    "placeholder": _("Long Box 3"),
                 }
             ),
             "notes": forms.Textarea(
                 attrs={
-                    "placeholder": "Additional notes (optional)",
+                    "placeholder": _("Additional notes (optional)"),
                     "rows": 4,
                 }
             ),
         }
         labels = {
-            "book_format": "Format",
-            "grade": "Grade",
-            "grading_company": "Grading Company",
-            "purchase_date": "Date Purchased",
-            "purchase_price": "Price Paid",
-            "purchase_store": "Store/Vendor",
-            "is_read": "Have you read this issue?",
+            "book_format": _("Format"),
+            "grade": _("Grade"),
+            "grading_company": _("Grading Company"),
+            "purchase_date": _("Date Purchased"),
+            "purchase_price": _("Price Paid"),
+            "purchase_store": _("Store/Vendor"),
+            "is_read": _("Have you read this issue?"),
         }
         help_texts = {
-            "issue": "Search using 'Series Name (Year) #Number' format.",
-            "quantity": "Number of copies you own",
-            "book_format": "Physical print, digital, or both",
-            "grade": "Comic book condition grade (CGC scale)",
-            "grading_company": "Professional grading company (leave blank if user-assessed)",
-            "purchase_date": "When did you purchase this issue?",
-            "purchase_price": "How much did you pay?",
-            "purchase_store": "Where did you buy it?",
-            "storage_location": "Where is it stored?",
-            "notes": "Any additional notes about this item",
-            "is_read": "Mark this if you've read the issue (read dates managed in detail view)",
+            "issue": _("Search using 'Series Name (Year) #Number' format."),
+            "quantity": _("Number of copies you own"),
+            "book_format": _("Physical print, digital, or both"),
+            "grade": _("Comic book condition grade (CGC scale)"),
+            "grading_company": _("Professional grading company (leave blank if user-assessed)"),
+            "purchase_date": _("When did you purchase this issue?"),
+            "purchase_price": _("How much did you pay?"),
+            "purchase_store": _("Where did you buy it?"),
+            "storage_location": _("Where is it stored?"),
+            "notes": _("Any additional notes about this item"),
+            "is_read": _("Mark this if you've read the issue (read dates managed in detail view)"),
         }
 
     def __init__(self, *args, **kwargs):
@@ -105,7 +106,7 @@ class CollectionItemForm(forms.ModelForm):
             and issue
             and CollectionItem.objects.filter(user=self.user, issue=issue).exists()
         ):
-            raise forms.ValidationError("This issue is already in your collection.")
+            raise forms.ValidationError(_("This issue is already in your collection."))
 
         return issue
 
@@ -114,8 +115,8 @@ class AddIssuesFromSeriesForm(forms.Form):
     """Form for adding multiple issues from a series to a collection."""
 
     RANGE_CHOICES = [
-        ("all", "All issues"),
-        ("range", "Issue range"),
+        ("all", _("All issues")),
+        ("range", _("Issue range")),
     ]
 
     series = forms.ModelChoiceField(
@@ -124,20 +125,20 @@ class AddIssuesFromSeriesForm(forms.Form):
         widget=SafeAutocompleteWidget(
             ac_class=SeriesAutocomplete,
             attrs={
-                "placeholder": "Search for a series...",
+                "placeholder": _("Search for a series..."),
                 "class": "input",
             },
         ),
-        label="Series",
-        help_text="Select the series to add issues from",
+        label=_("Series"),
+        help_text=_("Select the series to add issues from"),
     )
 
     range_type = forms.ChoiceField(
         choices=RANGE_CHOICES,
         initial="all",
         widget=forms.RadioSelect(),
-        label="Which issues?",
-        help_text="Choose whether to add all issues or specify a range",
+        label=_("Which issues?"),
+        help_text=_("Choose whether to add all issues or specify a range"),
     )
 
     start_number = forms.CharField(
@@ -145,12 +146,12 @@ class AddIssuesFromSeriesForm(forms.Form):
         max_length=25,
         widget=forms.TextInput(
             attrs={
-                "placeholder": "e.g., 1 or 1.1",
+                "placeholder": _("e.g., 1 or 1.1"),
                 "class": "input",
             }
         ),
-        label="Start Issue Number",
-        help_text="Optional: Issue number to start from (leave blank to start from beginning)",
+        label=_("Start Issue Number"),
+        help_text=_("Optional: Issue number to start from (leave blank to start from beginning)"),
     )
 
     end_number = forms.CharField(
@@ -158,12 +159,12 @@ class AddIssuesFromSeriesForm(forms.Form):
         max_length=25,
         widget=forms.TextInput(
             attrs={
-                "placeholder": "e.g., 50",
+                "placeholder": _("e.g., 50"),
                 "class": "input",
             }
         ),
-        label="End Issue Number",
-        help_text="Optional: Issue number to end at (leave blank to go to end)",
+        label=_("End Issue Number"),
+        help_text=_("Optional: Issue number to end at (leave blank to go to end)"),
     )
 
     default_format = forms.ChoiceField(
@@ -171,13 +172,13 @@ class AddIssuesFromSeriesForm(forms.Form):
         initial=CollectionItem.BookFormat.PRINT,
         required=False,
         widget=forms.Select(attrs={"class": "select"}),
-        label="Default Format",
-        help_text="The format to use for all added issues",
+        label=_("Default Format"),
+        help_text=_("The format to use for all added issues"),
     )
 
     mark_as_read = forms.BooleanField(
         required=False,
         initial=False,
-        label="Mark as read",
-        help_text="Check this to mark all added issues as read",
+        label=_("Mark as read"),
+        help_text=_("Check this to mark all added issues as read"),
     )

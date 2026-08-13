@@ -1,21 +1,20 @@
 {% extends parent_template|default:"base.html" %}
 {% load humanize %}
 {% load thumbnail %}
-{% load static %}
+{% load static i18n %}
 {% block title %}
-    Users - Metron
+    {% trans "Users - Metron" %}
 {% endblock title %}
 {% block content %}
     <header class="block has-text-centered">
-        <h1 class="title">Users</h1>
+        <h1 class="title">{% trans "Users" %}</h1>
     </header>
     <section>
-        <nav class="level" aria-label="List navigation and actions">
+        <nav class="level" aria-label="{% trans 'List navigation and actions' %}">
             <div class="level-left">
                 <div class="level-item">
                     <p class="subtitle is-5">
-                        <strong>{{ page_obj.paginator.count|intcomma }}</strong>
-                        User{{ page_obj.paginator.count|pluralize }}
+                        {% blocktrans count counter=page_obj.paginator.count with formatted_count=page_obj.paginator.count|intcomma %}<strong>{{ formatted_count }}</strong> User{% plural %}<strong>{{ formatted_count }}</strong> Users{% endblocktrans %}
                     </p>
                 </div>
                 <div class="level-item">
@@ -23,23 +22,23 @@
                           method="get"
                           accept-charset="utf-8"
                           role="search"
-                          aria-label="Search users">
+                          aria-label="{% trans 'Search users' %}">
                         <div class="field has-addons">
                             <div class="control">
-                                <label for="search-input-user" class="is-sr-only">Search Users</label>
+                                <label for="search-input-user" class="is-sr-only">{% trans "Search Users" %}</label>
                                 <input id="search-input-user"
                                        class="input"
                                        name="q"
                                        type="search"
-                                       placeholder="Find a user"
-                                       aria-label="Find a user">
+                                       placeholder="{% trans 'Find a user' %}"
+                                       aria-label="{% trans 'Find a user' %}">
                             </div>
                             <div class="control">
-                                <button class="button" type="submit" aria-label="Search">
+                                <button class="button" type="submit" aria-label="{% trans 'Search' %}">
                                     <span class="icon" aria-hidden="true">
                                         <i class="fas fa-search"></i>
                                     </span>
-                                    <span>Search</span>
+                                    <span>{% trans "Search" %}</span>
                                 </button>
                             </div>
                         </div>
@@ -62,13 +61,13 @@
                                                      src="{{ im.url }}"
                                                      width="{{ im.width }}"
                                                      height="{{ im.height }}"
-                                                     alt="Profile picture of {{ user.username }}"
+                                                     alt="{% blocktrans with username=user.username %}Profile picture of {{ username }}{% endblocktrans %}"
                                                      loading="lazy">
                                             {% endthumbnail %}
                                         {% else %}
                                             <img class="is-rounded"
                                                  src="{% static 'site/img/user-not-found.webp' %}"
-                                                 alt="Default profile picture"
+                                                 alt="{% trans 'Default profile picture' %}"
                                                  loading="lazy">
                                         {% endif %}
                                     </figure>
@@ -80,7 +79,7 @@
                                         <span class="icon is-small">
                                             <i class="fas fa-calendar-alt"></i>
                                         </span>
-                                        Joined {{ user.date_joined|date:"M Y" }}
+                                        {% blocktrans with joined=user.date_joined|date:"M Y" %}Joined {{ joined }}{% endblocktrans %}
                                     </p>
                                 </div>
                             </article>
@@ -95,7 +94,7 @@
                         <i class="fas fa-users fa-2x"></i>
                     </span>
                 </p>
-                <p class="mt-3">No users found.</p>
+                <p class="mt-3">{% trans "No users found." %}</p>
             </div>
         {% endif %}
     </section>

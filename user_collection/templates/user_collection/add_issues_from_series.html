@@ -1,13 +1,13 @@
 {% extends parent_template|default:"base.html" %}
-{% load static %}
-{% block title %}Add from Series - My Collection - Metron{% endblock %}
+{% load static i18n %}
+{% block title %}{% trans "Add from Series - My Collection - Metron" %}{% endblock %}
 {% block js %}
     {{ form.media }}
 {% endblock js %}
 {% block content %}
     <header class="block has-text-centered">
-        <h1 class="title">Add Issues from Series</h1>
-        <p class="subtitle">Bulk add to your collection</p>
+        <h1 class="title">{% trans "Add Issues from Series" %}</h1>
+        <p class="subtitle">{% trans "Bulk add to your collection" %}</p>
     </header>
     <section class="section">
         <div class="container">
@@ -79,40 +79,40 @@
                             </div>
                             <div class="field is-grouped is-flex-direction-column-mobile mt-5">
                                 <div class="control">
-                                    <a href="{% url 'user_collection:list' %}" class="button">Cancel</a>
+                                    <a href="{% url 'user_collection:list' %}" class="button">{% trans "Cancel" %}</a>
                                 </div>
                                 <div class="control">
-                                    <button type="submit" class="button is-primary">Add Issues</button>
+                                    <button type="submit" class="button is-primary">{% trans "Add Issues" %}</button>
                                 </div>
                             </div>
                         </form>
                     </div>
                     <div class="content mt-5">
-                        <h3 class="title is-5">How to use:</h3>
+                        <h3 class="title is-5">{% trans "How to use:" %}</h3>
                         <ul>
                             <li>
-                                <strong>Select a series:</strong> Start typing in the search box to find a series by name
+                                <strong>{% trans "Select a series:" %}</strong> {% trans "Start typing in the search box to find a series by name" %}
                             </li>
                             <li>
-                                <strong>Choose what to add:</strong>
+                                <strong>{% trans "Choose what to add:" %}</strong>
                                 <ul>
                                     <li>
-                                        <strong>All issues:</strong> Adds every issue from the series
+                                        <strong>{% trans "All issues:" %}</strong> {% trans "Adds every issue from the series" %}
                                     </li>
                                     <li>
-                                        <strong>Issue range:</strong> Specify a start and/or end issue number (e.g., start at #1, end at #50)
+                                        <strong>{% trans "Issue range:" %}</strong> {% trans "Specify a start and/or end issue number (e.g., start at #1, end at #50)" %}
                                     </li>
                                 </ul>
                             </li>
-                            <li>Issues already in your collection will be automatically skipped</li>
-                            <li>All issues will be added with your selected format and quantity 1</li>
+                            <li>{% trans "Issues already in your collection will be automatically skipped" %}</li>
+                            <li>{% trans "All issues will be added with your selected format and quantity 1" %}</li>
                             <li>
-                                <strong>Mark as read:</strong> Check this option if you've already read these issues
+                                <strong>{% trans "Mark as read:" %}</strong> {% trans "Check this option if you've already read these issues" %}
                             </li>
-                            <li>You can edit individual items later to add purchase information and update read status</li>
+                            <li>{% trans "You can edit individual items later to add purchase information and update read status" %}</li>
                         </ul>
                         <div class="notification is-info is-light mt-4">
-                            <strong>Tip:</strong> This is a quick way to add an entire series to your collection. After adding, you can update individual issues with purchase details, format preferences, and notes!
+                            <strong>{% trans "Tip:" %}</strong> {% trans "This is a quick way to add an entire series to your collection. After adding, you can update individual issues with purchase details, format preferences, and notes!" %}
                         </div>
                     </div>
                 </div>

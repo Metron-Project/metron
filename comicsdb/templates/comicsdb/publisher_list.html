@@ -1,17 +1,22 @@
 {% extends parent_template|default:"base.html" %}
-{% load static %}
-{% block title %}Publishers - Metron{% endblock %}
+{% load i18n static %}
+{% block title %}{% trans "Publishers - Metron" %}{% endblock %}
 {% block content %}
     <header class="block has-text-centered">
-        <h1 class="title">Publishers List</h1>
+        <h1 class="title">{% trans "Publishers List" %}</h1>
     </header>
+    {% trans "Publisher" as list_title %}
+    {% trans "Publishers" as list_title_plural %}
+    {% trans "Find a publisher" as list_search_placeholder %}
+    {% trans "Series" as series_label %}
+    {% trans "Add a new publisher" as list_create_title %}
     {% if publisher_list %}
         <section>
-            {% include "comicsdb/partials/list_header.html" with title="Publisher" count=page_obj.paginator.count search_url="publisher:search" search_placeholder="Find a publisher" create_url="publisher:create" create_title="Add a new publisher" %}
-            {% include "comicsdb/partials/card_grid.html" with items=publisher_list detail_url_name="publisher:detail" image_ratio="is-2by3" default_image="site/img/image-not-found.webp" count_type="series" count_url_name="publisher:series" count_label="Series" %}
+            {% include "comicsdb/partials/list_header.html" with title=list_title title_plural=list_title_plural count=page_obj.paginator.count search_url="publisher:search" search_placeholder=list_search_placeholder create_url="publisher:create" create_title=list_create_title %}
+            {% include "comicsdb/partials/card_grid.html" with items=publisher_list detail_url_name="publisher:detail" image_ratio="is-2by3" default_image="site/img/image-not-found.webp" count_type="series" count_url_name="publisher:series" count_label=series_label count_label_plural=series_label %}
         </section>
     {% else %}
-        {% include "comicsdb/partials/empty_state.html" with item_type="Publisher" create_url="publisher:create" create_title="Add a new publisher" %}
+        {% include "comicsdb/partials/empty_state.html" with item_type=list_title item_type_plural=list_title_plural create_url="publisher:create" create_title=list_create_title %}
     {% endif %}
 {% endblock %}
 {% block pagination %}

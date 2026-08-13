@@ -10,6 +10,7 @@ from django.db.models.functions import Upper
 from django.db.models.signals import pre_save
 from django.urls import reverse
 from django.utils.text import slugify
+from django.utils.translation import gettext_lazy as _
 from simple_history.models import HistoricalRecords
 
 from comicsdb.db_functions import ArrayToString
@@ -38,18 +39,21 @@ class SeriesType(models.Model):
 
 class Series(CommonInfo):
     class Status(models.IntegerChoices):
-        CANCELLED = 1
-        COMPLETED = 2
-        HIATUS = 3
-        ONGOING = 4
+        CANCELLED = 1, _("Cancelled")
+        COMPLETED = 2, _("Completed")
+        HIATUS = 3, _("Hiatus")
+        ONGOING = 4, _("Ongoing")
 
     sort_name = models.CharField(max_length=255)
     alt_names = ArrayField(
-        models.CharField(max_length=255), blank=True, default=list, verbose_name="Alternative Names"
+        models.CharField(max_length=255),
+        blank=True,
+        default=list,
+        verbose_name=_("Alternative Names"),
     )
-    volume = models.PositiveSmallIntegerField("Volume Number")
-    year_began = models.PositiveSmallIntegerField("Year Began")
-    year_end = models.PositiveSmallIntegerField("Year Ended", null=True, blank=True)
+    volume = models.PositiveSmallIntegerField(_("Volume Number"))
+    year_began = models.PositiveSmallIntegerField(_("Year Began"))
+    year_end = models.PositiveSmallIntegerField(_("Year Ended"), null=True, blank=True)
     series_type = models.ForeignKey(SeriesType, on_delete=models.CASCADE)
     status = models.IntegerField(choices=Status.choices, default=Status.ONGOING)
     publisher = models.ForeignKey(Publisher, on_delete=models.CASCADE, related_name="series")
@@ -57,10 +61,12 @@ class Series(CommonInfo):
         Imprint, on_delete=models.SET_NULL, null=True, blank=True, related_name="series"
     )
     collection = models.BooleanField(
-        "Allow Collection Title",
+        _("Allow Collection Title"),
         db_default=False,
-        help_text="Whether a series has a collection title. "
-        "Normally this only applies to Trade Paperbacks.",
+        help_text=_(
+            "Whether a series has a collection title. "
+            "Normally this only applies to Trade Paperbacks."
+        ),
     )
     genres = models.ManyToManyField(Genre, blank=True, related_name="series")
     associated = models.ManyToManyField("self", blank=True)
@@ -111,7 +117,7 @@ class Series(CommonInfo):
         ]
         ordering = ["sort_name", "year_began"]
         unique_together = ["publisher", "name", "volume", "series_type"]
-        verbose_name_plural = "Series"
+        verbose_name_plural = _("Series")
 
 
 def generate_series_slug(instance):

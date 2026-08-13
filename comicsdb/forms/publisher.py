@@ -1,4 +1,5 @@
 from django.forms import ClearableFileInput, ModelForm, ValidationError
+from django.utils.translation import gettext_lazy as _
 
 from comicsdb.autocomplete import PublisherAutocomplete
 from comicsdb.forms.widgets import SafeAutocompleteWidget
@@ -24,5 +25,5 @@ class PublisherForm(ModelForm):
         country = self.cleaned_data["country"]
         allowed = {"US", "GB"}
         if country and str(country) not in allowed:
-            raise ValidationError("Currently only US and UK Publishers are supported")
+            raise ValidationError(_("Currently only US and UK Publishers are supported"))
         return country

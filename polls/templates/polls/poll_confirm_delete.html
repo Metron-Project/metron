@@ -1,15 +1,15 @@
 {% extends parent_template|default:"base.html" %}
-{% block title %}Delete Poll - Metron{% endblock %}
+{% load i18n %}
+{% block title %}{% trans "Delete Poll - Metron" %}{% endblock %}
 {% block content %}
     <section class="section">
         <div class="container">
             <div class="columns is-centered">
                 <div class="column is-half">
                     <div class="box">
-                        <h1 class="title is-4">Delete Poll</h1>
+                        <h1 class="title is-4">{% trans "Delete Poll" %}</h1>
                         <p class="mb-4">
-                            Are you sure you want to delete <strong>{{ object.title }}</strong>?
-                            This will also delete all votes cast in this poll and cannot be undone.
+                            {% blocktrans with title=object.title %}Are you sure you want to delete <strong>{{ title }}</strong>? This will also delete all votes cast in this poll and cannot be undone.{% endblocktrans %}
                         </p>
                         <form method="post">
                             {% csrf_token %}
@@ -17,12 +17,12 @@
                                 <div class="control">
                                     <button type="submit" class="button is-danger">
                                         <span class="icon"><i class="fas fa-trash"></i></span>
-                                        <span>Delete</span>
+                                        <span>{% trans "Delete" %}</span>
                                     </button>
                                 </div>
                                 <div class="control">
                                     <a href="{% url 'polls:detail' object.pk %}"
-                                       class="button">Cancel</a>
+                                       class="button">{% trans "Cancel" %}</a>
                                 </div>
                             </div>
                         </form>

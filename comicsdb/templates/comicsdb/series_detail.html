@@ -1,6 +1,6 @@
 {% extends parent_template|default:"base.html" %}
 {% load thumbnail %}
-{% load static %}
+{% load i18n static %}
 {% load humanize %}
 {% block title %}
     {{ series.name }}
@@ -29,31 +29,31 @@
         </p>
     </header>
     {# Navigation Bar #}
-    <nav class="level mb-5" aria-label="Series navigation">
+    <nav class="level mb-5" aria-label="{% trans 'Series navigation' %}">
         <div class="level-left">
             {% if navigation.previous_series %}
                 <a class="button is-link"
                    href="{% url 'series:detail' navigation.previous_series.slug %}"
-                   aria-label="Go to {{ navigation.previous_series }}">
+                   aria-label="{% blocktrans with previous_series=navigation.previous_series %}Go to {{ previous_series }}{% endblocktrans %}">
                     <span class="icon is-small"><i class="fas fa-arrow-left" aria-hidden="true"></i></span>
-                    <span>Previous Series</span>
+                    <span>{% trans "Previous Series" %}</span>
                 </a>
             {% else %}
                 <button class="button" disabled aria-disabled="true">
                     <span class="icon is-small"><i class="fas fa-arrow-left" aria-hidden="true"></i></span>
-                    <span>Previous Series</span>
+                    <span>{% trans "Previous Series" %}</span>
                 </button>
             {% endif %}
             {% if navigation.next_series %}
                 <a class="button is-link ml-2"
                    href="{% url 'series:detail' navigation.next_series.slug %}"
-                   aria-label="Go to {{ navigation.next_series }}">
-                    <span>Next Series</span>
+                   aria-label="{% blocktrans with next_series=navigation.next_series %}Go to {{ next_series }}{% endblocktrans %}">
+                    <span>{% trans "Next Series" %}</span>
                     <span class="icon is-small"><i class="fas fa-arrow-right" aria-hidden="true"></i></span>
                 </a>
             {% else %}
                 <button class="button ml-2" disabled aria-disabled="true">
-                    <span>Next Series</span>
+                    <span>{% trans "Next Series" %}</span>
                     <span class="icon is-small"><i class="fas fa-arrow-right" aria-hidden="true"></i></span>
                 </button>
             {% endif %}
@@ -62,17 +62,17 @@
             <div class="buttons">
                 <a class="button is-link"
                    href="{% url 'series:issue' series.slug %}"
-                   title="View issue list for this series">
+                   title="{% trans 'View issue list for this series' %}">
                     <span class="icon is-small"><i class="fas fa-list" aria-hidden="true"></i></span>
-                    <span>Issue List</span>
+                    <span>{% trans "Issue List" %}</span>
                 </a>
                 {% if user.is_authenticated %}
                     {% include "pull_list/partials/pull_list_button.html" with series=series on_pull_list=on_pull_list %}
                     <a class="button is-primary"
                        href="{% url 'series:create' %}"
-                       title="Add a new series">
+                       title="{% trans 'Add a new series' %}">
                         <span class="icon is-small"><i class="fas fa-plus" aria-hidden="true"></i></span>
-                        <span>New</span>
+                        <span>{% trans "New" %}</span>
                     </a>
                     <div class="dropdown is-right" id="series-actions-dropdown">
                         <div class="dropdown-trigger">
@@ -80,7 +80,7 @@
                                     aria-haspopup="true"
                                     aria-controls="series-actions-menu"
                                     hx-on:click="document.getElementById('series-actions-dropdown').classList.toggle('is-active')">
-                                <span>Actions</span>
+                                <span>{% trans "Actions" %}</span>
                                 <span class="icon is-small"><i class="fas fa-angle-down" aria-hidden="true"></i></span>
                             </button>
                         </div>
@@ -89,19 +89,19 @@
                                 <a class="dropdown-item"
                                    href="{% url 'series:update' series.slug %}">
                                     <span class="icon is-small"><i class="fas fa-edit" aria-hidden="true"></i></span>
-                                    <span>Edit</span>
+                                    <span>{% trans "Edit" %}</span>
                                 </a>
                                 <a class="dropdown-item"
                                    href="{% url 'series:history' series.slug %}">
                                     <span class="icon is-small"><i class="fas fa-history" aria-hidden="true"></i></span>
-                                    <span>History</span>
+                                    <span>{% trans "History" %}</span>
                                 </a>
                                 {% if perms.comicsdb.delete_series %}
                                     <hr class="dropdown-divider">
                                     <a class="dropdown-item has-text-danger"
                                        href="{% url 'series:delete' series.slug %}">
                                         <span class="icon is-small"><i class="fas fa-trash" aria-hidden="true"></i></span>
-                                        <span>Delete</span>
+                                        <span>{% trans "Delete" %}</span>
                                     </a>
                                 {% endif %}
                             </div>
@@ -136,7 +136,7 @@
                             {% endthumbnail %}
                         {% else %}
                             <img src="{% static 'site/img/image-not-found.webp' %}"
-                                 alt="No image for {{ series }}"
+                                 alt="{% blocktrans %}No image for {{ series }}{% endblocktrans %}"
                                  loading="lazy">
                         {% endif %}
                     {% endwith %}
@@ -147,21 +147,21 @@
         <div class="column">
             {# Summary #}
             <div class="box">
-                <h2 class="title is-5">Summary</h2>
+                <h2 class="title is-5">{% trans "Summary" %}</h2>
                 {% if series.desc %}
                     <div class="content">{{ series.desc|linebreaksbr }}</div>
                 {% else %}
-                    <p class="has-text-grey">No information available.</p>
+                    <p class="has-text-grey">{% trans "No information available." %}</p>
                 {% endif %}
                 <footer class="content is-small is-italic mt-4">
-                    Last edited on <time datetime="{{ series.modified|date:'c' }}">{{ series.modified }}</time> by
+                    {% blocktrans with modified_time=series.modified %}Last edited on <time datetime="{{ modified_time|date:'c' }}">{{ modified_time }}</time> by{% endblocktrans %}
                     <a href="{% url 'user-detail' username=series.edited_by.username %}">{{ series.edited_by.username }}</a>
                 </footer>
             </div>
             {# Top Creators #}
             {% if creators %}
                 <div class="box">
-                    <h2 class="title is-5">Most Issue Credits ({{ creators|length }})</h2>
+                    <h2 class="title is-5">{% blocktrans with count=creators|length %}Most Issue Credits ({{ count }}){% endblocktrans %}</h2>
                     <div class="columns is-multiline">
                         {% for creator in creators %}
                             <div class="column is-4">
@@ -180,7 +180,7 @@
                                             {% else %}
                                                 <img class="is-rounded"
                                                      src="{% static 'site/img/creator-not-found.webp' %}"
-                                                     alt="No image for {{ creator.creators__name }}"
+                                                     alt="{% blocktrans %}No image for {{ creator.creators__name }}{% endblocktrans %}"
                                                      loading="lazy">
                                             {% endif %}
                                         </div>
@@ -190,7 +190,7 @@
                                             <p>
                                                 <a href="{% url 'creator:detail' creator.creators__slug %}">{{ creator.creators__name }}</a>
                                                 <br>
-                                                <small class="has-text-grey-dark">{{ creator.count }} issue{{ creator.count|pluralize }}</small>
+                                                <small class="has-text-grey-dark">{% blocktrans count counter=creator.count %}{{ counter }} issue{% plural %}{{ counter }} issues{% endblocktrans %}</small>
                                             </p>
                                         </div>
                                     </div>
@@ -203,7 +203,7 @@
             {# Top Characters #}
             {% if characters %}
                 <div class="box">
-                    <h2 class="title is-5">Top Character Appearances ({{ characters|length }})</h2>
+                    <h2 class="title is-5">{% blocktrans with count=characters|length %}Top Character Appearances ({{ count }}){% endblocktrans %}</h2>
                     <div class="columns is-multiline">
                         {% for character in characters %}
                             <div class="column is-4">
@@ -222,7 +222,7 @@
                                             {% else %}
                                                 <img class="is-rounded"
                                                      src="{% static 'site/img/creator-not-found.webp' %}"
-                                                     alt="No image for {{ character.characters__name }}"
+                                                     alt="{% blocktrans %}No image for {{ character.characters__name }}{% endblocktrans %}"
                                                      loading="lazy">
                                             {% endif %}
                                         </div>
@@ -232,7 +232,7 @@
                                             <p>
                                                 <a href="{% url 'character:detail' character.characters__slug %}">{{ character.characters__name }}</a>
                                                 <br>
-                                                <small class="has-text-grey-dark">{{ character.count }} issue{{ character.count|pluralize }}</small>
+                                                <small class="has-text-grey-dark">{% blocktrans count counter=character.count %}{{ counter }} issue{% plural %}{{ counter }} issues{% endblocktrans %}</small>
                                             </p>
                                         </div>
                                     </div>
@@ -252,50 +252,56 @@
         {# Metadata Sidebar #}
         <div class="column is-one-fifth">
             <div class="box">
-                <h2 class="title is-6">Series Details</h2>
+                <h2 class="title is-6">{% trans "Series Details" %}</h2>
                 <dl>
-                    <dt class="has-text-weight-bold">Publisher:</dt>
+                    <dt class="has-text-weight-bold">{% trans "Publisher:" %}</dt>
                     <dd class="mb-3">
                         <a href="{% url 'publisher:detail' series.publisher.slug %}">{{ series.publisher }}</a>
                     </dd>
                     {% if series.imprint %}
-                        <dt class="has-text-weight-bold">Imprint:</dt>
+                        <dt class="has-text-weight-bold">{% trans "Imprint:" %}</dt>
                         <dd class="mb-3">
                             <a href="{% url 'imprint:detail' series.imprint.slug %}">{{ series.imprint }}</a>
                         </dd>
                     {% endif %}
-                    <dt class="has-text-weight-bold">Type:</dt>
+                    <dt class="has-text-weight-bold">{% trans "Type:" %}</dt>
                     <dd class="mb-3">
                         {{ series.series_type }}
                     </dd>
-                    <dt class="has-text-weight-bold">Status:</dt>
+                    <dt class="has-text-weight-bold">{% trans "Status:" %}</dt>
                     <dd class="mb-3">
                         {{ series.get_status_display }}
                     </dd>
                     {% if series.volume %}
-                        <dt class="has-text-weight-bold">Volume:</dt>
+                        <dt class="has-text-weight-bold">{% trans "Volume:" %}</dt>
                         <dd class="mb-3">
                             {{ series.volume }}
                         </dd>
                     {% endif %}
-                    <dt class="has-text-weight-bold">Started:</dt>
+                    <dt class="has-text-weight-bold">{% trans "Started:" %}</dt>
                     <dd class="mb-3">
                         {{ series.year_began }}
                     </dd>
                     {% if series.year_end %}
-                        <dt class="has-text-weight-bold">Ended:</dt>
+                        <dt class="has-text-weight-bold">{% trans "Ended:" %}</dt>
                         <dd class="mb-3">
                             {{ series.year_end }}
                         </dd>
                     {% endif %}
                     {% if series.issue_count > 0 %}
-                        <dt class="has-text-weight-bold">Number of Issues:</dt>
+                        <dt class="has-text-weight-bold">{% trans "Number of Issues:" %}</dt>
                         <dd class="mb-3">
                             {{ series.issue_count|intcomma }}
                         </dd>
                     {% endif %}
                     {% if series.alt_names %}
-                        <dt class="has-text-weight-bold">Alternative Name{{ series.alt_names|pluralize }}:</dt>
+                        <dt class="has-text-weight-bold">
+                            {% if series.alt_names|length > 1 %}
+                                {% trans "Alternative Names:" %}
+                            {% else %}
+                                {% trans "Alternative Name:" %}
+                            {% endif %}
+                        </dt>
                         <dd class="mb-3">
                             {{ series.alt_names|join:", " }}
                         </dd>
@@ -304,7 +310,13 @@
                 {# Genres #}
                 {% with genres=series.genres.all %}
                     {% if genres %}
-                        <h3 class="title is-6 mt-4">Genre{{ genres|pluralize }}</h3>
+                        <h3 class="title is-6 mt-4">
+                            {% if genres|length > 1 %}
+                                {% trans "Genres" %}
+                            {% else %}
+                                {% trans "Genre" %}
+                            {% endif %}
+                        </h3>
                         <ul class="menu-list">
                             {% for genre in genres %}<li>{{ genre.name }}</li>{% endfor %}
                         </ul>
@@ -313,21 +325,21 @@
             </div>
             {# Identification Numbers #}
             <div class="box">
-                <h2 class="title is-6">Identification Numbers</h2>
+                <h2 class="title is-6">{% trans "Identification Numbers" %}</h2>
                 <dl>
-                    <dt class="has-text-weight-bold">Metron:</dt>
+                    <dt class="has-text-weight-bold">{% trans "Metron:" %}</dt>
                     <dd class="mb-2 is-flex is-align-items-center is-justify-content-space-between">
                         <span class="is-family-monospace">{{ series.id }}</span>
                         <button type="button"
                                 class="button is-small is-light copy-id"
                                 data-copy="{{ series.id }}"
-                                title="Copy Metron ID"
-                                aria-label="Copy Metron ID">
+                                title="{% trans 'Copy Metron ID' %}"
+                                aria-label="{% trans 'Copy Metron ID' %}">
                             <span class="icon is-small"><i class="fas fa-copy"></i></span>
                         </button>
                     </dd>
                     {% if series.cv_id %}
-                        <dt class="has-text-weight-bold">Comic Vine:</dt>
+                        <dt class="has-text-weight-bold">{% trans "Comic Vine:" %}</dt>
                         <dd class="mb-2 is-flex is-align-items-center is-justify-content-space-between">
                             <a class="is-family-monospace"
                                href="https://comicvine.gamespot.com/volume/4050-{{ series.cv_id }}/"
@@ -339,15 +351,15 @@
                             <button type="button"
                                     class="button is-small is-light copy-id"
                                     data-copy="{{ series.cv_id }}"
-                                    title="Copy Comic Vine ID"
-                                    aria-label="Copy Comic Vine ID">
+                                    title="{% trans 'Copy Comic Vine ID' %}"
+                                    aria-label="{% trans 'Copy Comic Vine ID' %}">
                                 <span class="icon is-small"><i class="fas fa-copy"></i></span>
                             </button>
                         </dd>
                     {% endif %}
                     {% if series.gcd_id %}
                         <dt class="has-text-weight-bold">
-                            <abbr title="Grand Comics Database">GCD</abbr>:
+                            <abbr title="{% trans 'Grand Comics Database' %}">GCD</abbr>:
                         </dt>
                         <dd class="is-flex is-align-items-center is-justify-content-space-between">
                             <a class="is-family-monospace"
@@ -360,8 +372,8 @@
                             <button type="button"
                                     class="button is-small is-light copy-id"
                                     data-copy="{{ series.gcd_id }}"
-                                    title="Copy GCD ID"
-                                    aria-label="Copy GCD ID">
+                                    title="{% trans 'Copy GCD ID' %}"
+                                    aria-label="{% trans 'Copy GCD ID' %}">
                                 <span class="icon is-small"><i class="fas fa-copy"></i></span>
                             </button>
                         </dd>
@@ -373,7 +385,7 @@
             {% with assoc=series.associated.all %}
                 {% if assoc %}
                     <div class="box">
-                        <h2 class="title is-6">Associated Series</h2>
+                        <h2 class="title is-6">{% trans "Associated Series" %}</h2>
                         <ul class="menu-list">
                             {% for associated in assoc %}
                                 <li>

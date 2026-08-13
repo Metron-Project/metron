@@ -1,8 +1,8 @@
 {% extends parent_template|default:"base.html" %}
 {% load bulma_tags %}
-{% load static %}
+{% load static i18n %}
 {% block title %}
-    Sign Up - Metron
+    {% trans "Sign Up - Metron" %}
 {% endblock title %}
 {% block headscripts %}
     <script src="https://hcaptcha.com/1/api.js" async defer></script>
@@ -13,8 +13,8 @@
         <span class="icon is-large has-text-primary">
             <i class="fas fa-user-plus fa-3x"></i>
         </span>
-        <h1 class="title is-3 mt-4">Join Metron</h1>
-        <p class="subtitle has-text-grey">Create an account to contribute to the comic book database</p>
+        <h1 class="title is-3 mt-4">{% trans "Join Metron" %}</h1>
+        <p class="subtitle has-text-grey">{% trans "Create an account to contribute to the comic book database" %}</p>
     </header>
     {# Sign Up Form #}
     <div class="columns is-centered">
@@ -27,7 +27,7 @@
                     {% if form.non_field_errors %}
                         <div class="notification is-danger is-light">
                             <button class="delete"
-                                    aria-label="close"
+                                    aria-label="{% trans 'close' %}"
                                     onclick="this.parentElement.remove();"></button>
                             {% for error in form.non_field_errors %}<p>{{ error }}</p>{% endfor %}
                         </div>
@@ -66,28 +66,28 @@
                                 <span class="icon">
                                     <i class="fas fa-user-plus"></i>
                                 </span>
-                                <span>Create Account</span>
+                                <span>{% trans "Create Account" %}</span>
                             </button>
                         </div>
                     </div>
                     {# Additional Links #}
                     <div class="field mt-4">
                         <p class="has-text-centered">
-                            Already have an account?
-                            <a href="{% url 'login' %}" class="has-text-link has-text-weight-bold">Log in here</a>
+                            {% trans "Already have an account?" %}
+                            <a href="{% url 'login' %}" class="has-text-link has-text-weight-bold">{% trans "Log in here" %}</a>
                         </p>
                     </div>
                 </form>
             </div>
             {# Information Box #}
             <div class="notification is-info is-light">
-                <p class="has-text-weight-bold mb-2">Why create an account?</p>
+                <p class="has-text-weight-bold mb-2">{% trans "Why create an account?" %}</p>
                 <div class="content">
                     <ul>
-                        <li>Contribute to the comic book database</li>
-                        <li>Add and edit comic information</li>
-                        <li>Access the API for developers</li>
-                        <li>Join our community of comic enthusiasts</li>
+                        <li>{% trans "Contribute to the comic book database" %}</li>
+                        <li>{% trans "Add and edit comic information" %}</li>
+                        <li>{% trans "Access the API for developers" %}</li>
+                        <li>{% trans "Join our community of comic enthusiasts" %}</li>
                     </ul>
                 </div>
             </div>

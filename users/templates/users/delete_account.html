@@ -1,6 +1,7 @@
 {% extends parent_template|default:"base.html" %}
+{% load i18n %}
 {% block title %}
-    Delete Account - Metron
+    {% trans "Delete Account - Metron" %}
 {% endblock title %}
 {% block content %}
     <div class="columns is-centered mt-5">
@@ -10,16 +11,16 @@
                     <span class="icon is-large has-text-danger">
                         <i class="fas fa-exclamation-triangle fa-3x"></i>
                     </span>
-                    <h1 class="title is-3 mt-4">Delete Your Account</h1>
-                    <p class="subtitle has-text-grey">This action cannot be undone</p>
+                    <h1 class="title is-3 mt-4">{% trans "Delete Your Account" %}</h1>
+                    <p class="subtitle has-text-grey">{% trans "This action cannot be undone" %}</p>
                 </header>
                 <div class="notification is-danger is-light mb-5">
-                    <p class="has-text-weight-bold mb-2">Warning: Permanent deletion</p>
+                    <p class="has-text-weight-bold mb-2">{% trans "Warning: Permanent deletion" %}</p>
                     <div class="content is-small">
                         <ul>
-                            <li>Your account and all personal data will be permanently deleted</li>
-                            <li>Your reading list and collection data will be removed</li>
-                            <li>Database contributions (issues, creators, etc.) will remain but will no longer be attributed to you</li>
+                            <li>{% trans "Your account and all personal data will be permanently deleted" %}</li>
+                            <li>{% trans "Your reading list and collection data will be removed" %}</li>
+                            <li>{% trans "Database contributions (issues, creators, etc.) will remain but will no longer be attributed to you" %}</li>
                         </ul>
                     </div>
                 </div>
@@ -31,7 +32,7 @@
                                 <span class="icon">
                                     <i class="fas fa-trash-alt"></i>
                                 </span>
-                                <span>Delete My Account</span>
+                                <span>{% trans "Delete My Account" %}</span>
                             </button>
                         </div>
                         <div class="control">
@@ -40,7 +41,7 @@
                                 <span class="icon">
                                     <i class="fas fa-times"></i>
                                 </span>
-                                <span>Cancel</span>
+                                <span>{% trans "Cancel" %}</span>
                             </a>
                         </div>
                     </div>

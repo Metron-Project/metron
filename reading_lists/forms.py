@@ -1,4 +1,5 @@
 from django import forms
+from django.utils.translation import gettext_lazy as _
 
 from comicsdb.autocomplete import ArcAutocomplete, IssueAutocomplete, SeriesAutocomplete
 from comicsdb.forms.widgets import SafeAutocompleteWidget
@@ -15,21 +16,21 @@ class ReadingListForm(forms.ModelForm):
     previous = forms.ModelChoiceField(
         queryset=ReadingList.objects.all(),
         required=False,
-        label="Previous List",
-        help_text="The reading list that comes before this one in a reading order (optional)",
+        label=_("Previous List"),
+        help_text=_("The reading list that comes before this one in a reading order (optional)"),
         widget=SafeAutocompleteWidget(
             ac_class=ReadingListAutocomplete,
-            attrs={"placeholder": "Search for a reading list...", "class": "input"},
+            attrs={"placeholder": _("Search for a reading list..."), "class": "input"},
         ),
     )
     next = forms.ModelChoiceField(
         queryset=ReadingList.objects.all(),
         required=False,
-        label="Next List",
-        help_text="The reading list that comes after this one in a reading order (optional)",
+        label=_("Next List"),
+        help_text=_("The reading list that comes after this one in a reading order (optional)"),
         widget=SafeAutocompleteWidget(
             ac_class=ReadingListAutocomplete,
-            attrs={"placeholder": "Search for a reading list...", "class": "input"},
+            attrs={"placeholder": _("Search for a reading list..."), "class": "input"},
         ),
     )
 
@@ -47,11 +48,11 @@ class ReadingListForm(forms.ModelForm):
             "next",
         )
         widgets = {
-            "name": forms.TextInput(attrs={"placeholder": "Enter a name for your reading list"}),
+            "name": forms.TextInput(attrs={"placeholder": _("Enter a name for your reading list")}),
             "image": forms.ClearableFileInput(),
             "desc": forms.Textarea(
                 attrs={
-                    "placeholder": "Describe the reading list (optional)",
+                    "placeholder": _("Describe the reading list (optional)"),
                     "rows": 5,
                 }
             ),
@@ -65,18 +66,18 @@ class ReadingListForm(forms.ModelForm):
             ),
         }
         labels = {
-            "desc": "Description",
-            "is_private": "Private List",
-            "list_type": "List Type",
-            "attribution_source": "Source",
-            "attribution_url": "Source URL",
+            "desc": _("Description"),
+            "is_private": _("Private List"),
+            "list_type": _("List Type"),
+            "attribution_source": _("Source"),
+            "attribution_url": _("Source URL"),
         }
         help_texts = {
-            "is_private": (
+            "is_private": _(
                 "Private lists are only visible to you. Public lists can be viewed by anyone."
             ),
-            "attribution_source": "Where did you get this reading list from? (optional)",
-            "attribution_url": "URL of the specific page for this reading list (optional)",
+            "attribution_source": _("Where did you get this reading list from? (optional)"),
+            "attribution_url": _("URL of the specific page for this reading list (optional)"),
         }
 
     def __init__(self, *args, **kwargs):
@@ -98,20 +99,20 @@ class AddIssueWithSearchForm(forms.Form):
         widget=SafeAutocompleteWidget(
             ac_class=IssueAutocomplete,
             attrs={
-                "placeholder": "Search for issues...",
+                "placeholder": _("Search for issues..."),
                 "class": "input",
             },
             options={
                 "multiselect": True,
             },
         ),
-        label="Search for Issues (Optional)",
-        help_text="Add new issues and/or reorder existing issues by dragging",
+        label=_("Search for Issues (Optional)"),
+        help_text=_("Add new issues and/or reorder existing issues by dragging"),
     )
     issue_order = forms.CharField(
         required=False,
         widget=forms.HiddenInput(),
-        help_text="Stores the order of selected issues after drag-and-drop",
+        help_text=_("Stores the order of selected issues after drag-and-drop"),
     )
 
 
@@ -119,8 +120,8 @@ class AddIssuesFromSeriesForm(forms.Form):
     """Form for adding multiple issues from a series to a reading list."""
 
     RANGE_CHOICES = [
-        ("all", "All issues"),
-        ("range", "Issue range"),
+        ("all", _("All issues")),
+        ("range", _("Issue range")),
     ]
 
     series = forms.ModelChoiceField(
@@ -129,19 +130,19 @@ class AddIssuesFromSeriesForm(forms.Form):
         widget=SafeAutocompleteWidget(
             ac_class=SeriesAutocomplete,
             attrs={
-                "placeholder": "Search for a series...",
+                "placeholder": _("Search for a series..."),
                 "class": "input",
             },
         ),
-        label="Series",
-        help_text="Select the series to add issues from",
+        label=_("Series"),
+        help_text=_("Select the series to add issues from"),
     )
 
     range_type = forms.ChoiceField(
         choices=RANGE_CHOICES,
         initial="all",
         widget=forms.RadioSelect(),
-        label="What to add",
+        label=_("What to add"),
         required=True,
     )
 
@@ -149,26 +150,26 @@ class AddIssuesFromSeriesForm(forms.Form):
         max_length=25,
         required=False,
         widget=forms.TextInput(attrs={"placeholder": "1", "class": "input"}),
-        label="Start Issue #",
-        help_text="Leave blank to start from the first issue",
+        label=_("Start Issue #"),
+        help_text=_("Leave blank to start from the first issue"),
     )
 
     end_number = forms.CharField(
         max_length=25,
         required=False,
         widget=forms.TextInput(attrs={"placeholder": "50", "class": "input"}),
-        label="End Issue #",
-        help_text="Leave blank to go to the last issue",
+        label=_("End Issue #"),
+        help_text=_("Leave blank to go to the last issue"),
     )
 
     position = forms.ChoiceField(
         choices=[
-            ("end", "At the end"),
-            ("beginning", "At the beginning"),
+            ("end", _("At the end")),
+            ("beginning", _("At the beginning")),
         ],
         initial="end",
         widget=forms.RadioSelect(),
-        label="Add issues",
+        label=_("Add issues"),
         required=True,
     )
 
@@ -181,7 +182,7 @@ class AddIssuesFromSeriesForm(forms.Form):
         # If range is selected, at least one of start or end must be provided
         if range_type == "range" and not start_number and not end_number:
             raise forms.ValidationError(
-                "Please specify at least a start or end issue number for the range."
+                _("Please specify at least a start or end issue number for the range.")
             )
 
         return cleaned_data
@@ -196,21 +197,21 @@ class AddIssuesFromArcForm(forms.Form):
         widget=SafeAutocompleteWidget(
             ac_class=ArcAutocomplete,
             attrs={
-                "placeholder": "Search for a story arc...",
+                "placeholder": _("Search for a story arc..."),
                 "class": "input",
             },
         ),
-        label="Story Arc",
-        help_text="Select the story arc to add issues from",
+        label=_("Story Arc"),
+        help_text=_("Select the story arc to add issues from"),
     )
 
     position = forms.ChoiceField(
         choices=[
-            ("end", "At the end"),
-            ("beginning", "At the beginning"),
+            ("end", _("At the end")),
+            ("beginning", _("At the beginning")),
         ],
         initial="end",
         widget=forms.RadioSelect(),
-        label="Add issues",
+        label=_("Add issues"),
         required=True,
     )

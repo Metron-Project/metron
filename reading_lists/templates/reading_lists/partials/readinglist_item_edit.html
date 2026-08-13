@@ -1,4 +1,4 @@
-{% load static thumbnail %}
+{% load static thumbnail i18n %}
 <li id="item-{{ item.pk }}"
     class="rl-item"
     data-issue-type="{{ item.issue_type|default:'UNCATEGORIZED' }}">
@@ -19,7 +19,7 @@
             {% else %}
                 <img src="{% static 'site/img/image-not-found.webp' %}"
                      width="48"
-                     alt="No image for {{ item.issue }}"
+                     alt="{% blocktrans with issue=item.issue %}No image for {{ issue }}{% endblocktrans %}"
                      loading="lazy"
                      style="display: block; width: 48px; border-radius: 4px;">
             {% endif %}
@@ -46,16 +46,16 @@
                 <div class="control">
                     <div class="select is-small">
                         <select name="issue_type">
-                            <option value="">-- No Type --</option>
-                            <option value="PROLOGUE" {% if item.issue_type == 'PROLOGUE' %}selected{% endif %}>Prologue</option>
-                            <option value="CORE" {% if item.issue_type == 'CORE' %}selected{% endif %}>Core</option>
-                            <option value="TIE_IN" {% if item.issue_type == 'TIE_IN' %}selected{% endif %}>Tie-In</option>
-                            <option value="EPILOGUE" {% if item.issue_type == 'EPILOGUE' %}selected{% endif %}>Epilogue</option>
+                            <option value="">{% trans "-- No Type --" %}</option>
+                            <option value="PROLOGUE" {% if item.issue_type == 'PROLOGUE' %}selected{% endif %}>{% trans "Prologue" %}</option>
+                            <option value="CORE" {% if item.issue_type == 'CORE' %}selected{% endif %}>{% trans "Core" %}</option>
+                            <option value="TIE_IN" {% if item.issue_type == 'TIE_IN' %}selected{% endif %}>{% trans "Tie-In" %}</option>
+                            <option value="EPILOGUE" {% if item.issue_type == 'EPILOGUE' %}selected{% endif %}>{% trans "Epilogue" %}</option>
                         </select>
                     </div>
                 </div>
                 <div class="control">
-                    <button type="submit" class="button is-small is-success" title="Save">
+                    <button type="submit" class="button is-small is-success" title="{% trans 'Save' %}">
                         <span class="icon is-small"><i class="fas fa-check"></i></span>
                     </button>
                 </div>
@@ -65,7 +65,7 @@
                             hx-get="{% url 'reading-list:cancel-edit-issue-type' reading_list_slug item.pk %}"
                             hx-target="#item-{{ item.pk }}"
                             hx-swap="outerHTML"
-                            title="Cancel">
+                            title="{% trans 'Cancel' %}">
                         <span class="icon is-small"><i class="fas fa-times"></i></span>
                     </button>
                 </div>
