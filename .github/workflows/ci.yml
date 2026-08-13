@@ -86,8 +86,14 @@ jobs:
         with:
           enable-cache: true
 
+      - name: Install gettext (for compilemessages)
+        run: sudo apt-get update && sudo apt-get install -y gettext
+
       - name: Install dependencies
         run: uv sync --dev
+
+      - name: Compile translation catalogs
+        run: uv run python manage.py compilemessages
 
       - name: Run tests
         run: uv run pytest

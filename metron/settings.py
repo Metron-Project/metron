@@ -87,6 +87,7 @@ INSTALLED_APPS = [
 MIDDLEWARE = [
     "django.middleware.security.SecurityMiddleware",
     "django.contrib.sessions.middleware.SessionMiddleware",
+    "django.middleware.locale.LocaleMiddleware",
     "django.middleware.common.CommonMiddleware",
     "django.middleware.csrf.CsrfViewMiddleware",
     "django.contrib.auth.middleware.AuthenticationMiddleware",
@@ -112,6 +113,7 @@ TEMPLATES = [
                 "django.contrib.messages.context_processors.messages",
                 "comicsdb.context_processors.announcement_context_processor",
                 "sekizai.context_processors.sekizai",
+                "django.template.context_processors.i18n",
             ],
             # Bulma templatetags for project.
             "libraries": {
@@ -273,6 +275,15 @@ logging.config.dictConfig(
 # https://docs.djangoproject.com/en/2.0/topics/i18n/
 
 LANGUAGE_CODE = "en-us"
+
+LANGUAGES = [
+    ("en", "English"),
+    ("it", "Italiano"),
+]
+
+LOCALE_PATHS = [
+    BASE_DIR / "locale",
+]
 
 TIME_ZONE = "America/New_York"
 

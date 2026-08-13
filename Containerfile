@@ -25,6 +25,16 @@ COPY . .
 
 ENV PATH="/app/.venv/bin:$PATH"
 
+# Compile translation catalogs into the image. Uses django-admin (not
+# manage.py) so it doesn't require settings/env vars (DB, SECRET_KEY, etc.)
+# to be configured at build time. gettext (msgfmt) is only needed here, so
+# it's removed again afterward to keep the runtime image slim.
+RUN apt-get update \
+    && apt-get install -y --no-install-recommends gettext \
+    && django-admin compilemessages --ignore=".venv/*" \
+    && apt-get purge -y --auto-remove gettext \
+    && rm -rf /var/lib/apt/lists/*
+
 EXPOSE 8000
 
 # Workers: 2 * CPU_count + 1 is the recommended starting point.

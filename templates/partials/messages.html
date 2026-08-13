@@ -1,4 +1,4 @@
-{% load bulma_tags %}
+{% load bulma_tags i18n %}
 {% comment %}
     Django messages display component
     Shows success, error, warning, and info messages
@@ -10,7 +10,7 @@
              role="alert"
              {% if message.tags != 'error' and message.tags != 'danger' %}data-auto-dismiss{% endif %}>
             <button class="delete"
-                    aria-label="close notification"
+                    aria-label="{% trans 'close notification' %}"
                     onclick="this.parentElement.remove();"></button>
             <div class="media">
                 <div class="media-left">

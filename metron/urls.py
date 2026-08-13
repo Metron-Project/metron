@@ -9,7 +9,7 @@ from django.contrib import admin
 from django.templatetags.static import static
 from django.urls import include, path
 from django.views.generic import RedirectView, TemplateView
-from django.views.i18n import JavaScriptCatalog
+from django.views.i18n import JavaScriptCatalog, set_language
 from drf_spectacular.views import SpectacularAPIView, SpectacularSwaggerView
 
 from api import urls as api_urls
@@ -61,6 +61,7 @@ urlpatterns = [
     path("imprint/", include(imprint_urls)),
     path("issue/", include(issue_urls)),
     path("issue-ratings/", include(issue_ratings_urls)),
+    path("i18n/setlang/", set_language, name="set_language"),
     path("jsi18n/", JavaScriptCatalog.as_view(), name="javascript-catalog"),
     path("publisher/", include(publisher_urls)),
     path("polls/", include(polls_urls)),
