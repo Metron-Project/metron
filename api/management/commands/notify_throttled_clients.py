@@ -125,7 +125,7 @@ class Command(BaseCommand):
 
             prior_notices = ThrottleNotice.objects.filter(user=user).count()
             will_enforce = enforce and prior_notices >= options["enforce_after"]
-            candidates.append((user, offender, will_enforce))
+            candidates.append((user, offender, will_enforce, prior_notices))
 
         self._print_summary(candidates, send)
 
@@ -133,7 +133,7 @@ class Command(BaseCommand):
             send_pushover(self._pushover_message(candidates, send))
 
         if send:
-            for user, offender, will_enforce in candidates:
+            for user, offender, will_enforce, _prior_notices in candidates:
                 if will_enforce:
                     self._enforce_and_notify(user, offender)
                 else:
@@ -144,16 +144,21 @@ class Command(BaseCommand):
             self.stdout.write("No candidates found.")
             return
 
-        for user, offender, will_enforce in candidates:
+        for user, offender, will_enforce, prior_notices in candidates:
             if will_enforce:
                 action = self._predict_enforcement_action(user)
                 verb = f"Enforcing ({action})" if send else f"Would enforce ({action})"
             else:
                 verb = "Emailing" if send else "Would email"
+            prior_notices_msg = (
+                f"{prior_notices} prior notice{'' if prior_notices == 1 else 's'}"
+                if prior_notices
+                else "no prior notices"
+            )
             self.stdout.write(
                 f"{verb} {user.username} <{user.email}>: throttled on "
                 f"{offender.days_throttled} day(s), {offender.total_count} total, "
-                f"worst day {offender.worst_day_count}"
+                f"worst day {offender.worst_day_count}, {prior_notices_msg}"
             )
         if not send:
             self.stdout.write(
@@ -169,7 +174,7 @@ class Command(BaseCommand):
     @staticmethod
     def _pushover_message(candidates, send: bool) -> str:
         verb = "Emailed" if send else "Found"
-        names = ", ".join(user.username for user, _, _ in candidates)
+        names = ", ".join(user.username for user, _, _, _ in candidates)
         return f"{verb} {len(candidates)} throttled API client(s) on Metron: {names}"
 
     @staticmethod
