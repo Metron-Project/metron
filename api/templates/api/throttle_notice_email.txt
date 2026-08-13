@@ -1,13 +1,18 @@
 {% autoescape off %}Hi {{ user.username }},
 
-We've noticed that your Metron API client has repeatedly hit our rate limits over
+{% if days_throttled == 1 %}We've noticed that your Metron API client hit our rate limits hard, with
+{{ worst_day_count }} rate-limited (429) responses in a single day. When a client keeps
+retrying immediately after a 429 response instead of backing off, it adds
+unnecessary load to the site for everyone.{% else %}We've noticed that your Metron API client has repeatedly hit our rate limits over
 the past several days. When a client keeps retrying immediately after a 429
 response instead of backing off, it adds unnecessary load to the site for
-everyone.
+everyone.{% endif %}
 
-Your client received {{ total_count }} rate-limited (429) response{{ total_count|pluralize }}
+{% if days_throttled == 1 %}{% if total_count == worst_day_count %}Your client received {{ worst_day_count }} rate-limited (429) response{{ worst_day_count|pluralize }}
+in a single day.{% else %}Your client received {{ total_count }} rate-limited (429) response{{ total_count|pluralize }}
+recently, including {{ worst_day_count }} in a single day.{% endif %}{% else %}Your client received {{ total_count }} rate-limited (429) response{{ total_count|pluralize }}
 across {{ days_throttled }} day{{ days_throttled|pluralize }}, including {{ worst_day_count }}
-in a single day.
+in a single day.{% endif %}
 
 Every API response includes X-RateLimit-* headers showing your current limit,
 remaining requests, and when the window resets. A 429 response also means you've
