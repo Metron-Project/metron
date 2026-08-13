@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: metron\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-08-13 15:00-0400\n"
+"POT-Creation-Date: 2026-08-13 16:05-0400\n"
 "PO-Revision-Date: 2026-08-13 11:23-0400\n"
 "Last-Translator: Metron Project\n"
 "Language-Team: Italian\n"
@@ -308,11 +308,21 @@ msgstr ""
 
 #: polls/templates/polls/poll_confirm_delete.html:20
 #: polls/templates/polls/poll_detail.html:38
+#: reading_lists/templates/reading_lists/readinglist_confirm_delete.html:32
+#: reading_lists/templates/reading_lists/readinglist_detail.html:177
 msgid "Delete"
 msgstr "Elimina"
 
 #: polls/templates/polls/poll_confirm_delete.html:25
 #: pull_list/templates/pull_list/remove_series_confirm.html:27
+#: reading_lists/templates/reading_lists/add_issue_autocomplete.html:42
+#: reading_lists/templates/reading_lists/add_issues_from_arc.html:43
+#: reading_lists/templates/reading_lists/add_issues_from_series.html:76
+#: reading_lists/templates/reading_lists/partials/readinglist_item_edit.html:68
+#: reading_lists/templates/reading_lists/readinglist_confirm_assign_metron.html:29
+#: reading_lists/templates/reading_lists/readinglist_confirm_delete.html:29
+#: reading_lists/templates/reading_lists/readinglist_form.html:114
+#: reading_lists/templates/reading_lists/remove_issue_confirm.html:25
 #: user_collection/templates/user_collection/add_issues_from_series.html:82
 #: user_collection/templates/user_collection/collection_confirm_delete.html:31
 #: user_collection/templates/user_collection/collection_form.html:72
@@ -326,6 +336,7 @@ msgid "Cancel"
 msgstr "Annulla"
 
 #: polls/templates/polls/poll_detail.html:3
+#: reading_lists/templates/reading_lists/readinglist_form.html:3
 #, python-format
 msgid "%(title)s - Metron"
 msgstr "%(title)s - Metron"
@@ -435,11 +446,13 @@ msgstr "Hai già votato in questo sondaggio."
 msgid "No choice selected."
 msgstr "Nessuna scelta selezionata."
 
-#: pull_list/forms.py:16 user_collection/forms.py:128
+#: pull_list/forms.py:16 reading_lists/forms.py:133 user_collection/forms.py:128
 msgid "Search for a series..."
 msgstr "Cerca una serie..."
 
 #: pull_list/forms.py:20 pull_list/templates/pull_list/pulllist_detail.html:47
+#: reading_lists/forms.py:137
+#: reading_lists/templates/reading_lists/readinglist_detail.html:100
 #: templates/partials/navbar.html:74 user_collection/forms.py:132
 #: user_collection/templates/user_collection/collection_stats.html:226
 #: user_collection/templates/user_collection/missing_issues_list.html:40
@@ -474,6 +487,7 @@ msgid "Add to pull list"
 msgstr "Aggiungi alla pull list"
 
 #: pull_list/templates/pull_list/pulllist_detail.html:3
+#: reading_lists/templates/reading_lists/readinglist_detail.html:3
 #: wish_list/templates/wish_list/wishlist_detail.html:3
 #, python-format
 msgid "%(name)s - Metron"
@@ -493,6 +507,8 @@ msgid "Series on Pull List (%(count)s)"
 msgstr "Serie nella Pull List (%(count)s)"
 
 #: pull_list/templates/pull_list/pulllist_detail.html:48
+#: reading_lists/templates/reading_lists/partials/readinglist_filter.html:89
+#: reading_lists/views.py:46
 #: user_collection/templates/user_collection/missing_issues_list.html:41
 #: user_collection/templates/user_collection/partials/collection_filter.html:94
 msgid "Publisher"
@@ -505,6 +521,7 @@ msgstr "Tipo"
 
 #: pull_list/templates/pull_list/pulllist_detail.html:68
 #: pull_list/templates/pull_list/remove_series_confirm.html:30
+#: reading_lists/templates/reading_lists/remove_issue_confirm.html:28
 #: user_collection/templates/user_collection/collection_detail.html:32
 #: user_collection/templates/user_collection/collection_list.html:139
 #: wish_list/templates/wish_list/wishlist_detail.html:128
@@ -567,6 +584,1096 @@ msgstr "%(series)s è già nella tua pull list."
 #, python-format
 msgid "Removed %(series)s from your pull list."
 msgstr "Rimosso %(series)s dalla tua pull list."
+
+#: reading_lists/forms.py:19
+msgid "Previous List"
+msgstr "Lista Precedente"
+
+#: reading_lists/forms.py:20
+msgid "The reading list that comes before this one in a reading order (optional)"
+msgstr "La lista di lettura che precede questa nell'ordine di lettura (opzionale)"
+
+#: reading_lists/forms.py:23 reading_lists/forms.py:33
+msgid "Search for a reading list..."
+msgstr "Cerca una lista di lettura..."
+
+#: reading_lists/forms.py:29
+msgid "Next List"
+msgstr "Lista Successiva"
+
+#: reading_lists/forms.py:30
+msgid "The reading list that comes after this one in a reading order (optional)"
+msgstr "La lista di lettura che segue questa nell'ordine di lettura (opzionale)"
+
+#: reading_lists/forms.py:51
+msgid "Enter a name for your reading list"
+msgstr "Inserisci un nome per la tua lista di lettura"
+
+#: reading_lists/forms.py:55
+msgid "Describe the reading list (optional)"
+msgstr "Descrivi la lista di lettura (opzionale)"
+
+#: reading_lists/forms.py:69
+#: user_collection/templates/user_collection/collection_detail.html:84
+msgid "Description"
+msgstr "Descrizione"
+
+#: reading_lists/forms.py:70
+msgid "Private List"
+msgstr "Lista Privata"
+
+#: reading_lists/forms.py:71
+#: reading_lists/templates/reading_lists/partials/readinglist_filter.html:107
+#: reading_lists/views.py:47
+msgid "List Type"
+msgstr "Tipo di Lista"
+
+#: reading_lists/forms.py:72
+msgid "Source"
+msgstr "Fonte"
+
+#: reading_lists/forms.py:73
+msgid "Source URL"
+msgstr "URL della Fonte"
+
+#: reading_lists/forms.py:77
+msgid "Private lists are only visible to you. Public lists can be viewed by anyone."
+msgstr ""
+"Le liste private sono visibili solo a te. Le liste pubbliche possono essere viste da "
+"chiunque."
+
+#: reading_lists/forms.py:79
+msgid "Where did you get this reading list from? (optional)"
+msgstr "Da dove hai preso questa lista di lettura? (opzionale)"
+
+#: reading_lists/forms.py:80
+msgid "URL of the specific page for this reading list (optional)"
+msgstr "URL della pagina specifica per questa lista di lettura (opzionale)"
+
+#: reading_lists/forms.py:102
+msgid "Search for issues..."
+msgstr "Cerca albi..."
+
+#: reading_lists/forms.py:109
+msgid "Search for Issues (Optional)"
+msgstr "Cerca Albi (Opzionale)"
+
+#: reading_lists/forms.py:110
+msgid "Add new issues and/or reorder existing issues by dragging"
+msgstr "Aggiungi nuovi albi e/o riordina gli albi esistenti trascinandoli"
+
+#: reading_lists/forms.py:115
+msgid "Stores the order of selected issues after drag-and-drop"
+msgstr "Memorizza l'ordine degli albi selezionati dopo il trascinamento"
+
+#: reading_lists/forms.py:123 user_collection/forms.py:118
+msgid "All issues"
+msgstr "Tutti gli albi"
+
+#: reading_lists/forms.py:124 user_collection/forms.py:119
+msgid "Issue range"
+msgstr "Intervallo di albi"
+
+#: reading_lists/forms.py:138 user_collection/forms.py:133
+msgid "Select the series to add issues from"
+msgstr "Seleziona la serie da cui aggiungere gli albi"
+
+#: reading_lists/forms.py:145
+msgid "What to add"
+msgstr "Cosa aggiungere"
+
+#: reading_lists/forms.py:153
+msgid "Start Issue #"
+msgstr "Albo Iniziale #"
+
+#: reading_lists/forms.py:154
+msgid "Leave blank to start from the first issue"
+msgstr "Lascia vuoto per iniziare dal primo albo"
+
+#: reading_lists/forms.py:161
+msgid "End Issue #"
+msgstr "Albo Finale #"
+
+#: reading_lists/forms.py:162
+msgid "Leave blank to go to the last issue"
+msgstr "Lascia vuoto per arrivare all'ultimo albo"
+
+#: reading_lists/forms.py:167 reading_lists/forms.py:210
+msgid "At the end"
+msgstr "Alla fine"
+
+#: reading_lists/forms.py:168 reading_lists/forms.py:211
+msgid "At the beginning"
+msgstr "All'inizio"
+
+#: reading_lists/forms.py:172 reading_lists/forms.py:215
+msgid "Add issues"
+msgstr "Aggiungi albi"
+
+#: reading_lists/forms.py:185
+msgid "Please specify at least a start or end issue number for the range."
+msgstr "Specifica almeno un numero di albo iniziale o finale per l'intervallo."
+
+#: reading_lists/forms.py:200
+msgid "Search for a story arc..."
+msgstr "Cerca un arco narrativo..."
+
+#: reading_lists/forms.py:204
+msgid "Story Arc"
+msgstr "Arco Narrativo"
+
+#: reading_lists/forms.py:205
+msgid "Select the story arc to add issues from"
+msgstr "Seleziona l'arco narrativo da cui aggiungere gli albi"
+
+#: reading_lists/models.py:62
+#: reading_lists/templates/reading_lists/partials/readinglist_filter.html:71
+#: reading_lists/views.py:45
+msgid "Creator"
+msgstr "Autore"
+
+#: reading_lists/models.py:63
+msgid "Event"
+msgstr "Evento"
+
+#: reading_lists/models.py:64
+msgid "Story"
+msgstr "Storia"
+
+#: reading_lists/models.py:65 templates/partials/navbar.html:93
+#: users/templates/users/customuser_detail.html:252
+msgid "Characters"
+msgstr "Personaggi"
+
+#: reading_lists/models.py:66 templates/partials/navbar.html:99
+#: users/templates/users/customuser_detail.html:274
+msgid "Teams"
+msgstr "Squadre"
+
+#: reading_lists/models.py:67
+msgid "Master"
+msgstr "Principale"
+
+#: reading_lists/models.py:72
+msgid "Comic Book Reading Orders"
+msgstr "Comic Book Reading Orders"
+
+#: reading_lists/models.py:73
+msgid "Complete Marvel Reading Orders"
+msgstr "Complete Marvel Reading Orders"
+
+#: reading_lists/models.py:74
+msgid "Comic Book Herald"
+msgstr "Comic Book Herald"
+
+#: reading_lists/models.py:75
+msgid "Comic Book Treasury"
+msgstr "Comic Book Treasury"
+
+#: reading_lists/models.py:76
+msgid "Marvel Guides"
+msgstr "Marvel Guides"
+
+#: reading_lists/models.py:77
+msgid "How To Love Comics"
+msgstr "How To Love Comics"
+
+#: reading_lists/models.py:78
+msgid "League of ComicGeeks"
+msgstr "League of ComicGeeks"
+
+#: reading_lists/models.py:79
+msgid "Other"
+msgstr "Altro"
+
+#: reading_lists/models.py:85
+msgid "The user who owns this reading list"
+msgstr "L'utente proprietario di questa lista di lettura"
+
+#: reading_lists/models.py:89
+msgid "Whether this list is private (only visible to the owner)"
+msgstr "Se questa lista è privata (visibile solo al proprietario)"
+
+#: reading_lists/models.py:95
+msgid "The type of reading list"
+msgstr "Il tipo di lista di lettura"
+
+#: reading_lists/models.py:101
+msgid "Source where this reading list information was obtained"
+msgstr "Fonte da cui sono state ottenute le informazioni di questa lista di lettura"
+
+#: reading_lists/models.py:105
+msgid "URL of the specific page where this reading list was obtained"
+msgstr "URL della pagina specifica da cui è stata ottenuta questa lista di lettura"
+
+#: reading_lists/models.py:120
+msgid "The reading list that comes before this one in a reading order"
+msgstr "La lista di lettura che precede questa nell'ordine di lettura"
+
+#: reading_lists/models.py:128
+msgid "The reading list that comes after this one in a reading order"
+msgstr "La lista di lettura che segue questa nell'ordine di lettura"
+
+#: reading_lists/models.py:145
+msgid "A reading list cannot be its own previous list."
+msgstr "Una lista di lettura non può essere la lista precedente di se stessa."
+
+#: reading_lists/models.py:148
+msgid "A reading list cannot be its own next list."
+msgstr "Una lista di lettura non può essere la lista successiva di se stessa."
+
+#: reading_lists/models.py:150
+msgid "The previous and next reading lists must be different."
+msgstr "Le liste di lettura precedente e successiva devono essere diverse."
+
+#: reading_lists/models.py:217
+#: reading_lists/templates/reading_lists/partials/readinglist_item_edit.html:50
+#: reading_lists/views.py:66
+msgid "Prologue"
+msgstr "Prologo"
+
+#: reading_lists/models.py:218
+msgid "Core Issue"
+msgstr "Albo Principale"
+
+#: reading_lists/models.py:219
+#: reading_lists/templates/reading_lists/partials/readinglist_item_edit.html:52
+#: reading_lists/views.py:65
+msgid "Tie-In"
+msgstr "Tie-In"
+
+#: reading_lists/models.py:220
+#: reading_lists/templates/reading_lists/partials/readinglist_item_edit.html:53
+#: reading_lists/views.py:67
+msgid "Epilogue"
+msgstr "Epilogo"
+
+#: reading_lists/models.py:234
+msgid "Position of this issue in the reading list"
+msgstr "Posizione di questo albo nella lista di lettura"
+
+#: reading_lists/models.py:240
+msgid "Optional categorization of this issue's role in the reading list"
+msgstr "Categorizzazione opzionale del ruolo di questo albo nella lista di lettura"
+
+#: reading_lists/templates/reading_lists/add_issue_autocomplete.html:3
+msgid "Manage Issues - %(name)s - Metron"
+msgstr "Gestisci Albi - %(name)s - Metron"
+
+#: reading_lists/templates/reading_lists/add_issue_autocomplete.html:10
+msgid "Manage Reading List"
+msgstr "Gestisci Lista di Lettura"
+
+#: reading_lists/templates/reading_lists/add_issue_autocomplete.html:30
+msgid "Selected Issues"
+msgstr "Albi Selezionati"
+
+#: reading_lists/templates/reading_lists/add_issue_autocomplete.html:31
+msgid "Drag to reorder"
+msgstr "Trascina per riordinare"
+
+#: reading_lists/templates/reading_lists/add_issue_autocomplete.html:45
+#: users/templates/users/change_profile.html:111
+#: wish_list/templates/wish_list/wishlist_item_form.html:53
+msgid "Save Changes"
+msgstr "Salva Modifiche"
+
+#: reading_lists/templates/reading_lists/add_issue_autocomplete.html:51
+#: reading_lists/templates/reading_lists/add_issues_from_arc.html:52
+#: reading_lists/templates/reading_lists/add_issues_from_series.html:85
+#: user_collection/templates/user_collection/add_issues_from_series.html:91
+msgid "How to use:"
+msgstr "Come si usa:"
+
+#: reading_lists/templates/reading_lists/add_issue_autocomplete.html:53
+msgid ""
+"To add new issues: Start typing in the search box to find issues by series name, "
+"issue number, or story title"
+msgstr ""
+"Per aggiungere nuovi albi: inizia a digitare nella casella di ricerca per trovare "
+"albi per nome serie, numero albo o titolo della storia"
+
+#: reading_lists/templates/reading_lists/add_issue_autocomplete.html:54
+msgid "Select multiple issues from the dropdown (they will appear as chips)"
+msgstr "Seleziona più albi dal menu a tendina (appariranno come chip)"
+
+#: reading_lists/templates/reading_lists/add_issue_autocomplete.html:55
+msgid "All issues (existing and new) will appear below in a draggable list"
+msgstr ""
+"Tutti gli albi (esistenti e nuovi) appariranno qui sotto in un elenco trascinabile"
+
+#: reading_lists/templates/reading_lists/add_issue_autocomplete.html:56
+msgid "Drag and drop the issues to set your preferred reading order"
+msgstr "Trascina gli albi per impostare il tuo ordine di lettura preferito"
+
+#: reading_lists/templates/reading_lists/add_issue_autocomplete.html:57
+msgid "Click \"Save Changes\" to add new issues and/or save the reordered list"
+msgstr ""
+"Clicca \"Salva Modifiche\" per aggiungere nuovi albi e/o salvare l'elenco riordinato"
+
+#: reading_lists/templates/reading_lists/add_issue_autocomplete.html:189
+msgid "Issue #"
+msgstr "Albo #"
+
+#: reading_lists/templates/reading_lists/add_issue_autocomplete.html:195
+msgid "Current"
+msgstr "Attuale"
+
+#: reading_lists/templates/reading_lists/add_issue_autocomplete.html:195
+msgid "New"
+msgstr "Nuovo"
+
+#: reading_lists/templates/reading_lists/add_issues_from_arc.html:3
+msgid "Add from Story Arc - %(name)s - Metron"
+msgstr "Aggiungi da Arco Narrativo - %(name)s - Metron"
+
+#: reading_lists/templates/reading_lists/add_issues_from_arc.html:9
+msgid "Add Issues from Story Arc"
+msgstr "Aggiungi Albi da Arco Narrativo"
+
+#: reading_lists/templates/reading_lists/add_issues_from_arc.html:46
+#: reading_lists/templates/reading_lists/add_issues_from_series.html:79
+#: reading_lists/templates/reading_lists/readinglist_detail.html:161
+#: reading_lists/templates/reading_lists/readinglist_detail.html:245
+#: user_collection/templates/user_collection/add_issues_from_series.html:85
+msgid "Add Issues"
+msgstr "Aggiungi Albi"
+
+#: reading_lists/templates/reading_lists/add_issues_from_arc.html:55
+msgid "Select a story arc:"
+msgstr "Seleziona un arco narrativo:"
+
+#: reading_lists/templates/reading_lists/add_issues_from_arc.html:55
+msgid "Start typing in the search box to find a story arc by name"
+msgstr ""
+"Inizia a digitare nella casella di ricerca per trovare un arco narrativo per nome"
+
+#: reading_lists/templates/reading_lists/add_issues_from_arc.html:58
+msgid "All issues from the arc will be added:"
+msgstr "Tutti gli albi dell'arco narrativo verranno aggiunti:"
+
+#: reading_lists/templates/reading_lists/add_issues_from_arc.html:58
+msgid "Issues are added in chronological order by cover date"
+msgstr "Gli albi vengono aggiunti in ordine cronologico per data di copertina"
+
+#: reading_lists/templates/reading_lists/add_issues_from_arc.html:61
+#: reading_lists/templates/reading_lists/add_issues_from_series.html:102
+msgid "Choose position:"
+msgstr "Scegli la posizione:"
+
+#: reading_lists/templates/reading_lists/add_issues_from_arc.html:61
+#: reading_lists/templates/reading_lists/add_issues_from_series.html:102
+msgid "Add issues at the beginning or end of your reading list"
+msgstr "Aggiungi albi all'inizio o alla fine della tua lista di lettura"
+
+#: reading_lists/templates/reading_lists/add_issues_from_arc.html:63
+#: reading_lists/templates/reading_lists/add_issues_from_series.html:104
+msgid "Issues already in your reading list will be automatically skipped"
+msgstr ""
+"Gli albi già presenti nella tua lista di lettura verranno automaticamente saltati"
+
+#: reading_lists/templates/reading_lists/add_issues_from_arc.html:66
+#: reading_lists/templates/reading_lists/add_issues_from_series.html:107
+#: user_collection/templates/user_collection/add_issues_from_series.html:115
+msgid "Tip:"
+msgstr "Suggerimento:"
+
+#: reading_lists/templates/reading_lists/add_issues_from_arc.html:66
+msgid ""
+"Story arcs are perfect for reading major crossover events in order! You can combine "
+"multiple arcs to build comprehensive reading orders."
+msgstr ""
+"Gli archi narrativi sono perfetti per leggere i principali eventi crossover in "
+"ordine! Puoi combinare più archi per costruire ordini di lettura completi."
+
+#: reading_lists/templates/reading_lists/add_issues_from_series.html:3
+msgid "Add from Series - %(name)s - Metron"
+msgstr "Aggiungi dalla Serie - %(name)s - Metron"
+
+#: reading_lists/templates/reading_lists/add_issues_from_series.html:9
+#: user_collection/templates/user_collection/add_issues_from_series.html:9
+msgid "Add Issues from Series"
+msgstr "Aggiungi Albi dalla Serie"
+
+#: reading_lists/templates/reading_lists/add_issues_from_series.html:88
+#: user_collection/templates/user_collection/add_issues_from_series.html:94
+msgid "Select a series:"
+msgstr "Seleziona una serie:"
+
+#: reading_lists/templates/reading_lists/add_issues_from_series.html:88
+#: user_collection/templates/user_collection/add_issues_from_series.html:94
+msgid "Start typing in the search box to find a series by name"
+msgstr "Inizia a digitare nella casella di ricerca per trovare una serie per nome"
+
+#: reading_lists/templates/reading_lists/add_issues_from_series.html:91
+#: user_collection/templates/user_collection/add_issues_from_series.html:97
+msgid "Choose what to add:"
+msgstr "Scegli cosa aggiungere:"
+
+#: reading_lists/templates/reading_lists/add_issues_from_series.html:94
+#: user_collection/templates/user_collection/add_issues_from_series.html:100
+msgid "All issues:"
+msgstr "Tutti gli albi:"
+
+#: reading_lists/templates/reading_lists/add_issues_from_series.html:94
+#: user_collection/templates/user_collection/add_issues_from_series.html:100
+msgid "Adds every issue from the series"
+msgstr "Aggiunge tutti gli albi della serie"
+
+#: reading_lists/templates/reading_lists/add_issues_from_series.html:97
+#: user_collection/templates/user_collection/add_issues_from_series.html:103
+msgid "Issue range:"
+msgstr "Intervallo di albi:"
+
+#: reading_lists/templates/reading_lists/add_issues_from_series.html:97
+#: user_collection/templates/user_collection/add_issues_from_series.html:103
+msgid "Specify a start and/or end issue number (e.g., start at #1, end at #50)"
+msgstr ""
+"Specifica un numero di albo iniziale e/o finale (es. inizia da #1, termina a #50)"
+
+#: reading_lists/templates/reading_lists/add_issues_from_series.html:107
+msgid ""
+"For large reading orders spanning multiple series, you can use this tool repeatedly "
+"to add different series or ranges, building your list quickly!"
+msgstr ""
+"Per ordini di lettura estesi su più serie, puoi usare questo strumento più volte per "
+"aggiungere serie o intervalli diversi, costruendo rapidamente la tua lista!"
+
+#: reading_lists/templates/reading_lists/partials/readinglist_card.html:14
+#: reading_lists/templates/reading_lists/partials/readinglist_filter.html:203
+#: reading_lists/templates/reading_lists/readinglist_detail.html:27
+#: reading_lists/templates/reading_lists/readinglist_detail.html:275
+#: reading_lists/views.py:61
+msgid "Private"
+msgstr "Privato"
+
+#: reading_lists/templates/reading_lists/partials/readinglist_card.html:25
+#: reading_lists/templates/reading_lists/readinglist_detail.html:333
+#: reading_lists/templates/reading_lists/readinglist_detail.html:381
+msgid "%(counter)s issue"
+msgid_plural "%(counter)s issues"
+msgstr[0] "%(counter)s albo"
+msgstr[1] "%(counter)s albi"
+
+#: reading_lists/templates/reading_lists/partials/readinglist_card.html:48
+msgid "By <strong>%(username)s</strong>"
+msgstr "Di <strong>%(username)s</strong>"
+
+#: reading_lists/templates/reading_lists/partials/readinglist_card.html:62
+msgid "No description"
+msgstr "Nessuna descrizione"
+
+#: reading_lists/templates/reading_lists/partials/readinglist_card.html:64
+msgid "Updated %(timesince)s ago"
+msgstr "Aggiornato %(timesince)s fa"
+
+#: reading_lists/templates/reading_lists/partials/readinglist_filter.html:10
+msgid "Search Reading Lists"
+msgstr "Cerca Liste di Lettura"
+
+#: reading_lists/templates/reading_lists/partials/readinglist_filter.html:18
+#: user_collection/templates/user_collection/partials/collection_filter.html:18
+msgid "Filters Active"
+msgstr "Filtri Attivi"
+
+#: reading_lists/templates/reading_lists/partials/readinglist_filter.html:24
+#: user_collection/templates/user_collection/partials/collection_filter.html:24
+msgid "Quick Search"
+msgstr "Ricerca Rapida"
+
+#: reading_lists/templates/reading_lists/partials/readinglist_filter.html:31
+msgid "Search by list name..."
+msgstr "Cerca per nome lista..."
+
+#: reading_lists/templates/reading_lists/partials/readinglist_filter.html:32
+#: user_collection/templates/user_collection/partials/collection_filter.html:32
+msgid "Quick search"
+msgstr "Ricerca rapida"
+
+#: reading_lists/templates/reading_lists/partials/readinglist_filter.html:37
+msgid "Search by reading list name"
+msgstr "Cerca per nome della lista di lettura"
+
+#: reading_lists/templates/reading_lists/partials/readinglist_filter.html:46
+#: user_collection/templates/user_collection/partials/collection_filter.html:46
+msgid "Advanced Filters"
+msgstr "Filtri Avanzati"
+
+#: reading_lists/templates/reading_lists/partials/readinglist_filter.html:53
+msgid "List Name"
+msgstr "Nome Lista"
+
+#: reading_lists/templates/reading_lists/partials/readinglist_filter.html:60
+msgid "e.g., Marvel Reading Order"
+msgstr "es. Marvel Reading Order"
+
+#: reading_lists/templates/reading_lists/partials/readinglist_filter.html:61
+msgid "Filter by list name"
+msgstr "Filtra per nome lista"
+
+#: reading_lists/templates/reading_lists/partials/readinglist_filter.html:78
+msgid "e.g., Metron"
+msgstr "es. Metron"
+
+#: reading_lists/templates/reading_lists/partials/readinglist_filter.html:79
+msgid "Filter by creator username"
+msgstr "Filtra per nome utente autore"
+
+#: reading_lists/templates/reading_lists/partials/readinglist_filter.html:96
+#: user_collection/templates/user_collection/partials/collection_filter.html:101
+msgid "e.g., Marvel"
+msgstr "es. Marvel"
+
+#: reading_lists/templates/reading_lists/partials/readinglist_filter.html:97
+#: user_collection/templates/user_collection/partials/collection_filter.html:102
+msgid "Filter by publisher"
+msgstr "Filtra per editore"
+
+#: reading_lists/templates/reading_lists/partials/readinglist_filter.html:110
+msgid "Filter by list type"
+msgstr "Filtra per tipo di lista"
+
+#: reading_lists/templates/reading_lists/partials/readinglist_filter.html:111
+#: user_collection/templates/user_collection/partials/collection_filter.html:76
+msgid "All Types"
+msgstr "Tutti i Tipi"
+
+#: reading_lists/templates/reading_lists/partials/readinglist_filter.html:129
+msgid "Attribution Source"
+msgstr "Fonte di Attribuzione"
+
+#: reading_lists/templates/reading_lists/partials/readinglist_filter.html:134
+msgid "Filter by attribution source"
+msgstr "Filtra per fonte di attribuzione"
+
+#: reading_lists/templates/reading_lists/partials/readinglist_filter.html:135
+msgid "All Sources"
+msgstr "Tutte le Fonti"
+
+#: reading_lists/templates/reading_lists/partials/readinglist_filter.html:153
+msgid "Minimum Rating"
+msgstr "Valutazione Minima"
+
+#: reading_lists/templates/reading_lists/partials/readinglist_filter.html:158
+msgid "Filter by minimum rating"
+msgstr "Filtra per valutazione minima"
+
+#: reading_lists/templates/reading_lists/partials/readinglist_filter.html:159
+#: user_collection/templates/user_collection/partials/collection_filter.html:222
+msgid "All Ratings"
+msgstr "Tutte le Valutazioni"
+
+#: reading_lists/templates/reading_lists/partials/readinglist_filter.html:162
+#: reading_lists/views.py:54
+msgid "1+ Stars"
+msgstr "1+ Stelle"
+
+#: reading_lists/templates/reading_lists/partials/readinglist_filter.html:166
+#: reading_lists/views.py:55
+msgid "2+ Stars"
+msgstr "2+ Stelle"
+
+#: reading_lists/templates/reading_lists/partials/readinglist_filter.html:170
+#: reading_lists/views.py:56
+msgid "3+ Stars"
+msgstr "3+ Stelle"
+
+#: reading_lists/templates/reading_lists/partials/readinglist_filter.html:174
+#: reading_lists/views.py:57
+msgid "4+ Stars"
+msgstr "4+ Stelle"
+
+#: reading_lists/templates/reading_lists/partials/readinglist_filter.html:178
+#: reading_lists/views.py:58
+msgid "5 Stars"
+msgstr "5 Stelle"
+
+#: reading_lists/templates/reading_lists/partials/readinglist_filter.html:192
+#: reading_lists/views.py:50
+msgid "Privacy"
+msgstr "Privacy"
+
+#: reading_lists/templates/reading_lists/partials/readinglist_filter.html:195
+msgid "Filter by privacy"
+msgstr "Filtra per privacy"
+
+#: reading_lists/templates/reading_lists/partials/readinglist_filter.html:196
+msgid "All Lists"
+msgstr "Tutte le Liste"
+
+#: reading_lists/templates/reading_lists/partials/readinglist_filter.html:199
+#: reading_lists/templates/reading_lists/readinglist_detail.html:57
+#: reading_lists/templates/reading_lists/readinglist_detail.html:277
+#: reading_lists/views.py:61
+msgid "Public"
+msgstr "Pubblico"
+
+#: reading_lists/templates/reading_lists/partials/readinglist_filter.html:223
+#: user_collection/templates/user_collection/partials/collection_filter.html:246
+msgid "Apply Filters"
+msgstr "Applica Filtri"
+
+#: reading_lists/templates/reading_lists/partials/readinglist_filter.html:229
+#: user_collection/templates/user_collection/partials/collection_filter.html:252
+msgid "Clear all filters"
+msgstr "Cancella tutti i filtri"
+
+#: reading_lists/templates/reading_lists/partials/readinglist_filter.html:233
+#: user_collection/templates/user_collection/partials/collection_filter.html:256
+msgid "Clear Filters"
+msgstr "Cancella Filtri"
+
+#: reading_lists/templates/reading_lists/partials/readinglist_item.html:22
+#: reading_lists/templates/reading_lists/partials/readinglist_item_edit.html:22
+msgid "No image for %(issue)s"
+msgstr "Nessuna immagine per %(issue)s"
+
+#: reading_lists/templates/reading_lists/partials/readinglist_item.html:52
+msgid "Edit issue type"
+msgstr "Modifica tipo di albo"
+
+#: reading_lists/templates/reading_lists/partials/readinglist_item.html:57
+msgid "Remove from list"
+msgstr "Rimuovi dalla lista"
+
+#: reading_lists/templates/reading_lists/partials/readinglist_item_edit.html:49
+msgid "-- No Type --"
+msgstr "-- Nessun Tipo --"
+
+#: reading_lists/templates/reading_lists/partials/readinglist_item_edit.html:51
+#: reading_lists/views.py:64
+msgid "Core"
+msgstr "Principale"
+
+#: reading_lists/templates/reading_lists/partials/readinglist_item_edit.html:58
+msgid "Save"
+msgstr "Salva"
+
+#: reading_lists/templates/reading_lists/partials/readinglist_item_list.html:14
+#: reading_lists/templates/reading_lists/readinglist_detail.html:232
+msgid "Load More Issues"
+msgstr "Carica Altri Albi"
+
+#: reading_lists/templates/reading_lists/readinglist_confirm_assign_metron.html:3
+msgid "Assign %(name)s to Metron - Metron"
+msgstr "Assegna %(name)s a Metron - Metron"
+
+#: reading_lists/templates/reading_lists/readinglist_confirm_assign_metron.html:6
+msgid "Assign Reading List to Metron"
+msgstr "Assegna Lista di Lettura a Metron"
+
+#: reading_lists/templates/reading_lists/readinglist_confirm_assign_metron.html:15
+msgid "Confirm ownership change"
+msgstr "Conferma cambio di proprietà"
+
+#: reading_lists/templates/reading_lists/readinglist_confirm_assign_metron.html:19
+#, python-format
+msgid ""
+"Are you sure you want to reassign ownership of the reading list <strong>\"%(name)s\"</"
+"strong> from <strong>%(username)s</strong> to the <strong>Metron</strong> account?"
+msgstr ""
+"Sei sicuro di voler riassegnare la proprietà della lista di lettura "
+"<strong>\"%(name)s\"</strong> da <strong>%(username)s</strong> all'account "
+"<strong>Metron</strong>?"
+
+#: reading_lists/templates/reading_lists/readinglist_confirm_assign_metron.html:21
+msgid "This action cannot be undone from this page."
+msgstr "Questa azione non può essere annullata da questa pagina."
+
+#: reading_lists/templates/reading_lists/readinglist_confirm_assign_metron.html:32
+#: reading_lists/templates/reading_lists/readinglist_detail.html:184
+msgid "Assign to Metron"
+msgstr "Assegna a Metron"
+
+#: reading_lists/templates/reading_lists/readinglist_confirm_delete.html:3
+msgid "Delete %(name)s - Metron"
+msgstr "Elimina %(name)s - Metron"
+
+#: reading_lists/templates/reading_lists/readinglist_confirm_delete.html:6
+msgid "Delete Reading List"
+msgstr "Elimina Lista di Lettura"
+
+#: reading_lists/templates/reading_lists/readinglist_confirm_delete.html:15
+#: user_collection/templates/user_collection/collection_confirm_delete.html:15
+#: wish_list/templates/wish_list/wishlist_item_confirm_delete.html:15
+msgid "Warning"
+msgstr "Attenzione"
+
+#: reading_lists/templates/reading_lists/readinglist_confirm_delete.html:19
+msgid "Are you sure you want to delete the reading list <strong>\"%(name)s\"</strong>?"
+msgstr ""
+"Sei sicuro di voler eliminare la lista di lettura <strong>\"%(name)s\"</strong>?"
+
+#: reading_lists/templates/reading_lists/readinglist_confirm_delete.html:21
+#: user_collection/templates/user_collection/collection_confirm_delete.html:24
+#: user_collection/templates/user_collection/partials/read_dates_list.html:30
+#: wish_list/templates/wish_list/wishlist_item_confirm_delete.html:19
+msgid "This action cannot be undone."
+msgstr "Questa azione non può essere annullata."
+
+#: reading_lists/templates/reading_lists/readinglist_detail.html:21
+#, python-format
+msgid "Reading List &middot; %(list_type)s"
+msgstr "Lista di Lettura &middot; %(list_type)s"
+
+#: reading_lists/templates/reading_lists/readinglist_detail.html:33
+msgid "Curated by"
+msgstr "Curata da"
+
+#: reading_lists/templates/reading_lists/readinglist_detail.html:48
+msgid "%(avg)s &middot; %(counter)s rating"
+msgid_plural "%(avg)s &middot; %(counter)s ratings"
+msgstr[0] "%(avg)s &middot; %(counter)s valutazione"
+msgstr[1] "%(avg)s &middot; %(counter)s valutazioni"
+
+#: reading_lists/templates/reading_lists/readinglist_detail.html:51
+msgid "No ratings yet"
+msgstr "Nessuna valutazione ancora"
+
+#: reading_lists/templates/reading_lists/readinglist_detail.html:64
+msgid "Link copied!"
+msgstr "Link copiato!"
+
+#: reading_lists/templates/reading_lists/readinglist_detail.html:66
+msgid "Share"
+msgstr "Condividi"
+
+#: reading_lists/templates/reading_lists/readinglist_detail.html:73
+msgid "Rate this list"
+msgstr "Valuta questa lista"
+
+#: reading_lists/templates/reading_lists/readinglist_detail.html:84
+#: templates/partials/navbar.html:80
+#: user_collection/templates/user_collection/collection_stats.html:227
+#: users/templates/users/customuser_detail.html:241
+msgid "Issues"
+msgstr "Albi"
+
+#: reading_lists/templates/reading_lists/readinglist_detail.html:88
+msgid "Reading span"
+msgstr "Periodo di lettura"
+
+#: reading_lists/templates/reading_lists/readinglist_detail.html:96
+#: reading_lists/templates/reading_lists/readinglist_detail.html:327
+#: reading_lists/templates/reading_lists/readinglist_detail.html:344
+#: templates/partials/navbar.html:62 users/templates/users/customuser_detail.html:219
+msgid "Publishers"
+msgstr "Editori"
+
+#: reading_lists/templates/reading_lists/readinglist_detail.html:105
+msgid "Composition"
+msgstr "Composizione"
+
+#: reading_lists/templates/reading_lists/readinglist_detail.html:132
+msgid "Previous"
+msgstr "Precedente"
+
+#: reading_lists/templates/reading_lists/readinglist_detail.html:142
+msgid "Next"
+msgstr "Successivo"
+
+#: reading_lists/templates/reading_lists/readinglist_detail.html:165
+#: reading_lists/templates/reading_lists/readinglist_detail.html:249
+#: user_collection/templates/user_collection/collection_list.html:39
+msgid "Add from Series"
+msgstr "Aggiungi dalla Serie"
+
+#: reading_lists/templates/reading_lists/readinglist_detail.html:169
+#: reading_lists/templates/reading_lists/readinglist_detail.html:253
+msgid "Add from Arc"
+msgstr "Aggiungi da Arco"
+
+#: reading_lists/templates/reading_lists/readinglist_detail.html:173
+#: user_collection/templates/user_collection/collection_detail.html:27
+#: user_collection/templates/user_collection/collection_list.html:132
+#: wish_list/templates/wish_list/wishlist_detail.html:123
+msgid "Edit"
+msgstr "Modifica"
+
+#: reading_lists/templates/reading_lists/readinglist_detail.html:197
+msgid "About this list"
+msgstr "Informazioni su questa lista"
+
+#: reading_lists/templates/reading_lists/readinglist_detail.html:203
+msgid "Issues (%(count)s)"
+msgstr "Albi (%(count)s)"
+
+#: reading_lists/templates/reading_lists/readinglist_detail.html:209
+#: user_collection/templates/user_collection/partials/collection_filter.html:156
+msgid "All"
+msgstr "Tutti"
+
+#: reading_lists/templates/reading_lists/readinglist_detail.html:240
+msgid "No issues in this list yet."
+msgstr "Nessun albo ancora in questa lista."
+
+#: reading_lists/templates/reading_lists/readinglist_detail.html:264
+msgid "List details"
+msgstr "Dettagli Lista"
+
+#: reading_lists/templates/reading_lists/readinglist_detail.html:266
+msgid "Owner:"
+msgstr "Proprietario:"
+
+#: reading_lists/templates/reading_lists/readinglist_detail.html:270
+msgid "Type:"
+msgstr "Tipo:"
+
+#: reading_lists/templates/reading_lists/readinglist_detail.html:272
+msgid "Visibility:"
+msgstr "Visibilità:"
+
+#: reading_lists/templates/reading_lists/readinglist_detail.html:281
+msgid "Reading span:"
+msgstr "Periodo di lettura:"
+
+#: reading_lists/templates/reading_lists/readinglist_detail.html:287
+msgid "Source:"
+msgstr "Fonte:"
+
+#: reading_lists/templates/reading_lists/readinglist_detail.html:299
+msgid "Created:"
+msgstr "Creata:"
+
+#: reading_lists/templates/reading_lists/readinglist_detail.html:301
+msgid "Last modified:"
+msgstr "Ultima modifica:"
+
+#: reading_lists/templates/reading_lists/readinglist_detail.html:310
+msgid "Series in this list"
+msgstr "Serie in questa lista"
+
+#: reading_lists/templates/reading_lists/readinglist_detail.html:355
+msgid "Top Characters"
+msgstr "Personaggi Principali"
+
+#: reading_lists/templates/reading_lists/readinglist_detail.html:391
+msgid "Featured Creators"
+msgstr "Autori in Evidenza"
+
+#: reading_lists/templates/reading_lists/readinglist_form.html:101
+msgid "Clear selection"
+msgstr "Cancella selezione"
+
+#: reading_lists/templates/reading_lists/readinglist_list.html:3
+#: reading_lists/templates/reading_lists/readinglist_list.html:6
+#: reading_lists/templates/reading_lists/readinglist_list.html:41
+#: templates/partials/navbar.html:132
+msgid "My Reading Lists"
+msgstr "Le Mie Liste di Lettura"
+
+#: reading_lists/templates/reading_lists/readinglist_list.html:3
+#: reading_lists/templates/reading_lists/readinglist_list.html:6
+#: templates/partials/navbar.html:119
+msgid "Reading Lists"
+msgstr "Liste di Lettura"
+
+#: reading_lists/templates/reading_lists/readinglist_list.html:21
+msgid "Reading list navigation"
+msgstr "Navigazione lista di lettura"
+
+#: reading_lists/templates/reading_lists/readinglist_list.html:25
+msgid "<strong>%(formatted_count)s</strong> reading list"
+msgid_plural "<strong>%(formatted_count)s</strong> reading lists"
+msgstr[0] "<strong>%(formatted_count)s</strong> lista di lettura"
+msgstr[1] "<strong>%(formatted_count)s</strong> liste di lettura"
+
+#: reading_lists/templates/reading_lists/readinglist_list.html:36
+msgid "All Reading Lists"
+msgstr "Tutte le Liste di Lettura"
+
+#: reading_lists/templates/reading_lists/readinglist_list.html:46
+#: reading_lists/templates/reading_lists/readinglist_list.html:69
+#: reading_lists/templates/reading_lists/readinglist_list.html:84
+#: reading_lists/views.py:507
+msgid "Create Reading List"
+msgstr "Crea Lista di Lettura"
+
+#: reading_lists/templates/reading_lists/readinglist_list.html:65
+msgid "You don't have any reading lists yet"
+msgstr "Non hai ancora nessuna lista di lettura"
+
+#: reading_lists/templates/reading_lists/readinglist_list.html:66
+#: reading_lists/templates/reading_lists/readinglist_list.html:81
+msgid "Create your first reading list!"
+msgstr "Crea la tua prima lista di lettura!"
+
+#: reading_lists/templates/reading_lists/readinglist_list.html:72
+#: user_collection/templates/user_collection/collection_list.html:157
+msgid "No results found"
+msgstr "Nessun risultato trovato"
+
+#: reading_lists/templates/reading_lists/readinglist_list.html:73
+#: user_collection/templates/user_collection/collection_list.html:158
+msgid "Try adjusting your search filters"
+msgstr "Prova a modificare i filtri di ricerca"
+
+#: reading_lists/templates/reading_lists/readinglist_list.html:76
+#: user_collection/templates/user_collection/collection_list.html:162
+msgid "Clear All Filters"
+msgstr "Cancella Tutti i Filtri"
+
+#: reading_lists/templates/reading_lists/readinglist_list.html:79
+msgid "No reading lists found"
+msgstr "Nessuna lista di lettura trovata"
+
+#: reading_lists/templates/reading_lists/readinglist_list.html:87
+msgid "Login to create your own reading lists"
+msgstr "Accedi per creare le tue liste di lettura"
+
+#: reading_lists/templates/reading_lists/remove_issue_confirm.html:3
+msgid "Remove Issue - Metron"
+msgstr "Rimuovi Albo - Metron"
+
+#: reading_lists/templates/reading_lists/remove_issue_confirm.html:6
+msgid "Remove Issue from Reading List"
+msgstr "Rimuovi Albo dalla Lista di Lettura"
+
+#: reading_lists/templates/reading_lists/remove_issue_confirm.html:16
+msgid "Remove <strong>%(issue)s</strong> from <strong>%(name)s</strong>?"
+msgstr "Rimuovere <strong>%(issue)s</strong> da <strong>%(name)s</strong>?"
+
+#: reading_lists/views.py:43 users/templates/users/customuser_list.html:37
+#: users/templates/users/customuser_list.html:41
+msgid "Search"
+msgstr "Cerca"
+
+#: reading_lists/views.py:44 users/templates/users/api_token.html:85
+msgid "Name"
+msgstr "Nome"
+
+#: reading_lists/views.py:48
+msgid "Attribution"
+msgstr "Attribuzione"
+
+#: reading_lists/views.py:49
+msgid "Min Rating"
+msgstr "Valutazione Min"
+
+#: reading_lists/views.py:74 reading_lists/views.py:75 reading_lists/views.py:76
+#: reading_lists/views.py:77
+msgid "Artist"
+msgstr "Disegnatore"
+
+#: reading_lists/views.py:78 reading_lists/views.py:79 reading_lists/views.py:80
+msgid "Writer"
+msgstr "Sceneggiatore"
+
+#: reading_lists/views.py:501
+#, python-format
+msgid "Reading list '%(name)s' created!"
+msgstr "Lista di lettura '%(name)s' creata!"
+
+#: reading_lists/views.py:508
+msgid "Create"
+msgstr "Crea"
+
+#: reading_lists/views.py:536
+#, python-format
+msgid "Reading list '%(name)s' updated!"
+msgstr "Lista di lettura '%(name)s' aggiornata!"
+
+#: reading_lists/views.py:542
+msgid "Edit Reading List"
+msgstr "Modifica Lista di Lettura"
+
+#: reading_lists/views.py:543
+#: user_collection/templates/user_collection/collection_form.html:77
+msgid "Update"
+msgstr "Aggiorna"
+
+#: reading_lists/views.py:561
+#, python-format
+msgid "Reading list '%(name)s' deleted!"
+msgstr "Lista di lettura '%(name)s' eliminata!"
+
+#: reading_lists/views.py:588
+msgid "The 'Metron' user account does not exist."
+msgstr "L'account utente 'Metron' non esiste."
+
+#: reading_lists/views.py:596
+#, python-format
+msgid "Ownership of '%(name)s' has been reassigned to Metron."
+msgstr "La proprietà di '%(name)s' è stata riassegnata a Metron."
+
+#: reading_lists/views.py:620
+msgid "Removed %(issue)s from '%(name)s'!"
+msgstr "Rimosso %(issue)s da '%(name)s'!"
+
+#: reading_lists/views.py:695
+msgid "Added %(issue)s"
+msgstr "Aggiunto %(issue)s"
+
+#: reading_lists/views.py:698
+msgid "Added %(count)d issue"
+msgid_plural "Added %(count)d issues"
+msgstr[0] "Aggiunto %(count)d albo"
+msgstr[1] "Aggiunti %(count)d albi"
+
+#: reading_lists/views.py:705
+#, python-format
+msgid "reordered %(count)d existing issue"
+msgid_plural "reordered %(count)d existing issues"
+msgstr[0] "riordinato %(count)d albo esistente"
+msgstr[1] "riordinati %(count)d albi esistenti"
+
+#: reading_lists/views.py:714
+msgid "%(first)s and %(second)s"
+msgstr "%(first)s e %(second)s"
+
+#: reading_lists/views.py:722
+#, python-format
+msgid "%(summary)s in '%(name)s'!"
+msgstr "%(summary)s in '%(name)s'!"
+
+#: reading_lists/views.py:730
+msgid "Skipped %(count)d duplicate issue."
+msgid_plural "Skipped %(count)d duplicate issues."
+msgstr[0] "Saltato %(count)d albo duplicato."
+msgstr[1] "Saltati %(count)d albi duplicati."
+
+#: reading_lists/views.py:738
+msgid "No changes were made."
+msgstr "Nessuna modifica effettuata."
+
+#: reading_lists/views.py:778
+msgid "No new issues to add. All issues from %(series)s are already in the list."
+msgstr ""
+"Nessun nuovo albo da aggiungere. Tutti gli albi di %(series)s sono già nella lista."
+
+#: reading_lists/views.py:785
+#, python-format
+msgid "Added %(count)d issue from %(series)s at the beginning of '%(name)s'!"
+msgid_plural "Added %(count)d issues from %(series)s at the beginning of '%(name)s'!"
+msgstr[0] "Aggiunto %(count)d albo da %(series)s all'inizio di '%(name)s'!"
+msgstr[1] "Aggiunti %(count)d albi da %(series)s all'inizio di '%(name)s'!"
+
+#: reading_lists/views.py:791
+#, python-format
+msgid "Added %(count)d issue from %(series)s at the end of '%(name)s'!"
+msgid_plural "Added %(count)d issues from %(series)s at the end of '%(name)s'!"
+msgstr[0] "Aggiunto %(count)d albo da %(series)s alla fine di '%(name)s'!"
+msgstr[1] "Aggiunti %(count)d albi da %(series)s alla fine di '%(name)s'!"
+
+#: reading_lists/views.py:821
+#, python-format
+msgid "No new issues to add. All issues from %(arc)s are already in the list."
+msgstr ""
+"Nessun nuovo albo da aggiungere. Tutti gli albi di %(arc)s sono già nella lista."
+
+#: reading_lists/views.py:828
+#, python-format
+msgid "Added %(count)d issue from %(arc)s at the beginning of '%(name)s'!"
+msgid_plural "Added %(count)d issues from %(arc)s at the beginning of '%(name)s'!"
+msgstr[0] "Aggiunto %(count)d albo da %(arc)s all'inizio di '%(name)s'!"
+msgstr[1] "Aggiunti %(count)d albi da %(arc)s all'inizio di '%(name)s'!"
+
+#: reading_lists/views.py:834
+#, python-format
+msgid "Added %(count)d issue from %(arc)s at the end of '%(name)s'!"
+msgid_plural "Added %(count)d issues from %(arc)s at the end of '%(name)s'!"
+msgstr[0] "Aggiunto %(count)d albo da %(arc)s alla fine di '%(name)s'!"
+msgstr[1] "Aggiunti %(count)d albi da %(arc)s alla fine di '%(name)s'!"
 
 #: templates/base.html:9 users/templates/registration/account_activation_email.html:210
 #: users/templates/registration/account_activation_email.txt:21
@@ -690,31 +1797,13 @@ msgstr "Future"
 msgid "Browse"
 msgstr "Esplora"
 
-#: templates/partials/navbar.html:62 users/templates/users/customuser_detail.html:219
-msgid "Publishers"
-msgstr "Editori"
-
 #: templates/partials/navbar.html:68 users/templates/users/customuser_detail.html:285
 msgid "Imprints"
 msgstr "Etichette"
 
-#: templates/partials/navbar.html:80
-#: user_collection/templates/user_collection/collection_stats.html:227
-#: users/templates/users/customuser_detail.html:241
-msgid "Issues"
-msgstr "Albi"
-
 #: templates/partials/navbar.html:87 users/templates/users/customuser_detail.html:263
 msgid "Creators"
 msgstr "Autori"
-
-#: templates/partials/navbar.html:93 users/templates/users/customuser_detail.html:252
-msgid "Characters"
-msgstr "Personaggi"
-
-#: templates/partials/navbar.html:99 users/templates/users/customuser_detail.html:274
-msgid "Teams"
-msgstr "Squadre"
 
 #: templates/partials/navbar.html:106
 msgid "Story Arcs"
@@ -724,17 +1813,9 @@ msgstr "Archi Narrativi"
 msgid "Universes"
 msgstr "Universi"
 
-#: templates/partials/navbar.html:119
-msgid "Reading Lists"
-msgstr "Liste di Lettura"
-
 #: templates/partials/navbar.html:126
 msgid "My Library"
 msgstr "La Mia Libreria"
-
-#: templates/partials/navbar.html:132
-msgid "My Reading Lists"
-msgstr "Le Mie Liste di Lettura"
 
 #: templates/partials/navbar.html:138
 #: user_collection/templates/user_collection/reading_history.html:30
@@ -914,18 +1995,6 @@ msgstr ""
 #: user_collection/forms.py:109
 msgid "This issue is already in your collection."
 msgstr "Questo albo è già nella tua collezione."
-
-#: user_collection/forms.py:118
-msgid "All issues"
-msgstr "Tutti gli albi"
-
-#: user_collection/forms.py:119
-msgid "Issue range"
-msgstr "Intervallo di albi"
-
-#: user_collection/forms.py:133
-msgid "Select the series to add issues from"
-msgstr "Seleziona la serie da cui aggiungere gli albi"
 
 #: user_collection/forms.py:140
 msgid "Which issues?"
@@ -1193,50 +2262,9 @@ msgstr "Date di Lettura"
 msgid "Add from Series - My Collection - Metron"
 msgstr "Aggiungi dalla Serie - La Mia Collezione - Metron"
 
-#: user_collection/templates/user_collection/add_issues_from_series.html:9
-msgid "Add Issues from Series"
-msgstr "Aggiungi Albi dalla Serie"
-
 #: user_collection/templates/user_collection/add_issues_from_series.html:10
 msgid "Bulk add to your collection"
 msgstr "Aggiunta massiva alla tua collezione"
-
-#: user_collection/templates/user_collection/add_issues_from_series.html:85
-msgid "Add Issues"
-msgstr "Aggiungi Albi"
-
-#: user_collection/templates/user_collection/add_issues_from_series.html:91
-msgid "How to use:"
-msgstr "Come si usa:"
-
-#: user_collection/templates/user_collection/add_issues_from_series.html:94
-msgid "Select a series:"
-msgstr "Seleziona una serie:"
-
-#: user_collection/templates/user_collection/add_issues_from_series.html:94
-msgid "Start typing in the search box to find a series by name"
-msgstr "Inizia a digitare nella casella di ricerca per trovare una serie per nome"
-
-#: user_collection/templates/user_collection/add_issues_from_series.html:97
-msgid "Choose what to add:"
-msgstr "Scegli cosa aggiungere:"
-
-#: user_collection/templates/user_collection/add_issues_from_series.html:100
-msgid "All issues:"
-msgstr "Tutti gli albi:"
-
-#: user_collection/templates/user_collection/add_issues_from_series.html:100
-msgid "Adds every issue from the series"
-msgstr "Aggiunge tutti gli albi della serie"
-
-#: user_collection/templates/user_collection/add_issues_from_series.html:103
-msgid "Issue range:"
-msgstr "Intervallo di albi:"
-
-#: user_collection/templates/user_collection/add_issues_from_series.html:103
-msgid "Specify a start and/or end issue number (e.g., start at #1, end at #50)"
-msgstr ""
-"Specifica un numero di albo iniziale e/o finale (es. inizia da #1, termina a #50)"
 
 #: user_collection/templates/user_collection/add_issues_from_series.html:107
 msgid "Issues already in your collection will be automatically skipped"
@@ -1262,10 +2290,6 @@ msgstr ""
 "e aggiornare lo stato di lettura"
 
 #: user_collection/templates/user_collection/add_issues_from_series.html:115
-msgid "Tip:"
-msgstr "Suggerimento:"
-
-#: user_collection/templates/user_collection/add_issues_from_series.html:115
 msgid ""
 "This is a quick way to add an entire series to your collection. After adding, you can "
 "update individual issues with purchase details, format preferences, and notes!"
@@ -1284,11 +2308,6 @@ msgstr "Rimuovi %(issue)s - Metron"
 msgid "Remove from Collection"
 msgstr "Rimuovi dalla Collezione"
 
-#: user_collection/templates/user_collection/collection_confirm_delete.html:15
-#: wish_list/templates/wish_list/wishlist_item_confirm_delete.html:15
-msgid "Warning"
-msgstr "Attenzione"
-
 #: user_collection/templates/user_collection/collection_confirm_delete.html:19
 #, python-format
 msgid "Are you sure you want to remove <strong>%(issue)s</strong> from your collection?"
@@ -1297,12 +2316,6 @@ msgstr "Sei sicuro di voler rimuovere <strong>%(issue)s</strong> dalla tua colle
 #: user_collection/templates/user_collection/collection_confirm_delete.html:22
 msgid "This will also delete the associated purchase information and notes."
 msgstr "Questo eliminerà anche le informazioni di acquisto e le note associate."
-
-#: user_collection/templates/user_collection/collection_confirm_delete.html:24
-#: user_collection/templates/user_collection/partials/read_dates_list.html:30
-#: wish_list/templates/wish_list/wishlist_item_confirm_delete.html:19
-msgid "This action cannot be undone."
-msgstr "Questa azione non può essere annullata."
 
 #: user_collection/templates/user_collection/collection_detail.html:4
 #, python-format
@@ -1318,12 +2331,6 @@ msgstr "Dettagli Elemento della Collezione"
 #: user_collection/templates/user_collection/missing_issues_list.html:14
 msgid "Back to Collection"
 msgstr "Torna alla Collezione"
-
-#: user_collection/templates/user_collection/collection_detail.html:27
-#: user_collection/templates/user_collection/collection_list.html:132
-#: wish_list/templates/wish_list/wishlist_detail.html:123
-msgid "Edit"
-msgstr "Modifica"
 
 #: user_collection/templates/user_collection/collection_detail.html:60
 msgid "Issue Information"
@@ -1345,10 +2352,6 @@ msgstr "Editore:"
 #: user_collection/templates/user_collection/collection_detail.html:75
 msgid "Cover Date:"
 msgstr "Data di Copertina:"
-
-#: user_collection/templates/user_collection/collection_detail.html:84
-msgid "Description"
-msgstr "Descrizione"
 
 #: user_collection/templates/user_collection/collection_detail.html:90
 msgid "Grading Information"
@@ -1453,10 +2456,6 @@ msgstr "Modifica Elemento della Collezione"
 msgid "Add Collection Item"
 msgstr "Aggiungi Elemento alla Collezione"
 
-#: user_collection/templates/user_collection/collection_form.html:77
-msgid "Update"
-msgstr "Aggiorna"
-
 #: user_collection/templates/user_collection/collection_form.html:79
 msgid "Add to Collection"
 msgstr "Aggiungi alla Collezione"
@@ -1490,10 +2489,6 @@ msgstr "Cronologia Letture"
 msgid "Missing Issues"
 msgstr "Albi Mancanti"
 
-#: user_collection/templates/user_collection/collection_list.html:39
-msgid "Add from Series"
-msgstr "Aggiungi dalla Serie"
-
 #: user_collection/templates/user_collection/collection_list.html:44
 msgid "Add Issue"
 msgstr "Aggiungi Albo"
@@ -1525,18 +2520,6 @@ msgstr "Letto il %(read_date)s"
 #: user_collection/templates/user_collection/reading_history.html:121
 msgid "View Details"
 msgstr "Visualizza Dettagli"
-
-#: user_collection/templates/user_collection/collection_list.html:157
-msgid "No results found"
-msgstr "Nessun risultato trovato"
-
-#: user_collection/templates/user_collection/collection_list.html:158
-msgid "Try adjusting your search filters"
-msgstr "Prova a modificare i filtri di ricerca"
-
-#: user_collection/templates/user_collection/collection_list.html:162
-msgid "Clear All Filters"
-msgstr "Cancella Tutti i Filtri"
 
 #: user_collection/templates/user_collection/collection_list.html:165
 msgid "Your collection is empty"
@@ -1699,29 +2682,13 @@ msgstr "Possiedi collezioni complete di tutte le tue serie."
 msgid "Search Collection"
 msgstr "Cerca nella Collezione"
 
-#: user_collection/templates/user_collection/partials/collection_filter.html:18
-msgid "Filters Active"
-msgstr "Filtri Attivi"
-
-#: user_collection/templates/user_collection/partials/collection_filter.html:24
-msgid "Quick Search"
-msgstr "Ricerca Rapida"
-
 #: user_collection/templates/user_collection/partials/collection_filter.html:31
 msgid "Search across series and notes..."
 msgstr "Cerca tra serie e note..."
 
-#: user_collection/templates/user_collection/partials/collection_filter.html:32
-msgid "Quick search"
-msgstr "Ricerca rapida"
-
 #: user_collection/templates/user_collection/partials/collection_filter.html:37
 msgid "Search across series names and notes"
 msgstr "Cerca tra i nomi delle serie e le note"
-
-#: user_collection/templates/user_collection/partials/collection_filter.html:46
-msgid "Advanced Filters"
-msgstr "Filtri Avanzati"
 
 #: user_collection/templates/user_collection/partials/collection_filter.html:53
 msgid "Series Name"
@@ -1742,18 +2709,6 @@ msgstr "Tipo di Serie"
 #: user_collection/templates/user_collection/partials/collection_filter.html:75
 msgid "Filter by series type"
 msgstr "Filtra per tipo di serie"
-
-#: user_collection/templates/user_collection/partials/collection_filter.html:76
-msgid "All Types"
-msgstr "Tutti i Tipi"
-
-#: user_collection/templates/user_collection/partials/collection_filter.html:101
-msgid "e.g., Marvel"
-msgstr "es. Marvel"
-
-#: user_collection/templates/user_collection/partials/collection_filter.html:102
-msgid "Filter by publisher"
-msgstr "Filtra per editore"
 
 #: user_collection/templates/user_collection/partials/collection_filter.html:112
 msgid "Issue Number"
@@ -1783,10 +2738,6 @@ msgstr "Stato Lettura"
 msgid "Filter by read status"
 msgstr "Filtra per stato di lettura"
 
-#: user_collection/templates/user_collection/partials/collection_filter.html:156
-msgid "All"
-msgstr "Tutti"
-
 #: user_collection/templates/user_collection/partials/collection_filter.html:175
 msgid "Filter by grade"
 msgstr "Filtra per grado"
@@ -1807,28 +2758,12 @@ msgstr "Tutte le Società"
 msgid "Filter by rating"
 msgstr "Filtra per valutazione"
 
-#: user_collection/templates/user_collection/partials/collection_filter.html:222
-msgid "All Ratings"
-msgstr "Tutte le Valutazioni"
-
 #: user_collection/templates/user_collection/partials/collection_filter.html:226
 #, python-format
 msgid "%(counter)s Star"
 msgid_plural "%(counter)s Stars"
 msgstr[0] "%(counter)s Stella"
 msgstr[1] "%(counter)s Stelle"
-
-#: user_collection/templates/user_collection/partials/collection_filter.html:246
-msgid "Apply Filters"
-msgstr "Applica Filtri"
-
-#: user_collection/templates/user_collection/partials/collection_filter.html:252
-msgid "Clear all filters"
-msgstr "Cancella tutti i filtri"
-
-#: user_collection/templates/user_collection/partials/collection_filter.html:256
-msgid "Clear Filters"
-msgstr "Cancella Filtri"
 
 #: user_collection/templates/user_collection/partials/read_dates_list.html:9
 msgid "Remove read date"
@@ -2189,6 +3124,7 @@ msgstr ""
 "tempo, dovrai registrarti di nuovo."
 
 #: users/templates/registration/account_activation_email.txt:29
+#, python-format
 msgid "(c) %(current_year)s Metron Project. All rights reserved."
 msgstr "(c) %(current_year)s Metron Project. Tutti i diritti riservati."
 
@@ -2530,10 +3466,6 @@ msgstr "I Tuoi Token"
 msgid "Never"
 msgstr "Mai"
 
-#: users/templates/users/api_token.html:85
-msgid "Name"
-msgstr "Nome"
-
 #: users/templates/users/api_token.html:86
 msgid "Created"
 msgstr "Creato"
@@ -2588,11 +3520,6 @@ msgstr "Per cambiare la tua password, utilizza il"
 msgid "password change form"
 msgstr "modulo di cambio password"
 
-#: users/templates/users/change_profile.html:111
-#: wish_list/templates/wish_list/wishlist_item_form.html:53
-msgid "Save Changes"
-msgstr "Salva Modifiche"
-
 #: users/templates/users/change_profile.html:132
 msgid "Profile Tips:"
 msgstr "Suggerimenti per il Profilo:"
@@ -2614,10 +3541,12 @@ msgid "Email address is used for notifications and account recovery"
 msgstr "L'indirizzo email viene utilizzato per notifiche e recupero dell'account"
 
 #: users/templates/users/customuser_detail.html:7
+#, python-format
 msgid "%(username)s - Metron"
 msgstr "%(username)s - Metron"
 
 #: users/templates/users/customuser_detail.html:11
+#, python-format
 msgid "Profile page for %(username)s on Metron Comic Book Database."
 msgstr "Pagina del profilo di %(username)s su Metron Comic Book Database."
 
@@ -2756,6 +3685,7 @@ msgid "(%(remaining)s remaining)"
 msgstr "(%(remaining)s rimanenti)"
 
 #: users/templates/users/customuser_detail.html:372
+#, python-format
 msgid "%(pct)s%% used"
 msgstr "%(pct)s%% utilizzato"
 
@@ -2805,6 +3735,7 @@ msgid "List navigation and actions"
 msgstr "Navigazione ed azioni elenco"
 
 #: users/templates/users/customuser_list.html:17
+#, python-format
 msgid "<strong>%(formatted_count)s</strong> User"
 msgid_plural "<strong>%(formatted_count)s</strong> Users"
 msgstr[0] "<strong>%(formatted_count)s</strong> Utente"
@@ -2822,11 +3753,6 @@ msgstr "Cerca Utenti"
 #: users/templates/users/customuser_list.html:34
 msgid "Find a user"
 msgstr "Trova un utente"
-
-#: users/templates/users/customuser_list.html:37
-#: users/templates/users/customuser_list.html:41
-msgid "Search"
-msgstr "Cerca"
 
 #: users/templates/users/customuser_list.html:70
 msgid "Default profile picture"

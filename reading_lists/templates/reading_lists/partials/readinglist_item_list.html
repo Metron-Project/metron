@@ -1,3 +1,4 @@
+{% load i18n %}
 {% for item in reading_list_items %}
     {% include "reading_lists/partials/readinglist_item.html" with item=item reading_list_slug=reading_list_slug is_owner=is_owner %}
 {% endfor %}
@@ -10,7 +11,7 @@
                 hx-target="#items-container"
                 hx-swap="beforeend"
                 hx-indicator="#items-spinner">
-            <span>Load More Issues</span>
+            <span>{% trans "Load More Issues" %}</span>
         </button>
         <span id="items-spinner" class="htmx-indicator ml-2">
             <i class="fas fa-spinner fa-spin"></i>

@@ -1,4 +1,4 @@
-{% load static thumbnail %}
+{% load static thumbnail i18n %}
 <li id="item-{{ item.pk }}"
     class="rl-item"
     data-issue-type="{{ item.issue_type|default:'UNCATEGORIZED' }}">
@@ -19,7 +19,7 @@
             {% else %}
                 <img src="{% static 'site/img/image-not-found.webp' %}"
                      width="48"
-                     alt="No image for {{ item.issue }}"
+                     alt="{% blocktrans with issue=item.issue %}No image for {{ issue }}{% endblocktrans %}"
                      loading="lazy"
                      style="display: block; width: 48px; border-radius: 4px;">
             {% endif %}
@@ -49,12 +49,12 @@
                         hx-get="{% url 'reading-list:edit-issue-type' reading_list_slug item.pk %}"
                         hx-target="#item-{{ item.pk }}"
                         hx-swap="outerHTML"
-                        title="Edit issue type">
+                        title="{% trans 'Edit issue type' %}">
                     <span class="icon is-small"><i class="fas fa-tag"></i></span>
                 </button>
                 <a href="{% url 'reading-list:remove-issue' reading_list_slug item.pk %}"
                    class="button is-small is-danger is-outlined"
-                   title="Remove from list">
+                   title="{% trans 'Remove from list' %}">
                     <span class="icon is-small"><i class="fas fa-times"></i></span>
                 </a>
             </div>

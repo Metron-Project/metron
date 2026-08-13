@@ -1,6 +1,6 @@
 {% extends parent_template|default:"base.html" %}
-{% load static thumbnail %}
-{% block title %}{{ reading_list.name }} - Metron{% endblock %}
+{% load static thumbnail i18n %}
+{% block title %}{% blocktrans with name=reading_list.name %}{{ name }} - Metron{% endblocktrans %}{% endblock %}
 {% block content %}
     {# ============================ HERO ============================ #}
     <header class="block"
@@ -18,19 +18,19 @@
         <div style="position: relative; z-index: 2; padding: 3rem 2rem;">
             <p style="text-transform: uppercase; letter-spacing: 3px; font-size: 0.75rem; font-weight: 600; color: #fff; opacity: 0.7; margin-bottom: 0.75rem;">
                 <span class="icon is-small"><i class="fas fa-layer-group"></i></span>
-                Reading List &middot; {{ reading_list.get_list_type_display }}
+                {% blocktrans with list_type=reading_list.get_list_type_display %}Reading List &middot; {{ list_type }}{% endblocktrans %}
             </p>
             <h1 class="title is-1 has-text-white"
                 style="font-weight: 800; letter-spacing: -1px; margin-bottom: 0.75rem;">
                 {{ reading_list.name }}
                 {% if reading_list.is_private %}
-                    <span class="tag is-warning is-medium" style="vertical-align: middle;">Private</span>
+                    <span class="tag is-warning is-medium" style="vertical-align: middle;">{% trans "Private" %}</span>
                 {% endif %}
             </h1>
 
             <div class="is-flex is-align-items-center is-flex-wrap-wrap" style="gap: 1rem;">
                 <span class="has-text-white">
-                    Curated by
+                    {% trans "Curated by" %}
                     <a href="{% url 'user-detail' username=reading_list.user.username %}"
                        class="has-text-white has-text-weight-bold"
                        style="border-bottom: 1px solid rgba(255,255,255,0.4);">{{ reading_list.user.username }}</a>
@@ -44,31 +44,33 @@
                                     <i class="{% if star_num|add:'0' <= average_rating %}fas{% else %}far{% endif %} fa-star"></i>
                                 {% endfor %}
                             </span>
-                            <span class="ml-1">{{ average_rating|floatformat:1 }} &middot; {{ rating_count }} rating{{ rating_count|pluralize }}</span>
+                            <span class="ml-1">
+                                {% blocktrans count counter=rating_count with avg=average_rating|floatformat:1 %}{{ avg }} &middot; {{ counter }} rating{% plural %}{{ avg }} &middot; {{ counter }} ratings{% endblocktrans %}
+                            </span>
                         {% else %}
-                            <span style="opacity: 0.8;">No ratings yet</span>
+                            <span style="opacity: 0.8;">{% trans "No ratings yet" %}</span>
                         {% endif %}
                     </span>
                     <span style="opacity: 0.4; color: #fff;">|</span>
                     <span class="tag is-success" style="background: rgba(72,199,142,0.22); color: #a8f0cd;">
                         <span class="icon is-small"><i class="fas fa-globe"></i></span>
-                        <span>Public</span>
+                        <span>{% trans "Public" %}</span>
                     </span>
                 {% endif %}
             </div>
 
             <div class="buttons mt-4">
                 <button class="button is-light"
-                        onclick="navigator.clipboard.writeText(window.location.href); var l=this.querySelector('.label-text'); var o=l.textContent; l.textContent='Link copied!'; setTimeout(function(){l.textContent=o;}, 1800);">
+                        onclick="navigator.clipboard.writeText(window.location.href); var l=this.querySelector('.label-text'); var o=l.textContent; l.textContent='{% filter escapejs %}{% trans "Link copied!" %}{% endfilter %}'; setTimeout(function(){l.textContent=o;}, 1800);">
                     <span class="icon is-small"><i class="fas fa-share-alt"></i></span>
-                    <span class="label-text">Share</span>
+                    <span class="label-text">{% trans "Share" %}</span>
                 </button>
                 {% if not reading_list.is_private %}
                     <a class="button is-light is-outlined"
                        href="#reading-list-rating-{{ reading_list.pk }}"
                        style="color: #fff; border-color: rgba(255,255,255,0.7);">
                         <span class="icon is-small"><i class="fas fa-star"></i></span>
-                        <span>Rate this list</span>
+                        <span>{% trans "Rate this list" %}</span>
                     </a>
                 {% endif %}
             </div>
@@ -79,11 +81,11 @@
     <div class="box" style="margin-top: -2.5rem; position: relative; z-index: 3;">
         <div class="is-flex is-align-items-center is-flex-wrap-wrap" style="gap: 1.5rem;">
             <div>
-                <p class="heading">Issues</p>
+                <p class="heading">{% trans "Issues" %}</p>
                 <p class="title is-4 mb-0">{{ reading_list_items_count }}</p>
             </div>
             <div style="border-left: 1px solid #ededed; padding-left: 1.5rem;">
-                <p class="heading">Reading span</p>
+                <p class="heading">{% trans "Reading span" %}</p>
                 <p class="title is-4 mb-0">
                     {% if start_year %}
                         {{ start_year }}{% if end_year and end_year != start_year %}&ndash;{{ end_year }}{% endif %}
@@ -91,16 +93,16 @@
                 </p>
             </div>
             <div style="border-left: 1px solid #ededed; padding-left: 1.5rem;">
-                <p class="heading">Publishers</p>
+                <p class="heading">{% trans "Publishers" %}</p>
                 <p class="title is-4 mb-0">{% if publisher_breakdown %}{{ publisher_breakdown|length }}{% else %}{{ publishers|length }}{% endif %}</p>
             </div>
             <div style="border-left: 1px solid #ededed; padding-left: 1.5rem;">
-                <p class="heading">Series</p>
+                <p class="heading">{% trans "Series" %}</p>
                 <p class="title is-4 mb-0">{{ series_breakdown|length }}</p>
             </div>
             {% if issue_type_breakdown %}
                 <div class="is-flex-grow-1" style="min-width: 240px; border-left: 1px solid #ededed; padding-left: 1.5rem;">
-                    <p class="heading">Composition</p>
+                    <p class="heading">{% trans "Composition" %}</p>
                     <div style="display: flex; height: 10px; border-radius: 5px; overflow: hidden; background: #ededed;">
                         {% for seg in issue_type_breakdown %}
                             <div style="width: {% widthratio seg.count reading_list_items_count 100 %}%; background: {{ seg.color }};"></div>
@@ -127,7 +129,7 @@
                     <a class="level-item" href="{{ reading_list.previous.get_absolute_url }}">
                         <span class="icon"><i class="fas fa-arrow-left"></i></span>
                         <span>
-                            <span class="has-text-grey is-size-7 is-block">Previous</span>
+                            <span class="has-text-grey is-size-7 is-block">{% trans "Previous" %}</span>
                             <span class="has-text-weight-semibold">{{ reading_list.previous.name }}</span>
                         </span>
                     </a>
@@ -137,7 +139,7 @@
                 {% if reading_list.next %}
                     <a class="level-item has-text-right" href="{{ reading_list.next.get_absolute_url }}">
                         <span>
-                            <span class="has-text-grey is-size-7 is-block">Next</span>
+                            <span class="has-text-grey is-size-7 is-block">{% trans "Next" %}</span>
                             <span class="has-text-weight-semibold">{{ reading_list.next.name }}</span>
                         </span>
                         <span class="icon"><i class="fas fa-arrow-right"></i></span>
@@ -156,30 +158,30 @@
                     {% if is_owner %}
                         <a class="button is-primary" href="{% url 'reading-list:add-issue' reading_list.slug %}">
                             <span class="icon is-small"><i class="fas fa-plus"></i></span>
-                            <span>Add Issues</span>
+                            <span>{% trans "Add Issues" %}</span>
                         </a>
                         <a class="button is-primary is-light" href="{% url 'reading-list:add-from-series' reading_list.slug %}">
                             <span class="icon is-small"><i class="fas fa-layer-group"></i></span>
-                            <span>Add from Series</span>
+                            <span>{% trans "Add from Series" %}</span>
                         </a>
                         <a class="button is-primary is-light" href="{% url 'reading-list:add-from-arc' reading_list.slug %}">
                             <span class="icon is-small"><i class="fas fa-book"></i></span>
-                            <span>Add from Arc</span>
+                            <span>{% trans "Add from Arc" %}</span>
                         </a>
                         <a class="button is-info" href="{% url 'reading-list:update' reading_list.slug %}">
                             <span class="icon is-small"><i class="fas fa-edit"></i></span>
-                            <span>Edit</span>
+                            <span>{% trans "Edit" %}</span>
                         </a>
                         <a class="button is-danger" href="{% url 'reading-list:delete' reading_list.slug %}">
                             <span class="icon is-small"><i class="fas fa-trash"></i></span>
-                            <span>Delete</span>
+                            <span>{% trans "Delete" %}</span>
                         </a>
                     {% endif %}
                     {% if can_assign_to_metron %}
                         <a class="button is-warning is-outlined"
                            href="{% url 'reading-list:assign-to-metron' reading_list.slug %}">
                             <span class="icon is-small"><i class="fas fa-user-shield"></i></span>
-                            <span>Assign to Metron</span>
+                            <span>{% trans "Assign to Metron" %}</span>
                         </a>
                     {% endif %}
                 </div>
@@ -192,19 +194,19 @@
         <div class="column is-three-quarters">
             {% if reading_list.desc %}
                 <div class="box">
-                    <h2 class="title is-5">About this list</h2>
+                    <h2 class="title is-5">{% trans "About this list" %}</h2>
                     <div class="content">{{ reading_list.desc|linebreaksbr }}</div>
                 </div>
             {% endif %}
 
             <div class="box">
-                <h2 class="title is-5">Issues ({{ reading_list_items_count }})</h2>
+                <h2 class="title is-5">{% blocktrans with count=reading_list_items_count %}Issues ({{ count }}){% endblocktrans %}</h2>
                 {% if reading_list_items_count > 0 %}
                     {# ---- Type filter chips ---- #}
                     {% if issue_type_breakdown %}
                         <div class="rl-filters mb-4" style="display: flex; flex-wrap: wrap; gap: 0.4rem;">
                             <button class="button is-small is-rounded is-link rl-filter" data-filter="all">
-                                All <span class="ml-1 has-text-weight-bold">{{ reading_list_items_count }}</span>
+                                {% trans "All" %} <span class="ml-1 has-text-weight-bold">{{ reading_list_items_count }}</span>
                             </button>
                             {% for seg in issue_type_breakdown %}
                                 <button class="button is-small is-rounded rl-filter" data-filter="{{ seg.key }}">
@@ -227,7 +229,7 @@
                                     hx-target="#items-container"
                                     hx-swap="beforeend"
                                     hx-indicator="#items-spinner">
-                                <span>Load More Issues</span>
+                                <span>{% trans "Load More Issues" %}</span>
                             </button>
                             <span id="items-spinner" class="htmx-indicator ml-2">
                                 <i class="fas fa-spinner fa-spin"></i>
@@ -235,20 +237,20 @@
                         </div>
                     {% endif %}
                 {% else %}
-                    <p class="has-text-grey">No issues in this list yet.</p>
+                    <p class="has-text-grey">{% trans "No issues in this list yet." %}</p>
                     {% if is_owner %}
                         <div class="buttons mt-3">
                             <a href="{% url 'reading-list:add-issue' reading_list.slug %}" class="button is-primary">
                                 <span class="icon"><i class="fas fa-plus"></i></span>
-                                <span>Add Issues</span>
+                                <span>{% trans "Add Issues" %}</span>
                             </a>
                             <a href="{% url 'reading-list:add-from-series' reading_list.slug %}" class="button is-primary is-light">
                                 <span class="icon"><i class="fas fa-layer-group"></i></span>
-                                <span>Add from Series</span>
+                                <span>{% trans "Add from Series" %}</span>
                             </a>
                             <a href="{% url 'reading-list:add-from-arc' reading_list.slug %}" class="button is-primary is-light">
                                 <span class="icon"><i class="fas fa-book"></i></span>
-                                <span>Add from Arc</span>
+                                <span>{% trans "Add from Arc" %}</span>
                             </a>
                         </div>
                     {% endif %}
@@ -259,30 +261,30 @@
         {# ----------------------- SIDEBAR ----------------------- #}
         <div class="column">
             <div class="box">
-                <h2 class="title is-6">List details</h2>
+                <h2 class="title is-6">{% trans "List details" %}</h2>
                 <dl>
-                    <dt class="has-text-weight-bold">Owner:</dt>
+                    <dt class="has-text-weight-bold">{% trans "Owner:" %}</dt>
                     <dd class="mb-3">
                         <a href="{% url 'user-detail' username=reading_list.user.username %}">{{ reading_list.user.username }}</a>
                     </dd>
-                    <dt class="has-text-weight-bold">Type:</dt>
+                    <dt class="has-text-weight-bold">{% trans "Type:" %}</dt>
                     <dd class="mb-3"><span class="tag is-link is-light">{{ reading_list.get_list_type_display }}</span></dd>
-                    <dt class="has-text-weight-bold">Visibility:</dt>
+                    <dt class="has-text-weight-bold">{% trans "Visibility:" %}</dt>
                     <dd class="mb-3">
                         {% if reading_list.is_private %}
-                            <span class="tag is-warning">Private</span>
+                            <span class="tag is-warning">{% trans "Private" %}</span>
                         {% else %}
-                            <span class="tag is-success">Public</span>
+                            <span class="tag is-success">{% trans "Public" %}</span>
                         {% endif %}
                     </dd>
                     {% if start_year %}
-                        <dt class="has-text-weight-bold">Reading span:</dt>
+                        <dt class="has-text-weight-bold">{% trans "Reading span:" %}</dt>
                         <dd class="mb-3">
                             {% if start_year == end_year %}{{ start_year }}{% else %}{{ start_year }} &ndash; {{ end_year }}{% endif %}
                         </dd>
                     {% endif %}
                     {% if reading_list.attribution_source %}
-                        <dt class="has-text-weight-bold">Source:</dt>
+                        <dt class="has-text-weight-bold">{% trans "Source:" %}</dt>
                         <dd class="mb-3">
                             {% if reading_list.attribution_url %}
                                 <a href="{{ reading_list.attribution_url }}" target="_blank" rel="noopener noreferrer">
@@ -294,9 +296,9 @@
                             {% endif %}
                         </dd>
                     {% endif %}
-                    <dt class="has-text-weight-bold">Created:</dt>
+                    <dt class="has-text-weight-bold">{% trans "Created:" %}</dt>
                     <dd class="mb-3">{{ reading_list.created_on|date:"F d, Y" }}</dd>
-                    <dt class="has-text-weight-bold">Last modified:</dt>
+                    <dt class="has-text-weight-bold">{% trans "Last modified:" %}</dt>
                     <dd class="mb-3">{{ reading_list.modified|date:"F d, Y" }}</dd>
                 </dl>
                 <hr>
@@ -305,7 +307,7 @@
 
             {% if series_breakdown %}
                 <div class="box">
-                    <h2 class="title is-6">Series in this list</h2>
+                    <h2 class="title is-6">{% trans "Series in this list" %}</h2>
                     {% for entry in series_breakdown %}
                         <div class="is-flex is-align-items-center mb-2" style="gap: 0.6rem;">
                             <a href="{% url 'series:detail' entry.series.slug %}" class="is-flex-grow-1" style="min-width: 0;">
@@ -322,12 +324,14 @@
 
             {% if publisher_breakdown %}
                 <div class="box">
-                    <h2 class="title is-6">Publishers</h2>
+                    <h2 class="title is-6">{% trans "Publishers" %}</h2>
                     {% for entry in publisher_breakdown %}
                         <div class="mb-3">
                             <div class="is-flex is-justify-content-space-between is-align-items-baseline">
                                 <a href="{% url 'publisher:detail' entry.publisher.slug %}" class="has-text-weight-semibold">{{ entry.publisher.name }}</a>
-                                <span class="has-text-grey is-size-7">{{ entry.count }} issue{{ entry.count|pluralize }}</span>
+                                <span class="has-text-grey is-size-7">
+                                    {% blocktrans count counter=entry.count %}{{ counter }} issue{% plural %}{{ counter }} issues{% endblocktrans %}
+                                </span>
                             </div>
                             <div style="height: 6px; border-radius: 3px; background: #ededed; margin-top: 6px; overflow: hidden;">
                                 <div style="width: {% widthratio entry.count reading_list_items_count 100 %}%; height: 100%; background: #3273dc;"></div>
@@ -337,7 +341,7 @@
                 </div>
             {% elif publishers %}
                 <div class="box">
-                    <h2 class="title is-6">Publishers</h2>
+                    <h2 class="title is-6">{% trans "Publishers" %}</h2>
                     <div class="content">
                         {% for publisher in publishers %}
                             <a href="{% url 'publisher:detail' publisher.slug %}">{{ publisher.name }}</a>{% if not forloop.last %}, {% endif %}
@@ -348,7 +352,7 @@
 
             {% if top_characters %}
                 <div class="box">
-                    <h2 class="title is-6">Top Characters</h2>
+                    <h2 class="title is-6">{% trans "Top Characters" %}</h2>
                     {% for character in top_characters %}
                         <article class="media{% if not forloop.last %} mb-4{% endif %}">
                             <figure class="media-left">
@@ -373,7 +377,9 @@
                             <div class="media-content" style="align-self: center;">
                                 <a href="{% url 'character:detail' character.slug %}"
                                    class="has-text-weight-semibold is-size-7">{{ character.name }}</a>
-                                <p class="is-size-7 has-text-grey-light">{{ character.appearance_count }} issue{{ character.appearance_count|pluralize }}</p>
+                                <p class="is-size-7 has-text-grey-light">
+                                    {% blocktrans count counter=character.appearance_count %}{{ counter }} issue{% plural %}{{ counter }} issues{% endblocktrans %}
+                                </p>
                             </div>
                         </article>
                     {% endfor %}
@@ -382,7 +388,7 @@
 
             {% if featured_creators %}
                 <div class="box">
-                    <h2 class="title is-6">Featured Creators</h2>
+                    <h2 class="title is-6">{% trans "Featured Creators" %}</h2>
                     {% for entry in featured_creators %}
                         <article class="media{% if not forloop.last %} mb-4{% endif %}">
                             <figure class="media-left">

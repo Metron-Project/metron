@@ -3,6 +3,7 @@ from django.db import models
 from django.db.models import Avg, Count, Max, Min, Q
 from django.db.models.signals import pre_save
 from django.urls import reverse
+from django.utils.translation import gettext_lazy as _
 from sorl.thumbnail import ImageField
 
 from comicsdb.models.common import AbstractRating, CommonInfo, pre_save_slug
@@ -58,50 +59,50 @@ class ReadingList(CommonInfo):
     class ListType(models.TextChoices):
         """Reading list type choices."""
 
-        CREATOR = "CREATOR", "Creator"
-        EVENT = "EVENT", "Event"
-        STORY = "STORY", "Story"
-        CHARACTERS = "CHARACTERS", "Characters"
-        TEAMS = "TEAMS", "Teams"
-        MASTER = "MASTER", "Master"
+        CREATOR = "CREATOR", _("Creator")
+        EVENT = "EVENT", _("Event")
+        STORY = "STORY", _("Story")
+        CHARACTERS = "CHARACTERS", _("Characters")
+        TEAMS = "TEAMS", _("Teams")
+        MASTER = "MASTER", _("Master")
 
     class AttributionSource(models.TextChoices):
         """Source attribution choices."""
 
-        CBRO = "CBRO", "Comic Book Reading Orders"
-        CMRO = "CMRO", "Complete Marvel Reading Orders"
-        CBH = "CBH", "Comic Book Herald"
-        CBT = "CBT", "Comic Book Treasury"
-        MG = "MG", "Marvel Guides"
-        HTLC = "HTLC", "How To Love Comics"
-        LOCG = "LOCG", "League of ComicGeeks"
-        OTHER = "OTHER", "Other"
+        CBRO = "CBRO", _("Comic Book Reading Orders")
+        CMRO = "CMRO", _("Complete Marvel Reading Orders")
+        CBH = "CBH", _("Comic Book Herald")
+        CBT = "CBT", _("Comic Book Treasury")
+        MG = "MG", _("Marvel Guides")
+        HTLC = "HTLC", _("How To Love Comics")
+        LOCG = "LOCG", _("League of ComicGeeks")
+        OTHER = "OTHER", _("Other")
 
     user = models.ForeignKey(
         CustomUser,
         on_delete=models.CASCADE,
         related_name="reading_lists",
-        help_text="The user who owns this reading list",
+        help_text=_("The user who owns this reading list"),
     )
     is_private = models.BooleanField(
         default=False,
-        help_text="Whether this list is private (only visible to the owner)",
+        help_text=_("Whether this list is private (only visible to the owner)"),
     )
     list_type = models.CharField(
         max_length=10,
         choices=ListType.choices,
         default=ListType.EVENT,
-        help_text="The type of reading list",
+        help_text=_("The type of reading list"),
     )
     attribution_source = models.CharField(
         max_length=10,
         choices=AttributionSource.choices,
         blank=True,
-        help_text="Source where this reading list information was obtained",
+        help_text=_("Source where this reading list information was obtained"),
     )
     attribution_url = models.URLField(
         blank=True,
-        help_text="URL of the specific page where this reading list was obtained",
+        help_text=_("URL of the specific page where this reading list was obtained"),
     )
     image = ImageField(upload_to="reading_list/%Y/%m/%d/", blank=True)
     issues = models.ManyToManyField(
@@ -116,7 +117,7 @@ class ReadingList(CommonInfo):
         null=True,
         blank=True,
         related_name="+",
-        help_text="The reading list that comes before this one in a reading order",
+        help_text=_("The reading list that comes before this one in a reading order"),
     )
     next = models.ForeignKey(
         "self",
@@ -124,7 +125,7 @@ class ReadingList(CommonInfo):
         null=True,
         blank=True,
         related_name="+",
-        help_text="The reading list that comes after this one in a reading order",
+        help_text=_("The reading list that comes after this one in a reading order"),
     )
 
     class Meta:
@@ -140,11 +141,13 @@ class ReadingList(CommonInfo):
     def clean(self):
         super().clean()
         if self.previous_id and self.previous_id == self.pk:
-            raise ValidationError({"previous": "A reading list cannot be its own previous list."})
+            raise ValidationError(
+                {"previous": _("A reading list cannot be its own previous list.")}
+            )
         if self.next_id and self.next_id == self.pk:
-            raise ValidationError({"next": "A reading list cannot be its own next list."})
+            raise ValidationError({"next": _("A reading list cannot be its own next list.")})
         if self.previous_id and self.next_id and self.previous_id == self.next_id:
-            raise ValidationError("The previous and next reading lists must be different.")
+            raise ValidationError(_("The previous and next reading lists must be different."))
 
     def save(self, *args, **kwargs):
         old_previous_id = None
@@ -211,10 +214,10 @@ class ReadingListItem(models.Model):
     class IssueType(models.TextChoices):
         """Issue type choices for reading list items."""
 
-        PROLOGUE = "PROLOGUE", "Prologue"
-        CORE = "CORE", "Core Issue"
-        TIE_IN = "TIE_IN", "Tie-In"
-        EPILOGUE = "EPILOGUE", "Epilogue"
+        PROLOGUE = "PROLOGUE", _("Prologue")
+        CORE = "CORE", _("Core Issue")
+        TIE_IN = "TIE_IN", _("Tie-In")
+        EPILOGUE = "EPILOGUE", _("Epilogue")
 
     reading_list = models.ForeignKey(
         ReadingList,
@@ -228,13 +231,13 @@ class ReadingListItem(models.Model):
     )
     order = models.PositiveIntegerField(
         default=1,
-        help_text="Position of this issue in the reading list",
+        help_text=_("Position of this issue in the reading list"),
     )
     issue_type = models.CharField(
         max_length=10,
         choices=IssueType.choices,
         blank=True,
-        help_text="Optional categorization of this issue's role in the reading list",
+        help_text=_("Optional categorization of this issue's role in the reading list"),
     )
 
     class Meta:
