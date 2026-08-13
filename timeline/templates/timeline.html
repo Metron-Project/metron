@@ -1,7 +1,7 @@
 {% extends parent_template|default:"base.html" %}
-{% load static %}
+{% load static i18n %}
 
-{% block title %}Timeline{% endblock %}
+{% block title %}{% trans "Timeline" %}{% endblock %}
 {% block headcss %}
   <link rel="stylesheet" href="{% static "site/css/timeline/timeline.css" %}">
 {% endblock %}

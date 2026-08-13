@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: metron\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-08-13 11:23-0400\n"
+"POT-Creation-Date: 2026-08-13 12:29-0400\n"
 "PO-Revision-Date: 2026-08-13 11:23-0400\n"
 "Last-Translator: Metron Project\n"
 "Language-Team: Italian\n"
@@ -15,6 +15,22 @@ msgstr ""
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=2; plural=(n != 1);\n"
+
+#: api/v1_0/serializers/collection.py:98 api/v1_0/serializers/collection.py:218
+#: api/v1_0/serializers/wish_list.py:79
+#, python-format
+msgid "Issue with id %(id)s does not exist."
+msgstr "Non esiste alcun albo con id %(id)s."
+
+#: api/v1_0/serializers/issue.py:115
+#, python-format
+msgid "Invalid currency '%(currency)s'. Supported: %(valid)s"
+msgstr "Valuta '%(currency)s' non valida. Supportate: %(valid)s"
+
+#: api/v1_0/serializers/issue.py:123 api/v1_0/serializers/issue.py:136
+#, python-format
+msgid "Invalid price format: %(error)s"
+msgstr "Formato del prezzo non valido: %(error)s"
 
 #: comicsdb/admin/issue.py:119 comicsdb/admin/issue.py:148
 #: comicsdb/admin/issue.py:170 comicsdb/admin/series.py:61
@@ -44,7 +60,8 @@ msgstr "Completamento automatico..."
 
 #: comicsdb/forms/issue.py:98
 msgid "Primarily used for legacy numbering for DC and Marvel comics."
-msgstr "Utilizzato principalmente per la numerazione storica dei fumetti DC e Marvel."
+msgstr ""
+"Utilizzato principalmente per la numerazione storica dei fumetti DC e Marvel."
 
 #: comicsdb/forms/issue.py:99
 msgid "Separate multiple story titles by a semicolon"
@@ -145,7 +162,8 @@ msgstr "Hash della Copertina"
 #: comicsdb/views/issue.py:451
 #, python-format
 msgid "Credit duplication is not allowed for %(publisher)s issues."
-msgstr "La duplicazione dei crediti non è consentita per gli albi di %(publisher)s."
+msgstr ""
+"La duplicazione dei crediti non è consentita per gli albi di %(publisher)s."
 
 #: comicsdb/views/issue.py:461
 #, python-format
@@ -153,8 +171,8 @@ msgid ""
 "%(issue)s already has credits assigned. Duplicate operation cancelled to "
 "preserve existing data."
 msgstr ""
-"%(issue)s ha già dei crediti assegnati. Operazione di duplicazione "
-"annullata per preservare i dati esistenti."
+"%(issue)s ha già dei crediti assegnati. Operazione di duplicazione annullata "
+"per preservare i dati esistenti."
 
 #: comicsdb/views/issue.py:473
 #, python-format
@@ -186,8 +204,8 @@ msgid ""
 "No credits were duplicated. Skipped %(skipped)s variant cover credit(s) from "
 "%(issue)s."
 msgstr ""
-"Nessun credito è stato duplicato. Saltati %(skipped)s credito/i di "
-"copertina variante da %(issue)s."
+"Nessun credito è stato duplicato. Saltati %(skipped)s credito/i di copertina "
+"variante da %(issue)s."
 
 #: comicsdb/views/issue.py:604
 #, python-format
@@ -311,7 +329,8 @@ msgstr "Quest'opera è distribuita con licenza"
 
 #: templates/partials/footer.html:78
 msgid "Creative Commons Attribution-ShareAlike 4.0 International License"
-msgstr "Creative Commons Attribuzione-Condividi allo stesso modo 4.0 Internazionale"
+msgstr ""
+"Creative Commons Attribuzione-Condividi allo stesso modo 4.0 Internazionale"
 
 #: templates/partials/footer.html:79
 msgid ", except where noted otherwise."
@@ -497,3 +516,7 @@ msgstr "Accedi al tuo account"
 #: templates/partials/navbar.html:273
 msgid "Log in"
 msgstr "Accedi"
+
+#: timeline/templates/timeline.html:4
+msgid "Timeline"
+msgstr "Cronologia"

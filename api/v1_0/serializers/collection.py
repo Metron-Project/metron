@@ -1,3 +1,4 @@
+from django.utils.translation import gettext as _
 from rest_framework import serializers
 
 from api.v1_0.serializers.issue import IssueListSeriesSerializer
@@ -93,7 +94,9 @@ class CollectionAddItemSerializer(serializers.Serializer):
     def validate_issue_id(self, value):
         """Verify issue exists."""
         if not Issue.objects.filter(pk=value).exists():
-            raise serializers.ValidationError(f"Issue with id {value} does not exist.")
+            raise serializers.ValidationError(
+                _("Issue with id %(id)s does not exist.") % {"id": value}
+            )
         return value
 
 
@@ -211,7 +214,9 @@ class ScrobbleRequestSerializer(serializers.Serializer):
         try:
             Issue.objects.get(pk=value)
         except Issue.DoesNotExist as err:
-            raise serializers.ValidationError(f"Issue with id {value} does not exist.") from err
+            raise serializers.ValidationError(
+                _("Issue with id %(id)s does not exist.") % {"id": value}
+            ) from err
         return value
 
 
