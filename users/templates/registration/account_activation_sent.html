@@ -1,6 +1,7 @@
 {% extends parent_template|default:"base.html" %}
+{% load i18n %}
 {% block title %}
-    Confirmation Email Sent - Metron
+    {% trans "Confirmation Email Sent - Metron" %}
 {% endblock title %}
 {% block content %}
     {# Success Header #}
@@ -8,7 +9,7 @@
         <span class="icon is-large has-text-success">
             <i class="fas fa-envelope-circle-check fa-4x"></i>
         </span>
-        <h1 class="title is-3 mt-4">Check Your Email</h1>
+        <h1 class="title is-3 mt-4">{% trans "Check Your Email" %}</h1>
     </header>
     {# Success Message #}
     <div class="columns is-centered">
@@ -17,9 +18,9 @@
                 <article class="message is-success">
                     <div class="message-body">
                         <p class="mb-3">
-                            <strong>Welcome to Metron!</strong> We've sent a confirmation link to your email address.
+                            <strong>{% trans "Welcome to Metron!" %}</strong> {% trans "We've sent a confirmation link to your email address." %}
                         </p>
-                        <p>Please click the link in the email to activate your account and complete the registration process.</p>
+                        <p>{% trans "Please click the link in the email to activate your account and complete the registration process." %}</p>
                     </div>
                 </article>
                 <div class="content has-text-centered mt-5">
@@ -28,7 +29,7 @@
                             <span class="icon">
                                 <i class="fas fa-home"></i>
                             </span>
-                            <span>Go to Home</span>
+                            <span>{% trans "Go to Home" %}</span>
                         </a>
                     </div>
                 </div>
@@ -39,28 +40,28 @@
                     <span class="icon">
                         <i class="fas fa-question-circle"></i>
                     </span>
-                    Didn't receive the email?
+                    {% trans "Didn't receive the email?" %}
                 </p>
                 <div class="content">
                     <ul>
-                        <li>Check your spam or junk folder</li>
-                        <li>Make sure you entered the correct email address</li>
-                        <li>Wait a few minutes - emails can be delayed</li>
-                        <li>The confirmation link is valid for 24 hours</li>
+                        <li>{% trans "Check your spam or junk folder" %}</li>
+                        <li>{% trans "Make sure you entered the correct email address" %}</li>
+                        <li>{% trans "Wait a few minutes - emails can be delayed" %}</li>
+                        <li>{% trans "The confirmation link is valid for 24 hours" %}</li>
                     </ul>
                 </div>
             </div>
             {# Support Box #}
             <div class="box has-text-centered">
-                <p class="has-text-weight-bold mb-2">Need help?</p>
-                <p class="mb-3">If you continue to have issues, please contact us</p>
+                <p class="has-text-weight-bold mb-2">{% trans "Need help?" %}</p>
+                <p class="mb-3">{% trans "If you continue to have issues, please contact us" %}</p>
                 <div class="buttons is-centered">
                     <a class="button is-link is-outlined is-small"
                        href="mailto:admin@metron.cloud">
                         <span class="icon">
                             <i class="fas fa-envelope"></i>
                         </span>
-                        <span>Contact Support</span>
+                        <span>{% trans "Contact Support" %}</span>
                     </a>
                     <a class="button is-link is-outlined is-small"
                        href="https://github.com/Metron-Project/metron/discussions"
@@ -69,7 +70,7 @@
                         <span class="icon">
                             <i class="fab fa-github"></i>
                         </span>
-                        <span>GitHub Discussions</span>
+                        <span>{% trans "GitHub Discussions" %}</span>
                     </a>
                 </div>
             </div>

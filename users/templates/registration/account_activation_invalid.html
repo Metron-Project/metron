@@ -1,6 +1,7 @@
 {% extends parent_template|default:"base.html" %}
+{% load i18n %}
 {% block title %}
-    Invalid Confirmation Link - Metron
+    {% trans "Invalid Confirmation Link - Metron" %}
 {% endblock title %}
 {% block content %}
     {# Error Header #}
@@ -8,7 +9,7 @@
         <span class="icon is-large has-text-danger">
             <i class="fas fa-times-circle fa-4x"></i>
         </span>
-        <h1 class="title is-3 mt-4">Invalid Confirmation Link</h1>
+        <h1 class="title is-3 mt-4">{% trans "Invalid Confirmation Link" %}</h1>
     </header>
     {# Error Message #}
     <div class="columns is-centered">
@@ -16,12 +17,12 @@
             <div class="box">
                 <article class="message is-danger">
                     <div class="message-body">
-                        <p class="mb-3">The confirmation link is invalid or has expired.</p>
-                        <p>This may have happened because:</p>
+                        <p class="mb-3">{% trans "The confirmation link is invalid or has expired." %}</p>
+                        <p>{% trans "This may have happened because:" %}</p>
                         <ul class="mt-3">
-                            <li>The link has already been used</li>
-                            <li>The link has expired (links are valid for 24 hours)</li>
-                            <li>The link was copied incorrectly</li>
+                            <li>{% trans "The link has already been used" %}</li>
+                            <li>{% trans "The link has expired (links are valid for 24 hours)" %}</li>
+                            <li>{% trans "The link was copied incorrectly" %}</li>
                         </ul>
                     </div>
                 </article>
@@ -31,13 +32,13 @@
                             <span class="icon">
                                 <i class="fas fa-home"></i>
                             </span>
-                            <span>Go to Home</span>
+                            <span>{% trans "Go to Home" %}</span>
                         </a>
                         <a class="button is-light is-medium" href="{% url 'login' %}">
                             <span class="icon">
                                 <i class="fas fa-sign-in-alt"></i>
                             </span>
-                            <span>Try Logging In</span>
+                            <span>{% trans "Try Logging In" %}</span>
                         </a>
                     </div>
                 </div>
@@ -48,31 +49,33 @@
                     <span class="icon">
                         <i class="fas fa-info-circle"></i>
                     </span>
-                    What should you do?
+                    {% trans "What should you do?" %}
                 </p>
                 <div class="content">
                     <ul>
                         <li>
-                            If your account was already activated, try <a href="{% url 'login' %}">logging in</a>
+                            {% url 'login' as login_url %}
+                            {% blocktrans %}If your account was already activated, try <a href="{{ login_url }}">logging in</a>{% endblocktrans %}
                         </li>
                         <li>
-                            If you need a new confirmation link, please <a href="{% url 'signup' %}">sign up again</a> or contact support
+                            {% url 'signup' as signup_url %}
+                            {% blocktrans %}If you need a new confirmation link, please <a href="{{ signup_url }}">sign up again</a> or contact support{% endblocktrans %}
                         </li>
-                        <li>Make sure you're using the most recent confirmation email</li>
+                        <li>{% trans "Make sure you're using the most recent confirmation email" %}</li>
                     </ul>
                 </div>
             </div>
             {# Contact Support #}
             <div class="box has-text-centered">
-                <p class="has-text-weight-bold mb-2">Still having trouble?</p>
-                <p class="mb-3">Our support team is here to help</p>
+                <p class="has-text-weight-bold mb-2">{% trans "Still having trouble?" %}</p>
+                <p class="mb-3">{% trans "Our support team is here to help" %}</p>
                 <div class="buttons is-centered">
                     <a class="button is-link is-outlined is-small"
                        href="mailto:admin@metron.cloud">
                         <span class="icon">
                             <i class="fas fa-envelope"></i>
                         </span>
-                        <span>Contact Support</span>
+                        <span>{% trans "Contact Support" %}</span>
                     </a>
                     <a class="button is-link is-outlined is-small"
                        href="https://github.com/Metron-Project/metron/issues/new/choose"
@@ -81,7 +84,7 @@
                         <span class="icon">
                             <i class="fas fa-bug"></i>
                         </span>
-                        <span>Report Issue</span>
+                        <span>{% trans "Report Issue" %}</span>
                     </a>
                 </div>
             </div>

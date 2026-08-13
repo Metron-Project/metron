@@ -1,8 +1,8 @@
 {% extends parent_template|default:"base.html" %}
 {% load bulma_tags %}
-{% load static %}
+{% load static i18n %}
 {% block title %}
-    Edit Profile - Metron
+    {% trans "Edit Profile - Metron" %}
 {% endblock title %}
 {% block content %}
     {# Page Header #}
@@ -10,8 +10,8 @@
         <span class="icon is-large has-text-info">
             <i class="fas fa-user-edit fa-3x"></i>
         </span>
-        <h1 class="title is-3 mt-4">Edit Your Profile</h1>
-        <p class="subtitle has-text-grey">Update your account information and preferences</p>
+        <h1 class="title is-3 mt-4">{% trans "Edit Your Profile" %}</h1>
+        <p class="subtitle has-text-grey">{% trans "Update your account information and preferences" %}</p>
     </header>
     {# Profile Edit Form #}
     <div class="columns is-centered">
@@ -23,7 +23,7 @@
                     {% if form.non_field_errors %}
                         <div class="notification is-danger is-light">
                             <button class="delete"
-                                    aria-label="close"
+                                    aria-label="{% trans 'close' %}"
                                     onclick="this.parentElement.remove();"></button>
                             {% for error in form.non_field_errors %}<p>{{ error }}</p>{% endfor %}
                         </div>
@@ -89,14 +89,14 @@
                     {% endfor %}
                     {# Password Change Link #}
                     <div class="field">
-                        <label class="label">Password</label>
+                        <label class="label">{% trans "Password" %}</label>
                         <div class="notification is-light">
                             <p>
                                 <span class="icon">
                                     <i class="fas fa-lock"></i>
                                 </span>
-                                To change your password, please use the
-                                <a href="{% url 'change_password' %}" class="has-text-weight-bold">password change form</a>.
+                                {% trans "To change your password, please use the" %}
+                                <a href="{% url 'change_password' %}" class="has-text-weight-bold">{% trans "password change form" %}</a>.
                             </p>
                         </div>
                     </div>
@@ -108,7 +108,7 @@
                                 <span class="icon">
                                     <i class="fas fa-save"></i>
                                 </span>
-                                <span>Save Changes</span>
+                                <span>{% trans "Save Changes" %}</span>
                             </button>
                         </div>
                         <div class="control">
@@ -117,7 +117,7 @@
                                 <span class="icon">
                                     <i class="fas fa-times"></i>
                                 </span>
-                                <span>Cancel</span>
+                                <span>{% trans "Cancel" %}</span>
                             </a>
                         </div>
                     </div>
@@ -129,14 +129,14 @@
                     <span class="icon">
                         <i class="fas fa-info-circle"></i>
                     </span>
-                    Profile Tips:
+                    {% trans "Profile Tips:" %}
                 </p>
                 <div class="content is-small">
                     <ul>
-                        <li>Your username is visible to other users in the community</li>
-                        <li>Adding a profile image helps others recognize you</li>
-                        <li>Your bio is displayed on your public profile page</li>
-                        <li>Email address is used for notifications and account recovery</li>
+                        <li>{% trans "Your username is visible to other users in the community" %}</li>
+                        <li>{% trans "Adding a profile image helps others recognize you" %}</li>
+                        <li>{% trans "Your bio is displayed on your public profile page" %}</li>
+                        <li>{% trans "Email address is used for notifications and account recovery" %}</li>
                     </ul>
                 </div>
             </div>

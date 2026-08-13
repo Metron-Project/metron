@@ -16,6 +16,7 @@ from django.urls import reverse, reverse_lazy
 from django.utils.encoding import force_bytes, force_str
 from django.utils.http import urlsafe_base64_decode, urlsafe_base64_encode
 from django.utils.safestring import mark_safe
+from django.utils.translation import gettext as _, gettext_lazy as _lazy
 from django.views.generic import DetailView, ListView
 
 # Import models for counting
@@ -124,9 +125,14 @@ def activate(request, uidb64, token):
         extra={"username": user.username, "ip": ip},
     )
     # Add a message asking the user to star the repository.
-    msg = mark_safe(
-        "If you are planning on adding new information to the database, please refer to the "
-        "<a href='/wiki/editing-guidelines/'>Editing Guidelines</a>."
+    link = f"<a href='/wiki/editing-guidelines/'>{_('Editing Guidelines')}</a>"
+    # Interpolated content is our own translation catalog text, not user input.
+    msg = mark_safe(  # noqa: S308
+        _(
+            "If you are planning on adding new information to the database, please refer "
+            "to the %(link)s."
+        )
+        % {"link": link}
     )
     messages.success(request, msg)
 
@@ -157,7 +163,7 @@ def signup(request):  # sourcery skip: extract-method
                 user.save()
                 _record_signup(request, user.username)
                 current_site = get_current_site(request)
-                subject = "Activate Your Metron Account"
+                subject = _("Activate Your Metron Account")
                 context = {
                     "user": user,
                     "domain": current_site.domain,
@@ -195,7 +201,7 @@ def signup(request):  # sourcery skip: extract-method
 
 class ChangePasswordView(SuccessMessageMixin, PasswordChangeView):
     template_name = "users/change_password.html"
-    success_message = "Successfully Changed Your Password"
+    success_message = _lazy("Successfully Changed Your Password")
     success_url = reverse_lazy("home")
 
 
@@ -207,9 +213,9 @@ def change_profile(request):
         if form.is_valid():
             user = form.save()
             update_session_auth_hash(request, user)  # Important!
-            messages.success(request, "Your profile was successfully updated!")
+            messages.success(request, _("Your profile was successfully updated!"))
             return redirect("user-detail", username=request.user.username)
-        messages.error(request, "Please correct the error below.")
+        messages.error(request, _("Please correct the error below."))
     else:
         form = CustomUserChangeForm(instance=request.user)
     return render(request, "users/change_profile.html", {"form": form})
@@ -222,7 +228,7 @@ def delete_account(request):
         user = request.user
         logout(request)
         user.delete()
-        messages.success(request, "Your account has been deleted.")
+        messages.success(request, _("Your account has been deleted."))
         return redirect("home")
     return render(request, "users/delete_account.html")
 
@@ -236,7 +242,8 @@ def api_tokens(request):
         name = request.POST.get("name", "").strip()
         _instance, new_token = ApiToken.objects.create(user=request.user, name=name)
         messages.success(
-            request, "New API token created. Copy it now — you won't be able to see it again."
+            request,
+            _("New API token created. Copy it now — you won't be able to see it again."),
         )
 
     context = {
@@ -252,7 +259,7 @@ def revoke_api_token(request, digest):
     token = get_object_or_404(ApiToken, digest=digest, user=request.user)
     if request.method == "POST":
         token.delete()
-        messages.success(request, "API token revoked.")
+        messages.success(request, _("API token revoked."))
     return redirect("api_tokens")
 
 

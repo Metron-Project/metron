@@ -2,6 +2,7 @@ from django.contrib.auth.base_user import BaseUserManager
 from django.contrib.auth.models import AbstractUser
 from django.db import models
 from django.utils import timezone
+from django.utils.translation import gettext_lazy as _
 from knox.models import AbstractAuthToken
 from sorl.thumbnail import ImageField
 
@@ -9,10 +10,10 @@ from sorl.thumbnail import ImageField
 # tier_for_amount can return on the first match ("round down to the nearest
 # qualifying tier"). Mega Sponsor is a flat ceiling at $25+, not a per-dollar formula.
 SUPPORTER_TIERS: tuple[tuple[int, str, str, int], ...] = (
-    (2500, "mega_sponsor", "Mega Sponsor", 25000),
-    (1000, "sponsor", "Sponsor", 15000),
-    (500, "backer", "Backer", 10000),
-    (200, "friend", "Friend", 7500),
+    (2500, "mega_sponsor", _("Mega Sponsor"), 25000),
+    (1000, "sponsor", _("Sponsor"), 15000),
+    (500, "backer", _("Backer"), 10000),
+    (200, "friend", _("Friend"), 7500),
 )
 
 _SUPPORTER_TIERS_BY_SLUG = {slug: (name, limit) for _, slug, name, limit in SUPPORTER_TIERS}
@@ -99,12 +100,12 @@ class SignupSettings(models.Model):
     disabled_message = models.CharField(
         max_length=255,
         blank=True,
-        default="New account signups are temporarily disabled. Please check back later.",
+        default=_("New account signups are temporarily disabled. Please check back later."),
     )
 
     class Meta:
-        verbose_name = "Signup settings"
-        verbose_name_plural = "Signup settings"
+        verbose_name = _("Signup settings")
+        verbose_name_plural = _("Signup settings")
 
     def __str__(self):
         return "Signup settings"
@@ -144,13 +145,17 @@ class OpenCollectiveDonation(models.Model):
         related_name="opencollective_donations",
     )
     email = models.EmailField()
-    amount = models.IntegerField(help_text="Donation amount in cents.")
+    amount = models.IntegerField(help_text=_("Donation amount in cents."))
     donated_at = models.DateTimeField()
     frequency = models.CharField(
         max_length=10,
         blank=True,
-        choices=[("monthly", "Monthly"), ("yearly", "Yearly"), ("onetime", "One-time")],
-        help_text="The underlying OpenCollective order's frequency.",
+        choices=[
+            ("monthly", _("Monthly")),
+            ("yearly", _("Yearly")),
+            ("onetime", _("One-time")),
+        ],
+        help_text=_("The underlying OpenCollective order's frequency."),
     )
     created_on = models.DateTimeField(auto_now_add=True)
 

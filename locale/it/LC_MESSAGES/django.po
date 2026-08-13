@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: metron\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-08-13 13:54-0400\n"
+"POT-Creation-Date: 2026-08-13 15:00-0400\n"
 "PO-Revision-Date: 2026-08-13 11:23-0400\n"
 "Last-Translator: Metron Project\n"
 "Language-Team: Italian\n"
@@ -317,6 +317,8 @@ msgstr "Elimina"
 #: user_collection/templates/user_collection/collection_confirm_delete.html:31
 #: user_collection/templates/user_collection/collection_form.html:72
 #: user_collection/templates/user_collection/partials/read_dates_list.html:38
+#: users/templates/users/change_profile.html:120
+#: users/templates/users/delete_account.html:44
 #: wish_list/templates/wish_list/wishlist_acquire_form.html:37
 #: wish_list/templates/wish_list/wishlist_item_confirm_delete.html:26
 #: wish_list/templates/wish_list/wishlist_item_form.html:50
@@ -441,6 +443,7 @@ msgstr "Cerca una serie..."
 #: templates/partials/navbar.html:74 user_collection/forms.py:132
 #: user_collection/templates/user_collection/collection_stats.html:226
 #: user_collection/templates/user_collection/missing_issues_list.html:40
+#: users/templates/users/customuser_detail.html:230
 #: wish_list/templates/wish_list/wishlist_detail.html:83
 msgid "Series"
 msgstr "Serie"
@@ -565,7 +568,8 @@ msgstr "%(series)s è già nella tua pull list."
 msgid "Removed %(series)s from your pull list."
 msgstr "Rimosso %(series)s dalla tua pull list."
 
-#: templates/base.html:9
+#: templates/base.html:9 users/templates/registration/account_activation_email.html:210
+#: users/templates/registration/account_activation_email.txt:21
 msgid "Metron Comic Book Database"
 msgstr "Database Fumetti Metron"
 
@@ -582,6 +586,7 @@ msgid "comics, comic books, database, Marvel, DC, creators, characters"
 msgstr "fumetti, albi, database, Marvel, DC, autori, personaggi"
 
 #: templates/partials/footer.html:10
+#: users/templates/registration/account_activation_email.html:229
 msgid "Contact Us"
 msgstr "Contattaci"
 
@@ -610,6 +615,7 @@ msgid "Join GitHub discussions"
 msgstr "Partecipa alle discussioni su GitHub"
 
 #: templates/partials/footer.html:44
+#: users/templates/registration/account_activation_sent.html:73
 msgid "GitHub Discussions"
 msgstr "Discussioni GitHub"
 
@@ -639,6 +645,7 @@ msgid "Creative Commons License"
 msgstr "Licenza Creative Commons"
 
 #: templates/partials/footer.html:95
+#: users/templates/registration/account_activation_email.html:236
 #, python-format
 msgid "&copy; %(current_year)s Metron Project. All rights reserved."
 msgstr "&copy; %(current_year)s Metron Project. Tutti i diritti riservati."
@@ -683,28 +690,29 @@ msgstr "Future"
 msgid "Browse"
 msgstr "Esplora"
 
-#: templates/partials/navbar.html:62
+#: templates/partials/navbar.html:62 users/templates/users/customuser_detail.html:219
 msgid "Publishers"
 msgstr "Editori"
 
-#: templates/partials/navbar.html:68
+#: templates/partials/navbar.html:68 users/templates/users/customuser_detail.html:285
 msgid "Imprints"
 msgstr "Etichette"
 
 #: templates/partials/navbar.html:80
 #: user_collection/templates/user_collection/collection_stats.html:227
+#: users/templates/users/customuser_detail.html:241
 msgid "Issues"
 msgstr "Albi"
 
-#: templates/partials/navbar.html:87
+#: templates/partials/navbar.html:87 users/templates/users/customuser_detail.html:263
 msgid "Creators"
 msgstr "Autori"
 
-#: templates/partials/navbar.html:93
+#: templates/partials/navbar.html:93 users/templates/users/customuser_detail.html:252
 msgid "Characters"
 msgstr "Personaggi"
 
-#: templates/partials/navbar.html:99
+#: templates/partials/navbar.html:99 users/templates/users/customuser_detail.html:274
 msgid "Teams"
 msgstr "Squadre"
 
@@ -712,7 +720,7 @@ msgstr "Squadre"
 msgid "Story Arcs"
 msgstr "Archi Narrativi"
 
-#: templates/partials/navbar.html:112
+#: templates/partials/navbar.html:112 users/templates/users/customuser_detail.html:307
 msgid "Universes"
 msgstr "Universi"
 
@@ -745,7 +753,7 @@ msgstr "La Mia Lista dei Desideri"
 msgid "More"
 msgstr "Altro"
 
-#: templates/partials/navbar.html:163
+#: templates/partials/navbar.html:163 users/templates/users/customuser_detail.html:498
 msgid "Wiki"
 msgstr "Wiki"
 
@@ -757,7 +765,7 @@ msgstr "Documentazione API"
 msgid "Statistics"
 msgstr "Statistiche"
 
-#: templates/partials/navbar.html:189
+#: templates/partials/navbar.html:189 users/templates/users/customuser_list.html:10
 msgid "Users"
 msgstr "Utenti"
 
@@ -1267,6 +1275,7 @@ msgstr ""
 "formato e note!"
 
 #: user_collection/templates/user_collection/collection_confirm_delete.html:3
+#, python-format
 msgid "Remove %(issue)s - Metron"
 msgstr "Rimuovi %(issue)s - Metron"
 
@@ -1281,6 +1290,7 @@ msgid "Warning"
 msgstr "Attenzione"
 
 #: user_collection/templates/user_collection/collection_confirm_delete.html:19
+#, python-format
 msgid "Are you sure you want to remove <strong>%(issue)s</strong> from your collection?"
 msgstr "Sei sicuro di voler rimuovere <strong>%(issue)s</strong> dalla tua collezione?"
 
@@ -1460,6 +1470,7 @@ msgid "My Comic Collection"
 msgstr "La Mia Collezione di Fumetti"
 
 #: user_collection/templates/user_collection/collection_list.html:14
+#, python-format
 msgid "<strong>%(counter)s</strong> item in your collection"
 msgid_plural "<strong>%(counter)s</strong> items in your collection"
 msgstr[0] "<strong>%(counter)s</strong> elemento nella tua collezione"
@@ -1592,6 +1603,7 @@ msgid "No series data available"
 msgstr "Nessun dato sulla serie disponibile"
 
 #: user_collection/templates/user_collection/missing_issues_detail.html:3
+#, python-format
 msgid "Missing Issues - %(name)s - Metron"
 msgstr "Albi Mancanti - %(name)s - Metron"
 
@@ -1625,6 +1637,7 @@ msgid "%(pct)s%% Complete"
 msgstr "%(pct)s%% Completato"
 
 #: user_collection/templates/user_collection/missing_issues_detail.html:64
+#, python-format
 msgid "%(counter)s issue missing"
 msgid_plural "%(counter)s issues missing"
 msgstr[0] "%(counter)s albo mancante"
@@ -1652,6 +1665,7 @@ msgid "Find gaps in your collection"
 msgstr "Trova le lacune nella tua collezione"
 
 #: user_collection/templates/user_collection/missing_issues_list.html:21
+#, python-format
 msgid "<strong>%(counter)s</strong> series with missing issues"
 msgid_plural "<strong>%(counter)s</strong> series with missing issues"
 msgstr[0] "<strong>%(counter)s</strong> serie con albi mancanti"
@@ -1798,6 +1812,7 @@ msgid "All Ratings"
 msgstr "Tutte le Valutazioni"
 
 #: user_collection/templates/user_collection/partials/collection_filter.html:226
+#, python-format
 msgid "%(counter)s Star"
 msgid_plural "%(counter)s Stars"
 msgstr[0] "%(counter)s Stella"
@@ -1824,10 +1839,15 @@ msgid "Confirm Delete"
 msgstr "Conferma Eliminazione"
 
 #: user_collection/templates/user_collection/partials/read_dates_list.html:22
+#: users/templates/registration/password_change_form.html:26
+#: users/templates/registration/signup.html:30
+#: users/templates/users/change_profile.html:26
+#: users/templates/users/customuser_detail.html:486
 msgid "close"
 msgstr "chiudi"
 
 #: user_collection/templates/user_collection/partials/read_dates_list.html:28
+#, python-format
 msgid "Are you sure you want to remove the read date <strong>%(read_date)s</strong>?"
 msgstr ""
 "Sei sicuro di voler rimuovere la data di lettura <strong>%(read_date)s</strong>?"
@@ -1838,6 +1858,7 @@ msgstr "Rimuovi Data di Lettura"
 
 #: user_collection/templates/user_collection/partials/read_dates_list.html:46
 #: user_collection/templates/user_collection/reading_history.html:83
+#, python-format
 msgid "Read %(counter)s time"
 msgid_plural "Read %(counter)s times"
 msgstr[0] "Letto %(counter)s volta"
@@ -1860,6 +1881,7 @@ msgid "Add Read Date"
 msgstr "Aggiungi Data di Lettura"
 
 #: user_collection/templates/user_collection/partials/star_rating.html:10
+#, python-format
 msgid "Rate %(counter)s star"
 msgid_plural "Rate %(counter)s stars"
 msgstr[0] "Vota %(counter)s stella"
@@ -1878,6 +1900,7 @@ msgid "My Reading History"
 msgstr "La Mia Cronologia di Lettura"
 
 #: user_collection/templates/user_collection/reading_history.html:15
+#, python-format
 msgid "<strong>%(counter)s</strong> issue read"
 msgid_plural "<strong>%(counter)s</strong> issues read"
 msgstr[0] "<strong>%(counter)s</strong> albo letto"
@@ -1888,6 +1911,7 @@ msgid "Date Unknown"
 msgstr "Data Sconosciuta"
 
 #: user_collection/templates/user_collection/reading_history.html:73
+#: users/templates/users/customuser_detail.html:442
 msgid "No cover available"
 msgstr "Copertina non disponibile"
 
@@ -1955,6 +1979,7 @@ msgid "Top Artists"
 msgstr "Migliori Disegnatori"
 
 #: user_collection/views.py:454
+#, python-format
 msgid "Added %(count)d issue to your collection"
 msgid_plural "Added %(count)d issues to your collection"
 msgstr[0] "Aggiunto %(count)d albo alla tua collezione"
@@ -1985,6 +2010,905 @@ msgstr "%(added)s!"
 #: user_collection/views.py:477
 msgid "All issues from this series are already in your collection."
 msgstr "Tutti gli albi di questa serie sono già nella tua collezione."
+
+#: users/forms.py:19
+msgid ""
+"Required. Enter a valid email address. Temporary email addresses are not allowed."
+msgstr ""
+"Obbligatorio. Inserisci un indirizzo email valido. Gli indirizzi email temporanei non "
+"sono ammessi."
+
+#: users/forms.py:42 users/forms.py:52 users/forms.py:67
+msgid "Email address is not valid."
+msgstr "L'indirizzo email non è valido."
+
+#: users/forms.py:46
+msgid "Email already exists"
+msgstr "L'email esiste già"
+
+#: users/forms.py:56 users/forms.py:65
+msgid "Temporary email addresses are not allowed."
+msgstr "Gli indirizzi email temporanei non sono ammessi."
+
+#: users/forms.py:61
+msgid "Error creating account. Contact the site administrator."
+msgstr "Errore nella creazione dell'account. Contatta l'amministratore del sito."
+
+#: users/forms.py:78
+msgid "Required. Enter a valid email address."
+msgstr "Obbligatorio. Inserisci un indirizzo email valido."
+
+#: users/forms.py:81
+msgid "Please provide valid email."
+msgstr "Fornisci un'email valida."
+
+#: users/models.py:13
+msgid "Mega Sponsor"
+msgstr "Mega Sponsor"
+
+#: users/models.py:14
+msgid "Sponsor"
+msgstr "Sponsor"
+
+#: users/models.py:15
+msgid "Backer"
+msgstr "Sostenitore"
+
+#: users/models.py:16
+msgid "Friend"
+msgstr "Amico"
+
+#: users/models.py:103
+msgid "New account signups are temporarily disabled. Please check back later."
+msgstr ""
+"Le registrazioni di nuovi account sono temporaneamente disabilitate. Riprova più "
+"tardi."
+
+#: users/models.py:107 users/models.py:108
+msgid "Signup settings"
+msgstr "Impostazioni di registrazione"
+
+#: users/models.py:148
+msgid "Donation amount in cents."
+msgstr "Importo della donazione in centesimi."
+
+#: users/models.py:154
+msgid "Monthly"
+msgstr "Mensile"
+
+#: users/models.py:155
+msgid "Yearly"
+msgstr "Annuale"
+
+#: users/models.py:156
+msgid "One-time"
+msgstr "Una tantum"
+
+#: users/models.py:158
+msgid "The underlying OpenCollective order's frequency."
+msgstr "La frequenza dell'ordine OpenCollective sottostante."
+
+#: users/templates/registration/account_activation_email.html:7 users/views.py:166
+msgid "Activate Your Metron Account"
+msgstr "Attiva il Tuo Account Metron"
+
+#: users/templates/registration/account_activation_email.html:48
+#: users/templates/registration/account_activation_email.txt:2
+#, python-format
+msgid "Welcome to Metron, %(username)s!"
+msgstr "Benvenuto su Metron, %(username)s!"
+
+#: users/templates/registration/account_activation_email.html:54
+#: users/templates/registration/account_activation_email.txt:4
+msgid ""
+"Thank you for joining the Metron Comic Book Database community! We're excited to have "
+"you as part of our growing community of comic book enthusiasts."
+msgstr ""
+"Grazie per esserti unito alla community di Metron Comic Book Database! Siamo felici "
+"di averti come parte della nostra crescente community di appassionati di fumetti."
+
+#: users/templates/registration/account_activation_email.html:60
+msgid ""
+"To complete your registration and activate your account, please click the button "
+"below:"
+msgstr ""
+"Per completare la registrazione e attivare il tuo account, clicca il pulsante qui "
+"sotto:"
+
+#: users/templates/registration/account_activation_email.html:77
+msgid "Activate My Account"
+msgstr "Attiva il Mio Account"
+
+#: users/templates/registration/account_activation_email.html:97
+msgid "Button not working?"
+msgstr "Il pulsante non funziona?"
+
+#: users/templates/registration/account_activation_email.html:97
+msgid "Copy and paste this link into your browser:"
+msgstr "Copia e incolla questo link nel tuo browser:"
+
+#: users/templates/registration/account_activation_email.html:123
+#: users/templates/registration/account_activation_email.txt:10
+msgid "What you can do with your Metron account:"
+msgstr "Cosa puoi fare con il tuo account Metron:"
+
+#: users/templates/registration/account_activation_email.html:134
+#: users/templates/registration/account_activation_email.txt:11
+msgid "Contribute to the comic book database by adding and editing information"
+msgstr "Contribuisci al database dei fumetti aggiungendo e modificando informazioni"
+
+#: users/templates/registration/account_activation_email.html:142
+#: users/templates/registration/account_activation_email.txt:12
+msgid "Access our comprehensive API for developers"
+msgstr "Accedi alla nostra API completa per sviluppatori"
+
+#: users/templates/registration/account_activation_email.html:150
+#: users/templates/registration/account_activation_email.txt:13
+msgid "Join discussions with fellow comic book fans"
+msgstr "Partecipa alle discussioni con altri appassionati di fumetti"
+
+#: users/templates/registration/account_activation_email.html:158
+#: users/templates/registration/account_activation_email.txt:14
+msgid "Help build the most accurate comic book database"
+msgstr "Aiuta a costruire il database di fumetti più accurato"
+
+#: users/templates/registration/account_activation_email.html:190
+msgid "This link expires in 24 hours."
+msgstr "Questo link scade tra 24 ore."
+
+#: users/templates/registration/account_activation_email.html:190
+msgid ""
+"If you don't activate your account within this time, you'll need to sign up again."
+msgstr "Se non attivi il tuo account entro questo tempo, dovrai registrarti di nuovo."
+
+#: users/templates/registration/account_activation_email.html:199
+#: users/templates/registration/account_activation_email.txt:18
+msgid "If you didn't create an account with Metron, you can safely ignore this email."
+msgstr ""
+"Se non hai creato un account con Metron, puoi tranquillamente ignorare questa email."
+
+#: users/templates/registration/account_activation_email.html:216
+#: users/templates/registration/account_activation_email.txt:22
+msgid "A community-driven project for comic book enthusiasts"
+msgstr "Un progetto guidato dalla community per appassionati di fumetti"
+
+#: users/templates/registration/account_activation_email.html:223
+msgid "Visit Website"
+msgstr "Visita il Sito"
+
+#: users/templates/registration/account_activation_email.txt:6
+msgid "To complete your registration and activate your account, please visit:"
+msgstr "Per completare la registrazione e attivare il tuo account, visita:"
+
+#: users/templates/registration/account_activation_email.txt:16
+msgid ""
+"IMPORTANT: This link expires in 24 hours. If you don't activate your account within "
+"this time, you'll need to sign up again."
+msgstr ""
+"IMPORTANTE: Questo link scade tra 24 ore. Se non attivi il tuo account entro questo "
+"tempo, dovrai registrarti di nuovo."
+
+#: users/templates/registration/account_activation_email.txt:29
+msgid "(c) %(current_year)s Metron Project. All rights reserved."
+msgstr "(c) %(current_year)s Metron Project. Tutti i diritti riservati."
+
+#: users/templates/registration/account_activation_invalid.html:4
+msgid "Invalid Confirmation Link - Metron"
+msgstr "Link di Conferma Non Valido - Metron"
+
+#: users/templates/registration/account_activation_invalid.html:12
+msgid "Invalid Confirmation Link"
+msgstr "Link di Conferma Non Valido"
+
+#: users/templates/registration/account_activation_invalid.html:20
+msgid "The confirmation link is invalid or has expired."
+msgstr "Il link di conferma non è valido o è scaduto."
+
+#: users/templates/registration/account_activation_invalid.html:21
+msgid "This may have happened because:"
+msgstr "Questo potrebbe essere successo perché:"
+
+#: users/templates/registration/account_activation_invalid.html:23
+msgid "The link has already been used"
+msgstr "Il link è già stato utilizzato"
+
+#: users/templates/registration/account_activation_invalid.html:24
+msgid "The link has expired (links are valid for 24 hours)"
+msgstr "Il link è scaduto (i link sono validi per 24 ore)"
+
+#: users/templates/registration/account_activation_invalid.html:25
+msgid "The link was copied incorrectly"
+msgstr "Il link è stato copiato in modo errato"
+
+#: users/templates/registration/account_activation_invalid.html:35
+#: users/templates/registration/account_activation_sent.html:32
+#: users/templates/registration/password_change_done.html:30
+#: users/templates/registration/signup_rate_limited.html:30
+#: users/templates/registration/signups_disabled.html:28
+msgid "Go to Home"
+msgstr "Vai alla Home"
+
+#: users/templates/registration/account_activation_invalid.html:41
+msgid "Try Logging In"
+msgstr "Prova ad Accedere"
+
+#: users/templates/registration/account_activation_invalid.html:52
+msgid "What should you do?"
+msgstr "Cosa dovresti fare?"
+
+#: users/templates/registration/account_activation_invalid.html:58
+#, python-format
+msgid ""
+"If your account was already activated, try <a href=\"%(login_url)s\">logging in</a>"
+msgstr ""
+"Se il tuo account era già stato attivato, prova ad <a "
+"href=\"%(login_url)s\">accedere</a>"
+
+#: users/templates/registration/account_activation_invalid.html:62
+#, python-format
+msgid ""
+"If you need a new confirmation link, please <a href=\"%(signup_url)s\">sign up again</"
+"a> or contact support"
+msgstr ""
+"Se hai bisogno di un nuovo link di conferma, <a href=\"%(signup_url)s\">registrati di "
+"nuovo</a> o contatta il supporto"
+
+#: users/templates/registration/account_activation_invalid.html:64
+msgid "Make sure you're using the most recent confirmation email"
+msgstr "Assicurati di utilizzare l'email di conferma più recente"
+
+#: users/templates/registration/account_activation_invalid.html:70
+msgid "Still having trouble?"
+msgstr "Hai ancora problemi?"
+
+#: users/templates/registration/account_activation_invalid.html:71
+msgid "Our support team is here to help"
+msgstr "Il nostro team di supporto è qui per aiutarti"
+
+#: users/templates/registration/account_activation_invalid.html:78
+#: users/templates/registration/account_activation_sent.html:64
+msgid "Contact Support"
+msgstr "Contatta il Supporto"
+
+#: users/templates/registration/account_activation_invalid.html:87
+msgid "Report Issue"
+msgstr "Segnala un Problema"
+
+#: users/templates/registration/account_activation_sent.html:4
+msgid "Confirmation Email Sent - Metron"
+msgstr "Email di Conferma Inviata - Metron"
+
+#: users/templates/registration/account_activation_sent.html:12
+msgid "Check Your Email"
+msgstr "Controlla la Tua Email"
+
+#: users/templates/registration/account_activation_sent.html:21
+#: users/templates/users/customuser_detail.html:492
+msgid "Welcome to Metron!"
+msgstr "Benvenuto su Metron!"
+
+#: users/templates/registration/account_activation_sent.html:21
+msgid "We've sent a confirmation link to your email address."
+msgstr "Abbiamo inviato un link di conferma al tuo indirizzo email."
+
+#: users/templates/registration/account_activation_sent.html:23
+msgid ""
+"Please click the link in the email to activate your account and complete the "
+"registration process."
+msgstr ""
+"Clicca il link nell'email per attivare il tuo account e completare il processo di "
+"registrazione."
+
+#: users/templates/registration/account_activation_sent.html:43
+msgid "Didn't receive the email?"
+msgstr "Non hai ricevuto l'email?"
+
+#: users/templates/registration/account_activation_sent.html:47
+msgid "Check your spam or junk folder"
+msgstr "Controlla la cartella spam o posta indesiderata"
+
+#: users/templates/registration/account_activation_sent.html:48
+msgid "Make sure you entered the correct email address"
+msgstr "Assicurati di aver inserito l'indirizzo email corretto"
+
+#: users/templates/registration/account_activation_sent.html:49
+msgid "Wait a few minutes - emails can be delayed"
+msgstr "Attendi qualche minuto - le email possono essere in ritardo"
+
+#: users/templates/registration/account_activation_sent.html:50
+msgid "The confirmation link is valid for 24 hours"
+msgstr "Il link di conferma è valido per 24 ore"
+
+#: users/templates/registration/account_activation_sent.html:56
+msgid "Need help?"
+msgstr "Hai bisogno di aiuto?"
+
+#: users/templates/registration/account_activation_sent.html:57
+msgid "If you continue to have issues, please contact us"
+msgstr "Se continui ad avere problemi, contattaci"
+
+#: users/templates/registration/password_change_done.html:4
+msgid "Password Changed - Metron"
+msgstr "Password Modificata - Metron"
+
+#: users/templates/registration/password_change_done.html:12
+msgid "Password Changed Successfully"
+msgstr "Password Modificata con Successo"
+
+#: users/templates/registration/password_change_done.html:20
+msgid "Your password has been successfully changed!"
+msgstr "La tua password è stata modificata con successo!"
+
+#: users/templates/registration/password_change_done.html:21
+msgid "You can now continue using your account with the new password."
+msgstr "Ora puoi continuare a usare il tuo account con la nuova password."
+
+#: users/templates/registration/password_change_done.html:37
+msgid "View Profile"
+msgstr "Visualizza Profilo"
+
+#: users/templates/registration/password_change_done.html:48
+msgid "Security Tip"
+msgstr "Suggerimento di Sicurezza"
+
+#: users/templates/registration/password_change_done.html:52
+msgid "Keep your password secure and don't share it with anyone"
+msgstr "Mantieni la tua password sicura e non condividerla con nessuno"
+
+#: users/templates/registration/password_change_done.html:53
+msgid "Use a unique password for Metron"
+msgstr "Usa una password unica per Metron"
+
+#: users/templates/registration/password_change_done.html:54
+msgid "Consider using a password manager"
+msgstr "Considera l'uso di un gestore di password"
+
+#: users/templates/registration/password_change_done.html:55
+msgid "Change your password periodically for better security"
+msgstr "Cambia la tua password periodicamente per una maggiore sicurezza"
+
+#: users/templates/registration/password_change_form.html:5
+msgid "Change Password - Metron"
+msgstr "Cambia Password - Metron"
+
+#: users/templates/registration/password_change_form.html:13
+msgid "Change Your Password"
+msgstr "Cambia la Tua Password"
+
+#: users/templates/registration/password_change_form.html:14
+msgid "Update your account password"
+msgstr "Aggiorna la password del tuo account"
+
+#: users/templates/registration/password_change_form.html:53
+#: users/templates/users/customuser_detail.html:31
+msgid "Change Password"
+msgstr "Cambia Password"
+
+#: users/templates/registration/password_change_form.html:65
+msgid "Password Requirements:"
+msgstr "Requisiti della Password:"
+
+#: users/templates/registration/password_change_form.html:69
+msgid "Your password can't be too similar to your other personal information"
+msgstr ""
+"La tua password non può essere troppo simile alle tue altre informazioni personali"
+
+#: users/templates/registration/password_change_form.html:70
+msgid "Your password must contain at least 8 characters"
+msgstr "La tua password deve contenere almeno 8 caratteri"
+
+#: users/templates/registration/password_change_form.html:71
+msgid "Your password can't be a commonly used password"
+msgstr "La tua password non può essere una password comunemente usata"
+
+#: users/templates/registration/password_change_form.html:72
+msgid "Your password can't be entirely numeric"
+msgstr "La tua password non può essere interamente numerica"
+
+#: users/templates/registration/signup.html:5
+msgid "Sign Up - Metron"
+msgstr "Registrati - Metron"
+
+#: users/templates/registration/signup.html:16
+msgid "Join Metron"
+msgstr "Unisciti a Metron"
+
+#: users/templates/registration/signup.html:17
+msgid "Create an account to contribute to the comic book database"
+msgstr "Crea un account per contribuire al database dei fumetti"
+
+#: users/templates/registration/signup.html:69
+msgid "Create Account"
+msgstr "Crea Account"
+
+#: users/templates/registration/signup.html:76
+msgid "Already have an account?"
+msgstr "Hai già un account?"
+
+#: users/templates/registration/signup.html:77
+msgid "Log in here"
+msgstr "Accedi qui"
+
+#: users/templates/registration/signup.html:84
+msgid "Why create an account?"
+msgstr "Perché creare un account?"
+
+#: users/templates/registration/signup.html:87
+msgid "Contribute to the comic book database"
+msgstr "Contribuisci al database dei fumetti"
+
+#: users/templates/registration/signup.html:88
+msgid "Add and edit comic information"
+msgstr "Aggiungi e modifica informazioni sui fumetti"
+
+#: users/templates/registration/signup.html:89
+msgid "Access the API for developers"
+msgstr "Accedi all'API per sviluppatori"
+
+#: users/templates/registration/signup.html:90
+msgid "Join our community of comic enthusiasts"
+msgstr "Unisciti alla nostra community di appassionati di fumetti"
+
+#: users/templates/registration/signup_rate_limited.html:4
+msgid "Too Many Signups - Metron"
+msgstr "Troppe Registrazioni - Metron"
+
+#: users/templates/registration/signup_rate_limited.html:11
+msgid "Too Many Signups"
+msgstr "Troppe Registrazioni"
+
+#: users/templates/registration/signup_rate_limited.html:19
+msgid ""
+"Too many accounts have recently been created from your network. Please try again "
+"later."
+msgstr "Troppi account sono stati creati di recente dalla tua rete. Riprova più tardi."
+
+#: users/templates/registration/signup_rate_limited.html:25
+#: users/templates/registration/signups_disabled.html:23
+msgid "Log In"
+msgstr "Accedi"
+
+#: users/templates/registration/signups_disabled.html:4
+msgid "Signups Disabled - Metron"
+msgstr "Registrazioni Disabilitate - Metron"
+
+#: users/templates/registration/signups_disabled.html:11
+msgid "Signups Disabled"
+msgstr "Registrazioni Disabilitate"
+
+#: users/templates/users/api_token.html:4
+msgid "API Tokens - Metron"
+msgstr "Token API - Metron"
+
+#: users/templates/users/api_token.html:12
+#: users/templates/users/customuser_detail.html:39
+msgid "API Tokens"
+msgstr "Token API"
+
+#: users/templates/users/api_token.html:13
+msgid "Manage the tokens used to authenticate scripts and apps against the Metron API"
+msgstr ""
+"Gestisci i token utilizzati per autenticare script e app rispetto all'API di Metron"
+
+#: users/templates/users/api_token.html:24
+msgid "Copy your new token now — it won't be shown again"
+msgstr "Copia subito il tuo nuovo token — non verrà mostrato di nuovo"
+
+#: users/templates/users/api_token.html:39 users/templates/users/api_token.html:40
+msgid "Copy token"
+msgstr "Copia token"
+
+#: users/templates/users/api_token.html:44
+msgid "Copy"
+msgstr "Copia"
+
+#: users/templates/users/api_token.html:52
+msgid "Generate a New Token"
+msgstr "Genera un Nuovo Token"
+
+#: users/templates/users/api_token.html:61
+msgid "Optional label, e.g. &quot;Mokkari script&quot;"
+msgstr "Etichetta opzionale, es. &quot;Script Mokkari&quot;"
+
+#: users/templates/users/api_token.html:68
+msgid "Generate Token"
+msgstr "Genera Token"
+
+#: users/templates/users/api_token.html:74
+msgid ""
+"Send it as <code>Authorization: Bearer &lt;token&gt;</code>. Tokens don't expire by "
+"default — revoke one below if you no longer need it."
+msgstr ""
+"Invialo come <code>Authorization: Bearer &lt;token&gt;</code>. I token non scadono "
+"per impostazione predefinita — revocane uno qui sotto se non ne hai più bisogno."
+
+#: users/templates/users/api_token.html:79
+msgid "Your Tokens"
+msgstr "I Tuoi Token"
+
+#: users/templates/users/api_token.html:81
+msgid "Never"
+msgstr "Mai"
+
+#: users/templates/users/api_token.html:85
+msgid "Name"
+msgstr "Nome"
+
+#: users/templates/users/api_token.html:86
+msgid "Created"
+msgstr "Creato"
+
+#: users/templates/users/api_token.html:87
+msgid "Expires"
+msgstr "Scade"
+
+#: users/templates/users/api_token.html:100
+msgid "Revoke this token? Any application using it will stop working immediately."
+msgstr ""
+"Revocare questo token? Qualsiasi applicazione che lo utilizza smetterà immediatamente "
+"di funzionare."
+
+#: users/templates/users/api_token.html:106
+msgid "Revoke"
+msgstr "Revoca"
+
+#: users/templates/users/api_token.html:115
+msgid "You don't have any API tokens yet."
+msgstr "Non hai ancora nessun token API."
+
+#: users/templates/users/api_token.html:125
+msgid "Back to Profile"
+msgstr "Torna al Profilo"
+
+#: users/templates/users/api_token.html:140
+msgid "Copied"
+msgstr "Copiato"
+
+#: users/templates/users/change_profile.html:5
+msgid "Edit Profile - Metron"
+msgstr "Modifica Profilo - Metron"
+
+#: users/templates/users/change_profile.html:13
+msgid "Edit Your Profile"
+msgstr "Modifica il Tuo Profilo"
+
+#: users/templates/users/change_profile.html:14
+msgid "Update your account information and preferences"
+msgstr "Aggiorna le informazioni e le preferenze del tuo account"
+
+#: users/templates/users/change_profile.html:92
+msgid "Password"
+msgstr "Password"
+
+#: users/templates/users/change_profile.html:98
+msgid "To change your password, please use the"
+msgstr "Per cambiare la tua password, utilizza il"
+
+#: users/templates/users/change_profile.html:99
+msgid "password change form"
+msgstr "modulo di cambio password"
+
+#: users/templates/users/change_profile.html:111
+#: wish_list/templates/wish_list/wishlist_item_form.html:53
+msgid "Save Changes"
+msgstr "Salva Modifiche"
+
+#: users/templates/users/change_profile.html:132
+msgid "Profile Tips:"
+msgstr "Suggerimenti per il Profilo:"
+
+#: users/templates/users/change_profile.html:136
+msgid "Your username is visible to other users in the community"
+msgstr "Il tuo nome utente è visibile agli altri utenti della community"
+
+#: users/templates/users/change_profile.html:137
+msgid "Adding a profile image helps others recognize you"
+msgstr "Aggiungere un'immagine del profilo aiuta gli altri a riconoscerti"
+
+#: users/templates/users/change_profile.html:138
+msgid "Your bio is displayed on your public profile page"
+msgstr "La tua biografia viene visualizzata nella tua pagina del profilo pubblico"
+
+#: users/templates/users/change_profile.html:139
+msgid "Email address is used for notifications and account recovery"
+msgstr "L'indirizzo email viene utilizzato per notifiche e recupero dell'account"
+
+#: users/templates/users/customuser_detail.html:7
+msgid "%(username)s - Metron"
+msgstr "%(username)s - Metron"
+
+#: users/templates/users/customuser_detail.html:11
+msgid "Profile page for %(username)s on Metron Comic Book Database."
+msgstr "Pagina del profilo di %(username)s su Metron Comic Book Database."
+
+#: users/templates/users/customuser_detail.html:19
+msgid "Edit your profile"
+msgstr "Modifica il tuo profilo"
+
+#: users/templates/users/customuser_detail.html:23
+msgid "Edit Profile"
+msgstr "Modifica Profilo"
+
+#: users/templates/users/customuser_detail.html:27
+msgid "Change your password"
+msgstr "Cambia la tua password"
+
+#: users/templates/users/customuser_detail.html:35
+msgid "Manage your API tokens"
+msgstr "Gestisci i tuoi token API"
+
+#: users/templates/users/customuser_detail.html:43
+msgid "Delete your account"
+msgstr "Elimina il tuo account"
+
+#: users/templates/users/customuser_detail.html:47
+msgid "Delete Account"
+msgstr "Elimina Account"
+
+#: users/templates/users/customuser_detail.html:63
+#: users/templates/users/customuser_list.html:64
+#, python-format
+msgid "Profile picture of %(username)s"
+msgstr "Immagine del profilo di %(username)s"
+
+#: users/templates/users/customuser_detail.html:69
+#, python-format
+msgid "Default profile picture for %(username)s"
+msgstr "Immagine del profilo predefinita per %(username)s"
+
+#: users/templates/users/customuser_detail.html:83
+#: users/templates/users/customuser_detail.html:115
+msgid "Site Administrator"
+msgstr "Amministratore del Sito"
+
+#: users/templates/users/customuser_detail.html:87
+#: users/templates/users/customuser_detail.html:119
+msgid "Admin"
+msgstr "Admin"
+
+#: users/templates/users/customuser_detail.html:92
+#: users/templates/users/customuser_detail.html:124
+msgid "Database Editor"
+msgstr "Editor del Database"
+
+#: users/templates/users/customuser_detail.html:96
+#: users/templates/users/customuser_detail.html:128
+msgid "Editor"
+msgstr "Editor"
+
+#: users/templates/users/customuser_detail.html:99
+#: users/templates/users/customuser_detail.html:131
+msgid "Reading List Editor"
+msgstr "Editor delle Liste di Lettura"
+
+#: users/templates/users/customuser_detail.html:103
+#: users/templates/users/customuser_detail.html:135
+msgid "List Editor"
+msgstr "Editor Liste"
+
+#: users/templates/users/customuser_detail.html:146
+msgid "Member Since"
+msgstr "Membro Dal"
+
+#: users/templates/users/customuser_detail.html:159
+msgid "Last Active"
+msgstr "Ultima Attività"
+
+#: users/templates/users/customuser_detail.html:178
+msgid "About"
+msgstr "Informazioni"
+
+#: users/templates/users/customuser_detail.html:189
+msgid "You haven't added a bio yet."
+msgstr "Non hai ancora aggiunto una biografia."
+
+#: users/templates/users/customuser_detail.html:190
+msgid "Add one now"
+msgstr "Aggiungine una ora"
+
+#: users/templates/users/customuser_detail.html:190
+msgid "to tell others about yourself!"
+msgstr "per parlare di te agli altri!"
+
+#: users/templates/users/customuser_detail.html:207
+msgid "Database Contributions"
+msgstr "Contributi al Database"
+
+#: users/templates/users/customuser_detail.html:209
+msgid "Items created by this user"
+msgstr "Elementi creati da questo utente"
+
+#: users/templates/users/customuser_detail.html:296
+msgid "Arcs"
+msgstr "Archi"
+
+#: users/templates/users/customuser_detail.html:323
+msgid "No contribution statistics available."
+msgstr "Nessuna statistica sui contributi disponibile."
+
+#: users/templates/users/customuser_detail.html:335
+msgid "Account Settings"
+msgstr "Impostazioni Account"
+
+#: users/templates/users/customuser_detail.html:342
+msgid "Email:"
+msgstr "Email:"
+
+#: users/templates/users/customuser_detail.html:352
+msgid "Email Status:"
+msgstr "Stato Email:"
+
+#: users/templates/users/customuser_detail.html:354
+msgid "Confirmed"
+msgstr "Confermata"
+
+#: users/templates/users/customuser_detail.html:356
+msgid "Not Confirmed"
+msgstr "Non Confermata"
+
+#: users/templates/users/customuser_detail.html:365
+msgid "Daily API Usage:"
+msgstr "Utilizzo Giornaliero API:"
+
+#: users/templates/users/customuser_detail.html:367
+#, python-format
+msgid "(%(remaining)s remaining)"
+msgstr "(%(remaining)s rimanenti)"
+
+#: users/templates/users/customuser_detail.html:372
+msgid "%(pct)s%% used"
+msgstr "%(pct)s%% utilizzato"
+
+#: users/templates/users/customuser_detail.html:382
+msgid "Supporter Status:"
+msgstr "Stato Sostenitore:"
+
+#: users/templates/users/customuser_detail.html:384
+#, python-format
+msgid "(elevated rate limit until %(until)s)"
+msgstr "(limite di velocità elevato fino al %(until)s)"
+
+#: users/templates/users/customuser_detail.html:393
+msgid "Manage Settings"
+msgstr "Gestisci Impostazioni"
+
+#: users/templates/users/customuser_detail.html:411
+msgid "Recent Reading Activity"
+msgstr "Attività di Lettura Recente"
+
+#: users/templates/users/customuser_detail.html:423
+msgid "View Full History"
+msgstr "Visualizza Cronologia Completa"
+
+#: users/templates/users/customuser_detail.html:495
+msgid "Here are some helpful resources to get you started:"
+msgstr "Ecco alcune risorse utili per iniziare:"
+
+#: users/templates/users/customuser_detail.html:498
+msgid "Learn how to contribute to the database and explore our developer API"
+msgstr "Scopri come contribuire al database ed esplora la nostra API per sviluppatori"
+
+#: users/templates/users/customuser_detail.html:503
+msgid "Community Discussions"
+msgstr "Discussioni della Community"
+
+#: users/templates/users/customuser_detail.html:503
+msgid "Join the conversation"
+msgstr "Unisciti alla conversazione"
+
+#: users/templates/users/customuser_list.html:6
+msgid "Users - Metron"
+msgstr "Utenti - Metron"
+
+#: users/templates/users/customuser_list.html:13
+msgid "List navigation and actions"
+msgstr "Navigazione ed azioni elenco"
+
+#: users/templates/users/customuser_list.html:17
+msgid "<strong>%(formatted_count)s</strong> User"
+msgid_plural "<strong>%(formatted_count)s</strong> Users"
+msgstr[0] "<strong>%(formatted_count)s</strong> Utente"
+msgstr[1] "<strong>%(formatted_count)s</strong> Utenti"
+
+#: users/templates/users/customuser_list.html:25
+msgid "Search users"
+msgstr "Cerca utenti"
+
+#: users/templates/users/customuser_list.html:28
+msgid "Search Users"
+msgstr "Cerca Utenti"
+
+#: users/templates/users/customuser_list.html:33
+#: users/templates/users/customuser_list.html:34
+msgid "Find a user"
+msgstr "Trova un utente"
+
+#: users/templates/users/customuser_list.html:37
+#: users/templates/users/customuser_list.html:41
+msgid "Search"
+msgstr "Cerca"
+
+#: users/templates/users/customuser_list.html:70
+msgid "Default profile picture"
+msgstr "Immagine del profilo predefinita"
+
+#: users/templates/users/customuser_list.html:82
+#, python-format
+msgid "Joined %(joined)s"
+msgstr "Iscritto dal %(joined)s"
+
+#: users/templates/users/customuser_list.html:97
+msgid "No users found."
+msgstr "Nessun utente trovato."
+
+#: users/templates/users/delete_account.html:4
+msgid "Delete Account - Metron"
+msgstr "Elimina Account - Metron"
+
+#: users/templates/users/delete_account.html:14
+msgid "Delete Your Account"
+msgstr "Elimina il Tuo Account"
+
+#: users/templates/users/delete_account.html:15
+msgid "This action cannot be undone"
+msgstr "Questa azione non può essere annullata"
+
+#: users/templates/users/delete_account.html:18
+msgid "Warning: Permanent deletion"
+msgstr "Attenzione: eliminazione permanente"
+
+#: users/templates/users/delete_account.html:21
+msgid "Your account and all personal data will be permanently deleted"
+msgstr "Il tuo account e tutti i dati personali verranno eliminati permanentemente"
+
+#: users/templates/users/delete_account.html:22
+msgid "Your reading list and collection data will be removed"
+msgstr "I dati della tua lista di lettura e della collezione verranno rimossi"
+
+#: users/templates/users/delete_account.html:23
+msgid ""
+"Database contributions (issues, creators, etc.) will remain but will no longer be "
+"attributed to you"
+msgstr ""
+"I contributi al database (albi, autori, ecc.) rimarranno ma non saranno più "
+"attribuiti a te"
+
+#: users/templates/users/delete_account.html:35
+msgid "Delete My Account"
+msgstr "Elimina il Mio Account"
+
+#: users/views.py:128
+msgid "Editing Guidelines"
+msgstr "Linee Guida per la Modifica"
+
+#: users/views.py:132
+#, python-format
+msgid ""
+"If you are planning on adding new information to the database, please refer to the "
+"%(link)s."
+msgstr ""
+"Se hai intenzione di aggiungere nuove informazioni al database, fai riferimento a "
+"%(link)s."
+
+#: users/views.py:216
+msgid "Your profile was successfully updated!"
+msgstr "Il tuo profilo è stato aggiornato con successo!"
+
+#: users/views.py:218
+msgid "Please correct the error below."
+msgstr "Correggi l'errore qui sotto."
+
+#: users/views.py:231
+msgid "Your account has been deleted."
+msgstr "Il tuo account è stato eliminato."
+
+#: users/views.py:246
+msgid "New API token created. Copy it now — you won't be able to see it again."
+msgstr "Nuovo token API creato. Copialo ora — non potrai vederlo di nuovo."
+
+#: users/views.py:262
+msgid "API token revoked."
+msgstr "Token API revocato."
 
 #: wish_list/forms.py:41
 msgid "Notes about this item (optional)"
@@ -2056,6 +2980,7 @@ msgid "Add to wish list"
 msgstr "Aggiungi alla lista dei desideri"
 
 #: wish_list/templates/wish_list/wishlist_acquire_form.html:3
+#, python-format
 msgid "Acquire %(issue)s - Metron"
 msgstr "Acquisisci %(issue)s - Metron"
 
@@ -2064,6 +2989,7 @@ msgid "Acquire Item"
 msgstr "Acquisisci Elemento"
 
 #: wish_list/templates/wish_list/wishlist_acquire_form.html:7
+#, python-format
 msgid "Mark <strong>%(issue)s</strong> as acquired"
 msgstr "Segna <strong>%(issue)s</strong> come acquisito"
 
@@ -2127,6 +3053,7 @@ msgid "Remove from Wish List"
 msgstr "Rimuovi dalla Lista dei Desideri"
 
 #: wish_list/templates/wish_list/wishlist_item_confirm_delete.html:18
+#, python-format
 msgid "Are you sure you want to remove <strong>%(issue)s</strong> from your wish list?"
 msgstr ""
 "Sei sicuro di voler rimuovere <strong>%(issue)s</strong> dalla tua lista dei desideri?"
@@ -2139,15 +3066,13 @@ msgstr "Modifica Elemento della Lista dei Desideri - Metron"
 msgid "Edit Wish List Item"
 msgstr "Modifica Elemento della Lista dei Desideri"
 
-#: wish_list/templates/wish_list/wishlist_item_form.html:53
-msgid "Save Changes"
-msgstr "Salva Modifiche"
-
 #: wish_list/views.py:35
+#, python-format
 msgid "%(issue)s is already on your wish list."
 msgstr "%(issue)s è già nella tua lista dei desideri."
 
 #: wish_list/views.py:41
+#, python-format
 msgid "Added %(issue)s to your wish list."
 msgstr "Aggiunto %(issue)s alla tua lista dei desideri."
 
@@ -2157,6 +3082,7 @@ msgid "Updated %(issue)s."
 msgstr "%(issue)s aggiornato."
 
 #: wish_list/views.py:84
+#, python-format
 msgid "Removed %(issue)s from your wish list."
 msgstr "Rimosso %(issue)s dalla tua lista dei desideri."
 
