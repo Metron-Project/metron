@@ -1,9 +1,9 @@
 {% extends parent_template|default:"base.html" %}
-{% load static %}
-{% block title %}Remove Series from Pull List - Metron{% endblock %}
+{% load static i18n %}
+{% block title %}{% trans "Remove Series from Pull List - Metron" %}{% endblock %}
 {% block content %}
     <header class="block has-text-centered">
-        <h1 class="title">Remove Series</h1>
+        <h1 class="title">{% trans "Remove Series" %}</h1>
     </header>
     <section class="section">
         <div class="container">
@@ -12,22 +12,22 @@
                     <div class="box">
                         <article class="message is-warning">
                             <div class="message-header">
-                                <p>Confirm Removal</p>
+                                <p>{% trans "Confirm Removal" %}</p>
                             </div>
                             <div class="message-body">
-                                <p>Are you sure you want to remove
-                                    <strong>{{ object.series }}</strong>
-                                    from your pull list?</p>
+                                <p>
+                                    {% blocktrans with series=object.series %}Are you sure you want to remove <strong>{{ series }}</strong> from your pull list?{% endblocktrans %}
+                                </p>
                             </div>
                         </article>
                         <form method="post">
                             {% csrf_token %}
                             <div class="field is-grouped is-grouped-right">
                                 <div class="control">
-                                    <a href="{% url 'pull-list:detail' %}" class="button">Cancel</a>
+                                    <a href="{% url 'pull-list:detail' %}" class="button">{% trans "Cancel" %}</a>
                                 </div>
                                 <div class="control">
-                                    <button type="submit" class="button is-warning">Remove</button>
+                                    <button type="submit" class="button is-warning">{% trans "Remove" %}</button>
                                 </div>
                             </div>
                         </form>

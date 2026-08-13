@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: metron\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-08-13 12:29-0400\n"
+"POT-Creation-Date: 2026-08-13 12:53-0400\n"
 "PO-Revision-Date: 2026-08-13 11:23-0400\n"
 "Last-Translator: Metron Project\n"
 "Language-Team: Italian\n"
@@ -266,6 +266,290 @@ msgstr "%(first)s e %(last)s"
 msgid "Successfully added %(parts)s from reprinted issues."
 msgstr "Aggiunti con successo %(parts)s dagli albi ristampati."
 
+#: polls/templates/polls/partials/poll_results.html:3
+msgid "Results"
+msgstr "Risultati"
+
+#: polls/templates/polls/partials/poll_results.html:21
+#: polls/templates/polls/poll_list.html:45
+#, python-format
+msgid "%(counter)s vote"
+msgid_plural "%(counter)s votes"
+msgstr[0] "%(counter)s voto"
+msgstr[1] "%(counter)s voti"
+
+#: polls/templates/polls/partials/poll_results.html:36
+#, python-format
+msgid "<strong>%(counter)s</strong> total vote"
+msgid_plural "<strong>%(counter)s</strong> total votes"
+msgstr[0] "<strong>%(counter)s</strong> voto totale"
+msgstr[1] "<strong>%(counter)s</strong> voti totali"
+
+#: polls/templates/polls/partials/poll_results.html:39
+msgid "No votes have been cast yet."
+msgstr "Non è stato ancora espresso alcun voto."
+
+#: polls/templates/polls/poll_confirm_delete.html:3
+msgid "Delete Poll - Metron"
+msgstr "Elimina Sondaggio - Metron"
+
+#: polls/templates/polls/poll_confirm_delete.html:10
+msgid "Delete Poll"
+msgstr "Elimina Sondaggio"
+
+#: polls/templates/polls/poll_confirm_delete.html:12
+#, python-format
+msgid ""
+"Are you sure you want to delete <strong>%(title)s</strong>? This will also "
+"delete all votes cast in this poll and cannot be undone."
+msgstr ""
+"Sei sicuro di voler eliminare <strong>%(title)s</strong>? Questo eliminerà "
+"anche tutti i voti espressi in questo sondaggio e non può essere annullato."
+
+#: polls/templates/polls/poll_confirm_delete.html:20
+#: polls/templates/polls/poll_detail.html:38
+msgid "Delete"
+msgstr "Elimina"
+
+#: polls/templates/polls/poll_confirm_delete.html:25
+#: pull_list/templates/pull_list/remove_series_confirm.html:27
+msgid "Cancel"
+msgstr "Annulla"
+
+#: polls/templates/polls/poll_detail.html:3
+#, python-format
+msgid "%(title)s - Metron"
+msgstr "%(title)s - Metron"
+
+#: polls/templates/polls/poll_detail.html:10 templates/partials/navbar.html:177
+msgid "Polls"
+msgstr "Sondaggi"
+
+#: polls/templates/polls/poll_detail.html:22
+#: polls/templates/polls/poll_detail.html:104
+#: polls/templates/polls/poll_list.html:25
+msgid "Active"
+msgstr "Attivo"
+
+#: polls/templates/polls/poll_detail.html:24
+#: polls/templates/polls/poll_detail.html:104
+#: polls/templates/polls/poll_list.html:27
+msgid "Upcoming"
+msgstr "In Arrivo"
+
+#: polls/templates/polls/poll_detail.html:26
+#: polls/templates/polls/poll_detail.html:104
+#: polls/templates/polls/poll_list.html:29
+msgid "Closed"
+msgstr "Chiuso"
+
+#: polls/templates/polls/poll_detail.html:48
+msgid "Proposal"
+msgstr "Proposta"
+
+#: polls/templates/polls/poll_detail.html:55
+msgid "Cast Your Vote"
+msgstr "Esprimi il Tuo Voto"
+
+#: polls/templates/polls/poll_detail.html:77
+msgid "Cast Vote"
+msgstr "Vota"
+
+#: polls/templates/polls/poll_detail.html:86
+#, python-format
+msgid "Voting opens on %(start_date)s."
+msgstr "Le votazioni si aprono il %(start_date)s."
+
+#: polls/templates/polls/poll_detail.html:90 templates/partials/navbar.html:273
+msgid "Log in"
+msgstr "Accedi"
+
+#: polls/templates/polls/poll_detail.html:91
+msgid "to cast your vote."
+msgstr "per esprimere il tuo voto."
+
+#: polls/templates/polls/poll_detail.html:100
+msgid "Poll Details"
+msgstr "Dettagli Sondaggio"
+
+#: polls/templates/polls/poll_detail.html:102
+msgid "Status:"
+msgstr "Stato:"
+
+#: polls/templates/polls/poll_detail.html:106
+msgid "Voting Opens:"
+msgstr "Apertura Votazioni:"
+
+#: polls/templates/polls/poll_detail.html:108
+msgid "Voting Closes:"
+msgstr "Chiusura Votazioni:"
+
+#: polls/templates/polls/poll_detail.html:110
+msgid "Total Votes:"
+msgstr "Voti Totali:"
+
+#: polls/templates/polls/poll_detail.html:113
+msgid "Created By:"
+msgstr "Creato Da:"
+
+#: polls/templates/polls/poll_list.html:3
+msgid "Community Polls - Metron"
+msgstr "Sondaggi della Community - Metron"
+
+#: polls/templates/polls/poll_list.html:6
+msgid "Community Polls"
+msgstr "Sondaggi della Community"
+
+#: polls/templates/polls/poll_list.html:7
+msgid "Vote on governance and policy proposals for the Metron project"
+msgstr "Vota le proposte di governance e policy per il progetto Metron"
+
+#: polls/templates/polls/poll_list.html:57
+msgid "No polls yet"
+msgstr "Nessun sondaggio ancora"
+
+#: polls/templates/polls/poll_list.html:58
+msgid "Check back later for community governance polls."
+msgstr "Torna più tardi per i sondaggi di governance della community."
+
+#: polls/views.py:79
+#, python-format
+msgid "Poll '%(title)s' deleted."
+msgstr "Sondaggio '%(title)s' eliminato."
+
+#: polls/views.py:91
+msgid "Voting is not currently open for this poll."
+msgstr "Le votazioni non sono attualmente aperte per questo sondaggio."
+
+#: polls/views.py:94
+msgid "You have already voted in this poll."
+msgstr "Hai già votato in questo sondaggio."
+
+#: polls/views.py:98
+msgid "No choice selected."
+msgstr "Nessuna scelta selezionata."
+
+#: pull_list/forms.py:16
+msgid "Search for a series..."
+msgstr "Cerca una serie..."
+
+#: pull_list/forms.py:20 pull_list/templates/pull_list/pulllist_detail.html:47
+#: templates/partials/navbar.html:74
+msgid "Series"
+msgstr "Serie"
+
+#: pull_list/forms.py:21
+msgid "Select a series to add to your pull list"
+msgstr "Seleziona una serie da aggiungere alla tua pull list"
+
+#: pull_list/models.py:27
+#: pull_list/templates/pull_list/partials/pull_list_button.html:11
+msgid "Pull List"
+msgstr "Pull List"
+
+#: pull_list/models.py:28
+msgid "Pull Lists"
+msgstr "Pull List"
+
+#: pull_list/models.py:56 pull_list/models.py:57
+msgid "Pull List Series"
+msgstr "Serie della Pull List"
+
+#: pull_list/templates/pull_list/partials/pull_list_button.html:7
+msgid "Remove from pull list"
+msgstr "Rimuovi dalla pull list"
+
+#: pull_list/templates/pull_list/partials/pull_list_button.html:7
+msgid "Add to pull list"
+msgstr "Aggiungi alla pull list"
+
+#: pull_list/templates/pull_list/pulllist_detail.html:3
+#, python-format
+msgid "%(name)s - Metron"
+msgstr "%(name)s - Metron"
+
+#: pull_list/templates/pull_list/pulllist_detail.html:10
+msgid "Add a Series"
+msgstr "Aggiungi una Serie"
+
+#: pull_list/templates/pull_list/pulllist_detail.html:28
+msgid "Add"
+msgstr "Aggiungi"
+
+#: pull_list/templates/pull_list/pulllist_detail.html:40
+#, python-format
+msgid "Series on Pull List (%(count)s)"
+msgstr "Serie nella Pull List (%(count)s)"
+
+#: pull_list/templates/pull_list/pulllist_detail.html:48
+msgid "Publisher"
+msgstr "Editore"
+
+#: pull_list/templates/pull_list/pulllist_detail.html:49
+msgid "Type"
+msgstr "Tipo"
+
+#: pull_list/templates/pull_list/pulllist_detail.html:68
+#: pull_list/templates/pull_list/remove_series_confirm.html:30
+msgid "Remove"
+msgstr "Rimuovi"
+
+#: pull_list/templates/pull_list/pulllist_detail.html:78
+msgid "No series on this pull list yet."
+msgstr "Nessuna serie ancora in questa pull list."
+
+#: pull_list/templates/pull_list/pulllist_detail.html:85
+msgid "Upcoming Issues"
+msgstr "Prossimi Albi"
+
+#: pull_list/templates/pull_list/pulllist_detail.html:91
+msgid "Issue"
+msgstr "Albo"
+
+#: pull_list/templates/pull_list/pulllist_detail.html:92
+msgid "Store Date"
+msgstr "Data di Uscita"
+
+#: pull_list/templates/pull_list/pulllist_detail.html:108
+msgid "No upcoming issues found for series on this pull list."
+msgstr "Nessun albo in arrivo trovato per le serie in questa pull list."
+
+#: pull_list/templates/pull_list/remove_series_confirm.html:3
+msgid "Remove Series from Pull List - Metron"
+msgstr "Rimuovi Serie dalla Pull List - Metron"
+
+#: pull_list/templates/pull_list/remove_series_confirm.html:6
+msgid "Remove Series"
+msgstr "Rimuovi Serie"
+
+#: pull_list/templates/pull_list/remove_series_confirm.html:15
+msgid "Confirm Removal"
+msgstr "Conferma Rimozione"
+
+#: pull_list/templates/pull_list/remove_series_confirm.html:19
+#, python-format
+msgid ""
+"Are you sure you want to remove <strong>%(series)s</strong> from your pull "
+"list?"
+msgstr ""
+"Sei sicuro di voler rimuovere <strong>%(series)s</strong> dalla tua pull "
+"list?"
+
+#: pull_list/views.py:37
+#, python-format
+msgid "Added %(series)s to your pull list."
+msgstr "Aggiunto %(series)s alla tua pull list."
+
+#: pull_list/views.py:42
+#, python-format
+msgid "%(series)s is already on your pull list."
+msgstr "%(series)s è già nella tua pull list."
+
+#: pull_list/views.py:89
+#, python-format
+msgid "Removed %(series)s from your pull list."
+msgstr "Rimosso %(series)s dalla tua pull list."
+
 #: templates/base.html:9
 msgid "Metron Comic Book Database"
 msgstr "Database Fumetti Metron"
@@ -393,10 +677,6 @@ msgstr "Editori"
 msgid "Imprints"
 msgstr "Etichette"
 
-#: templates/partials/navbar.html:74
-msgid "Series"
-msgstr "Serie"
-
 #: templates/partials/navbar.html:80
 msgid "Issues"
 msgstr "Albi"
@@ -457,10 +737,6 @@ msgstr "Wiki"
 msgid "API Docs"
 msgstr "Documentazione API"
 
-#: templates/partials/navbar.html:177
-msgid "Polls"
-msgstr "Sondaggi"
-
 #: templates/partials/navbar.html:183
 msgid "Statistics"
 msgstr "Statistiche"
@@ -512,10 +788,6 @@ msgstr "Registrati"
 #: templates/partials/navbar.html:273
 msgid "Log in to your account"
 msgstr "Accedi al tuo account"
-
-#: templates/partials/navbar.html:273
-msgid "Log in"
-msgstr "Accedi"
 
 #: timeline/templates/timeline.html:4
 msgid "Timeline"

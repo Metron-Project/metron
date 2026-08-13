@@ -1,5 +1,6 @@
+{% load i18n %}
 <div class="box">
-    <h3 class="title is-5">Results</h3>
+    <h3 class="title is-5">{% trans "Results" %}</h3>
     {% if total_votes > 0 %}
         {% for choice in choices %}
             <div class="mb-4">
@@ -17,7 +18,7 @@
                     <div class="level-right">
                         <div class="level-item">
                             <span class="is-size-7 has-text-grey">
-                                {{ choice.vote_count }} vote{{ choice.vote_count|pluralize }}
+                                {% blocktrans count counter=choice.vote_count %}{{ counter }} vote{% plural %}{{ counter }} votes{% endblocktrans %}
                                 ({% widthratio choice.vote_count total_votes 100 %}%)
                             </span>
                         </div>
@@ -32,9 +33,9 @@
             </div>
         {% endfor %}
         <p class="is-size-7 has-text-grey mt-3">
-            <strong>{{ total_votes }}</strong> total vote{{ total_votes|pluralize }}
+            {% blocktrans count counter=total_votes %}<strong>{{ counter }}</strong> total vote{% plural %}<strong>{{ counter }}</strong> total votes{% endblocktrans %}
         </p>
     {% else %}
-        <p class="has-text-grey">No votes have been cast yet.</p>
+        <p class="has-text-grey">{% trans "No votes have been cast yet." %}</p>
     {% endif %}
 </div>

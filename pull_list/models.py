@@ -1,6 +1,7 @@
 from django.db import models
 from django.db.models.functions import Now
 from django.urls import reverse
+from django.utils.translation import gettext_lazy as _
 
 from comicsdb.models.series import Series
 from users.models import CustomUser
@@ -23,8 +24,8 @@ class PullList(models.Model):
 
     class Meta:
         ordering = ["user"]
-        verbose_name = "Pull List"
-        verbose_name_plural = "Pull Lists"
+        verbose_name = _("Pull List")
+        verbose_name_plural = _("Pull Lists")
 
     def __str__(self) -> str:
         return f"{self.user.username}'s Pull List"
@@ -52,8 +53,8 @@ class PullListSeries(models.Model):
         indexes = [
             models.Index(fields=["pull_list", "series"], name="pull_list_series_idx"),
         ]
-        verbose_name = "Pull List Series"
-        verbose_name_plural = "Pull List Series"
+        verbose_name = _("Pull List Series")
+        verbose_name_plural = _("Pull List Series")
 
     def __str__(self) -> str:
         return f"{self.pull_list} — {self.series}"

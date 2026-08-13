@@ -1,12 +1,13 @@
 {% extends parent_template|default:"base.html" %}
-{% block title %}{{ poll.title }} - Metron{% endblock %}
+{% load i18n %}
+{% block title %}{% blocktrans with title=poll.title %}{{ title }} - Metron{% endblocktrans %}{% endblock %}
 {% block content %}
     <nav class="breadcrumb mb-4" aria-label="breadcrumbs">
         <ul>
             <li>
                 <a href="{% url 'polls:list' %}">
                     <span class="icon is-small"><i class="fas fa-poll"></i></span>
-                    <span>Polls</span>
+                    <span>{% trans "Polls" %}</span>
                 </a>
             </li>
             <li class="is-active">
@@ -18,11 +19,11 @@
         <h1 class="title">{{ poll.title }}</h1>
         <div class="tags">
             {% if poll.status == "active" %}
-                <span class="tag is-success is-medium">Active</span>
+                <span class="tag is-success is-medium">{% trans "Active" %}</span>
             {% elif poll.status == "upcoming" %}
-                <span class="tag is-info is-medium">Upcoming</span>
+                <span class="tag is-info is-medium">{% trans "Upcoming" %}</span>
             {% else %}
-                <span class="tag is-dark is-medium">Closed</span>
+                <span class="tag is-dark is-medium">{% trans "Closed" %}</span>
             {% endif %}
         </div>
     </header>
@@ -34,7 +35,7 @@
                     <a class="button is-danger"
                        href="{% url 'polls:delete' poll.pk %}">
                         <span class="icon is-small"><i class="fas fa-trash"></i></span>
-                        <span>Delete</span>
+                        <span>{% trans "Delete" %}</span>
                     </a>
                 </div>
             </div>
@@ -44,14 +45,14 @@
         <div class="column is-two-thirds">
             {% if poll.description %}
                 <div class="box">
-                    <h2 class="title is-5">Proposal</h2>
+                    <h2 class="title is-5">{% trans "Proposal" %}</h2>
                     <div class="content">{{ poll.description|linebreaksbr }}</div>
                 </div>
             {% endif %}
             <div id="poll-voting-section">
                 {% if can_vote %}
                     <div class="box">
-                        <h2 class="title is-5">Cast Your Vote</h2>
+                        <h2 class="title is-5">{% trans "Cast Your Vote" %}</h2>
                         <form hx-post="{% url 'polls:vote' poll.pk %}"
                               hx-target="#poll-voting-section"
                               hx-swap="innerHTML">
@@ -73,7 +74,7 @@
                                 <div class="control">
                                     <button type="submit" class="button is-primary ">
                                         <span class="icon"><i class="fas fa-vote-yea"></i></span>
-                                        <span>Cast Vote</span>
+                                        <span>{% trans "Cast Vote" %}</span>
                                     </button>
                                 </div>
                             </div>
@@ -82,12 +83,12 @@
                 {% elif poll.status == "upcoming" %}
                     <div class="notification is-info is-light">
                         <span class="icon"><i class="fas fa-clock"></i></span>
-                        Voting opens on {{ poll.start_date|date:"F j, Y" }}.
+                        {% blocktrans with start_date=poll.start_date|date:"F j, Y" %}Voting opens on {{ start_date }}.{% endblocktrans %}
                     </div>
                 {% elif not user.is_authenticated and poll.status == "active" %}
                     <div class="notification is-warning is-light">
-                        <a href="{% url 'login' %}?next={{ request.path }}">Log in</a>
-                        to cast your vote.
+                        <a href="{% url 'login' %}?next={{ request.path }}">{% trans "Log in" %}</a>
+                        {% trans "to cast your vote." %}
                     </div>
                 {% else %}
                     {% include "polls/partials/poll_results.html" %}
@@ -96,20 +97,20 @@
         </div>
         <div class="column">
             <div class="box">
-                <h2 class="title is-6">Poll Details</h2>
+                <h2 class="title is-6">{% trans "Poll Details" %}</h2>
                 <dl>
-                    <dt class="has-text-weight-bold">Status:</dt>
+                    <dt class="has-text-weight-bold">{% trans "Status:" %}</dt>
                     <dd class="mb-3">
-                        {% if poll.status == "active" %}Active{% elif poll.status == "upcoming" %}Upcoming{% else %}Closed{% endif %}
+                        {% if poll.status == "active" %}{% trans "Active" %}{% elif poll.status == "upcoming" %}{% trans "Upcoming" %}{% else %}{% trans "Closed" %}{% endif %}
                     </dd>
-                    <dt class="has-text-weight-bold">Voting Opens:</dt>
+                    <dt class="has-text-weight-bold">{% trans "Voting Opens:" %}</dt>
                     <dd class="mb-3">{{ poll.start_date|date:"F j, Y" }}</dd>
-                    <dt class="has-text-weight-bold">Voting Closes:</dt>
+                    <dt class="has-text-weight-bold">{% trans "Voting Closes:" %}</dt>
                     <dd class="mb-3">{{ poll.end_date|date:"F j, Y" }}</dd>
-                    <dt class="has-text-weight-bold">Total Votes:</dt>
+                    <dt class="has-text-weight-bold">{% trans "Total Votes:" %}</dt>
                     <dd class="mb-3">{{ total_votes }}</dd>
                     {% if poll.created_by %}
-                        <dt class="has-text-weight-bold">Created By:</dt>
+                        <dt class="has-text-weight-bold">{% trans "Created By:" %}</dt>
                         <dd class="mb-3">{{ poll.created_by.username }}</dd>
                     {% endif %}
                 </dl>

@@ -6,6 +6,7 @@ from django.http import HttpResponseBadRequest, HttpResponseForbidden
 from django.shortcuts import get_object_or_404, render
 from django.urls import reverse_lazy
 from django.utils import timezone
+from django.utils.translation import gettext as _
 from django.views.decorators.http import require_POST
 from django.views.generic import DeleteView, DetailView, ListView
 
@@ -74,7 +75,9 @@ class PollDeleteView(LoginRequiredMixin, UserPassesTestMixin, DeleteView):
         return self.request.user.is_staff
 
     def form_valid(self, form):
-        messages.success(self.request, f"Poll '{self.object.title}' deleted.")
+        messages.success(
+            self.request, _("Poll '%(title)s' deleted.") % {"title": self.object.title}
+        )
         return super().form_valid(form)
 
 
@@ -85,14 +88,14 @@ def vote(request, pk):
     now = timezone.now()
 
     if not (poll.start_date <= now <= poll.end_date):
-        return HttpResponseForbidden("Voting is not currently open for this poll.")
+        return HttpResponseForbidden(_("Voting is not currently open for this poll."))
 
     if PollVote.objects.filter(poll=poll, user=request.user).exists():
-        return HttpResponseForbidden("You have already voted in this poll.")
+        return HttpResponseForbidden(_("You have already voted in this poll."))
 
     choice_pk = request.POST.get("choice")
     if not choice_pk:
-        return HttpResponseBadRequest("No choice selected.")
+        return HttpResponseBadRequest(_("No choice selected."))
 
     choice = get_object_or_404(PollChoice, pk=choice_pk, poll=poll)
     PollVote.objects.create(poll=poll, choice=choice, user=request.user)
