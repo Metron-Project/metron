@@ -1,5 +1,5 @@
 {% load thumbnail %}
-{% load static %}
+{% load i18n static %}
 {% for character in characters %}
     <div class="column is-4">
         <article class="media">
@@ -17,7 +17,7 @@
                     {% else %}
                         <img class="is-rounded"
                              src="{% static 'site/img/creator-not-found.webp' %}"
-                             alt="No image for {{ character }}"
+                             alt="{% blocktrans %}No image for {{ character }}{% endblocktrans %}"
                              loading="lazy">
                     {% endif %}
                 </div>
@@ -37,7 +37,7 @@
                 hx-target="#characters-container"
                 hx-swap="beforeend"
                 hx-indicator="#characters-spinner">
-            <span>Load More Characters</span>
+            <span>{% trans "Load More Characters" %}</span>
         </button>
         <span id="characters-spinner" class="htmx-indicator ml-2">
             <i class="fas fa-spinner fa-spin"></i>

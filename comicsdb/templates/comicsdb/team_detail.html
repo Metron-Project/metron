@@ -1,6 +1,6 @@
 {% extends parent_template|default:"base.html" %}
 {% load thumbnail %}
-{% load static %}
+{% load i18n static %}
 {% load humanize %}
 {% block title %}
     {{ team.name }}
@@ -11,31 +11,31 @@
         <h1 class="title">{{ team }}</h1>
     </header>
     {# Navigation Bar #}
-    <nav class="level mb-5" aria-label="Team navigation">
+    <nav class="level mb-5" aria-label="{% trans 'Team navigation' %}">
         <div class="level-left">
             {% if navigation.previous_team %}
                 <a class="button is-link"
                    href="{% url 'team:detail' navigation.previous_team.slug %}"
-                   aria-label="Go to {{ navigation.previous_team }}">
+                   aria-label="{% blocktrans with previous_team=navigation.previous_team %}Go to {{ previous_team }}{% endblocktrans %}">
                     <span class="icon is-small"><i class="fas fa-arrow-left" aria-hidden="true"></i></span>
-                    <span>Previous Team</span>
+                    <span>{% trans "Previous Team" %}</span>
                 </a>
             {% else %}
                 <button class="button" disabled aria-disabled="true">
                     <span class="icon is-small"><i class="fas fa-arrow-left" aria-hidden="true"></i></span>
-                    <span>Previous Team</span>
+                    <span>{% trans "Previous Team" %}</span>
                 </button>
             {% endif %}
             {% if navigation.next_team %}
                 <a class="button is-link ml-2"
                    href="{% url 'team:detail' navigation.next_team.slug %}"
-                   aria-label="Go to {{ navigation.next_team }}">
-                    <span>Next Team</span>
+                   aria-label="{% blocktrans with next_team=navigation.next_team %}Go to {{ next_team }}{% endblocktrans %}">
+                    <span>{% trans "Next Team" %}</span>
                     <span class="icon is-small"><i class="fas fa-arrow-right" aria-hidden="true"></i></span>
                 </a>
             {% else %}
                 <button class="button ml-2" disabled aria-disabled="true">
-                    <span>Next Team</span>
+                    <span>{% trans "Next Team" %}</span>
                     <span class="icon is-small"><i class="fas fa-arrow-right" aria-hidden="true"></i></span>
                 </button>
             {% endif %}
@@ -45,9 +45,9 @@
                 <div class="buttons">
                     <a class="button is-primary"
                        href="{% url 'team:create' %}"
-                       title="Add a new team">
+                       title="{% trans 'Add a new team' %}">
                         <span class="icon is-small"><i class="fas fa-plus" aria-hidden="true"></i></span>
-                        <span>New</span>
+                        <span>{% trans "New" %}</span>
                     </a>
                     <div class="dropdown is-right" id="team-actions-dropdown">
                         <div class="dropdown-trigger">
@@ -55,7 +55,7 @@
                                     aria-haspopup="true"
                                     aria-controls="team-actions-menu"
                                     hx-on:click="document.getElementById('team-actions-dropdown').classList.toggle('is-active')">
-                                <span>Actions</span>
+                                <span>{% trans "Actions" %}</span>
                                 <span class="icon is-small"><i class="fas fa-angle-down" aria-hidden="true"></i></span>
                             </button>
                         </div>
@@ -64,19 +64,19 @@
                                 <a class="dropdown-item"
                                    href="{% url 'team:update' team.slug %}">
                                     <span class="icon is-small"><i class="fas fa-edit" aria-hidden="true"></i></span>
-                                    <span>Edit</span>
+                                    <span>{% trans "Edit" %}</span>
                                 </a>
                                 <a class="dropdown-item"
                                    href="{% url 'team:history' team.slug %}">
                                     <span class="icon is-small"><i class="fas fa-history" aria-hidden="true"></i></span>
-                                    <span>History</span>
+                                    <span>{% trans "History" %}</span>
                                 </a>
                                 {% if perms.comicsdb.delete_team %}
                                     <hr class="dropdown-divider">
                                     <a class="dropdown-item has-text-danger"
                                        href="{% url 'team:delete' team.slug %}">
                                         <span class="icon is-small"><i class="fas fa-trash" aria-hidden="true"></i></span>
-                                        <span>Delete</span>
+                                        <span>{% trans "Delete" %}</span>
                                     </a>
                                 {% endif %}
                             </div>
@@ -110,7 +110,7 @@
                         {% endthumbnail %}
                     {% else %}
                         <img src="{% static 'site/img/image-not-found.webp' %}"
-                             alt="No image for {{ team.name }}"
+                             alt="{% blocktrans %}No image for {{ team.name }}{% endblocktrans %}"
                              loading="lazy">
                     {% endif %}
                 </figure>
@@ -120,21 +120,21 @@
         <div class="column">
             {# Summary #}
             <div class="box">
-                <h2 class="title is-5">Summary</h2>
+                <h2 class="title is-5">{% trans "Summary" %}</h2>
                 {% if team.desc %}
                     <div class="content">{{ team.desc|linebreaksbr }}</div>
                 {% else %}
-                    <p class="has-text-grey">No information available.</p>
+                    <p class="has-text-grey">{% trans "No information available." %}</p>
                 {% endif %}
                 <footer class="content is-small is-italic mt-4">
-                    Last edited on <time datetime="{{ team.modified|date:'c' }}">{{ team.modified }}</time> by
+                    {% blocktrans with modified_time=team.modified %}Last edited on <time datetime="{{ modified_time|date:'c' }}">{{ modified_time }}</time> by{% endblocktrans %}
                     <a href="{% url 'user-detail' username=team.edited_by.username %}">{{ team.edited_by.username }}</a>
                 </footer>
             </div>
             {# Members #}
             {% if member_count > 0 %}
                 <div class="box">
-                    <h2 class="title is-5">Member{{ member_count|pluralize }} ({{ member_count }})</h2>
+                    <h2 class="title is-5">{% blocktrans count counter=member_count %}Member ({{ counter }}){% plural %}Members ({{ counter }}){% endblocktrans %}</h2>
                     <div id="members-container" class="columns is-multiline">
                         {% for character in members %}
                             <div class="column is-4">
@@ -153,7 +153,7 @@
                                             {% else %}
                                                 <img class="is-rounded"
                                                      src="{% static 'site/img/creator-not-found.webp' %}"
-                                                     alt="No image for {{ character }}"
+                                                     alt="{% blocktrans %}No image for {{ character }}{% endblocktrans %}"
                                                      loading="lazy">
                                             {% endif %}
                                         </div>
@@ -172,7 +172,7 @@
                                     hx-target="#members-container"
                                     hx-swap="beforeend"
                                     hx-indicator="#members-spinner">
-                                <span>Load More Members</span>
+                                <span>{% trans "Load More Members" %}</span>
                             </button>
                             <span id="members-spinner" class="htmx-indicator ml-2">
                                 <i class="fas fa-spinner fa-spin"></i>
@@ -191,9 +191,9 @@
         {# Metadata Sidebar #}
         <div class="column is-one-fifth">
             <div class="box">
-                <h2 class="title is-6">Team Details</h2>
+                <h2 class="title is-6">{% trans "Team Details" %}</h2>
                 <dl>
-                    <dt class="has-text-weight-bold">Number of Issues:</dt>
+                    <dt class="has-text-weight-bold">{% trans "Number of Issues:" %}</dt>
                     <dd class="mb-3">
                         {{ team.issue_count|intcomma }}
                     </dd>
@@ -201,7 +201,13 @@
                 {# Creators #}
                 {% with creators=team.creators.all %}
                     {% if creators %}
-                        <h3 class="title is-6 mt-4">Creator{{ creators|pluralize }}</h3>
+                        <h3 class="title is-6 mt-4">
+                            {% if creators|length > 1 %}
+                                {% trans "Creators" %}
+                            {% else %}
+                                {% trans "Creator" %}
+                            {% endif %}
+                        </h3>
                         <ul class="menu-list">
                             {% for creator in creators %}
                                 <li>
@@ -214,7 +220,13 @@
                 {# Universes #}
                 {% with universes=team.universes.all %}
                     {% if universes %}
-                        <h3 class="title is-6 mt-4">Universe{{ universes|pluralize }}</h3>
+                        <h3 class="title is-6 mt-4">
+                            {% if universes|length > 1 %}
+                                {% trans "Universes" %}
+                            {% else %}
+                                {% trans "Universe" %}
+                            {% endif %}
+                        </h3>
                         <ul class="menu-list">
                             {% for universe in universes %}
                                 <li>
@@ -227,21 +239,21 @@
             </div>
             {# Identification Numbers #}
             <div class="box">
-                <h2 class="title is-6">Identification Numbers</h2>
+                <h2 class="title is-6">{% trans "Identification Numbers" %}</h2>
                 <dl>
-                    <dt class="has-text-weight-bold">Metron:</dt>
+                    <dt class="has-text-weight-bold">{% trans "Metron:" %}</dt>
                     <dd class="mb-2 is-flex is-align-items-center is-justify-content-space-between">
                         <span class="is-family-monospace">{{ team.id }}</span>
                         <button type="button"
                                 class="button is-small is-light copy-id"
                                 data-copy="{{ team.id }}"
-                                title="Copy Metron ID"
-                                aria-label="Copy Metron ID">
+                                title="{% trans 'Copy Metron ID' %}"
+                                aria-label="{% trans 'Copy Metron ID' %}">
                             <span class="icon is-small"><i class="fas fa-copy"></i></span>
                         </button>
                     </dd>
                     {% if team.cv_id %}
-                        <dt class="has-text-weight-bold">Comic Vine:</dt>
+                        <dt class="has-text-weight-bold">{% trans "Comic Vine:" %}</dt>
                         <dd class="mb-2 is-flex is-align-items-center is-justify-content-space-between">
                             <a class="is-family-monospace"
                                href="https://comicvine.gamespot.com/team/4060-{{ team.cv_id }}/"
@@ -253,15 +265,15 @@
                             <button type="button"
                                     class="button is-small is-light copy-id"
                                     data-copy="{{ team.cv_id }}"
-                                    title="Copy Comic Vine ID"
-                                    aria-label="Copy Comic Vine ID">
+                                    title="{% trans 'Copy Comic Vine ID' %}"
+                                    aria-label="{% trans 'Copy Comic Vine ID' %}">
                                 <span class="icon is-small"><i class="fas fa-copy"></i></span>
                             </button>
                         </dd>
                     {% endif %}
                     {% if team.gcd_id %}
                         <dt class="has-text-weight-bold">
-                            <abbr title="Grand Comics Database">GCD</abbr>:
+                            <abbr title="{% trans 'Grand Comics Database' %}">GCD</abbr>:
                         </dt>
                         <dd class="is-flex is-align-items-center is-justify-content-space-between">
                             <a class="is-family-monospace"
@@ -274,8 +286,8 @@
                             <button type="button"
                                     class="button is-small is-light copy-id"
                                     data-copy="{{ team.gcd_id }}"
-                                    title="Copy GCD ID"
-                                    aria-label="Copy GCD ID">
+                                    title="{% trans 'Copy GCD ID' %}"
+                                    aria-label="{% trans 'Copy GCD ID' %}">
                                 <span class="icon is-small"><i class="fas fa-copy"></i></span>
                             </button>
                         </dd>

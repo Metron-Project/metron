@@ -1,5 +1,5 @@
 {% load thumbnail %}
-{% load static %}
+{% load i18n static %}
 {% for team in teams %}
     <div class="column is-4">
         <article class="media">
@@ -17,7 +17,7 @@
                     {% else %}
                         <img class="is-rounded"
                              src="{% static 'site/img/creator-not-found.webp' %}"
-                             alt="No image for {{ team }}"
+                             alt="{% blocktrans %}No image for {{ team }}{% endblocktrans %}"
                              loading="lazy">
                     {% endif %}
                 </div>
@@ -37,7 +37,7 @@
                 hx-target="#teams-container"
                 hx-swap="beforeend"
                 hx-indicator="#teams-spinner">
-            <span>Load More Teams</span>
+            <span>{% trans "Load More Teams" %}</span>
         </button>
         <span id="teams-spinner" class="htmx-indicator ml-2">
             <i class="fas fa-spinner fa-spin"></i>

@@ -1,0 +1,27 @@
+{% load i18n humanize %}
+{% comment %}
+    Renders the count footer link/span for card_grid.html.
+    Requires: count, count_url_name, item, count_label, count_label_plural
+    (all inherited from the including template's context).
+{% endcomment %}
+{% if count and count_url_name %}
+    {% if count == 1 %}
+        {% with label=count_label %}
+            <a href="{% url count_url_name item.slug %}"
+               class="card-footer-item is-size-7 has-text-weight-semibold"
+               aria-label="{% blocktrans with c=count|intcomma %}{{ c }} {{ label }} for {{ item }}{% endblocktrans %}">
+                {{ count|intcomma }} {{ label }}
+            </a>
+        {% endwith %}
+    {% else %}
+        {% with label=count_label_plural %}
+            <a href="{% url count_url_name item.slug %}"
+               class="card-footer-item is-size-7 has-text-weight-semibold"
+               aria-label="{% blocktrans with c=count|intcomma %}{{ c }} {{ label }} for {{ item }}{% endblocktrans %}">
+                {{ count|intcomma }} {{ label }}
+            </a>
+        {% endwith %}
+    {% endif %}
+{% else %}
+    <span class="card-footer-item is-size-7" aria-label="{% blocktrans %}No {{ count_label_plural }}{% endblocktrans %}">{% blocktrans %}0 {{ count_label_plural }}{% endblocktrans %}</span>
+{% endif %}

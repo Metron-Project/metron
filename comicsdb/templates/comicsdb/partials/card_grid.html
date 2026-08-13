@@ -1,20 +1,22 @@
 {% load thumbnail %}
 {% load static %}
 {% load humanize %}
+{% load i18n %}
 {% comment %}
     Reusable card grid for displaying items with images
     Usage: {% include "comicsdb/partials/card_grid.html" with items=character_list ... %}
-    
+
     Required parameters:
     - items: List of items to display
     - detail_url_name: URL name for detail view (e.g., "character:detail")
     - image_ratio: Image aspect ratio class (e.g., "is-2by3", "is-square")
     - default_image: Path to default image if item has no image
-    
+
     Optional parameters:
     - count_type: Which count to display - "issue" or "series" (default: "issue")
     - count_url_name: URL name for count/list view (e.g., "character:issue")
-    - count_label: Label for count (e.g., "Issue", "Series")
+    - count_label: Singular label for count (e.g., "Issue", "Series")
+    - count_label_plural: Plural label for count (e.g., "Issues", "Series")
     - show_count: Boolean to show/hide count footer (default: True)
 {% endcomment %}
 <div class="columns is-multiline">
@@ -29,7 +31,7 @@
                 <div class="card-image">
                     <figure class="image {{ image_ratio }}">
                         <a href="{% url detail_url_name item.slug %}"
-                           aria-label="View details for {{ item }}">
+                           aria-label="{% blocktrans %}View details for {{ item }}{% endblocktrans %}">
                             {% if item.image %}
                                 {# Use different thumbnail sizes and crop based on ratio #}
                                 {% if image_ratio == "is-square" %}
@@ -52,7 +54,7 @@
                                 {% endif %}
                             {% else %}
                                 <img src="{% static default_image %}"
-                                     alt="No image available for {{ item.name }}"
+                                     alt="{% blocktrans %}No image available for {{ item.name }}{% endblocktrans %}"
                                      loading="lazy">
                             {% endif %}
                         </a>
@@ -64,28 +66,12 @@
                         {# Determine which count to use based on count_type parameter #}
                         {% if count_type == "series" %}
                             {% with count=item.series_count %}
-                                {% if count and count_url_name %}
-                                    <a href="{% url count_url_name item.slug %}"
-                                       class="card-footer-item is-size-7 has-text-weight-semibold"
-                                       aria-label="{{ count }} {{ count_label }} for {{ item }}">
-                                        {{ count|intcomma }} {{ count_label }}
-                                    </a>
-                                {% else %}
-                                    <span class="card-footer-item is-size-7" aria-label="No {{ count_label|lower }}s">0 {{ count_label }}s</span>
-                                {% endif %}
+                                {% include "comicsdb/partials/card_grid_count.html" %}
                             {% endwith %}
                         {% else %}
                             {# Default to issue_count #}
                             {% with count=item.issue_count %}
-                                {% if count and count_url_name %}
-                                    <a href="{% url count_url_name item.slug %}"
-                                       class="card-footer-item is-size-7 has-text-weight-semibold"
-                                       aria-label="{{ count }} {{ count_label }}{{ count|pluralize }} for {{ item }}">
-                                        {{ count|intcomma }} {{ count_label }}{{ count|pluralize }}
-                                    </a>
-                                {% else %}
-                                    <span class="card-footer-item is-size-7" aria-label="No {{ count_label|lower }}s">0 {{ count_label }}s</span>
-                                {% endif %}
+                                {% include "comicsdb/partials/card_grid_count.html" %}
                             {% endwith %}
                         {% endif %}
                     {% endif %}

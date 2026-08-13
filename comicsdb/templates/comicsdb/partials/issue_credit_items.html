@@ -1,5 +1,5 @@
 {% load thumbnail %}
-{% load static %}
+{% load i18n static %}
 {% for credit in credits %}
     <div class="column is-4">
         <article class="media">
@@ -17,7 +17,7 @@
                     {% else %}
                         <img class="is-rounded"
                              src="{% static 'site/img/creator-not-found.webp' %}"
-                             alt="No image for {{ credit.creator }}"
+                             alt="{% blocktrans %}No image for {{ credit.creator }}{% endblocktrans %}"
                              loading="lazy">
                     {% endif %}
                 </div>
@@ -47,7 +47,7 @@
                 hx-target="#credits-container"
                 hx-swap="beforeend"
                 hx-indicator="#credits-spinner">
-            <span>Load More Credits</span>
+            <span>{% trans "Load More Credits" %}</span>
         </button>
         <span id="credits-spinner" class="htmx-indicator ml-2">
             <i class="fas fa-spinner fa-spin"></i>

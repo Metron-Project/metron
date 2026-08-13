@@ -1,10 +1,11 @@
+{% load i18n %}
 {% autoescape off %}
     <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
     <html xmlns="http://www.w3.org/1999/xhtml">
         <head>
             <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
             <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-            <title>Your Metron API access has been restricted</title>
+            <title>{% trans "Your Metron API access has been restricted" %}</title>
         </head>
         <body style="margin: 0;
                      padding: 0;
@@ -45,15 +46,13 @@
                                                color: #363636;
                                                font-weight: 600;
                                                font-family: Arial, Helvetica, sans-serif">
-                                        Hi {{ user.username }},
+                                        {% blocktrans with username=user.username %}Hi {{ username }},{% endblocktrans %}
                                     </h2>
                                     <p style="margin: 0 0 20px 0;
                                               font-size: 16px;
                                               color: #4a4a4a;
                                               font-family: Arial, Helvetica, sans-serif">
-                                        We previously warned you that your Metron API client was repeatedly
-                                        hitting our rate limits without backing off. Since that behavior has
-                                        continued, we've had to take action on this account:
+                                        {% blocktrans %}We previously warned you that your Metron API client was repeatedly hitting our rate limits without backing off. Since that behavior has continued, we've had to take action on this account:{% endblocktrans %}
                                     </p>
                                     <!-- Stats Box -->
                                     <table border="0"
@@ -71,19 +70,15 @@
                                                           font-family: Arial, Helvetica, sans-serif">
                                                     {% if days_throttled == 1 %}
                                                         {% if total_count == worst_day_count %}
-                                                            Most recently, your client received
-                                                            <strong>{{ worst_day_count }} rate-limited (429) response{{ worst_day_count|pluralize }}</strong>
-                                                            in a single day.
+                                                            {% blocktrans count counter=worst_day_count %}Most recently, your client received <strong>{{ counter }} rate-limited (429) response</strong> in a single day.{% plural %}Most recently, your client received <strong>{{ counter }} rate-limited (429) responses</strong> in a single day.{% endblocktrans %}
                                                         {% else %}
-                                                            Most recently, your client received
-                                                            <strong>{{ total_count }} rate-limited (429) response{{ total_count|pluralize }}</strong>
-                                                            recently, including <strong>{{ worst_day_count }}</strong> in a single day.
+                                                            {% blocktrans count counter=total_count %}Most recently, your client received <strong>{{ counter }} rate-limited (429) response</strong>{% plural %}Most recently, your client received <strong>{{ counter }} rate-limited (429) responses</strong>{% endblocktrans %}
+                                                            {% blocktrans with worst=worst_day_count %}recently, including <strong>{{ worst }}</strong> in a single day.{% endblocktrans %}
                                                         {% endif %}
                                                     {% else %}
-                                                        Most recently, your client received
-                                                        <strong>{{ total_count }} rate-limited (429) response{{ total_count|pluralize }}</strong>
-                                                        across <strong>{{ days_throttled }} day{{ days_throttled|pluralize }}</strong>,
-                                                        including <strong>{{ worst_day_count }}</strong> in a single day.
+                                                        {% blocktrans count counter=total_count %}Most recently, your client received <strong>{{ counter }} rate-limited (429) response</strong>{% plural %}Most recently, your client received <strong>{{ counter }} rate-limited (429) responses</strong>{% endblocktrans %}
+                                                        {% blocktrans count counter=days_throttled %}across <strong>{{ counter }} day</strong>{% plural %}across <strong>{{ counter }} days</strong>{% endblocktrans %},
+                                                        {% blocktrans with worst=worst_day_count %}including <strong>{{ worst }}</strong> in a single day.{% endblocktrans %}
                                                     {% endif %}
                                                 </p>
                                             </td>
@@ -104,13 +99,9 @@
                                                           color: #4a4a4a;
                                                           font-family: Arial, Helvetica, sans-serif">
                                                     {% if account_disabled %}
-                                                        <strong>This account has been disabled.</strong> You won't
-                                                        be able to log in or use the API until an administrator
-                                                        reinstates it.
+                                                        {% blocktrans %}<strong>This account has been disabled.</strong> You won't be able to log in or use the API until an administrator reinstates it.{% endblocktrans %}
                                                     {% else %}
-                                                        <strong>All API tokens for this account have been
-                                                        revoked.</strong> You'll need to generate a new token before
-                                                        you can use the API again.
+                                                        {% blocktrans %}<strong>All API tokens for this account have been revoked.</strong> You'll need to generate a new token before you can use the API again.{% endblocktrans %}
                                                     {% endif %}
                                                 </p>
                                             </td>
@@ -120,19 +111,13 @@
                                               font-size: 16px;
                                               color: #4a4a4a;
                                               font-family: Arial, Helvetica, sans-serif">
-                                        Before using the API again, please make sure your client respects the
-                                        <code>X-RateLimit-*</code> response headers and backs off after a 429
-                                        response instead of retrying immediately. For details on our rate limits
-                                        and how to implement a backoff strategy, see our
-                                        <a href="https://metron.cloud/wiki/api/handling-rate-limits/"
-                                           style="color: #3273dc;">Rate Limiting documentation</a>.
+                                        {% blocktrans %}Before using the API again, please make sure your client respects the <code>X-RateLimit-*</code> response headers and backs off after a 429 response instead of retrying immediately. For details on our rate limits and how to implement a backoff strategy, see our <a href="https://metron.cloud/wiki/api/handling-rate-limits/" style="color: #3273dc;">Rate Limiting documentation</a>.{% endblocktrans %}
                                     </p>
                                     <p style="margin: 0;
                                               font-size: 16px;
                                               color: #4a4a4a;
                                               font-family: Arial, Helvetica, sans-serif">
-                                        If you have any questions, or believe this was done in error, please reply
-                                        to this email so we can review it.
+                                        {% trans "If you have any questions, or believe this was done in error, please reply to this email so we can review it." %}
                                     </p>
                                 </td>
                             </tr>
@@ -143,32 +128,33 @@
                                               font-size: 14px;
                                               color: #ffffff;
                                               font-family: Arial, Helvetica, sans-serif">
-                                        <strong>Metron Comic Book Database</strong>
+                                        <strong>{% trans "Metron Comic Book Database" %}</strong>
                                     </p>
                                     <p style="margin: 0 0 15px 0;
                                               font-size: 14px;
                                               color: #b5b5b5;
                                               font-family: Arial, Helvetica, sans-serif">
-                                        A community-driven project for comic book enthusiasts
+                                        {% trans "A community-driven project for comic book enthusiasts" %}
                                     </p>
                                     <p style="margin: 0 0 10px 0;
                                               font-size: 14px;
                                               font-family: Arial, Helvetica, sans-serif">
                                         <a href="https://metron.cloud"
                                            style="color: #3273dc;
-                                                  text-decoration: none">Visit Website</a> &#8226;
+                                                  text-decoration: none">{% trans "Visit Website" %}</a> &#8226;
                                         <a href="https://github.com/Metron-Project/metron"
                                            style="color: #3273dc;
                                                   text-decoration: none">GitHub</a> &#8226;
                                         <a href="mailto:admin@metron.cloud"
                                            style="color: #3273dc;
-                                                  text-decoration: none">Contact Us</a>
+                                                  text-decoration: none">{% trans "Contact Us" %}</a>
                                     </p>
                                     <p style="margin: 15px 0 0 0;
                                               font-size: 12px;
                                               color: #7a7a7a;
                                               font-family: Arial, Helvetica, sans-serif">
-                                        &copy; {% now "Y" %} Metron Project. All rights reserved.
+                                        {% now "Y" as current_year %}
+                                        {% blocktrans %}&copy; {{ current_year }} Metron Project. All rights reserved.{% endblocktrans %}
                                     </p>
                                 </td>
                             </tr>

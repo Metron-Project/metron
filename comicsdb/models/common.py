@@ -3,6 +3,7 @@ import itertools
 from django.db import models
 from django.db.models.functions import Now
 from django.utils.text import slugify
+from django.utils.translation import gettext_lazy as _
 
 MIN_RATING = 1
 MAX_RATING = 5
@@ -40,9 +41,9 @@ def pre_save_slug(sender, instance, **kwargs):
 class CommonInfo(models.Model):
     name = models.CharField(max_length=255)
     slug = models.SlugField(max_length=255, unique=True)
-    desc = models.TextField("Description", blank=True)
-    cv_id = models.PositiveIntegerField("Comic Vine ID", null=True, blank=True, unique=True)
-    gcd_id = models.PositiveIntegerField("GCD ID", null=True, blank=True, unique=True)
+    desc = models.TextField(_("Description"), blank=True)
+    cv_id = models.PositiveIntegerField(_("Comic Vine ID"), null=True, blank=True, unique=True)
+    gcd_id = models.PositiveIntegerField(_("GCD ID"), null=True, blank=True, unique=True)
     modified = models.DateTimeField(auto_now=True)
     created_on = models.DateTimeField(db_default=Now())
 
@@ -55,7 +56,7 @@ class AbstractRating(models.Model):
 
     rating = models.PositiveSmallIntegerField(
         choices=RATING_CHOICES,
-        help_text="Star rating (1-5)",
+        help_text=_("Star rating (1-5)"),
     )
     created_on = models.DateTimeField(db_default=Now())
     modified = models.DateTimeField(auto_now=True)

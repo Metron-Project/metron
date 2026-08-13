@@ -1,6 +1,6 @@
 {% extends parent_template|default:"base.html" %}
 {% load thumbnail %}
-{% load static %}
+{% load i18n static %}
 {% load humanize %}
 {% block title %}
     {{ creator.name }}
@@ -11,31 +11,31 @@
         <h1 class="title">{{ creator.name }}</h1>
     </header>
     {# Navigation Bar #}
-    <nav class="level mb-5" aria-label="Creator navigation">
+    <nav class="level mb-5" aria-label="{% trans 'Creator navigation' %}">
         <div class="level-left">
             {% if navigation.previous_creator %}
                 <a class="button is-link"
                    href="{% url 'creator:detail' navigation.previous_creator.slug %}"
-                   aria-label="Go to {{ navigation.previous_creator }}">
+                   aria-label="{% blocktrans with previous_creator=navigation.previous_creator %}Go to {{ previous_creator }}{% endblocktrans %}">
                     <span class="icon is-small"><i class="fas fa-arrow-left" aria-hidden="true"></i></span>
-                    <span>Previous Creator</span>
+                    <span>{% trans "Previous Creator" %}</span>
                 </a>
             {% else %}
                 <button class="button" disabled aria-disabled="true">
                     <span class="icon is-small"><i class="fas fa-arrow-left" aria-hidden="true"></i></span>
-                    <span>Previous Creator</span>
+                    <span>{% trans "Previous Creator" %}</span>
                 </button>
             {% endif %}
             {% if navigation.next_creator %}
                 <a class="button is-link ml-2"
                    href="{% url 'creator:detail' navigation.next_creator.slug %}"
-                   aria-label="Go to {{ navigation.next_creator }}">
-                    <span>Next Creator</span>
+                   aria-label="{% blocktrans with next_creator=navigation.next_creator %}Go to {{ next_creator }}{% endblocktrans %}">
+                    <span>{% trans "Next Creator" %}</span>
                     <span class="icon is-small"><i class="fas fa-arrow-right" aria-hidden="true"></i></span>
                 </a>
             {% else %}
                 <button class="button ml-2" disabled aria-disabled="true">
-                    <span>Next Creator</span>
+                    <span>{% trans "Next Creator" %}</span>
                     <span class="icon is-small"><i class="fas fa-arrow-right" aria-hidden="true"></i></span>
                 </button>
             {% endif %}
@@ -45,9 +45,9 @@
                 <div class="buttons">
                     <a class="button is-primary"
                        href="{% url 'creator:create' %}"
-                       title="Add a new creator">
+                       title="{% trans 'Add a new creator' %}">
                         <span class="icon is-small"><i class="fas fa-plus" aria-hidden="true"></i></span>
-                        <span>New</span>
+                        <span>{% trans "New" %}</span>
                     </a>
                     <div class="dropdown is-right" id="creator-actions-dropdown">
                         <div class="dropdown-trigger">
@@ -55,7 +55,7 @@
                                     aria-haspopup="true"
                                     aria-controls="creator-actions-menu"
                                     hx-on:click="document.getElementById('creator-actions-dropdown').classList.toggle('is-active')">
-                                <span>Actions</span>
+                                <span>{% trans "Actions" %}</span>
                                 <span class="icon is-small"><i class="fas fa-angle-down" aria-hidden="true"></i></span>
                             </button>
                         </div>
@@ -64,19 +64,19 @@
                                 <a class="dropdown-item"
                                    href="{% url 'creator:update' creator.slug %}">
                                     <span class="icon is-small"><i class="fas fa-edit" aria-hidden="true"></i></span>
-                                    <span>Edit</span>
+                                    <span>{% trans "Edit" %}</span>
                                 </a>
                                 <a class="dropdown-item"
                                    href="{% url 'creator:history' creator.slug %}">
                                     <span class="icon is-small"><i class="fas fa-history" aria-hidden="true"></i></span>
-                                    <span>History</span>
+                                    <span>{% trans "History" %}</span>
                                 </a>
                                 {% if perms.comicsdb.delete_creator %}
                                     <hr class="dropdown-divider">
                                     <a class="dropdown-item has-text-danger"
                                        href="{% url 'creator:delete' creator.slug %}">
                                         <span class="icon is-small"><i class="fas fa-trash" aria-hidden="true"></i></span>
-                                        <span>Delete</span>
+                                        <span>{% trans "Delete" %}</span>
                                     </a>
                                 {% endif %}
                             </div>
@@ -110,7 +110,7 @@
                         {% endthumbnail %}
                     {% else %}
                         <img src="{% static 'site/img/creator-not-found.webp' %}"
-                             alt="No image for {{ creator.name }}"
+                             alt="{% blocktrans %}No image for {{ creator.name }}{% endblocktrans %}"
                              loading="lazy">
                     {% endif %}
                 </figure>
@@ -120,21 +120,21 @@
         <div class="column">
             {# Summary #}
             <div class="box">
-                <h2 class="title is-5">Summary</h2>
+                <h2 class="title is-5">{% trans "Summary" %}</h2>
                 {% if creator.desc %}
                     <div class="content">{{ creator.desc|linebreaksbr }}</div>
                 {% else %}
-                    <p class="has-text-grey">No information available.</p>
+                    <p class="has-text-grey">{% trans "No information available." %}</p>
                 {% endif %}
                 <footer class="content is-small is-italic mt-4">
-                    Last edited on <time datetime="{{ creator.modified|date:'c' }}">{{ creator.modified }}</time> by
+                    {% blocktrans with modified_time=creator.modified %}Last edited on <time datetime="{{ modified_time|date:'c' }}">{{ modified_time }}</time> by{% endblocktrans %}
                     <a href="{% url 'user-detail' username=creator.edited_by.username %}">{{ creator.edited_by.username }}</a>
                 </footer>
             </div>
             {# Series Credits #}
             {% if credits %}
                 <div class="box">
-                    <h2 class="title is-5">Series ({{ series_count }})</h2>
+                    <h2 class="title is-5">{% blocktrans %}Series ({{ series_count }}){% endblocktrans %}</h2>
                     <div class="content">
                         <ul id="series-list">
                             {% for series in credits %}
@@ -148,12 +148,12 @@
                                         {% elif series.issue__series__series_type == 8 %}
                                             HC
                                         {% elif series.issue__series__series_type == 12 %}
-                                            Digital
+                                            {% trans "Digital" %}
                                         {% endif %}
                                         ({{ series.issue__series__year_began }})
                                     </a>:
                                     <a href="{% url 'creator:series' creator=creator.slug series=series.issue__series__slug %}">
-                                        {{ series.issue__count }} issue{{ series.issue__count|pluralize }}
+                                        {% blocktrans count counter=series.issue__count %}{{ counter }} issue{% plural %}{{ counter }} issues{% endblocktrans %}
                                     </a>
                                 </li>
                             {% endfor %}
@@ -165,7 +165,7 @@
                                         hx-target="#series-list"
                                         hx-swap="beforeend"
                                         hx-indicator="#series-spinner">
-                                    <span>Load More Series</span>
+                                    <span>{% trans "Load More Series" %}</span>
                                 </button>
                                 <span id="series-spinner" class="htmx-indicator ml-2">
                                     <i class="fas fa-spinner fa-spin"></i>
@@ -185,26 +185,32 @@
         {# Metadata Sidebar #}
         <div class="column is-one-fifth">
             <div class="box">
-                <h2 class="title is-6">Creator Details</h2>
+                <h2 class="title is-6">{% trans "Creator Details" %}</h2>
                 <dl>
                     {% if creator.birth %}
-                        <dt class="has-text-weight-bold">Birth:</dt>
+                        <dt class="has-text-weight-bold">{% trans "Birth:" %}</dt>
                         <dd class="mb-3">
                             <time datetime="{{ creator.birth|date:'Y-m-d' }}">{{ creator.birth|date:"SHORT_DATE_FORMAT" }}</time>
                         </dd>
                     {% endif %}
                     {% if creator.death %}
-                        <dt class="has-text-weight-bold">Death:</dt>
+                        <dt class="has-text-weight-bold">{% trans "Death:" %}</dt>
                         <dd class="mb-3">
                             <time datetime="{{ creator.death|date:'Y-m-d' }}">{{ creator.death|date:"SHORT_DATE_FORMAT" }}</time>
                         </dd>
                     {% endif %}
-                    <dt class="has-text-weight-bold">Number of Issues:</dt>
+                    <dt class="has-text-weight-bold">{% trans "Number of Issues:" %}</dt>
                     <dd class="mb-3">
                         {{ creator.issue_count|intcomma }}
                     </dd>
                     {% if creator.alias %}
-                        <dt class="has-text-weight-bold">Alias{{ creator.alias|pluralize:"es" }}:</dt>
+                        <dt class="has-text-weight-bold">
+                            {% if creator.alias|length > 1 %}
+                                {% trans "Aliases:" %}
+                            {% else %}
+                                {% trans "Alias:" %}
+                            {% endif %}
+                        </dt>
                         <dd class="mb-3">
                             {{ creator.alias|join:", " }}
                         </dd>
@@ -213,21 +219,21 @@
             </div>
             {# Identification Numbers #}
             <div class="box">
-                <h2 class="title is-6">Identification Numbers</h2>
+                <h2 class="title is-6">{% trans "Identification Numbers" %}</h2>
                 <dl>
-                    <dt class="has-text-weight-bold">Metron:</dt>
+                    <dt class="has-text-weight-bold">{% trans "Metron:" %}</dt>
                     <dd class="mb-2 is-flex is-align-items-center is-justify-content-space-between">
                         <span class="is-family-monospace">{{ creator.id }}</span>
                         <button type="button"
                                 class="button is-small is-light copy-id"
                                 data-copy="{{ creator.id }}"
-                                title="Copy Metron ID"
-                                aria-label="Copy Metron ID">
+                                title="{% trans 'Copy Metron ID' %}"
+                                aria-label="{% trans 'Copy Metron ID' %}">
                             <span class="icon is-small"><i class="fas fa-copy"></i></span>
                         </button>
                     </dd>
                     {% if creator.cv_id %}
-                        <dt class="has-text-weight-bold">Comic Vine:</dt>
+                        <dt class="has-text-weight-bold">{% trans "Comic Vine:" %}</dt>
                         <dd class="mb-2 is-flex is-align-items-center is-justify-content-space-between">
                             <a class="is-family-monospace"
                                href="https://comicvine.gamespot.com/person/4040-{{ creator.cv_id }}/"
@@ -239,15 +245,15 @@
                             <button type="button"
                                     class="button is-small is-light copy-id"
                                     data-copy="{{ creator.cv_id }}"
-                                    title="Copy Comic Vine ID"
-                                    aria-label="Copy Comic Vine ID">
+                                    title="{% trans 'Copy Comic Vine ID' %}"
+                                    aria-label="{% trans 'Copy Comic Vine ID' %}">
                                 <span class="icon is-small"><i class="fas fa-copy"></i></span>
                             </button>
                         </dd>
                     {% endif %}
                     {% if creator.gcd_id %}
                         <dt class="has-text-weight-bold">
-                            <abbr title="Grand Comics Database">GCD</abbr>:
+                            <abbr title="{% trans 'Grand Comics Database' %}">GCD</abbr>:
                         </dt>
                         <dd class="is-flex is-align-items-center is-justify-content-space-between">
                             <a class="is-family-monospace"
@@ -260,8 +266,8 @@
                             <button type="button"
                                     class="button is-small is-light copy-id"
                                     data-copy="{{ creator.gcd_id }}"
-                                    title="Copy GCD ID"
-                                    aria-label="Copy GCD ID">
+                                    title="{% trans 'Copy GCD ID' %}"
+                                    aria-label="{% trans 'Copy GCD ID' %}">
                                 <span class="icon is-small"><i class="fas fa-copy"></i></span>
                             </button>
                         </dd>

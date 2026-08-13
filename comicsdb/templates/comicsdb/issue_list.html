@@ -1,15 +1,15 @@
 {% extends parent_template|default:"base.html" %}
 {% load humanize %}
-{% load static %}
+{% load i18n static %}
 {% block title %}
     {% if title %}{{ title }}{% endif %}
-    Issues - Metron
+    {% trans "Issues - Metron" %}
 {% endblock %}
 {% block content %}
     <header class="block has-text-centered">
         <h1 class="title">
             {% if title %}{{ title }}{% endif %}
-            Issues
+            {% trans "Issues" %}
         </h1>
     </header>
     <section class="section">
@@ -24,14 +24,14 @@
         <section class="section pt-0">
             <div class="container">
                 {# Navigation Bar #}
-                <nav class="level" aria-label="Issue list navigation">
+                <nav class="level" aria-label="{% trans 'Issue list navigation' %}">
                     <div class="level-left">
                         <div class="level-item">
                             <p class="subtitle is-5">
                                 {% if page_obj.paginator %}
-                                    <strong>{{ page_obj.paginator.count|intcomma }}</strong> Issue{{ page_obj.paginator.count|pluralize }}
+                                    {% blocktrans count counter=page_obj.paginator.count with counter_fmt=page_obj.paginator.count|intcomma %}<strong>{{ counter_fmt }}</strong> Issue{% plural %}<strong>{{ counter_fmt }}</strong> Issues{% endblocktrans %}
                                 {% else %}
-                                    <strong>{{ issue_list.count|intcomma }}</strong> Issue{{ issue_list.count|pluralize }}
+                                    {% blocktrans count counter=issue_list.count with counter_fmt=issue_list.count|intcomma %}<strong>{{ counter_fmt }}</strong> Issue{% plural %}<strong>{{ counter_fmt }}</strong> Issues{% endblocktrans %}
                                 {% endif %}
                             </p>
                         </div>
@@ -44,12 +44,12 @@
                             <div class="level-item">
                                 <a class="button is-primary"
                                    href="{% url 'issue:create' %}"
-                                   title="Add a new issue"
-                                   aria-label="Add a new issue">
+                                   title="{% trans 'Add a new issue' %}"
+                                   aria-label="{% trans 'Add a new issue' %}">
                                     <span class="icon is-small" aria-hidden="true">
                                         <i class="fas fa-plus"></i>
                                     </span>
-                                    <span>New</span>
+                                    <span>{% trans "New" %}</span>
                                 </a>
                             </div>
                         {% endif %}
@@ -63,14 +63,17 @@
         <section class="section pt-0">
             <div class="container has-text-centered">
                 {% if has_active_filters %}
-                    <p class="title is-4">No results found</p>
-                    <p class="subtitle">Try adjusting your search filters</p>
+                    <p class="title is-4">{% trans "No results found" %}</p>
+                    <p class="subtitle">{% trans "Try adjusting your search filters" %}</p>
                     <a href="{% url 'issue:list' %}" class="button is-light is-medium">
                         <span class="icon"><i class="fas fa-times"></i></span>
-                        <span>Clear All Filters</span>
+                        <span>{% trans "Clear All Filters" %}</span>
                     </a>
                 {% else %}
-                    {% include "comicsdb/partials/empty_state.html" with item_type="Issue" create_url="issue:create" create_title="Add a new issue" %}
+                    {% trans "Issue" as issue_label %}
+                    {% trans "Issues" as issue_label_plural %}
+                    {% trans "Add a new issue" as issue_create_title %}
+                    {% include "comicsdb/partials/empty_state.html" with item_type=issue_label item_type_plural=issue_label_plural create_url="issue:create" create_title=issue_create_title %}
                 {% endif %}
             </div>
         </section>

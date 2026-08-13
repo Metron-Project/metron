@@ -1,3 +1,4 @@
+{% load i18n %}
 {% comment %}
 Generic 1-5 star rating widget, shared by reading_lists and issue_ratings.
 
@@ -15,7 +16,7 @@ Required context:
     <div id="rating-widget-{{ rated_object.pk }}" class="rating-widget" style="scroll-margin-top: 4rem;">
         {# Display average rating #}
         <div class="average-rating mb-2">
-            <span class="has-text-weight-bold">Average Rating:</span>
+            <span class="has-text-weight-bold">{% trans "Average Rating:" %}</span>
             {% if average_rating %}
                 <span class="rating-stars">
                     {% for star_num in "12345" %}
@@ -23,15 +24,17 @@ Required context:
                            style="color: #ffd700"></i>
                     {% endfor %}
                 </span>
-                <span class="rating-value">{{ average_rating|floatformat:1 }} ({{ rating_count }} rating{{ rating_count|pluralize }})</span>
+                <span class="rating-value">
+                    {% blocktrans count counter=rating_count with avg=average_rating|floatformat:1 %}{{ avg }} ({{ counter }} rating){% plural %}{{ avg }} ({{ counter }} ratings){% endblocktrans %}
+                </span>
             {% else %}
-                <span class="has-text-grey-light">No ratings yet</span>
+                <span class="has-text-grey-light">{% trans "No ratings yet" %}</span>
             {% endif %}
         </div>
         {# User's rating (if allowed) #}
         {% if can_rate %}
             <div class="user-rating">
-                <span class="has-text-weight-bold">Your Rating:</span>
+                <span class="has-text-weight-bold">{% trans "Your Rating:" %}</span>
                 <div class="star-rating">
                     {% for star_num in "12345" %}
                         <button type="button"
@@ -40,7 +43,7 @@ Required context:
                                 hx-vals='{"rating": "{{ forloop.counter }}"}'
                                 hx-target="#rating-widget-{{ rated_object.pk }}"
                                 hx-swap="outerHTML"
-                                title="Rate {{ forloop.counter }} star{% if forloop.counter > 1 %}s{% endif %}">
+                                title="{% blocktrans count counter=forloop.counter %}Rate {{ counter }} star{% plural %}Rate {{ counter }} stars{% endblocktrans %}">
                             <i class="{% if user_rating and forloop.counter <= user_rating.rating %}fas{% else %}far{% endif %} fa-star"></i>
                         </button>
                     {% endfor %}
@@ -51,7 +54,7 @@ Required context:
                                 hx-vals='{"rating": "0"}'
                                 hx-target="#rating-widget-{{ rated_object.pk }}"
                                 hx-swap="outerHTML"
-                                title="Clear rating">
+                                title="{% trans 'Clear rating' %}">
                             <i class="fas fa-times-circle"></i>
                         </button>
                     {% endif %}

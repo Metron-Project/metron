@@ -1,4 +1,4 @@
-{% load bulma_tags %}
+{% load bulma_tags i18n %}
 <tr class="formset-row">
     {% for field in form.visible_fields %}
         {% if field.name != 'DELETE' %}
@@ -38,7 +38,7 @@
         <button type="button"
                 class="button is-small is-danger delete-row"
                 onclick="this.closest('tr').remove(); updateFormsetManagement('variants');"
-                title="Remove this row">
+                title="{% trans 'Remove this row' %}">
             <span class="icon is-small">
                 <i class="fas fa-times"></i>
             </span>

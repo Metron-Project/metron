@@ -1,7 +1,7 @@
 {% extends parent_template|default:"base.html" %}
-{% load static %}
+{% load static i18n %}
 {% block title %}
-    Page Not Found - Metron
+    {% trans "Page Not Found - Metron" %}
 {% endblock title %}
 {% block content %}
     <section class="hero is-medium">
@@ -13,7 +13,7 @@
                         <i class="fas fa-exclamation-triangle fa-5x"></i>
                     </span>
                     <h1 class="title is-1 mt-4 has-text-grey-dark">404</h1>
-                    <h2 class="subtitle is-3 has-text-grey">Page Not Found</h2>
+                    <h2 class="subtitle is-3 has-text-grey">{% trans "Page Not Found" %}</h2>
                 </div>
                 {# Error Message #}
                 <div class="columns is-centered">
@@ -21,7 +21,7 @@
                         <div class="box">
                             <div class="content">
                                 <p class="is-size-5 mb-4">
-                                    Sorry, we couldn't find the page you're looking for. It might have been moved, deleted, or never existed.
+                                    {% trans "Sorry, we couldn't find the page you're looking for. It might have been moved, deleted, or never existed." %}
                                 </p>
                                 {# Helpful Actions #}
                                 <div class="buttons is-centered mt-5">
@@ -29,37 +29,41 @@
                                         <span class="icon">
                                             <i class="fas fa-home"></i>
                                         </span>
-                                        <span>Go to Home</span>
+                                        <span>{% trans "Go to Home" %}</span>
                                     </a>
                                     <button class="button is-light is-medium" onclick="history.back()">
                                         <span class="icon">
                                             <i class="fas fa-arrow-left"></i>
                                         </span>
-                                        <span>Go Back</span>
+                                        <span>{% trans "Go Back" %}</span>
                                     </button>
                                 </div>
                             </div>
                         </div>
                         {# Suggestions #}
                         <div class="notification is-info is-light">
-                            <p class="has-text-weight-bold mb-3">You might want to:</p>
+                            <p class="has-text-weight-bold mb-3">{% trans "You might want to:" %}</p>
                             <div class="content">
                                 <ul class="has-text-left">
-                                    <li>Check the URL for typos</li>
-                                    <li>Use the search feature to find what you're looking for</li>
+                                    <li>{% trans "Check the URL for typos" %}</li>
+                                    <li>{% trans "Use the search feature to find what you're looking for" %}</li>
                                     <li>
-                                        Browse our <a href="{% url 'issue:list' %}">issues</a>, <a href="{% url 'series:list' %}">series</a>, or <a href="{% url 'character:list' %}">characters</a>
+                                        {% url 'issue:list' as issue_list_url %}
+                                        {% url 'series:list' as series_list_url %}
+                                        {% url 'character:list' as character_list_url %}
+                                        {% blocktrans %}Browse our <a href="{{ issue_list_url }}">issues</a>, <a href="{{ series_list_url }}">series</a>, or <a href="{{ character_list_url }}">characters</a>{% endblocktrans %}
                                     </li>
                                     <li>
-                                        Return to the <a href="{% url 'home' %}">homepage</a>
+                                        {% url 'home' as home_url %}
+                                        {% blocktrans %}Return to the <a href="{{ home_url }}">homepage</a>{% endblocktrans %}
                                     </li>
                                 </ul>
                             </div>
                         </div>
                         {# Contact Section #}
                         <div class="box">
-                            <p class="has-text-weight-bold mb-2">Still need help?</p>
-                            <p class="mb-3">If you believe this is an error, please let us know:</p>
+                            <p class="has-text-weight-bold mb-2">{% trans "Still need help?" %}</p>
+                            <p class="mb-3">{% trans "If you believe this is an error, please let us know:" %}</p>
                             <div class="buttons is-centered">
                                 <a class="button is-link is-outlined is-small"
                                    href="https://github.com/Metron-Project/metron/issues/new/choose"
@@ -68,14 +72,14 @@
                                     <span class="icon">
                                         <i class="fas fa-bug"></i>
                                     </span>
-                                    <span>Report Issue</span>
+                                    <span>{% trans "Report Issue" %}</span>
                                 </a>
                                 <a class="button is-link is-outlined is-small"
                                    href="mailto:admin@metron.cloud">
                                     <span class="icon">
                                         <i class="fas fa-envelope"></i>
                                     </span>
-                                    <span>Contact Us</span>
+                                    <span>{% trans "Contact Us" %}</span>
                                 </a>
                             </div>
                         </div>

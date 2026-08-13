@@ -1,23 +1,24 @@
-{% load humanize %}
+{% load humanize i18n %}
 {% comment %}
     Reusable list header with count, search, and add button
     Usage: {% include "comicsdb/partials/list_header.html" with title="Characters" ... %}
-    
+
     Required parameters:
-    - title: Display title (e.g., "Character", "Publisher")
+    - title: Display title, singular (e.g., "Character", "Publisher")
+    - title_plural: Display title, plural (e.g., "Characters", "Publishers")
     - count: Total item count from paginator
     - search_url: URL name for search action
     - search_placeholder: Placeholder text for search input
     - create_url: URL name for create action (optional)
     - create_title: Title attribute for create button
 {% endcomment %}
-<nav class="level" aria-label="List navigation and actions">
+<nav class="level" aria-label="{% trans 'List navigation and actions' %}">
     <div class="level-left">
         {# Item Count #}
         <div class="level-item">
             <p class="subtitle is-5">
                 <strong>{{ count|intcomma }}</strong>
-                {{ title }}{% if title != "Series" %}{{ count|pluralize }}{% endif %}
+                {% if count == 1 %}{{ title }}{% else %}{{ title_plural }}{% endif %}
             </p>
         </div>
         {# Search Form #}
@@ -26,10 +27,10 @@
                   method="get"
                   accept-charset="utf-8"
                   role="search"
-                  aria-label="Search {{ title|lower }}s">
+                  aria-label="{% blocktrans %}Search {{ title_plural }}{% endblocktrans %}">
                 <div class="field has-addons">
                     <div class="control">
-                        <label for="search-input-{{ title|lower }}" class="is-sr-only">Search {{ title }}s</label>
+                        <label for="search-input-{{ title|lower }}" class="is-sr-only">{% blocktrans %}Search {{ title_plural }}{% endblocktrans %}</label>
                         <input id="search-input-{{ title|lower }}"
                                class="input"
                                name="q"
@@ -38,11 +39,11 @@
                                aria-label="{{ search_placeholder }}">
                     </div>
                     <div class="control">
-                        <button class="button" type="submit" aria-label="Search">
+                        <button class="button" type="submit" aria-label="{% trans 'Search' %}">
                             <span class="icon" aria-hidden="true">
                                 <i class="fas fa-search"></i>
                             </span>
-                            <span>Search</span>
+                            <span>{% trans "Search" %}</span>
                         </button>
                     </div>
                 </div>
@@ -60,7 +61,7 @@
                     <span class="icon is-small" aria-hidden="true">
                         <i class="fas fa-plus"></i>
                     </span>
-                    <span>New</span>
+                    <span>{% trans "New" %}</span>
                 </a>
             </div>
         </div>

@@ -1,8 +1,9 @@
 {% extends parent_template|default:"base.html" %}
-{% load static %}
+{% load i18n static %}
 {% load bulma_tags %}
 {% block title %}
-    {{ title|default:"Form" }}
+    {% trans "Form" as default_title %}
+    {{ title|default:default_title }}
 {% endblock title %}
 {% block headcss %}
     {{ form.media.css }}
@@ -13,31 +14,32 @@
           href="{% static 'site/css/issue-form-usability.css' %}">
 {% endblock %}
 {% block content %}
+    {% trans "Form" as default_title %}
     <form method="post" enctype="multipart/form-data" id="mainForm" novalidate>
         {% csrf_token %}
         <!-- Sticky action bar — Save / Cancel always reachable + section nav -->
         <div class="usab-actionbar">
             <div class="usab-actionbar__top">
-                <h1 class="usab-actionbar__title">{{ title|default:"Form" }}</h1>
+                <h1 class="usab-actionbar__title">{{ title|default:default_title }}</h1>
                 <div class="usab-actionbar__actions">
                     <button type="button" class="button" onclick="history.back()">
                         <span class="icon"><i class="fas fa-times"></i></span>
-                        <span>Cancel</span>
+                        <span>{% trans "Cancel" %}</span>
                     </button>
                     <button class="button is-info" type="submit">
                         <span class="icon"><i class="fas fa-check"></i></span>
-                        <span>Save</span>
+                        <span>{% trans "Save" %}</span>
                     </button>
                 </div>
             </div>
-            <nav class="usab-nav" aria-label="Form sections">
-                <a href="#section-primary" class="is-active">Primary</a>
-                <a href="#section-attribution">Attribution</a>
+            <nav class="usab-nav" aria-label="{% trans 'Form sections' %}">
+                <a href="#section-primary" class="is-active">{% trans "Primary" %}</a>
+                <a href="#section-attribution">{% trans "Attribution" %}</a>
             </nav>
         </div>
         <!-- Primary Information Section -->
         <div class="box" id="section-primary">
-            <h2 class="title is-5">Primary Information</h2>
+            <h2 class="title is-5">{% trans "Primary Information" %}</h2>
             {% include "comicsdb/partials/form_errors.html" with form=form %}
             {% for field in form.hidden_fields %}{{ field }}{% endfor %}
             {% for field in form.visible_fields %}
@@ -46,7 +48,7 @@
         </div>
         <!-- Attribution Section -->
         <div class="box" id="section-attribution">
-            <h2 class="title is-5">Attribution</h2>
+            <h2 class="title is-5">{% trans "Attribution" %}</h2>
             {% include "comicsdb/partials/attribution_formset.html" with formset=attribution %}
         </div>
     </form>

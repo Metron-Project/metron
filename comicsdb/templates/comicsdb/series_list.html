@@ -1,14 +1,14 @@
 {% extends parent_template|default:"base.html" %}
-{% load static %}
+{% load i18n static %}
 {% block title %}
     {% if title %}{{ title }}{% endif %}
-    Series - Metron
+    {% trans "Series - Metron" %}
 {% endblock %}
 {% block content %}
     <header class="block has-text-centered">
         <h1 class="title">
             {% if title %}{{ title }}{% endif %}
-            Series
+            {% trans "Series" %}
         </h1>
     </header>
     <section class="section">
@@ -22,12 +22,12 @@
     {% if series_list %}
         <section class="section pt-0">
             <div class="container">
-                <nav class="level" aria-label="List navigation and actions">
+                <nav class="level" aria-label="{% trans 'List navigation and actions' %}">
                     <div class="level-left">
                         {# Item Count #}
                         <div class="level-item">
                             <p class="subtitle is-5">
-                                <strong>{{ page_obj.paginator.count|default:series_list.count }}</strong> Series
+                                <strong>{{ page_obj.paginator.count|default:series_list.count }}</strong> {% trans "Series" %}
                             </p>
                         </div>
                     </div>
@@ -37,12 +37,12 @@
                             <div class="level-item">
                                 <a class="button is-primary"
                                    href="{% url 'series:create' %}"
-                                   title="Add a new series"
-                                   aria-label="Add a new series">
+                                   title="{% trans 'Add a new series' %}"
+                                   aria-label="{% trans 'Add a new series' %}">
                                     <span class="icon is-small" aria-hidden="true">
                                         <i class="fas fa-plus"></i>
                                     </span>
-                                    <span>New</span>
+                                    <span>{% trans "New" %}</span>
                                 </a>
                             </div>
                         </div>
@@ -56,14 +56,16 @@
         <section class="section pt-0">
             <div class="container has-text-centered">
                 {% if has_active_filters %}
-                    <p class="title is-4">No results found</p>
-                    <p class="subtitle">Try adjusting your search filters</p>
+                    <p class="title is-4">{% trans "No results found" %}</p>
+                    <p class="subtitle">{% trans "Try adjusting your search filters" %}</p>
                     <a href="{% url 'series:list' %}" class="button is-light is-medium">
                         <span class="icon"><i class="fas fa-times"></i></span>
-                        <span>Clear All Filters</span>
+                        <span>{% trans "Clear All Filters" %}</span>
                     </a>
                 {% else %}
-                    {% include "comicsdb/partials/empty_state.html" with item_type="Series" create_url="series:create" create_title="Add a new series" %}
+                    {% trans "Series" as series_label %}
+                    {% trans "Add a new series" as series_create_title %}
+                    {% include "comicsdb/partials/empty_state.html" with item_type=series_label item_type_plural=series_label create_url="series:create" create_title=series_create_title %}
                 {% endif %}
             </div>
         </section>

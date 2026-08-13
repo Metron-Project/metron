@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: metron\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-08-13 16:05-0400\n"
+"POT-Creation-Date: 2026-08-13 18:48-0400\n"
 "PO-Revision-Date: 2026-08-13 11:23-0400\n"
 "Last-Translator: Metron Project\n"
 "Language-Team: Italian\n"
@@ -15,6 +15,452 @@ msgstr ""
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=2; plural=(n != 1);\n"
+
+#: api/templates/api/throttle_enforcement_email.html:8
+msgid "Your Metron API access has been restricted"
+msgstr "Il tuo accesso all'API di Metron è stato limitato"
+
+#: api/templates/api/throttle_enforcement_email.html:49
+#: api/templates/api/throttle_enforcement_email.txt:1
+#: api/templates/api/throttle_notice_email.html:49
+#: api/templates/api/throttle_notice_email.txt:1
+#, python-format
+msgid "Hi %(username)s,"
+msgstr "Ciao %(username)s,"
+
+#: api/templates/api/throttle_enforcement_email.html:55
+msgid ""
+"We previously warned you that your Metron API client was repeatedly hitting our rate "
+"limits without backing off. Since that behavior has continued, we've had to take "
+"action on this account:"
+msgstr ""
+"Ti avevamo già avvisato che il tuo client API di Metron stava ripetutamente superando "
+"i nostri limiti di frequenza senza rallentare. Poiché questo comportamento è "
+"continuato, abbiamo dovuto intervenire su questo account:"
+
+#: api/templates/api/throttle_enforcement_email.html:73
+#, python-format
+msgid ""
+"Most recently, your client received <strong>%(counter)s rate-limited (429) response</"
+"strong> in a single day."
+msgid_plural ""
+"Most recently, your client received <strong>%(counter)s rate-limited (429) responses</"
+"strong> in a single day."
+msgstr[0] ""
+"Più di recente, il tuo client ha ricevuto <strong>%(counter)s risposta limitata "
+"(429)</strong> in un singolo giorno."
+msgstr[1] ""
+"Più di recente, il tuo client ha ricevuto <strong>%(counter)s risposte limitate "
+"(429)</strong> in un singolo giorno."
+
+#: api/templates/api/throttle_enforcement_email.html:75
+#: api/templates/api/throttle_enforcement_email.html:79
+#, python-format
+msgid ""
+"Most recently, your client received <strong>%(counter)s rate-limited (429) response</"
+"strong>"
+msgid_plural ""
+"Most recently, your client received <strong>%(counter)s rate-limited (429) responses</"
+"strong>"
+msgstr[0] ""
+"Più di recente, il tuo client ha ricevuto <strong>%(counter)s risposta limitata "
+"(429)</strong>"
+msgstr[1] ""
+"Più di recente, il tuo client ha ricevuto <strong>%(counter)s risposte limitate "
+"(429)</strong>"
+
+#: api/templates/api/throttle_enforcement_email.html:76
+#: api/templates/api/throttle_notice_email.html:80
+#, python-format
+msgid "recently, including <strong>%(worst)s</strong> in a single day."
+msgstr "recentemente, incluso <strong>%(worst)s</strong> in un singolo giorno."
+
+#: api/templates/api/throttle_enforcement_email.html:80
+#: api/templates/api/throttle_notice_email.html:84
+#, python-format
+msgid "across <strong>%(counter)s day</strong>"
+msgid_plural "across <strong>%(counter)s days</strong>"
+msgstr[0] "attraverso <strong>%(counter)s giorno</strong>"
+msgstr[1] "attraverso <strong>%(counter)s giorni</strong>"
+
+#: api/templates/api/throttle_enforcement_email.html:81
+#: api/templates/api/throttle_notice_email.html:85
+#, python-format
+msgid "including <strong>%(worst)s</strong> in a single day."
+msgstr "incluso <strong>%(worst)s</strong> in un singolo giorno."
+
+#: api/templates/api/throttle_enforcement_email.html:102
+msgid ""
+"<strong>This account has been disabled.</strong> You won't be able to log in or use "
+"the API until an administrator reinstates it."
+msgstr ""
+"<strong>Questo account è stato disabilitato.</strong> Non potrai accedere o "
+"utilizzare l'API finché un amministratore non lo riattiverà."
+
+#: api/templates/api/throttle_enforcement_email.html:104
+msgid ""
+"<strong>All API tokens for this account have been revoked.</strong> You'll need to "
+"generate a new token before you can use the API again."
+msgstr ""
+"<strong>Tutti i token API per questo account sono stati revocati.</strong> Dovrai "
+"generare un nuovo token prima di poter utilizzare nuovamente l'API."
+
+#: api/templates/api/throttle_enforcement_email.html:114
+msgid ""
+"Before using the API again, please make sure your client respects the <code>X-"
+"RateLimit-*</code> response headers and backs off after a 429 response instead of "
+"retrying immediately. For details on our rate limits and how to implement a backoff "
+"strategy, see our <a href=\"https://metron.cloud/wiki/api/handling-rate-limits/\" "
+"style=\"color: #3273dc;\">Rate Limiting documentation</a>."
+msgstr ""
+"Prima di usare nuovamente l'API, assicurati che il tuo client rispetti gli header di "
+"risposta <code>X-RateLimit-*</code> e rallenti dopo una risposta 429 invece di "
+"riprovare immediatamente. Per dettagli sui nostri limiti di frequenza e su come "
+"implementare una strategia di backoff, consulta la nostra <a href=\"https://"
+"metron.cloud/wiki/api/handling-rate-limits/\" style=\"color: #3273dc;"
+"\">documentazione sul Rate Limiting</a>."
+
+#: api/templates/api/throttle_enforcement_email.html:120
+msgid ""
+"If you have any questions, or believe this was done in error, please reply to this "
+"email so we can review it."
+msgstr ""
+"Se hai domande, o ritieni che questo sia stato fatto per errore, rispondi a questa "
+"email in modo da poterlo esaminare."
+
+#: api/templates/api/throttle_enforcement_email.html:131
+#: api/templates/api/throttle_enforcement_email.txt:29
+#: api/templates/api/throttle_notice_email.html:150
+#: api/templates/api/throttle_notice_email.txt:35 templates/base.html:9
+#: templates/partials/social_meta.html:10 templates/partials/social_meta.html:21
+#: users/templates/registration/account_activation_email.html:210
+#: users/templates/registration/account_activation_email.txt:21
+msgid "Metron Comic Book Database"
+msgstr "Database Fumetti Metron"
+
+#: api/templates/api/throttle_enforcement_email.html:137
+#: api/templates/api/throttle_enforcement_email.txt:30
+#: api/templates/api/throttle_notice_email.html:156
+#: api/templates/api/throttle_notice_email.txt:36
+#: users/templates/registration/account_activation_email.html:216
+#: users/templates/registration/account_activation_email.txt:22
+msgid "A community-driven project for comic book enthusiasts"
+msgstr "Un progetto guidato dalla community per appassionati di fumetti"
+
+#: api/templates/api/throttle_enforcement_email.html:144
+#: api/templates/api/throttle_notice_email.html:163
+#: users/templates/registration/account_activation_email.html:223
+msgid "Visit Website"
+msgstr "Visita il Sito"
+
+#: api/templates/api/throttle_enforcement_email.html:150
+#: api/templates/api/throttle_notice_email.html:169 templates/404.html:82
+#: templates/500.html:82 templates/partials/footer.html:10
+#: users/templates/registration/account_activation_email.html:229
+msgid "Contact Us"
+msgstr "Contattaci"
+
+#: api/templates/api/throttle_enforcement_email.html:157
+#: api/templates/api/throttle_notice_email.html:176 templates/partials/footer.html:95
+#: users/templates/registration/account_activation_email.html:236
+#, python-format
+msgid "&copy; %(current_year)s Metron Project. All rights reserved."
+msgstr "&copy; %(current_year)s Metron Project. Tutti i diritti riservati."
+
+#: api/templates/api/throttle_enforcement_email.txt:3
+msgid ""
+"We previously warned you that your Metron API client was repeatedly hitting our\n"
+"rate limits without backing off. Since that behavior has continued, we've had\n"
+"to take action on this account:"
+msgstr ""
+"Ti avevamo già avvisato che il tuo client API di Metron stava ripetutamente superando "
+"i\n"
+"nostri limiti di frequenza senza rallentare. Poiché questo comportamento è "
+"continuato, abbiamo dovuto\n"
+"intervenire su questo account:"
+
+#: api/templates/api/throttle_enforcement_email.txt:7
+#, python-format
+msgid ""
+"Most recently, your client received %(counter)s rate-limited (429) response\n"
+"in a single day."
+msgid_plural ""
+"Most recently, your client received %(counter)s rate-limited (429) responses\n"
+"in a single day."
+msgstr[0] ""
+"Più di recente, il tuo client ha ricevuto %(counter)s risposta limitata (429)\n"
+"in un singolo giorno."
+msgstr[1] ""
+"Più di recente, il tuo client ha ricevuto %(counter)s risposte limitate (429)\n"
+"in un singolo giorno."
+
+#: api/templates/api/throttle_enforcement_email.txt:9
+#: api/templates/api/throttle_enforcement_email.txt:10
+#, python-format
+msgid "Most recently, your client received %(counter)s rate-limited (429) response"
+msgid_plural ""
+"Most recently, your client received %(counter)s rate-limited (429) responses"
+msgstr[0] ""
+"Più di recente, il tuo client ha ricevuto %(counter)s risposta limitata (429)"
+msgstr[1] ""
+"Più di recente, il tuo client ha ricevuto %(counter)s risposte limitate (429)"
+
+#: api/templates/api/throttle_enforcement_email.txt:10
+#: api/templates/api/throttle_notice_email.txt:14
+#, python-format
+msgid "recently, including %(worst)s in a single day."
+msgstr "recentemente, incluso %(worst)s in un singolo giorno."
+
+#: api/templates/api/throttle_enforcement_email.txt:11
+#: api/templates/api/throttle_notice_email.txt:15
+#, python-format
+msgid "across %(counter)s day"
+msgid_plural "across %(counter)s days"
+msgstr[0] "attraverso %(counter)s giorno"
+msgstr[1] "attraverso %(counter)s giorni"
+
+#: api/templates/api/throttle_enforcement_email.txt:11
+#: api/templates/api/throttle_notice_email.txt:15
+#, python-format
+msgid ""
+"including %(worst)s\n"
+"in a single day."
+msgstr ""
+"incluso %(worst)s\n"
+"in un singolo giorno."
+
+#: api/templates/api/throttle_enforcement_email.txt:14
+msgid ""
+"This account has been disabled. You won't be able to log in or use the API\n"
+"until an administrator reinstates it."
+msgstr ""
+"Questo account è stato disabilitato. Non potrai accedere o utilizzare l'API\n"
+"finché un amministratore non lo riattiverà."
+
+#: api/templates/api/throttle_enforcement_email.txt:15
+msgid ""
+"All API tokens for this account have been revoked. You'll need to generate a\n"
+"new token before you can use the API again."
+msgstr ""
+"Tutti i token API per questo account sono stati revocati. Dovrai generare un\n"
+"nuovo token prima di poter utilizzare nuovamente l'API."
+
+#: api/templates/api/throttle_enforcement_email.txt:18
+msgid ""
+"Before using the API again, please make sure your client respects the\n"
+"X-RateLimit-* response headers and backs off after a 429 response instead of\n"
+"retrying immediately. For details on our rate limits and how to implement a\n"
+"backoff strategy, see:"
+msgstr ""
+"Prima di usare nuovamente l'API, assicurati che il tuo client rispetti gli\n"
+"header di risposta X-RateLimit-* e rallenti dopo una risposta 429 invece di\n"
+"riprovare immediatamente. Per dettagli sui nostri limiti di frequenza e su\n"
+"come implementare una strategia di backoff, vedi:"
+
+#: api/templates/api/throttle_enforcement_email.txt:25
+msgid ""
+"If you have any questions, or believe this was done in error, please reply to\n"
+"this email so we can review it."
+msgstr ""
+"Se hai domande, o ritieni che questo sia stato fatto per errore, rispondi a\n"
+"questa email in modo da poterlo esaminare."
+
+#: api/templates/api/throttle_enforcement_email.txt:32
+#: api/templates/api/throttle_notice_email.txt:38
+msgid "Website:"
+msgstr "Sito web:"
+
+#: api/templates/api/throttle_enforcement_email.txt:34
+#: api/templates/api/throttle_notice_email.txt:40
+msgid "Contact:"
+msgstr "Contatto:"
+
+#: api/templates/api/throttle_enforcement_email.txt:37
+#: api/templates/api/throttle_notice_email.txt:43
+#: users/templates/registration/account_activation_email.txt:29
+#, python-format
+msgid "(c) %(current_year)s Metron Project. All rights reserved."
+msgstr "(c) %(current_year)s Metron Project. Tutti i diritti riservati."
+
+#: api/templates/api/throttle_notice_email.html:8
+msgid "Your Metron API client is being rate-limited"
+msgstr "Il tuo client API di Metron è soggetto a limitazione di frequenza"
+
+#: api/templates/api/throttle_notice_email.html:56
+#, python-format
+msgid ""
+"We've noticed that your Metron API client hit our rate limits hard, with %(count)s "
+"rate-limited (429) responses in a single day. When a client keeps retrying "
+"immediately after a 429 response instead of backing off, it adds unnecessary load to "
+"the site for everyone."
+msgstr ""
+"Abbiamo notato che il tuo client API di Metron ha superato pesantemente i nostri "
+"limiti di frequenza, con %(count)s risposte limitate (429) in un singolo giorno. "
+"Quando un client continua a riprovare immediatamente dopo una risposta 429 invece di "
+"rallentare, aggiunge un carico non necessario al sito per tutti."
+
+#: api/templates/api/throttle_notice_email.html:58
+msgid ""
+"We've noticed that your Metron API client has repeatedly hit our rate limits over the "
+"past several days. When a client keeps retrying immediately after a 429 response "
+"instead of backing off, it adds unnecessary load to the site for everyone."
+msgstr ""
+"Abbiamo notato che il tuo client API di Metron ha ripetutamente superato i nostri "
+"limiti di frequenza negli ultimi giorni. Quando un client continua a riprovare "
+"immediatamente dopo una risposta 429 invece di rallentare, aggiunge un carico non "
+"necessario al sito per tutti."
+
+#: api/templates/api/throttle_notice_email.html:77
+#, python-format
+msgid ""
+"Your client received <strong>%(counter)s rate-limited (429) response</strong> in a "
+"single day."
+msgid_plural ""
+"Your client received <strong>%(counter)s rate-limited (429) responses</strong> in a "
+"single day."
+msgstr[0] ""
+"Il tuo client ha ricevuto <strong>%(counter)s risposta limitata (429)</strong> in un "
+"singolo giorno."
+msgstr[1] ""
+"Il tuo client ha ricevuto <strong>%(counter)s risposte limitate (429)</strong> in un "
+"singolo giorno."
+
+#: api/templates/api/throttle_notice_email.html:79
+#: api/templates/api/throttle_notice_email.html:83
+#, python-format
+msgid "Your client received <strong>%(counter)s rate-limited (429) response</strong>"
+msgid_plural ""
+"Your client received <strong>%(counter)s rate-limited (429) responses</strong>"
+msgstr[0] ""
+"Il tuo client ha ricevuto <strong>%(counter)s risposta limitata (429)</strong>"
+msgstr[1] ""
+"Il tuo client ha ricevuto <strong>%(counter)s risposte limitate (429)</strong>"
+
+#: api/templates/api/throttle_notice_email.html:105
+msgid ""
+"Every API response includes <code>X-RateLimit-*</code> headers showing your current "
+"limit, remaining requests, and when the window resets. A 429 response means you've "
+"exceeded that limit for the current window - the fix is to slow down and wait before "
+"retrying, rather than retrying immediately."
+msgstr ""
+"Ogni risposta dell'API include gli header <code>X-RateLimit-*</code> che mostrano il "
+"tuo limite attuale, le richieste rimanenti e quando la finestra si azzera. Una "
+"risposta 429 significa che hai superato quel limite per la finestra corrente - la "
+"soluzione è rallentare e attendere prima di riprovare, invece di riprovare "
+"immediatamente."
+
+#: api/templates/api/throttle_notice_email.html:114
+msgid ""
+"For details on our current rate limits and how to implement a backoff strategy, see "
+"our <a href=\"https://metron.cloud/wiki/api/handling-rate-limits/\" style=\"color: "
+"#3273dc;\">Rate Limiting documentation</a>."
+msgstr ""
+"Per dettagli sui nostri limiti di frequenza attuali e su come implementare una "
+"strategia di backoff, consulta la nostra <a href=\"https://metron.cloud/wiki/api/"
+"handling-rate-limits/\" style=\"color: #3273dc;\">documentazione sul Rate Limiting</"
+"a>."
+
+#: api/templates/api/throttle_notice_email.html:130
+msgid ""
+"<strong>Important:</strong> If this behavior continues, we may revoke API access for "
+"this account to protect the site for other users."
+msgstr ""
+"<strong>Importante:</strong> Se questo comportamento continua, potremmo revocare "
+"l'accesso API per questo account per proteggere il sito per gli altri utenti."
+
+#: api/templates/api/throttle_notice_email.html:139
+msgid ""
+"If you have any questions, or believe you're seeing this in error, just reply to this "
+"email."
+msgstr ""
+"Se hai domande, o ritieni che questo sia un errore, rispondi semplicemente a questa "
+"email."
+
+#: api/templates/api/throttle_notice_email.txt:3
+#, python-format
+msgid ""
+"We've noticed that your Metron API client hit our rate limits hard, with\n"
+"%(count)s rate-limited (429) responses in a single day. When a client keeps\n"
+"retrying immediately after a 429 response instead of backing off, it adds\n"
+"unnecessary load to the site for everyone."
+msgstr ""
+"Abbiamo notato che il tuo client API di Metron ha superato pesantemente i\n"
+"nostri limiti di frequenza, con %(count)s risposte limitate (429) in un\n"
+"singolo giorno. Quando un client continua a riprovare immediatamente dopo\n"
+"una risposta 429 invece di rallentare, aggiunge un carico non necessario al\n"
+"sito per tutti."
+
+#: api/templates/api/throttle_notice_email.txt:6
+msgid ""
+"We've noticed that your Metron API client has repeatedly hit our rate limits over\n"
+"the past several days. When a client keeps retrying immediately after a 429\n"
+"response instead of backing off, it adds unnecessary load to the site for\n"
+"everyone."
+msgstr ""
+"Abbiamo notato che il tuo client API di Metron ha ripetutamente superato i\n"
+"nostri limiti di frequenza negli ultimi giorni. Quando un client continua a\n"
+"riprovare immediatamente dopo una risposta 429 invece di rallentare,\n"
+"aggiunge un carico non necessario al sito per tutti."
+
+#: api/templates/api/throttle_notice_email.txt:11
+#, python-format
+msgid ""
+"Your client received %(counter)s rate-limited (429) response\n"
+"in a single day."
+msgid_plural ""
+"Your client received %(counter)s rate-limited (429) responses\n"
+"in a single day."
+msgstr[0] ""
+"Il tuo client ha ricevuto %(counter)s risposta limitata (429)\n"
+"in un singolo giorno."
+msgstr[1] ""
+"Il tuo client ha ricevuto %(counter)s risposte limitate (429)\n"
+"in un singolo giorno."
+
+#: api/templates/api/throttle_notice_email.txt:13
+#: api/templates/api/throttle_notice_email.txt:14
+#, python-format
+msgid "Your client received %(counter)s rate-limited (429) response"
+msgid_plural "Your client received %(counter)s rate-limited (429) responses"
+msgstr[0] "Il tuo client ha ricevuto %(counter)s risposta limitata (429)"
+msgstr[1] "Il tuo client ha ricevuto %(counter)s risposte limitate (429)"
+
+#: api/templates/api/throttle_notice_email.txt:18
+msgid ""
+"Every API response includes X-RateLimit-* headers showing your current limit,\n"
+"remaining requests, and when the window resets. A 429 response also means you've\n"
+"exceeded that limit for the current window - the fix is to slow down and wait\n"
+"before retrying, rather than retrying immediately."
+msgstr ""
+"Ogni risposta dell'API include gli header X-RateLimit-* che mostrano il tuo\n"
+"limite attuale, le richieste rimanenti e quando la finestra si azzera. Una\n"
+"risposta 429 significa anche che hai superato quel limite per la finestra\n"
+"corrente - la soluzione è rallentare e attendere prima di riprovare, invece\n"
+"di riprovare immediatamente."
+
+#: api/templates/api/throttle_notice_email.txt:23
+msgid ""
+"For details on our current rate limits and how to implement a backoff strategy,\n"
+"see:"
+msgstr ""
+"Per dettagli sui nostri limiti di frequenza attuali e su come implementare\n"
+"una strategia di backoff, vedi:"
+
+#: api/templates/api/throttle_notice_email.txt:28
+msgid ""
+"IMPORTANT: If this behavior continues, we may revoke API access for this account\n"
+"to protect the site for other users."
+msgstr ""
+"IMPORTANTE: Se questo comportamento continua, potremmo revocare l'accesso\n"
+"API per questo account per proteggere il sito per gli altri utenti."
+
+#: api/templates/api/throttle_notice_email.txt:31
+msgid ""
+"If you have any questions, or believe you're seeing this in error, just reply to\n"
+"this email."
+msgstr ""
+"Se hai domande, o ritieni che questo sia un errore, rispondi semplicemente a\n"
+"questa email."
 
 #: api/v1_0/serializers/collection.py:98 api/v1_0/serializers/collection.py:218
 #: api/v1_0/serializers/wish_list.py:79
@@ -54,7 +500,11 @@ msgid_plural "%d issues were updated"
 msgstr[0] "%d albo è stato aggiornato"
 msgstr[1] "%d albi sono stati aggiornati"
 
-#: comicsdb/forms/issue.py:50
+#: comicsdb/forms/character.py:31 comicsdb/forms/creator.py:34
+msgid "Separate multiple aliases by a comma"
+msgstr "Separa più alias con una virgola"
+
+#: comicsdb/forms/credits.py:21 comicsdb/forms/issue.py:50
 msgid "Autocomplete..."
 msgstr "Completamento automatico..."
 
@@ -83,11 +533,13 @@ msgid "This date should be earlier than the store date"
 msgstr "Questa data dovrebbe essere precedente alla data di uscita in negozio"
 
 #: comicsdb/forms/issue.py:106 comicsdb/models/issue.py:57
+#: comicsdb/templates/comicsdb/issue_detail.html:290
 #: user_collection/templates/user_collection/missing_issues_detail.html:80
 msgid "Story Title"
 msgstr "Titolo della Storia"
 
 #: comicsdb/forms/issue.py:107 comicsdb/models/issue.py:58
+#: comicsdb/templates/comicsdb/issue_detail.html:280
 msgid "Collection Title"
 msgstr "Titolo della Raccolta"
 
@@ -115,7 +567,182 @@ msgstr "Il campo Titolo della Raccolta non è consentito per questa serie."
 msgid "Arcs cannot be added to Trade Paperbacks."
 msgstr "Gli archi narrativi non possono essere aggiunti ai Trade Paperback."
 
+#: comicsdb/forms/publisher.py:28
+msgid "Currently only US and UK Publishers are supported"
+msgstr "Attualmente sono supportati solo Editori di US e UK"
+
+#: comicsdb/forms/series.py:30
+#: comicsdb/templates/comicsdb/partials/issue_filter.html:122
+#: comicsdb/templates/comicsdb/partials/series_filter.html:113
+#: comicsdb/templates/comicsdb/publisher_list.html:8
+#: comicsdb/views/issue_list_helpers.py:62 comicsdb/views/series_list_helpers.py:20
+#: pull_list/templates/pull_list/pulllist_detail.html:48
+#: reading_lists/templates/reading_lists/partials/readinglist_filter.html:89
+#: reading_lists/views.py:46
+#: user_collection/templates/user_collection/missing_issues_list.html:41
+#: user_collection/templates/user_collection/partials/collection_filter.html:94
+msgid "Publisher"
+msgstr "Editore"
+
+#: comicsdb/forms/series.py:35 comicsdb/templates/comicsdb/imprint_list.html:8
+#: comicsdb/templates/comicsdb/partials/series_filter.html:131
+#: comicsdb/views/series_list_helpers.py:22
+msgid "Imprint"
+msgstr "Etichetta"
+
+#: comicsdb/forms/series.py:42 comicsdb/models/series.py:52
+msgid "Alternative Names"
+msgstr "Nomi Alternativi"
+
+#: comicsdb/forms/series.py:43
+msgid "Separate multiple alternative names by a semicolon"
+msgstr "Separa più nomi alternativi con un punto e virgola"
+
+#: comicsdb/forms/series.py:72
+msgid ""
+"This is <strong>not</strong> the year the series began. If you have a question, "
+"contact the site administrator."
+msgstr ""
+"Questo <strong>non</strong> è l'anno in cui la serie è iniziata. In caso di domande, "
+"contatta l'amministratore del sito."
+
+#: comicsdb/forms/series.py:76
+msgid ""
+"Most of the time it will be the same as the series name, but if the title starts with "
+"an article like 'The' it might be remove so that it is listed with like named series."
+msgstr ""
+"Nella maggior parte dei casi sarà uguale al nome della serie, ma se il titolo inizia "
+"con un articolo come 'The' potrebbe essere rimosso in modo che sia elencato insieme a "
+"serie con nomi simili."
+
+#: comicsdb/forms/series.py:80
+msgid "Leave blank if a One-Shot, Annual, or Ongoing Series."
+msgstr "Lascia vuoto se si tratta di un One-Shot, un Annual o una Serie in corso."
+
+#: comicsdb/forms/series.py:82
+msgid ""
+"Associate the series with another series. For example, an annual with it's primary "
+"series."
+msgstr ""
+"Associa la serie a un'altra serie. Ad esempio, un annual con la sua serie principale."
+
+#: comicsdb/forms/series.py:85
+msgid "Hold down “Control”, or “Command” on a Mac, to select more than one."
+msgstr "Tieni premuto “Control”, o “Command” su Mac, per selezionarne più di uno."
+
+#: comicsdb/forms/series.py:87
+msgid ""
+"Whether a series has a collection title. Normally this only applies to Trade "
+"Paperbacks. For example, the 2015 Deathstroke Trade Paperback which has a collection "
+"title of 'Gods of War'."
+msgstr ""
+"Indica se una serie ha un titolo di raccolta. Normalmente questo si applica solo ai "
+"Trade Paperback. Ad esempio, il Trade Paperback di Deathstroke del 2015 ha un titolo "
+"di raccolta 'Gods of War'."
+
+#: comicsdb/forms/series.py:93 comicsdb/templates/comicsdb/series_detail.html:388
+msgid "Associated Series"
+msgstr "Serie Associate"
+
+#: comicsdb/forms/series.py:93
+msgid "Allow collection title?"
+msgstr "Consenti titolo della raccolta?"
+
+#: comicsdb/forms/series.py:125
+msgid ""
+"Adding a Comic Vine ID  is not allowed for Trade Paperbacks, due to the consolidation "
+"work being done there."
+msgstr ""
+"L'aggiunta di un ID Comic Vine non è consentita per i Trade Paperback, a causa del "
+"lavoro di consolidamento in corso."
+
+#: comicsdb/forms/series.py:141
+msgid "Collections are not allowed to have an associated series."
+msgstr "Le raccolte non possono avere una serie associata."
+
+#: comicsdb/forms/universe.py:29 comicsdb/forms/universe.py:33
+msgid ""
+"Do not use a hyphen to separate text in this field. For example, <i>'Earth 2'</i> "
+"should <b>not</b> be <i>'Earth-2'</i>."
+msgstr ""
+"Non usare un trattino per separare il testo in questo campo. Ad esempio, <i>'Earth "
+"2'</i> <b>non</b> deve essere <i>'Earth-2'</i>."
+
+#: comicsdb/models/announcement.py:7 comicsdb/templates/comicsdb/issue_form.html:34
+#: comicsdb/templates/comicsdb/model_with_attribution_form.html:36
+msgid "Primary"
+msgstr "Primario"
+
+#: comicsdb/models/announcement.py:8
+msgid "Success"
+msgstr "Successo"
+
+#: comicsdb/models/announcement.py:9
+msgid "Link"
+msgstr "Link"
+
+#: comicsdb/models/announcement.py:10
+#: reading_lists/templates/reading_lists/readinglist_confirm_delete.html:15
+#: user_collection/templates/user_collection/collection_confirm_delete.html:15
+#: wish_list/templates/wish_list/wishlist_item_confirm_delete.html:15
+msgid "Warning"
+msgstr "Attenzione"
+
+#: comicsdb/models/announcement.py:11
+msgid "Danger"
+msgstr "Pericolo"
+
+#: comicsdb/models/attribution.py:9
+msgid "Marvel"
+msgstr "Marvel"
+
+#: comicsdb/models/attribution.py:10
+msgid "Wikipedia"
+msgstr "Wikipedia"
+
+#: comicsdb/models/attribution.py:11 comicsdb/templates/comicsdb/arc_detail.html:217
+#: comicsdb/templates/comicsdb/character_detail.html:309
+#: comicsdb/templates/comicsdb/creator_detail.html:256
+#: comicsdb/templates/comicsdb/imprint_detail.html:206
+#: comicsdb/templates/comicsdb/issue_detail.html:682
+#: comicsdb/templates/comicsdb/partials/issue_filter.html:385
+#: comicsdb/templates/comicsdb/publisher_detail.html:320
+#: comicsdb/templates/comicsdb/series_detail.html:362
+#: comicsdb/templates/comicsdb/team_detail.html:276
+#: comicsdb/templates/comicsdb/universe_detail.html:327
+msgid "Grand Comics Database"
+msgstr "Grand Comics Database"
+
+#: comicsdb/models/attribution.py:12
+msgid "DC"
+msgstr "DC"
+
+#: comicsdb/models/common.py:44 reading_lists/forms.py:69
+#: user_collection/templates/user_collection/collection_detail.html:84
+msgid "Description"
+msgstr "Descrizione"
+
+#: comicsdb/models/common.py:45
+#: comicsdb/templates/comicsdb/partials/issue_filter.html:366
+#: comicsdb/views/issue_list_helpers.py:73
+msgid "Comic Vine ID"
+msgstr "ID Comic Vine"
+
+#: comicsdb/models/common.py:46 comicsdb/views/issue_list_helpers.py:74
+msgid "GCD ID"
+msgstr "ID GCD"
+
+#: comicsdb/models/common.py:59
+msgid "Star rating (1-5)"
+msgstr "Valutazione a stelle (1-5)"
+
+#: comicsdb/models/credits.py:31 comicsdb/templates/comicsdb/issue_form.html:35
+#: comicsdb/templates/comicsdb/issue_form.html:97
+msgid "Credits"
+msgstr "Crediti"
+
 #: comicsdb/models/issue.py:60
+#: comicsdb/templates/comicsdb/partials/issue_filter.html:163
 msgid "Alternative Number"
 msgstr "Numero Alternativo"
 
@@ -139,6 +766,7 @@ msgid "Cover Price"
 msgstr "Prezzo di Copertina"
 
 #: comicsdb/models/issue.py:66
+#: comicsdb/templates/comicsdb/partials/issue_filter.html:348
 msgid "Distributor SKU"
 msgstr "SKU del Distributore"
 
@@ -147,6 +775,7 @@ msgid "ISBN"
 msgstr "ISBN"
 
 #: comicsdb/models/issue.py:68
+#: comicsdb/templates/comicsdb/partials/issue_filter.html:330
 msgid "UPC Code"
 msgstr "Codice UPC"
 
@@ -161,6 +790,2619 @@ msgstr "Copertina"
 #: comicsdb/models/issue.py:71
 msgid "Cover Hash"
 msgstr "Hash della Copertina"
+
+#: comicsdb/models/series.py:42
+msgid "Cancelled"
+msgstr "Annullata"
+
+#: comicsdb/models/series.py:43
+msgid "Completed"
+msgstr "Completata"
+
+#: comicsdb/models/series.py:44
+msgid "Hiatus"
+msgstr "In Pausa"
+
+#: comicsdb/models/series.py:45
+msgid "Ongoing"
+msgstr "In Corso"
+
+#: comicsdb/models/series.py:54
+msgid "Volume Number"
+msgstr "Numero Volume"
+
+#: comicsdb/models/series.py:55 comicsdb/views/series_list_helpers.py:24
+msgid "Year Began"
+msgstr "Anno di Inizio"
+
+#: comicsdb/models/series.py:56 comicsdb/views/series_list_helpers.py:27
+msgid "Year Ended"
+msgstr "Anno di Fine"
+
+#: comicsdb/models/series.py:64
+msgid "Allow Collection Title"
+msgstr "Consenti Titolo della Raccolta"
+
+#: comicsdb/models/series.py:67
+msgid ""
+"Whether a series has a collection title. Normally this only applies to Trade "
+"Paperbacks."
+msgstr ""
+"Indica se una serie ha un titolo di raccolta. Normalmente questo si applica solo ai "
+"Trade Paperback."
+
+#: comicsdb/models/series.py:120 comicsdb/templates/comicsdb/imprint_list.html:11
+#: comicsdb/templates/comicsdb/partials/issue_filter.html:57
+#: comicsdb/templates/comicsdb/publisher_list.html:11
+#: comicsdb/templates/comicsdb/series_list.html:11
+#: comicsdb/templates/comicsdb/series_list.html:30
+#: comicsdb/templates/comicsdb/series_list.html:66
+#: comicsdb/templates/comicsdb/statistics.html:32
+#: comicsdb/views/issue_list_helpers.py:59 pull_list/forms.py:20
+#: pull_list/templates/pull_list/pulllist_detail.html:47 reading_lists/forms.py:137
+#: reading_lists/templates/reading_lists/readinglist_detail.html:100
+#: templates/partials/navbar.html:74 user_collection/forms.py:132
+#: user_collection/templates/user_collection/collection_stats.html:226
+#: user_collection/templates/user_collection/missing_issues_list.html:40
+#: users/templates/users/customuser_detail.html:230
+#: wish_list/templates/wish_list/wishlist_detail.html:83
+msgid "Series"
+msgstr "Serie"
+
+#: comicsdb/templates/comicsdb/arc_detail.html:13
+msgid "Story arc navigation"
+msgstr "Navigazione arco narrativo"
+
+#: comicsdb/templates/comicsdb/arc_detail.html:18
+#, python-format
+msgid "Go to %(previous_arc)s"
+msgstr "Vai a %(previous_arc)s"
+
+#: comicsdb/templates/comicsdb/arc_detail.html:20
+#: comicsdb/templates/comicsdb/arc_detail.html:25
+msgid "Previous Arc"
+msgstr "Arco Precedente"
+
+#: comicsdb/templates/comicsdb/arc_detail.html:31
+#, python-format
+msgid "Go to %(next_arc)s"
+msgstr "Vai a %(next_arc)s"
+
+#: comicsdb/templates/comicsdb/arc_detail.html:32
+#: comicsdb/templates/comicsdb/arc_detail.html:37
+msgid "Next Arc"
+msgstr "Arco Successivo"
+
+#: comicsdb/templates/comicsdb/arc_detail.html:47
+#: comicsdb/templates/comicsdb/arc_list.html:13
+msgid "Add a new story arc"
+msgstr "Aggiungi un nuovo arco narrativo"
+
+#: comicsdb/templates/comicsdb/arc_detail.html:49
+#: comicsdb/templates/comicsdb/character_detail.html:50
+#: comicsdb/templates/comicsdb/creator_detail.html:50
+#: comicsdb/templates/comicsdb/imprint_detail.html:56
+#: comicsdb/templates/comicsdb/issue_detail.html:108
+#: comicsdb/templates/comicsdb/issue_list.html:52
+#: comicsdb/templates/comicsdb/partials/list_header.html:64
+#: comicsdb/templates/comicsdb/publisher_detail.html:56
+#: comicsdb/templates/comicsdb/series_detail.html:75
+#: comicsdb/templates/comicsdb/series_list.html:45
+#: comicsdb/templates/comicsdb/team_detail.html:50
+#: comicsdb/templates/comicsdb/universe_detail.html:50
+#: comicsdb/templates/comicsdb/week_list.html:57
+#: reading_lists/templates/reading_lists/add_issue_autocomplete.html:195
+msgid "New"
+msgstr "Nuovo"
+
+#: comicsdb/templates/comicsdb/arc_detail.html:57
+#: comicsdb/templates/comicsdb/character_detail.html:58
+#: comicsdb/templates/comicsdb/creator_detail.html:58
+#: comicsdb/templates/comicsdb/history_list.html:24
+#: comicsdb/templates/comicsdb/imprint_detail.html:64
+#: comicsdb/templates/comicsdb/issue_detail.html:162
+#: comicsdb/templates/comicsdb/publisher_detail.html:64
+#: comicsdb/templates/comicsdb/series_detail.html:83
+#: comicsdb/templates/comicsdb/team_detail.html:58
+#: comicsdb/templates/comicsdb/universe_detail.html:58
+#: user_collection/templates/user_collection/collection_list.html:70
+#: user_collection/templates/user_collection/missing_issues_list.html:45
+msgid "Actions"
+msgstr "Azioni"
+
+#: comicsdb/templates/comicsdb/arc_detail.html:66
+#: comicsdb/templates/comicsdb/character_detail.html:67
+#: comicsdb/templates/comicsdb/creator_detail.html:67
+#: comicsdb/templates/comicsdb/imprint_detail.html:73
+#: comicsdb/templates/comicsdb/issue_detail.html:171
+#: comicsdb/templates/comicsdb/publisher_detail.html:73
+#: comicsdb/templates/comicsdb/series_detail.html:92
+#: comicsdb/templates/comicsdb/team_detail.html:67
+#: comicsdb/templates/comicsdb/universe_detail.html:67
+#: reading_lists/templates/reading_lists/readinglist_detail.html:173
+#: user_collection/templates/user_collection/collection_detail.html:27
+#: user_collection/templates/user_collection/collection_list.html:132
+#: wish_list/templates/wish_list/wishlist_detail.html:123
+msgid "Edit"
+msgstr "Modifica"
+
+#: comicsdb/templates/comicsdb/arc_detail.html:71
+#: comicsdb/templates/comicsdb/character_detail.html:72
+#: comicsdb/templates/comicsdb/creator_detail.html:72
+#: comicsdb/templates/comicsdb/imprint_detail.html:78
+#: comicsdb/templates/comicsdb/issue_detail.html:176
+#: comicsdb/templates/comicsdb/publisher_detail.html:78
+#: comicsdb/templates/comicsdb/series_detail.html:97
+#: comicsdb/templates/comicsdb/team_detail.html:72
+#: comicsdb/templates/comicsdb/universe_detail.html:72
+msgid "History"
+msgstr "Cronologia"
+
+#: comicsdb/templates/comicsdb/arc_detail.html:78
+#: comicsdb/templates/comicsdb/character_detail.html:79
+#: comicsdb/templates/comicsdb/creator_detail.html:79
+#: comicsdb/templates/comicsdb/imprint_detail.html:85
+#: comicsdb/templates/comicsdb/issue_detail.html:183
+#: comicsdb/templates/comicsdb/partials/attribution_formset.html:18
+#: comicsdb/templates/comicsdb/partials/credits_formset.html:18
+#: comicsdb/templates/comicsdb/partials/variants_formset.html:30
+#: comicsdb/templates/comicsdb/publisher_detail.html:85
+#: comicsdb/templates/comicsdb/series_detail.html:104
+#: comicsdb/templates/comicsdb/team_detail.html:79
+#: comicsdb/templates/comicsdb/universe_detail.html:79
+#: polls/templates/polls/poll_confirm_delete.html:20
+#: polls/templates/polls/poll_detail.html:38
+#: reading_lists/templates/reading_lists/readinglist_confirm_delete.html:32
+#: reading_lists/templates/reading_lists/readinglist_detail.html:177
+msgid "Delete"
+msgstr "Elimina"
+
+#: comicsdb/templates/comicsdb/arc_detail.html:112
+#, python-format
+msgid "No image for %(arc.name)s"
+msgstr "Nessuna immagine per %(arc.name)s"
+
+#: comicsdb/templates/comicsdb/arc_detail.html:122
+#: comicsdb/templates/comicsdb/character_detail.html:123
+#: comicsdb/templates/comicsdb/creator_detail.html:123
+#: comicsdb/templates/comicsdb/imprint_detail.html:129
+#: comicsdb/templates/comicsdb/issue_detail.html:299
+#: comicsdb/templates/comicsdb/publisher_detail.html:129
+#: comicsdb/templates/comicsdb/series_detail.html:150
+#: comicsdb/templates/comicsdb/team_detail.html:123
+#: comicsdb/templates/comicsdb/universe_detail.html:123
+msgid "Summary"
+msgstr "Riassunto"
+
+#: comicsdb/templates/comicsdb/arc_detail.html:126
+#: comicsdb/templates/comicsdb/character_detail.html:127
+#: comicsdb/templates/comicsdb/creator_detail.html:127
+#: comicsdb/templates/comicsdb/imprint_detail.html:133
+#: comicsdb/templates/comicsdb/publisher_detail.html:133
+#: comicsdb/templates/comicsdb/series_detail.html:154
+#: comicsdb/templates/comicsdb/team_detail.html:127
+#: comicsdb/templates/comicsdb/universe_detail.html:127
+msgid "No information available."
+msgstr "Nessuna informazione disponibile."
+
+#: comicsdb/templates/comicsdb/arc_detail.html:129
+#: comicsdb/templates/comicsdb/character_detail.html:130
+#: comicsdb/templates/comicsdb/creator_detail.html:130
+#: comicsdb/templates/comicsdb/imprint_detail.html:136
+#: comicsdb/templates/comicsdb/issue_detail.html:306
+#: comicsdb/templates/comicsdb/publisher_detail.html:136
+#: comicsdb/templates/comicsdb/series_detail.html:157
+#: comicsdb/templates/comicsdb/team_detail.html:130
+#: comicsdb/templates/comicsdb/universe_detail.html:130
+#, python-format
+msgid ""
+"Last edited on <time datetime=\"%(modified_time|date:'c')s\">%(modified_time)s</time> "
+"by"
+msgstr ""
+"Ultima modifica il <time datetime=\"%(modified_time|date:'c')s\">%(modified_time)s</"
+"time> di"
+
+#: comicsdb/templates/comicsdb/arc_detail.html:136
+#, python-format
+msgid "Issues (%(issue_count)s)"
+msgstr "Albi (%(issue_count)s)"
+
+#: comicsdb/templates/comicsdb/arc_detail.html:153
+#: comicsdb/templates/comicsdb/partials/arc_issue_items.html:17
+#: reading_lists/templates/reading_lists/partials/readinglist_item_list.html:14
+#: reading_lists/templates/reading_lists/readinglist_detail.html:232
+msgid "Load More Issues"
+msgstr "Carica Altri Albi"
+
+#: comicsdb/templates/comicsdb/arc_detail.html:173
+msgid "Story Arc Details"
+msgstr "Dettagli Arco Narrativo"
+
+#: comicsdb/templates/comicsdb/arc_detail.html:175
+#: comicsdb/templates/comicsdb/character_detail.html:190
+#: comicsdb/templates/comicsdb/creator_detail.html:202
+#: comicsdb/templates/comicsdb/series_detail.html:292
+#: comicsdb/templates/comicsdb/team_detail.html:196
+#: comicsdb/templates/comicsdb/universe_detail.html:297
+msgid "Number of Issues:"
+msgstr "Numero di Albi:"
+
+#: comicsdb/templates/comicsdb/arc_detail.html:183
+#: comicsdb/templates/comicsdb/character_detail.html:275
+#: comicsdb/templates/comicsdb/creator_detail.html:222
+#: comicsdb/templates/comicsdb/imprint_detail.html:172
+#: comicsdb/templates/comicsdb/issue_detail.html:648
+#: comicsdb/templates/comicsdb/publisher_detail.html:286
+#: comicsdb/templates/comicsdb/series_detail.html:328
+#: comicsdb/templates/comicsdb/team_detail.html:242
+#: comicsdb/templates/comicsdb/universe_detail.html:312
+msgid "Identification Numbers"
+msgstr "Numeri di Identificazione"
+
+#: comicsdb/templates/comicsdb/arc_detail.html:185
+#: comicsdb/templates/comicsdb/character_detail.html:277
+#: comicsdb/templates/comicsdb/creator_detail.html:224
+#: comicsdb/templates/comicsdb/imprint_detail.html:174
+#: comicsdb/templates/comicsdb/issue_detail.html:650
+#: comicsdb/templates/comicsdb/publisher_detail.html:288
+#: comicsdb/templates/comicsdb/series_detail.html:330
+#: comicsdb/templates/comicsdb/team_detail.html:244
+#: comicsdb/templates/comicsdb/universe_detail.html:314
+msgid "Metron:"
+msgstr "Metron:"
+
+#: comicsdb/templates/comicsdb/arc_detail.html:191
+#: comicsdb/templates/comicsdb/arc_detail.html:192
+#: comicsdb/templates/comicsdb/character_detail.html:283
+#: comicsdb/templates/comicsdb/character_detail.html:284
+#: comicsdb/templates/comicsdb/creator_detail.html:230
+#: comicsdb/templates/comicsdb/creator_detail.html:231
+#: comicsdb/templates/comicsdb/imprint_detail.html:180
+#: comicsdb/templates/comicsdb/imprint_detail.html:181
+#: comicsdb/templates/comicsdb/issue_detail.html:656
+#: comicsdb/templates/comicsdb/issue_detail.html:657
+#: comicsdb/templates/comicsdb/publisher_detail.html:294
+#: comicsdb/templates/comicsdb/publisher_detail.html:295
+#: comicsdb/templates/comicsdb/series_detail.html:336
+#: comicsdb/templates/comicsdb/series_detail.html:337
+#: comicsdb/templates/comicsdb/team_detail.html:250
+#: comicsdb/templates/comicsdb/team_detail.html:251
+#: comicsdb/templates/comicsdb/universe_detail.html:320
+#: comicsdb/templates/comicsdb/universe_detail.html:321
+msgid "Copy Metron ID"
+msgstr "Copia ID Metron"
+
+#: comicsdb/templates/comicsdb/arc_detail.html:197
+#: comicsdb/templates/comicsdb/character_detail.html:289
+#: comicsdb/templates/comicsdb/creator_detail.html:236
+#: comicsdb/templates/comicsdb/imprint_detail.html:186
+#: comicsdb/templates/comicsdb/issue_detail.html:662
+#: comicsdb/templates/comicsdb/publisher_detail.html:300
+#: comicsdb/templates/comicsdb/series_detail.html:342
+#: comicsdb/templates/comicsdb/team_detail.html:256
+msgid "Comic Vine:"
+msgstr "Comic Vine:"
+
+#: comicsdb/templates/comicsdb/arc_detail.html:209
+#: comicsdb/templates/comicsdb/arc_detail.html:210
+#: comicsdb/templates/comicsdb/character_detail.html:301
+#: comicsdb/templates/comicsdb/character_detail.html:302
+#: comicsdb/templates/comicsdb/creator_detail.html:248
+#: comicsdb/templates/comicsdb/creator_detail.html:249
+#: comicsdb/templates/comicsdb/imprint_detail.html:198
+#: comicsdb/templates/comicsdb/imprint_detail.html:199
+#: comicsdb/templates/comicsdb/issue_detail.html:674
+#: comicsdb/templates/comicsdb/issue_detail.html:675
+#: comicsdb/templates/comicsdb/publisher_detail.html:312
+#: comicsdb/templates/comicsdb/publisher_detail.html:313
+#: comicsdb/templates/comicsdb/series_detail.html:354
+#: comicsdb/templates/comicsdb/series_detail.html:355
+#: comicsdb/templates/comicsdb/team_detail.html:268
+#: comicsdb/templates/comicsdb/team_detail.html:269
+msgid "Copy Comic Vine ID"
+msgstr "Copia ID Comic Vine"
+
+#: comicsdb/templates/comicsdb/arc_detail.html:230
+#: comicsdb/templates/comicsdb/arc_detail.html:231
+#: comicsdb/templates/comicsdb/character_detail.html:322
+#: comicsdb/templates/comicsdb/character_detail.html:323
+#: comicsdb/templates/comicsdb/creator_detail.html:269
+#: comicsdb/templates/comicsdb/creator_detail.html:270
+#: comicsdb/templates/comicsdb/imprint_detail.html:219
+#: comicsdb/templates/comicsdb/imprint_detail.html:220
+#: comicsdb/templates/comicsdb/issue_detail.html:695
+#: comicsdb/templates/comicsdb/issue_detail.html:696
+#: comicsdb/templates/comicsdb/publisher_detail.html:333
+#: comicsdb/templates/comicsdb/publisher_detail.html:334
+#: comicsdb/templates/comicsdb/series_detail.html:375
+#: comicsdb/templates/comicsdb/series_detail.html:376
+#: comicsdb/templates/comicsdb/team_detail.html:289
+#: comicsdb/templates/comicsdb/team_detail.html:290
+#: comicsdb/templates/comicsdb/universe_detail.html:340
+#: comicsdb/templates/comicsdb/universe_detail.html:341
+msgid "Copy GCD ID"
+msgstr "Copia ID GCD"
+
+#: comicsdb/templates/comicsdb/arc_list.html:3
+msgid "Story Arcs - Metron"
+msgstr "Archi Narrativi - Metron"
+
+#: comicsdb/templates/comicsdb/arc_list.html:6
+msgid "Story Arcs List"
+msgstr "Elenco Archi Narrativi"
+
+#: comicsdb/templates/comicsdb/arc_list.html:8
+#: comicsdb/templates/comicsdb/issue_detail.html:632 reading_lists/forms.py:204
+msgid "Story Arc"
+msgstr "Arco Narrativo"
+
+#: comicsdb/templates/comicsdb/arc_list.html:9
+#: comicsdb/templates/comicsdb/issue_detail.html:630
+#: comicsdb/templates/comicsdb/statistics.html:62 templates/partials/navbar.html:106
+msgid "Story Arcs"
+msgstr "Archi Narrativi"
+
+#: comicsdb/templates/comicsdb/arc_list.html:10
+msgid "Find an arc"
+msgstr "Cerca un arco narrativo"
+
+#: comicsdb/templates/comicsdb/arc_list.html:11
+#: comicsdb/templates/comicsdb/character_list.html:11
+#: comicsdb/templates/comicsdb/creator_list.html:11
+#: comicsdb/templates/comicsdb/issue_list.html:73
+#: comicsdb/templates/comicsdb/team_list.html:11
+#: comicsdb/templates/comicsdb/universe_list.html:11
+#: pull_list/templates/pull_list/pulllist_detail.html:91
+#: user_collection/templates/user_collection/collection_list.html:62
+#: user_collection/templates/user_collection/missing_issues_detail.html:79
+#: wish_list/templates/wish_list/wishlist_detail.html:82
+msgid "Issue"
+msgstr "Albo"
+
+#: comicsdb/templates/comicsdb/arc_list.html:12
+#: comicsdb/templates/comicsdb/character_list.html:12
+#: comicsdb/templates/comicsdb/creator_list.html:12
+#: comicsdb/templates/comicsdb/issue_list.html:12
+#: comicsdb/templates/comicsdb/issue_list.html:74
+#: comicsdb/templates/comicsdb/statistics.html:38
+#: comicsdb/templates/comicsdb/team_list.html:12
+#: comicsdb/templates/comicsdb/universe_list.html:12
+#: reading_lists/templates/reading_lists/readinglist_detail.html:84
+#: templates/partials/navbar.html:80
+#: user_collection/templates/user_collection/collection_stats.html:227
+#: users/templates/users/customuser_detail.html:241
+msgid "Issues"
+msgstr "Albi"
+
+#: comicsdb/templates/comicsdb/attribution.html:8
+#: comicsdb/templates/comicsdb/issue_form.html:37
+#: comicsdb/templates/comicsdb/issue_form.html:107
+#: comicsdb/templates/comicsdb/model_with_attribution_form.html:37
+#: comicsdb/templates/comicsdb/model_with_attribution_form.html:51
+#: reading_lists/views.py:48
+msgid "Attribution"
+msgstr "Attribuzione"
+
+#: comicsdb/templates/comicsdb/attribution.html:13
+#, python-format
+msgid ""
+"This article uses material from <a href=\"%(url)s\" target=\"_blank\" rel=\"noopener "
+"noreferrer\">Wikipedia</a>, which is released under the <a href=\"https://"
+"creativecommons.org/licenses/by-sa/3.0/\" target=\"_blank\" rel=\"noopener "
+"noreferrer\">Creative Commons Attribution-Share-Alike License 3.0</a>."
+msgstr ""
+"Questo articolo utilizza materiale tratto da <a href=\"%(url)s\" target=\"_blank\" "
+"rel=\"noopener noreferrer\">Wikipedia</a>, rilasciato sotto la <a href=\"https://"
+"creativecommons.org/licenses/by-sa/3.0/\" target=\"_blank\" rel=\"noopener "
+"noreferrer\">licenza Creative Commons Attribuzione-Condividi allo stesso modo 3.0</a>."
+
+#: comicsdb/templates/comicsdb/attribution.html:17
+#, python-format
+msgid ""
+"Some data provided by <a href=\"%(url)s\" target=\"_blank\" rel=\"noopener "
+"noreferrer\">Marvel</a>."
+msgstr ""
+"Alcuni dati forniti da <a href=\"%(url)s\" target=\"_blank\" rel=\"noopener "
+"noreferrer\">Marvel</a>."
+
+#: comicsdb/templates/comicsdb/attribution.html:22
+#, python-format
+msgid ""
+"This article uses material from the <a href=\"%(url)s\" target=\"_blank\" "
+"rel=\"noopener noreferrer\">Grand Comics Database&#8482;</a>, which is released under "
+"the <a href=\"https://creativecommons.org/licenses/by-sa/4.0/\" target=\"_blank\" "
+"rel=\"noopener noreferrer\">Creative Commons Attribution-ShareAlike 4.0 International "
+"License (CC BY-SA 4.0)</a>."
+msgstr ""
+"Questo articolo utilizza materiale tratto dal <a href=\"%(url)s\" target=\"_blank\" "
+"rel=\"noopener noreferrer\">Grand Comics Database&#8482;</a>, rilasciato sotto la <a "
+"href=\"https://creativecommons.org/licenses/by-sa/4.0/\" target=\"_blank\" "
+"rel=\"noopener noreferrer\">licenza Creative Commons Attribuzione-Condividi allo "
+"stesso modo 4.0 Internazionale (CC BY-SA 4.0)</a>."
+
+#: comicsdb/templates/comicsdb/attribution.html:26
+#, python-format
+msgid ""
+"Some data provided by <a href=\"%(url)s\" target=\"_blank\" rel=\"noopener "
+"noreferrer\">DC</a>."
+msgstr ""
+"Alcuni dati forniti da <a href=\"%(url)s\" target=\"_blank\" rel=\"noopener "
+"noreferrer\">DC</a>."
+
+#: comicsdb/templates/comicsdb/attribution.html:32
+#, python-format
+msgid ""
+"Data provided by <a href=\"%(url)s\" target=\"_blank\" rel=\"noopener "
+"noreferrer\">external source</a>."
+msgstr ""
+"Dati forniti da <a href=\"%(url)s\" target=\"_blank\" rel=\"noopener "
+"noreferrer\">fonte esterna</a>."
+
+#: comicsdb/templates/comicsdb/character_detail.html:14
+msgid "Character navigation"
+msgstr "Navigazione personaggio"
+
+#: comicsdb/templates/comicsdb/character_detail.html:19
+#, python-format
+msgid "Go to %(previous_character)s"
+msgstr "Vai a %(previous_character)s"
+
+#: comicsdb/templates/comicsdb/character_detail.html:21
+#: comicsdb/templates/comicsdb/character_detail.html:26
+msgid "Previous Character"
+msgstr "Personaggio Precedente"
+
+#: comicsdb/templates/comicsdb/character_detail.html:32
+#, python-format
+msgid "Go to %(next_character)s"
+msgstr "Vai a %(next_character)s"
+
+#: comicsdb/templates/comicsdb/character_detail.html:33
+#: comicsdb/templates/comicsdb/character_detail.html:38
+msgid "Next Character"
+msgstr "Personaggio Successivo"
+
+#: comicsdb/templates/comicsdb/character_detail.html:48
+#: comicsdb/templates/comicsdb/character_list.html:13
+msgid "Add a new character"
+msgstr "Aggiungi un nuovo personaggio"
+
+#: comicsdb/templates/comicsdb/character_detail.html:113
+#, python-format
+msgid "No image for %(character.name)s"
+msgstr "Nessuna immagine per %(character.name)s"
+
+#: comicsdb/templates/comicsdb/character_detail.html:137
+#: comicsdb/templates/comicsdb/universe_detail.html:239
+#, python-format
+msgid "Series Appearances (%(series_count)s)"
+msgstr "Apparizioni in Serie (%(series_count)s)"
+
+#: comicsdb/templates/comicsdb/character_detail.html:151
+#: comicsdb/templates/comicsdb/creator_detail.html:151
+#: comicsdb/templates/comicsdb/partials/character_series_items.html:13
+#: comicsdb/templates/comicsdb/partials/creator_series_items.html:13
+#: comicsdb/templates/comicsdb/partials/universe_series_items.html:13
+#: comicsdb/templates/comicsdb/universe_detail.html:253 user_collection/models.py:48
+#: user_collection/templates/user_collection/collection_stats.html:201
+msgid "Digital"
+msgstr "Digitale"
+
+#: comicsdb/templates/comicsdb/character_detail.html:156
+#: comicsdb/templates/comicsdb/creator_detail.html:156
+#: comicsdb/templates/comicsdb/partials/character_series_items.html:18
+#: comicsdb/templates/comicsdb/partials/creator_series_items.html:18
+#: comicsdb/templates/comicsdb/partials/universe_series_items.html:18
+#: comicsdb/templates/comicsdb/series_detail.html:193
+#: comicsdb/templates/comicsdb/series_detail.html:235
+#: comicsdb/templates/comicsdb/universe_detail.html:258
+#: reading_lists/templates/reading_lists/partials/readinglist_card.html:25
+#: reading_lists/templates/reading_lists/readinglist_detail.html:333
+#: reading_lists/templates/reading_lists/readinglist_detail.html:381
+#, python-format
+msgid "%(counter)s issue"
+msgid_plural "%(counter)s issues"
+msgstr[0] "%(counter)s albo"
+msgstr[1] "%(counter)s albi"
+
+#: comicsdb/templates/comicsdb/character_detail.html:168
+#: comicsdb/templates/comicsdb/creator_detail.html:168
+#: comicsdb/templates/comicsdb/partials/character_series_items.html:31
+#: comicsdb/templates/comicsdb/partials/creator_series_items.html:31
+#: comicsdb/templates/comicsdb/partials/universe_series_items.html:31
+#: comicsdb/templates/comicsdb/universe_detail.html:270
+msgid "Load More Series"
+msgstr "Carica Altre Serie"
+
+#: comicsdb/templates/comicsdb/character_detail.html:188
+msgid "Character Details"
+msgstr "Dettagli Personaggio"
+
+#: comicsdb/templates/comicsdb/character_detail.html:196
+#: comicsdb/templates/comicsdb/universe_detail.html:302
+msgid "First Appearance:"
+msgstr "Prima Apparizione:"
+
+#: comicsdb/templates/comicsdb/character_detail.html:205
+#: comicsdb/templates/comicsdb/creator_detail.html:209
+msgid "Aliases:"
+msgstr "Alias:"
+
+#: comicsdb/templates/comicsdb/character_detail.html:207
+#: comicsdb/templates/comicsdb/creator_detail.html:211
+msgid "Alias:"
+msgstr "Alias:"
+
+#: comicsdb/templates/comicsdb/character_detail.html:220
+#: comicsdb/templates/comicsdb/creator_list.html:9
+#: comicsdb/templates/comicsdb/statistics.html:50
+#: comicsdb/templates/comicsdb/team_detail.html:206 templates/partials/navbar.html:87
+#: users/templates/users/customuser_detail.html:263
+msgid "Creators"
+msgstr "Autori"
+
+#: comicsdb/templates/comicsdb/character_detail.html:222
+#: comicsdb/templates/comicsdb/creator_list.html:8
+#: comicsdb/templates/comicsdb/partials/credits_formset.html:16
+#: comicsdb/templates/comicsdb/team_detail.html:208 reading_lists/models.py:62
+#: reading_lists/templates/reading_lists/partials/readinglist_filter.html:71
+#: reading_lists/views.py:45
+msgid "Creator"
+msgstr "Autore"
+
+#: comicsdb/templates/comicsdb/character_detail.html:239
+#: comicsdb/templates/comicsdb/statistics.html:56
+#: comicsdb/templates/comicsdb/team_list.html:9 reading_lists/models.py:66
+#: templates/partials/navbar.html:99 users/templates/users/customuser_detail.html:274
+msgid "Teams"
+msgstr "Squadre"
+
+#: comicsdb/templates/comicsdb/character_detail.html:241
+#: comicsdb/templates/comicsdb/team_list.html:8
+msgid "Team"
+msgstr "Squadra"
+
+#: comicsdb/templates/comicsdb/character_detail.html:258
+#: comicsdb/templates/comicsdb/team_detail.html:225
+#: comicsdb/templates/comicsdb/universe_list.html:9 templates/partials/navbar.html:112
+#: users/templates/users/customuser_detail.html:307
+msgid "Universes"
+msgstr "Universi"
+
+#: comicsdb/templates/comicsdb/character_detail.html:260
+#: comicsdb/templates/comicsdb/team_detail.html:227
+#: comicsdb/templates/comicsdb/universe_list.html:8
+msgid "Universe"
+msgstr "Universo"
+
+#: comicsdb/templates/comicsdb/character_list.html:3
+msgid "Characters - Metron"
+msgstr "Personaggi - Metron"
+
+#: comicsdb/templates/comicsdb/character_list.html:6
+msgid "Characters List"
+msgstr "Elenco Personaggi"
+
+#: comicsdb/templates/comicsdb/character_list.html:8
+msgid "Character"
+msgstr "Personaggio"
+
+#: comicsdb/templates/comicsdb/character_list.html:9
+#: comicsdb/templates/comicsdb/statistics.html:44 reading_lists/models.py:65
+#: templates/partials/navbar.html:93 users/templates/users/customuser_detail.html:252
+msgid "Characters"
+msgstr "Personaggi"
+
+#: comicsdb/templates/comicsdb/character_list.html:10
+msgid "Find a character"
+msgstr "Cerca un personaggio"
+
+#: comicsdb/templates/comicsdb/confirm_delete.html:4
+#: comicsdb/templates/comicsdb/confirm_delete.html:14
+msgid "Confirm Deletion"
+msgstr "Conferma Eliminazione"
+
+#: comicsdb/templates/comicsdb/confirm_delete.html:22
+msgid "Warning: This action cannot be undone"
+msgstr "Attenzione: questa azione non può essere annullata"
+
+#: comicsdb/templates/comicsdb/confirm_delete.html:26
+#, python-format
+msgid "Are you sure you want to permanently delete <strong>\"%(object)s\"</strong>?"
+msgstr "Sei sicuro di voler eliminare definitivamente <strong>\"%(object)s\"</strong>?"
+
+#: comicsdb/templates/comicsdb/confirm_delete.html:28
+msgid "This will remove all associated data and cannot be recovered."
+msgstr "Questo rimuoverà tutti i dati associati e non potrà essere recuperato."
+
+#: comicsdb/templates/comicsdb/confirm_delete.html:39
+msgid "Yes, Delete"
+msgstr "Sì, Elimina"
+
+#: comicsdb/templates/comicsdb/confirm_delete.html:45
+msgid "Cancel and return"
+msgstr "Annulla e torna indietro"
+
+#: comicsdb/templates/comicsdb/confirm_delete.html:49
+#: comicsdb/templates/comicsdb/issue_form.html:25
+#: comicsdb/templates/comicsdb/model_with_attribution_form.html:27
+#: polls/templates/polls/poll_confirm_delete.html:25
+#: pull_list/templates/pull_list/remove_series_confirm.html:27
+#: reading_lists/templates/reading_lists/add_issue_autocomplete.html:42
+#: reading_lists/templates/reading_lists/add_issues_from_arc.html:43
+#: reading_lists/templates/reading_lists/add_issues_from_series.html:76
+#: reading_lists/templates/reading_lists/partials/readinglist_item_edit.html:68
+#: reading_lists/templates/reading_lists/readinglist_confirm_assign_metron.html:29
+#: reading_lists/templates/reading_lists/readinglist_confirm_delete.html:29
+#: reading_lists/templates/reading_lists/readinglist_form.html:114
+#: reading_lists/templates/reading_lists/remove_issue_confirm.html:25
+#: user_collection/templates/user_collection/add_issues_from_series.html:82
+#: user_collection/templates/user_collection/collection_confirm_delete.html:31
+#: user_collection/templates/user_collection/collection_form.html:72
+#: user_collection/templates/user_collection/partials/read_dates_list.html:38
+#: users/templates/users/change_profile.html:120
+#: users/templates/users/delete_account.html:44
+#: wish_list/templates/wish_list/wishlist_acquire_form.html:37
+#: wish_list/templates/wish_list/wishlist_item_confirm_delete.html:26
+#: wish_list/templates/wish_list/wishlist_item_form.html:50
+msgid "Cancel"
+msgstr "Annulla"
+
+#: comicsdb/templates/comicsdb/confirm_delete.html:57
+msgid "Before you delete:"
+msgstr "Prima di eliminare:"
+
+#: comicsdb/templates/comicsdb/confirm_delete.html:59
+msgid "Make sure this is the correct item to delete"
+msgstr "Assicurati che questo sia l'elemento corretto da eliminare"
+
+#: comicsdb/templates/comicsdb/confirm_delete.html:60
+msgid "Consider if other records depend on this data"
+msgstr "Considera se altri record dipendono da questi dati"
+
+#: comicsdb/templates/comicsdb/confirm_delete.html:61
+msgid "This action is permanent and irreversible"
+msgstr "Questa azione è permanente e irreversibile"
+
+#: comicsdb/templates/comicsdb/creator_detail.html:14
+msgid "Creator navigation"
+msgstr "Navigazione autore"
+
+#: comicsdb/templates/comicsdb/creator_detail.html:19
+#, python-format
+msgid "Go to %(previous_creator)s"
+msgstr "Vai a %(previous_creator)s"
+
+#: comicsdb/templates/comicsdb/creator_detail.html:21
+#: comicsdb/templates/comicsdb/creator_detail.html:26
+msgid "Previous Creator"
+msgstr "Autore Precedente"
+
+#: comicsdb/templates/comicsdb/creator_detail.html:32
+#, python-format
+msgid "Go to %(next_creator)s"
+msgstr "Vai a %(next_creator)s"
+
+#: comicsdb/templates/comicsdb/creator_detail.html:33
+#: comicsdb/templates/comicsdb/creator_detail.html:38
+msgid "Next Creator"
+msgstr "Autore Successivo"
+
+#: comicsdb/templates/comicsdb/creator_detail.html:48
+#: comicsdb/templates/comicsdb/creator_list.html:13
+msgid "Add a new creator"
+msgstr "Aggiungi un nuovo autore"
+
+#: comicsdb/templates/comicsdb/creator_detail.html:113
+#, python-format
+msgid "No image for %(creator.name)s"
+msgstr "Nessuna immagine per %(creator.name)s"
+
+#: comicsdb/templates/comicsdb/creator_detail.html:137
+#, python-format
+msgid "Series (%(series_count)s)"
+msgstr "Serie (%(series_count)s)"
+
+#: comicsdb/templates/comicsdb/creator_detail.html:188
+msgid "Creator Details"
+msgstr "Dettagli Autore"
+
+#: comicsdb/templates/comicsdb/creator_detail.html:191
+msgid "Birth:"
+msgstr "Nascita:"
+
+#: comicsdb/templates/comicsdb/creator_detail.html:197
+msgid "Death:"
+msgstr "Morte:"
+
+#: comicsdb/templates/comicsdb/creator_list.html:3
+msgid "Creators - Metron"
+msgstr "Autori - Metron"
+
+#: comicsdb/templates/comicsdb/creator_list.html:6
+msgid "Creators List"
+msgstr "Elenco Autori"
+
+#: comicsdb/templates/comicsdb/creator_list.html:10
+msgid "Find a creator"
+msgstr "Cerca un autore"
+
+#: comicsdb/templates/comicsdb/history_list.html:4
+#, python-format
+msgid "Edit History - %(object)s"
+msgstr "Cronologia Modifiche - %(object)s"
+
+#: comicsdb/templates/comicsdb/history_list.html:9
+msgid "Edit History"
+msgstr "Cronologia Modifiche"
+
+#: comicsdb/templates/comicsdb/history_list.html:21
+msgid "Date"
+msgstr "Data"
+
+#: comicsdb/templates/comicsdb/history_list.html:22
+msgid "User"
+msgstr "Utente"
+
+#: comicsdb/templates/comicsdb/history_list.html:23
+msgid "Change Type"
+msgstr "Tipo di Modifica"
+
+#: comicsdb/templates/comicsdb/history_list.html:37 user_collection/views.py:212
+#: user_collection/views.py:229 user_collection/views.py:243
+msgid "Unknown"
+msgstr "Sconosciuto"
+
+#: comicsdb/templates/comicsdb/history_list.html:42
+#: users/templates/users/api_token.html:86
+msgid "Created"
+msgstr "Creato"
+
+#: comicsdb/templates/comicsdb/history_list.html:44
+msgid "Updated"
+msgstr "Aggiornato"
+
+#: comicsdb/templates/comicsdb/history_list.html:46
+msgid "Deleted"
+msgstr "Eliminato"
+
+#: comicsdb/templates/comicsdb/history_list.html:53
+msgid "View Changes"
+msgstr "Visualizza Modifiche"
+
+#: comicsdb/templates/comicsdb/history_list.html:61
+msgid "Changed Fields:"
+msgstr "Campi Modificati:"
+
+#: comicsdb/templates/comicsdb/history_list.html:83
+#, python-format
+msgid "No edit history available for this %(model_name)s."
+msgstr "Nessuna cronologia modifiche disponibile per %(model_name)s."
+
+#: comicsdb/templates/comicsdb/history_list.html:90
+#, python-format
+msgid "Back to %(model_name)s"
+msgstr "Torna a %(model_name)s"
+
+#: comicsdb/templates/comicsdb/home.html:8
+msgid ""
+"Metron is a community-based comic book database with a public REST API. Search and "
+"discover comic books with comprehensive metadata."
+msgstr ""
+"Metron è un database di fumetti gestito dalla community con un'API REST pubblica. "
+"Cerca e scopri fumetti con metadati completi."
+
+#: comicsdb/templates/comicsdb/home.html:15
+msgid "Metron - Comic Book Database"
+msgstr "Metron - Database di Fumetti"
+
+#: comicsdb/templates/comicsdb/home.html:25
+msgid "Dismiss announcement"
+msgstr "Ignora annuncio"
+
+#: comicsdb/templates/comicsdb/home.html:38 templates/partials/navbar.html:12
+msgid "Metron logo"
+msgstr "Logo Metron"
+
+#: comicsdb/templates/comicsdb/home.html:43
+msgid "Comic Book Database"
+msgstr "Database di Fumetti"
+
+#: comicsdb/templates/comicsdb/home.html:45
+msgid "Built by the community, for the community."
+msgstr "Costruito dalla community, per la community."
+
+#: comicsdb/templates/comicsdb/home.html:50
+msgid "Browse Comics"
+msgstr "Sfoglia i Fumetti"
+
+#: comicsdb/templates/comicsdb/home.html:54 comicsdb/templates/comicsdb/home.html:118
+#: comicsdb/templates/comicsdb/home.html:240
+msgid "Read the Wiki"
+msgstr "Leggi il Wiki"
+
+#: comicsdb/templates/comicsdb/home.html:58
+msgid "Sign Up Free"
+msgstr "Iscriviti Gratis"
+
+#: comicsdb/templates/comicsdb/home.html:70
+msgid "What is Metron?"
+msgstr "Cos'è Metron?"
+
+#: comicsdb/templates/comicsdb/home.html:72
+msgid ""
+"A community-built, open database for comic book metadata — free from corporate "
+"control."
+msgstr ""
+"Un database aperto per i metadati dei fumetti, costruito dalla community — libero dal "
+"controllo aziendale."
+
+#: comicsdb/templates/comicsdb/home.html:78
+msgid ""
+"<strong>Metron</strong> is a community-based site whose goal is to build an open "
+"database with a <a href=\"https://en.wikipedia.org/wiki/"
+"Representational_state_transfer\" target=\"_blank\" rel=\"noopener noreferrer\">REST</"
+"a> API for comic books."
+msgstr ""
+"<strong>Metron</strong> è un sito gestito dalla community il cui obiettivo è "
+"costruire un database aperto con un'API <a href=\"https://en.wikipedia.org/wiki/"
+"Representational_state_transfer\" target=\"_blank\" rel=\"noopener noreferrer\">REST</"
+"a> per i fumetti."
+
+#: comicsdb/templates/comicsdb/home.html:81
+msgid ""
+"Originally, when this project was created, the only comic book database that provided "
+"a REST API for users was <a href=\"https://comicvine.gamespot.com/\" "
+"target=\"_blank\" rel=\"noopener noreferrer\">Comic Vine</a>. Unfortunately, it's a "
+"corporately-owned service and the community that uses it has no control over the "
+"resources provided to maintain it or ensure its continued accessibility. This project "
+"was started to create an alternative."
+msgstr ""
+"Originariamente, quando questo progetto è stato creato, l'unico database di fumetti "
+"che forniva un'API REST agli utenti era <a href=\"https://comicvine.gamespot.com/\" "
+"target=\"_blank\" rel=\"noopener noreferrer\">Comic Vine</a>. Purtroppo, è un "
+"servizio di proprietà aziendale e la community che lo utilizza non ha alcun controllo "
+"sulle risorse fornite per mantenerlo o garantirne l'accessibilità continua. Questo "
+"progetto è nato per creare un'alternativa."
+
+#: comicsdb/templates/comicsdb/home.html:84
+msgid ""
+"<strong>Note:</strong> Recently, the <a href=\"https://www.comics.org/\" "
+"target=\"_blank\" rel=\"noopener noreferrer\">Grand Comics Database</a> created an <a "
+"href=\"https://github.com/GrandComicsDatabase/gcd-django/wiki/API\" target=\"_blank\" "
+"rel=\"noopener noreferrer\">API</a>, which you may wish to explore as an alternative."
+msgstr ""
+"<strong>Nota:</strong> Recentemente, il <a href=\"https://www.comics.org/\" "
+"target=\"_blank\" rel=\"noopener noreferrer\">Grand Comics Database</a> ha creato "
+"un'<a href=\"https://github.com/GrandComicsDatabase/gcd-django/wiki/API\" "
+"target=\"_blank\" rel=\"noopener noreferrer\">API</a>, che potresti voler esplorare "
+"come alternativa."
+
+#: comicsdb/templates/comicsdb/home.html:93
+msgid "What Metron Offers"
+msgstr "Cosa Offre Metron"
+
+#: comicsdb/templates/comicsdb/home.html:95
+msgid "Everything you need to discover, track, and organize your comic collection."
+msgstr ""
+"Tutto ciò di cui hai bisogno per scoprire, tracciare e organizzare la tua collezione "
+"di fumetti."
+
+#: comicsdb/templates/comicsdb/home.html:108
+msgid "REST API"
+msgstr "API REST"
+
+#: comicsdb/templates/comicsdb/home.html:111
+msgid ""
+"Access comic book metadata programmatically. Use the Python wrapper <a href=\"https://"
+"github.com/Metron-Project/mokkari\" target=\"_blank\" rel=\"noopener "
+"noreferrer\">Mokkari</a> to integrate Metron data into your projects with ease."
+msgstr ""
+"Accedi ai metadati dei fumetti in modo programmatico. Usa il wrapper Python <a "
+"href=\"https://github.com/Metron-Project/mokkari\" target=\"_blank\" rel=\"noopener "
+"noreferrer\">Mokkari</a> per integrare facilmente i dati di Metron nei tuoi progetti."
+
+#: comicsdb/templates/comicsdb/home.html:125
+msgid "Software"
+msgstr "Software"
+
+#: comicsdb/templates/comicsdb/home.html:138
+msgid "Collections"
+msgstr "Collezioni"
+
+#: comicsdb/templates/comicsdb/home.html:141
+msgid ""
+"Catalog and organize the comics you own. Track grades, purchase history, reading "
+"status, and personal ratings for your physical or digital library."
+msgstr ""
+"Cataloga e organizza i fumetti che possiedi. Tieni traccia di gradi, cronologia degli "
+"acquisti, stato di lettura e valutazioni personali per la tua libreria fisica o "
+"digitale."
+
+#: comicsdb/templates/comicsdb/home.html:148
+msgid "View Collection"
+msgstr "Visualizza Collezione"
+
+#: comicsdb/templates/comicsdb/home.html:161
+#: reading_lists/templates/reading_lists/readinglist_list.html:3
+#: reading_lists/templates/reading_lists/readinglist_list.html:6
+#: templates/partials/navbar.html:119
+msgid "Reading Lists"
+msgstr "Liste di Lettura"
+
+#: comicsdb/templates/comicsdb/home.html:164
+msgid ""
+"Create custom lists of issues to read, mark your progress, and share your reading "
+"order with others. Perfect for story arcs and event crossovers."
+msgstr ""
+"Crea liste personalizzate di albi da leggere, segna i tuoi progressi e condividi il "
+"tuo ordine di lettura con altri. Perfetto per archi narrativi e crossover di eventi."
+
+#: comicsdb/templates/comicsdb/home.html:171
+msgid "View Reading Lists"
+msgstr "Visualizza Liste di Lettura"
+
+#: comicsdb/templates/comicsdb/home.html:184 wish_list/models.py:23
+#: wish_list/templates/wish_list/partials/wish_list_button.html:11
+msgid "Wish List"
+msgstr "Lista dei Desideri"
+
+#: comicsdb/templates/comicsdb/home.html:187
+msgid ""
+"Keep track of issues you want to acquire. Never lose track of the comics you're "
+"hunting for while shopping or trading with other collectors."
+msgstr ""
+"Tieni traccia degli albi che vuoi acquisire. Non perdere mai di vista i fumetti che "
+"stai cercando mentre fai acquisti o scambi con altri collezionisti."
+
+#: comicsdb/templates/comicsdb/home.html:194
+msgid "View Wish List"
+msgstr "Visualizza Lista dei Desideri"
+
+#: comicsdb/templates/comicsdb/home.html:207 pull_list/models.py:27
+#: pull_list/templates/pull_list/partials/pull_list_button.html:11
+msgid "Pull List"
+msgstr "Pull List"
+
+#: comicsdb/templates/comicsdb/home.html:210
+msgid ""
+"Follow the series you love. Add ongoing titles to your pull list and get a "
+"consolidated view of everything you're currently collecting — so you never miss a new "
+"release."
+msgstr ""
+"Segui le serie che ami. Aggiungi titoli in corso alla tua pull list e ottieni una "
+"visione consolidata di tutto ciò che stai attualmente collezionando — così non ti "
+"perderai mai una nuova uscita."
+
+#: comicsdb/templates/comicsdb/home.html:217
+msgid "View Pull List"
+msgstr "Visualizza Pull List"
+
+#: comicsdb/templates/comicsdb/home.html:230
+msgid "Quick Scrobble"
+msgstr "Scrobble Rapido"
+
+#: comicsdb/templates/comicsdb/home.html:233
+msgid ""
+"Mark issues as read instantly via the API — great for comic servers and automation. "
+"Manage reading history programmatically at <code>/api/collection/</code>."
+msgstr ""
+"Segna gli albi come letti istantaneamente tramite l'API — ideale per server di "
+"fumetti e automazione. Gestisci la cronologia di lettura in modo programmatico su "
+"<code>/api/collection/</code>."
+
+#: comicsdb/templates/comicsdb/home.html:252
+msgid "Interactive Timeline"
+msgstr "Cronologia Interattiva"
+
+#: comicsdb/templates/comicsdb/home.html:261
+msgid ""
+"Discover the history of our community, and learn about the events that made our "
+"community what it is today."
+msgstr ""
+"Scopri la storia della nostra community e conosci gli eventi che l'hanno resa quello "
+"che è oggi."
+
+#: comicsdb/templates/comicsdb/home.html:265
+msgid "Check it out!"
+msgstr "Dai un'occhiata!"
+
+#: comicsdb/templates/comicsdb/home.html:276
+msgid "Get Involved"
+msgstr "Partecipa"
+
+#: comicsdb/templates/comicsdb/home.html:278
+msgid "Metron is a community project — everyone is welcome to contribute."
+msgstr "Metron è un progetto della community — tutti sono i benvenuti a contribuire."
+
+#: comicsdb/templates/comicsdb/home.html:289
+msgid "Add Comic Data"
+msgstr "Aggiungi Dati sui Fumetti"
+
+#: comicsdb/templates/comicsdb/home.html:293
+#, python-format
+msgid ""
+"Sign up for an account and help grow the database. Read the <a "
+"href=\"%(wiki_root_url)s\">Wiki</a> to learn the contribution guidelines before "
+"getting started."
+msgstr ""
+"Registra un account e aiuta a far crescere il database. Leggi il <a "
+"href=\"%(wiki_root_url)s\">Wiki</a> per conoscere le linee guida per contribuire "
+"prima di iniziare."
+
+#: comicsdb/templates/comicsdb/home.html:300 users/templates/registration/signup.html:69
+msgid "Create Account"
+msgstr "Crea Account"
+
+#: comicsdb/templates/comicsdb/home.html:311
+msgid "Contribute Code"
+msgstr "Contribuisci al Codice"
+
+#: comicsdb/templates/comicsdb/home.html:314
+msgid ""
+"Metron is built with <a href=\"https://www.djangoproject.com/\" target=\"_blank\" "
+"rel=\"noopener noreferrer\">Django</a>. Check out the source on <a href=\"https://"
+"github.com/Metron-Project/metron\" target=\"_blank\" rel=\"noopener "
+"noreferrer\">GitHub</a> and help improve the platform."
+msgstr ""
+"Metron è costruito con <a href=\"https://www.djangoproject.com/\" target=\"_blank\" "
+"rel=\"noopener noreferrer\">Django</a>. Consulta il codice sorgente su <a "
+"href=\"https://github.com/Metron-Project/metron\" target=\"_blank\" rel=\"noopener "
+"noreferrer\">GitHub</a> e aiuta a migliorare la piattaforma."
+
+#: comicsdb/templates/comicsdb/home.html:324
+msgid "View on GitHub"
+msgstr "Visualizza su GitHub"
+
+#: comicsdb/templates/comicsdb/home.html:335
+msgid "Support the Project"
+msgstr "Sostieni il Progetto"
+
+#: comicsdb/templates/comicsdb/home.html:338
+msgid ""
+"Help cover server and development costs by donating through <a href=\"https://"
+"opencollective.com/metron\" target=\"_blank\" rel=\"noopener "
+"noreferrer\">OpenCollective</a>. Every contribution helps keep Metron running."
+msgstr ""
+"Aiuta a coprire i costi del server e dello sviluppo donando tramite <a href=\"https://"
+"opencollective.com/metron\" target=\"_blank\" rel=\"noopener "
+"noreferrer\">OpenCollective</a>. Ogni contributo aiuta a mantenere Metron attivo."
+
+#: comicsdb/templates/comicsdb/home.html:348
+msgid "Donate"
+msgstr "Dona"
+
+#: comicsdb/templates/comicsdb/home.html:356
+msgid "Have Questions?"
+msgstr "Hai Domande?"
+
+#: comicsdb/templates/comicsdb/home.html:360
+msgid "Feel free to reach out through any of these channels:"
+msgstr "Sentiti libero di contattarci attraverso uno di questi canali:"
+
+#: comicsdb/templates/comicsdb/home.html:370 templates/partials/footer.html:32
+msgid "Matrix Chat"
+msgstr "Chat Matrix"
+
+#: comicsdb/templates/comicsdb/home.html:381 templates/partials/footer.html:44
+#: users/templates/registration/account_activation_sent.html:73
+msgid "GitHub Discussions"
+msgstr "Discussioni GitHub"
+
+#: comicsdb/templates/comicsdb/home.html:389
+msgid "Email Admin"
+msgstr "Email all'Amministratore"
+
+#: comicsdb/templates/comicsdb/imprint_detail.html:14
+msgid "Imprint navigation"
+msgstr "Navigazione etichetta"
+
+#: comicsdb/templates/comicsdb/imprint_detail.html:19
+#, python-format
+msgid "Go to %(previous_imprint)s"
+msgstr "Vai a %(previous_imprint)s"
+
+#: comicsdb/templates/comicsdb/imprint_detail.html:21
+#: comicsdb/templates/comicsdb/imprint_detail.html:26
+msgid "Previous Imprint"
+msgstr "Etichetta Precedente"
+
+#: comicsdb/templates/comicsdb/imprint_detail.html:32
+#, python-format
+msgid "Go to %(next_imprint)s"
+msgstr "Vai a %(next_imprint)s"
+
+#: comicsdb/templates/comicsdb/imprint_detail.html:33
+#: comicsdb/templates/comicsdb/imprint_detail.html:38
+msgid "Next Imprint"
+msgstr "Etichetta Successiva"
+
+#: comicsdb/templates/comicsdb/imprint_detail.html:47
+msgid "View series list for this imprint"
+msgstr "Visualizza elenco serie per questa etichetta"
+
+#: comicsdb/templates/comicsdb/imprint_detail.html:49
+#: comicsdb/templates/comicsdb/publisher_detail.html:49
+msgid "Series List"
+msgstr "Elenco Serie"
+
+#: comicsdb/templates/comicsdb/imprint_detail.html:54
+#: comicsdb/templates/comicsdb/imprint_list.html:12
+msgid "Add a new imprint"
+msgstr "Aggiungi una nuova etichetta"
+
+#: comicsdb/templates/comicsdb/imprint_detail.html:119
+#: comicsdb/templates/comicsdb/partials/publisher_imprint_items.html:21
+#: comicsdb/templates/comicsdb/publisher_detail.html:162
+#, python-format
+msgid "No image for %(imprint.name)s"
+msgstr "Nessuna immagine per %(imprint.name)s"
+
+#: comicsdb/templates/comicsdb/imprint_detail.html:150
+msgid "Imprint Details"
+msgstr "Dettagli Etichetta"
+
+#: comicsdb/templates/comicsdb/imprint_detail.html:152
+#: comicsdb/templates/comicsdb/series_detail.html:257
+#: comicsdb/templates/comicsdb/universe_detail.html:292
+#: user_collection/templates/user_collection/collection_detail.html:71
+#: user_collection/templates/user_collection/missing_issues_detail.html:35
+msgid "Publisher:"
+msgstr "Editore:"
+
+#: comicsdb/templates/comicsdb/imprint_detail.html:157
+#: comicsdb/templates/comicsdb/publisher_detail.html:267
+msgid "Founded:"
+msgstr "Fondata:"
+
+#: comicsdb/templates/comicsdb/imprint_detail.html:163
+#: comicsdb/templates/comicsdb/publisher_detail.html:277
+msgid "Number of Series:"
+msgstr "Numero di Serie:"
+
+#: comicsdb/templates/comicsdb/imprint_list.html:3
+msgid "Imprints - Metron"
+msgstr "Etichette - Metron"
+
+#: comicsdb/templates/comicsdb/imprint_list.html:6
+msgid "Imprints List"
+msgstr "Elenco Etichette"
+
+#: comicsdb/templates/comicsdb/imprint_list.html:9 templates/partials/navbar.html:68
+#: users/templates/users/customuser_detail.html:285
+msgid "Imprints"
+msgstr "Etichette"
+
+#: comicsdb/templates/comicsdb/imprint_list.html:10
+msgid "Find an imprint"
+msgstr "Cerca un'etichetta"
+
+#: comicsdb/templates/comicsdb/issue_detail.html:6
+#, python-format
+msgid "%(issue)s Information"
+msgstr "Informazioni su %(issue)s"
+
+#: comicsdb/templates/comicsdb/issue_detail.html:38 templates/registration/login.html:26
+#: templates/registration/password_reset_confirm.html:26
+#: user_collection/templates/user_collection/partials/read_dates_list.html:22
+#: users/templates/registration/password_change_form.html:26
+#: users/templates/registration/signup.html:30
+#: users/templates/users/change_profile.html:26
+#: users/templates/users/customuser_detail.html:486
+msgid "close"
+msgstr "chiudi"
+
+#: comicsdb/templates/comicsdb/issue_detail.html:52
+#, python-format
+msgid "Issue #%(issue_number)s"
+msgstr "Albo #%(issue_number)s"
+
+#: comicsdb/templates/comicsdb/issue_detail.html:71
+msgid "Issue navigation"
+msgstr "Navigazione albo"
+
+#: comicsdb/templates/comicsdb/issue_detail.html:76
+#, python-format
+msgid "Go to %(previous_issue)s"
+msgstr "Vai a %(previous_issue)s"
+
+#: comicsdb/templates/comicsdb/issue_detail.html:78
+#: comicsdb/templates/comicsdb/issue_detail.html:83
+msgid "Previous Issue"
+msgstr "Albo Precedente"
+
+#: comicsdb/templates/comicsdb/issue_detail.html:89
+#, python-format
+msgid "Go to %(next_issue)s"
+msgstr "Vai a %(next_issue)s"
+
+#: comicsdb/templates/comicsdb/issue_detail.html:90
+#: comicsdb/templates/comicsdb/issue_detail.html:95
+msgid "Next Issue"
+msgstr "Albo Successivo"
+
+#: comicsdb/templates/comicsdb/issue_detail.html:106
+#: comicsdb/templates/comicsdb/issue_list.html:47
+#: comicsdb/templates/comicsdb/issue_list.html:48
+#: comicsdb/templates/comicsdb/issue_list.html:75
+#: comicsdb/templates/comicsdb/week_list.html:52
+#: comicsdb/templates/comicsdb/week_list.html:53
+#: comicsdb/templates/comicsdb/week_list.html:93
+#: comicsdb/templates/comicsdb/week_list.html:94
+msgid "Add a new issue"
+msgstr "Aggiungi un nuovo albo"
+
+#: comicsdb/templates/comicsdb/issue_detail.html:118
+msgid "Duplicate credits from previous issue"
+msgstr "Duplica crediti dall'albo precedente"
+
+#: comicsdb/templates/comicsdb/issue_detail.html:120
+#: comicsdb/templates/comicsdb/issue_detail.html:129
+msgid "Duplicate Credits"
+msgstr "Duplica Crediti"
+
+#: comicsdb/templates/comicsdb/issue_detail.html:127
+msgid "No previous issue or credits already exist"
+msgstr "Nessun albo precedente o i crediti esistono già"
+
+#: comicsdb/templates/comicsdb/issue_detail.html:141
+msgid "Sync resources from reprints"
+msgstr "Sincronizza risorse dalle ristampe"
+
+#: comicsdb/templates/comicsdb/issue_detail.html:143
+#: comicsdb/templates/comicsdb/issue_detail.html:152
+msgid "Sync"
+msgstr "Sincronizza"
+
+#: comicsdb/templates/comicsdb/issue_detail.html:150
+msgid "No sync available"
+msgstr "Nessuna sincronizzazione disponibile"
+
+#: comicsdb/templates/comicsdb/issue_detail.html:210
+msgid "View larger cover image"
+msgstr "Visualizza immagine di copertina più grande"
+
+#: comicsdb/templates/comicsdb/issue_detail.html:221
+msgid "Main Cover"
+msgstr "Copertina Principale"
+
+#: comicsdb/templates/comicsdb/issue_detail.html:223
+msgid "Click to enlarge"
+msgstr "Clicca per ingrandire"
+
+#: comicsdb/templates/comicsdb/issue_detail.html:228
+#: reading_lists/templates/reading_lists/partials/readinglist_item.html:22
+#: reading_lists/templates/reading_lists/partials/readinglist_item_edit.html:22
+#, python-format
+msgid "No image for %(issue)s"
+msgstr "Nessuna immagine per %(issue)s"
+
+#: comicsdb/templates/comicsdb/issue_detail.html:251
+#, python-format
+msgid "No image for %(variant.name)s"
+msgstr "Nessuna immagine per %(variant.name)s"
+
+#: comicsdb/templates/comicsdb/issue_detail.html:261
+#, python-format
+msgid "Price: %(price)s"
+msgstr "Prezzo: %(price)s"
+
+#: comicsdb/templates/comicsdb/issue_detail.html:263
+#, python-format
+msgid "SKU: %(sku)s"
+msgstr "SKU: %(sku)s"
+
+#: comicsdb/templates/comicsdb/issue_detail.html:265
+#, python-format
+msgid "UPC: %(upc)s"
+msgstr "UPC: %(upc)s"
+
+#: comicsdb/templates/comicsdb/issue_detail.html:288
+msgid "Story Titles"
+msgstr "Titoli delle Storie"
+
+#: comicsdb/templates/comicsdb/issue_detail.html:303
+msgid "No summary available."
+msgstr "Nessun riassunto disponibile."
+
+#: comicsdb/templates/comicsdb/issue_detail.html:313
+#, python-format
+msgid "Credit (%(counter)s)"
+msgid_plural "Credits (%(counter)s)"
+msgstr[0] "Credito (%(counter)s)"
+msgstr[1] "Crediti (%(counter)s)"
+
+#: comicsdb/templates/comicsdb/issue_detail.html:332
+#: comicsdb/templates/comicsdb/partials/issue_credit_items.html:20
+#, python-format
+msgid "No image for %(credit.creator)s"
+msgstr "Nessuna immagine per %(credit.creator)s"
+
+#: comicsdb/templates/comicsdb/issue_detail.html:361
+#: comicsdb/templates/comicsdb/partials/issue_credit_items.html:50
+msgid "Load More Credits"
+msgstr "Carica Altri Crediti"
+
+#: comicsdb/templates/comicsdb/issue_detail.html:373
+#: comicsdb/templates/comicsdb/universe_detail.html:137
+#, python-format
+msgid "Character (%(counter)s)"
+msgid_plural "Characters (%(counter)s)"
+msgstr[0] "Personaggio (%(counter)s)"
+msgstr[1] "Personaggi (%(counter)s)"
+
+#: comicsdb/templates/comicsdb/issue_detail.html:392
+#: comicsdb/templates/comicsdb/partials/issue_character_items.html:20
+#: comicsdb/templates/comicsdb/partials/team_member_items.html:20
+#: comicsdb/templates/comicsdb/partials/universe_character_items.html:20
+#: comicsdb/templates/comicsdb/team_detail.html:156
+#: comicsdb/templates/comicsdb/universe_detail.html:156
+#, python-format
+msgid "No image for %(character)s"
+msgstr "Nessuna immagine per %(character)s"
+
+#: comicsdb/templates/comicsdb/issue_detail.html:411
+#: comicsdb/templates/comicsdb/partials/issue_character_items.html:40
+#: comicsdb/templates/comicsdb/partials/universe_character_items.html:40
+#: comicsdb/templates/comicsdb/universe_detail.html:176
+msgid "Load More Characters"
+msgstr "Carica Altri Personaggi"
+
+#: comicsdb/templates/comicsdb/issue_detail.html:423
+#: comicsdb/templates/comicsdb/universe_detail.html:188
+#, python-format
+msgid "Team (%(counter)s)"
+msgid_plural "Teams (%(counter)s)"
+msgstr[0] "Squadra (%(counter)s)"
+msgstr[1] "Squadre (%(counter)s)"
+
+#: comicsdb/templates/comicsdb/issue_detail.html:442
+#: comicsdb/templates/comicsdb/partials/issue_team_items.html:20
+#: comicsdb/templates/comicsdb/partials/universe_team_items.html:20
+#: comicsdb/templates/comicsdb/universe_detail.html:207
+#, python-format
+msgid "No image for %(team)s"
+msgstr "Nessuna immagine per %(team)s"
+
+#: comicsdb/templates/comicsdb/issue_detail.html:461
+#: comicsdb/templates/comicsdb/partials/issue_team_items.html:40
+#: comicsdb/templates/comicsdb/partials/universe_team_items.html:40
+#: comicsdb/templates/comicsdb/universe_detail.html:227
+msgid "Load More Teams"
+msgstr "Carica Altre Squadre"
+
+#: comicsdb/templates/comicsdb/issue_detail.html:473
+#: comicsdb/templates/comicsdb/publisher_detail.html:200
+#, python-format
+msgid "Universe (%(counter)s)"
+msgid_plural "Universes (%(counter)s)"
+msgstr[0] "Universo (%(counter)s)"
+msgstr[1] "Universi (%(counter)s)"
+
+#: comicsdb/templates/comicsdb/issue_detail.html:492
+#: comicsdb/templates/comicsdb/partials/issue_universe_items.html:20
+#, python-format
+msgid "No image for %(universe)s"
+msgstr "Nessuna immagine per %(universe)s"
+
+#: comicsdb/templates/comicsdb/issue_detail.html:511
+#: comicsdb/templates/comicsdb/partials/issue_universe_items.html:40
+#: comicsdb/templates/comicsdb/partials/publisher_universe_items.html:47
+#: comicsdb/templates/comicsdb/publisher_detail.html:245
+msgid "Load More Universes"
+msgstr "Carica Altri Universi"
+
+#: comicsdb/templates/comicsdb/issue_detail.html:524
+#, python-format
+msgid "Reprint (%(counter)s)"
+msgid_plural "Reprints (%(counter)s)"
+msgstr[0] "Ristampa (%(counter)s)"
+msgstr[1] "Ristampe (%(counter)s)"
+
+#: comicsdb/templates/comicsdb/issue_detail.html:530
+msgid "from"
+msgstr "da"
+
+#: comicsdb/templates/comicsdb/issue_detail.html:532
+msgid "in"
+msgstr "in"
+
+#: comicsdb/templates/comicsdb/issue_detail.html:553
+msgid "Issue Details"
+msgstr "Dettagli Albo"
+
+#: comicsdb/templates/comicsdb/issue_detail.html:555
+#: user_collection/templates/user_collection/collection_detail.html:67
+msgid "Series:"
+msgstr "Serie:"
+
+#: comicsdb/templates/comicsdb/issue_detail.html:559
+msgid "Number:"
+msgstr "Numero:"
+
+#: comicsdb/templates/comicsdb/issue_detail.html:564
+msgid "Alternative Number:"
+msgstr "Numero Alternativo:"
+
+#: comicsdb/templates/comicsdb/issue_detail.html:569
+#: user_collection/templates/user_collection/collection_detail.html:75
+msgid "Cover Date:"
+msgstr "Data di Copertina:"
+
+#: comicsdb/templates/comicsdb/issue_detail.html:574
+msgid "In Store Date:"
+msgstr "Data di Uscita:"
+
+#: comicsdb/templates/comicsdb/issue_detail.html:581
+msgid "Final Order Cutoff"
+msgstr "Scadenza Ordine Finale"
+
+#: comicsdb/templates/comicsdb/issue_detail.html:581
+msgid "Date:"
+msgstr "Data:"
+
+#: comicsdb/templates/comicsdb/issue_detail.html:591
+msgid "Cover Price:"
+msgstr "Prezzo di Copertina:"
+
+#: comicsdb/templates/comicsdb/issue_detail.html:597
+msgid "Page Count:"
+msgstr "Numero di Pagine:"
+
+#: comicsdb/templates/comicsdb/issue_detail.html:602
+#: user_collection/templates/user_collection/collection_detail.html:177
+msgid "Rating:"
+msgstr "Valutazione:"
+
+#: comicsdb/templates/comicsdb/issue_detail.html:607
+msgid "Distributor SKU:"
+msgstr "SKU Distributore:"
+
+#: comicsdb/templates/comicsdb/issue_detail.html:613
+msgid "ISBN:"
+msgstr "ISBN:"
+
+#: comicsdb/templates/comicsdb/issue_detail.html:619
+msgid "UPC:"
+msgstr "UPC:"
+
+#: comicsdb/templates/comicsdb/issue_form.html:5
+#: comicsdb/templates/comicsdb/issue_form.html:21
+msgid "Issue Form"
+msgstr "Modulo Albo"
+
+#: comicsdb/templates/comicsdb/issue_form.html:29
+msgid "Save Issue"
+msgstr "Salva Albo"
+
+#: comicsdb/templates/comicsdb/issue_form.html:33
+#: comicsdb/templates/comicsdb/model_with_attribution_form.html:35
+msgid "Form sections"
+msgstr "Sezioni del modulo"
+
+#: comicsdb/templates/comicsdb/issue_form.html:36
+msgid "Variants"
+msgstr "Varianti"
+
+#: comicsdb/templates/comicsdb/issue_form.html:42
+#: comicsdb/templates/comicsdb/model_with_attribution_form.html:42
+msgid "Primary Information"
+msgstr "Informazioni Principali"
+
+#: comicsdb/templates/comicsdb/issue_form.html:47
+msgid "Identity"
+msgstr "Identità"
+
+#: comicsdb/templates/comicsdb/issue_form.html:60
+msgid "Publication"
+msgstr "Pubblicazione"
+
+#: comicsdb/templates/comicsdb/issue_form.html:71
+#: comicsdb/templates/comicsdb/partials/issue_filter.html:325
+msgid "Codes & IDs"
+msgstr "Codici & ID"
+
+#: comicsdb/templates/comicsdb/issue_form.html:82
+msgid "Cover Image"
+msgstr "Immagine di Copertina"
+
+#: comicsdb/templates/comicsdb/issue_form.html:87
+msgid "Relationships"
+msgstr "Relazioni"
+
+#: comicsdb/templates/comicsdb/issue_form.html:102
+msgid "Variant Covers"
+msgstr "Copertine Varianti"
+
+#: comicsdb/templates/comicsdb/issue_list.html:6
+msgid "Issues - Metron"
+msgstr "Albi - Metron"
+
+#: comicsdb/templates/comicsdb/issue_list.html:27
+msgid "Issue list navigation"
+msgstr "Navigazione elenco albi"
+
+#: comicsdb/templates/comicsdb/issue_list.html:32
+#: comicsdb/templates/comicsdb/issue_list.html:34
+#, python-format
+msgid "<strong>%(counter_fmt)s</strong> Issue"
+msgid_plural "<strong>%(counter_fmt)s</strong> Issues"
+msgstr[0] "<strong>%(counter_fmt)s</strong> Albo"
+msgstr[1] "<strong>%(counter_fmt)s</strong> Albi"
+
+#: comicsdb/templates/comicsdb/issue_list.html:66
+#: comicsdb/templates/comicsdb/series_list.html:59
+#: comicsdb/templates/comicsdb/week_list.html:71
+#: reading_lists/templates/reading_lists/readinglist_list.html:72
+#: user_collection/templates/user_collection/collection_list.html:157
+msgid "No results found"
+msgstr "Nessun risultato trovato"
+
+#: comicsdb/templates/comicsdb/issue_list.html:67
+#: comicsdb/templates/comicsdb/series_list.html:60
+#: comicsdb/templates/comicsdb/week_list.html:72
+#: reading_lists/templates/reading_lists/readinglist_list.html:73
+#: user_collection/templates/user_collection/collection_list.html:158
+msgid "Try adjusting your search filters"
+msgstr "Prova a modificare i filtri di ricerca"
+
+#: comicsdb/templates/comicsdb/issue_list.html:70
+#: comicsdb/templates/comicsdb/series_list.html:63
+#: comicsdb/templates/comicsdb/week_list.html:75
+#: reading_lists/templates/reading_lists/readinglist_list.html:76
+#: user_collection/templates/user_collection/collection_list.html:162
+msgid "Clear All Filters"
+msgstr "Cancella Tutti i Filtri"
+
+#: comicsdb/templates/comicsdb/model_with_attribution_form.html:5
+#: comicsdb/templates/comicsdb/model_with_attribution_form.html:17
+msgid "Form"
+msgstr "Modulo"
+
+#: comicsdb/templates/comicsdb/model_with_attribution_form.html:31
+#: reading_lists/templates/reading_lists/partials/readinglist_item_edit.html:58
+msgid "Save"
+msgstr "Salva"
+
+#: comicsdb/templates/comicsdb/partials/active_filters.html:13
+msgid "Active filters:"
+msgstr "Filtri attivi:"
+
+#: comicsdb/templates/comicsdb/partials/active_filters.html:23
+#: comicsdb/templates/comicsdb/partials/active_filters.html:24
+#, python-format
+msgid "Remove %(chip_label)s filter"
+msgstr "Rimuovi filtro %(chip_label)s"
+
+#: comicsdb/templates/comicsdb/partials/active_filters.html:29
+msgid "Clear all"
+msgstr "Cancella tutto"
+
+#: comicsdb/templates/comicsdb/partials/attribution_formset.html:16
+#: reading_lists/forms.py:72
+msgid "Source"
+msgstr "Fonte"
+
+#: comicsdb/templates/comicsdb/partials/attribution_formset.html:17
+msgid "URL"
+msgstr "URL"
+
+#: comicsdb/templates/comicsdb/partials/attribution_formset.html:65
+#: comicsdb/templates/comicsdb/partials/credits_formset.html:63
+#: comicsdb/templates/comicsdb/partials/variants_formset.html:77
+msgid "Mark for deletion"
+msgstr "Contrassegna per l'eliminazione"
+
+#: comicsdb/templates/comicsdb/partials/attribution_formset.html:75
+#: comicsdb/templates/comicsdb/partials/attribution_formset_row.html:41
+#: comicsdb/templates/comicsdb/partials/credits_formset.html:73
+#: comicsdb/templates/comicsdb/partials/credits_formset_row.html:39
+#: comicsdb/templates/comicsdb/partials/variants_formset.html:87
+#: comicsdb/templates/comicsdb/partials/variants_formset_row.html:41
+msgid "Remove this row"
+msgstr "Rimuovi questa riga"
+
+#: comicsdb/templates/comicsdb/partials/attribution_formset.html:96
+msgid "Add another attribution"
+msgstr "Aggiungi un'altra attribuzione"
+
+#: comicsdb/templates/comicsdb/partials/card_grid.html:34
+#, python-format
+msgid "View details for %(item)s"
+msgstr "Visualizza dettagli per %(item)s"
+
+#: comicsdb/templates/comicsdb/partials/card_grid.html:57
+#, python-format
+msgid "No image available for %(item.name)s"
+msgstr "Nessuna immagine disponibile per %(item.name)s"
+
+#: comicsdb/templates/comicsdb/partials/card_grid_count.html:12
+#: comicsdb/templates/comicsdb/partials/card_grid_count.html:20
+#, python-format
+msgid "%(c)s %(label)s for %(item)s"
+msgstr "%(c)s %(label)s per %(item)s"
+
+#: comicsdb/templates/comicsdb/partials/card_grid_count.html:26
+#, python-format
+msgid "No %(count_label_plural)s"
+msgstr "Nessun %(count_label_plural)s"
+
+#: comicsdb/templates/comicsdb/partials/card_grid_count.html:26
+#, python-format
+msgid "0 %(count_label_plural)s"
+msgstr "0 %(count_label_plural)s"
+
+#: comicsdb/templates/comicsdb/partials/credits_formset.html:17
+msgid "Role"
+msgstr "Ruolo"
+
+#: comicsdb/templates/comicsdb/partials/credits_formset.html:94
+msgid "Add another creator credit"
+msgstr "Aggiungi un altro credito autore"
+
+#: comicsdb/templates/comicsdb/partials/empty_state.html:19
+#, python-format
+msgid "No %(item_type_plural)s Available"
+msgstr "Nessun %(item_type_plural)s Disponibile"
+
+#: comicsdb/templates/comicsdb/partials/empty_state.html:22
+#, python-format
+msgid "Get started by creating your first %(item_type_lower)s."
+msgstr "Inizia creando il tuo primo %(item_type_lower)s."
+
+#: comicsdb/templates/comicsdb/partials/empty_state.html:24
+#, python-format
+msgid "No %(item_type_plural)s have been added yet."
+msgstr "Non è ancora stato aggiunto nessun %(item_type_plural)s."
+
+#: comicsdb/templates/comicsdb/partials/empty_state.html:35
+#, python-format
+msgid "Create %(item_type)s"
+msgstr "Crea %(item_type)s"
+
+#: comicsdb/templates/comicsdb/partials/issue_card_grid.html:24
+#: comicsdb/views/issue_list_helpers.py:35
+msgid "Recently added"
+msgstr "Aggiunto di recente"
+
+#: comicsdb/templates/comicsdb/partials/issue_card_grid.html:24
+msgid "New!"
+msgstr "Nuovo!"
+
+#: comicsdb/templates/comicsdb/partials/issue_card_grid.html:34
+#: comicsdb/templates/comicsdb/partials/issue_card_grid.html:46
+#, python-format
+msgid "View details for %(issue)s"
+msgstr "Visualizza dettagli per %(issue)s"
+
+#: comicsdb/templates/comicsdb/partials/issue_card_grid.html:48
+#, python-format
+msgid "No image available for %(issue)s"
+msgstr "Nessuna immagine disponibile per %(issue)s"
+
+#: comicsdb/templates/comicsdb/partials/issue_filter.html:16
+msgid "Search Issues"
+msgstr "Cerca Albi"
+
+#: comicsdb/templates/comicsdb/partials/issue_filter.html:24
+#: comicsdb/templates/comicsdb/partials/series_filter.html:18
+#: reading_lists/templates/reading_lists/partials/readinglist_filter.html:18
+#: user_collection/templates/user_collection/partials/collection_filter.html:18
+msgid "Filters Active"
+msgstr "Filtri Attivi"
+
+#: comicsdb/templates/comicsdb/partials/issue_filter.html:30
+#: comicsdb/templates/comicsdb/partials/series_filter.html:24
+#: reading_lists/templates/reading_lists/partials/readinglist_filter.html:24
+#: user_collection/templates/user_collection/partials/collection_filter.html:24
+msgid "Quick Search"
+msgstr "Ricerca Rapida"
+
+#: comicsdb/templates/comicsdb/partials/issue_filter.html:37
+msgid "Search by series name..."
+msgstr "Cerca per nome della serie..."
+
+#: comicsdb/templates/comicsdb/partials/issue_filter.html:38
+#: comicsdb/templates/comicsdb/partials/series_filter.html:32
+#: reading_lists/templates/reading_lists/partials/readinglist_filter.html:32
+#: user_collection/templates/user_collection/partials/collection_filter.html:32
+msgid "Quick search"
+msgstr "Ricerca rapida"
+
+#: comicsdb/templates/comicsdb/partials/issue_filter.html:43
+msgid "Search series names (supports multi-word search)"
+msgstr "Cerca nomi delle serie (supporta la ricerca multi-parola)"
+
+#: comicsdb/templates/comicsdb/partials/issue_filter.html:52
+#: comicsdb/templates/comicsdb/partials/series_filter.html:46
+#: reading_lists/templates/reading_lists/partials/readinglist_filter.html:46
+#: user_collection/templates/user_collection/partials/collection_filter.html:46
+msgid "Advanced Filters"
+msgstr "Filtri Avanzati"
+
+#: comicsdb/templates/comicsdb/partials/issue_filter.html:62
+#: comicsdb/templates/comicsdb/partials/series_filter.html:53
+#: user_collection/templates/user_collection/partials/collection_filter.html:53
+msgid "Series Name"
+msgstr "Nome Serie"
+
+#: comicsdb/templates/comicsdb/partials/issue_filter.html:69
+#: comicsdb/templates/comicsdb/partials/series_filter.html:60
+#: user_collection/templates/user_collection/partials/collection_filter.html:60
+msgid "e.g., Amazing Spider-Man"
+msgstr "es. Amazing Spider-Man"
+
+#: comicsdb/templates/comicsdb/partials/issue_filter.html:70
+#: comicsdb/templates/comicsdb/partials/series_filter.html:61
+#: user_collection/templates/user_collection/partials/collection_filter.html:61
+msgid "Filter by series name"
+msgstr "Filtra per nome serie"
+
+#: comicsdb/templates/comicsdb/partials/issue_filter.html:80
+#: comicsdb/templates/comicsdb/partials/series_filter.html:89
+#: user_collection/templates/user_collection/partials/collection_filter.html:70
+msgid "Series Type"
+msgstr "Tipo di Serie"
+
+#: comicsdb/templates/comicsdb/partials/issue_filter.html:85
+#: comicsdb/templates/comicsdb/partials/series_filter.html:94
+#: user_collection/templates/user_collection/partials/collection_filter.html:75
+msgid "Filter by series type"
+msgstr "Filtra per tipo di serie"
+
+#: comicsdb/templates/comicsdb/partials/issue_filter.html:86
+#: comicsdb/templates/comicsdb/partials/series_filter.html:95
+#: reading_lists/templates/reading_lists/partials/readinglist_filter.html:111
+#: user_collection/templates/user_collection/partials/collection_filter.html:76
+msgid "All Types"
+msgstr "Tutti i Tipi"
+
+#: comicsdb/templates/comicsdb/partials/issue_filter.html:104
+msgid "Series Volume"
+msgstr "Volume della Serie"
+
+#: comicsdb/templates/comicsdb/partials/issue_filter.html:111
+#: comicsdb/templates/comicsdb/partials/issue_filter.html:152
+#: comicsdb/templates/comicsdb/partials/series_filter.html:191
+#: user_collection/templates/user_collection/partials/collection_filter.html:119
+msgid "e.g., 1"
+msgstr "es. 1"
+
+#: comicsdb/templates/comicsdb/partials/issue_filter.html:112
+msgid "Filter by series volume"
+msgstr "Filtra per volume della serie"
+
+#: comicsdb/templates/comicsdb/partials/issue_filter.html:129
+#: comicsdb/templates/comicsdb/partials/series_filter.html:120
+#: reading_lists/templates/reading_lists/partials/readinglist_filter.html:96
+#: user_collection/templates/user_collection/partials/collection_filter.html:101
+msgid "e.g., Marvel"
+msgstr "es. Marvel"
+
+#: comicsdb/templates/comicsdb/partials/issue_filter.html:130
+#: comicsdb/templates/comicsdb/partials/series_filter.html:121
+#: reading_lists/templates/reading_lists/partials/readinglist_filter.html:97
+#: user_collection/templates/user_collection/partials/collection_filter.html:102
+msgid "Filter by publisher"
+msgstr "Filtra per editore"
+
+#: comicsdb/templates/comicsdb/partials/issue_filter.html:140
+msgid "Issue Numbers"
+msgstr "Numeri degli Albi"
+
+#: comicsdb/templates/comicsdb/partials/issue_filter.html:145
+#: user_collection/templates/user_collection/partials/collection_filter.html:112
+msgid "Issue Number"
+msgstr "Numero Albo"
+
+#: comicsdb/templates/comicsdb/partials/issue_filter.html:153
+#: user_collection/templates/user_collection/partials/collection_filter.html:120
+msgid "Filter by issue number"
+msgstr "Filtra per numero albo"
+
+#: comicsdb/templates/comicsdb/partials/issue_filter.html:170
+msgid "e.g., 616"
+msgstr "es. 616"
+
+#: comicsdb/templates/comicsdb/partials/issue_filter.html:171
+msgid "Filter by alternative number"
+msgstr "Filtra per numero alternativo"
+
+#: comicsdb/templates/comicsdb/partials/issue_filter.html:181
+msgid "Dates"
+msgstr "Date"
+
+#: comicsdb/templates/comicsdb/partials/issue_filter.html:186
+msgid "Cover Year"
+msgstr "Anno di Copertina"
+
+#: comicsdb/templates/comicsdb/partials/issue_filter.html:189
+msgid "Filter by cover year"
+msgstr "Filtra per anno di copertina"
+
+#: comicsdb/templates/comicsdb/partials/issue_filter.html:190
+msgid "All Years"
+msgstr "Tutti gli Anni"
+
+#: comicsdb/templates/comicsdb/partials/issue_filter.html:218
+msgid "Cover Month"
+msgstr "Mese di Copertina"
+
+#: comicsdb/templates/comicsdb/partials/issue_filter.html:223
+msgid "Filter by cover month"
+msgstr "Filtra per mese di copertina"
+
+#: comicsdb/templates/comicsdb/partials/issue_filter.html:224
+msgid "All Months"
+msgstr "Tutti i Mesi"
+
+#: comicsdb/templates/comicsdb/partials/issue_filter.html:225
+#: comicsdb/views/issue_list_helpers.py:78
+msgid "January"
+msgstr "Gennaio"
+
+#: comicsdb/templates/comicsdb/partials/issue_filter.html:226
+#: comicsdb/views/issue_list_helpers.py:79
+msgid "February"
+msgstr "Febbraio"
+
+#: comicsdb/templates/comicsdb/partials/issue_filter.html:227
+#: comicsdb/views/issue_list_helpers.py:80
+msgid "March"
+msgstr "Marzo"
+
+#: comicsdb/templates/comicsdb/partials/issue_filter.html:228
+#: comicsdb/views/issue_list_helpers.py:81
+msgid "April"
+msgstr "Aprile"
+
+#: comicsdb/templates/comicsdb/partials/issue_filter.html:229
+#: comicsdb/views/issue_list_helpers.py:82
+msgid "May"
+msgstr "Maggio"
+
+#: comicsdb/templates/comicsdb/partials/issue_filter.html:230
+#: comicsdb/views/issue_list_helpers.py:83
+msgid "June"
+msgstr "Giugno"
+
+#: comicsdb/templates/comicsdb/partials/issue_filter.html:231
+#: comicsdb/views/issue_list_helpers.py:84
+msgid "July"
+msgstr "Luglio"
+
+#: comicsdb/templates/comicsdb/partials/issue_filter.html:232
+#: comicsdb/views/issue_list_helpers.py:85
+msgid "August"
+msgstr "Agosto"
+
+#: comicsdb/templates/comicsdb/partials/issue_filter.html:233
+#: comicsdb/views/issue_list_helpers.py:86
+msgid "September"
+msgstr "Settembre"
+
+#: comicsdb/templates/comicsdb/partials/issue_filter.html:236
+#: comicsdb/views/issue_list_helpers.py:87
+msgid "October"
+msgstr "Ottobre"
+
+#: comicsdb/templates/comicsdb/partials/issue_filter.html:240
+#: comicsdb/views/issue_list_helpers.py:88
+msgid "November"
+msgstr "Novembre"
+
+#: comicsdb/templates/comicsdb/partials/issue_filter.html:244
+#: comicsdb/views/issue_list_helpers.py:89
+msgid "December"
+msgstr "Dicembre"
+
+#: comicsdb/templates/comicsdb/partials/issue_filter.html:257
+msgid "Store Date From"
+msgstr "Data di Uscita Da"
+
+#: comicsdb/templates/comicsdb/partials/issue_filter.html:264
+msgid "Filter by store date from"
+msgstr "Filtra per data di uscita da"
+
+#: comicsdb/templates/comicsdb/partials/issue_filter.html:274
+msgid "Store Date To"
+msgstr "Data di Uscita A"
+
+#: comicsdb/templates/comicsdb/partials/issue_filter.html:281
+msgid "Filter by store date to"
+msgstr "Filtra per data di uscita a"
+
+#: comicsdb/templates/comicsdb/partials/issue_filter.html:291
+msgid "FOC Date From"
+msgstr "Data FOC Da"
+
+#: comicsdb/templates/comicsdb/partials/issue_filter.html:298
+msgid "Filter by FOC date from"
+msgstr "Filtra per data FOC da"
+
+#: comicsdb/templates/comicsdb/partials/issue_filter.html:308
+msgid "FOC Date To"
+msgstr "Data FOC A"
+
+#: comicsdb/templates/comicsdb/partials/issue_filter.html:315
+msgid "Filter by FOC date to"
+msgstr "Filtra per data FOC a"
+
+#: comicsdb/templates/comicsdb/partials/issue_filter.html:337
+msgid "e.g., 76194134186700111"
+msgstr "es. 76194134186700111"
+
+#: comicsdb/templates/comicsdb/partials/issue_filter.html:338
+msgid "Filter by UPC code"
+msgstr "Filtra per codice UPC"
+
+#: comicsdb/templates/comicsdb/partials/issue_filter.html:355
+msgid "e.g., JUN240001"
+msgstr "es. JUN240001"
+
+#: comicsdb/templates/comicsdb/partials/issue_filter.html:356
+msgid "Filter by distributor SKU"
+msgstr "Filtra per SKU distributore"
+
+#: comicsdb/templates/comicsdb/partials/issue_filter.html:373
+msgid "e.g., 12345"
+msgstr "es. 12345"
+
+#: comicsdb/templates/comicsdb/partials/issue_filter.html:374
+msgid "Filter by Comic Vine ID"
+msgstr "Filtra per ID Comic Vine"
+
+#: comicsdb/templates/comicsdb/partials/issue_filter.html:385
+msgid "ID"
+msgstr "ID"
+
+#: comicsdb/templates/comicsdb/partials/issue_filter.html:393
+msgid "e.g., 67890"
+msgstr "es. 67890"
+
+#: comicsdb/templates/comicsdb/partials/issue_filter.html:394
+msgid "Filter by GCD ID"
+msgstr "Filtra per ID GCD"
+
+#: comicsdb/templates/comicsdb/partials/issue_filter.html:410
+#: comicsdb/templates/comicsdb/partials/series_filter.html:230
+#: reading_lists/templates/reading_lists/partials/readinglist_filter.html:223
+#: user_collection/templates/user_collection/partials/collection_filter.html:246
+msgid "Apply Filters"
+msgstr "Applica Filtri"
+
+#: comicsdb/templates/comicsdb/partials/issue_filter.html:416
+#: comicsdb/templates/comicsdb/partials/series_filter.html:236
+#: reading_lists/templates/reading_lists/partials/readinglist_filter.html:229
+#: user_collection/templates/user_collection/partials/collection_filter.html:252
+msgid "Clear all filters"
+msgstr "Cancella tutti i filtri"
+
+#: comicsdb/templates/comicsdb/partials/issue_filter.html:420
+#: comicsdb/templates/comicsdb/partials/series_filter.html:240
+#: reading_lists/templates/reading_lists/partials/readinglist_filter.html:233
+#: user_collection/templates/user_collection/partials/collection_filter.html:256
+msgid "Clear Filters"
+msgstr "Cancella Filtri"
+
+#: comicsdb/templates/comicsdb/partials/issue_sort.html:12
+msgid "Sort issues"
+msgstr "Ordina albi"
+
+#: comicsdb/templates/comicsdb/partials/issue_sort.html:20
+#: comicsdb/templates/comicsdb/partials/issue_sort.html:36
+msgid "Sort"
+msgstr "Ordina"
+
+#: comicsdb/templates/comicsdb/partials/issue_sort.html:26
+msgid "Sort order"
+msgstr "Ordine"
+
+#: comicsdb/templates/comicsdb/partials/list_header.html:15
+#: comicsdb/templates/comicsdb/series_list.html:25
+#: users/templates/users/customuser_list.html:13
+msgid "List navigation and actions"
+msgstr "Navigazione ed azioni elenco"
+
+#: comicsdb/templates/comicsdb/partials/list_header.html:30
+#: comicsdb/templates/comicsdb/partials/list_header.html:33
+#, python-format
+msgid "Search %(title_plural)s"
+msgstr "Cerca %(title_plural)s"
+
+#: comicsdb/templates/comicsdb/partials/list_header.html:42
+#: comicsdb/templates/comicsdb/partials/list_header.html:46
+#: comicsdb/views/issue_list_helpers.py:58 comicsdb/views/series_list_helpers.py:16
+#: reading_lists/views.py:43 users/templates/users/customuser_list.html:37
+#: users/templates/users/customuser_list.html:41
+msgid "Search"
+msgstr "Cerca"
+
+#: comicsdb/templates/comicsdb/partials/pagination.html:20
+msgid "Go to previous page"
+msgstr "Vai alla pagina precedente"
+
+#: comicsdb/templates/comicsdb/partials/pagination.html:20
+#: comicsdb/templates/comicsdb/partials/pagination.html:25
+#: reading_lists/templates/reading_lists/readinglist_detail.html:132
+msgid "Previous"
+msgstr "Precedente"
+
+#: comicsdb/templates/comicsdb/partials/pagination.html:23
+msgid "This is the first page"
+msgstr "Questa è la prima pagina"
+
+#: comicsdb/templates/comicsdb/partials/pagination.html:31
+msgid "Go to next page"
+msgstr "Vai alla pagina successiva"
+
+#: comicsdb/templates/comicsdb/partials/pagination.html:31
+#: comicsdb/templates/comicsdb/partials/pagination.html:36
+msgid "Next page"
+msgstr "Pagina successiva"
+
+#: comicsdb/templates/comicsdb/partials/pagination.html:34
+msgid "This is the last page"
+msgstr "Questa è l'ultima pagina"
+
+#: comicsdb/templates/comicsdb/partials/pagination.html:50
+#, python-format
+msgid "Page %(page_num)s"
+msgstr "Pagina %(page_num)s"
+
+#: comicsdb/templates/comicsdb/partials/pagination.html:57
+#, python-format
+msgid "Go to page %(page_num)s"
+msgstr "Vai alla pagina %(page_num)s"
+
+#: comicsdb/templates/comicsdb/partials/publisher_imprint_items.html:31
+#: comicsdb/templates/comicsdb/publisher_detail.html:172
+#, python-format
+msgid "%(counter_fmt)s series"
+msgid_plural "%(counter_fmt)s series"
+msgstr[0] "%(counter_fmt)s serie"
+msgstr[1] "%(counter_fmt)s serie"
+
+#: comicsdb/templates/comicsdb/partials/publisher_imprint_items.html:47
+#: comicsdb/templates/comicsdb/publisher_detail.html:188
+msgid "Load More Imprints"
+msgstr "Carica Altre Etichette"
+
+#: comicsdb/templates/comicsdb/partials/publisher_universe_items.html:21
+#: comicsdb/templates/comicsdb/publisher_detail.html:219
+#: comicsdb/templates/comicsdb/universe_detail.html:113
+#, python-format
+msgid "No image for %(universe.name)s"
+msgstr "Nessuna immagine per %(universe.name)s"
+
+#: comicsdb/templates/comicsdb/partials/publisher_universe_items.html:31
+#: comicsdb/templates/comicsdb/partials/series_card_grid.html:55
+#: comicsdb/templates/comicsdb/publisher_detail.html:229
+#, python-format
+msgid "%(counter_fmt)s issue"
+msgid_plural "%(counter_fmt)s issues"
+msgstr[0] "%(counter_fmt)s albo"
+msgstr[1] "%(counter_fmt)s albi"
+
+#: comicsdb/templates/comicsdb/partials/series_card_grid.html:22
+#, python-format
+msgid "View details for %(series)s"
+msgstr "Visualizza dettagli per %(series)s"
+
+#: comicsdb/templates/comicsdb/partials/series_card_grid.html:34
+#, python-format
+msgid "No image available for %(series)s"
+msgstr "Nessuna immagine disponibile per %(series)s"
+
+#: comicsdb/templates/comicsdb/partials/series_card_grid.html:48
+#, python-format
+msgid "View publisher %(publisher)s"
+msgstr "Visualizza editore %(publisher)s"
+
+#: comicsdb/templates/comicsdb/partials/series_card_grid.html:54
+#, python-format
+msgid "%(counter_fmt)s issue for %(series)s"
+msgid_plural "%(counter_fmt)s issues for %(series)s"
+msgstr[0] "%(counter_fmt)s albo per %(series)s"
+msgstr[1] "%(counter_fmt)s albi per %(series)s"
+
+#: comicsdb/templates/comicsdb/partials/series_card_grid.html:58
+msgid "No issues"
+msgstr "Nessun albo"
+
+#: comicsdb/templates/comicsdb/partials/series_card_grid.html:58
+msgid "0 issues"
+msgstr "0 albi"
+
+#: comicsdb/templates/comicsdb/partials/series_filter.html:10
+msgid "Search Series"
+msgstr "Cerca Serie"
+
+#: comicsdb/templates/comicsdb/partials/series_filter.html:31
+msgid "Search series names..."
+msgstr "Cerca nomi delle serie..."
+
+#: comicsdb/templates/comicsdb/partials/series_filter.html:37
+msgid "Search series names and alternative names (supports multi-word search)"
+msgstr "Cerca nomi delle serie e nomi alternativi (supporta la ricerca multi-parola)"
+
+#: comicsdb/templates/comicsdb/partials/series_filter.html:71
+#: comicsdb/views/series_list_helpers.py:18
+msgid "Alternative Name"
+msgstr "Nome Alternativo"
+
+#: comicsdb/templates/comicsdb/partials/series_filter.html:78
+msgid "e.g., Betty & Veronica Spectacular"
+msgstr "es. Betty & Veronica Spectacular"
+
+#: comicsdb/templates/comicsdb/partials/series_filter.html:79
+msgid "Filter by alternative series name"
+msgstr "Filtra per nome alternativo della serie"
+
+#: comicsdb/templates/comicsdb/partials/series_filter.html:138
+msgid "e.g., Vertigo"
+msgstr "es. Vertigo"
+
+#: comicsdb/templates/comicsdb/partials/series_filter.html:139
+msgid "Filter by imprint"
+msgstr "Filtra per etichetta"
+
+#: comicsdb/templates/comicsdb/partials/series_filter.html:149
+msgid "Year Began (From)"
+msgstr "Anno di Inizio (Da)"
+
+#: comicsdb/templates/comicsdb/partials/series_filter.html:156
+msgid "e.g., 1960"
+msgstr "es. 1960"
+
+#: comicsdb/templates/comicsdb/partials/series_filter.html:157
+msgid "Filter by year began (from)"
+msgstr "Filtra per anno di inizio (da)"
+
+#: comicsdb/templates/comicsdb/partials/series_filter.html:166
+msgid "Year Began (To)"
+msgstr "Anno di Inizio (A)"
+
+#: comicsdb/templates/comicsdb/partials/series_filter.html:173
+msgid "e.g., 2020"
+msgstr "es. 2020"
+
+#: comicsdb/templates/comicsdb/partials/series_filter.html:174
+msgid "Filter by year began (to)"
+msgstr "Filtra per anno di inizio (a)"
+
+#: comicsdb/templates/comicsdb/partials/series_filter.html:184
+#: comicsdb/views/issue_list_helpers.py:61 comicsdb/views/series_list_helpers.py:29
+msgid "Volume"
+msgstr "Volume"
+
+#: comicsdb/templates/comicsdb/partials/series_filter.html:192
+msgid "Filter by volume"
+msgstr "Filtra per volume"
+
+#: comicsdb/templates/comicsdb/partials/series_filter.html:202
+#: comicsdb/views/series_list_helpers.py:28
+#: wish_list/templates/wish_list/wishlist_detail.html:84
+msgid "Status"
+msgstr "Stato"
+
+#: comicsdb/templates/comicsdb/partials/series_filter.html:205
+msgid "Filter by status"
+msgstr "Filtra per stato"
+
+#: comicsdb/templates/comicsdb/partials/series_filter.html:206
+msgid "All Statuses"
+msgstr "Tutti gli Stati"
+
+#: comicsdb/templates/comicsdb/partials/team_member_items.html:40
+#: comicsdb/templates/comicsdb/team_detail.html:175
+msgid "Load More Members"
+msgstr "Carica Altri Membri"
+
+#: comicsdb/templates/comicsdb/partials/variants_formset.html:25
+msgid "Image"
+msgstr "Immagine"
+
+#: comicsdb/templates/comicsdb/partials/variants_formset.html:26
+#: comicsdb/views/series_list_helpers.py:17 reading_lists/views.py:44
+#: users/templates/users/api_token.html:85
+msgid "Name"
+msgstr "Nome"
+
+#: comicsdb/templates/comicsdb/partials/variants_formset.html:27
+msgid "Price"
+msgstr "Prezzo"
+
+#: comicsdb/templates/comicsdb/partials/variants_formset.html:28
+#: comicsdb/views/issue_list_helpers.py:72
+msgid "SKU"
+msgstr "SKU"
+
+#: comicsdb/templates/comicsdb/partials/variants_formset.html:29
+#: comicsdb/views/issue_list_helpers.py:71
+msgid "UPC"
+msgstr "UPC"
+
+#: comicsdb/templates/comicsdb/partials/variants_formset.html:108
+msgid "Add another variant cover"
+msgstr "Aggiungi un'altra copertina variante"
+
+#: comicsdb/templates/comicsdb/publisher_detail.html:14
+msgid "Publisher navigation"
+msgstr "Navigazione editore"
+
+#: comicsdb/templates/comicsdb/publisher_detail.html:19
+#, python-format
+msgid "Go to %(previous_publisher)s"
+msgstr "Vai a %(previous_publisher)s"
+
+#: comicsdb/templates/comicsdb/publisher_detail.html:21
+#: comicsdb/templates/comicsdb/publisher_detail.html:26
+msgid "Previous Publisher"
+msgstr "Editore Precedente"
+
+#: comicsdb/templates/comicsdb/publisher_detail.html:32
+#, python-format
+msgid "Go to %(next_publisher)s"
+msgstr "Vai a %(next_publisher)s"
+
+#: comicsdb/templates/comicsdb/publisher_detail.html:33
+#: comicsdb/templates/comicsdb/publisher_detail.html:38
+msgid "Next Publisher"
+msgstr "Editore Successivo"
+
+#: comicsdb/templates/comicsdb/publisher_detail.html:47
+msgid "View series list for this publisher"
+msgstr "Visualizza elenco serie per questo editore"
+
+#: comicsdb/templates/comicsdb/publisher_detail.html:54
+#: comicsdb/templates/comicsdb/publisher_list.html:12
+msgid "Add a new publisher"
+msgstr "Aggiungi un nuovo editore"
+
+#: comicsdb/templates/comicsdb/publisher_detail.html:119
+#, python-format
+msgid "No image for %(publisher.name)s"
+msgstr "Nessuna immagine per %(publisher.name)s"
+
+#: comicsdb/templates/comicsdb/publisher_detail.html:143
+#, python-format
+msgid "Imprint (%(counter)s)"
+msgid_plural "Imprints (%(counter)s)"
+msgstr[0] "Etichetta (%(counter)s)"
+msgstr[1] "Etichette (%(counter)s)"
+
+#: comicsdb/templates/comicsdb/publisher_detail.html:264
+msgid "Publisher Details"
+msgstr "Dettagli Editore"
+
+#: comicsdb/templates/comicsdb/publisher_detail.html:272
+msgid "Country:"
+msgstr "Nazione:"
+
+#: comicsdb/templates/comicsdb/publisher_list.html:3
+msgid "Publishers - Metron"
+msgstr "Editori - Metron"
+
+#: comicsdb/templates/comicsdb/publisher_list.html:6
+msgid "Publishers List"
+msgstr "Elenco Editori"
+
+#: comicsdb/templates/comicsdb/publisher_list.html:9
+#: comicsdb/templates/comicsdb/statistics.html:26
+#: reading_lists/templates/reading_lists/readinglist_detail.html:96
+#: reading_lists/templates/reading_lists/readinglist_detail.html:327
+#: reading_lists/templates/reading_lists/readinglist_detail.html:344
+#: templates/partials/navbar.html:62 users/templates/users/customuser_detail.html:219
+msgid "Publishers"
+msgstr "Editori"
+
+#: comicsdb/templates/comicsdb/publisher_list.html:10
+msgid "Find a publisher"
+msgstr "Cerca un editore"
+
+#: comicsdb/templates/comicsdb/series_detail.html:32
+msgid "Series navigation"
+msgstr "Navigazione serie"
+
+#: comicsdb/templates/comicsdb/series_detail.html:37
+#, python-format
+msgid "Go to %(previous_series)s"
+msgstr "Vai a %(previous_series)s"
+
+#: comicsdb/templates/comicsdb/series_detail.html:39
+#: comicsdb/templates/comicsdb/series_detail.html:44
+msgid "Previous Series"
+msgstr "Serie Precedente"
+
+#: comicsdb/templates/comicsdb/series_detail.html:50
+#, python-format
+msgid "Go to %(next_series)s"
+msgstr "Vai a %(next_series)s"
+
+#: comicsdb/templates/comicsdb/series_detail.html:51
+#: comicsdb/templates/comicsdb/series_detail.html:56
+msgid "Next Series"
+msgstr "Serie Successiva"
+
+#: comicsdb/templates/comicsdb/series_detail.html:65
+msgid "View issue list for this series"
+msgstr "Visualizza elenco albi per questa serie"
+
+#: comicsdb/templates/comicsdb/series_detail.html:67
+msgid "Issue List"
+msgstr "Elenco Albi"
+
+#: comicsdb/templates/comicsdb/series_detail.html:73
+#: comicsdb/templates/comicsdb/series_list.html:40
+#: comicsdb/templates/comicsdb/series_list.html:41
+#: comicsdb/templates/comicsdb/series_list.html:67
+msgid "Add a new series"
+msgstr "Aggiungi una nuova serie"
+
+#: comicsdb/templates/comicsdb/series_detail.html:139
+#, python-format
+msgid "No image for %(series)s"
+msgstr "Nessuna immagine per %(series)s"
+
+#: comicsdb/templates/comicsdb/series_detail.html:164
+#, python-format
+msgid "Most Issue Credits (%(count)s)"
+msgstr "Maggiori Crediti per Albo (%(count)s)"
+
+#: comicsdb/templates/comicsdb/series_detail.html:183
+#, python-format
+msgid "No image for %(creator.creators__name)s"
+msgstr "Nessuna immagine per %(creator.creators__name)s"
+
+#: comicsdb/templates/comicsdb/series_detail.html:206
+#, python-format
+msgid "Top Character Appearances (%(count)s)"
+msgstr "Principali Apparizioni di Personaggi (%(count)s)"
+
+#: comicsdb/templates/comicsdb/series_detail.html:225
+#, python-format
+msgid "No image for %(character.characters__name)s"
+msgstr "Nessuna immagine per %(character.characters__name)s"
+
+#: comicsdb/templates/comicsdb/series_detail.html:255
+msgid "Series Details"
+msgstr "Dettagli Serie"
+
+#: comicsdb/templates/comicsdb/series_detail.html:262
+msgid "Imprint:"
+msgstr "Etichetta:"
+
+#: comicsdb/templates/comicsdb/series_detail.html:267
+#: reading_lists/templates/reading_lists/readinglist_detail.html:270
+msgid "Type:"
+msgstr "Tipo:"
+
+#: comicsdb/templates/comicsdb/series_detail.html:271
+#: polls/templates/polls/poll_detail.html:102
+msgid "Status:"
+msgstr "Stato:"
+
+#: comicsdb/templates/comicsdb/series_detail.html:276
+#: user_collection/templates/user_collection/missing_issues_detail.html:44
+msgid "Volume:"
+msgstr "Volume:"
+
+#: comicsdb/templates/comicsdb/series_detail.html:281
+msgid "Started:"
+msgstr "Iniziata:"
+
+#: comicsdb/templates/comicsdb/series_detail.html:286
+msgid "Ended:"
+msgstr "Terminata:"
+
+#: comicsdb/templates/comicsdb/series_detail.html:300
+msgid "Alternative Names:"
+msgstr "Nomi Alternativi:"
+
+#: comicsdb/templates/comicsdb/series_detail.html:302
+msgid "Alternative Name:"
+msgstr "Nome Alternativo:"
+
+#: comicsdb/templates/comicsdb/series_detail.html:315
+msgid "Genres"
+msgstr "Generi"
+
+#: comicsdb/templates/comicsdb/series_detail.html:317
+msgid "Genre"
+msgstr "Genere"
+
+#: comicsdb/templates/comicsdb/series_list.html:5
+msgid "Series - Metron"
+msgstr "Serie - Metron"
+
+#: comicsdb/templates/comicsdb/statistics.html:9
+msgid "Statistics - Metron"
+msgstr "Statistiche - Metron"
+
+#: comicsdb/templates/comicsdb/statistics.html:14
+msgid "Metron Database Statistics"
+msgstr "Statistiche del Database Metron"
+
+#: comicsdb/templates/comicsdb/statistics.html:16
+#, python-format
+msgid ""
+"Last Updated: <time "
+"datetime=\"%(update_time_value|date:'c')s\">%(update_time_value)s</time>"
+msgstr ""
+"Ultimo Aggiornamento: <time "
+"datetime=\"%(update_time_value|date:'c')s\">%(update_time_value)s</time>"
+
+#: comicsdb/templates/comicsdb/statistics.html:22
+msgid "Database Totals"
+msgstr "Totali del Database"
+
+#: comicsdb/templates/comicsdb/statistics.html:71
+msgid "Statistical Analysis"
+msgstr "Analisi Statistica"
+
+#: comicsdb/templates/comicsdb/statistics.html:111
+msgid "About These Statistics"
+msgstr "Informazioni su Queste Statistiche"
+
+#: comicsdb/templates/comicsdb/statistics.html:113
+msgid ""
+"These statistics are automatically generated from the Metron database and are updated "
+"every 30 minutes. They represent the collective efforts of our community in building "
+"a comprehensive comic book database."
+msgstr ""
+"Queste statistiche sono generate automaticamente dal database Metron e vengono "
+"aggiornate ogni 30 minuti. Rappresentano gli sforzi collettivi della nostra community "
+"nella costruzione di un database completo di fumetti."
+
+#: comicsdb/templates/comicsdb/team_detail.html:14
+msgid "Team navigation"
+msgstr "Navigazione squadra"
+
+#: comicsdb/templates/comicsdb/team_detail.html:19
+#, python-format
+msgid "Go to %(previous_team)s"
+msgstr "Vai a %(previous_team)s"
+
+#: comicsdb/templates/comicsdb/team_detail.html:21
+#: comicsdb/templates/comicsdb/team_detail.html:26
+msgid "Previous Team"
+msgstr "Squadra Precedente"
+
+#: comicsdb/templates/comicsdb/team_detail.html:32
+#, python-format
+msgid "Go to %(next_team)s"
+msgstr "Vai a %(next_team)s"
+
+#: comicsdb/templates/comicsdb/team_detail.html:33
+#: comicsdb/templates/comicsdb/team_detail.html:38
+msgid "Next Team"
+msgstr "Squadra Successiva"
+
+#: comicsdb/templates/comicsdb/team_detail.html:48
+#: comicsdb/templates/comicsdb/team_list.html:13
+msgid "Add a new team"
+msgstr "Aggiungi una nuova squadra"
+
+#: comicsdb/templates/comicsdb/team_detail.html:113
+#, python-format
+msgid "No image for %(team.name)s"
+msgstr "Nessuna immagine per %(team.name)s"
+
+#: comicsdb/templates/comicsdb/team_detail.html:137
+#, python-format
+msgid "Member (%(counter)s)"
+msgid_plural "Members (%(counter)s)"
+msgstr[0] "Membro (%(counter)s)"
+msgstr[1] "Membri (%(counter)s)"
+
+#: comicsdb/templates/comicsdb/team_detail.html:194
+msgid "Team Details"
+msgstr "Dettagli Squadra"
+
+#: comicsdb/templates/comicsdb/team_list.html:3
+msgid "Teams - Metron"
+msgstr "Squadre - Metron"
+
+#: comicsdb/templates/comicsdb/team_list.html:6
+msgid "Teams List"
+msgstr "Elenco Squadre"
+
+#: comicsdb/templates/comicsdb/team_list.html:10
+msgid "Find a team"
+msgstr "Cerca una squadra"
+
+#: comicsdb/templates/comicsdb/universe_detail.html:14
+msgid "Universe navigation"
+msgstr "Navigazione universo"
+
+#: comicsdb/templates/comicsdb/universe_detail.html:19
+#, python-format
+msgid "Go to %(previous_universe)s"
+msgstr "Vai a %(previous_universe)s"
+
+#: comicsdb/templates/comicsdb/universe_detail.html:21
+#: comicsdb/templates/comicsdb/universe_detail.html:26
+msgid "Previous Universe"
+msgstr "Universo Precedente"
+
+#: comicsdb/templates/comicsdb/universe_detail.html:32
+#, python-format
+msgid "Go to %(next_universe)s"
+msgstr "Vai a %(next_universe)s"
+
+#: comicsdb/templates/comicsdb/universe_detail.html:33
+#: comicsdb/templates/comicsdb/universe_detail.html:38
+msgid "Next Universe"
+msgstr "Universo Successivo"
+
+#: comicsdb/templates/comicsdb/universe_detail.html:48
+#: comicsdb/templates/comicsdb/universe_list.html:13
+msgid "Add a new universe"
+msgstr "Aggiungi un nuovo universo"
+
+#: comicsdb/templates/comicsdb/universe_detail.html:290
+msgid "Universe Details"
+msgstr "Dettagli Universo"
+
+#: comicsdb/templates/comicsdb/universe_list.html:3
+msgid "Universes - Metron"
+msgstr "Universi - Metron"
+
+#: comicsdb/templates/comicsdb/universe_list.html:6
+msgid "Universes List"
+msgstr "Elenco Universi"
+
+#: comicsdb/templates/comicsdb/universe_list.html:10
+msgid "Find a universe"
+msgstr "Cerca un universo"
+
+#: comicsdb/templates/comicsdb/week_list.html:5
+msgid "Future Releases - Metron"
+msgstr "Prossime Uscite - Metron"
+
+#: comicsdb/templates/comicsdb/week_list.html:7
+#, python-format
+msgid "New Comics - %(release_date)s - Metron"
+msgstr "Nuovi Fumetti - %(release_date)s - Metron"
+
+#: comicsdb/templates/comicsdb/week_list.html:14
+#, python-format
+msgid "Comics Released the Week of %(release_date)s"
+msgstr "Fumetti Usciti la Settimana del %(release_date)s"
+
+#: comicsdb/templates/comicsdb/week_list.html:16
+msgid "Future Releases"
+msgstr "Prossime Uscite"
+
+#: comicsdb/templates/comicsdb/week_list.html:32
+msgid "Weekly releases navigation"
+msgstr "Navigazione uscite settimanali"
+
+#: comicsdb/templates/comicsdb/week_list.html:37
+#: comicsdb/templates/comicsdb/week_list.html:39
+#, python-format
+msgid "<strong>%(counter)s</strong> Issue"
+msgid_plural "<strong>%(counter)s</strong> Issues"
+msgstr[0] "<strong>%(counter)s</strong> Albo"
+msgstr[1] "<strong>%(counter)s</strong> Albi"
+
+#: comicsdb/templates/comicsdb/week_list.html:82
+msgid "No Releases Found"
+msgstr "Nessuna Uscita Trovata"
+
+#: comicsdb/templates/comicsdb/week_list.html:85
+msgid "No future releases have been scheduled yet."
+msgstr "Non è ancora stata programmata nessuna futura uscita."
+
+#: comicsdb/templates/comicsdb/week_list.html:87
+msgid "No issues were released this week."
+msgstr "Nessun albo è stato pubblicato questa settimana."
+
+#: comicsdb/templates/comicsdb/week_list.html:98
+#: user_collection/templates/user_collection/collection_list.html:44
+msgid "Add Issue"
+msgstr "Aggiungi Albo"
 
 #: comicsdb/views/issue.py:451
 #, python-format
@@ -266,6 +3508,96 @@ msgstr "%(first)s e %(last)s"
 msgid "Successfully added %(parts)s from reprinted issues."
 msgstr "Aggiunti con successo %(parts)s dagli albi ristampati."
 
+#: comicsdb/views/issue_list_helpers.py:23
+msgid "Series A–Z"
+msgstr "Serie A–Z"
+
+#: comicsdb/views/issue_list_helpers.py:27
+msgid "Cover date (newest)"
+msgstr "Data di copertina (più recente)"
+
+#: comicsdb/views/issue_list_helpers.py:31
+msgid "Cover date (oldest)"
+msgstr "Data di copertina (meno recente)"
+
+#: comicsdb/views/issue_list_helpers.py:60 comicsdb/views/series_list_helpers.py:19
+#: pull_list/templates/pull_list/pulllist_detail.html:49
+#: user_collection/templates/user_collection/missing_issues_list.html:42
+msgid "Type"
+msgstr "Tipo"
+
+#: comicsdb/views/issue_list_helpers.py:63
+msgid "Number"
+msgstr "Numero"
+
+#: comicsdb/views/issue_list_helpers.py:64
+msgid "Alt number"
+msgstr "Numero alternativo"
+
+#: comicsdb/views/issue_list_helpers.py:65
+msgid "Cover year"
+msgstr "Anno di copertina"
+
+#: comicsdb/views/issue_list_helpers.py:66
+msgid "Cover month"
+msgstr "Mese di copertina"
+
+#: comicsdb/views/issue_list_helpers.py:67
+msgid "Store date from"
+msgstr "Data di uscita da"
+
+#: comicsdb/views/issue_list_helpers.py:68
+msgid "Store date to"
+msgstr "Data di uscita a"
+
+#: comicsdb/views/issue_list_helpers.py:69
+msgid "FOC date from"
+msgstr "Data FOC da"
+
+#: comicsdb/views/issue_list_helpers.py:70
+msgid "FOC date to"
+msgstr "Data FOC a"
+
+#: comicsdb/views/series_list_helpers.py:21
+msgid "Publisher ID"
+msgstr "ID Editore"
+
+#: comicsdb/views/series_list_helpers.py:23
+msgid "Imprint ID"
+msgstr "ID Etichetta"
+
+#: comicsdb/views/series_list_helpers.py:25
+msgid "Year Began (from)"
+msgstr "Anno di Inizio (da)"
+
+#: comicsdb/views/series_list_helpers.py:26
+msgid "Year Began (to)"
+msgstr "Anno di Inizio (a)"
+
+#: comicsdb/views/statistics.py:136
+msgid "Percentage of Issues by Publisher"
+msgstr "Percentuale di Albi per Editore"
+
+#: comicsdb/views/statistics.py:141
+msgid "Number of Issues Added per Year"
+msgstr "Numero di Albi Aggiunti per Anno"
+
+#: comicsdb/views/statistics.py:145
+msgid "Number of Issues for the last 30 days"
+msgstr "Numero di Albi negli ultimi 30 giorni"
+
+#: comicsdb/views/statistics.py:149
+msgid "Number of Issues Added by Month"
+msgstr "Numero di Albi Aggiunti per Mese"
+
+#: comicsdb/views/statistics.py:153
+msgid "Number of Creators Added by Month"
+msgstr "Numero di Autori Aggiunti per Mese"
+
+#: comicsdb/views/statistics.py:158
+msgid "Number of Characters Added by Month"
+msgstr "Numero di Personaggi Aggiunti per Mese"
+
 #: polls/templates/polls/partials/poll_results.html:3
 msgid "Results"
 msgstr "Risultati"
@@ -305,35 +3637,6 @@ msgid ""
 msgstr ""
 "Sei sicuro di voler eliminare <strong>%(title)s</strong>? Questo eliminerà anche "
 "tutti i voti espressi in questo sondaggio e non può essere annullato."
-
-#: polls/templates/polls/poll_confirm_delete.html:20
-#: polls/templates/polls/poll_detail.html:38
-#: reading_lists/templates/reading_lists/readinglist_confirm_delete.html:32
-#: reading_lists/templates/reading_lists/readinglist_detail.html:177
-msgid "Delete"
-msgstr "Elimina"
-
-#: polls/templates/polls/poll_confirm_delete.html:25
-#: pull_list/templates/pull_list/remove_series_confirm.html:27
-#: reading_lists/templates/reading_lists/add_issue_autocomplete.html:42
-#: reading_lists/templates/reading_lists/add_issues_from_arc.html:43
-#: reading_lists/templates/reading_lists/add_issues_from_series.html:76
-#: reading_lists/templates/reading_lists/partials/readinglist_item_edit.html:68
-#: reading_lists/templates/reading_lists/readinglist_confirm_assign_metron.html:29
-#: reading_lists/templates/reading_lists/readinglist_confirm_delete.html:29
-#: reading_lists/templates/reading_lists/readinglist_form.html:114
-#: reading_lists/templates/reading_lists/remove_issue_confirm.html:25
-#: user_collection/templates/user_collection/add_issues_from_series.html:82
-#: user_collection/templates/user_collection/collection_confirm_delete.html:31
-#: user_collection/templates/user_collection/collection_form.html:72
-#: user_collection/templates/user_collection/partials/read_dates_list.html:38
-#: users/templates/users/change_profile.html:120
-#: users/templates/users/delete_account.html:44
-#: wish_list/templates/wish_list/wishlist_acquire_form.html:37
-#: wish_list/templates/wish_list/wishlist_item_confirm_delete.html:26
-#: wish_list/templates/wish_list/wishlist_item_form.html:50
-msgid "Cancel"
-msgstr "Annulla"
 
 #: polls/templates/polls/poll_detail.html:3
 #: reading_lists/templates/reading_lists/readinglist_form.html:3
@@ -388,10 +3691,6 @@ msgstr "per esprimere il tuo voto."
 #: polls/templates/polls/poll_detail.html:100
 msgid "Poll Details"
 msgstr "Dettagli Sondaggio"
-
-#: polls/templates/polls/poll_detail.html:102
-msgid "Status:"
-msgstr "Stato:"
 
 #: polls/templates/polls/poll_detail.html:106
 msgid "Voting Opens:"
@@ -450,25 +3749,9 @@ msgstr "Nessuna scelta selezionata."
 msgid "Search for a series..."
 msgstr "Cerca una serie..."
 
-#: pull_list/forms.py:20 pull_list/templates/pull_list/pulllist_detail.html:47
-#: reading_lists/forms.py:137
-#: reading_lists/templates/reading_lists/readinglist_detail.html:100
-#: templates/partials/navbar.html:74 user_collection/forms.py:132
-#: user_collection/templates/user_collection/collection_stats.html:226
-#: user_collection/templates/user_collection/missing_issues_list.html:40
-#: users/templates/users/customuser_detail.html:230
-#: wish_list/templates/wish_list/wishlist_detail.html:83
-msgid "Series"
-msgstr "Serie"
-
 #: pull_list/forms.py:21
 msgid "Select a series to add to your pull list"
 msgstr "Seleziona una serie da aggiungere alla tua pull list"
-
-#: pull_list/models.py:27
-#: pull_list/templates/pull_list/partials/pull_list_button.html:11
-msgid "Pull List"
-msgstr "Pull List"
 
 #: pull_list/models.py:28
 msgid "Pull Lists"
@@ -506,19 +3789,6 @@ msgstr "Aggiungi"
 msgid "Series on Pull List (%(count)s)"
 msgstr "Serie nella Pull List (%(count)s)"
 
-#: pull_list/templates/pull_list/pulllist_detail.html:48
-#: reading_lists/templates/reading_lists/partials/readinglist_filter.html:89
-#: reading_lists/views.py:46
-#: user_collection/templates/user_collection/missing_issues_list.html:41
-#: user_collection/templates/user_collection/partials/collection_filter.html:94
-msgid "Publisher"
-msgstr "Editore"
-
-#: pull_list/templates/pull_list/pulllist_detail.html:49
-#: user_collection/templates/user_collection/missing_issues_list.html:42
-msgid "Type"
-msgstr "Tipo"
-
 #: pull_list/templates/pull_list/pulllist_detail.html:68
 #: pull_list/templates/pull_list/remove_series_confirm.html:30
 #: reading_lists/templates/reading_lists/remove_issue_confirm.html:28
@@ -536,13 +3806,6 @@ msgstr "Nessuna serie ancora in questa pull list."
 #: pull_list/templates/pull_list/pulllist_detail.html:85
 msgid "Upcoming Issues"
 msgstr "Prossimi Albi"
-
-#: pull_list/templates/pull_list/pulllist_detail.html:91
-#: user_collection/templates/user_collection/collection_list.html:62
-#: user_collection/templates/user_collection/missing_issues_detail.html:79
-#: wish_list/templates/wish_list/wishlist_detail.html:82
-msgid "Issue"
-msgstr "Albo"
 
 #: pull_list/templates/pull_list/pulllist_detail.html:92
 #: user_collection/templates/user_collection/missing_issues_detail.html:82
@@ -613,11 +3876,6 @@ msgstr "Inserisci un nome per la tua lista di lettura"
 msgid "Describe the reading list (optional)"
 msgstr "Descrivi la lista di lettura (opzionale)"
 
-#: reading_lists/forms.py:69
-#: user_collection/templates/user_collection/collection_detail.html:84
-msgid "Description"
-msgstr "Descrizione"
-
 #: reading_lists/forms.py:70
 msgid "Private List"
 msgstr "Lista Privata"
@@ -627,10 +3885,6 @@ msgstr "Lista Privata"
 #: reading_lists/views.py:47
 msgid "List Type"
 msgstr "Tipo di Lista"
-
-#: reading_lists/forms.py:72
-msgid "Source"
-msgstr "Fonte"
 
 #: reading_lists/forms.py:73
 msgid "Source URL"
@@ -718,19 +3972,9 @@ msgstr "Specifica almeno un numero di albo iniziale o finale per l'intervallo."
 msgid "Search for a story arc..."
 msgstr "Cerca un arco narrativo..."
 
-#: reading_lists/forms.py:204
-msgid "Story Arc"
-msgstr "Arco Narrativo"
-
 #: reading_lists/forms.py:205
 msgid "Select the story arc to add issues from"
 msgstr "Seleziona l'arco narrativo da cui aggiungere gli albi"
-
-#: reading_lists/models.py:62
-#: reading_lists/templates/reading_lists/partials/readinglist_filter.html:71
-#: reading_lists/views.py:45
-msgid "Creator"
-msgstr "Autore"
 
 #: reading_lists/models.py:63
 msgid "Event"
@@ -739,16 +3983,6 @@ msgstr "Evento"
 #: reading_lists/models.py:64
 msgid "Story"
 msgstr "Storia"
-
-#: reading_lists/models.py:65 templates/partials/navbar.html:93
-#: users/templates/users/customuser_detail.html:252
-msgid "Characters"
-msgstr "Personaggi"
-
-#: reading_lists/models.py:66 templates/partials/navbar.html:99
-#: users/templates/users/customuser_detail.html:274
-msgid "Teams"
-msgstr "Squadre"
 
 #: reading_lists/models.py:67
 msgid "Master"
@@ -857,6 +4091,7 @@ msgid "Optional categorization of this issue's role in the reading list"
 msgstr "Categorizzazione opzionale del ruolo di questo albo nella lista di lettura"
 
 #: reading_lists/templates/reading_lists/add_issue_autocomplete.html:3
+#, python-format
 msgid "Manage Issues - %(name)s - Metron"
 msgstr "Gestisci Albi - %(name)s - Metron"
 
@@ -919,11 +4154,8 @@ msgstr "Albo #"
 msgid "Current"
 msgstr "Attuale"
 
-#: reading_lists/templates/reading_lists/add_issue_autocomplete.html:195
-msgid "New"
-msgstr "Nuovo"
-
 #: reading_lists/templates/reading_lists/add_issues_from_arc.html:3
+#, python-format
 msgid "Add from Story Arc - %(name)s - Metron"
 msgstr "Aggiungi da Arco Narrativo - %(name)s - Metron"
 
@@ -987,6 +4219,7 @@ msgstr ""
 "ordine! Puoi combinare più archi per costruire ordini di lettura completi."
 
 #: reading_lists/templates/reading_lists/add_issues_from_series.html:3
+#, python-format
 msgid "Add from Series - %(name)s - Metron"
 msgstr "Aggiungi dalla Serie - %(name)s - Metron"
 
@@ -1047,15 +4280,8 @@ msgstr ""
 msgid "Private"
 msgstr "Privato"
 
-#: reading_lists/templates/reading_lists/partials/readinglist_card.html:25
-#: reading_lists/templates/reading_lists/readinglist_detail.html:333
-#: reading_lists/templates/reading_lists/readinglist_detail.html:381
-msgid "%(counter)s issue"
-msgid_plural "%(counter)s issues"
-msgstr[0] "%(counter)s albo"
-msgstr[1] "%(counter)s albi"
-
 #: reading_lists/templates/reading_lists/partials/readinglist_card.html:48
+#, python-format
 msgid "By <strong>%(username)s</strong>"
 msgstr "Di <strong>%(username)s</strong>"
 
@@ -1064,6 +4290,7 @@ msgid "No description"
 msgstr "Nessuna descrizione"
 
 #: reading_lists/templates/reading_lists/partials/readinglist_card.html:64
+#, python-format
 msgid "Updated %(timesince)s ago"
 msgstr "Aggiornato %(timesince)s fa"
 
@@ -1071,33 +4298,13 @@ msgstr "Aggiornato %(timesince)s fa"
 msgid "Search Reading Lists"
 msgstr "Cerca Liste di Lettura"
 
-#: reading_lists/templates/reading_lists/partials/readinglist_filter.html:18
-#: user_collection/templates/user_collection/partials/collection_filter.html:18
-msgid "Filters Active"
-msgstr "Filtri Attivi"
-
-#: reading_lists/templates/reading_lists/partials/readinglist_filter.html:24
-#: user_collection/templates/user_collection/partials/collection_filter.html:24
-msgid "Quick Search"
-msgstr "Ricerca Rapida"
-
 #: reading_lists/templates/reading_lists/partials/readinglist_filter.html:31
 msgid "Search by list name..."
 msgstr "Cerca per nome lista..."
 
-#: reading_lists/templates/reading_lists/partials/readinglist_filter.html:32
-#: user_collection/templates/user_collection/partials/collection_filter.html:32
-msgid "Quick search"
-msgstr "Ricerca rapida"
-
 #: reading_lists/templates/reading_lists/partials/readinglist_filter.html:37
 msgid "Search by reading list name"
 msgstr "Cerca per nome della lista di lettura"
-
-#: reading_lists/templates/reading_lists/partials/readinglist_filter.html:46
-#: user_collection/templates/user_collection/partials/collection_filter.html:46
-msgid "Advanced Filters"
-msgstr "Filtri Avanzati"
 
 #: reading_lists/templates/reading_lists/partials/readinglist_filter.html:53
 msgid "List Name"
@@ -1119,24 +4326,9 @@ msgstr "es. Metron"
 msgid "Filter by creator username"
 msgstr "Filtra per nome utente autore"
 
-#: reading_lists/templates/reading_lists/partials/readinglist_filter.html:96
-#: user_collection/templates/user_collection/partials/collection_filter.html:101
-msgid "e.g., Marvel"
-msgstr "es. Marvel"
-
-#: reading_lists/templates/reading_lists/partials/readinglist_filter.html:97
-#: user_collection/templates/user_collection/partials/collection_filter.html:102
-msgid "Filter by publisher"
-msgstr "Filtra per editore"
-
 #: reading_lists/templates/reading_lists/partials/readinglist_filter.html:110
 msgid "Filter by list type"
 msgstr "Filtra per tipo di lista"
-
-#: reading_lists/templates/reading_lists/partials/readinglist_filter.html:111
-#: user_collection/templates/user_collection/partials/collection_filter.html:76
-msgid "All Types"
-msgstr "Tutti i Tipi"
 
 #: reading_lists/templates/reading_lists/partials/readinglist_filter.html:129
 msgid "Attribution Source"
@@ -1208,26 +4400,6 @@ msgstr "Tutte le Liste"
 msgid "Public"
 msgstr "Pubblico"
 
-#: reading_lists/templates/reading_lists/partials/readinglist_filter.html:223
-#: user_collection/templates/user_collection/partials/collection_filter.html:246
-msgid "Apply Filters"
-msgstr "Applica Filtri"
-
-#: reading_lists/templates/reading_lists/partials/readinglist_filter.html:229
-#: user_collection/templates/user_collection/partials/collection_filter.html:252
-msgid "Clear all filters"
-msgstr "Cancella tutti i filtri"
-
-#: reading_lists/templates/reading_lists/partials/readinglist_filter.html:233
-#: user_collection/templates/user_collection/partials/collection_filter.html:256
-msgid "Clear Filters"
-msgstr "Cancella Filtri"
-
-#: reading_lists/templates/reading_lists/partials/readinglist_item.html:22
-#: reading_lists/templates/reading_lists/partials/readinglist_item_edit.html:22
-msgid "No image for %(issue)s"
-msgstr "Nessuna immagine per %(issue)s"
-
 #: reading_lists/templates/reading_lists/partials/readinglist_item.html:52
 msgid "Edit issue type"
 msgstr "Modifica tipo di albo"
@@ -1245,16 +4417,8 @@ msgstr "-- Nessun Tipo --"
 msgid "Core"
 msgstr "Principale"
 
-#: reading_lists/templates/reading_lists/partials/readinglist_item_edit.html:58
-msgid "Save"
-msgstr "Salva"
-
-#: reading_lists/templates/reading_lists/partials/readinglist_item_list.html:14
-#: reading_lists/templates/reading_lists/readinglist_detail.html:232
-msgid "Load More Issues"
-msgstr "Carica Altri Albi"
-
 #: reading_lists/templates/reading_lists/readinglist_confirm_assign_metron.html:3
+#, python-format
 msgid "Assign %(name)s to Metron - Metron"
 msgstr "Assegna %(name)s a Metron - Metron"
 
@@ -1286,6 +4450,7 @@ msgid "Assign to Metron"
 msgstr "Assegna a Metron"
 
 #: reading_lists/templates/reading_lists/readinglist_confirm_delete.html:3
+#, python-format
 msgid "Delete %(name)s - Metron"
 msgstr "Elimina %(name)s - Metron"
 
@@ -1293,13 +4458,8 @@ msgstr "Elimina %(name)s - Metron"
 msgid "Delete Reading List"
 msgstr "Elimina Lista di Lettura"
 
-#: reading_lists/templates/reading_lists/readinglist_confirm_delete.html:15
-#: user_collection/templates/user_collection/collection_confirm_delete.html:15
-#: wish_list/templates/wish_list/wishlist_item_confirm_delete.html:15
-msgid "Warning"
-msgstr "Attenzione"
-
 #: reading_lists/templates/reading_lists/readinglist_confirm_delete.html:19
+#, python-format
 msgid "Are you sure you want to delete the reading list <strong>\"%(name)s\"</strong>?"
 msgstr ""
 "Sei sicuro di voler eliminare la lista di lettura <strong>\"%(name)s\"</strong>?"
@@ -1321,12 +4481,14 @@ msgid "Curated by"
 msgstr "Curata da"
 
 #: reading_lists/templates/reading_lists/readinglist_detail.html:48
+#, python-format
 msgid "%(avg)s &middot; %(counter)s rating"
 msgid_plural "%(avg)s &middot; %(counter)s ratings"
 msgstr[0] "%(avg)s &middot; %(counter)s valutazione"
 msgstr[1] "%(avg)s &middot; %(counter)s valutazioni"
 
 #: reading_lists/templates/reading_lists/readinglist_detail.html:51
+#: templates/partials/rating_widget.html:31
 msgid "No ratings yet"
 msgstr "Nessuna valutazione ancora"
 
@@ -1342,31 +4504,13 @@ msgstr "Condividi"
 msgid "Rate this list"
 msgstr "Valuta questa lista"
 
-#: reading_lists/templates/reading_lists/readinglist_detail.html:84
-#: templates/partials/navbar.html:80
-#: user_collection/templates/user_collection/collection_stats.html:227
-#: users/templates/users/customuser_detail.html:241
-msgid "Issues"
-msgstr "Albi"
-
 #: reading_lists/templates/reading_lists/readinglist_detail.html:88
 msgid "Reading span"
 msgstr "Periodo di lettura"
 
-#: reading_lists/templates/reading_lists/readinglist_detail.html:96
-#: reading_lists/templates/reading_lists/readinglist_detail.html:327
-#: reading_lists/templates/reading_lists/readinglist_detail.html:344
-#: templates/partials/navbar.html:62 users/templates/users/customuser_detail.html:219
-msgid "Publishers"
-msgstr "Editori"
-
 #: reading_lists/templates/reading_lists/readinglist_detail.html:105
 msgid "Composition"
 msgstr "Composizione"
-
-#: reading_lists/templates/reading_lists/readinglist_detail.html:132
-msgid "Previous"
-msgstr "Precedente"
 
 #: reading_lists/templates/reading_lists/readinglist_detail.html:142
 msgid "Next"
@@ -1383,18 +4527,12 @@ msgstr "Aggiungi dalla Serie"
 msgid "Add from Arc"
 msgstr "Aggiungi da Arco"
 
-#: reading_lists/templates/reading_lists/readinglist_detail.html:173
-#: user_collection/templates/user_collection/collection_detail.html:27
-#: user_collection/templates/user_collection/collection_list.html:132
-#: wish_list/templates/wish_list/wishlist_detail.html:123
-msgid "Edit"
-msgstr "Modifica"
-
 #: reading_lists/templates/reading_lists/readinglist_detail.html:197
 msgid "About this list"
 msgstr "Informazioni su questa lista"
 
 #: reading_lists/templates/reading_lists/readinglist_detail.html:203
+#, python-format
 msgid "Issues (%(count)s)"
 msgstr "Albi (%(count)s)"
 
@@ -1414,10 +4552,6 @@ msgstr "Dettagli Lista"
 #: reading_lists/templates/reading_lists/readinglist_detail.html:266
 msgid "Owner:"
 msgstr "Proprietario:"
-
-#: reading_lists/templates/reading_lists/readinglist_detail.html:270
-msgid "Type:"
-msgstr "Tipo:"
 
 #: reading_lists/templates/reading_lists/readinglist_detail.html:272
 msgid "Visibility:"
@@ -1462,17 +4596,12 @@ msgstr "Cancella selezione"
 msgid "My Reading Lists"
 msgstr "Le Mie Liste di Lettura"
 
-#: reading_lists/templates/reading_lists/readinglist_list.html:3
-#: reading_lists/templates/reading_lists/readinglist_list.html:6
-#: templates/partials/navbar.html:119
-msgid "Reading Lists"
-msgstr "Liste di Lettura"
-
 #: reading_lists/templates/reading_lists/readinglist_list.html:21
 msgid "Reading list navigation"
 msgstr "Navigazione lista di lettura"
 
 #: reading_lists/templates/reading_lists/readinglist_list.html:25
+#, python-format
 msgid "<strong>%(formatted_count)s</strong> reading list"
 msgid_plural "<strong>%(formatted_count)s</strong> reading lists"
 msgstr[0] "<strong>%(formatted_count)s</strong> lista di lettura"
@@ -1498,21 +4627,6 @@ msgstr "Non hai ancora nessuna lista di lettura"
 msgid "Create your first reading list!"
 msgstr "Crea la tua prima lista di lettura!"
 
-#: reading_lists/templates/reading_lists/readinglist_list.html:72
-#: user_collection/templates/user_collection/collection_list.html:157
-msgid "No results found"
-msgstr "Nessun risultato trovato"
-
-#: reading_lists/templates/reading_lists/readinglist_list.html:73
-#: user_collection/templates/user_collection/collection_list.html:158
-msgid "Try adjusting your search filters"
-msgstr "Prova a modificare i filtri di ricerca"
-
-#: reading_lists/templates/reading_lists/readinglist_list.html:76
-#: user_collection/templates/user_collection/collection_list.html:162
-msgid "Clear All Filters"
-msgstr "Cancella Tutti i Filtri"
-
 #: reading_lists/templates/reading_lists/readinglist_list.html:79
 msgid "No reading lists found"
 msgstr "Nessuna lista di lettura trovata"
@@ -1530,21 +4644,9 @@ msgid "Remove Issue from Reading List"
 msgstr "Rimuovi Albo dalla Lista di Lettura"
 
 #: reading_lists/templates/reading_lists/remove_issue_confirm.html:16
+#, python-format
 msgid "Remove <strong>%(issue)s</strong> from <strong>%(name)s</strong>?"
 msgstr "Rimuovere <strong>%(issue)s</strong> da <strong>%(name)s</strong>?"
-
-#: reading_lists/views.py:43 users/templates/users/customuser_list.html:37
-#: users/templates/users/customuser_list.html:41
-msgid "Search"
-msgstr "Cerca"
-
-#: reading_lists/views.py:44 users/templates/users/api_token.html:85
-msgid "Name"
-msgstr "Nome"
-
-#: reading_lists/views.py:48
-msgid "Attribution"
-msgstr "Attribuzione"
 
 #: reading_lists/views.py:49
 msgid "Min Rating"
@@ -1597,14 +4699,17 @@ msgid "Ownership of '%(name)s' has been reassigned to Metron."
 msgstr "La proprietà di '%(name)s' è stata riassegnata a Metron."
 
 #: reading_lists/views.py:620
+#, python-format
 msgid "Removed %(issue)s from '%(name)s'!"
 msgstr "Rimosso %(issue)s da '%(name)s'!"
 
 #: reading_lists/views.py:695
+#, python-format
 msgid "Added %(issue)s"
 msgstr "Aggiunto %(issue)s"
 
 #: reading_lists/views.py:698
+#, python-format
 msgid "Added %(count)d issue"
 msgid_plural "Added %(count)d issues"
 msgstr[0] "Aggiunto %(count)d albo"
@@ -1618,6 +4723,7 @@ msgstr[0] "riordinato %(count)d albo esistente"
 msgstr[1] "riordinati %(count)d albi esistenti"
 
 #: reading_lists/views.py:714
+#, python-format
 msgid "%(first)s and %(second)s"
 msgstr "%(first)s e %(second)s"
 
@@ -1627,6 +4733,7 @@ msgid "%(summary)s in '%(name)s'!"
 msgstr "%(summary)s in '%(name)s'!"
 
 #: reading_lists/views.py:730
+#, python-format
 msgid "Skipped %(count)d duplicate issue."
 msgid_plural "Skipped %(count)d duplicate issues."
 msgstr[0] "Saltato %(count)d albo duplicato."
@@ -1637,6 +4744,7 @@ msgid "No changes were made."
 msgstr "Nessuna modifica effettuata."
 
 #: reading_lists/views.py:778
+#, python-format
 msgid "No new issues to add. All issues from %(series)s are already in the list."
 msgstr ""
 "Nessun nuovo albo da aggiungere. Tutti gli albi di %(series)s sono già nella lista."
@@ -1675,10 +4783,75 @@ msgid_plural "Added %(count)d issues from %(arc)s at the end of '%(name)s'!"
 msgstr[0] "Aggiunto %(count)d albo da %(arc)s alla fine di '%(name)s'!"
 msgstr[1] "Aggiunti %(count)d albi da %(arc)s alla fine di '%(name)s'!"
 
-#: templates/base.html:9 users/templates/registration/account_activation_email.html:210
-#: users/templates/registration/account_activation_email.txt:21
-msgid "Metron Comic Book Database"
-msgstr "Database Fumetti Metron"
+#: templates/404.html:4 templates/500.html:4
+msgid "Page Not Found - Metron"
+msgstr "Pagina Non Trovata - Metron"
+
+#: templates/404.html:16 templates/500.html:16
+msgid "Page Not Found"
+msgstr "Pagina Non Trovata"
+
+#: templates/404.html:24 templates/500.html:24
+msgid ""
+"Sorry, we couldn't find the page you're looking for. It might have been moved, "
+"deleted, or never existed."
+msgstr ""
+"Siamo spiacenti, non siamo riusciti a trovare la pagina che stai cercando. Potrebbe "
+"essere stata spostata, eliminata o non essere mai esistita."
+
+#: templates/404.html:32 templates/500.html:32
+#: users/templates/registration/account_activation_invalid.html:35
+#: users/templates/registration/account_activation_sent.html:32
+#: users/templates/registration/password_change_done.html:30
+#: users/templates/registration/signup_rate_limited.html:30
+#: users/templates/registration/signups_disabled.html:28
+msgid "Go to Home"
+msgstr "Vai alla Home"
+
+#: templates/404.html:38 templates/500.html:38
+msgid "Go Back"
+msgstr "Torna Indietro"
+
+#: templates/404.html:45 templates/500.html:45
+msgid "You might want to:"
+msgstr "Potresti voler:"
+
+#: templates/404.html:48 templates/500.html:48
+msgid "Check the URL for typos"
+msgstr "Controlla l'URL per errori di battitura"
+
+#: templates/404.html:49 templates/500.html:49
+msgid "Use the search feature to find what you're looking for"
+msgstr "Usa la funzione di ricerca per trovare quello che stai cercando"
+
+#: templates/404.html:54 templates/500.html:54
+#, python-format
+msgid ""
+"Browse our <a href=\"%(issue_list_url)s\">issues</a>, <a "
+"href=\"%(series_list_url)s\">series</a>, or <a "
+"href=\"%(character_list_url)s\">characters</a>"
+msgstr ""
+"Sfoglia i nostri <a href=\"%(issue_list_url)s\">albi</a>, <a "
+"href=\"%(series_list_url)s\">serie</a> o <a "
+"href=\"%(character_list_url)s\">personaggi</a>"
+
+#: templates/404.html:58 templates/500.html:58
+#, python-format
+msgid "Return to the <a href=\"%(home_url)s\">homepage</a>"
+msgstr "Torna alla <a href=\"%(home_url)s\">homepage</a>"
+
+#: templates/404.html:65 templates/500.html:65
+msgid "Still need help?"
+msgstr "Hai ancora bisogno di aiuto?"
+
+#: templates/404.html:66 templates/500.html:66
+msgid "If you believe this is an error, please let us know:"
+msgstr "Se ritieni che questo sia un errore, faccelo sapere:"
+
+#: templates/404.html:75 templates/500.html:75
+#: users/templates/registration/account_activation_invalid.html:87
+msgid "Report Issue"
+msgstr "Segnala un Problema"
 
 #: templates/base.html:13
 msgid ""
@@ -1692,10 +4865,20 @@ msgstr ""
 msgid "comics, comic books, database, Marvel, DC, creators, characters"
 msgstr "fumetti, albi, database, Marvel, DC, autori, personaggi"
 
-#: templates/partials/footer.html:10
-#: users/templates/registration/account_activation_email.html:229
-msgid "Contact Us"
-msgstr "Contattaci"
+#: templates/django/forms/widgets/clearable_file_input.html:65
+#: templates/django/forms/widgets/clearable_file_input.html:72
+#: templates/django/forms/widgets/clearable_file_input.html:85
+#: templates/django/forms/widgets/clearable_file_input.html:92
+msgid "No file selected"
+msgstr "Nessun file selezionato"
+
+#: templates/django/forms/widgets/clearable_file_input.html:70
+msgid "Choose new file…"
+msgstr "Scegli un nuovo file…"
+
+#: templates/django/forms/widgets/clearable_file_input.html:90
+msgid "Choose a file…"
+msgstr "Scegli un file…"
 
 #: templates/partials/footer.html:11
 msgid "Contact links"
@@ -1713,18 +4896,9 @@ msgstr "Email all'Amministratore"
 msgid "Join our Matrix chat"
 msgstr "Unisciti alla nostra chat Matrix"
 
-#: templates/partials/footer.html:32
-msgid "Matrix Chat"
-msgstr "Chat Matrix"
-
 #: templates/partials/footer.html:40
 msgid "Join GitHub discussions"
 msgstr "Partecipa alle discussioni su GitHub"
-
-#: templates/partials/footer.html:44
-#: users/templates/registration/account_activation_sent.html:73
-msgid "GitHub Discussions"
-msgstr "Discussioni GitHub"
 
 #: templates/partials/footer.html:55
 msgid "Built with"
@@ -1751,12 +4925,6 @@ msgstr ", salvo dove diversamente indicato."
 msgid "Creative Commons License"
 msgstr "Licenza Creative Commons"
 
-#: templates/partials/footer.html:95
-#: users/templates/registration/account_activation_email.html:236
-#, python-format
-msgid "&copy; %(current_year)s Metron Project. All rights reserved."
-msgstr "&copy; %(current_year)s Metron Project. Tutti i diritti riservati."
-
 #: templates/partials/messages.html:13
 msgid "close notification"
 msgstr "chiudi notifica"
@@ -1768,10 +4936,6 @@ msgstr "navigazione principale"
 #: templates/partials/navbar.html:10
 msgid "Metron home"
 msgstr "Home di Metron"
-
-#: templates/partials/navbar.html:12
-msgid "Metron logo"
-msgstr "Logo Metron"
 
 #: templates/partials/navbar.html:18
 msgid "menu"
@@ -1796,22 +4960,6 @@ msgstr "Future"
 #: templates/partials/navbar.html:56
 msgid "Browse"
 msgstr "Esplora"
-
-#: templates/partials/navbar.html:68 users/templates/users/customuser_detail.html:285
-msgid "Imprints"
-msgstr "Etichette"
-
-#: templates/partials/navbar.html:87 users/templates/users/customuser_detail.html:263
-msgid "Creators"
-msgstr "Autori"
-
-#: templates/partials/navbar.html:106
-msgid "Story Arcs"
-msgstr "Archi Narrativi"
-
-#: templates/partials/navbar.html:112 users/templates/users/customuser_detail.html:307
-msgid "Universes"
-msgstr "Universi"
 
 #: templates/partials/navbar.html:126
 msgid "My Library"
@@ -1893,6 +5041,264 @@ msgstr "Registrati"
 #: templates/partials/navbar.html:273
 msgid "Log in to your account"
 msgstr "Accedi al tuo account"
+
+#: templates/partials/rating_summary.html:25 templates/partials/rating_widget.html:28
+#, python-format
+msgid "%(avg)s (%(counter)s rating)"
+msgid_plural "%(avg)s (%(counter)s ratings)"
+msgstr[0] "%(avg)s (%(counter)s recensione)"
+msgstr[1] "%(avg)s (%(counter)s recensioni)"
+
+#: templates/partials/rating_widget.html:19
+msgid "Average Rating:"
+msgstr "Valutazione Media:"
+
+#: templates/partials/rating_widget.html:37
+msgid "Your Rating:"
+msgstr "La Tua Valutazione:"
+
+#: templates/partials/rating_widget.html:46
+#: user_collection/templates/user_collection/partials/star_rating.html:10
+#, python-format
+msgid "Rate %(counter)s star"
+msgid_plural "Rate %(counter)s stars"
+msgstr[0] "Vota %(counter)s stella"
+msgstr[1] "Vota %(counter)s stelle"
+
+#: templates/partials/rating_widget.html:57
+#: user_collection/templates/user_collection/partials/star_rating.html:21
+msgid "Clear rating"
+msgstr "Cancella valutazione"
+
+#: templates/partials/social_meta.html:12 templates/partials/social_meta.html:23
+msgid "A community-based comic book database."
+msgstr "Un database di fumetti gestito dalla community."
+
+#: templates/partials/social_meta.html:16
+msgid "An image of the New God Metron seated and pondering the universe."
+msgstr "Un'immagine del Nuovo Dio Metron seduto a riflettere sull'universo."
+
+#: templates/registration/login.html:5
+msgid "Login - Metron"
+msgstr "Accedi - Metron"
+
+#: templates/registration/login.html:13
+msgid "Login to Metron"
+msgstr "Accedi a Metron"
+
+#: templates/registration/login.html:14
+msgid "Access your account to contribute to the database"
+msgstr "Accedi al tuo account per contribuire al database"
+
+#: templates/registration/login.html:57
+msgid "Login"
+msgstr "Accedi"
+
+#: templates/registration/login.html:68
+msgid "Forgot your password?"
+msgstr "Hai dimenticato la password?"
+
+#: templates/registration/login.html:77
+msgid "Don't have an account?"
+msgstr "Non hai un account?"
+
+#: templates/registration/login.html:78
+msgid "Sign up here"
+msgstr "Registrati qui"
+
+#: templates/registration/password_reset_complete.html:4
+msgid "Password Reset Complete - Metron"
+msgstr "Reimpostazione Password Completata - Metron"
+
+#: templates/registration/password_reset_complete.html:12
+msgid "Password Reset Complete"
+msgstr "Reimpostazione Password Completata"
+
+#: templates/registration/password_reset_complete.html:20
+#: users/templates/registration/password_change_done.html:20
+msgid "Your password has been successfully changed!"
+msgstr "La tua password è stata modificata con successo!"
+
+#: templates/registration/password_reset_complete.html:21
+msgid "You can now log in with your new password."
+msgstr "Ora puoi accedere con la tua nuova password."
+
+#: templates/registration/password_reset_complete.html:30
+msgid "Go to Login Page"
+msgstr "Vai alla Pagina di Accesso"
+
+#: templates/registration/password_reset_complete.html:41
+#: users/templates/registration/password_change_done.html:48
+msgid "Security Tip"
+msgstr "Suggerimento di Sicurezza"
+
+#: templates/registration/password_reset_complete.html:45
+#: users/templates/registration/password_change_done.html:52
+msgid "Keep your password secure and don't share it with anyone"
+msgstr "Mantieni la tua password sicura e non condividerla con nessuno"
+
+#: templates/registration/password_reset_complete.html:46
+#: users/templates/registration/password_change_done.html:53
+msgid "Use a unique password for Metron"
+msgstr "Usa una password unica per Metron"
+
+#: templates/registration/password_reset_complete.html:47
+#: users/templates/registration/password_change_done.html:54
+msgid "Consider using a password manager"
+msgstr "Considera l'uso di un gestore di password"
+
+#: templates/registration/password_reset_complete.html:48
+#: users/templates/registration/password_change_done.html:55
+msgid "Change your password periodically for better security"
+msgstr "Cambia la tua password periodicamente per una maggiore sicurezza"
+
+#: templates/registration/password_reset_confirm.html:5
+msgid "Set New Password - Metron"
+msgstr "Imposta Nuova Password - Metron"
+
+#: templates/registration/password_reset_confirm.html:13
+msgid "Set Your New Password"
+msgstr "Imposta la Tua Nuova Password"
+
+#: templates/registration/password_reset_confirm.html:14
+msgid "Choose a strong password for your account"
+msgstr "Scegli una password sicura per il tuo account"
+
+#: templates/registration/password_reset_confirm.html:53
+#: users/templates/registration/password_change_form.html:53
+#: users/templates/users/customuser_detail.html:31
+msgid "Change Password"
+msgstr "Cambia Password"
+
+#: templates/registration/password_reset_confirm.html:61
+#: users/templates/registration/password_change_form.html:65
+msgid "Password Requirements:"
+msgstr "Requisiti della Password:"
+
+#: templates/registration/password_reset_confirm.html:63
+#: users/templates/registration/password_change_form.html:69
+msgid "Your password can't be too similar to your other personal information"
+msgstr ""
+"La tua password non può essere troppo simile alle tue altre informazioni personali"
+
+#: templates/registration/password_reset_confirm.html:64
+#: users/templates/registration/password_change_form.html:70
+msgid "Your password must contain at least 8 characters"
+msgstr "La tua password deve contenere almeno 8 caratteri"
+
+#: templates/registration/password_reset_confirm.html:65
+#: users/templates/registration/password_change_form.html:71
+msgid "Your password can't be a commonly used password"
+msgstr "La tua password non può essere una password comunemente usata"
+
+#: templates/registration/password_reset_confirm.html:66
+#: users/templates/registration/password_change_form.html:72
+msgid "Your password can't be entirely numeric"
+msgstr "La tua password non può essere interamente numerica"
+
+#: templates/registration/password_reset_done.html:4
+msgid "Reset Email Sent - Metron"
+msgstr "Email di Reimpostazione Inviata - Metron"
+
+#: templates/registration/password_reset_done.html:12
+msgid "Check Your Inbox"
+msgstr "Controlla la Tua Casella di Posta"
+
+#: templates/registration/password_reset_done.html:20
+msgid "We've sent password reset instructions to your email address."
+msgstr ""
+"Abbiamo inviato le istruzioni per la reimpostazione della password al tuo indirizzo "
+"email."
+
+#: templates/registration/password_reset_done.html:21
+msgid "You should receive the email within a few minutes."
+msgstr "Dovresti ricevere l'email entro pochi minuti."
+
+#: templates/registration/password_reset_done.html:30
+#: templates/registration/password_reset_form.html:52
+msgid "Back to Login"
+msgstr "Torna al Login"
+
+#: templates/registration/password_reset_done.html:37
+#: users/templates/registration/account_activation_sent.html:43
+msgid "Didn't receive the email?"
+msgstr "Non hai ricevuto l'email?"
+
+#: templates/registration/password_reset_done.html:39
+#: users/templates/registration/account_activation_sent.html:47
+msgid "Check your spam or junk folder"
+msgstr "Controlla la cartella spam o posta indesiderata"
+
+#: templates/registration/password_reset_done.html:40
+#: users/templates/registration/account_activation_sent.html:48
+msgid "Make sure you entered the correct email address"
+msgstr "Assicurati di aver inserito l'indirizzo email corretto"
+
+#: templates/registration/password_reset_done.html:41
+#: users/templates/registration/account_activation_sent.html:49
+msgid "Wait a few minutes - emails can be delayed"
+msgstr "Attendi qualche minuto - le email possono essere in ritardo"
+
+#: templates/registration/password_reset_done.html:44
+#, python-format
+msgid "Try the <a href=\"%(password_reset_url)s\">password reset</a> again"
+msgstr "Riprova la <a href=\"%(password_reset_url)s\">reimpostazione della password</a>"
+
+#: templates/registration/password_reset_done.html:50
+#: users/templates/registration/account_activation_invalid.html:70
+msgid "Still having trouble?"
+msgstr "Hai ancora problemi?"
+
+#: templates/registration/password_reset_done.html:51
+msgid "Contact us for assistance"
+msgstr "Contattaci per assistenza"
+
+#: templates/registration/password_reset_done.html:58
+#: users/templates/registration/account_activation_invalid.html:78
+#: users/templates/registration/account_activation_sent.html:64
+msgid "Contact Support"
+msgstr "Contatta il Supporto"
+
+#: templates/registration/password_reset_form.html:5
+msgid "Password Reset - Metron"
+msgstr "Reimpostazione Password - Metron"
+
+#: templates/registration/password_reset_form.html:13
+msgid "Reset Your Password"
+msgstr "Reimposta la Tua Password"
+
+#: templates/registration/password_reset_form.html:14
+msgid "Enter your email address and we'll send you reset instructions"
+msgstr ""
+"Inserisci il tuo indirizzo email e ti invieremo le istruzioni per la reimpostazione"
+
+#: templates/registration/password_reset_form.html:24
+msgid "Email Address"
+msgstr "Indirizzo Email"
+
+#: templates/registration/password_reset_form.html:41
+msgid "Send Reset Instructions"
+msgstr "Invia Istruzioni di Reimpostazione"
+
+#: templates/registration/password_reset_form.html:60
+msgid "What happens next?"
+msgstr "Cosa succede dopo?"
+
+#: templates/registration/password_reset_form.html:62
+msgid "We'll send an email to the address you provided"
+msgstr "Invieremo un'email all'indirizzo che hai fornito"
+
+#: templates/registration/password_reset_form.html:63
+msgid "Check your inbox (and spam folder)"
+msgstr "Controlla la tua casella di posta (e la cartella spam)"
+
+#: templates/registration/password_reset_form.html:64
+msgid "Follow the link in the email to reset your password"
+msgstr "Segui il link nell'email per reimpostare la tua password"
+
+#: templates/registration/password_reset_form.html:65
+msgid "The link expires in 24 hours"
+msgstr "Il link scade tra 24 ore"
 
 #: timeline/templates/timeline.html:4
 msgid "Timeline"
@@ -2151,11 +5557,6 @@ msgstr "0.5 (PR - Scadente)"
 msgid "Print"
 msgstr "Cartaceo"
 
-#: user_collection/models.py:48
-#: user_collection/templates/user_collection/collection_stats.html:201
-msgid "Digital"
-msgstr "Digitale"
-
 #: user_collection/models.py:49
 #: user_collection/templates/user_collection/collection_stats.html:203
 msgid "Both"
@@ -2340,19 +5741,6 @@ msgstr "Informazioni Albo"
 msgid "Issue:"
 msgstr "Albo:"
 
-#: user_collection/templates/user_collection/collection_detail.html:67
-msgid "Series:"
-msgstr "Serie:"
-
-#: user_collection/templates/user_collection/collection_detail.html:71
-#: user_collection/templates/user_collection/missing_issues_detail.html:35
-msgid "Publisher:"
-msgstr "Editore:"
-
-#: user_collection/templates/user_collection/collection_detail.html:75
-msgid "Cover Date:"
-msgstr "Data di Copertina:"
-
 #: user_collection/templates/user_collection/collection_detail.html:90
 msgid "Grading Information"
 msgstr "Informazioni sulla Valutazione"
@@ -2424,10 +5812,6 @@ msgstr "Letto"
 msgid "Unread"
 msgstr "Non Letto"
 
-#: user_collection/templates/user_collection/collection_detail.html:177
-msgid "Rating:"
-msgstr "Valutazione:"
-
 #: user_collection/templates/user_collection/collection_detail.html:181
 msgid "Read History:"
 msgstr "Cronologia Letture:"
@@ -2489,10 +5873,6 @@ msgstr "Cronologia Letture"
 msgid "Missing Issues"
 msgstr "Albi Mancanti"
 
-#: user_collection/templates/user_collection/collection_list.html:44
-msgid "Add Issue"
-msgstr "Aggiungi Albo"
-
 #: user_collection/templates/user_collection/collection_list.html:67
 #: user_collection/templates/user_collection/partials/collection_filter.html:218
 msgid "Rating"
@@ -2501,11 +5881,6 @@ msgstr "Valutazione"
 #: user_collection/templates/user_collection/collection_list.html:68
 msgid "Quantity"
 msgstr "Quantità"
-
-#: user_collection/templates/user_collection/collection_list.html:70
-#: user_collection/templates/user_collection/missing_issues_list.html:45
-msgid "Actions"
-msgstr "Azioni"
 
 #: user_collection/templates/user_collection/collection_list.html:88
 msgid "User-assessed"
@@ -2606,10 +5981,6 @@ msgstr "Informazioni Serie"
 msgid "Series Type:"
 msgstr "Tipo di Serie:"
 
-#: user_collection/templates/user_collection/missing_issues_detail.html:44
-msgid "Volume:"
-msgstr "Volume:"
-
 #: user_collection/templates/user_collection/missing_issues_detail.html:52
 msgid "Collection Progress"
 msgstr "Progresso della Collezione"
@@ -2690,38 +6061,6 @@ msgstr "Cerca tra serie e note..."
 msgid "Search across series names and notes"
 msgstr "Cerca tra i nomi delle serie e le note"
 
-#: user_collection/templates/user_collection/partials/collection_filter.html:53
-msgid "Series Name"
-msgstr "Nome Serie"
-
-#: user_collection/templates/user_collection/partials/collection_filter.html:60
-msgid "e.g., Amazing Spider-Man"
-msgstr "es. Amazing Spider-Man"
-
-#: user_collection/templates/user_collection/partials/collection_filter.html:61
-msgid "Filter by series name"
-msgstr "Filtra per nome serie"
-
-#: user_collection/templates/user_collection/partials/collection_filter.html:70
-msgid "Series Type"
-msgstr "Tipo di Serie"
-
-#: user_collection/templates/user_collection/partials/collection_filter.html:75
-msgid "Filter by series type"
-msgstr "Filtra per tipo di serie"
-
-#: user_collection/templates/user_collection/partials/collection_filter.html:112
-msgid "Issue Number"
-msgstr "Numero Albo"
-
-#: user_collection/templates/user_collection/partials/collection_filter.html:119
-msgid "e.g., 1"
-msgstr "es. 1"
-
-#: user_collection/templates/user_collection/partials/collection_filter.html:120
-msgid "Filter by issue number"
-msgstr "Filtra per numero albo"
-
 #: user_collection/templates/user_collection/partials/collection_filter.html:133
 msgid "Filter by format"
 msgstr "Filtra per formato"
@@ -2773,14 +6112,6 @@ msgstr "Rimuovi data di lettura"
 msgid "Confirm Delete"
 msgstr "Conferma Eliminazione"
 
-#: user_collection/templates/user_collection/partials/read_dates_list.html:22
-#: users/templates/registration/password_change_form.html:26
-#: users/templates/registration/signup.html:30
-#: users/templates/users/change_profile.html:26
-#: users/templates/users/customuser_detail.html:486
-msgid "close"
-msgstr "chiudi"
-
 #: user_collection/templates/user_collection/partials/read_dates_list.html:28
 #, python-format
 msgid "Are you sure you want to remove the read date <strong>%(read_date)s</strong>?"
@@ -2814,17 +6145,6 @@ msgstr "Lascia vuoto per usare la data/ora corrente"
 #: user_collection/templates/user_collection/partials/read_dates_list.html:73
 msgid "Add Read Date"
 msgstr "Aggiungi Data di Lettura"
-
-#: user_collection/templates/user_collection/partials/star_rating.html:10
-#, python-format
-msgid "Rate %(counter)s star"
-msgid_plural "Rate %(counter)s stars"
-msgstr[0] "Vota %(counter)s stella"
-msgstr[1] "Vota %(counter)s stelle"
-
-#: user_collection/templates/user_collection/partials/star_rating.html:21
-msgid "Clear rating"
-msgstr "Cancella valutazione"
 
 #: user_collection/templates/user_collection/reading_history.html:4
 msgid "Reading History - Metron"
@@ -2879,11 +6199,6 @@ msgstr "Elemento della collezione aggiornato!"
 #: user_collection/views.py:168
 msgid "Item removed from your collection."
 msgstr "Elemento rimosso dalla tua collezione."
-
-#: user_collection/views.py:212 user_collection/views.py:229
-#: user_collection/views.py:243
-msgid "Unknown"
-msgstr "Sconosciuto"
 
 #: user_collection/views.py:217
 msgid "Issues by Publisher"
@@ -3102,15 +6417,6 @@ msgid "If you didn't create an account with Metron, you can safely ignore this e
 msgstr ""
 "Se non hai creato un account con Metron, puoi tranquillamente ignorare questa email."
 
-#: users/templates/registration/account_activation_email.html:216
-#: users/templates/registration/account_activation_email.txt:22
-msgid "A community-driven project for comic book enthusiasts"
-msgstr "Un progetto guidato dalla community per appassionati di fumetti"
-
-#: users/templates/registration/account_activation_email.html:223
-msgid "Visit Website"
-msgstr "Visita il Sito"
-
 #: users/templates/registration/account_activation_email.txt:6
 msgid "To complete your registration and activate your account, please visit:"
 msgstr "Per completare la registrazione e attivare il tuo account, visita:"
@@ -3122,11 +6428,6 @@ msgid ""
 msgstr ""
 "IMPORTANTE: Questo link scade tra 24 ore. Se non attivi il tuo account entro questo "
 "tempo, dovrai registrarti di nuovo."
-
-#: users/templates/registration/account_activation_email.txt:29
-#, python-format
-msgid "(c) %(current_year)s Metron Project. All rights reserved."
-msgstr "(c) %(current_year)s Metron Project. Tutti i diritti riservati."
 
 #: users/templates/registration/account_activation_invalid.html:4
 msgid "Invalid Confirmation Link - Metron"
@@ -3155,14 +6456,6 @@ msgstr "Il link è scaduto (i link sono validi per 24 ore)"
 #: users/templates/registration/account_activation_invalid.html:25
 msgid "The link was copied incorrectly"
 msgstr "Il link è stato copiato in modo errato"
-
-#: users/templates/registration/account_activation_invalid.html:35
-#: users/templates/registration/account_activation_sent.html:32
-#: users/templates/registration/password_change_done.html:30
-#: users/templates/registration/signup_rate_limited.html:30
-#: users/templates/registration/signups_disabled.html:28
-msgid "Go to Home"
-msgstr "Vai alla Home"
 
 #: users/templates/registration/account_activation_invalid.html:41
 msgid "Try Logging In"
@@ -3193,22 +6486,9 @@ msgstr ""
 msgid "Make sure you're using the most recent confirmation email"
 msgstr "Assicurati di utilizzare l'email di conferma più recente"
 
-#: users/templates/registration/account_activation_invalid.html:70
-msgid "Still having trouble?"
-msgstr "Hai ancora problemi?"
-
 #: users/templates/registration/account_activation_invalid.html:71
 msgid "Our support team is here to help"
 msgstr "Il nostro team di supporto è qui per aiutarti"
-
-#: users/templates/registration/account_activation_invalid.html:78
-#: users/templates/registration/account_activation_sent.html:64
-msgid "Contact Support"
-msgstr "Contatta il Supporto"
-
-#: users/templates/registration/account_activation_invalid.html:87
-msgid "Report Issue"
-msgstr "Segnala un Problema"
 
 #: users/templates/registration/account_activation_sent.html:4
 msgid "Confirmation Email Sent - Metron"
@@ -3235,22 +6515,6 @@ msgstr ""
 "Clicca il link nell'email per attivare il tuo account e completare il processo di "
 "registrazione."
 
-#: users/templates/registration/account_activation_sent.html:43
-msgid "Didn't receive the email?"
-msgstr "Non hai ricevuto l'email?"
-
-#: users/templates/registration/account_activation_sent.html:47
-msgid "Check your spam or junk folder"
-msgstr "Controlla la cartella spam o posta indesiderata"
-
-#: users/templates/registration/account_activation_sent.html:48
-msgid "Make sure you entered the correct email address"
-msgstr "Assicurati di aver inserito l'indirizzo email corretto"
-
-#: users/templates/registration/account_activation_sent.html:49
-msgid "Wait a few minutes - emails can be delayed"
-msgstr "Attendi qualche minuto - le email possono essere in ritardo"
-
 #: users/templates/registration/account_activation_sent.html:50
 msgid "The confirmation link is valid for 24 hours"
 msgstr "Il link di conferma è valido per 24 ore"
@@ -3271,10 +6535,6 @@ msgstr "Password Modificata - Metron"
 msgid "Password Changed Successfully"
 msgstr "Password Modificata con Successo"
 
-#: users/templates/registration/password_change_done.html:20
-msgid "Your password has been successfully changed!"
-msgstr "La tua password è stata modificata con successo!"
-
 #: users/templates/registration/password_change_done.html:21
 msgid "You can now continue using your account with the new password."
 msgstr "Ora puoi continuare a usare il tuo account con la nuova password."
@@ -3282,26 +6542,6 @@ msgstr "Ora puoi continuare a usare il tuo account con la nuova password."
 #: users/templates/registration/password_change_done.html:37
 msgid "View Profile"
 msgstr "Visualizza Profilo"
-
-#: users/templates/registration/password_change_done.html:48
-msgid "Security Tip"
-msgstr "Suggerimento di Sicurezza"
-
-#: users/templates/registration/password_change_done.html:52
-msgid "Keep your password secure and don't share it with anyone"
-msgstr "Mantieni la tua password sicura e non condividerla con nessuno"
-
-#: users/templates/registration/password_change_done.html:53
-msgid "Use a unique password for Metron"
-msgstr "Usa una password unica per Metron"
-
-#: users/templates/registration/password_change_done.html:54
-msgid "Consider using a password manager"
-msgstr "Considera l'uso di un gestore di password"
-
-#: users/templates/registration/password_change_done.html:55
-msgid "Change your password periodically for better security"
-msgstr "Cambia la tua password periodicamente per una maggiore sicurezza"
 
 #: users/templates/registration/password_change_form.html:5
 msgid "Change Password - Metron"
@@ -3315,32 +6555,6 @@ msgstr "Cambia la Tua Password"
 msgid "Update your account password"
 msgstr "Aggiorna la password del tuo account"
 
-#: users/templates/registration/password_change_form.html:53
-#: users/templates/users/customuser_detail.html:31
-msgid "Change Password"
-msgstr "Cambia Password"
-
-#: users/templates/registration/password_change_form.html:65
-msgid "Password Requirements:"
-msgstr "Requisiti della Password:"
-
-#: users/templates/registration/password_change_form.html:69
-msgid "Your password can't be too similar to your other personal information"
-msgstr ""
-"La tua password non può essere troppo simile alle tue altre informazioni personali"
-
-#: users/templates/registration/password_change_form.html:70
-msgid "Your password must contain at least 8 characters"
-msgstr "La tua password deve contenere almeno 8 caratteri"
-
-#: users/templates/registration/password_change_form.html:71
-msgid "Your password can't be a commonly used password"
-msgstr "La tua password non può essere una password comunemente usata"
-
-#: users/templates/registration/password_change_form.html:72
-msgid "Your password can't be entirely numeric"
-msgstr "La tua password non può essere interamente numerica"
-
 #: users/templates/registration/signup.html:5
 msgid "Sign Up - Metron"
 msgstr "Registrati - Metron"
@@ -3352,10 +6566,6 @@ msgstr "Unisciti a Metron"
 #: users/templates/registration/signup.html:17
 msgid "Create an account to contribute to the comic book database"
 msgstr "Crea un account per contribuire al database dei fumetti"
-
-#: users/templates/registration/signup.html:69
-msgid "Create Account"
-msgstr "Crea Account"
 
 #: users/templates/registration/signup.html:76
 msgid "Already have an account?"
@@ -3465,10 +6675,6 @@ msgstr "I Tuoi Token"
 #: users/templates/users/api_token.html:81
 msgid "Never"
 msgstr "Mai"
-
-#: users/templates/users/api_token.html:86
-msgid "Created"
-msgstr "Creato"
 
 #: users/templates/users/api_token.html:87
 msgid "Expires"
@@ -3730,10 +6936,6 @@ msgstr "Unisciti alla conversazione"
 msgid "Users - Metron"
 msgstr "Utenti - Metron"
 
-#: users/templates/users/customuser_list.html:13
-msgid "List navigation and actions"
-msgstr "Navigazione ed azioni elenco"
-
 #: users/templates/users/customuser_list.html:17
 #, python-format
 msgid "<strong>%(formatted_count)s</strong> User"
@@ -3868,11 +7070,6 @@ msgstr "Data di Acquisto"
 msgid "Additional notes"
 msgstr "Note aggiuntive"
 
-#: wish_list/models.py:23
-#: wish_list/templates/wish_list/partials/wish_list_button.html:11
-msgid "Wish List"
-msgstr "Lista dei Desideri"
-
 #: wish_list/models.py:24
 msgid "Wish Lists"
 msgstr "Liste dei Desideri"
@@ -3950,10 +7147,6 @@ msgstr "Elementi (%(count)s)"
 msgid "Priority"
 msgstr "Priorità"
 
-#: wish_list/templates/wish_list/wishlist_detail.html:84
-msgid "Status"
-msgstr "Stato"
-
 #: wish_list/templates/wish_list/wishlist_detail.html:85
 msgid "Min Grade"
 msgstr "Grado Min"
@@ -4021,3 +7214,15 @@ msgstr "%(issue)s segnato come acquisito! Aggiunto alla tua collezione."
 #, python-format
 msgid "%(issue)s marked as acquired! Already in your collection."
 msgstr "%(issue)s segnato come acquisito! Già nella tua collezione."
+
+#, python-format
+#~ msgid "<strong>%(counter|intcomma)s</strong> Issue"
+#~ msgid_plural "<strong>%(counter|intcomma)s</strong> Issues"
+#~ msgstr[0] "<strong>%(counter)s</strong> Albo"
+#~ msgstr[1] "<strong>%(counter)s</strong> Albi"
+
+#, python-format
+#~ msgid "%(counter|intcomma)s issue"
+#~ msgid_plural "%(counter|intcomma)s issues"
+#~ msgstr[0] "%(counter)s albo"
+#~ msgstr[1] "%(counter)s albi"

@@ -4,6 +4,7 @@ from django.forms import (
     ModelMultipleChoiceField,
     inlineformset_factory,
 )
+from django.utils.translation import gettext_lazy as _
 
 from comicsdb.autocomplete import CreatorAutocomplete, RoleAutocomplete
 from comicsdb.forms.widgets import SafeAutocompleteWidget
@@ -17,7 +18,7 @@ class CreditsForm(ModelForm):
         widget=SafeAutocompleteWidget(
             ac_class=CreatorAutocomplete,
             attrs={
-                "placeholder": "Autocomplete...",
+                "placeholder": _("Autocomplete..."),
             },
         ),
     )

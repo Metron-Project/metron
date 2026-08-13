@@ -1,3 +1,4 @@
+{% load i18n %}
 {% for series in credits %}
     <li>
         <a href="{% url 'series:detail' slug=series.issue__series__slug %}">
@@ -9,12 +10,12 @@
             {% elif series.issue__series__series_type == 8 %}
                 HC
             {% elif series.issue__series__series_type == 12 %}
-                Digital
+                {% trans "Digital" %}
             {% endif %}
             ({{ series.issue__series__year_began }})
         </a>:
         <a href="{% url 'creator:series' creator=creator_slug series=series.issue__series__slug %}">
-            {{ series.issue__count }} issue{{ series.issue__count|pluralize }}
+            {% blocktrans count counter=series.issue__count %}{{ counter }} issue{% plural %}{{ counter }} issues{% endblocktrans %}
         </a>
     </li>
 {% endfor %}
@@ -27,7 +28,7 @@
                 hx-target="#series-list"
                 hx-swap="beforeend"
                 hx-indicator="#series-spinner">
-            <span>Load More Series</span>
+            <span>{% trans "Load More Series" %}</span>
         </button>
         <span id="series-spinner" class="htmx-indicator ml-2">
             <i class="fas fa-spinner fa-spin"></i>
