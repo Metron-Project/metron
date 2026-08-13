@@ -1,0 +1,21 @@
+{% load i18n %}
+<div class="navbar-item">
+    <form action="{% url 'set_language' %}" method="post">
+        {% csrf_token %}
+        <input name="next" type="hidden" value="{{ request.path }}">
+        <div class="select is-small">
+            {% get_current_language as CURRENT_LANGUAGE %}
+            {% get_available_languages as AVAILABLE_LANGUAGES %}
+            <select name="language"
+                    aria-label="Choose site language"
+                    onchange="this.form.submit()">
+                {% for lang_code, lang_name in AVAILABLE_LANGUAGES %}
+                    <option value="{{ lang_code }}"
+                            {% if lang_code == CURRENT_LANGUAGE %}selected{% endif %}>
+                        {{ lang_name }}
+                    </option>
+                {% endfor %}
+            </select>
+        </div>
+    </form>
+</div>

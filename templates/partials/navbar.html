@@ -1,4 +1,5 @@
 {% load static %}
+{% load i18n %}
 <nav class="navbar is-link is-fixed-top"
      role="navigation"
      aria-label="main navigation">
@@ -216,6 +217,7 @@
             </div>
         </div>
         <div class="navbar-end">
+            {% include "partials/language_switcher.html" %}
             {# Social Links #}
             <a class="navbar-item"
                href="https://metron-project.github.io"
