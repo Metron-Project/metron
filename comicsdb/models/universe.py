@@ -13,14 +13,14 @@ from simple_history.models import HistoricalRecords
 from sorl.thumbnail import ImageField
 
 from comicsdb.models.attribution import Attribution
-from comicsdb.models.common import CommonInfo, pre_save_slug
+from comicsdb.models.common import CommonInfo, LastModifiedCacheMixin, pre_save_slug
 from comicsdb.models.publisher import Publisher
 from users.models import CustomUser
 
 LOGGER = logging.getLogger(__name__)
 
 
-class Universe(CommonInfo):
+class Universe(LastModifiedCacheMixin, CommonInfo):
     publisher = models.ForeignKey(Publisher, on_delete=models.CASCADE, related_name="universes")
     image = ImageField(upload_to="universe/%Y/%m/%d/", blank=True)
     designation = models.CharField(max_length=255, blank=True)

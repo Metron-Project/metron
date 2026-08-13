@@ -14,6 +14,7 @@ from django.db.models import (
 from django.http import Http404
 from django.shortcuts import get_object_or_404
 from django.utils import timezone
+from django.utils.http import parse_http_date_safe
 from djmoney.money import Money
 from drf_spectacular.utils import OpenApiParameter, extend_schema
 from rest_framework import mixins, status, viewsets
@@ -77,6 +78,7 @@ from api.v1_0.serializers.wish_list import (
     WishListItemReadSerializer,
     WishListSerializer,
 )
+from comicsdb.cache import get_last_modified, set_last_modified
 from comicsdb.filters.collection import CollectionFilter
 from comicsdb.filters.issue import IssueFilter
 from comicsdb.filters.name import ComicVineFilter, NameFilter, UniverseFilter
@@ -111,6 +113,8 @@ class ReadingListItemsPagination(PageNumberPagination):
 
 
 class CachedObjectMixin:
+    """Memoizes get_object() per request."""
+
     def get_object(self):
         if not hasattr(self, "_cached_object"):
             self._cached_object = super().get_object()
@@ -118,19 +122,45 @@ class CachedObjectMixin:
         return self._cached_object
 
 
-class ConditionalRetrieveModelMixin(CachedObjectMixin, mixins.RetrieveModelMixin):
-    def retrieve(self, request, *args, **kwargs):
-        retrieve = last_modified(last_modified_func=self._retrieve_last_modified)(super().retrieve)
+class LastModifiedMixin(CachedObjectMixin):
+    """Supplies `_last_modified` via a plain DB fetch."""
 
-        return retrieve(self, request, *args, **kwargs)
-
-    def _retrieve_last_modified(self, *args, **kwargs):
+    def _last_modified(self, *args, **kwargs):
         obj = self.get_object()
 
-        if obj and getattr(obj, "modified", None):
-            return obj.modified
+        return getattr(obj, "modified", None) if obj else None
 
-        return None
+
+class CachedLastModifiedMixin(LastModifiedMixin):
+    """Answers conditional-GET checks from Redis, skipping the DB on a cache hit.
+
+    Only use on viewsets whose queryset isn't filtered by request.user - a cache
+    hit skips that filtering, which would leak other users' rows via a 304.
+    """
+
+    def _last_modified(self, request, *args, **kwargs):
+        if_modified_since = parse_http_date_safe(request.META.get("HTTP_IF_MODIFIED_SINCE", ""))
+
+        if if_modified_since is not None:
+            pk = self.kwargs.get(self.lookup_url_kwarg or self.lookup_field)
+            cached = get_last_modified(self.get_queryset().model, pk) if pk else None
+
+            if cached is not None and int(cached.timestamp()) <= if_modified_since:
+                return cached
+
+        dt = super()._last_modified(request, *args, **kwargs)
+
+        if if_modified_since is not None and dt is not None:
+            set_last_modified(self.get_object())
+
+        return dt
+
+
+class ConditionalRetrieveModelMixin(LastModifiedMixin, mixins.RetrieveModelMixin):
+    def retrieve(self, request, *args, **kwargs):
+        retrieve = last_modified(last_modified_func=self._last_modified)(super().retrieve)
+
+        return retrieve(self, request, *args, **kwargs)
 
 
 class UserTrackingMixin:
@@ -143,7 +173,7 @@ class UserTrackingMixin:
         serializer.save(edited_by=self.request.user)
 
 
-class IssueListMixin(CachedObjectMixin):
+class IssueListMixin(LastModifiedMixin):
     """Mixin to provide a standard issue_list action for related models."""
 
     def get_issue_queryset(self, obj):
@@ -155,9 +185,7 @@ class IssueListMixin(CachedObjectMixin):
     @extend_schema(responses={200: IssueListSerializer(many=True)}, filters=False)
     @action(detail=True)
     def issue_list(self, request, *args, **kwargs):
-        issue_list = last_modified(last_modified_func=self._issue_list_last_modified)(
-            self._issue_list
-        )
+        issue_list = last_modified(last_modified_func=self._last_modified)(self._issue_list)
 
         return issue_list(self, request, *args, **kwargs)
 
@@ -171,16 +199,9 @@ class IssueListMixin(CachedObjectMixin):
             return self.get_paginated_response(serializer.data)
         raise Http404
 
-    def _issue_list_last_modified(self, *args, **kwargs):
-        obj = self.get_object()
-
-        if obj and getattr(obj, "modified", None):
-            return obj.modified
-
-        return None
-
 
 class ArcViewSet(
+    CachedLastModifiedMixin,
     UserTrackingMixin,
     IssueListMixin,
     mixins.CreateModelMixin,
@@ -212,6 +233,7 @@ class ArcViewSet(
 
 
 class CharacterViewSet(
+    CachedLastModifiedMixin,
     UserTrackingMixin,
     IssueListMixin,
     mixins.CreateModelMixin,
@@ -251,6 +273,7 @@ class CharacterViewSet(
 
 
 class CreatorViewSet(
+    CachedLastModifiedMixin,
     UserTrackingMixin,
     mixins.CreateModelMixin,
     ConditionalRetrieveModelMixin,
@@ -301,6 +324,7 @@ class CreditViewset(
 
 
 class ImprintViewSet(
+    CachedLastModifiedMixin,
     UserTrackingMixin,
     mixins.CreateModelMixin,
     ConditionalRetrieveModelMixin,
@@ -343,6 +367,7 @@ class ImprintViewSet(
 
 
 class IssueViewSet(
+    CachedLastModifiedMixin,
     UserTrackingMixin,
     mixins.CreateModelMixin,
     ConditionalRetrieveModelMixin,
@@ -414,6 +439,7 @@ class IssueViewSet(
 
 
 class PublisherViewSet(
+    CachedLastModifiedMixin,
     UserTrackingMixin,
     mixins.CreateModelMixin,
     ConditionalRetrieveModelMixin,
@@ -479,6 +505,7 @@ class RoleViewset(mixins.ListModelMixin, viewsets.GenericViewSet):
 
 
 class SeriesViewSet(
+    CachedLastModifiedMixin,
     UserTrackingMixin,
     IssueListMixin,
     mixins.CreateModelMixin,
@@ -562,6 +589,7 @@ class SeriesTypeViewSet(mixins.ListModelMixin, viewsets.GenericViewSet):
 
 
 class TeamViewSet(
+    CachedLastModifiedMixin,
     UserTrackingMixin,
     IssueListMixin,
     mixins.CreateModelMixin,
@@ -601,6 +629,7 @@ class TeamViewSet(
 
 
 class UniverseViewSet(
+    CachedLastModifiedMixin,
     UserTrackingMixin,
     mixins.CreateModelMixin,
     ConditionalRetrieveModelMixin,

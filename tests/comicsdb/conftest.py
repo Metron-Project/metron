@@ -1,10 +1,12 @@
 # ruff: noqa: PLC0415
 import uuid
 from datetime import date, datetime
+from unittest.mock import patch
 
 import pytest
 from django.contrib.auth.models import Group, Permission
 from django.contrib.contenttypes.models import ContentType
+from django.core.cache.backends.locmem import LocMemCache
 from django.core.management import call_command
 from django.utils import timezone
 
@@ -20,6 +22,14 @@ from comicsdb.models.team import Team
 from users.models import CustomUser
 
 NUMBER_OF_ISSUES = 35
+
+
+@pytest.fixture(autouse=True)
+def isolated_last_modified_cache():
+    """Isolates comicsdb.cache from the shared Redis (see test_auth_method_tracking.py)."""
+    test_cache = LocMemCache(f"test-last-modified-cache-{uuid.uuid4()}", {})
+    with patch("comicsdb.cache.cache", test_cache):
+        yield test_cache
 
 
 @pytest.fixture

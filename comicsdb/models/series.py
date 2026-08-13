@@ -14,7 +14,7 @@ from simple_history.models import HistoricalRecords
 
 from comicsdb.db_functions import ArrayToString
 from comicsdb.models.attribution import Attribution
-from comicsdb.models.common import CommonInfo
+from comicsdb.models.common import CommonInfo, LastModifiedCacheMixin
 from comicsdb.models.genre import Genre
 from comicsdb.models.imprint import Imprint
 from comicsdb.models.publisher import Publisher
@@ -36,7 +36,7 @@ class SeriesType(models.Model):
         return self.name
 
 
-class Series(CommonInfo):
+class Series(LastModifiedCacheMixin, CommonInfo):
     class Status(models.IntegerChoices):
         CANCELLED = 1
         COMPLETED = 2

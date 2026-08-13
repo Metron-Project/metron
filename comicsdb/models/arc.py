@@ -13,13 +13,13 @@ from simple_history.models import HistoricalRecords
 from sorl.thumbnail import ImageField
 
 from comicsdb.models.attribution import Attribution
-from comicsdb.models.common import CommonInfo, pre_save_slug
+from comicsdb.models.common import CommonInfo, LastModifiedCacheMixin, pre_save_slug
 from users.models import CustomUser
 
 LOGGER = logging.getLogger(__name__)
 
 
-class Arc(CommonInfo):
+class Arc(LastModifiedCacheMixin, CommonInfo):
     image = ImageField(upload_to="arc/%Y/%m/%d/", blank=True)
     attribution = GenericRelation(Attribution, related_query_name="arcs")
     created_by = models.ForeignKey(

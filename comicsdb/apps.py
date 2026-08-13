@@ -2,6 +2,7 @@ from django.apps import AppConfig
 from django.db.models.signals import m2m_changed, post_delete, post_save, pre_delete
 
 from comicsdb.signals import (
+    post_delete_last_modified,
     pre_delete_credit,
     pre_delete_image,
     update_arc_modified,
@@ -65,3 +66,14 @@ class ComicsdbConfig(AppConfig):
 
         credits_ = self.get_model("Credits")
         pre_delete.connect(pre_delete_credit, sender=credits_, dispatch_uid="pre_delete_credits")
+
+        # Clear the cache entry on delete, so a removed row 404s instead of 304ing.
+        from comicsdb.models.common import LastModifiedCacheMixin  # noqa: PLC0415
+
+        for model in self.get_models():
+            if issubclass(model, LastModifiedCacheMixin):
+                post_delete.connect(
+                    post_delete_last_modified,
+                    sender=model,
+                    dispatch_uid=f"post_delete_last_modified_{model._meta.model_name}",
+                )

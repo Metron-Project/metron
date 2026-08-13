@@ -14,13 +14,13 @@ from simple_history.models import HistoricalRecords
 from sorl.thumbnail import ImageField
 
 from comicsdb.models.attribution import Attribution
-from comicsdb.models.common import CommonInfo, pre_save_slug
+from comicsdb.models.common import CommonInfo, LastModifiedCacheMixin, pre_save_slug
 from users.models import CustomUser
 
 LOGGER = logging.getLogger(__name__)
 
 
-class Publisher(CommonInfo):
+class Publisher(LastModifiedCacheMixin, CommonInfo):
     founded = models.PositiveSmallIntegerField("Year Founded", null=True, blank=True)
     country = CountryField(default="US")
     image = ImageField("Logo", upload_to="publisher/%Y/%m/%d/", blank=True)

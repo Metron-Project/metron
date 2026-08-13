@@ -1,7 +1,10 @@
 import logging
 
+from django.db import transaction
 from django.utils import timezone
 from sorl.thumbnail import delete
+
+from comicsdb.cache import delete_last_modified, delete_last_modified_many
 
 LOGGER = logging.getLogger(__name__)
 
@@ -19,43 +22,65 @@ def update_series_modified_on_issue_save(sender, instance, **kwargs):
     from comicsdb.models import Series  # noqa: PLC0415
 
     Series.objects.filter(pk=instance.series_id).update(modified=timezone.now())
+    transaction.on_commit(lambda pk=instance.series_id: delete_last_modified(Series, pk))
 
 
 def update_series_modified_on_issue_delete(sender, instance, **kwargs):
     from comicsdb.models import Series  # noqa: PLC0415
 
     Series.objects.filter(pk=instance.series_id).update(modified=timezone.now())
+    transaction.on_commit(lambda pk=instance.series_id: delete_last_modified(Series, pk))
 
 
-def update_related_modified(parent_model, instance, action, pk_set):
-    """Shared logic for M2M post_add/post_remove/post_clear on Arc, Character, Team."""
-    if action not in ("post_add", "post_remove", "post_clear"):
+def update_related_modified(parent_model, field_name, instance, action, pk_set):
+    """Shared logic for M2M pre_clear/post_add/post_remove/post_clear on Arc, Character, Team."""
+    if action not in ("pre_clear", "post_add", "post_remove", "post_clear"):
         return
 
     from comicsdb.models import Issue  # noqa: PLC0415
 
     if isinstance(instance, Issue):
-        # pk_set is None for post_clear; skip since affected parents are unknown
+        if action == "pre_clear":
+            # pk_set is None for post_clear; snapshot the affected parents now,
+            # before the through rows are removed, so post_clear can invalidate them.
+            instance._cleared_pks = set(getattr(instance, field_name).values_list("pk", flat=True))
+            return
+
+        if action == "post_clear":
+            pk_set = getattr(instance, "_cleared_pks", None)
+            if hasattr(instance, "_cleared_pks"):
+                del instance._cleared_pks
+
         if pk_set:
             parent_model.objects.filter(pk__in=pk_set).update(modified=timezone.now())
-    else:
+            transaction.on_commit(
+                lambda pks=frozenset(pk_set): delete_last_modified_many(parent_model, pks)
+            )
+    elif action != "pre_clear":
         # instance is the parent (e.g. arc.issues.add/clear(...))
         parent_model.objects.filter(pk=instance.pk).update(modified=timezone.now())
+        transaction.on_commit(lambda pk=instance.pk: delete_last_modified(parent_model, pk))
+
+
+def post_delete_last_modified(sender, instance, **kwargs):
+    # instance.pk is reset to None by Model.delete() right after this signal
+    # fires, so it must be captured now rather than read when on_commit runs.
+    transaction.on_commit(lambda pk=instance.pk: delete_last_modified(sender, pk))
 
 
 def update_arc_modified(sender, instance, action, pk_set, **kwargs):
     from comicsdb.models import Arc  # noqa: PLC0415
 
-    update_related_modified(Arc, instance, action, pk_set)
+    update_related_modified(Arc, "arcs", instance, action, pk_set)
 
 
 def update_character_modified(sender, instance, action, pk_set, **kwargs):
     from comicsdb.models import Character  # noqa: PLC0415
 
-    update_related_modified(Character, instance, action, pk_set)
+    update_related_modified(Character, "characters", instance, action, pk_set)
 
 
 def update_team_modified(sender, instance, action, pk_set, **kwargs):
     from comicsdb.models import Team  # noqa: PLC0415
 
-    update_related_modified(Team, instance, action, pk_set)
+    update_related_modified(Team, "teams", instance, action, pk_set)

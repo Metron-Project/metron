@@ -4,6 +4,8 @@ from django.db import models
 from django.db.models.functions import Now
 from django.utils.text import slugify
 
+from comicsdb.cache import set_last_modified
+
 MIN_RATING = 1
 MAX_RATING = 5
 RATING_CHOICES = [(i, str(i)) for i in range(MIN_RATING, MAX_RATING + 1)]
@@ -35,6 +37,20 @@ def generate_slug_from_name(instance):
 def pre_save_slug(sender, instance, **kwargs):
     if not instance.slug:
         instance.slug = generate_slug_from_name(instance)
+
+
+class LastModifiedCacheMixin(models.Model):
+    """Writes `modified` to comicsdb.cache on every save().
+
+    Use only on models whose viewset reads it via CachedLastModifiedMixin.
+    """
+
+    class Meta:
+        abstract = True
+
+    def save(self, *args, **kwargs):
+        super().save(*args, **kwargs)
+        set_last_modified(self)
 
 
 class CommonInfo(models.Model):
