@@ -5,6 +5,7 @@ from django.forms import (
     ModelForm,
     ValidationError,
 )
+from django.utils.translation import gettext_lazy as _
 from isbnlib import canonical, is_isbn10, is_isbn13
 
 from comicsdb.autocomplete import (
@@ -46,7 +47,7 @@ class IssueForm(ModelForm):
         widget=SafeAutocompleteWidget(
             ac_class=SeriesAutocomplete,
             attrs={
-                "placeholder": "Autocomplete...",
+                "placeholder": _("Autocomplete..."),
             },
         ),
     )
@@ -94,16 +95,16 @@ class IssueForm(ModelForm):
             "image": ClearableFileInput(),
         }
         help_texts = {
-            "alt_number": "Primarily used for legacy numbering for DC and Marvel comics.",
-            "name": "Separate multiple story titles by a semicolon",
-            "title": "Only used with Collected Editions like a Trade Paperback.",
-            "price": "USD for US publishers, GBP for UK publishers",
-            "reprints": "Search using 'Series Name (Year) #Number' format.",
-            "foc_date": "This date should be earlier than the store date",
+            "alt_number": _("Primarily used for legacy numbering for DC and Marvel comics."),
+            "name": _("Separate multiple story titles by a semicolon"),
+            "title": _("Only used with Collected Editions like a Trade Paperback."),
+            "price": _("USD for US publishers, GBP for UK publishers"),
+            "reprints": _("Search using 'Series Name (Year) #Number' format."),
+            "foc_date": _("This date should be earlier than the store date"),
         }
         labels = {
-            "name": "Story Title",
-            "title": "Collection Title",
+            "name": _("Story Title"),
+            "title": _("Collection Title"),
         }
 
     def __init__(self, *args, **kwargs):
@@ -117,7 +118,7 @@ class IssueForm(ModelForm):
     def _validate_date(self, field: str):
         form_date = self.cleaned_data[field]
         if form_date is not None and form_date.year < MINIMUM_YEAR:
-            raise ValidationError("Date has a non-valid year.")
+            raise ValidationError(_("Date has a non-valid year."))
         return form_date
 
     def clean_store_date(self):
@@ -132,7 +133,7 @@ class IssueForm(ModelForm):
     def clean_sku(self):
         sku = self.cleaned_data["sku"]
         if sku and not sku.isalnum():
-            raise ValidationError("SKU must be alphanumeric. No spaces or hyphens allowed.")
+            raise ValidationError(_("SKU must be alphanumeric. No spaces or hyphens allowed."))
         return sku
 
     def clean_isbn(self):
@@ -141,13 +142,13 @@ class IssueForm(ModelForm):
             isbn = canonical(data)
             if is_isbn10(isbn) or is_isbn13(isbn):
                 return isbn
-            raise ValidationError("ISBN is not a valid ISBN-10 or ISBN-13.")
+            raise ValidationError(_("ISBN is not a valid ISBN-10 or ISBN-13."))
         return isbn
 
     def clean_upc(self):
         upc = self.cleaned_data["upc"]
         if upc and not upc.isdigit():
-            raise ValidationError("UPC must be numeric. No spaces or hyphens allowed.")
+            raise ValidationError(_("UPC must be numeric. No spaces or hyphens allowed."))
         return upc
 
     def clean_title(self):
@@ -155,7 +156,7 @@ class IssueForm(ModelForm):
         if collection_title:
             series: Series = self.cleaned_data["series"]
             if not series.collection:
-                raise ValidationError("Collection Title field is not allowed for this series..")
+                raise ValidationError(_("Collection Title field is not allowed for this series.."))
         return collection_title
 
     def clean_arcs(self):
@@ -163,5 +164,5 @@ class IssueForm(ModelForm):
         if arcs:
             series: Series = self.cleaned_data["series"]
             if series.series_type.id in self.collections:
-                raise ValidationError("Arcs cannot be added to Trade Paperbacks.")
+                raise ValidationError(_("Arcs cannot be added to Trade Paperbacks."))
         return arcs

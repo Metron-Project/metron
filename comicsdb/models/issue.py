@@ -12,6 +12,7 @@ from django.db.models.functions import Upper
 from django.db.models.signals import pre_save
 from django.urls import reverse
 from django.utils.text import slugify
+from django.utils.translation import gettext_lazy as _
 from djmoney.models.fields import MoneyField
 from PIL import Image
 from simple_history.models import HistoricalRecords
@@ -53,21 +54,21 @@ class TradePaperbackManager(models.Manager):
 
 class Issue(CommonInfo):
     series = models.ForeignKey(Series, on_delete=models.CASCADE, related_name="issues")
-    name = ArrayField(models.CharField("Story Title", max_length=150), blank=True, default=list)
-    title = models.CharField("Collection Title", max_length=255, blank=True)
+    name = ArrayField(models.CharField(_("Story Title"), max_length=150), blank=True, default=list)
+    title = models.CharField(_("Collection Title"), max_length=255, blank=True)
     number = models.CharField(max_length=25)
-    alt_number = models.CharField("Alternative Number", max_length=25, blank=True)
-    cover_date = models.DateField("Cover Date")
-    store_date = models.DateField("In Store Date", null=True, blank=True)
-    foc_date = models.DateField("Final Order Cutoff Date", null=True, blank=True)
-    price = MoneyField("Cover Price", max_digits=5, decimal_places=2, blank=True, null=True)
+    alt_number = models.CharField(_("Alternative Number"), max_length=25, blank=True)
+    cover_date = models.DateField(_("Cover Date"))
+    store_date = models.DateField(_("In Store Date"), null=True, blank=True)
+    foc_date = models.DateField(_("Final Order Cutoff Date"), null=True, blank=True)
+    price = MoneyField(_("Cover Price"), max_digits=5, decimal_places=2, blank=True, null=True)
     rating = models.ForeignKey(Rating, default=1, on_delete=models.SET_DEFAULT)
-    sku = models.CharField("Distributor SKU", max_length=12, blank=True)
-    isbn = models.CharField("ISBN", max_length=13, blank=True)
-    upc = models.CharField("UPC Code", max_length=20, blank=True)
-    page = models.PositiveSmallIntegerField("Page Count", null=True, blank=True)
-    image = ImageField("Cover", upload_to="issue/%Y/%m/%d/", blank=True)
-    cover_hash = models.CharField("Cover Hash", max_length=16, blank=True)
+    sku = models.CharField(_("Distributor SKU"), max_length=12, blank=True)
+    isbn = models.CharField(_("ISBN"), max_length=13, blank=True)
+    upc = models.CharField(_("UPC Code"), max_length=20, blank=True)
+    page = models.PositiveSmallIntegerField(_("Page Count"), null=True, blank=True)
+    image = ImageField(_("Cover"), upload_to="issue/%Y/%m/%d/", blank=True)
+    cover_hash = models.CharField(_("Cover Hash"), max_length=16, blank=True)
     arcs = models.ManyToManyField(Arc, blank=True, related_name="issues")
     creators = models.ManyToManyField(Creator, through="Credits", blank=True, related_name="issues")
     characters = models.ManyToManyField(Character, blank=True, related_name="issues")

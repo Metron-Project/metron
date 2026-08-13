@@ -6,15 +6,15 @@
         <meta name="viewport" content="width=device-width, initial-scale=1">
         {# SEO Meta Tags #}
         <title>
-            {% block title %}Metron Comic Book Database{% endblock %}
+            {% block title %}{% trans "Metron Comic Book Database" %}{% endblock %}
         </title>
         {% block sitedesc %}
             <meta name="description"
-                  content="A community-based comic book database with comprehensive information about comics, creators, characters, and more.">
+                  content="{% trans 'A community-based comic book database with comprehensive information about comics, creators, characters, and more.' %}">
         {% endblock %}
         {% block sitekeywords %}
             <meta name="keywords"
-                  content="comics, comic books, database, Marvel, DC, creators, characters">
+                  content="{% trans 'comics, comic books, database, Marvel, DC, creators, characters' %}">
         {% endblock %}
         {# Social Media Meta Tags #}
         {% block social_meta %}

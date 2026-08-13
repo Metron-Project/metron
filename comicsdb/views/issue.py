@@ -11,6 +11,7 @@ from django.http import HttpResponse, HttpResponseRedirect
 from django.shortcuts import get_object_or_404
 from django.template.loader import render_to_string
 from django.urls import reverse, reverse_lazy
+from django.utils.translation import gettext as _
 from django.views import View
 from django.views.generic import DetailView, ListView
 from django.views.generic.edit import CreateView, DeleteView, UpdateView
@@ -447,7 +448,8 @@ class IssueDuplicateCreditsView(LoginRequiredMixin, View):
         if issue.series.publisher.name in excluded_publishers:
             messages.error(
                 request,
-                f"Credit duplication is not allowed for {issue.series.publisher.name} issues.",
+                _("Credit duplication is not allowed for %(publisher)s issues.")
+                % {"publisher": issue.series.publisher.name},
             )
             return HttpResponseRedirect(reverse("issue:detail", args=[slug]))
 
@@ -455,8 +457,11 @@ class IssueDuplicateCreditsView(LoginRequiredMixin, View):
         if issue.credits_set.exists():
             messages.info(
                 request,
-                f"{issue} already has credits assigned. "
-                "Duplicate operation cancelled to preserve existing data.",
+                _(
+                    "%(issue)s already has credits assigned. "
+                    "Duplicate operation cancelled to preserve existing data."
+                )
+                % {"issue": issue},
             )
             return HttpResponseRedirect(reverse("issue:detail", args=[slug]))
 
@@ -464,14 +469,19 @@ class IssueDuplicateCreditsView(LoginRequiredMixin, View):
         try:
             previous_issue = issue.get_previous_by_cover_date(series=issue.series)
         except ObjectDoesNotExist:
-            messages.warning(request, f"No previous issue found for {issue}.")
+            messages.warning(
+                request, _("No previous issue found for %(issue)s.") % {"issue": issue}
+            )
             return HttpResponseRedirect(reverse("issue:detail", args=[slug]))
 
         # Get all credits from the previous issue
         previous_credits = Credits.objects.filter(issue=previous_issue).prefetch_related("role")
 
         if not previous_credits.exists():
-            messages.info(request, f"No credits found in {previous_issue} to duplicate.")
+            messages.info(
+                request,
+                _("No credits found in %(issue)s to duplicate.") % {"issue": previous_issue},
+            )
             return HttpResponseRedirect(reverse("issue:detail", args=[slug]))
 
         # Get the Cover role to check for variant cover credits
@@ -521,20 +531,35 @@ class IssueDuplicateCreditsView(LoginRequiredMixin, View):
 
         # Provide appropriate feedback based on what was duplicated
         if credits_count > 0:
-            message = f"Successfully duplicated {credits_count} credit(s) from {previous_issue}."
             if skipped_count > 0:
-                message += f" Skipped {skipped_count} variant cover credit(s)."
+                message = _(
+                    "Successfully duplicated %(credits)s credit(s) from %(issue)s."
+                    " Skipped %(skipped)s variant cover credit(s)."
+                ) % {
+                    "credits": credits_count,
+                    "issue": previous_issue,
+                    "skipped": skipped_count,
+                }
+            else:
+                message = _("Successfully duplicated %(credits)s credit(s) from %(issue)s.") % {
+                    "credits": credits_count,
+                    "issue": previous_issue,
+                }
             messages.success(request, message)
         elif skipped_count > 0:
             messages.info(
                 request,
-                (
-                    f"No credits were duplicated. Skipped {skipped_count} variant cover credit(s)"
-                    f" from {previous_issue}."
-                ),
+                _(
+                    "No credits were duplicated. Skipped %(skipped)s variant cover credit(s)"
+                    " from %(issue)s."
+                )
+                % {"skipped": skipped_count, "issue": previous_issue},
             )
         else:
-            messages.info(request, f"No credits found in {previous_issue} to duplicate.")
+            messages.info(
+                request,
+                _("No credits found in %(issue)s to duplicate.") % {"issue": previous_issue},
+            )
 
         return HttpResponseRedirect(reverse("issue:detail", args=[slug]))
 
@@ -545,7 +570,7 @@ class IssueReprintSyncView(LoginRequiredMixin, View):
     to the current issue.
     """
 
-    def post(self, request, slug):  # noqa: PLR0912
+    def post(self, request, slug):  # noqa: PLR0912, PLR0915
         """
         Add characters, teams, and story titles from all reprinted issues to the current issue.
         Only works for Trade Paperback, Omnibus, and Hardcover series types.
@@ -572,17 +597,22 @@ class IssueReprintSyncView(LoginRequiredMixin, View):
         # Check if series type is Trade Paperback or Omnibus
         allowed_types = ["Trade Paperback", "Omnibus", "Hardcover"]
         if issue.series.series_type.name not in allowed_types:
+            type_list = f"{', '.join(allowed_types[:-1])} and {allowed_types[-1]}"
             messages.error(
                 request,
-                f"This function only works for {', '.join(allowed_types[:-1])} "
-                f"and {allowed_types[-1]} series types. "
-                f"This issue is of type '{issue.series.series_type.name}'.",
+                _(
+                    "This function only works for %(types)s series types. "
+                    "This issue is of type '%(current_type)s'."
+                )
+                % {"types": type_list, "current_type": issue.series.series_type.name},
             )
             return HttpResponseRedirect(reverse("issue:detail", args=[slug]))
 
         # Check if there are any reprints
         if not issue.reprints.exists():
-            messages.warning(request, f"No reprinted issues found for {issue}.")
+            messages.warning(
+                request, _("No reprinted issues found for %(issue)s.") % {"issue": issue}
+            )
             return HttpResponseRedirect(reverse("issue:detail", args=[slug]))
 
         # Check if issue already has characters, teams, or stories
@@ -590,8 +620,11 @@ class IssueReprintSyncView(LoginRequiredMixin, View):
         if issue.characters.exists() or issue.teams.exists() or has_stories:
             messages.info(
                 request,
-                f"{issue} already has characters, teams, or stories assigned. "
-                "Sync operation cancelled to preserve existing data.",
+                _(
+                    "%(issue)s already has characters, teams, or stories assigned. "
+                    "Sync operation cancelled to preserve existing data."
+                )
+                % {"issue": issue},
             )
             return HttpResponseRedirect(reverse("issue:detail", args=[slug]))
 
@@ -619,16 +652,18 @@ class IssueReprintSyncView(LoginRequiredMixin, View):
 
         # Inform user if any reprints were skipped
         if skipped_reprints:
+            reprint_names = ", ".join(skipped_reprints[:3])
+            if len(skipped_reprints) > 3:  # noqa: PLR2004
+                reprint_names += "..."
             messages.warning(
                 request,
-                f"Skipped {len(skipped_reprints)} reprinted issue(s) with multiple story titles: "
-                f"{', '.join(skipped_reprints[:3])}"
-                f"{'...' if len(skipped_reprints) > 3 else ''}",  # noqa: PLR2004
+                _("Skipped %(count)s reprinted issue(s) with multiple story titles: %(names)s")
+                % {"count": len(skipped_reprints), "names": reprint_names},
             )
 
         # Check if we found any characters or teams to add
         if not characters_to_add and not teams_to_add:
-            messages.info(request, "No characters or teams found in the reprinted issues.")
+            messages.info(request, _("No characters or teams found in the reprinted issues."))
             return HttpResponseRedirect(reverse("issue:detail", args=[slug]))
 
         # Add all characters, teams, and stories from reprints
@@ -668,18 +703,23 @@ class IssueReprintSyncView(LoginRequiredMixin, View):
         # Provide feedback
         message_parts = []
         if characters_to_add:
-            message_parts.append(f"{len(characters_to_add)} character(s)")
+            message_parts.append(_("%(count)s character(s)") % {"count": len(characters_to_add)})
         if teams_to_add:
-            message_parts.append(f"{len(teams_to_add)} team(s)")
+            message_parts.append(_("%(count)s team(s)") % {"count": len(teams_to_add)})
         if stories_to_add:
-            message_parts.append(f"{len(stories_to_add)} story title(s)")
+            message_parts.append(_("%(count)s story title(s)") % {"count": len(stories_to_add)})
+
+        if len(message_parts) > 1:
+            parts_text = _("%(first)s and %(last)s") % {
+                "first": ", ".join(message_parts[:-1]),
+                "last": message_parts[-1],
+            }
+        else:
+            parts_text = message_parts[0]
 
         messages.success(
             request,
-            f"Successfully added {', '.join(message_parts[:-1])} and "
-            f"{message_parts[-1]} from reprinted issues."
-            if len(message_parts) > 1
-            else f"Successfully added {message_parts[0]} from reprinted issues.",
+            _("Successfully added %(parts)s from reprinted issues.") % {"parts": parts_text},
         )
 
         return HttpResponseRedirect(reverse("issue:detail", args=[slug]))

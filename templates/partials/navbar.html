@@ -2,20 +2,20 @@
 {% load i18n %}
 <nav class="navbar is-link is-fixed-top"
      role="navigation"
-     aria-label="main navigation">
+     aria-label="{% trans 'main navigation' %}">
     <div class="navbar-brand">
         <a id="navbar-banner"
            class="navbar-item"
            href="{% url 'home' %}"
-           aria-label="Metron home">
+           aria-label="{% trans 'Metron home' %}">
             <img src="{% static 'site/img/metron.svg' %}"
-                 alt="Metron logo"
+                 alt="{% trans 'Metron logo' %}"
                  width="112"
                  height="28">
         </a>
         <a class="navbar-burger"
            role="button"
-           aria-label="menu"
+           aria-label="{% trans 'menu' %}"
            aria-expanded="false"
            aria-controls="navMenu"
            onclick="this.classList.toggle('is-active'); document.getElementById('navMenu').classList.toggle('is-active');">
@@ -29,164 +29,164 @@
         <div class="navbar-start">
             {# Releases Menu #}
             <div class="navbar-item has-dropdown is-hoverable">
-                <a class="navbar-link" aria-haspopup="true" aria-expanded="false">Releases</a>
+                <a class="navbar-link" aria-haspopup="true" aria-expanded="false">{% trans "Releases" %}</a>
                 <div class="navbar-dropdown">
                     <a class="navbar-item" href="{% url 'issue:thisweek' %}">
                         <span class="icon" aria-hidden="true">
                             <i class="fas fa-star"></i>
                         </span>
-                        <span>This Week</span>
+                        <span>{% trans "This Week" %}</span>
                     </a>
                     <a class="navbar-item" href="{% url 'issue:nextweek' %}">
                         <span class="icon" aria-hidden="true">
                             <i class="fas fa-bolt"></i>
                         </span>
-                        <span>Next Week</span>
+                        <span>{% trans "Next Week" %}</span>
                     </a>
                     <a class="navbar-item" href="{% url 'issue:future' %}">
                         <span class="icon" aria-hidden="true">
                             <i class="fas fa-gem"></i>
                         </span>
-                        <span>Future</span>
+                        <span>{% trans "Future" %}</span>
                     </a>
                 </div>
             </div>
             {# Browse Menu #}
             <div class="navbar-item has-dropdown is-hoverable">
-                <a class="navbar-link" aria-haspopup="true" aria-expanded="false">Browse</a>
+                <a class="navbar-link" aria-haspopup="true" aria-expanded="false">{% trans "Browse" %}</a>
                 <div class="navbar-dropdown">
                     <a class="navbar-item" href="{% url 'publisher:list' %}">
                         <span class="icon" aria-hidden="true">
                             <i class="fas fa-building"></i>
                         </span>
-                        <span>Publishers</span>
+                        <span>{% trans "Publishers" %}</span>
                     </a>
                     <a class="navbar-item" href="{% url 'imprint:list' %}">
                         <span class="icon" aria-hidden="true">
                             <i class="fas fa-bookmark"></i>
                         </span>
-                        <span>Imprints</span>
+                        <span>{% trans "Imprints" %}</span>
                     </a>
                     <a class="navbar-item" href="{% url 'series:list' %}">
                         <span class="icon" aria-hidden="true">
                             <i class="fas fa-list"></i>
                         </span>
-                        <span>Series</span>
+                        <span>{% trans "Series" %}</span>
                     </a>
                     <a class="navbar-item" href="{% url 'issue:list' %}">
                         <span class="icon" aria-hidden="true">
                             <i class="fas fa-book"></i>
                         </span>
-                        <span>Issues</span>
+                        <span>{% trans "Issues" %}</span>
                     </a>
                     <hr class="navbar-divider" role="separator">
                     <a class="navbar-item" href="{% url 'creator:list' %}">
                         <span class="icon" aria-hidden="true">
                             <i class="fas fa-pencil-alt"></i>
                         </span>
-                        <span>Creators</span>
+                        <span>{% trans "Creators" %}</span>
                     </a>
                     <a class="navbar-item" href="{% url 'character:list' %}">
                         <span class="icon" aria-hidden="true">
                             <i class="fas fa-mask"></i>
                         </span>
-                        <span>Characters</span>
+                        <span>{% trans "Characters" %}</span>
                     </a>
                     <a class="navbar-item" href="{% url 'team:list' %}">
                         <span class="icon" aria-hidden="true">
                             <i class="fas fa-users"></i>
                         </span>
-                        <span>Teams</span>
+                        <span>{% trans "Teams" %}</span>
                     </a>
                     <hr class="navbar-divider" role="separator">
                     <a class="navbar-item" href="{% url 'arc:list' %}">
                         <span class="icon" aria-hidden="true">
                             <i class="fas fa-project-diagram"></i>
                         </span>
-                        <span>Story Arcs</span>
+                        <span>{% trans "Story Arcs" %}</span>
                     </a>
                     <a class="navbar-item" href="{% url 'universe:list' %}">
                         <span class="icon" aria-hidden="true">
                             <i class="fas fa-globe"></i>
                         </span>
-                        <span>Universes</span>
+                        <span>{% trans "Universes" %}</span>
                     </a>
                     <hr class="navbar-divider" role="separator">
                     <a class="navbar-item" href="{% url 'reading-list:list' %}">
                         <span class="icon" aria-hidden="true">
                             <i class="fas fa-book-reader"></i>
                         </span>
-                        <span>Reading Lists</span>
+                        <span>{% trans "Reading Lists" %}</span>
                     </a>
                 </div>
             </div>
             {# My Library Menu #}
             {% if user.is_authenticated %}
                 <div class="navbar-item has-dropdown is-hoverable">
-                    <a class="navbar-link" aria-haspopup="true" aria-expanded="false">My Library</a>
+                    <a class="navbar-link" aria-haspopup="true" aria-expanded="false">{% trans "My Library" %}</a>
                     <div class="navbar-dropdown">
                         <a class="navbar-item" href="{% url 'reading-list:my-lists' %}">
                             <span class="icon" aria-hidden="true">
                                 <i class="fas fa-clipboard-check"></i>
                             </span>
-                            <span>My Reading Lists</span>
+                            <span>{% trans "My Reading Lists" %}</span>
                         </a>
                         <a class="navbar-item" href="{% url 'user_collection:list' %}">
                             <span class="icon" aria-hidden="true">
                                 <i class="fas fa-box-open"></i>
                             </span>
-                            <span>My Collection</span>
+                            <span>{% trans "My Collection" %}</span>
                         </a>
                         <a class="navbar-item" href="{% url 'pull-list:detail' %}">
                             <span class="icon" aria-hidden="true">
                                 <i class="fas fa-shopping-basket"></i>
                             </span>
-                            <span>My Pull List</span>
+                            <span>{% trans "My Pull List" %}</span>
                         </a>
                         <a class="navbar-item" href="{% url 'wish-list:detail' %}">
                             <span class="icon" aria-hidden="true">
                                 <i class="fas fa-star"></i>
                             </span>
-                            <span>My Wish List</span>
+                            <span>{% trans "My Wish List" %}</span>
                         </a>
                     </div>
                 </div>
             {% endif %}
             {# More Menu #}
             <div class="navbar-item has-dropdown is-hoverable">
-                <a class="navbar-link" aria-haspopup="true" aria-expanded="false">More</a>
+                <a class="navbar-link" aria-haspopup="true" aria-expanded="false">{% trans "More" %}</a>
                 <div class="navbar-dropdown">
                     <a class="navbar-item" href="{% url 'wiki:root' %}">
                         <span class="icon" aria-hidden="true">
                             <i class="fas fa-book-open"></i>
                         </span>
-                        <span>Wiki</span>
+                        <span>{% trans "Wiki" %}</span>
                     </a>
                     {% if user.is_authenticated %}
                         <a class="navbar-item" href="/docs/">
                             <span class="icon" aria-hidden="true">
                                 <i class="fas fa-file"></i>
                             </span>
-                            <span>API Docs</span>
+                            <span>{% trans "API Docs" %}</span>
                         </a>
                     {% endif %}
                     <a class="navbar-item" href="{% url 'polls:list' %}">
                         <span class="icon" aria-hidden="true">
                             <i class="fas fa-poll"></i>
                         </span>
-                        <span>Polls</span>
+                        <span>{% trans "Polls" %}</span>
                     </a>
                     <a class="navbar-item" href="{% url 'statistics' %}">
                         <span class="icon" aria-hidden="true">
                             <i class="fas fa-chart-bar"></i>
                         </span>
-                        <span>Statistics</span>
+                        <span>{% trans "Statistics" %}</span>
                     </a>
                     <a class="navbar-item" href="{% url 'user-list' %}">
                         <span class="icon" aria-hidden="true">
                             <i class="fas fa-users"></i>
                         </span>
-                        <span>Users</span>
+                        <span>{% trans "Users" %}</span>
                     </a>
                     <a class="navbar-item"
                        href="https://metron-project.github.io/blog"
@@ -195,7 +195,7 @@
                         <span class="icon" aria-hidden="true">
                             <i class="fas fa-blog"></i>
                         </span>
-                        <span>Blog</span>
+                        <span>{% trans "Blog" %}</span>
                         <span class="icon is-small" aria-hidden="true">
                             <i class="fas fa-external-link-alt"></i>
                         </span>
@@ -208,7 +208,7 @@
                         <span class="icon" aria-hidden="true">
                             <i class="fas fa-bug"></i>
                         </span>
-                        <span>Report an Issue</span>
+                        <span>{% trans "Report an Issue" %}</span>
                         <span class="icon is-small" aria-hidden="true">
                             <i class="fas fa-external-link-alt"></i>
                         </span>
@@ -223,7 +223,7 @@
                href="https://metron-project.github.io"
                target="_blank"
                rel="noopener noreferrer"
-               aria-label="Metron on GitHub">
+               aria-label="{% trans 'Metron on GitHub' %}">
                 <span class="icon">
                     <i class="fab fa-lg fa-github" aria-hidden="true"></i>
                 </span>
@@ -232,7 +232,7 @@
                rel="me"
                href="https://mastodon.social/@metron"
                target="_blank"
-               aria-label="Metron on Mastodon">
+               aria-label="{% trans 'Metron on Mastodon' %}">
                 <span class="icon">
                     <i class="fab fa-lg fa-mastodon" aria-hidden="true"></i>
                 </span>
@@ -241,11 +241,11 @@
             {% if user.is_authenticated %}
                 <a class="navbar-item"
                    href="{% url 'user-detail' username=user.username %}"
-                   aria-label="View your account">
+                   aria-label="{% trans 'View your account' %}">
                     <span class="icon" aria-hidden="true">
                         <i class="fas fa-user"></i>
                     </span>
-                    <span>Account</span>
+                    <span>{% trans "Account" %}</span>
                 </a>
             {% endif %}
             <div class="navbar-item">
@@ -255,22 +255,22 @@
                             {% csrf_token %}
                             <button class="button is-light"
                                     type="submit"
-                                    aria-label="Log out of your account">
+                                    aria-label="{% trans 'Log out of your account' %}">
                                 <span class="icon" aria-hidden="true">
                                     <i class="fas fa-sign-out-alt"></i>
                                 </span>
-                                <span>Log out</span>
+                                <span>{% trans "Log out" %}</span>
                             </button>
                         </form>
                     {% else %}
                         <a class="button is-primary"
                            href="{% url 'signup' %}"
-                           aria-label="Create a new account">
-                            <strong>Sign up</strong>
+                           aria-label="{% trans 'Create a new account' %}">
+                            <strong>{% trans "Sign up" %}</strong>
                         </a>
                         <a class="button is-light"
                            href="{% url 'login' %}"
-                           aria-label="Log in to your account">Log in</a>
+                           aria-label="{% trans 'Log in to your account' %}">{% trans "Log in" %}</a>
                     {% endif %}
                 </div>
             </div>
