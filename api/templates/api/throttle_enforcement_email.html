@@ -69,10 +69,22 @@
                                                           font-size: 14px;
                                                           color: #4a4a4a;
                                                           font-family: Arial, Helvetica, sans-serif">
-                                                    Most recently, your client received
-                                                    <strong>{{ total_count }} rate-limited (429) response{{ total_count|pluralize }}</strong>
-                                                    across <strong>{{ days_throttled }} day{{ days_throttled|pluralize }}</strong>,
-                                                    including <strong>{{ worst_day_count }}</strong> in a single day.
+                                                    {% if days_throttled == 1 %}
+                                                        {% if total_count == worst_day_count %}
+                                                            Most recently, your client received
+                                                            <strong>{{ worst_day_count }} rate-limited (429) response{{ worst_day_count|pluralize }}</strong>
+                                                            in a single day.
+                                                        {% else %}
+                                                            Most recently, your client received
+                                                            <strong>{{ total_count }} rate-limited (429) response{{ total_count|pluralize }}</strong>
+                                                            recently, including <strong>{{ worst_day_count }}</strong> in a single day.
+                                                        {% endif %}
+                                                    {% else %}
+                                                        Most recently, your client received
+                                                        <strong>{{ total_count }} rate-limited (429) response{{ total_count|pluralize }}</strong>
+                                                        across <strong>{{ days_throttled }} day{{ days_throttled|pluralize }}</strong>,
+                                                        including <strong>{{ worst_day_count }}</strong> in a single day.
+                                                    {% endif %}
                                                 </p>
                                             </td>
                                         </tr>
