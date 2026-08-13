@@ -1,6 +1,7 @@
 from django.db import models
 from django.db.models.functions import Now
 from django.urls import reverse
+from django.utils.translation import gettext_lazy as _
 from djmoney.models.fields import MoneyField
 
 from comicsdb.models.issue import Issue
@@ -19,8 +20,8 @@ class WishList(models.Model):
 
     class Meta:
         ordering = ["user"]
-        verbose_name = "Wish List"
-        verbose_name_plural = "Wish Lists"
+        verbose_name = _("Wish List")
+        verbose_name_plural = _("Wish Lists")
 
     def __str__(self) -> str:
         return f"{self.user.username}'s Wish List"
@@ -31,9 +32,9 @@ class WishList(models.Model):
 
 class WishListItem(models.Model):
     class Status(models.TextChoices):
-        WANTED = "WANTED", "Wanted"
-        FOUND = "FOUND", "Found"
-        ACQUIRED = "ACQUIRED", "Acquired"
+        WANTED = "WANTED", _("Wanted")
+        FOUND = "FOUND", _("Found")
+        ACQUIRED = "ACQUIRED", _("Acquired")
 
     wish_list = models.ForeignKey(
         WishList,
@@ -62,7 +63,7 @@ class WishListItem(models.Model):
         choices=GRADE_CHOICES,
     )
     max_price = MoneyField(
-        "Maximum Price",
+        _("Maximum Price"),
         max_digits=7,
         decimal_places=2,
         blank=True,
@@ -79,8 +80,8 @@ class WishListItem(models.Model):
             models.Index(fields=["wish_list", "status"], name="wish_list_status_idx"),
             models.Index(fields=["wish_list", "priority"], name="wish_list_priority_idx"),
         ]
-        verbose_name = "Wish List Item"
-        verbose_name_plural = "Wish List Items"
+        verbose_name = _("Wish List Item")
+        verbose_name_plural = _("Wish List Items")
 
     def __str__(self) -> str:
         return f"{self.wish_list.user.username}: {self.issue} ({self.get_status_display()})"

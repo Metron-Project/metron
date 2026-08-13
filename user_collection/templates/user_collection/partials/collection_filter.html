@@ -1,3 +1,4 @@
+{% load i18n %}
 <div class="box mb-5" id="filter-panel">
     <form method="get" accept-charset="utf-8">
         <div class="is-flex is-justify-content-space-between is-align-items-center mb-4">
@@ -6,7 +7,7 @@
                     <span class="icon has-text-link">
                         <i class="fas fa-search"></i>
                     </span>
-                    <span>Search Collection</span>
+                    <span>{% trans "Search Collection" %}</span>
                 </span>
             </h2>
             {% if has_active_filters %}
@@ -14,26 +15,26 @@
                     <span class="icon">
                         <i class="fas fa-filter"></i>
                     </span>
-                    <span>Filters Active</span>
+                    <span>{% trans "Filters Active" %}</span>
                 </span>
             {% endif %}
         </div>
         {# Quick Search Field #}
         <div class="field">
-            <label class="label" for="q">Quick Search</label>
+            <label class="label" for="q">{% trans "Quick Search" %}</label>
             <div class="control has-icons-left">
                 <input class="input"
                        type="text"
                        id="q"
                        name="q"
                        value="{{ request.GET.q }}"
-                       placeholder="Search across series and notes..."
-                       aria-label="Quick search">
+                       placeholder="{% trans 'Search across series and notes...' %}"
+                       aria-label="{% trans 'Quick search' %}">
                 <span class="icon is-small is-left">
                     <i class="fas fa-search"></i>
                 </span>
             </div>
-            <p class="help">Search across series names and notes</p>
+            <p class="help">{% trans "Search across series names and notes" %}</p>
         </div>
         {# Collapsible Advanced Filters #}
         <details {% if has_active_filters %}open{% endif %}>
@@ -42,22 +43,22 @@
                     <span class="icon">
                         <i class="fas fa-sliders-h"></i>
                     </span>
-                    <span>Advanced Filters</span>
+                    <span>{% trans "Advanced Filters" %}</span>
                 </span>
             </summary>
             <div class="columns is-multiline">
                 {# Series Filters #}
                 <div class="column is-half">
                     <div class="field">
-                        <label class="label" for="series_name">Series Name</label>
+                        <label class="label" for="series_name">{% trans "Series Name" %}</label>
                         <div class="control has-icons-left">
                             <input class="input"
                                    type="text"
                                    id="series_name"
                                    name="series_name"
                                    value="{{ request.GET.series_name }}"
-                                   placeholder="e.g., Amazing Spider-Man"
-                                   aria-label="Filter by series name">
+                                   placeholder="{% trans 'e.g., Amazing Spider-Man' %}"
+                                   aria-label="{% trans 'Filter by series name' %}">
                             <span class="icon is-small is-left">
                                 <i class="fas fa-book-open"></i>
                             </span>
@@ -66,13 +67,13 @@
                 </div>
                 <div class="column is-half">
                     <div class="field">
-                        <label class="label" for="series_type">Series Type</label>
+                        <label class="label" for="series_type">{% trans "Series Type" %}</label>
                         <div class="control has-icons-left">
                             <div class="select is-fullwidth">
                                 <select id="series_type"
                                         name="series_type"
-                                        aria-label="Filter by series type">
-                                    <option value="">All Types</option>
+                                        aria-label="{% trans 'Filter by series type' %}">
+                                    <option value="">{% trans "All Types" %}</option>
                                     {% for type in series_type %}
                                         <option value="{{ type.id }}"
                                                 {% if request.GET.series_type == type.id|stringformat:"s" %}selected{% endif %}>
@@ -90,15 +91,15 @@
                 {# Publisher Filter #}
                 <div class="column is-half">
                     <div class="field">
-                        <label class="label" for="publisher_name">Publisher</label>
+                        <label class="label" for="publisher_name">{% trans "Publisher" %}</label>
                         <div class="control has-icons-left">
                             <input class="input"
                                    type="text"
                                    id="publisher_name"
                                    name="publisher_name"
                                    value="{{ request.GET.publisher_name }}"
-                                   placeholder="e.g., Marvel"
-                                   aria-label="Filter by publisher">
+                                   placeholder="{% trans 'e.g., Marvel' %}"
+                                   aria-label="{% trans 'Filter by publisher' %}">
                             <span class="icon is-small is-left">
                                 <i class="fas fa-building"></i>
                             </span>
@@ -108,15 +109,15 @@
                 {# Issue Number Filter #}
                 <div class="column is-half">
                     <div class="field">
-                        <label class="label" for="issue_number">Issue Number</label>
+                        <label class="label" for="issue_number">{% trans "Issue Number" %}</label>
                         <div class="control has-icons-left">
                             <input class="input"
                                    type="text"
                                    id="issue_number"
                                    name="issue_number"
                                    value="{{ request.GET.issue_number }}"
-                                   placeholder="e.g., 1"
-                                   aria-label="Filter by issue number">
+                                   placeholder="{% trans 'e.g., 1' %}"
+                                   aria-label="{% trans 'Filter by issue number' %}">
                             <span class="icon is-small is-left">
                                 <i class="fas fa-hashtag"></i>
                             </span>
@@ -126,11 +127,11 @@
                 {# Format Filter #}
                 <div class="column is-half">
                     <div class="field">
-                        <label class="label" for="book_format">Format</label>
+                        <label class="label" for="book_format">{% trans "Format" %}</label>
                         <div class="control has-icons-left">
                             <div class="select is-fullwidth">
-                                <select id="book_format" name="book_format" aria-label="Filter by format">
-                                    <option value="">All Formats</option>
+                                <select id="book_format" name="book_format" aria-label="{% trans 'Filter by format' %}">
+                                    <option value="">{% trans "All Formats" %}</option>
                                     {% for value, label in book_formats %}
                                         <option value="{{ value }}"
                                                 {% if request.GET.book_format == value %}selected{% endif %}>
@@ -148,15 +149,15 @@
                 {# Read Status Filter #}
                 <div class="column is-half">
                     <div class="field">
-                        <label class="label" for="is_read">Read Status</label>
+                        <label class="label" for="is_read">{% trans "Read Status" %}</label>
                         <div class="control has-icons-left">
                             <div class="select is-fullwidth">
-                                <select id="is_read" name="is_read" aria-label="Filter by read status">
-                                    <option value="">All</option>
+                                <select id="is_read" name="is_read" aria-label="{% trans 'Filter by read status' %}">
+                                    <option value="">{% trans "All" %}</option>
                                     <option value="true"
-                                            {% if request.GET.is_read == "true" %}selected{% endif %}>Read</option>
+                                            {% if request.GET.is_read == "true" %}selected{% endif %}>{% trans "Read" %}</option>
                                     <option value="false"
-                                            {% if request.GET.is_read == "false" %}selected{% endif %}>Unread</option>
+                                            {% if request.GET.is_read == "false" %}selected{% endif %}>{% trans "Unread" %}</option>
                                 </select>
                             </div>
                             <span class="icon is-small is-left">
@@ -168,11 +169,11 @@
                 {# Grade Filter #}
                 <div class="column is-half">
                     <div class="field">
-                        <label class="label" for="grade">Grade</label>
+                        <label class="label" for="grade">{% trans "Grade" %}</label>
                         <div class="control has-icons-left">
                             <div class="select is-fullwidth">
-                                <select id="grade" name="grade" aria-label="Filter by grade">
-                                    <option value="">All Grades</option>
+                                <select id="grade" name="grade" aria-label="{% trans 'Filter by grade' %}">
+                                    <option value="">{% trans "All Grades" %}</option>
                                     {% for value, label in grade_choices %}
                                         <option value="{{ value }}"
                                                 {% if request.GET.grade == value|stringformat:"s" %}selected{% endif %}>
@@ -190,13 +191,13 @@
                 {# Grading Company Filter #}
                 <div class="column is-half">
                     <div class="field">
-                        <label class="label" for="grading_company">Grading Company</label>
+                        <label class="label" for="grading_company">{% trans "Grading Company" %}</label>
                         <div class="control has-icons-left">
                             <div class="select is-fullwidth">
                                 <select id="grading_company"
                                         name="grading_company"
-                                        aria-label="Filter by grading company">
-                                    <option value="">All Companies</option>
+                                        aria-label="{% trans 'Filter by grading company' %}">
+                                    <option value="">{% trans "All Companies" %}</option>
                                     {% for value, label in grading_companies %}
                                         <option value="{{ value }}"
                                                 {% if request.GET.grading_company == value %}selected{% endif %}>
@@ -214,15 +215,15 @@
                 {# Rating Filter #}
                 <div class="column is-half">
                     <div class="field">
-                        <label class="label" for="rating">Rating</label>
+                        <label class="label" for="rating">{% trans "Rating" %}</label>
                         <div class="control has-icons-left">
                             <div class="select is-fullwidth">
-                                <select id="rating" name="rating" aria-label="Filter by rating">
-                                    <option value="">All Ratings</option>
+                                <select id="rating" name="rating" aria-label="{% trans 'Filter by rating' %}">
+                                    <option value="">{% trans "All Ratings" %}</option>
                                     {% for value, label in rating_choices %}
                                         <option value="{{ value }}"
                                                 {% if request.GET.rating == value|stringformat:"s" %}selected{% endif %}>
-                                            {{ label }} Star{{ label|pluralize }}
+                                            {% blocktrans count counter=label %}{{ counter }} Star{% plural %}{{ counter }} Stars{% endblocktrans %}
                                         </option>
                                     {% endfor %}
                                 </select>
@@ -242,17 +243,17 @@
                     <span class="icon">
                         <i class="fas fa-search"></i>
                     </span>
-                    <span>Apply Filters</span>
+                    <span>{% trans "Apply Filters" %}</span>
                 </button>
             </div>
             <div class="control">
                 <a class="button is-light"
                    href="{% url 'user_collection:list' %}"
-                   title="Clear all filters">
+                   title="{% trans 'Clear all filters' %}">
                     <span class="icon">
                         <i class="fas fa-times"></i>
                     </span>
-                    <span>Clear Filters</span>
+                    <span>{% trans "Clear Filters" %}</span>
                 </a>
             </div>
         </div>

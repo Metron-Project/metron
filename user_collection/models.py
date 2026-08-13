@@ -4,6 +4,7 @@ from django.db import models
 from django.db.models.functions import Now
 from django.urls import reverse
 from django.utils import timezone
+from django.utils.translation import gettext_lazy as _
 from djmoney.models.fields import MoneyField
 
 from comicsdb.models.issue import Issue
@@ -11,31 +12,31 @@ from users.models import CustomUser
 
 # CGC Grading Scale choices
 GRADE_CHOICES = [
-    (Decimal("10.0"), "10.0 (Gem Mint)"),
-    (Decimal("9.9"), "9.9 (Mint)"),
-    (Decimal("9.8"), "9.8 (NM/M - Near Mint/Mint)"),
-    (Decimal("9.6"), "9.6 (NM+ - Near Mint+)"),
-    (Decimal("9.4"), "9.4 (NM - Near Mint)"),
-    (Decimal("9.2"), "9.2 (NM- - Near Mint-)"),
-    (Decimal("9.0"), "9.0 (VF/NM - Very Fine/Near Mint)"),
-    (Decimal("8.5"), "8.5 (VF+ - Very Fine+)"),
-    (Decimal("8.0"), "8.0 (VF - Very Fine)"),
-    (Decimal("7.5"), "7.5 (VF- - Very Fine-)"),
-    (Decimal("7.0"), "7.0 (FN/VF - Fine/Very Fine)"),
-    (Decimal("6.5"), "6.5 (FN+ - Fine+)"),
-    (Decimal("6.0"), "6.0 (FN - Fine)"),
-    (Decimal("5.5"), "5.5 (FN- - Fine-)"),
-    (Decimal("5.0"), "5.0 (VG/FN - Very Good/Fine)"),
-    (Decimal("4.5"), "4.5 (VG+ - Very Good+)"),
-    (Decimal("4.0"), "4.0 (VG - Very Good)"),
-    (Decimal("3.5"), "3.5 (VG- - Very Good-)"),
-    (Decimal("3.0"), "3.0 (GD/VG - Good/Very Good)"),
-    (Decimal("2.5"), "2.5 (GD+ - Good+)"),
-    (Decimal("2.0"), "2.0 (GD - Good)"),
-    (Decimal("1.8"), "1.8 (GD- - Good-)"),
-    (Decimal("1.5"), "1.5 (FR/GD - Fair/Good)"),
-    (Decimal("1.0"), "1.0 (FR - Fair)"),
-    (Decimal("0.5"), "0.5 (PR - Poor)"),
+    (Decimal("10.0"), _("10.0 (Gem Mint)")),
+    (Decimal("9.9"), _("9.9 (Mint)")),
+    (Decimal("9.8"), _("9.8 (NM/M - Near Mint/Mint)")),
+    (Decimal("9.6"), _("9.6 (NM+ - Near Mint+)")),
+    (Decimal("9.4"), _("9.4 (NM - Near Mint)")),
+    (Decimal("9.2"), _("9.2 (NM- - Near Mint-)")),
+    (Decimal("9.0"), _("9.0 (VF/NM - Very Fine/Near Mint)")),
+    (Decimal("8.5"), _("8.5 (VF+ - Very Fine+)")),
+    (Decimal("8.0"), _("8.0 (VF - Very Fine)")),
+    (Decimal("7.5"), _("7.5 (VF- - Very Fine-)")),
+    (Decimal("7.0"), _("7.0 (FN/VF - Fine/Very Fine)")),
+    (Decimal("6.5"), _("6.5 (FN+ - Fine+)")),
+    (Decimal("6.0"), _("6.0 (FN - Fine)")),
+    (Decimal("5.5"), _("5.5 (FN- - Fine-)")),
+    (Decimal("5.0"), _("5.0 (VG/FN - Very Good/Fine)")),
+    (Decimal("4.5"), _("4.5 (VG+ - Very Good+)")),
+    (Decimal("4.0"), _("4.0 (VG - Very Good)")),
+    (Decimal("3.5"), _("3.5 (VG- - Very Good-)")),
+    (Decimal("3.0"), _("3.0 (GD/VG - Good/Very Good)")),
+    (Decimal("2.5"), _("2.5 (GD+ - Good+)")),
+    (Decimal("2.0"), _("2.0 (GD - Good)")),
+    (Decimal("1.8"), _("1.8 (GD- - Good-)")),
+    (Decimal("1.5"), _("1.5 (FR/GD - Fair/Good)")),
+    (Decimal("1.0"), _("1.0 (FR - Fair)")),
+    (Decimal("0.5"), _("0.5 (PR - Poor)")),
 ]
 
 
@@ -43,36 +44,36 @@ class CollectionItem(models.Model):
     """Model for tracking a user's comic book collection."""
 
     class BookFormat(models.TextChoices):
-        PRINT = "PRINT", "Print"
-        DIGITAL = "DIGITAL", "Digital"
-        BOTH = "BOTH", "Both"
+        PRINT = "PRINT", _("Print")
+        DIGITAL = "DIGITAL", _("Digital")
+        BOTH = "BOTH", _("Both")
 
     class GradingCompany(models.TextChoices):
-        CGC = "CGC", "CGC (Certified Guaranty Company)"
-        CBCS = "CBCS", "CBCS (Comic Book Certification Service)"
-        PGX = "PGX", "PGX (Professional Grading Experts)"
+        CGC = "CGC", _("CGC (Certified Guaranty Company)")
+        CBCS = "CBCS", _("CBCS (Comic Book Certification Service)")
+        PGX = "PGX", _("PGX (Professional Grading Experts)")
 
     # Relationships
     user = models.ForeignKey(
         CustomUser,
         on_delete=models.CASCADE,
         related_name="collection_items",
-        help_text="The user who owns this collection item",
+        help_text=_("The user who owns this collection item"),
     )
     issue = models.ForeignKey(
         Issue,
         on_delete=models.CASCADE,
         related_name="in_collections",
-        help_text="The issue in this collection",
+        help_text=_("The issue in this collection"),
     )
 
     # Collection metadata
-    quantity = models.PositiveSmallIntegerField(default=1, help_text="Number of copies owned")
+    quantity = models.PositiveSmallIntegerField(default=1, help_text=_("Number of copies owned"))
     book_format = models.CharField(
         max_length=10,
         choices=BookFormat.choices,
         default=BookFormat.PRINT,
-        help_text="Format of the comic (print, digital, or both)",
+        help_text=_("Format of the comic (print, digital, or both)"),
     )
 
     # Grading information
@@ -82,50 +83,50 @@ class CollectionItem(models.Model):
         null=True,
         blank=True,
         choices=GRADE_CHOICES,
-        help_text="Comic book grade (CGC scale)",
+        help_text=_("Comic book grade (CGC scale)"),
     )
     grading_company = models.CharField(
         max_length=10,
         choices=GradingCompany.choices,
         blank=True,
         default="",
-        help_text="Professional grading company (leave blank for user-assessed grade)",
+        help_text=_("Professional grading company (leave blank for user-assessed grade)"),
     )
 
     # Purchase information
     purchase_date = models.DateField(
-        null=True, blank=True, help_text="Date when the issue was purchased"
+        null=True, blank=True, help_text=_("Date when the issue was purchased")
     )
     purchase_price = MoneyField(
-        "Purchase Price",
+        _("Purchase Price"),
         max_digits=7,
         decimal_places=2,
         blank=True,
         null=True,
-        help_text="Price paid for this issue",
+        help_text=_("Price paid for this issue"),
     )
     purchase_store = models.CharField(
-        max_length=255, blank=True, help_text="Store or vendor where purchased"
+        max_length=255, blank=True, help_text=_("Store or vendor where purchased")
     )
 
     # Storage and notes
     storage_location = models.CharField(
-        max_length=255, blank=True, help_text="Physical location where the issue is stored"
+        max_length=255, blank=True, help_text=_("Physical location where the issue is stored")
     )
-    notes = models.TextField(blank=True, help_text="Additional notes about this collection item")
+    notes = models.TextField(blank=True, help_text=_("Additional notes about this collection item"))
 
     # Reading tracking
-    is_read = models.BooleanField(default=False, help_text="Whether the issue has been read")
+    is_read = models.BooleanField(default=False, help_text=_("Whether the issue has been read"))
     date_read = models.DateTimeField(
         null=True,
         blank=True,
-        help_text="Date and time when the issue was last read (synced from read_dates)",
+        help_text=_("Date and time when the issue was last read (synced from read_dates)"),
     )
     rating = models.PositiveSmallIntegerField(
         null=True,
         blank=True,
         choices=[(i, i) for i in range(1, 6)],
-        help_text="Star rating (1-5) for this issue",
+        help_text=_("Star rating (1-5) for this issue"),
     )
 
     # Timestamps
@@ -143,8 +144,8 @@ class CollectionItem(models.Model):
             models.Index(fields=["user", "grade"], name="user_grade_idx"),
             models.Index(fields=["user", "grading_company"], name="user_grading_company_idx"),
         ]
-        verbose_name = "Collection Item"
-        verbose_name_plural = "Collection Items"
+        verbose_name = _("Collection Item")
+        verbose_name_plural = _("Collection Items")
 
     def __str__(self) -> str:
         return f"{self.user.username}: {self.issue} (x{self.quantity})"
@@ -181,9 +182,9 @@ class ReadDate(models.Model):
         CollectionItem,
         on_delete=models.CASCADE,
         related_name="read_dates",
-        help_text="The collection item this read date belongs to",
+        help_text=_("The collection item this read date belongs to"),
     )
-    read_date = models.DateTimeField(help_text="Date and time when the issue was read")
+    read_date = models.DateTimeField(help_text=_("Date and time when the issue was read"))
     created_on = models.DateTimeField(db_default=Now())
 
     class Meta:
@@ -191,8 +192,8 @@ class ReadDate(models.Model):
         indexes = [
             models.Index(fields=["collection_item", "-read_date"], name="collection_read_date_idx"),
         ]
-        verbose_name = "Read Date"
-        verbose_name_plural = "Read Dates"
+        verbose_name = _("Read Date")
+        verbose_name_plural = _("Read Dates")
 
     def __str__(self) -> str:
         return f"{self.collection_item} - {self.read_date}"

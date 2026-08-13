@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: metron\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-08-13 12:53-0400\n"
+"POT-Creation-Date: 2026-08-13 13:54-0400\n"
 "PO-Revision-Date: 2026-08-13 11:23-0400\n"
 "Last-Translator: Metron Project\n"
 "Language-Team: Italian\n"
@@ -32,8 +32,8 @@ msgstr "Valuta '%(currency)s' non valida. Supportate: %(valid)s"
 msgid "Invalid price format: %(error)s"
 msgstr "Formato del prezzo non valido: %(error)s"
 
-#: comicsdb/admin/issue.py:119 comicsdb/admin/issue.py:148
-#: comicsdb/admin/issue.py:170 comicsdb/admin/series.py:61
+#: comicsdb/admin/issue.py:119 comicsdb/admin/issue.py:148 comicsdb/admin/issue.py:170
+#: comicsdb/admin/series.py:61
 #, python-format
 msgid "%d issue was updated."
 msgid_plural "%d issues were updated."
@@ -60,8 +60,7 @@ msgstr "Completamento automatico..."
 
 #: comicsdb/forms/issue.py:98
 msgid "Primarily used for legacy numbering for DC and Marvel comics."
-msgstr ""
-"Utilizzato principalmente per la numerazione storica dei fumetti DC e Marvel."
+msgstr "Utilizzato principalmente per la numerazione storica dei fumetti DC e Marvel."
 
 #: comicsdb/forms/issue.py:99
 msgid "Separate multiple story titles by a semicolon"
@@ -75,7 +74,7 @@ msgstr "Utilizzato solo con edizioni raccolte come un Trade Paperback."
 msgid "USD for US publishers, GBP for UK publishers"
 msgstr "USD per editori statunitensi, GBP per editori britannici"
 
-#: comicsdb/forms/issue.py:102
+#: comicsdb/forms/issue.py:102 user_collection/forms.py:80 wish_list/forms.py:52
 msgid "Search using 'Series Name (Year) #Number' format."
 msgstr "Cerca usando il formato 'Nome Serie (Anno) #Numero'."
 
@@ -84,6 +83,7 @@ msgid "This date should be earlier than the store date"
 msgstr "Questa data dovrebbe essere precedente alla data di uscita in negozio"
 
 #: comicsdb/forms/issue.py:106 comicsdb/models/issue.py:57
+#: user_collection/templates/user_collection/missing_issues_detail.html:80
 msgid "Story Title"
 msgstr "Titolo della Storia"
 
@@ -120,6 +120,8 @@ msgid "Alternative Number"
 msgstr "Numero Alternativo"
 
 #: comicsdb/models/issue.py:61
+#: user_collection/templates/user_collection/collection_list.html:63
+#: user_collection/templates/user_collection/missing_issues_detail.html:81
 msgid "Cover Date"
 msgstr "Data di Copertina"
 
@@ -132,6 +134,7 @@ msgid "Final Order Cutoff Date"
 msgstr "Data Limite per l'Ordine Finale"
 
 #: comicsdb/models/issue.py:64
+#: user_collection/templates/user_collection/missing_issues_detail.html:83
 msgid "Cover Price"
 msgstr "Prezzo di Copertina"
 
@@ -162,17 +165,16 @@ msgstr "Hash della Copertina"
 #: comicsdb/views/issue.py:451
 #, python-format
 msgid "Credit duplication is not allowed for %(publisher)s issues."
-msgstr ""
-"La duplicazione dei crediti non è consentita per gli albi di %(publisher)s."
+msgstr "La duplicazione dei crediti non è consentita per gli albi di %(publisher)s."
 
 #: comicsdb/views/issue.py:461
 #, python-format
 msgid ""
-"%(issue)s already has credits assigned. Duplicate operation cancelled to "
-"preserve existing data."
+"%(issue)s already has credits assigned. Duplicate operation cancelled to preserve "
+"existing data."
 msgstr ""
-"%(issue)s ha già dei crediti assegnati. Operazione di duplicazione annullata "
-"per preservare i dati esistenti."
+"%(issue)s ha già dei crediti assegnati. Operazione di duplicazione annullata per "
+"preservare i dati esistenti."
 
 #: comicsdb/views/issue.py:473
 #, python-format
@@ -187,11 +189,11 @@ msgstr "Nessun credito trovato in %(issue)s da duplicare."
 #: comicsdb/views/issue.py:536
 #, python-format
 msgid ""
-"Successfully duplicated %(credits)s credit(s) from %(issue)s. Skipped "
-"%(skipped)s variant cover credit(s)."
+"Successfully duplicated %(credits)s credit(s) from %(issue)s. Skipped %(skipped)s "
+"variant cover credit(s)."
 msgstr ""
-"Duplicati con successo %(credits)s credito/i da %(issue)s. Saltati "
-"%(skipped)s credito/i di copertina variante."
+"Duplicati con successo %(credits)s credito/i da %(issue)s. Saltati %(skipped)s "
+"credito/i di copertina variante."
 
 #: comicsdb/views/issue.py:544
 #, python-format
@@ -204,8 +206,8 @@ msgid ""
 "No credits were duplicated. Skipped %(skipped)s variant cover credit(s) from "
 "%(issue)s."
 msgstr ""
-"Nessun credito è stato duplicato. Saltati %(skipped)s credito/i di copertina "
-"variante da %(issue)s."
+"Nessun credito è stato duplicato. Saltati %(skipped)s credito/i di copertina variante "
+"da %(issue)s."
 
 #: comicsdb/views/issue.py:604
 #, python-format
@@ -213,8 +215,8 @@ msgid ""
 "This function only works for %(types)s series types. This issue is of type "
 "'%(current_type)s'."
 msgstr ""
-"Questa funzione funziona solo per i tipi di serie %(types)s. Questo albo è "
-"di tipo '%(current_type)s'."
+"Questa funzione funziona solo per i tipi di serie %(types)s. Questo albo è di tipo "
+"'%(current_type)s'."
 
 #: comicsdb/views/issue.py:614
 #, python-format
@@ -232,10 +234,8 @@ msgstr ""
 
 #: comicsdb/views/issue.py:660
 #, python-format
-msgid ""
-"Skipped %(count)s reprinted issue(s) with multiple story titles: %(names)s"
-msgstr ""
-"Saltati %(count)s albo/i ristampato/i con più titoli di storie: %(names)s"
+msgid "Skipped %(count)s reprinted issue(s) with multiple story titles: %(names)s"
+msgstr "Saltati %(count)s albo/i ristampato/i con più titoli di storie: %(names)s"
 
 #: comicsdb/views/issue.py:666
 msgid "No characters or teams found in the reprinted issues."
@@ -300,11 +300,11 @@ msgstr "Elimina Sondaggio"
 #: polls/templates/polls/poll_confirm_delete.html:12
 #, python-format
 msgid ""
-"Are you sure you want to delete <strong>%(title)s</strong>? This will also "
-"delete all votes cast in this poll and cannot be undone."
+"Are you sure you want to delete <strong>%(title)s</strong>? This will also delete all "
+"votes cast in this poll and cannot be undone."
 msgstr ""
-"Sei sicuro di voler eliminare <strong>%(title)s</strong>? Questo eliminerà "
-"anche tutti i voti espressi in questo sondaggio e non può essere annullato."
+"Sei sicuro di voler eliminare <strong>%(title)s</strong>? Questo eliminerà anche "
+"tutti i voti espressi in questo sondaggio e non può essere annullato."
 
 #: polls/templates/polls/poll_confirm_delete.html:20
 #: polls/templates/polls/poll_detail.html:38
@@ -313,6 +313,13 @@ msgstr "Elimina"
 
 #: polls/templates/polls/poll_confirm_delete.html:25
 #: pull_list/templates/pull_list/remove_series_confirm.html:27
+#: user_collection/templates/user_collection/add_issues_from_series.html:82
+#: user_collection/templates/user_collection/collection_confirm_delete.html:31
+#: user_collection/templates/user_collection/collection_form.html:72
+#: user_collection/templates/user_collection/partials/read_dates_list.html:38
+#: wish_list/templates/wish_list/wishlist_acquire_form.html:37
+#: wish_list/templates/wish_list/wishlist_item_confirm_delete.html:26
+#: wish_list/templates/wish_list/wishlist_item_form.html:50
 msgid "Cancel"
 msgstr "Annulla"
 
@@ -325,20 +332,17 @@ msgstr "%(title)s - Metron"
 msgid "Polls"
 msgstr "Sondaggi"
 
-#: polls/templates/polls/poll_detail.html:22
-#: polls/templates/polls/poll_detail.html:104
+#: polls/templates/polls/poll_detail.html:22 polls/templates/polls/poll_detail.html:104
 #: polls/templates/polls/poll_list.html:25
 msgid "Active"
 msgstr "Attivo"
 
-#: polls/templates/polls/poll_detail.html:24
-#: polls/templates/polls/poll_detail.html:104
+#: polls/templates/polls/poll_detail.html:24 polls/templates/polls/poll_detail.html:104
 #: polls/templates/polls/poll_list.html:27
 msgid "Upcoming"
 msgstr "In Arrivo"
 
-#: polls/templates/polls/poll_detail.html:26
-#: polls/templates/polls/poll_detail.html:104
+#: polls/templates/polls/poll_detail.html:26 polls/templates/polls/poll_detail.html:104
 #: polls/templates/polls/poll_list.html:29
 msgid "Closed"
 msgstr "Chiuso"
@@ -429,12 +433,15 @@ msgstr "Hai già votato in questo sondaggio."
 msgid "No choice selected."
 msgstr "Nessuna scelta selezionata."
 
-#: pull_list/forms.py:16
+#: pull_list/forms.py:16 user_collection/forms.py:128
 msgid "Search for a series..."
 msgstr "Cerca una serie..."
 
 #: pull_list/forms.py:20 pull_list/templates/pull_list/pulllist_detail.html:47
-#: templates/partials/navbar.html:74
+#: templates/partials/navbar.html:74 user_collection/forms.py:132
+#: user_collection/templates/user_collection/collection_stats.html:226
+#: user_collection/templates/user_collection/missing_issues_list.html:40
+#: wish_list/templates/wish_list/wishlist_detail.html:83
 msgid "Series"
 msgstr "Serie"
 
@@ -464,6 +471,7 @@ msgid "Add to pull list"
 msgstr "Aggiungi alla pull list"
 
 #: pull_list/templates/pull_list/pulllist_detail.html:3
+#: wish_list/templates/wish_list/wishlist_detail.html:3
 #, python-format
 msgid "%(name)s - Metron"
 msgstr "%(name)s - Metron"
@@ -482,15 +490,22 @@ msgid "Series on Pull List (%(count)s)"
 msgstr "Serie nella Pull List (%(count)s)"
 
 #: pull_list/templates/pull_list/pulllist_detail.html:48
+#: user_collection/templates/user_collection/missing_issues_list.html:41
+#: user_collection/templates/user_collection/partials/collection_filter.html:94
 msgid "Publisher"
 msgstr "Editore"
 
 #: pull_list/templates/pull_list/pulllist_detail.html:49
+#: user_collection/templates/user_collection/missing_issues_list.html:42
 msgid "Type"
 msgstr "Tipo"
 
 #: pull_list/templates/pull_list/pulllist_detail.html:68
 #: pull_list/templates/pull_list/remove_series_confirm.html:30
+#: user_collection/templates/user_collection/collection_detail.html:32
+#: user_collection/templates/user_collection/collection_list.html:139
+#: wish_list/templates/wish_list/wishlist_detail.html:128
+#: wish_list/templates/wish_list/wishlist_item_confirm_delete.html:29
 msgid "Remove"
 msgstr "Rimuovi"
 
@@ -503,10 +518,14 @@ msgid "Upcoming Issues"
 msgstr "Prossimi Albi"
 
 #: pull_list/templates/pull_list/pulllist_detail.html:91
+#: user_collection/templates/user_collection/collection_list.html:62
+#: user_collection/templates/user_collection/missing_issues_detail.html:79
+#: wish_list/templates/wish_list/wishlist_detail.html:82
 msgid "Issue"
 msgstr "Albo"
 
 #: pull_list/templates/pull_list/pulllist_detail.html:92
+#: user_collection/templates/user_collection/missing_issues_detail.html:82
 msgid "Store Date"
 msgstr "Data di Uscita"
 
@@ -528,12 +547,8 @@ msgstr "Conferma Rimozione"
 
 #: pull_list/templates/pull_list/remove_series_confirm.html:19
 #, python-format
-msgid ""
-"Are you sure you want to remove <strong>%(series)s</strong> from your pull "
-"list?"
-msgstr ""
-"Sei sicuro di voler rimuovere <strong>%(series)s</strong> dalla tua pull "
-"list?"
+msgid "Are you sure you want to remove <strong>%(series)s</strong> from your pull list?"
+msgstr "Sei sicuro di voler rimuovere <strong>%(series)s</strong> dalla tua pull list?"
 
 #: pull_list/views.py:37
 #, python-format
@@ -556,11 +571,11 @@ msgstr "Database Fumetti Metron"
 
 #: templates/base.html:13
 msgid ""
-"A community-based comic book database with comprehensive information about "
-"comics, creators, characters, and more."
+"A community-based comic book database with comprehensive information about comics, "
+"creators, characters, and more."
 msgstr ""
-"Un database di fumetti gestito dalla community, con informazioni complete su "
-"fumetti, autori, personaggi e altro ancora."
+"Un database di fumetti gestito dalla community, con informazioni complete su fumetti, "
+"autori, personaggi e altro ancora."
 
 #: templates/base.html:17
 msgid "comics, comic books, database, Marvel, DC, creators, characters"
@@ -613,8 +628,7 @@ msgstr "Quest'opera è distribuita con licenza"
 
 #: templates/partials/footer.html:78
 msgid "Creative Commons Attribution-ShareAlike 4.0 International License"
-msgstr ""
-"Creative Commons Attribuzione-Condividi allo stesso modo 4.0 Internazionale"
+msgstr "Creative Commons Attribuzione-Condividi allo stesso modo 4.0 Internazionale"
 
 #: templates/partials/footer.html:79
 msgid ", except where noted otherwise."
@@ -678,6 +692,7 @@ msgid "Imprints"
 msgstr "Etichette"
 
 #: templates/partials/navbar.html:80
+#: user_collection/templates/user_collection/collection_stats.html:227
 msgid "Issues"
 msgstr "Albi"
 
@@ -714,6 +729,7 @@ msgid "My Reading Lists"
 msgstr "Le Mie Liste di Lettura"
 
 #: templates/partials/navbar.html:138
+#: user_collection/templates/user_collection/reading_history.html:30
 msgid "My Collection"
 msgstr "La Mia Collezione"
 
@@ -792,3 +808,1364 @@ msgstr "Accedi al tuo account"
 #: timeline/templates/timeline.html:4
 msgid "Timeline"
 msgstr "Cronologia"
+
+#: user_collection/forms.py:32 wish_list/forms.py:25
+msgid "Search for an issue..."
+msgstr "Cerca un albo..."
+
+#: user_collection/forms.py:55 wish_list/forms.py:79
+msgid "Local Comic Shop"
+msgstr "Fumetteria Locale"
+
+#: user_collection/forms.py:60
+msgid "Long Box 3"
+msgstr "Scatola 3"
+
+#: user_collection/forms.py:65
+msgid "Additional notes (optional)"
+msgstr "Note aggiuntive (opzionale)"
+
+#: user_collection/forms.py:71
+#: user_collection/templates/user_collection/collection_list.html:64
+#: user_collection/templates/user_collection/collection_stats.html:189
+#: user_collection/templates/user_collection/partials/collection_filter.html:130
+msgid "Format"
+msgstr "Formato"
+
+#: user_collection/forms.py:72
+#: user_collection/templates/user_collection/collection_list.html:65
+#: user_collection/templates/user_collection/partials/collection_filter.html:172
+msgid "Grade"
+msgstr "Grado"
+
+#: user_collection/forms.py:73
+#: user_collection/templates/user_collection/partials/collection_filter.html:194
+msgid "Grading Company"
+msgstr "Società di Valutazione"
+
+#: user_collection/forms.py:74
+msgid "Date Purchased"
+msgstr "Data di Acquisto"
+
+#: user_collection/forms.py:75
+#: user_collection/templates/user_collection/collection_list.html:69
+#: wish_list/forms.py:74
+msgid "Price Paid"
+msgstr "Prezzo Pagato"
+
+#: user_collection/forms.py:76 wish_list/forms.py:80
+msgid "Store/Vendor"
+msgstr "Negozio/Venditore"
+
+#: user_collection/forms.py:77
+msgid "Have you read this issue?"
+msgstr "Hai letto questo albo?"
+
+#: user_collection/forms.py:81
+msgid "Number of copies you own"
+msgstr "Numero di copie possedute"
+
+#: user_collection/forms.py:82
+msgid "Physical print, digital, or both"
+msgstr "Cartaceo, digitale o entrambi"
+
+#: user_collection/forms.py:83
+msgid "Comic book condition grade (CGC scale)"
+msgstr "Grado di condizione del fumetto (scala CGC)"
+
+#: user_collection/forms.py:84
+msgid "Professional grading company (leave blank if user-assessed)"
+msgstr "Società di valutazione professionale (lascia vuoto se valutato dall'utente)"
+
+#: user_collection/forms.py:85
+msgid "When did you purchase this issue?"
+msgstr "Quando hai acquistato questo albo?"
+
+#: user_collection/forms.py:86
+msgid "How much did you pay?"
+msgstr "Quanto hai pagato?"
+
+#: user_collection/forms.py:87
+msgid "Where did you buy it?"
+msgstr "Dove l'hai acquistato?"
+
+#: user_collection/forms.py:88
+msgid "Where is it stored?"
+msgstr "Dove viene conservato?"
+
+#: user_collection/forms.py:89
+msgid "Any additional notes about this item"
+msgstr "Eventuali note aggiuntive su questo elemento"
+
+#: user_collection/forms.py:90
+msgid "Mark this if you've read the issue (read dates managed in detail view)"
+msgstr ""
+"Seleziona questa opzione se hai letto l'albo (le date di lettura si gestiscono nella "
+"vista dettagli)"
+
+#: user_collection/forms.py:109
+msgid "This issue is already in your collection."
+msgstr "Questo albo è già nella tua collezione."
+
+#: user_collection/forms.py:118
+msgid "All issues"
+msgstr "Tutti gli albi"
+
+#: user_collection/forms.py:119
+msgid "Issue range"
+msgstr "Intervallo di albi"
+
+#: user_collection/forms.py:133
+msgid "Select the series to add issues from"
+msgstr "Seleziona la serie da cui aggiungere gli albi"
+
+#: user_collection/forms.py:140
+msgid "Which issues?"
+msgstr "Quali albi?"
+
+#: user_collection/forms.py:141
+msgid "Choose whether to add all issues or specify a range"
+msgstr "Scegli se aggiungere tutti gli albi o specificare un intervallo"
+
+#: user_collection/forms.py:149
+msgid "e.g., 1 or 1.1"
+msgstr "es. 1 o 1.1"
+
+#: user_collection/forms.py:153
+msgid "Start Issue Number"
+msgstr "Numero Albo Iniziale"
+
+#: user_collection/forms.py:154
+msgid "Optional: Issue number to start from (leave blank to start from beginning)"
+msgstr ""
+"Opzionale: numero dell'albo da cui iniziare (lascia vuoto per iniziare dall'inizio)"
+
+#: user_collection/forms.py:162
+msgid "e.g., 50"
+msgstr "es. 50"
+
+#: user_collection/forms.py:166
+msgid "End Issue Number"
+msgstr "Numero Albo Finale"
+
+#: user_collection/forms.py:167
+msgid "Optional: Issue number to end at (leave blank to go to end)"
+msgstr ""
+"Opzionale: numero dell'albo a cui terminare (lascia vuoto per arrivare fino alla fine)"
+
+#: user_collection/forms.py:175
+msgid "Default Format"
+msgstr "Formato Predefinito"
+
+#: user_collection/forms.py:176
+msgid "The format to use for all added issues"
+msgstr "Il formato da usare per tutti gli albi aggiunti"
+
+#: user_collection/forms.py:182
+msgid "Mark as read"
+msgstr "Segna come letto"
+
+#: user_collection/forms.py:183
+msgid "Check this to mark all added issues as read"
+msgstr "Seleziona questa opzione per segnare tutti gli albi aggiunti come letti"
+
+#: user_collection/models.py:15
+msgid "10.0 (Gem Mint)"
+msgstr "10.0 (Gemma Perfetta)"
+
+#: user_collection/models.py:16
+msgid "9.9 (Mint)"
+msgstr "9.9 (Perfetta)"
+
+#: user_collection/models.py:17
+msgid "9.8 (NM/M - Near Mint/Mint)"
+msgstr "9.8 (NM/M - Quasi Perfetta/Perfetta)"
+
+#: user_collection/models.py:18
+msgid "9.6 (NM+ - Near Mint+)"
+msgstr "9.6 (NM+ - Quasi Perfetta+)"
+
+#: user_collection/models.py:19
+msgid "9.4 (NM - Near Mint)"
+msgstr "9.4 (NM - Quasi Perfetta)"
+
+#: user_collection/models.py:20
+msgid "9.2 (NM- - Near Mint-)"
+msgstr "9.2 (NM- - Quasi Perfetta-)"
+
+#: user_collection/models.py:21
+msgid "9.0 (VF/NM - Very Fine/Near Mint)"
+msgstr "9.0 (VF/NM - Molto Bella/Quasi Perfetta)"
+
+#: user_collection/models.py:22
+msgid "8.5 (VF+ - Very Fine+)"
+msgstr "8.5 (VF+ - Molto Bella+)"
+
+#: user_collection/models.py:23
+msgid "8.0 (VF - Very Fine)"
+msgstr "8.0 (VF - Molto Bella)"
+
+#: user_collection/models.py:24
+msgid "7.5 (VF- - Very Fine-)"
+msgstr "7.5 (VF- - Molto Bella-)"
+
+#: user_collection/models.py:25
+msgid "7.0 (FN/VF - Fine/Very Fine)"
+msgstr "7.0 (FN/VF - Bella/Molto Bella)"
+
+#: user_collection/models.py:26
+msgid "6.5 (FN+ - Fine+)"
+msgstr "6.5 (FN+ - Bella+)"
+
+#: user_collection/models.py:27
+msgid "6.0 (FN - Fine)"
+msgstr "6.0 (FN - Bella)"
+
+#: user_collection/models.py:28
+msgid "5.5 (FN- - Fine-)"
+msgstr "5.5 (FN- - Bella-)"
+
+#: user_collection/models.py:29
+msgid "5.0 (VG/FN - Very Good/Fine)"
+msgstr "5.0 (VG/FN - Molto Buona/Bella)"
+
+#: user_collection/models.py:30
+msgid "4.5 (VG+ - Very Good+)"
+msgstr "4.5 (VG+ - Molto Buona+)"
+
+#: user_collection/models.py:31
+msgid "4.0 (VG - Very Good)"
+msgstr "4.0 (VG - Molto Buona)"
+
+#: user_collection/models.py:32
+msgid "3.5 (VG- - Very Good-)"
+msgstr "3.5 (VG- - Molto Buona-)"
+
+#: user_collection/models.py:33
+msgid "3.0 (GD/VG - Good/Very Good)"
+msgstr "3.0 (GD/VG - Buona/Molto Buona)"
+
+#: user_collection/models.py:34
+msgid "2.5 (GD+ - Good+)"
+msgstr "2.5 (GD+ - Buona+)"
+
+#: user_collection/models.py:35
+msgid "2.0 (GD - Good)"
+msgstr "2.0 (GD - Buona)"
+
+#: user_collection/models.py:36
+msgid "1.8 (GD- - Good-)"
+msgstr "1.8 (GD- - Buona-)"
+
+#: user_collection/models.py:37
+msgid "1.5 (FR/GD - Fair/Good)"
+msgstr "1.5 (FR/GD - Discreta/Buona)"
+
+#: user_collection/models.py:38
+msgid "1.0 (FR - Fair)"
+msgstr "1.0 (FR - Discreta)"
+
+#: user_collection/models.py:39
+msgid "0.5 (PR - Poor)"
+msgstr "0.5 (PR - Scadente)"
+
+#: user_collection/models.py:47
+#: user_collection/templates/user_collection/collection_stats.html:199
+msgid "Print"
+msgstr "Cartaceo"
+
+#: user_collection/models.py:48
+#: user_collection/templates/user_collection/collection_stats.html:201
+msgid "Digital"
+msgstr "Digitale"
+
+#: user_collection/models.py:49
+#: user_collection/templates/user_collection/collection_stats.html:203
+msgid "Both"
+msgstr "Entrambi"
+
+#: user_collection/models.py:52
+msgid "CGC (Certified Guaranty Company)"
+msgstr "CGC (Certified Guaranty Company)"
+
+#: user_collection/models.py:53
+msgid "CBCS (Comic Book Certification Service)"
+msgstr "CBCS (Comic Book Certification Service)"
+
+#: user_collection/models.py:54
+msgid "PGX (Professional Grading Experts)"
+msgstr "PGX (Professional Grading Experts)"
+
+#: user_collection/models.py:61
+msgid "The user who owns this collection item"
+msgstr "L'utente proprietario di questo elemento della collezione"
+
+#: user_collection/models.py:67
+msgid "The issue in this collection"
+msgstr "L'albo in questa collezione"
+
+#: user_collection/models.py:71
+msgid "Number of copies owned"
+msgstr "Numero di copie possedute"
+
+#: user_collection/models.py:76
+msgid "Format of the comic (print, digital, or both)"
+msgstr "Formato del fumetto (cartaceo, digitale o entrambi)"
+
+#: user_collection/models.py:86
+msgid "Comic book grade (CGC scale)"
+msgstr "Grado del fumetto (scala CGC)"
+
+#: user_collection/models.py:93
+msgid "Professional grading company (leave blank for user-assessed grade)"
+msgstr ""
+"Società di valutazione professionale (lascia vuoto per grado valutato dall'utente)"
+
+#: user_collection/models.py:98
+msgid "Date when the issue was purchased"
+msgstr "Data di acquisto dell'albo"
+
+#: user_collection/models.py:101
+msgid "Purchase Price"
+msgstr "Prezzo di Acquisto"
+
+#: user_collection/models.py:106
+msgid "Price paid for this issue"
+msgstr "Prezzo pagato per questo albo"
+
+#: user_collection/models.py:109
+msgid "Store or vendor where purchased"
+msgstr "Negozio o venditore presso cui è stato acquistato"
+
+#: user_collection/models.py:114
+msgid "Physical location where the issue is stored"
+msgstr "Luogo fisico in cui è conservato l'albo"
+
+#: user_collection/models.py:116
+msgid "Additional notes about this collection item"
+msgstr "Note aggiuntive su questo elemento della collezione"
+
+#: user_collection/models.py:119
+msgid "Whether the issue has been read"
+msgstr "Se l'albo è stato letto"
+
+#: user_collection/models.py:123
+msgid "Date and time when the issue was last read (synced from read_dates)"
+msgstr "Data e ora dell'ultima lettura dell'albo (sincronizzata da read_dates)"
+
+#: user_collection/models.py:129
+msgid "Star rating (1-5) for this issue"
+msgstr "Valutazione a stelle (1-5) per questo albo"
+
+#: user_collection/models.py:147
+msgid "Collection Item"
+msgstr "Elemento della Collezione"
+
+#: user_collection/models.py:148
+msgid "Collection Items"
+msgstr "Elementi della Collezione"
+
+#: user_collection/models.py:185
+msgid "The collection item this read date belongs to"
+msgstr "L'elemento della collezione a cui appartiene questa data di lettura"
+
+#: user_collection/models.py:187
+msgid "Date and time when the issue was read"
+msgstr "Data e ora della lettura dell'albo"
+
+#: user_collection/models.py:195
+msgid "Read Date"
+msgstr "Data di Lettura"
+
+#: user_collection/models.py:196
+msgid "Read Dates"
+msgstr "Date di Lettura"
+
+#: user_collection/templates/user_collection/add_issues_from_series.html:3
+msgid "Add from Series - My Collection - Metron"
+msgstr "Aggiungi dalla Serie - La Mia Collezione - Metron"
+
+#: user_collection/templates/user_collection/add_issues_from_series.html:9
+msgid "Add Issues from Series"
+msgstr "Aggiungi Albi dalla Serie"
+
+#: user_collection/templates/user_collection/add_issues_from_series.html:10
+msgid "Bulk add to your collection"
+msgstr "Aggiunta massiva alla tua collezione"
+
+#: user_collection/templates/user_collection/add_issues_from_series.html:85
+msgid "Add Issues"
+msgstr "Aggiungi Albi"
+
+#: user_collection/templates/user_collection/add_issues_from_series.html:91
+msgid "How to use:"
+msgstr "Come si usa:"
+
+#: user_collection/templates/user_collection/add_issues_from_series.html:94
+msgid "Select a series:"
+msgstr "Seleziona una serie:"
+
+#: user_collection/templates/user_collection/add_issues_from_series.html:94
+msgid "Start typing in the search box to find a series by name"
+msgstr "Inizia a digitare nella casella di ricerca per trovare una serie per nome"
+
+#: user_collection/templates/user_collection/add_issues_from_series.html:97
+msgid "Choose what to add:"
+msgstr "Scegli cosa aggiungere:"
+
+#: user_collection/templates/user_collection/add_issues_from_series.html:100
+msgid "All issues:"
+msgstr "Tutti gli albi:"
+
+#: user_collection/templates/user_collection/add_issues_from_series.html:100
+msgid "Adds every issue from the series"
+msgstr "Aggiunge tutti gli albi della serie"
+
+#: user_collection/templates/user_collection/add_issues_from_series.html:103
+msgid "Issue range:"
+msgstr "Intervallo di albi:"
+
+#: user_collection/templates/user_collection/add_issues_from_series.html:103
+msgid "Specify a start and/or end issue number (e.g., start at #1, end at #50)"
+msgstr ""
+"Specifica un numero di albo iniziale e/o finale (es. inizia da #1, termina a #50)"
+
+#: user_collection/templates/user_collection/add_issues_from_series.html:107
+msgid "Issues already in your collection will be automatically skipped"
+msgstr "Gli albi già presenti nella tua collezione verranno automaticamente saltati"
+
+#: user_collection/templates/user_collection/add_issues_from_series.html:108
+msgid "All issues will be added with your selected format and quantity 1"
+msgstr "Tutti gli albi verranno aggiunti con il formato selezionato e quantità 1"
+
+#: user_collection/templates/user_collection/add_issues_from_series.html:110
+msgid "Mark as read:"
+msgstr "Segna come letto:"
+
+#: user_collection/templates/user_collection/add_issues_from_series.html:110
+msgid "Check this option if you've already read these issues"
+msgstr "Seleziona questa opzione se hai già letto questi albi"
+
+#: user_collection/templates/user_collection/add_issues_from_series.html:112
+msgid ""
+"You can edit individual items later to add purchase information and update read status"
+msgstr ""
+"Puoi modificare i singoli elementi in seguito per aggiungere informazioni di acquisto "
+"e aggiornare lo stato di lettura"
+
+#: user_collection/templates/user_collection/add_issues_from_series.html:115
+msgid "Tip:"
+msgstr "Suggerimento:"
+
+#: user_collection/templates/user_collection/add_issues_from_series.html:115
+msgid ""
+"This is a quick way to add an entire series to your collection. After adding, you can "
+"update individual issues with purchase details, format preferences, and notes!"
+msgstr ""
+"Questo è un modo rapido per aggiungere un'intera serie alla tua collezione. Dopo "
+"l'aggiunta, puoi aggiornare i singoli albi con dettagli di acquisto, preferenze di "
+"formato e note!"
+
+#: user_collection/templates/user_collection/collection_confirm_delete.html:3
+msgid "Remove %(issue)s - Metron"
+msgstr "Rimuovi %(issue)s - Metron"
+
+#: user_collection/templates/user_collection/collection_confirm_delete.html:6
+#: user_collection/templates/user_collection/collection_confirm_delete.html:34
+msgid "Remove from Collection"
+msgstr "Rimuovi dalla Collezione"
+
+#: user_collection/templates/user_collection/collection_confirm_delete.html:15
+#: wish_list/templates/wish_list/wishlist_item_confirm_delete.html:15
+msgid "Warning"
+msgstr "Attenzione"
+
+#: user_collection/templates/user_collection/collection_confirm_delete.html:19
+msgid "Are you sure you want to remove <strong>%(issue)s</strong> from your collection?"
+msgstr "Sei sicuro di voler rimuovere <strong>%(issue)s</strong> dalla tua collezione?"
+
+#: user_collection/templates/user_collection/collection_confirm_delete.html:22
+msgid "This will also delete the associated purchase information and notes."
+msgstr "Questo eliminerà anche le informazioni di acquisto e le note associate."
+
+#: user_collection/templates/user_collection/collection_confirm_delete.html:24
+#: user_collection/templates/user_collection/partials/read_dates_list.html:30
+#: wish_list/templates/wish_list/wishlist_item_confirm_delete.html:19
+msgid "This action cannot be undone."
+msgstr "Questa azione non può essere annullata."
+
+#: user_collection/templates/user_collection/collection_detail.html:4
+#, python-format
+msgid "%(issue)s - My Collection - Metron"
+msgstr "%(issue)s - La Mia Collezione - Metron"
+
+#: user_collection/templates/user_collection/collection_detail.html:11
+msgid "Collection Item Details"
+msgstr "Dettagli Elemento della Collezione"
+
+#: user_collection/templates/user_collection/collection_detail.html:18
+#: user_collection/templates/user_collection/collection_stats.html:61
+#: user_collection/templates/user_collection/missing_issues_list.html:14
+msgid "Back to Collection"
+msgstr "Torna alla Collezione"
+
+#: user_collection/templates/user_collection/collection_detail.html:27
+#: user_collection/templates/user_collection/collection_list.html:132
+#: wish_list/templates/wish_list/wishlist_detail.html:123
+msgid "Edit"
+msgstr "Modifica"
+
+#: user_collection/templates/user_collection/collection_detail.html:60
+msgid "Issue Information"
+msgstr "Informazioni Albo"
+
+#: user_collection/templates/user_collection/collection_detail.html:63
+msgid "Issue:"
+msgstr "Albo:"
+
+#: user_collection/templates/user_collection/collection_detail.html:67
+msgid "Series:"
+msgstr "Serie:"
+
+#: user_collection/templates/user_collection/collection_detail.html:71
+#: user_collection/templates/user_collection/missing_issues_detail.html:35
+msgid "Publisher:"
+msgstr "Editore:"
+
+#: user_collection/templates/user_collection/collection_detail.html:75
+msgid "Cover Date:"
+msgstr "Data di Copertina:"
+
+#: user_collection/templates/user_collection/collection_detail.html:84
+msgid "Description"
+msgstr "Descrizione"
+
+#: user_collection/templates/user_collection/collection_detail.html:90
+msgid "Grading Information"
+msgstr "Informazioni sulla Valutazione"
+
+#: user_collection/templates/user_collection/collection_detail.html:92
+msgid "Grade:"
+msgstr "Grado:"
+
+#: user_collection/templates/user_collection/collection_detail.html:101
+msgid "Grading Type:"
+msgstr "Tipo di Valutazione:"
+
+#: user_collection/templates/user_collection/collection_detail.html:107
+#, python-format
+msgid "Professionally graded by %(company)s"
+msgstr "Valutato professionalmente da %(company)s"
+
+#: user_collection/templates/user_collection/collection_detail.html:112
+msgid "User-assessed grade"
+msgstr "Grado valutato dall'utente"
+
+#: user_collection/templates/user_collection/collection_detail.html:120
+#: wish_list/forms.py:85
+msgid "Notes"
+msgstr "Note"
+
+#: user_collection/templates/user_collection/collection_detail.html:127
+msgid "Collection Details"
+msgstr "Dettagli Collezione"
+
+#: user_collection/templates/user_collection/collection_detail.html:129
+msgid "Format:"
+msgstr "Formato:"
+
+#: user_collection/templates/user_collection/collection_detail.html:135
+msgid "Quantity:"
+msgstr "Quantità:"
+
+#: user_collection/templates/user_collection/collection_detail.html:140
+msgid "Purchase Date:"
+msgstr "Data di Acquisto:"
+
+#: user_collection/templates/user_collection/collection_detail.html:146
+msgid "Price Paid:"
+msgstr "Prezzo Pagato:"
+
+#: user_collection/templates/user_collection/collection_detail.html:152
+msgid "Store/Vendor:"
+msgstr "Negozio/Venditore:"
+
+#: user_collection/templates/user_collection/collection_detail.html:158
+msgid "Storage Location:"
+msgstr "Luogo di Conservazione:"
+
+#: user_collection/templates/user_collection/collection_detail.html:163
+msgid "Read Status:"
+msgstr "Stato Lettura:"
+
+#: user_collection/templates/user_collection/collection_detail.html:168
+#: user_collection/templates/user_collection/collection_list.html:66
+#: user_collection/templates/user_collection/collection_list.html:103
+#: user_collection/templates/user_collection/partials/collection_filter.html:158
+msgid "Read"
+msgstr "Letto"
+
+#: user_collection/templates/user_collection/collection_detail.html:173
+#: user_collection/templates/user_collection/collection_list.html:107
+#: user_collection/templates/user_collection/partials/collection_filter.html:160
+msgid "Unread"
+msgstr "Non Letto"
+
+#: user_collection/templates/user_collection/collection_detail.html:177
+msgid "Rating:"
+msgstr "Valutazione:"
+
+#: user_collection/templates/user_collection/collection_detail.html:181
+msgid "Read History:"
+msgstr "Cronologia Letture:"
+
+#: user_collection/templates/user_collection/collection_detail.html:185
+msgid "Added to Collection:"
+msgstr "Aggiunto alla Collezione:"
+
+#: user_collection/templates/user_collection/collection_detail.html:189
+msgid "Last Modified:"
+msgstr "Ultima Modifica:"
+
+#: user_collection/templates/user_collection/collection_form.html:5
+msgid "Edit Collection Item - Metron"
+msgstr "Modifica Elemento della Collezione - Metron"
+
+#: user_collection/templates/user_collection/collection_form.html:7
+msgid "Add Collection Item - Metron"
+msgstr "Aggiungi Elemento alla Collezione - Metron"
+
+#: user_collection/templates/user_collection/collection_form.html:19
+msgid "Edit Collection Item"
+msgstr "Modifica Elemento della Collezione"
+
+#: user_collection/templates/user_collection/collection_form.html:21
+msgid "Add Collection Item"
+msgstr "Aggiungi Elemento alla Collezione"
+
+#: user_collection/templates/user_collection/collection_form.html:77
+msgid "Update"
+msgstr "Aggiorna"
+
+#: user_collection/templates/user_collection/collection_form.html:79
+msgid "Add to Collection"
+msgstr "Aggiungi alla Collezione"
+
+#: user_collection/templates/user_collection/collection_list.html:3
+msgid "My Collection - Metron"
+msgstr "La Mia Collezione - Metron"
+
+#: user_collection/templates/user_collection/collection_list.html:6
+msgid "My Comic Collection"
+msgstr "La Mia Collezione di Fumetti"
+
+#: user_collection/templates/user_collection/collection_list.html:14
+msgid "<strong>%(counter)s</strong> item in your collection"
+msgid_plural "<strong>%(counter)s</strong> items in your collection"
+msgstr[0] "<strong>%(counter)s</strong> elemento nella tua collezione"
+msgstr[1] "<strong>%(counter)s</strong> elementi nella tua collezione"
+
+#: user_collection/templates/user_collection/collection_list.html:24
+#: user_collection/templates/user_collection/reading_history.html:25
+msgid "View Statistics"
+msgstr "Visualizza Statistiche"
+
+#: user_collection/templates/user_collection/collection_list.html:29
+msgid "Reading History"
+msgstr "Cronologia Letture"
+
+#: user_collection/templates/user_collection/collection_list.html:34
+#: user_collection/templates/user_collection/missing_issues_detail.html:6
+msgid "Missing Issues"
+msgstr "Albi Mancanti"
+
+#: user_collection/templates/user_collection/collection_list.html:39
+msgid "Add from Series"
+msgstr "Aggiungi dalla Serie"
+
+#: user_collection/templates/user_collection/collection_list.html:44
+msgid "Add Issue"
+msgstr "Aggiungi Albo"
+
+#: user_collection/templates/user_collection/collection_list.html:67
+#: user_collection/templates/user_collection/partials/collection_filter.html:218
+msgid "Rating"
+msgstr "Valutazione"
+
+#: user_collection/templates/user_collection/collection_list.html:68
+msgid "Quantity"
+msgstr "Quantità"
+
+#: user_collection/templates/user_collection/collection_list.html:70
+#: user_collection/templates/user_collection/missing_issues_list.html:45
+msgid "Actions"
+msgstr "Azioni"
+
+#: user_collection/templates/user_collection/collection_list.html:88
+msgid "User-assessed"
+msgstr "Valutato dall'utente"
+
+#: user_collection/templates/user_collection/collection_list.html:103
+#, python-format
+msgid "Read on %(read_date)s"
+msgstr "Letto il %(read_date)s"
+
+#: user_collection/templates/user_collection/collection_list.html:125
+#: user_collection/templates/user_collection/reading_history.html:121
+msgid "View Details"
+msgstr "Visualizza Dettagli"
+
+#: user_collection/templates/user_collection/collection_list.html:157
+msgid "No results found"
+msgstr "Nessun risultato trovato"
+
+#: user_collection/templates/user_collection/collection_list.html:158
+msgid "Try adjusting your search filters"
+msgstr "Prova a modificare i filtri di ricerca"
+
+#: user_collection/templates/user_collection/collection_list.html:162
+msgid "Clear All Filters"
+msgstr "Cancella Tutti i Filtri"
+
+#: user_collection/templates/user_collection/collection_list.html:165
+msgid "Your collection is empty"
+msgstr "La tua collezione è vuota"
+
+#: user_collection/templates/user_collection/collection_list.html:166
+msgid "Start adding issues to track your comic collection!"
+msgstr "Inizia ad aggiungere albi per tenere traccia della tua collezione di fumetti!"
+
+#: user_collection/templates/user_collection/collection_list.html:170
+msgid "Add Your First Issue"
+msgstr "Aggiungi il Tuo Primo Albo"
+
+#: user_collection/templates/user_collection/collection_stats.html:51
+msgid "Collection Statistics - Metron"
+msgstr "Statistiche Collezione - Metron"
+
+#: user_collection/templates/user_collection/collection_stats.html:54
+msgid "Collection Statistics"
+msgstr "Statistiche Collezione"
+
+#: user_collection/templates/user_collection/collection_stats.html:72
+msgid "Total Items"
+msgstr "Elementi Totali"
+
+#: user_collection/templates/user_collection/collection_stats.html:81
+msgid "Total Issues"
+msgstr "Albi Totali"
+
+#: user_collection/templates/user_collection/collection_stats.html:90
+msgid "Total Value"
+msgstr "Valore Totale"
+
+#: user_collection/templates/user_collection/collection_stats.html:105
+msgid "Issues Read"
+msgstr "Albi Letti"
+
+#: user_collection/templates/user_collection/collection_stats.html:114
+msgid "Issues Unread"
+msgstr "Albi Non Letti"
+
+#: user_collection/templates/user_collection/collection_stats.html:123
+msgid "Reading Progress"
+msgstr "Progresso di Lettura"
+
+#: user_collection/templates/user_collection/collection_stats.html:184
+msgid "By Format"
+msgstr "Per Formato"
+
+#: user_collection/templates/user_collection/collection_stats.html:190
+msgid "Count"
+msgstr "Conteggio"
+
+#: user_collection/templates/user_collection/collection_stats.html:215
+msgid "No format data available"
+msgstr "Nessun dato sul formato disponibile"
+
+#: user_collection/templates/user_collection/collection_stats.html:221
+msgid "Top Series"
+msgstr "Serie Principali"
+
+#: user_collection/templates/user_collection/collection_stats.html:244
+msgid "No series data available"
+msgstr "Nessun dato sulla serie disponibile"
+
+#: user_collection/templates/user_collection/missing_issues_detail.html:3
+msgid "Missing Issues - %(name)s - Metron"
+msgstr "Albi Mancanti - %(name)s - Metron"
+
+#: user_collection/templates/user_collection/missing_issues_detail.html:18
+msgid "Back to Missing List"
+msgstr "Torna all'Elenco Mancanti"
+
+#: user_collection/templates/user_collection/missing_issues_detail.html:23
+msgid "Collection"
+msgstr "Collezione"
+
+#: user_collection/templates/user_collection/missing_issues_detail.html:33
+msgid "Series Information"
+msgstr "Informazioni Serie"
+
+#: user_collection/templates/user_collection/missing_issues_detail.html:39
+msgid "Series Type:"
+msgstr "Tipo di Serie:"
+
+#: user_collection/templates/user_collection/missing_issues_detail.html:44
+msgid "Volume:"
+msgstr "Volume:"
+
+#: user_collection/templates/user_collection/missing_issues_detail.html:52
+msgid "Collection Progress"
+msgstr "Progresso della Collezione"
+
+#: user_collection/templates/user_collection/missing_issues_detail.html:55
+#, python-format
+msgid "%(pct)s%% Complete"
+msgstr "%(pct)s%% Completato"
+
+#: user_collection/templates/user_collection/missing_issues_detail.html:64
+msgid "%(counter)s issue missing"
+msgid_plural "%(counter)s issues missing"
+msgstr[0] "%(counter)s albo mancante"
+msgstr[1] "%(counter)s albi mancanti"
+
+#: user_collection/templates/user_collection/missing_issues_detail.html:127
+#: user_collection/templates/user_collection/missing_issues_list.html:94
+msgid "No Missing Issues!"
+msgstr "Nessun Albo Mancante!"
+
+#: user_collection/templates/user_collection/missing_issues_detail.html:128
+msgid "You own all issues from this series."
+msgstr "Possiedi tutti gli albi di questa serie."
+
+#: user_collection/templates/user_collection/missing_issues_list.html:3
+msgid "Missing Issues - My Collection - Metron"
+msgstr "Albi Mancanti - La Mia Collezione - Metron"
+
+#: user_collection/templates/user_collection/missing_issues_list.html:6
+msgid "Missing Issues by Series"
+msgstr "Albi Mancanti per Serie"
+
+#: user_collection/templates/user_collection/missing_issues_list.html:7
+msgid "Find gaps in your collection"
+msgstr "Trova le lacune nella tua collezione"
+
+#: user_collection/templates/user_collection/missing_issues_list.html:21
+msgid "<strong>%(counter)s</strong> series with missing issues"
+msgid_plural "<strong>%(counter)s</strong> series with missing issues"
+msgstr[0] "<strong>%(counter)s</strong> serie con albi mancanti"
+msgstr[1] "<strong>%(counter)s</strong> serie con albi mancanti"
+
+#: user_collection/templates/user_collection/missing_issues_list.html:29
+msgid ""
+"This page shows series where you own at least one issue but are missing others. Use "
+"it to identify gaps in your collection."
+msgstr ""
+"Questa pagina mostra le serie di cui possiedi almeno un albo ma te ne mancano altri. "
+"Usala per identificare le lacune nella tua collezione."
+
+#: user_collection/templates/user_collection/missing_issues_list.html:43
+msgid "Progress"
+msgstr "Progresso"
+
+#: user_collection/templates/user_collection/missing_issues_list.html:44
+msgid "Missing"
+msgstr "Mancanti"
+
+#: user_collection/templates/user_collection/missing_issues_list.html:78
+msgid "View Missing"
+msgstr "Visualizza Mancanti"
+
+#: user_collection/templates/user_collection/missing_issues_list.html:95
+msgid "You have complete runs of all your series."
+msgstr "Possiedi collezioni complete di tutte le tue serie."
+
+#: user_collection/templates/user_collection/partials/collection_filter.html:10
+msgid "Search Collection"
+msgstr "Cerca nella Collezione"
+
+#: user_collection/templates/user_collection/partials/collection_filter.html:18
+msgid "Filters Active"
+msgstr "Filtri Attivi"
+
+#: user_collection/templates/user_collection/partials/collection_filter.html:24
+msgid "Quick Search"
+msgstr "Ricerca Rapida"
+
+#: user_collection/templates/user_collection/partials/collection_filter.html:31
+msgid "Search across series and notes..."
+msgstr "Cerca tra serie e note..."
+
+#: user_collection/templates/user_collection/partials/collection_filter.html:32
+msgid "Quick search"
+msgstr "Ricerca rapida"
+
+#: user_collection/templates/user_collection/partials/collection_filter.html:37
+msgid "Search across series names and notes"
+msgstr "Cerca tra i nomi delle serie e le note"
+
+#: user_collection/templates/user_collection/partials/collection_filter.html:46
+msgid "Advanced Filters"
+msgstr "Filtri Avanzati"
+
+#: user_collection/templates/user_collection/partials/collection_filter.html:53
+msgid "Series Name"
+msgstr "Nome Serie"
+
+#: user_collection/templates/user_collection/partials/collection_filter.html:60
+msgid "e.g., Amazing Spider-Man"
+msgstr "es. Amazing Spider-Man"
+
+#: user_collection/templates/user_collection/partials/collection_filter.html:61
+msgid "Filter by series name"
+msgstr "Filtra per nome serie"
+
+#: user_collection/templates/user_collection/partials/collection_filter.html:70
+msgid "Series Type"
+msgstr "Tipo di Serie"
+
+#: user_collection/templates/user_collection/partials/collection_filter.html:75
+msgid "Filter by series type"
+msgstr "Filtra per tipo di serie"
+
+#: user_collection/templates/user_collection/partials/collection_filter.html:76
+msgid "All Types"
+msgstr "Tutti i Tipi"
+
+#: user_collection/templates/user_collection/partials/collection_filter.html:101
+msgid "e.g., Marvel"
+msgstr "es. Marvel"
+
+#: user_collection/templates/user_collection/partials/collection_filter.html:102
+msgid "Filter by publisher"
+msgstr "Filtra per editore"
+
+#: user_collection/templates/user_collection/partials/collection_filter.html:112
+msgid "Issue Number"
+msgstr "Numero Albo"
+
+#: user_collection/templates/user_collection/partials/collection_filter.html:119
+msgid "e.g., 1"
+msgstr "es. 1"
+
+#: user_collection/templates/user_collection/partials/collection_filter.html:120
+msgid "Filter by issue number"
+msgstr "Filtra per numero albo"
+
+#: user_collection/templates/user_collection/partials/collection_filter.html:133
+msgid "Filter by format"
+msgstr "Filtra per formato"
+
+#: user_collection/templates/user_collection/partials/collection_filter.html:134
+msgid "All Formats"
+msgstr "Tutti i Formati"
+
+#: user_collection/templates/user_collection/partials/collection_filter.html:152
+msgid "Read Status"
+msgstr "Stato Lettura"
+
+#: user_collection/templates/user_collection/partials/collection_filter.html:155
+msgid "Filter by read status"
+msgstr "Filtra per stato di lettura"
+
+#: user_collection/templates/user_collection/partials/collection_filter.html:156
+msgid "All"
+msgstr "Tutti"
+
+#: user_collection/templates/user_collection/partials/collection_filter.html:175
+msgid "Filter by grade"
+msgstr "Filtra per grado"
+
+#: user_collection/templates/user_collection/partials/collection_filter.html:176
+msgid "All Grades"
+msgstr "Tutti i Gradi"
+
+#: user_collection/templates/user_collection/partials/collection_filter.html:199
+msgid "Filter by grading company"
+msgstr "Filtra per società di valutazione"
+
+#: user_collection/templates/user_collection/partials/collection_filter.html:200
+msgid "All Companies"
+msgstr "Tutte le Società"
+
+#: user_collection/templates/user_collection/partials/collection_filter.html:221
+msgid "Filter by rating"
+msgstr "Filtra per valutazione"
+
+#: user_collection/templates/user_collection/partials/collection_filter.html:222
+msgid "All Ratings"
+msgstr "Tutte le Valutazioni"
+
+#: user_collection/templates/user_collection/partials/collection_filter.html:226
+msgid "%(counter)s Star"
+msgid_plural "%(counter)s Stars"
+msgstr[0] "%(counter)s Stella"
+msgstr[1] "%(counter)s Stelle"
+
+#: user_collection/templates/user_collection/partials/collection_filter.html:246
+msgid "Apply Filters"
+msgstr "Applica Filtri"
+
+#: user_collection/templates/user_collection/partials/collection_filter.html:252
+msgid "Clear all filters"
+msgstr "Cancella tutti i filtri"
+
+#: user_collection/templates/user_collection/partials/collection_filter.html:256
+msgid "Clear Filters"
+msgstr "Cancella Filtri"
+
+#: user_collection/templates/user_collection/partials/read_dates_list.html:9
+msgid "Remove read date"
+msgstr "Rimuovi data di lettura"
+
+#: user_collection/templates/user_collection/partials/read_dates_list.html:20
+msgid "Confirm Delete"
+msgstr "Conferma Eliminazione"
+
+#: user_collection/templates/user_collection/partials/read_dates_list.html:22
+msgid "close"
+msgstr "chiudi"
+
+#: user_collection/templates/user_collection/partials/read_dates_list.html:28
+msgid "Are you sure you want to remove the read date <strong>%(read_date)s</strong>?"
+msgstr ""
+"Sei sicuro di voler rimuovere la data di lettura <strong>%(read_date)s</strong>?"
+
+#: user_collection/templates/user_collection/partials/read_dates_list.html:35
+msgid "Remove Read Date"
+msgstr "Rimuovi Data di Lettura"
+
+#: user_collection/templates/user_collection/partials/read_dates_list.html:46
+#: user_collection/templates/user_collection/reading_history.html:83
+msgid "Read %(counter)s time"
+msgid_plural "Read %(counter)s times"
+msgstr[0] "Letto %(counter)s volta"
+msgstr[1] "Letto %(counter)s volte"
+
+#: user_collection/templates/user_collection/partials/read_dates_list.html:49
+msgid "Not read yet"
+msgstr "Non ancora letto"
+
+#: user_collection/templates/user_collection/partials/read_dates_list.html:58
+msgid "Optional: specify date/time"
+msgstr "Opzionale: specifica data/ora"
+
+#: user_collection/templates/user_collection/partials/read_dates_list.html:62
+msgid "Leave blank to use current date/time"
+msgstr "Lascia vuoto per usare la data/ora corrente"
+
+#: user_collection/templates/user_collection/partials/read_dates_list.html:73
+msgid "Add Read Date"
+msgstr "Aggiungi Data di Lettura"
+
+#: user_collection/templates/user_collection/partials/star_rating.html:10
+msgid "Rate %(counter)s star"
+msgid_plural "Rate %(counter)s stars"
+msgstr[0] "Vota %(counter)s stella"
+msgstr[1] "Vota %(counter)s stelle"
+
+#: user_collection/templates/user_collection/partials/star_rating.html:21
+msgid "Clear rating"
+msgstr "Cancella valutazione"
+
+#: user_collection/templates/user_collection/reading_history.html:4
+msgid "Reading History - Metron"
+msgstr "Cronologia Letture - Metron"
+
+#: user_collection/templates/user_collection/reading_history.html:7
+msgid "My Reading History"
+msgstr "La Mia Cronologia di Lettura"
+
+#: user_collection/templates/user_collection/reading_history.html:15
+msgid "<strong>%(counter)s</strong> issue read"
+msgid_plural "<strong>%(counter)s</strong> issues read"
+msgstr[0] "<strong>%(counter)s</strong> albo letto"
+msgstr[1] "<strong>%(counter)s</strong> albi letti"
+
+#: user_collection/templates/user_collection/reading_history.html:55
+msgid "Date Unknown"
+msgstr "Data Sconosciuta"
+
+#: user_collection/templates/user_collection/reading_history.html:73
+msgid "No cover available"
+msgstr "Copertina non disponibile"
+
+#: user_collection/templates/user_collection/reading_history.html:125
+msgid "Details"
+msgstr "Dettagli"
+
+#: user_collection/templates/user_collection/reading_history.html:139
+msgid "No reading history yet"
+msgstr "Nessuna cronologia di lettura ancora"
+
+#: user_collection/templates/user_collection/reading_history.html:140
+msgid "Start reading and marking issues as read to build your reading history!"
+msgstr ""
+"Inizia a leggere e segnare gli albi come letti per costruire la tua cronologia di "
+"lettura!"
+
+#: user_collection/templates/user_collection/reading_history.html:144
+msgid "Go to My Collection"
+msgstr "Vai alla Mia Collezione"
+
+#: user_collection/views.py:115
+msgid "Item added to your collection!"
+msgstr "Elemento aggiunto alla tua collezione!"
+
+#: user_collection/views.py:147
+msgid "Collection item updated!"
+msgstr "Elemento della collezione aggiornato!"
+
+#: user_collection/views.py:168
+msgid "Item removed from your collection."
+msgstr "Elemento rimosso dalla tua collezione."
+
+#: user_collection/views.py:212 user_collection/views.py:229
+#: user_collection/views.py:243
+msgid "Unknown"
+msgstr "Sconosciuto"
+
+#: user_collection/views.py:217
+msgid "Issues by Publisher"
+msgstr "Albi per Editore"
+
+#: user_collection/views.py:234
+msgid "Issues by Series Type"
+msgstr "Albi per Tipo di Serie"
+
+#: user_collection/views.py:248
+msgid "Issues by Format"
+msgstr "Albi per Formato"
+
+#: user_collection/views.py:272
+msgid "Issues Read (Last 30 Days)"
+msgstr "Albi Letti (Ultimi 30 Giorni)"
+
+#: user_collection/views.py:285
+msgid "Issues Read (Last 12 Months)"
+msgstr "Albi Letti (Ultimi 12 Mesi)"
+
+#: user_collection/views.py:302
+msgid "Top Writers"
+msgstr "Migliori Sceneggiatori"
+
+#: user_collection/views.py:327
+msgid "Top Artists"
+msgstr "Migliori Disegnatori"
+
+#: user_collection/views.py:454
+msgid "Added %(count)d issue to your collection"
+msgid_plural "Added %(count)d issues to your collection"
+msgstr[0] "Aggiunto %(count)d albo alla tua collezione"
+msgstr[1] "Aggiunti %(count)d albi alla tua collezione"
+
+#: user_collection/views.py:459
+#, python-format
+msgid "%(phrase)s (marked as read)"
+msgstr "%(phrase)s (segnato come letto)"
+
+#: user_collection/views.py:463
+#, python-format
+msgid "Skipped %(count)d issue already in your collection."
+msgid_plural "Skipped %(count)d issues already in your collection."
+msgstr[0] "Saltato %(count)d albo già nella tua collezione."
+msgstr[1] "Saltati %(count)d albi già nella tua collezione."
+
+#: user_collection/views.py:467
+#, python-format
+msgid "%(added)s. %(skipped)s"
+msgstr "%(added)s. %(skipped)s"
+
+#: user_collection/views.py:472
+#, python-format
+msgid "%(added)s!"
+msgstr "%(added)s!"
+
+#: user_collection/views.py:477
+msgid "All issues from this series are already in your collection."
+msgstr "Tutti gli albi di questa serie sono già nella tua collezione."
+
+#: wish_list/forms.py:41
+msgid "Notes about this item (optional)"
+msgstr "Note su questo elemento (opzionale)"
+
+#: wish_list/forms.py:47
+msgid "Minimum Grade"
+msgstr "Grado Minimo"
+
+#: wish_list/forms.py:48 wish_list/models.py:66
+msgid "Maximum Price"
+msgstr "Prezzo Massimo"
+
+#: wish_list/forms.py:49
+msgid "Priority (1=Highest)"
+msgstr "Priorità (1=Massima)"
+
+#: wish_list/forms.py:53
+msgid "Leave blank if any condition is acceptable."
+msgstr "Lascia vuoto se qualsiasi condizione è accettabile."
+
+#: wish_list/forms.py:54
+msgid "1 is highest priority, 5 is lowest."
+msgstr "1 è la priorità più alta, 5 la più bassa."
+
+#: wish_list/forms.py:67
+msgid "Purchase Date"
+msgstr "Data di Acquisto"
+
+#: wish_list/forms.py:84
+msgid "Additional notes"
+msgstr "Note aggiuntive"
+
+#: wish_list/models.py:23
+#: wish_list/templates/wish_list/partials/wish_list_button.html:11
+msgid "Wish List"
+msgstr "Lista dei Desideri"
+
+#: wish_list/models.py:24
+msgid "Wish Lists"
+msgstr "Liste dei Desideri"
+
+#: wish_list/models.py:35
+msgid "Wanted"
+msgstr "Desiderato"
+
+#: wish_list/models.py:36
+msgid "Found"
+msgstr "Trovato"
+
+#: wish_list/models.py:37
+msgid "Acquired"
+msgstr "Acquisito"
+
+#: wish_list/models.py:83
+msgid "Wish List Item"
+msgstr "Elemento della Lista dei Desideri"
+
+#: wish_list/models.py:84
+msgid "Wish List Items"
+msgstr "Elementi della Lista dei Desideri"
+
+#: wish_list/templates/wish_list/partials/wish_list_button.html:7
+msgid "Remove from wish list"
+msgstr "Rimuovi dalla lista dei desideri"
+
+#: wish_list/templates/wish_list/partials/wish_list_button.html:7
+msgid "Add to wish list"
+msgstr "Aggiungi alla lista dei desideri"
+
+#: wish_list/templates/wish_list/wishlist_acquire_form.html:3
+msgid "Acquire %(issue)s - Metron"
+msgstr "Acquisisci %(issue)s - Metron"
+
+#: wish_list/templates/wish_list/wishlist_acquire_form.html:6
+msgid "Acquire Item"
+msgstr "Acquisisci Elemento"
+
+#: wish_list/templates/wish_list/wishlist_acquire_form.html:7
+msgid "Mark <strong>%(issue)s</strong> as acquired"
+msgstr "Segna <strong>%(issue)s</strong> come acquisito"
+
+#: wish_list/templates/wish_list/wishlist_acquire_form.html:15
+#, python-format
+msgid ""
+"This will mark <strong>%(issue)s</strong> as acquired on your wish list and add it to "
+"your collection. You can optionally record purchase details below."
+msgstr ""
+"Questo segnerà <strong>%(issue)s</strong> come acquisito nella tua lista dei desideri "
+"e lo aggiungerà alla tua collezione. Puoi facoltativamente registrare i dettagli di "
+"acquisto qui sotto."
+
+#: wish_list/templates/wish_list/wishlist_acquire_form.html:40
+msgid "Mark as Acquired"
+msgstr "Segna come Acquisito"
+
+#: wish_list/templates/wish_list/wishlist_detail.html:10
+msgid "Add an Issue"
+msgstr "Aggiungi un Albo"
+
+#: wish_list/templates/wish_list/wishlist_detail.html:64
+msgid "Add to Wish List"
+msgstr "Aggiungi alla Lista dei Desideri"
+
+#: wish_list/templates/wish_list/wishlist_detail.html:74
+#, python-format
+msgid "Items (%(count)s)"
+msgstr "Elementi (%(count)s)"
+
+#: wish_list/templates/wish_list/wishlist_detail.html:81
+msgid "Priority"
+msgstr "Priorità"
+
+#: wish_list/templates/wish_list/wishlist_detail.html:84
+msgid "Status"
+msgstr "Stato"
+
+#: wish_list/templates/wish_list/wishlist_detail.html:85
+msgid "Min Grade"
+msgstr "Grado Min"
+
+#: wish_list/templates/wish_list/wishlist_detail.html:86
+msgid "Max Price"
+msgstr "Prezzo Max"
+
+#: wish_list/templates/wish_list/wishlist_detail.html:117
+msgid "Acquire"
+msgstr "Acquisisci"
+
+#: wish_list/templates/wish_list/wishlist_detail.html:140
+msgid "No items on this wish list yet."
+msgstr "Nessun elemento ancora in questa lista dei desideri."
+
+#: wish_list/templates/wish_list/wishlist_item_confirm_delete.html:3
+msgid "Remove from Wish List - Metron"
+msgstr "Rimuovi dalla Lista dei Desideri - Metron"
+
+#: wish_list/templates/wish_list/wishlist_item_confirm_delete.html:6
+msgid "Remove from Wish List"
+msgstr "Rimuovi dalla Lista dei Desideri"
+
+#: wish_list/templates/wish_list/wishlist_item_confirm_delete.html:18
+msgid "Are you sure you want to remove <strong>%(issue)s</strong> from your wish list?"
+msgstr ""
+"Sei sicuro di voler rimuovere <strong>%(issue)s</strong> dalla tua lista dei desideri?"
+
+#: wish_list/templates/wish_list/wishlist_item_form.html:3
+msgid "Edit Wish List Item - Metron"
+msgstr "Modifica Elemento della Lista dei Desideri - Metron"
+
+#: wish_list/templates/wish_list/wishlist_item_form.html:6
+msgid "Edit Wish List Item"
+msgstr "Modifica Elemento della Lista dei Desideri"
+
+#: wish_list/templates/wish_list/wishlist_item_form.html:53
+msgid "Save Changes"
+msgstr "Salva Modifiche"
+
+#: wish_list/views.py:35
+msgid "%(issue)s is already on your wish list."
+msgstr "%(issue)s è già nella tua lista dei desideri."
+
+#: wish_list/views.py:41
+msgid "Added %(issue)s to your wish list."
+msgstr "Aggiunto %(issue)s alla tua lista dei desideri."
+
+#: wish_list/views.py:69
+#, python-format
+msgid "Updated %(issue)s."
+msgstr "%(issue)s aggiornato."
+
+#: wish_list/views.py:84
+msgid "Removed %(issue)s from your wish list."
+msgstr "Rimosso %(issue)s dalla tua lista dei desideri."
+
+#: wish_list/views.py:116
+#, python-format
+msgid "%(issue)s marked as acquired! Added to your collection."
+msgstr "%(issue)s segnato come acquisito! Aggiunto alla tua collezione."
+
+#: wish_list/views.py:120
+#, python-format
+msgid "%(issue)s marked as acquired! Already in your collection."
+msgstr "%(issue)s segnato come acquisito! Già nella tua collezione."

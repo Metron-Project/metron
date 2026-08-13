@@ -1,5 +1,5 @@
 {% extends parent_template|default:"base.html" %}
-{% load static %}
+{% load static i18n %}
 {% block headscripts %}
     <script src="{% static 'chartkick/Chart.bundle.js' %}"></script>
     <script>
@@ -48,17 +48,17 @@
     </script>
     <script src="{% static 'chartkick/chartkick.js' %}"></script>
 {% endblock %}
-{% block title %}Collection Statistics - Metron{% endblock %}
+{% block title %}{% trans "Collection Statistics - Metron" %}{% endblock %}
 {% block content %}
     <header class="block has-text-centered">
-        <h1 class="title">Collection Statistics</h1>
+        <h1 class="title">{% trans "Collection Statistics" %}</h1>
     </header>
     <nav class="level mb-5">
         <div class="level-left">
             <div class="level-item">
                 <a class="button" href="{% url 'user_collection:list' %}">
                     <span class="icon"><i class="fas fa-arrow-left"></i></span>
-                    <span>Back to Collection</span>
+                    <span>{% trans "Back to Collection" %}</span>
                 </a>
             </div>
         </div>
@@ -69,7 +69,7 @@
             <div class="columns is-multiline">
                 <div class="column is-one-third">
                     <div class="box has-text-centered">
-                        <p class="heading">Total Items</p>
+                        <p class="heading">{% trans "Total Items" %}</p>
                         <p class="title">{{ total_items }}</p>
                         <span class="icon has-text-info">
                             <i class="fas fa-layer-group fa-2x"></i>
@@ -78,7 +78,7 @@
                 </div>
                 <div class="column is-one-third">
                     <div class="box has-text-centered">
-                        <p class="heading">Total Issues</p>
+                        <p class="heading">{% trans "Total Issues" %}</p>
                         <p class="title">{{ total_quantity }}</p>
                         <span class="icon has-text-success">
                             <i class="fas fa-book fa-2x"></i>
@@ -87,7 +87,7 @@
                 </div>
                 <div class="column is-one-third">
                     <div class="box has-text-centered">
-                        <p class="heading">Total Value</p>
+                        <p class="heading">{% trans "Total Value" %}</p>
                         <p class="title">
                             {% if total_value %}
                                 ${{ total_value|floatformat:2 }}
@@ -102,7 +102,7 @@
                 </div>
                 <div class="column is-one-third">
                     <div class="box has-text-centered">
-                        <p class="heading">Issues Read</p>
+                        <p class="heading">{% trans "Issues Read" %}</p>
                         <p class="title">{{ read_count }}</p>
                         <span class="icon has-text-success">
                             <i class="fas fa-check-circle fa-2x"></i>
@@ -111,7 +111,7 @@
                 </div>
                 <div class="column is-one-third">
                     <div class="box has-text-centered">
-                        <p class="heading">Issues Unread</p>
+                        <p class="heading">{% trans "Issues Unread" %}</p>
                         <p class="title">{{ unread_count }}</p>
                         <span class="icon has-text-grey">
                             <i class="far fa-circle fa-2x"></i>
@@ -120,7 +120,7 @@
                 </div>
                 <div class="column is-one-third">
                     <div class="box has-text-centered">
-                        <p class="heading">Reading Progress</p>
+                        <p class="heading">{% trans "Reading Progress" %}</p>
                         <p class="title">
                             {% if total_items > 0 %}
                                 {{ read_count|floatformat:0 }}/{{ total_items }}
@@ -181,13 +181,13 @@
             <div class="columns">
                 <div class="column is-half">
                     <div class="box">
-                        <h2 class="title is-5">By Format</h2>
+                        <h2 class="title is-5">{% trans "By Format" %}</h2>
                         {% if format_counts %}
                             <table class="table is-fullwidth is-striped">
                                 <thead>
                                     <tr>
-                                        <th>Format</th>
-                                        <th class="has-text-right">Count</th>
+                                        <th>{% trans "Format" %}</th>
+                                        <th class="has-text-right">{% trans "Count" %}</th>
                                     </tr>
                                 </thead>
                                 <tbody>
@@ -196,11 +196,11 @@
                                             <td>
                                                 <span class="tag {% if format.book_format == 'DIGITAL' %}is-info{% elif format.book_format == 'BOTH' %}is-success{% else %}is-dark{% endif %}">
                                                     {% if format.book_format == 'PRINT' %}
-                                                        Print
+                                                        {% trans "Print" %}
                                                     {% elif format.book_format == 'DIGITAL' %}
-                                                        Digital
+                                                        {% trans "Digital" %}
                                                     {% elif format.book_format == 'BOTH' %}
-                                                        Both
+                                                        {% trans "Both" %}
                                                     {% endif %}
                                                 </span>
                                             </td>
@@ -212,19 +212,19 @@
                                 </tbody>
                             </table>
                         {% else %}
-                            <p class="has-text-grey">No format data available</p>
+                            <p class="has-text-grey">{% trans "No format data available" %}</p>
                         {% endif %}
                     </div>
                 </div>
                 <div class="column is-half">
                     <div class="box">
-                        <h2 class="title is-5">Top Series</h2>
+                        <h2 class="title is-5">{% trans "Top Series" %}</h2>
                         {% if top_series %}
                             <table class="table is-fullwidth is-striped">
                                 <thead>
                                     <tr>
-                                        <th>Series</th>
-                                        <th class="has-text-right">Issues</th>
+                                        <th>{% trans "Series" %}</th>
+                                        <th class="has-text-right">{% trans "Issues" %}</th>
                                     </tr>
                                 </thead>
                                 <tbody>
@@ -241,7 +241,7 @@
                                 </tbody>
                             </table>
                         {% else %}
-                            <p class="has-text-grey">No series data available</p>
+                            <p class="has-text-grey">{% trans "No series data available" %}</p>
                         {% endif %}
                     </div>
                 </div>

@@ -1,12 +1,11 @@
 {% extends parent_template|default:"base.html" %}
-{% load static bulma_tags %}
+{% load static bulma_tags i18n %}
 {% block title %}
     {% if object %}
-        Edit
+        {% trans "Edit Collection Item - Metron" %}
     {% else %}
-        Add
+        {% trans "Add Collection Item - Metron" %}
     {% endif %}
-    Collection Item - Metron
 {% endblock %}
 {% block headcss %}
     {{ form.media.css }}
@@ -17,11 +16,10 @@
     <header class="block has-text-centered">
         <h1 class="title">
             {% if object %}
-                Edit
+                {% trans "Edit Collection Item" %}
             {% else %}
-                Add
+                {% trans "Add Collection Item" %}
             {% endif %}
-            Collection Item
         </h1>
     </header>
     <section class="section">
@@ -71,14 +69,14 @@
                             <div class="field is-grouped is-flex-direction-column-mobile mt-5">
                                 <div class="control">
                                     <a href="{% if object %}{% url 'user_collection:detail' object.pk %}{% else %}{% url 'user_collection:list' %}{% endif %}"
-                                       class="button">Cancel</a>
+                                       class="button">{% trans "Cancel" %}</a>
                                 </div>
                                 <div class="control">
                                     <button type="submit" class="button is-primary">
                                         {% if object %}
-                                            Update
+                                            {% trans "Update" %}
                                         {% else %}
-                                            Add to Collection
+                                            {% trans "Add to Collection" %}
                                         {% endif %}
                                     </button>
                                 </div>

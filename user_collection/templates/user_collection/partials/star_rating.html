@@ -1,3 +1,4 @@
+{% load i18n %}
 <div id="rating-{{ item.pk }}" class="star-rating">
     {% for star_num in "12345" %}
         <button type="button"
@@ -6,7 +7,7 @@
                 hx-vals='{"rating": "{{ forloop.counter }}"}'
                 hx-target="#rating-{{ item.pk }}"
                 hx-swap="outerHTML"
-                title="Rate {{ forloop.counter }} star{% if forloop.counter > 1 %}s{% endif %}">
+                title="{% blocktrans count counter=forloop.counter %}Rate {{ counter }} star{% plural %}Rate {{ counter }} stars{% endblocktrans %}">
             <i class="{% if item.rating and forloop.counter <= item.rating %}fas{% else %}far{% endif %} fa-star"></i>
         </button>
     {% endfor %}
@@ -17,7 +18,7 @@
                 hx-vals='{"rating": "0"}'
                 hx-target="#rating-{{ item.pk }}"
                 hx-swap="outerHTML"
-                title="Clear rating">
+                title="{% trans 'Clear rating' %}">
             <i class="fas fa-times-circle"></i>
         </button>
     {% endif %}

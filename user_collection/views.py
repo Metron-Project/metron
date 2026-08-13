@@ -11,6 +11,7 @@ from django.shortcuts import get_object_or_404, render
 from django.urls import reverse, reverse_lazy
 from django.utils import timezone
 from django.utils.dateparse import parse_datetime
+from django.utils.translation import gettext as _, ngettext
 from django.views.decorators.http import require_POST
 from django.views.generic import (
     CreateView,
@@ -111,7 +112,7 @@ class CollectionCreateView(LoginRequiredMixin, CreateView):
         if form.instance.is_read and not form.instance.read_dates.exists():
             form.instance.add_read_date()
 
-        messages.success(self.request, "Item added to your collection!")
+        messages.success(self.request, _("Item added to your collection!"))
         return response
 
     def get_success_url(self):
@@ -143,7 +144,7 @@ class CollectionUpdateView(LoginRequiredMixin, UserPassesTestMixin, UpdateView):
         if form.instance.is_read and not form.instance.read_dates.exists():
             form.instance.add_read_date()
 
-        messages.success(self.request, "Collection item updated!")
+        messages.success(self.request, _("Collection item updated!"))
         return response
 
     def get_success_url(self):
@@ -164,7 +165,7 @@ class CollectionDeleteView(LoginRequiredMixin, UserPassesTestMixin, DeleteView):
         return item.user == self.request.user
 
     def form_valid(self, form):
-        messages.success(self.request, "Item removed from your collection.")
+        messages.success(self.request, _("Item removed from your collection."))
         return super().form_valid(form)
 
 
@@ -208,12 +209,12 @@ class CollectionStatsView(LoginRequiredMixin, TemplateView):
             .order_by("-count")
         )
         publisher_dict = {
-            item["issue__series__publisher__name"] or "Unknown": item["count"]
+            item["issue__series__publisher__name"] or _("Unknown"): item["count"]
             for item in publisher_data
         }
         publisher_chart = PieChart(
             publisher_dict,
-            title="Issues by Publisher",
+            title=_("Issues by Publisher"),
             thousands=",",
             legend="bottom",
         )
@@ -225,12 +226,12 @@ class CollectionStatsView(LoginRequiredMixin, TemplateView):
             .order_by("-count")
         )
         series_type_dict = {
-            item["issue__series__series_type__name"] or "Unknown": item["count"]
+            item["issue__series__series_type__name"] or _("Unknown"): item["count"]
             for item in series_type_data
         }
         series_type_chart = PieChart(
             series_type_dict,
-            title="Issues by Series Type",
+            title=_("Issues by Series Type"),
             thousands=",",
             legend="bottom",
         )
@@ -239,12 +240,12 @@ class CollectionStatsView(LoginRequiredMixin, TemplateView):
         format_dict = {}
         for item in format_counts:
             format_name = dict(CollectionItem.BookFormat.choices).get(
-                item["book_format"], "Unknown"
+                item["book_format"], _("Unknown")
             )
             format_dict[format_name] = item["count"]
         format_chart = PieChart(
             format_dict,
-            title="Issues by Format",
+            title=_("Issues by Format"),
             thousands=",",
             legend="bottom",
         )
@@ -268,7 +269,7 @@ class CollectionStatsView(LoginRequiredMixin, TemplateView):
         }
         reading_daily_chart = ColumnChart(
             daily_dict,
-            title="Issues Read (Last 30 Days)",
+            title=_("Issues Read (Last 30 Days)"),
             thousands=",",
         )
 
@@ -281,7 +282,7 @@ class CollectionStatsView(LoginRequiredMixin, TemplateView):
         monthly_dict = {r["month"].strftime("%b %Y"): r["c"] for r in monthly_reads[::-1]}
         reading_monthly_chart = ColumnChart(
             monthly_dict,
-            title="Issues Read (Last 12 Months)",
+            title=_("Issues Read (Last 12 Months)"),
             thousands=",",
         )
 
@@ -298,7 +299,7 @@ class CollectionStatsView(LoginRequiredMixin, TemplateView):
         writers_dict = {item["creator__name"]: item["count"] for item in top_writers_data}
         top_writers_chart = BarChart(
             writers_dict,
-            title="Top Writers",
+            title=_("Top Writers"),
             thousands=",",
             library={"scales": {"x": {"ticks": {"precision": 0}}}},
         )
@@ -323,7 +324,7 @@ class CollectionStatsView(LoginRequiredMixin, TemplateView):
         artists_dict = {item["creator__name"]: item["count"] for item in top_artists_data}
         top_artists_chart = BarChart(
             artists_dict,
-            title="Top Artists",
+            title=_("Top Artists"),
             thousands=",",
             library={"scales": {"x": {"ticks": {"precision": 0}}}},
         )
@@ -448,25 +449,32 @@ class AddIssuesFromSeriesView(LoginRequiredMixin, FormView):
         if new_items:
             CollectionItem.objects.bulk_create(new_items)
             added_count = len(new_items)
-            read_status_msg = " (marked as read)" if mark_as_read else ""
+
+            added_phrase = ngettext(
+                "Added %(count)d issue to your collection",
+                "Added %(count)d issues to your collection",
+                added_count,
+            ) % {"count": added_count}
+            if mark_as_read:
+                added_phrase = _("%(phrase)s (marked as read)") % {"phrase": added_phrase}
 
             if skipped_count > 0:
-                issue_word = "issue" if added_count == 1 else "issues"
-                skipped_word = "issue" if skipped_count == 1 else "issues"
-                messages.success(
-                    self.request,
-                    f"Added {added_count} {issue_word} to your collection{read_status_msg}. "
-                    f"Skipped {skipped_count} {skipped_word} already in your collection.",
-                )
+                skipped_phrase = ngettext(
+                    "Skipped %(count)d issue already in your collection.",
+                    "Skipped %(count)d issues already in your collection.",
+                    skipped_count,
+                ) % {"count": skipped_count}
+                message = _("%(added)s. %(skipped)s") % {
+                    "added": added_phrase,
+                    "skipped": skipped_phrase,
+                }
             else:
-                messages.success(
-                    self.request,
-                    f"Added {added_count} issue{'s' if added_count != 1 else ''} "
-                    f"to your collection{read_status_msg}!",
-                )
+                message = _("%(added)s!") % {"added": added_phrase}
+            messages.success(self.request, message)
         else:
             messages.info(
-                self.request, "All issues from this series are already in your collection."
+                self.request,
+                _("All issues from this series are already in your collection."),
             )
 
         return super().form_valid(form)

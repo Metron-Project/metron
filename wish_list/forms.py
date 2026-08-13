@@ -1,4 +1,5 @@
 from django import forms
+from django.utils.translation import gettext_lazy as _
 from djmoney.forms.fields import MoneyField
 
 from comicsdb.autocomplete import IssueAutocomplete
@@ -21,7 +22,7 @@ class WishListItemForm(forms.ModelForm):
             "issue": SafeAutocompleteWidget(
                 ac_class=IssueAutocomplete,
                 attrs={
-                    "placeholder": "Search for an issue...",
+                    "placeholder": _("Search for an issue..."),
                     "class": "input",
                 },
             ),
@@ -37,20 +38,20 @@ class WishListItemForm(forms.ModelForm):
             ),
             "notes": forms.Textarea(
                 attrs={
-                    "placeholder": "Notes about this item (optional)",
+                    "placeholder": _("Notes about this item (optional)"),
                     "rows": 4,
                 }
             ),
         }
         labels = {
-            "desired_grade": "Minimum Grade",
-            "max_price": "Maximum Price",
-            "priority": "Priority (1=Highest)",
+            "desired_grade": _("Minimum Grade"),
+            "max_price": _("Maximum Price"),
+            "priority": _("Priority (1=Highest)"),
         }
         help_texts = {
-            "issue": "Search using 'Series Name (Year) #Number' format.",
-            "desired_grade": "Leave blank if any condition is acceptable.",
-            "priority": "1 is highest priority, 5 is lowest.",
+            "issue": _("Search using 'Series Name (Year) #Number' format."),
+            "desired_grade": _("Leave blank if any condition is acceptable."),
+            "priority": _("1 is highest priority, 5 is lowest."),
         }
 
 
@@ -63,25 +64,25 @@ class AcquireWishListItemForm(forms.Form):
                 "data-bulma-calendar": "on",
             }
         ),
-        label="Purchase Date",
+        label=_("Purchase Date"),
     )
     purchase_price = MoneyField(
         required=False,
         min_value=0,
         decimal_places=2,
         default_currency="USD",
-        label="Price Paid",
+        label=_("Price Paid"),
     )
     purchase_store = forms.CharField(
         max_length=255,
         required=False,
-        widget=forms.TextInput(attrs={"placeholder": "Local Comic Shop"}),
-        label="Store/Vendor",
+        widget=forms.TextInput(attrs={"placeholder": _("Local Comic Shop")}),
+        label=_("Store/Vendor"),
     )
     notes = forms.CharField(
         required=False,
-        widget=forms.Textarea(attrs={"placeholder": "Additional notes", "rows": 3}),
-        label="Notes",
+        widget=forms.Textarea(attrs={"placeholder": _("Additional notes"), "rows": 3}),
+        label=_("Notes"),
     )
 
     def __init__(self, *args, **kwargs):

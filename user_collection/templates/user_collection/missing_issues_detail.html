@@ -1,9 +1,9 @@
 {% extends parent_template|default:"base.html" %}
-{% load static %}
-{% block title %}Missing Issues - {{ series.name }} - Metron{% endblock %}
+{% load static i18n %}
+{% block title %}{% blocktrans with name=series.name %}Missing Issues - {{ name }} - Metron{% endblocktrans %}{% endblock %}
 {% block content %}
     <header class="block">
-        <h1 class="title">Missing Issues</h1>
+        <h1 class="title">{% trans "Missing Issues" %}</h1>
         <h2 class="subtitle">
             {{ series.name }}
             {% if series.year_began %}({{ series.year_began }}){% endif %}
@@ -15,12 +15,12 @@
                 <a class="button"
                    href="{% url 'user_collection:missing-list' %}">
                     <span class="icon"><i class="fas fa-arrow-left"></i></span>
-                    <span>Back to Missing List</span>
+                    <span>{% trans "Back to Missing List" %}</span>
                 </a>
                 <a class="button is-light"
                    href="{% url 'user_collection:list' %}">
                     <span class="icon"><i class="fas fa-home"></i></span>
-                    <span>Collection</span>
+                    <span>{% trans "Collection" %}</span>
                 </a>
             </div>
         </div>
@@ -30,18 +30,18 @@
             <div class="box">
                 <div class="columns is-vcentered">
                     <div class="column">
-                        <h3 class="title is-5">Series Information</h3>
+                        <h3 class="title is-5">{% trans "Series Information" %}</h3>
                         <dl>
-                            <dt class="has-text-weight-bold">Publisher:</dt>
+                            <dt class="has-text-weight-bold">{% trans "Publisher:" %}</dt>
                             <dd class="mb-2">
                                 {{ series.publisher.name }}
                             </dd>
-                            <dt class="has-text-weight-bold">Series Type:</dt>
+                            <dt class="has-text-weight-bold">{% trans "Series Type:" %}</dt>
                             <dd class="mb-2">
                                 {{ series.series_type.name }}
                             </dd>
                             {% if series.volume %}
-                                <dt class="has-text-weight-bold">Volume:</dt>
+                                <dt class="has-text-weight-bold">{% trans "Volume:" %}</dt>
                                 <dd>
                                     {{ series.volume }}
                                 </dd>
@@ -49,10 +49,10 @@
                         </dl>
                     </div>
                     <div class="column">
-                        <h3 class="title is-5">Collection Progress</h3>
+                        <h3 class="title is-5">{% trans "Collection Progress" %}</h3>
                         <div class="has-text-centered mb-3">
                             <p class="title is-3">{{ owned_issues }} / {{ total_issues }}</p>
-                            <p class="subtitle is-6">{{ completion_percentage }}% Complete</p>
+                            <p class="subtitle is-6">{% blocktrans with pct=completion_percentage %}{{ pct }}% Complete{% endblocktrans %}</p>
                         </div>
                         <progress class="progress {% if completion_percentage < 50 %}is-danger{% elif completion_percentage < 80 %}is-warning{% else %}is-success{% endif %}"
                                   value="{{ owned_issues }}"
@@ -60,7 +60,9 @@
                             {{ completion_percentage }}%
                         </progress>
                         <p class="has-text-centered mt-2">
-                            <span class="tag is-warning is-medium">{{ missing_count }} issue{{ missing_count|pluralize }} missing</span>
+                            <span class="tag is-warning is-medium">
+                                {% blocktrans count counter=missing_count %}{{ counter }} issue missing{% plural %}{{ counter }} issues missing{% endblocktrans %}
+                            </span>
                         </p>
                     </div>
                 </div>
@@ -74,11 +76,11 @@
                     <table class="table is-fullwidth is-striped is-hoverable">
                         <thead>
                             <tr>
-                                <th>Issue</th>
-                                <th>Story Title</th>
-                                <th>Cover Date</th>
-                                <th>Store Date</th>
-                                <th>Cover Price</th>
+                                <th>{% trans "Issue" %}</th>
+                                <th>{% trans "Story Title" %}</th>
+                                <th>{% trans "Cover Date" %}</th>
+                                <th>{% trans "Store Date" %}</th>
+                                <th>{% trans "Cover Price" %}</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -122,8 +124,8 @@
                 <span class="icon is-large has-text-success">
                     <i class="fas fa-check-circle fa-3x"></i>
                 </span>
-                <p class="title is-4 mt-4">No Missing Issues!</p>
-                <p class="subtitle">You own all issues from this series.</p>
+                <p class="title is-4 mt-4">{% trans "No Missing Issues!" %}</p>
+                <p class="subtitle">{% trans "You own all issues from this series." %}</p>
             </div>
         </section>
     {% endif %}
