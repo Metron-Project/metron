@@ -4955,7 +4955,7 @@ msgstr "Prossima Settimana"
 
 #: templates/partials/navbar.html:50
 msgid "Future"
-msgstr "Future"
+msgstr "In Arrivo"
 
 #: templates/partials/navbar.html:56
 msgid "Browse"
