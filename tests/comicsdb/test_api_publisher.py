@@ -171,6 +171,24 @@ def test_filter_by_alt_names_matches_any_of_multiple_values(
     assert resp.data["results"][0]["name"] == marvel.name
 
 
+def test_filter_by_quick_search(api_client_with_credentials, marvel, dc_comics):
+    """Quick search (q) should match either the name or alt_names field."""
+    dc_comics.alt_names = ["National Periodical"]
+    dc_comics.save()
+
+    # Matches via the primary name field
+    resp = api_client_with_credentials.get("/api/publisher/?q=Marvel")
+    assert resp.status_code == status.HTTP_200_OK
+    assert resp.data["count"] == 1
+    assert resp.data["results"][0]["name"] == marvel.name
+
+    # Matches via the alt_names field
+    resp = api_client_with_credentials.get("/api/publisher/?q=National+Periodical")
+    assert resp.status_code == status.HTTP_200_OK
+    assert resp.data["count"] == 1
+    assert resp.data["results"][0]["name"] == dc_comics.name
+
+
 def test_publisher_series_list_view(api_client_with_credentials, dc_comics, fc_series):
     resp = api_client_with_credentials.get(
         reverse("api:publisher-series-list", kwargs={"pk": dc_comics.pk})

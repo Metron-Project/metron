@@ -115,7 +115,8 @@ class PublisherDetailRedirect(SlugRedirectView):
 
 
 class SearchPublisherList(SearchMixin, PublisherList):
-    pass
+    def get_search_fields(self):
+        return ["name__icontains", "alt_names__joined__icontains"]
 
 
 class PublisherCreate(AttributionCreateMixin, LoginRequiredMixin, CreateView):
