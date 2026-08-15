@@ -251,7 +251,7 @@ class TestIssuePriceField:
     def test_patch_invalid_currency_returns_400(self, api_client_with_staff_credentials, usd_issue):
         resp = api_client_with_staff_credentials.patch(
             reverse("api:issue-detail", kwargs={"pk": usd_issue.pk}),
-            data={"price": {"amount": 3.99, "currency": "EUR"}},
+            data={"price": {"amount": 3.99, "currency": "JPY"}},
             format="json",
         )
         assert resp.status_code == status.HTTP_400_BAD_REQUEST
@@ -285,7 +285,7 @@ class TestIssuePriceField:
     def test_post_invalid_currency_returns_400(
         self, api_client_with_staff_credentials, base_issue_data
     ):
-        base_issue_data["price"] = {"amount": 3.99, "currency": "EUR"}
+        base_issue_data["price"] = {"amount": 3.99, "currency": "JPY"}
         resp = api_client_with_staff_credentials.post(
             reverse("api:issue-list"), data=base_issue_data, format="json"
         )
