@@ -5,6 +5,8 @@ from pytest_django.asserts import assertTemplateUsed
 
 from comicsdb.models import Publisher
 from comicsdb.models.attribution import Attribution
+from comicsdb.models.issue import Issue
+from comicsdb.models.series import Series
 
 HTML_OK_CODE = 200
 HTML_REDIRECT_CODE = 302
@@ -30,6 +32,49 @@ def test_publisher_detail(dc_comics, auto_login_user):
     client, _ = auto_login_user()
     resp = client.get(f"/publisher/{dc_comics.slug}/")
     assert resp.status_code == HTML_OK_CODE
+
+
+def test_publisher_detail_with_imprint_and_universe_counts(
+    dc_comics,
+    vertigo_imprint,
+    earth_2_universe,
+    single_issue_type,
+    create_user,
+    auto_login_user,
+):
+    """Regression test: imprint/universe series & issue counts must render.
+
+    Rendering these counts previously relied on unannotated querysets, which
+    made ``imprint.series_count``/``universe.issue_count`` resolve to an
+    empty string and crashed the ``{% blocktrans count %}`` tag.
+    """
+    user = create_user()
+    series = Series.objects.create(
+        name="Sandman",
+        slug="sandman",
+        publisher=dc_comics,
+        imprint=vertigo_imprint,
+        series_type=single_issue_type,
+        year_began=1989,
+        volume=1,
+        edited_by=user,
+        created_by=user,
+    )
+    issue = Issue.objects.create(
+        series=series,
+        number="1",
+        slug="sandman-1989-1",
+        cover_date="1989-01-01",
+        edited_by=user,
+        created_by=user,
+    )
+    issue.universes.add(earth_2_universe)
+
+    client, _ = auto_login_user()
+    resp = client.get(f"/publisher/{dc_comics.slug}/")
+    assert resp.status_code == HTML_OK_CODE
+    assert resp.context["imprints"][0].series_count == 1
+    assert resp.context["universes"][0].issue_count == 1
 
 
 def test_publisher_redirect(dc_comics, auto_login_user):
