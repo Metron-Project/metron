@@ -177,6 +177,50 @@ def test_valid_form_with_alt_names(dc_comics, single_issue_type):
     assert form.cleaned_data["alt_names"] == ["Batman, the Dark Knight", "Batman & Robin"]
 
 
+@pytest.mark.parametrize("language", ["en", "it"])
+def test_valid_form_with_supported_language(dc_comics, single_issue_type, language):
+    form = SeriesForm(
+        data={
+            "name": "Batman",
+            "sort_name": "Batman",
+            "slug": "batman",
+            "volume": 3,
+            "year_began": 2017,
+            "year_end": "",
+            "series_type": single_issue_type,
+            "status": Series.Status.ONGOING,
+            "publisher": dc_comics,
+            "desc": "The Dark Knight.",
+            "language": language,
+        }
+    )
+    assert form.is_valid() is True
+
+
+def test_invalid_form_with_unsupported_language(dc_comics, single_issue_type):
+    form = SeriesForm(
+        data={
+            "name": "Batman",
+            "sort_name": "Batman",
+            "slug": "batman",
+            "volume": 3,
+            "year_began": 2017,
+            "year_end": "",
+            "series_type": single_issue_type,
+            "status": Series.Status.ONGOING,
+            "publisher": dc_comics,
+            "desc": "The Dark Knight.",
+            "language": "fr",
+        }
+    )
+    assert form.is_valid() is False
+    assert "language" in form.errors
+    assert (
+        "Currently only English and Italian language Series are supported"
+        in form.errors["language"]
+    )
+
+
 def test_form_invalid(dc_comics, single_issue_type):
     form = SeriesForm(
         data={

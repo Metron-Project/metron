@@ -2,6 +2,7 @@ import operator
 from functools import reduce
 
 import django_filters as df
+from django.conf import global_settings
 from django.db.models import Q
 from django_filters import rest_framework as filters
 
@@ -52,6 +53,7 @@ class SeriesFilter(filters.FilterSet):
     series_type_id = filters.filters.NumberFilter(field_name="series_type__id", lookup_expr="exact")
     series_type = filters.CharFilter(field_name="series_type__name", lookup_expr="icontains")
     status = filters.ChoiceFilter(choices=Series.Status)
+    language = filters.ChoiceFilter(choices=global_settings.LANGUAGES)
     modified_gt = filters.DateTimeFilter(
         label="Greater than Modified DateTime", field_name="modified", lookup_expr="gt"
     )
@@ -143,6 +145,9 @@ class SeriesViewFilter(df.FilterSet):
     # Status filter
     status = df.ChoiceFilter(label="Status", choices=Series.Status)
 
+    # Language filter
+    language = df.ChoiceFilter(label="Language", choices=global_settings.LANGUAGES)
+
     # Volume filter
     volume = df.NumberFilter(label="Volume")
 
@@ -162,5 +167,6 @@ class SeriesViewFilter(df.FilterSet):
             "year_began_lte",
             "year_end",
             "status",
+            "language",
             "volume",
         ]

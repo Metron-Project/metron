@@ -17,6 +17,7 @@ class PublisherAdmin(AdminImageMixin, SimpleHistoryAdmin):
         "name",
         "slug",
         "modified",
+        "alt_names",
         "founded",
         "country",
         "desc",

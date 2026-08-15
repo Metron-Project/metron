@@ -1,3 +1,4 @@
+from django.conf import settings
 from django.contrib.postgres.forms import SimpleArrayField
 from django.forms import CharField, ModelChoiceField, ModelForm, ValidationError
 from django.utils.translation import gettext_lazy as _
@@ -50,6 +51,7 @@ class SeriesForm(ModelForm):
             "name",
             "sort_name",
             "alt_names",
+            "language",
             "volume",
             "year_began",
             "year_end",
@@ -96,6 +98,7 @@ class SeriesForm(ModelForm):
             "name",
             "sort_name",
             "alt_names",
+            "language",
             "volume",
             "year_began",
             "year_end",
@@ -127,6 +130,15 @@ class SeriesForm(ModelForm):
                 )
                 raise ValidationError(msg)
         return cvid
+
+    def clean_language(self):
+        language = self.cleaned_data.get("language")
+        allowed = {code for code, _ in settings.LANGUAGES}
+        if language and language not in allowed:
+            raise ValidationError(
+                _("Currently only English and Italian language Series are supported")
+            )
+        return language
 
     def clean_associated(self):
         assoc = self.cleaned_data["associated"]

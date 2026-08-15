@@ -111,6 +111,16 @@ def test_publisher_search_lists_all_publishers(auto_login_user, list_of_publishe
     assert len(resp.context["publisher_list"]) == PAGINATE_DIFF_VAL
 
 
+def test_publisher_search_matches_alt_names(auto_login_user, marvel, dc_comics):
+    marvel.alt_names = ["House of Ideas"]
+    marvel.save()
+
+    client, _ = auto_login_user()
+    resp = client.get("/publisher/search?q=House")
+    assert resp.status_code == HTML_OK_CODE
+    assert list(resp.context["publisher_list"]) == [marvel]
+
+
 def test_publisher_list_view_url_exists_at_desired_location(auto_login_user):
     client, _ = auto_login_user()
     resp = client.get("/publisher/")

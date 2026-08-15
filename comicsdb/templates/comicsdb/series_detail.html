@@ -272,6 +272,10 @@
                     <dd class="mb-3">
                         {{ series.get_status_display }}
                     </dd>
+                    <dt class="has-text-weight-bold">{% trans "Language:" %}</dt>
+                    <dd class="mb-3">
+                        {{ series.get_language_display }}
+                    </dd>
                     {% if series.volume %}
                         <dt class="has-text-weight-bold">{% trans "Volume:" %}</dt>
                         <dd class="mb-3">

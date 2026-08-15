@@ -80,6 +80,7 @@ from api.v1_0.serializers.wish_list import (
 from comicsdb.filters.collection import CollectionFilter
 from comicsdb.filters.issue import IssueFilter
 from comicsdb.filters.name import ComicVineFilter, NameFilter, UniverseFilter
+from comicsdb.filters.publisher import PublisherFilter
 from comicsdb.filters.reading_list import ReadingListFilter
 from comicsdb.filters.series import SeriesFilter
 from comicsdb.models import (
@@ -436,7 +437,7 @@ class PublisherViewSet(
     """
 
     queryset = Publisher.objects.all()
-    filterset_class = ComicVineFilter
+    filterset_class = PublisherFilter
     parser_classes = (MultiPartParser, FormParser)
 
     def get_serializer_class(self):

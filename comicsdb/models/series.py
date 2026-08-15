@@ -1,6 +1,7 @@
 import itertools
 from typing import TYPE_CHECKING
 
+from django.conf import global_settings
 from django.contrib.contenttypes.fields import GenericRelation
 from django.contrib.postgres.fields import ArrayField
 from django.contrib.postgres.indexes import GinIndex, OpClass
@@ -50,6 +51,13 @@ class Series(CommonInfo):
         blank=True,
         default=list,
         verbose_name=_("Alternative Names"),
+    )
+    language = models.CharField(
+        _("Language"),
+        max_length=10,
+        choices=global_settings.LANGUAGES,
+        default="en",
+        blank=True,
     )
     volume = models.PositiveSmallIntegerField(_("Volume Number"))
     year_began = models.PositiveSmallIntegerField(_("Year Began"))

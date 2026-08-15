@@ -279,6 +279,18 @@
                             {{ publisher.series_count|intcomma }}
                         </dd>
                     {% endif %}
+                    {% if publisher.alt_names %}
+                        <dt class="has-text-weight-bold">
+                            {% if publisher.alt_names|length > 1 %}
+                                {% trans "Alternative Names:" %}
+                            {% else %}
+                                {% trans "Alternative Name:" %}
+                            {% endif %}
+                        </dt>
+                        <dd class="mb-3">
+                            {{ publisher.alt_names|join:", " }}
+                        </dd>
+                    {% endif %}
                 </dl>
             </div>
             {# Identification Numbers #}

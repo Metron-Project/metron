@@ -75,6 +75,7 @@ class SeriesSerializer(serializers.ModelSerializer):
             "name",
             "sort_name",
             "alt_names",
+            "language",
             "volume",
             "series_type",
             "status",

@@ -30,6 +30,7 @@ class PublisherSerializer(CountryFieldMixin, serializers.ModelSerializer):
         fields = (
             "id",
             "name",
+            "alt_names",
             "founded",
             "country",
             "desc",

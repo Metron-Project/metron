@@ -1,5 +1,6 @@
 import logging
 
+from django.conf import global_settings
 from django.contrib.auth.mixins import LoginRequiredMixin, PermissionRequiredMixin
 from django.db.models import Count, OuterRef, Subquery
 from django.shortcuts import get_object_or_404
@@ -51,6 +52,7 @@ class SeriesList(ListView):
         series_types = list(SeriesType.objects.values("id", "name").order_by("name"))
         context["series_types"] = series_types
         context["status_choices"] = Series.Status.choices
+        context["language_choices"] = global_settings.LANGUAGES
         context["has_active_filters"] = any(key != "page" for key in self.request.GET)
         type_names = {str(t["id"]): t["name"] for t in series_types}
         context["active_filters"] = build_active_filters(self.request, type_names=type_names)

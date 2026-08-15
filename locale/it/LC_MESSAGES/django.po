@@ -567,9 +567,29 @@ msgstr "Il campo Titolo della Raccolta non è consentito per questa serie."
 msgid "Arcs cannot be added to Trade Paperbacks."
 msgstr "Gli archi narrativi non possono essere aggiunti ai Trade Paperback."
 
-#: comicsdb/forms/publisher.py:28
-msgid "Currently only US and UK Publishers are supported"
-msgstr "Attualmente sono supportati solo Editori di US e UK"
+#: comicsdb/forms/publisher.py:46
+msgid "Currently only US, UK, and Italian Publishers are supported"
+msgstr "Attualmente sono supportati solo Editori di US, UK e Italia"
+
+#: comicsdb/forms/series.py:139
+msgid "Currently only English and Italian language Series are supported"
+msgstr "Attualmente sono supportate solo Serie in lingua Inglese e Italiana"
+
+#: comicsdb/models/series.py:56 comicsdb/templates/comicsdb/partials/series_filter.html:184
+msgid "Language"
+msgstr "Lingua"
+
+#: comicsdb/templates/comicsdb/partials/series_filter.html:189
+msgid "Filter by language"
+msgstr "Filtra per lingua"
+
+#: comicsdb/templates/comicsdb/partials/series_filter.html:190
+msgid "All Languages"
+msgstr "Tutte le Lingue"
+
+#: comicsdb/templates/comicsdb/series_detail.html:275
+msgid "Language:"
+msgstr "Lingua:"
 
 #: comicsdb/forms/series.py:30
 #: comicsdb/templates/comicsdb/partials/issue_filter.html:122
@@ -590,11 +610,12 @@ msgstr "Editore"
 msgid "Imprint"
 msgstr "Etichetta"
 
-#: comicsdb/forms/series.py:42 comicsdb/models/series.py:52
+#: comicsdb/forms/publisher.py:20 comicsdb/forms/series.py:42
+#: comicsdb/models/publisher.py:32 comicsdb/models/series.py:52
 msgid "Alternative Names"
 msgstr "Nomi Alternativi"
 
-#: comicsdb/forms/series.py:43
+#: comicsdb/forms/publisher.py:21 comicsdb/forms/series.py:43
 msgid "Separate multiple alternative names by a semicolon"
 msgstr "Separa più nomi alternativi con un punto e virgola"
 
@@ -3196,11 +3217,13 @@ msgstr "Iniziata:"
 msgid "Ended:"
 msgstr "Terminata:"
 
-#: comicsdb/templates/comicsdb/series_detail.html:300
+#: comicsdb/templates/comicsdb/publisher_detail.html:285
+#: comicsdb/templates/comicsdb/series_detail.html:304
 msgid "Alternative Names:"
 msgstr "Nomi Alternativi:"
 
-#: comicsdb/templates/comicsdb/series_detail.html:302
+#: comicsdb/templates/comicsdb/publisher_detail.html:287
+#: comicsdb/templates/comicsdb/series_detail.html:306
 msgid "Alternative Name:"
 msgstr "Nome Alternativo:"
 

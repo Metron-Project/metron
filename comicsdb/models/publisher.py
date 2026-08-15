@@ -2,6 +2,7 @@ import contextlib
 import logging
 
 from django.contrib.contenttypes.fields import GenericRelation
+from django.contrib.postgres.fields import ArrayField
 from django.contrib.postgres.indexes import GinIndex, OpClass
 from django.contrib.postgres.lookups import Unaccent
 from django.core.exceptions import ObjectDoesNotExist
@@ -9,10 +10,12 @@ from django.db import models
 from django.db.models.functions import Upper
 from django.db.models.signals import pre_save
 from django.urls import reverse
+from django.utils.translation import gettext_lazy as _
 from django_countries.fields import CountryField
 from simple_history.models import HistoricalRecords
 from sorl.thumbnail import ImageField
 
+from comicsdb.db_functions import ArrayToString
 from comicsdb.models.attribution import Attribution
 from comicsdb.models.common import CommonInfo, pre_save_slug
 from users.models import CustomUser
@@ -22,6 +25,12 @@ LOGGER = logging.getLogger(__name__)
 
 class Publisher(CommonInfo):
     founded = models.PositiveSmallIntegerField("Year Founded", null=True, blank=True)
+    alt_names = ArrayField(
+        models.CharField(max_length=255),
+        blank=True,
+        default=list,
+        verbose_name=_("Alternative Names"),
+    )
     country = CountryField(default="US")
     image = ImageField("Logo", upload_to="publisher/%Y/%m/%d/", blank=True)
     attribution = GenericRelation(Attribution, related_query_name="publishers")
@@ -64,6 +73,10 @@ class Publisher(CommonInfo):
             GinIndex(
                 OpClass(Upper(Unaccent("name")), name="gin_trgm_ops"),
                 name="publisher_name_trgm_idx",
+            ),
+            GinIndex(
+                OpClass(Upper(ArrayToString("alt_names")), name="gin_trgm_ops"),
+                name="publisher_alt_names_trgm_idx",
             ),
             models.Index(fields=["cv_id"], name="publisher_cv_id_idx"),
             models.Index(fields=["gcd_id"], name="publisher_gcd_id_idx"),

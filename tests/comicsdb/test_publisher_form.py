@@ -11,7 +11,7 @@ class TestPublisherFormCountry:
             "founded": 1990,
         }
 
-    @pytest.mark.parametrize("country", ["US", "GB"])
+    @pytest.mark.parametrize("country", ["US", "GB", "IT"])
     def test_allowed_countries(self, base_data, country):
         base_data["country"] = country
         form = PublisherForm(data=base_data)
@@ -25,4 +25,6 @@ class TestPublisherFormCountry:
     def test_disallowed_country_error_message(self, base_data):
         base_data["country"] = "DE"
         form = PublisherForm(data=base_data)
-        assert "Currently only US and UK Publishers are supported" in form.errors["country"]
+        assert (
+            "Currently only US, UK, and Italian Publishers are supported" in form.errors["country"]
+        )

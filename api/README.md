@@ -400,7 +400,7 @@ The Issue endpoint supports the most comprehensive filtering options:
 
 - All list fields plus:
     - `desc` - Issue description
-    - `series` - Expanded compared to the list view, adding `sort_name`, `series_type` (object with `id`/`name`), `genres` (array of genre objects), and `alt_names` (array of alternate series names)
+    - `series` - Expanded compared to the list view, adding `sort_name`, `series_type` (object with `id`/`name`), `genres` (array of genre objects), `alt_names` (array of alternate series names), and `language` (ISO 639-1 code, e.g. `"en"`, `"it"`)
     - `price` - Cover price amount as a decimal string (e.g. `"3.99"`). See `price_currency` for the currency.
     - `price_currency` - ISO 4217 currency code for the cover price (e.g. `"USD"`, `"GBP"`).
     - `sku` - Distributor SKU
@@ -430,7 +430,7 @@ The `price` field accepts two formats on POST/PATCH:
 - **Decimal string** — defaults to USD: `"3.99"`
 - **Object** — for non-USD prices: `{"amount": 3.99, "currency": "GBP"}`
 
-Supported currencies: `USD`, `GBP`. Unsupported currency codes will return a `400 Bad Request`.
+Supported currencies: `USD`, `GBP`, `EUR`, `ITL`. Unsupported currency codes will return a `400 Bad Request`.
 
 **Cover Hash:**
 The `cover_hash` field contains a perceptual hash generated using [ImageHash](https://github.com/JohannesBuchner/imagehash). This allows for finding similar or duplicate covers.
@@ -497,6 +497,8 @@ Comic book publishers.
 **Filters:**
 
 - `name` - Publisher name (case-insensitive, partial match)
+- `alt_names` - Publisher alternative name (partial match)
+- `q` - Quick search across both `name` and `alt_names` (searches all words, case-insensitive)
 - `cv_id` - Comic Vine ID (exact match)
 - `gcd_id` - Grand Comics Database ID (exact match)
 - `modified_gt` - Modified after datetime
@@ -516,6 +518,7 @@ Comic book publishers.
 **Detail Response Fields:**
 
 - All list fields plus:
+    - `alt_names` - Array of alternative publisher names
     - `country` - ISO 3166-1 alpha-2 country code (e.g. `"US"`, `"GB"`)
     - `desc` - Description
     - `image` - Publisher logo URL
@@ -525,13 +528,19 @@ Comic book publishers.
 
 **Country (Write):**
 
-The `country` field on POST/PATCH accepts ISO 3166-1 alpha-2 codes. Currently supported values are `"US"` (United States) and `"GB"` (United Kingdom). Other values will return a `400 Bad Request`.
+The `country` field on POST/PATCH accepts any ISO 3166-1 alpha-2 code recognized by `django-countries`; the API does not restrict which countries are accepted. The website's publisher form is more restrictive — it currently only allows `"US"`, `"GB"`, and `"IT"` — but that restriction applies to the web UI only, not the API.
 
 **Example:**
 
 ```bash
 # Get all publishers
 GET /api/publisher/
+
+# Quick search by name or alternative name
+GET /api/publisher/?q=house of ideas
+
+# Search for a publisher by alternative name only
+GET /api/publisher/?alt_names=house of ideas
 
 # Get series from a publisher
 GET /api/publisher/1/series_list/
@@ -611,6 +620,7 @@ Comic book series.
 - `name` - Series name (searches all words, case-insensitive)
 - `alt_names` - Alternative series name (partial match)
 - `q` - Quick search across both `name` and `alt_names` (searches all words, case-insensitive)
+- `language` - Series language (exact match, ISO 639-1 code, e.g. `en`, `it`)
 - `volume` - Volume number
 - `year_began` - Year series started
 - `year_end` - Year series ended
@@ -670,6 +680,7 @@ Comic book series.
     - `imprint` - Imprint object (if applicable)
     - `status` - Series status (continuing, completed, cancelled, hiatus)
     - `alt_names` - Array of alternative series names
+    - `language` - ISO 639-1 language code (e.g. `"en"`, `"it"`)
     - `desc` - Description
     - `genres` - Array of genre objects
     - `associated` - Associated series
@@ -684,6 +695,10 @@ Comic book series.
 - `cancelled` - Cancelled series
 - `hiatus` - On hiatus
 
+**Language (Write):**
+
+The `language` field on POST/PATCH accepts any language code from Django's built-in language list (~100 languages, e.g. `"en"`, `"it"`, `"fr"`, `"ja"`) and defaults to `"en"` if omitted. The website's series form is more restrictive — it currently only allows `"en"` and `"it"` — but that restriction applies to the web UI only, not the API.
+
 **Examples:**
 
 ```bash
@@ -695,6 +710,9 @@ GET /api/series/?q=betty veronica
 
 # Search for series by alternative name only
 GET /api/series/?alt_names=veronica spectacular
+
+# Get Italian-language series
+GET /api/series/?language=it
 
 # Get Marvel ongoing series
 GET /api/series/?publisher_name=marvel&status=continuing
@@ -1762,7 +1780,7 @@ Request body (all fields optional):
 }
 ```
 
-- `purchase_price_currency` accepts `USD` or `GBP` and defaults to `USD` if omitted
+- `purchase_price_currency` accepts `USD`, `GBP`, `EUR`, or `ITL` and defaults to `USD` if omitted
 
 Response:
 
@@ -2107,6 +2125,8 @@ Variant covers for issues.
 
 - `issue` - Parent issue ID
 - `name` - Variant name
+- `price` - Cover price amount as a decimal string (e.g. `"3.99"`). See `price_currency` for the currency.
+- `price_currency` - ISO 4217 currency code for the cover price (e.g. `"USD"`, `"GBP"`, `"EUR"`, `"ITL"`)
 - `sku` - Distributor SKU
 - `upc` - UPC code
 - `image` - Variant cover image
@@ -2512,6 +2532,16 @@ For questions, issues, or feature requests:
 ---
 
 ## Changelog
+
+### Version 1.10
+
+- Italian comics support: Issue and Variant `price` fields now support larger cover price amounts (up to 6 digits before the decimal point)
+- `EUR` and `ITL` are now accepted alongside `USD` and `GBP` everywhere a currency code is written: Issue/Variant `price_currency`, and Wish List `max_price_currency` / `purchase_price_currency`
+- Documented previously-undocumented `price`/`price_currency` fields on the Variant endpoint
+- Added `alt_names` field and filter to Publisher endpoint (array of alternative publisher names)
+- Added `q` quick search filter to Publisher endpoint (searches both `name` and `alt_names`)
+- Added `language` field and filter to Series endpoint (ISO 639-1 code, defaults to `"en"`)
+- Issue detail endpoint's nested `series` object now includes `language`
 
 ### Version 1.9
 
