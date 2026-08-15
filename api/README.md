@@ -2125,6 +2125,8 @@ Variant covers for issues.
 
 - `issue` - Parent issue ID
 - `name` - Variant name
+- `price` - Cover price amount as a decimal string (e.g. `"3.99"`). See `price_currency` for the currency.
+- `price_currency` - ISO 4217 currency code for the cover price (e.g. `"USD"`, `"GBP"`, `"EUR"`, `"ITL"`)
 - `sku` - Distributor SKU
 - `upc` - UPC code
 - `image` - Variant cover image
@@ -2533,8 +2535,9 @@ For questions, issues, or feature requests:
 
 ### Version 1.10
 
-- Italian comics support: Issue `price` field now supports larger cover price amounts (up to 6 digits before the decimal point)
-- `EUR` and `ITL` are now accepted alongside `USD` and `GBP` everywhere a currency code is written: Issue `price_currency`, and Wish List `max_price_currency` / `purchase_price_currency`
+- Italian comics support: Issue and Variant `price` fields now support larger cover price amounts (up to 6 digits before the decimal point)
+- `EUR` and `ITL` are now accepted alongside `USD` and `GBP` everywhere a currency code is written: Issue/Variant `price_currency`, and Wish List `max_price_currency` / `purchase_price_currency`
+- Documented previously-undocumented `price`/`price_currency` fields on the Variant endpoint
 - Added `alt_names` field and filter to Publisher endpoint (array of alternative publisher names)
 - Added `q` quick search filter to Publisher endpoint (searches both `name` and `alt_names`)
 - Added `language` field and filter to Series endpoint (ISO 639-1 code, defaults to `"en"`)
