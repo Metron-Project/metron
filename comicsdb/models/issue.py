@@ -61,7 +61,7 @@ class Issue(CommonInfo):
     cover_date = models.DateField(_("Cover Date"))
     store_date = models.DateField(_("In Store Date"), null=True, blank=True)
     foc_date = models.DateField(_("Final Order Cutoff Date"), null=True, blank=True)
-    price = MoneyField(_("Cover Price"), max_digits=5, decimal_places=2, blank=True, null=True)
+    price = MoneyField(_("Cover Price"), max_digits=8, decimal_places=2, blank=True, null=True)
     rating = models.ForeignKey(Rating, default=1, on_delete=models.SET_DEFAULT)
     sku = models.CharField(_("Distributor SKU"), max_length=12, blank=True)
     isbn = models.CharField(_("ISBN"), max_length=13, blank=True)

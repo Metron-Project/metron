@@ -2,6 +2,7 @@ import contextlib
 import logging
 
 from django.contrib.contenttypes.fields import GenericRelation
+from django.contrib.postgres.fields import ArrayField
 from django.contrib.postgres.indexes import GinIndex, OpClass
 from django.contrib.postgres.lookups import Unaccent
 from django.core.exceptions import ObjectDoesNotExist
@@ -9,6 +10,7 @@ from django.db import models
 from django.db.models.functions import Upper
 from django.db.models.signals import pre_save
 from django.urls import reverse
+from django.utils.translation import gettext_lazy as _
 from django_countries.fields import CountryField
 from simple_history.models import HistoricalRecords
 from sorl.thumbnail import ImageField
@@ -22,6 +24,12 @@ LOGGER = logging.getLogger(__name__)
 
 class Publisher(CommonInfo):
     founded = models.PositiveSmallIntegerField("Year Founded", null=True, blank=True)
+    alt_names = ArrayField(
+        models.CharField(max_length=255),
+        blank=True,
+        default=list,
+        verbose_name=_("Alternative Names"),
+    )
     country = CountryField(default="US")
     image = ImageField("Logo", upload_to="publisher/%Y/%m/%d/", blank=True)
     attribution = GenericRelation(Attribution, related_query_name="publishers")
