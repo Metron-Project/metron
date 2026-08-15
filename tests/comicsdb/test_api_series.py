@@ -70,6 +70,32 @@ def test_admin_user_post_url_with_alt_names(
     assert resp.data["alt_names"] == ["The Wasp Spectacular"]
 
 
+def test_admin_user_post_url_with_multiple_alt_names(
+    db, api_client_with_staff_credentials, create_series_data
+):
+    create_series_data["alt_names"] = ["The Wasp Spectacular", "Wasp: Nuff Said", "Wasp Annual"]
+    resp = api_client_with_staff_credentials.post(
+        reverse("api:series-list"), data=create_series_data
+    )
+    assert resp.status_code == status.HTTP_201_CREATED
+    assert resp.data["alt_names"] == [
+        "The Wasp Spectacular",
+        "Wasp: Nuff Said",
+        "Wasp Annual",
+    ]
+
+
+def test_admin_user_post_url_with_language(
+    db, api_client_with_staff_credentials, create_series_data
+):
+    create_series_data["language"] = "it"
+    resp = api_client_with_staff_credentials.post(
+        reverse("api:series-list"), data=create_series_data
+    )
+    assert resp.status_code == status.HTTP_201_CREATED
+    assert resp.data["language"] == "it"
+
+
 # Put Tests
 def test_unauthorized_put_url(db, api_client, fc_series, create_put_data):
     resp = api_client.put(
@@ -136,6 +162,30 @@ def test_filter_by_alt_names(
     fc_series.save()
 
     resp = api_client_with_credentials.get("/api/series/?alt_names=Crisis")
+    assert resp.status_code == status.HTTP_200_OK
+    assert resp.data["count"] == 1
+    assert resp.data["results"][0]["series"] == str(fc_series)
+
+
+def test_filter_by_alt_names_matches_any_of_multiple_values(
+    api_client_with_credentials, fc_series: Series, bat_sups_series: Series
+):
+    fc_series.alt_names = ["The Crisis", "Crisis on Infinite Earths"]
+    fc_series.save()
+
+    resp = api_client_with_credentials.get("/api/series/?alt_names=Infinite+Earths")
+    assert resp.status_code == status.HTTP_200_OK
+    assert resp.data["count"] == 1
+    assert resp.data["results"][0]["series"] == str(fc_series)
+
+
+def test_filter_by_language(
+    api_client_with_credentials, fc_series: Series, bat_sups_series: Series
+):
+    fc_series.language = "it"
+    fc_series.save()
+
+    resp = api_client_with_credentials.get("/api/series/?language=it")
     assert resp.status_code == status.HTTP_200_OK
     assert resp.data["count"] == 1
     assert resp.data["results"][0]["series"] == str(fc_series)

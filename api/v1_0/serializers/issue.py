@@ -160,6 +160,7 @@ class IssueSeriesSerializer(serializers.ModelSerializer):
             "year_began",
             "series_type",
             "genres",
+            "language",
         )
 
 

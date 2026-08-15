@@ -52,6 +52,28 @@ def test_group_user_post_url(db, api_client_with_staff_credentials, create_publi
     # assert resp.data == serializer.data
 
 
+def test_admin_user_post_url_with_alt_names(
+    db, api_client_with_staff_credentials, create_publisher_data
+):
+    create_publisher_data["alt_names"] = ["Soulside Comics"]
+    resp = api_client_with_staff_credentials.post(
+        reverse("api:publisher-list"), data=create_publisher_data
+    )
+    assert resp.status_code == status.HTTP_201_CREATED
+    assert resp.data["alt_names"] == ["Soulside Comics"]
+
+
+def test_admin_user_post_url_with_multiple_alt_names(
+    db, api_client_with_staff_credentials, create_publisher_data
+):
+    create_publisher_data["alt_names"] = ["Soulside Comics", "Soulside Publishing", "SSC"]
+    resp = api_client_with_staff_credentials.post(
+        reverse("api:publisher-list"), data=create_publisher_data
+    )
+    assert resp.status_code == status.HTTP_201_CREATED
+    assert resp.data["alt_names"] == ["Soulside Comics", "Soulside Publishing", "SSC"]
+
+
 # Put Tests
 def test_unauthorized_put_url(db, api_client, marvel, create_put_data):
     resp = api_client.put(
@@ -102,6 +124,21 @@ def test_get_valid_single_publisher(api_client_with_credentials, dc_comics):
     # assert response.data == serializer.data
 
 
+def test_get_single_publisher_with_multiple_alt_names(api_client_with_credentials, dc_comics):
+    dc_comics.alt_names = ["Detective Comics", "National Comics", "National Periodical"]
+    dc_comics.save()
+
+    response = api_client_with_credentials.get(
+        reverse("api:publisher-detail", kwargs={"pk": dc_comics.pk})
+    )
+    assert response.status_code == status.HTTP_200_OK
+    assert response.data["alt_names"] == [
+        "Detective Comics",
+        "National Comics",
+        "National Periodical",
+    ]
+
+
 def test_get_invalid_single_publisher(api_client_with_credentials):
     response = api_client_with_credentials.get(reverse("api:publisher-detail", kwargs={"pk": "10"}))
     assert response.status_code == status.HTTP_404_NOT_FOUND
@@ -110,6 +147,28 @@ def test_get_invalid_single_publisher(api_client_with_credentials):
 def test_unauthorized_detail_view_url(api_client, dc_comics):
     response = api_client.get(reverse("api:publisher-detail", kwargs={"pk": dc_comics.pk}))
     assert response.status_code == status.HTTP_401_UNAUTHORIZED
+
+
+def test_filter_by_alt_names(api_client_with_credentials, marvel, dc_comics):
+    marvel.alt_names = ["House of Ideas"]
+    marvel.save()
+
+    resp = api_client_with_credentials.get("/api/publisher/?alt_names=House")
+    assert resp.status_code == status.HTTP_200_OK
+    assert resp.data["count"] == 1
+    assert resp.data["results"][0]["name"] == marvel.name
+
+
+def test_filter_by_alt_names_matches_any_of_multiple_values(
+    api_client_with_credentials, marvel, dc_comics
+):
+    marvel.alt_names = ["House of Ideas", "The Mighty Marvel"]
+    marvel.save()
+
+    resp = api_client_with_credentials.get("/api/publisher/?alt_names=Mighty")
+    assert resp.status_code == status.HTTP_200_OK
+    assert resp.data["count"] == 1
+    assert resp.data["results"][0]["name"] == marvel.name
 
 
 def test_publisher_series_list_view(api_client_with_credentials, dc_comics, fc_series):
