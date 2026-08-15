@@ -10,7 +10,14 @@ from comicsdb.models import Issue, Series, SeriesType
 class SeriesAdmin(SimpleHistoryAdmin):
     search_fields = ("name", "alt_names")
     list_display = ("name", "year_began", "created_by")
-    list_filter = (CreatedOnDateListFilter, "modified", "series_type", "status", "publisher")
+    list_filter = (
+        CreatedOnDateListFilter,
+        "modified",
+        "series_type",
+        "status",
+        "language",
+        "publisher",
+    )
     prepopulated_fields = {"slug": ("name", "year_began")}
     autocomplete_fields = ["associated"]
     actions = ["rename_issue_slugs"]
@@ -24,6 +31,7 @@ class SeriesAdmin(SimpleHistoryAdmin):
                     "slug",
                     "sort_name",
                     "alt_names",
+                    "language",
                     "publisher",
                     "imprint",
                     "volume",
