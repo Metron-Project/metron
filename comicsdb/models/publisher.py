@@ -15,6 +15,7 @@ from django_countries.fields import CountryField
 from simple_history.models import HistoricalRecords
 from sorl.thumbnail import ImageField
 
+from comicsdb.db_functions import ArrayToString
 from comicsdb.models.attribution import Attribution
 from comicsdb.models.common import CommonInfo, pre_save_slug
 from users.models import CustomUser
@@ -72,6 +73,10 @@ class Publisher(CommonInfo):
             GinIndex(
                 OpClass(Upper(Unaccent("name")), name="gin_trgm_ops"),
                 name="publisher_name_trgm_idx",
+            ),
+            GinIndex(
+                OpClass(Upper(ArrayToString("alt_names")), name="gin_trgm_ops"),
+                name="publisher_alt_names_trgm_idx",
             ),
             models.Index(fields=["cv_id"], name="publisher_cv_id_idx"),
             models.Index(fields=["gcd_id"], name="publisher_gcd_id_idx"),
