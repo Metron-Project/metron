@@ -54,6 +54,20 @@ _universe_count_sq = (
     .values("count")
 )
 
+_imprint_series_count_sq = (
+    Series.objects.filter(imprint=OuterRef("pk"))
+    .values("imprint")
+    .annotate(count=Count("pk"))
+    .values("count")
+)
+
+_universe_issue_count_sq = (
+    Issue.objects.filter(universes=OuterRef("pk"))
+    .values("universes")
+    .annotate(count=Count("pk"))
+    .values("count")
+)
+
 
 class PublisherList(ListView):
     model = Publisher
@@ -100,11 +114,15 @@ class PublisherDetail(NavigationMixin, DetailView):
 
         # Paginate imprints - only load first batch
         if imprint_count > 0:
-            context["imprints"] = publisher.imprints.all()[:DETAIL_PAGINATE_BY]
+            context["imprints"] = publisher.imprints.annotate(
+                series_count=Subquery(_imprint_series_count_sq)
+            )[:DETAIL_PAGINATE_BY]
 
         # Paginate universes - only load first batch
         if universe_count > 0:
-            context["universes"] = publisher.universes.all()[:DETAIL_PAGINATE_BY]
+            context["universes"] = publisher.universes.annotate(
+                issue_count=Subquery(_universe_issue_count_sq)
+            )[:DETAIL_PAGINATE_BY]
 
         return context
 
@@ -153,6 +171,11 @@ class PublisherImprintsLoadMore(LazyLoadMixin):
     context_object_name = "imprints"
     slug_context_name = "publisher_slug"
 
+    def get_queryset(self, parent_object, offset, limit):
+        return parent_object.imprints.annotate(series_count=Subquery(_imprint_series_count_sq))[
+            offset : offset + limit
+        ]
+
 
 class PublisherUniversesLoadMore(LazyLoadMixin):
     """HTMX endpoint for lazy loading more universes."""
@@ -162,3 +185,8 @@ class PublisherUniversesLoadMore(LazyLoadMixin):
     template_name = "comicsdb/partials/publisher_universe_items.html"
     context_object_name = "universes"
     slug_context_name = "publisher_slug"
+
+    def get_queryset(self, parent_object, offset, limit):
+        return parent_object.universes.annotate(issue_count=Subquery(_universe_issue_count_sq))[
+            offset : offset + limit
+        ]
