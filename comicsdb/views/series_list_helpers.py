@@ -6,6 +6,7 @@ params exposed by SeriesViewFilter.
 
 from urllib.parse import urlencode
 
+from django.conf import global_settings
 from django.utils.translation import gettext_lazy as _
 
 from comicsdb.models import Series, SeriesType
@@ -26,10 +27,12 @@ FILTER_LABELS = {
     "year_began_lte": _("Year Began (to)"),
     "year_end": _("Year Ended"),
     "status": _("Status"),
+    "language": _("Language"),
     "volume": _("Volume"),
 }
 
 _STATUS_LABELS = {str(k): v for k, v in Series.Status.choices}
+_LANGUAGE_LABELS = dict(global_settings.LANGUAGES)
 
 
 def build_active_filters(request, type_names=None):
@@ -60,6 +63,8 @@ def build_active_filters(request, type_names=None):
             display = type_names.get(value, value)
         elif key == "status":
             display = _STATUS_LABELS.get(value, value)
+        elif key == "language":
+            display = _LANGUAGE_LABELS.get(value, value)
 
         kept = [(k, v) for k, v in get.items() if k not in (key, "page")]
         remove_url = f"?{urlencode(kept)}" if kept else "?"
