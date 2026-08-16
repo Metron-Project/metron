@@ -2,6 +2,7 @@ import logging
 
 from django.contrib.auth.mixins import LoginRequiredMixin, PermissionRequiredMixin
 from django.db.models import Count, OuterRef, Subquery
+from django.db.models.functions import Coalesce
 from django.shortcuts import get_object_or_404
 from django.urls import reverse_lazy
 from django.views.generic import DetailView, ListView
@@ -115,13 +116,13 @@ class PublisherDetail(NavigationMixin, DetailView):
         # Paginate imprints - only load first batch
         if imprint_count > 0:
             context["imprints"] = publisher.imprints.annotate(
-                series_count=Subquery(_imprint_series_count_sq)
+                series_count=Coalesce(Subquery(_imprint_series_count_sq), 0)
             )[:DETAIL_PAGINATE_BY]
 
         # Paginate universes - only load first batch
         if universe_count > 0:
             context["universes"] = publisher.universes.annotate(
-                issue_count=Subquery(_universe_issue_count_sq)
+                issue_count=Coalesce(Subquery(_universe_issue_count_sq), 0)
             )[:DETAIL_PAGINATE_BY]
 
         return context
@@ -172,9 +173,9 @@ class PublisherImprintsLoadMore(LazyLoadMixin):
     slug_context_name = "publisher_slug"
 
     def get_queryset(self, parent_object, offset, limit):
-        return parent_object.imprints.annotate(series_count=Subquery(_imprint_series_count_sq))[
-            offset : offset + limit
-        ]
+        return parent_object.imprints.annotate(
+            series_count=Coalesce(Subquery(_imprint_series_count_sq), 0)
+        )[offset : offset + limit]
 
 
 class PublisherUniversesLoadMore(LazyLoadMixin):
@@ -187,6 +188,6 @@ class PublisherUniversesLoadMore(LazyLoadMixin):
     slug_context_name = "publisher_slug"
 
     def get_queryset(self, parent_object, offset, limit):
-        return parent_object.universes.annotate(issue_count=Subquery(_universe_issue_count_sq))[
-            offset : offset + limit
-        ]
+        return parent_object.universes.annotate(
+            issue_count=Coalesce(Subquery(_universe_issue_count_sq), 0)
+        )[offset : offset + limit]

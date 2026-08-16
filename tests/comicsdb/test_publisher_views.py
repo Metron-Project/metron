@@ -77,6 +77,23 @@ def test_publisher_detail_with_imprint_and_universe_counts(
     assert resp.context["universes"][0].issue_count == 1
 
 
+def test_publisher_detail_with_empty_imprint_and_universe(
+    dc_comics, vertigo_imprint, earth_2_universe, auto_login_user
+):
+    """Regression test: imprints/universes with zero series/issues must render.
+
+    The correlated-subquery annotation returns NULL (not 0) when an imprint
+    has no series or a universe has no issues, which also crashed the
+    ``{% blocktrans count %}`` tag (e.g. /publisher/dc-comics/ in production
+    where an imprint/universe existed with nothing tagged to it yet).
+    """
+    client, _ = auto_login_user()
+    resp = client.get(f"/publisher/{dc_comics.slug}/")
+    assert resp.status_code == HTML_OK_CODE
+    assert resp.context["imprints"][0].series_count == 0
+    assert resp.context["universes"][0].issue_count == 0
+
+
 def test_publisher_redirect(dc_comics, auto_login_user):
     client, _ = auto_login_user()
     resp = client.get(f"/publisher/{dc_comics.pk}/")
