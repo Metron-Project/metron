@@ -148,3 +148,22 @@ def test_supporter_daily_limit_falls_back_to_lowest_tier_when_blank(create_user)
     assert user.supporter_tier == ""
     assert user.supporter_daily_limit == SUPPORTER_TIERS[-1][3]
     assert user.supporter_tier_display == SUPPORTER_TIERS[-1][2]
+
+
+def test_superuser_is_mega_sponsor_by_default(create_user):
+    user = create_user(is_superuser=True)
+    assert user.supporter_until is None
+    assert user.supporter_tier == ""
+    assert user.is_supporter is True
+    assert user.supporter_daily_limit == 25000
+    assert user.supporter_tier_display == "Mega Sponsor"
+
+
+def test_superuser_stays_mega_sponsor_regardless_of_real_donation(create_user):
+    """A superuser's real supporter_tier/supporter_until is ignored: the
+    superuser floor always wins."""
+    user = create_user(is_superuser=True)
+    user.supporter_until = timezone.now() + timedelta(days=1)
+    user.supporter_tier = "backer"
+    assert user.supporter_daily_limit == 25000
+    assert user.supporter_tier_display == "Mega Sponsor"

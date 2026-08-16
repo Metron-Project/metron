@@ -156,6 +156,17 @@ def test_supporter_with_blank_tier_falls_back_to_lowest_tier_limit(create_user, 
 
 
 @pytest.mark.django_db
+def test_superuser_gets_mega_sponsor_sustained_limit(create_user, api_client):
+    user = create_user(is_superuser=True)
+    api_client.force_authenticate(user=user)
+
+    resp = api_client.get(reverse("api:arc-list"))
+
+    assert resp.status_code == status.HTTP_200_OK
+    assert resp["X-RateLimit-Sustained-Limit"] == "25000"
+
+
+@pytest.mark.django_db
 def test_non_supporter_gets_default_sustained_limit(api_client_with_credentials):
     resp = api_client_with_credentials.get(reverse("api:arc-list"))
 

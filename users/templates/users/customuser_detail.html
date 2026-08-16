@@ -381,7 +381,9 @@
                                 </span>
                                 <strong>{% trans "Supporter Status:" %}</strong>
                                 <span class="tag is-success is-light">{{ supporter_tier_display }}</span>
-                                <span class="has-text-grey is-size-7">{% blocktrans with until=supporter_until|date:"N j, Y" %}(elevated rate limit until {{ until }}){% endblocktrans %}</span>
+                                {% if supporter_until %}
+                                    <span class="has-text-grey is-size-7">{% blocktrans with until=supporter_until|date:"N j, Y" %}(elevated rate limit until {{ until }}){% endblocktrans %}</span>
+                                {% endif %}
                             </p>
                         {% endif %}
                         <div class="buttons mt-4">
