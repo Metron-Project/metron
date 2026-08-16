@@ -73,24 +73,32 @@ class CustomUser(AbstractUser):
 
     @property
     def is_supporter(self):
+        if self.is_superuser:
+            return True
         return bool(self.supporter_until and self.supporter_until > timezone.now())
 
     @property
-    def supporter_daily_limit(self) -> int | None:
+    def _effective_tier(self) -> tuple[str, int] | None:
+        """(display_name, daily_limit) for the active tier, or None."""
         if not self.is_supporter:
             return None
+        if self.is_superuser:
+            return _SUPPORTER_TIERS_BY_SLUG["mega_sponsor"]
         tier = _SUPPORTER_TIERS_BY_SLUG.get(self.supporter_tier)
         # Defensive fallback: is_supporter True but supporter_tier blank/unrecognized
         # shouldn't normally happen (the sync command always sets both together), but
         # fail open to the lowest tier (Friend) rather than silently granting nothing.
-        return tier[1] if tier else SUPPORTER_TIERS[-1][3]
+        return tier or _SUPPORTER_TIERS_BY_SLUG[SUPPORTER_TIERS[-1][1]]
+
+    @property
+    def supporter_daily_limit(self) -> int | None:
+        tier = self._effective_tier
+        return tier[1] if tier else None
 
     @property
     def supporter_tier_display(self) -> str | None:
-        if not self.is_supporter:
-            return None
-        tier = _SUPPORTER_TIERS_BY_SLUG.get(self.supporter_tier)
-        return tier[0] if tier else SUPPORTER_TIERS[-1][2]
+        tier = self._effective_tier
+        return tier[0] if tier else None
 
 
 class SignupSettings(models.Model):
