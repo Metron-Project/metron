@@ -82,6 +82,24 @@ def test_get_invalid_collection_item(api_client_with_credentials):
     assert resp.status_code == status.HTTP_404_NOT_FOUND
 
 
+def test_conditional_request_cannot_leak_other_users_item(
+    api_client, collection_user, other_collection_user, collection_item
+):
+    """A cache warmed by the owner must not let another user 304 past the
+    per-user queryset filter."""
+    api_client.force_authenticate(user=collection_user)
+    resp = api_client.get(reverse("api:collection-detail", kwargs={"pk": collection_item.pk}))
+    assert resp.status_code == status.HTTP_200_OK
+    last_modified = resp["Last-Modified"]
+
+    api_client.force_authenticate(user=other_collection_user)
+    resp = api_client.get(
+        reverse("api:collection-detail", kwargs={"pk": collection_item.pk}),
+        HTTP_IF_MODIFIED_SINCE=last_modified,
+    )
+    assert resp.status_code == status.HTTP_404_NOT_FOUND
+
+
 # Stats Endpoint Tests
 def test_unauthenticated_stats_requires_auth(api_client):
     """Unauthenticated users require authentication to view stats."""

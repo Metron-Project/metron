@@ -14,7 +14,7 @@ from simple_history.models import HistoricalRecords
 from sorl.thumbnail import ImageField
 
 from comicsdb.models.attribution import Attribution
-from comicsdb.models.common import CommonInfo, pre_save_slug
+from comicsdb.models.common import CommonInfo, LastModifiedCacheMixin, pre_save_slug
 from comicsdb.models.creator import Creator
 from comicsdb.models.team import Team
 from comicsdb.models.universe import Universe
@@ -23,7 +23,7 @@ from users.models import CustomUser
 LOGGER = logging.getLogger(__name__)
 
 
-class Character(CommonInfo):
+class Character(LastModifiedCacheMixin, CommonInfo):
     image = ImageField(upload_to="character/%Y/%m/%d/", blank=True)
     alias = ArrayField(models.CharField(max_length=100), blank=True, default=list)
     creators = models.ManyToManyField(Creator, blank=True, related_name="characters")

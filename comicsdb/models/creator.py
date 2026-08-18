@@ -14,13 +14,13 @@ from simple_history.models import HistoricalRecords
 from sorl.thumbnail import ImageField
 
 from comicsdb.models.attribution import Attribution
-from comicsdb.models.common import CommonInfo, pre_save_slug
+from comicsdb.models.common import CommonInfo, LastModifiedCacheMixin, pre_save_slug
 from users.models import CustomUser
 
 LOGGER = logging.getLogger(__name__)
 
 
-class Creator(CommonInfo):
+class Creator(LastModifiedCacheMixin, CommonInfo):
     birth = models.DateField("Date of Birth", null=True, blank=True)
     death = models.DateField("Date of Death", null=True, blank=True)
     image = ImageField(upload_to="creator/%Y/%m/%d/", blank=True)

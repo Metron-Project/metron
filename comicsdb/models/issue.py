@@ -21,7 +21,7 @@ from sorl.thumbnail import ImageField
 from comicsdb.models.arc import Arc
 from comicsdb.models.attribution import Attribution
 from comicsdb.models.character import Character
-from comicsdb.models.common import CommonInfo
+from comicsdb.models.common import CommonInfo, LastModifiedCacheMixin
 from comicsdb.models.creator import Creator
 from comicsdb.models.rating import Rating
 from comicsdb.models.series import Series
@@ -52,7 +52,7 @@ class TradePaperbackManager(models.Manager):
         )
 
 
-class Issue(CommonInfo):
+class Issue(LastModifiedCacheMixin, CommonInfo):
     series = models.ForeignKey(Series, on_delete=models.CASCADE, related_name="issues")
     name = ArrayField(models.CharField(_("Story Title"), max_length=150), blank=True, default=list)
     title = models.CharField(_("Collection Title"), max_length=255, blank=True)
