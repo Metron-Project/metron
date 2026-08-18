@@ -1,9 +1,9 @@
 bots:
   # Deny lovable.app — hammers the API unauthenticated with rotating IPs.
   # Must appear before the api ALLOW rule so the deny fires first.
-  - name: deny-lovable-app
-    user_agent_regex: lovable\.app
-    action: DENY
+  # - name: deny-lovable-app
+  #   user_agent_regex: lovable\.app
+  #   action: DENY
 
   # Deny ClickWhir — hammers the API unauthenticated.
   - name: deny-clickwhir
