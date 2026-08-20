@@ -1,3 +1,4 @@
+from django.core.cache import cache
 from django.db import models
 from django.db.models import (
     Avg,
@@ -24,6 +25,13 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework_condition import last_modified
 
+from api.cache import (
+    DETAIL_CACHE_TTL,
+    LIST_CACHE_TTL,
+    ModelLabel,
+    detail_cache_key,
+    list_cache_key,
+)
 from api.v1_0.serializers import (
     ArcListSerializer,
     ArcSerializer,
@@ -112,26 +120,109 @@ class ReadingListItemsPagination(PageNumberPagination):
 
 
 class CachedObjectMixin:
+    #: Set on concrete viewsets to enable response caching; None disables it
+    #: (fail-open -- behaves exactly as before this attribute existed).
+    cache_model_label: str | None = None
+
     def get_object(self):
         if not hasattr(self, "_cached_object"):
             self._cached_object = super().get_object()
 
         return self._cached_object
 
+    def get_modified_queryset(self):
+        """Queryset used by get_object_modified() for its (pk, modified)
+        lookup. Defaults to get_queryset(), but a viewset whose
+        get_queryset() adds annotate() aggregates should override this to
+        return a lean, unannotated queryset with the same row-level
+        permission scoping -- an annotated aggregate still forces a JOIN +
+        GROUP BY even when values_list() doesn't select the annotated
+        field.
+        """
+        return self.get_queryset()
+
+    def get_object_modified(self):
+        """Cheap (pk, modified) lookup for conditional-request checks and
+        cache-key computation -- does NOT trigger the full get_object()
+        queryset (select_related/prefetch_related/annotate). That heavier
+        query only runs lazily if get_object() is later called for an
+        actual cache-miss render.
+        """
+        if not hasattr(self, "_cached_object_modified"):
+            if hasattr(self, "_cached_object"):
+                # get_object() already ran this request -- reuse it instead
+                # of doing a second query.
+                obj = self._cached_object
+                self._cached_object_modified = (
+                    getattr(obj, "pk", None),
+                    getattr(obj, "modified", None),
+                )
+            else:
+                lookup_url_kwarg = self.lookup_url_kwarg or self.lookup_field
+                pk = self.kwargs[lookup_url_kwarg]
+                # get_modified_queryset()/filter_queryset(), not a bare
+                # Model.objects, so this still respects per-viewset row
+                # scoping (e.g. CollectionViewSet/PullListViewSet/
+                # WishListViewSet filtering by user).
+                row = (
+                    self.filter_queryset(self.get_modified_queryset())
+                    .filter(**{self.lookup_field: pk})
+                    .values_list(self.lookup_field, "modified")
+                    .first()
+                )
+                self._cached_object_modified = row if row else (None, None)
+
+        return self._cached_object_modified
+
 
 class ConditionalRetrieveModelMixin(CachedObjectMixin, mixins.RetrieveModelMixin):
+    #: Other models' cache-generation counters (see api/cache.py) to mix
+    #: into the detail cache key, for responses that embed a related
+    #: object's fields where an edit to that related object doesn't cascade
+    #: a `modified` bump onto this one.
+    cache_detail_dependent_labels: tuple[str, ...] = ()
+
     def retrieve(self, request, *args, **kwargs):
-        retrieve = last_modified(last_modified_func=self._retrieve_last_modified)(super().retrieve)
+        retrieve = last_modified(last_modified_func=self._retrieve_last_modified)(
+            self._cached_retrieve
+        )
 
         return retrieve(self, request, *args, **kwargs)
 
     def _retrieve_last_modified(self, *args, **kwargs):
-        obj = self.get_object()
+        _pk, modified = self.get_object_modified()
 
-        if obj and getattr(obj, "modified", None):
-            return obj.modified
+        return modified
 
-        return None
+    def _cached_retrieve(self, request, *args, **kwargs):
+        """Reached only once rest_framework_condition's last_modified() has
+        already ruled out a 304 -- i.e. exactly where a cache lookup is
+        worth doing.
+
+        Note: a cache hit returns without calling get_object(), so
+        check_object_permissions() never runs on that path. Every
+        permission class in this project is view-level only (none override
+        has_object_permission), so this is currently inert -- but a future
+        object-level permission class on a cache_model_label-enabled
+        viewset would need get_object_modified() (or this method) to also
+        enforce it explicitly, since DRF's default only calls it from
+        get_object().
+        """
+        pk, modified = self.get_object_modified()
+        if not self.cache_model_label or modified is None:
+            return mixins.RetrieveModelMixin.retrieve(self, request, *args, **kwargs)
+
+        key = detail_cache_key(
+            self.cache_model_label, pk, modified, *self.cache_detail_dependent_labels
+        )
+        cached = cache.get(key)
+        if cached is not None:
+            return Response(cached)
+
+        response = mixins.RetrieveModelMixin.retrieve(self, request, *args, **kwargs)
+        if response.status_code == status.HTTP_200_OK:
+            cache.set(key, response.data, DETAIL_CACHE_TTL)
+        return response
 
 
 class UserTrackingMixin:
@@ -144,7 +235,73 @@ class UserTrackingMixin:
         serializer.save(edited_by=self.request.user)
 
 
-class IssueListMixin(CachedObjectMixin):
+class CachedListModelMixin(mixins.ListModelMixin):
+    """Drop-in replacement for mixins.ListModelMixin that caches list()
+    responses under a per-model cache-generation counter (see api/cache.py).
+    """
+
+    cache_model_label: str | None = None
+    cache_dependent_labels: tuple[str, ...] = ()
+
+    def list(self, request, *args, **kwargs):
+        if not self.cache_model_label:
+            return super().list(request, *args, **kwargs)
+
+        key = list_cache_key(
+            self.cache_model_label,
+            *self.cache_dependent_labels,
+            query=request.query_params.lists(),
+        )
+        cached = cache.get(key)
+        if cached is not None:
+            return Response(cached)
+
+        response = super().list(request, *args, **kwargs)
+        if response.status_code == status.HTTP_200_OK:
+            cache.set(key, response.data, LIST_CACHE_TTL)
+        return response
+
+
+class CachedDetailActionMixin(CachedObjectMixin):
+    """Shared cache-wrapping logic for detail-scoped list actions
+    (issue_list, etc.) that paginate a related queryset off a parent object.
+    Cached under the parent's own `modified` timestamp, since that already
+    captures "has this parent's related collection changed" via the
+    existing modified-cascade signals.
+    """
+
+    #: Other models' cache-generation counters (see api/cache.py) to mix
+    #: into the action's cache key, for actions whose payload can change
+    #: without the parent object's own `modified` being touched (e.g.
+    #: issue_list embeds fields from Issue rows that don't cascade a
+    #: `modified` bump onto the parent Arc/Character/Team on every edit --
+    #: only on M2M add/remove/clear).
+    cache_action_dependent_labels: tuple[str, ...] = ()
+
+    def _cached_paginated_action(self, *, build_queryset, serializer_class):
+        pk, modified = self.get_object_modified()
+        key = None
+        if self.cache_model_label and modified is not None:
+            key = detail_cache_key(
+                self.cache_model_label, pk, modified, *self.cache_action_dependent_labels
+            )
+            cached = cache.get(key)
+            if cached is not None:
+                return Response(cached)
+
+        obj = self.get_object()
+        queryset = build_queryset(obj)
+        page = self.paginate_queryset(queryset)
+        if page is None:
+            raise Http404
+        serializer = serializer_class(page, many=True, context={"request": self.request})
+        response = self.get_paginated_response(serializer.data)
+        if key is not None:
+            cache.set(key, response.data, DETAIL_CACHE_TTL)
+        return response
+
+
+class IssueListMixin(CachedDetailActionMixin):
     """Mixin to provide a standard issue_list action for related models."""
 
     def get_issue_queryset(self, obj):
@@ -164,21 +321,15 @@ class IssueListMixin(CachedObjectMixin):
 
     def _issue_list(self, request, *args, **kwargs):
         """Returns a list of issues for this object."""
-        obj = self.get_object()
-        queryset = self.get_issue_queryset(obj)
-        page = self.paginate_queryset(queryset)
-        if page is not None:
-            serializer = IssueListSerializer(page, many=True, context={"request": self.request})
-            return self.get_paginated_response(serializer.data)
-        raise Http404
+        return self._cached_paginated_action(
+            build_queryset=self.get_issue_queryset,
+            serializer_class=IssueListSerializer,
+        )
 
     def _issue_list_last_modified(self, *args, **kwargs):
-        obj = self.get_object()
+        _pk, modified = self.get_object_modified()
 
-        if obj and getattr(obj, "modified", None):
-            return obj.modified
-
-        return None
+        return modified
 
 
 class ArcViewSet(
@@ -186,7 +337,7 @@ class ArcViewSet(
     IssueListMixin,
     mixins.CreateModelMixin,
     ConditionalRetrieveModelMixin,
-    mixins.ListModelMixin,
+    CachedListModelMixin,
     mixins.UpdateModelMixin,
     viewsets.GenericViewSet,
 ):
@@ -201,6 +352,11 @@ class ArcViewSet(
     queryset = Arc.objects.all()
     filterset_class = ComicVineFilter
     parser_classes = (MultiPartParser, FormParser)
+    cache_model_label = ModelLabel.ARC
+    # issue_list embeds fields from Issue rows (and their Series) that
+    # don't cascade a `modified` bump onto this Arc except on M2M
+    # add/remove/clear.
+    cache_action_dependent_labels = (ModelLabel.ISSUE, ModelLabel.SERIES)
 
     def get_serializer_class(self):
         match self.action:
@@ -217,7 +373,7 @@ class CharacterViewSet(
     IssueListMixin,
     mixins.CreateModelMixin,
     ConditionalRetrieveModelMixin,
-    mixins.ListModelMixin,
+    CachedListModelMixin,
     mixins.UpdateModelMixin,
     viewsets.GenericViewSet,
 ):
@@ -232,6 +388,19 @@ class CharacterViewSet(
     queryset = Character.objects.all()
     filterset_class = ComicVineFilter
     parser_classes = (MultiPartParser, FormParser)
+    cache_model_label = ModelLabel.CHARACTER
+    # retrieve also embeds Creator/Universe names (CharacterReadSerializer)
+    # that don't cascade a `modified` bump onto this Character either, but
+    # those are deliberately left as bounded (TTL-limited) staleness rather
+    # than a cache_detail_dependent_labels dependency -- Creators in
+    # particular are edited/added far more often than Publishers/Imprints,
+    # so tying this key to CREATOR's version would invalidate every cached
+    # Character detail on essentially any creator edit anywhere.
+    #
+    # issue_list embeds fields from Issue rows (and their Series) that
+    # don't cascade a `modified` bump onto this Character except on M2M
+    # add/remove/clear.
+    cache_action_dependent_labels = (ModelLabel.ISSUE, ModelLabel.SERIES)
 
     def get_queryset(self):
         queryset = super().get_queryset()
@@ -255,7 +424,7 @@ class CreatorViewSet(
     UserTrackingMixin,
     mixins.CreateModelMixin,
     ConditionalRetrieveModelMixin,
-    mixins.ListModelMixin,
+    CachedListModelMixin,
     mixins.UpdateModelMixin,
     viewsets.GenericViewSet,
 ):
@@ -270,6 +439,7 @@ class CreatorViewSet(
     queryset = Creator.objects.all()
     filterset_class = ComicVineFilter
     parser_classes = (MultiPartParser, FormParser)
+    cache_model_label = ModelLabel.CREATOR
 
     def get_serializer_class(self):
         match self.action:
@@ -305,7 +475,7 @@ class ImprintViewSet(
     UserTrackingMixin,
     mixins.CreateModelMixin,
     ConditionalRetrieveModelMixin,
-    mixins.ListModelMixin,
+    CachedListModelMixin,
     mixins.UpdateModelMixin,
     viewsets.GenericViewSet,
 ):
@@ -326,6 +496,10 @@ class ImprintViewSet(
     queryset = Imprint.objects.all()
     filterset_class = ComicVineFilter
     parser_classes = (MultiPartParser, FormParser)
+    cache_model_label = ModelLabel.IMPRINT
+    # Imprint retrieve embeds its Publisher's name, which doesn't cascade a
+    # `modified` bump onto this Imprint when renamed.
+    cache_detail_dependent_labels = (ModelLabel.PUBLISHER,)
 
     def get_queryset(self):
         queryset = super().get_queryset()
@@ -347,7 +521,7 @@ class IssueViewSet(
     UserTrackingMixin,
     mixins.CreateModelMixin,
     ConditionalRetrieveModelMixin,
-    mixins.ListModelMixin,
+    CachedListModelMixin,
     mixins.UpdateModelMixin,
     viewsets.GenericViewSet,
 ):
@@ -365,6 +539,23 @@ class IssueViewSet(
     queryset = Issue.objects.all()
     filterset_class = IssueFilter
     parser_classes = (JSONParser, MultiPartParser, FormParser)
+    cache_model_label = ModelLabel.ISSUE
+    # Issue retrieve embeds its Series/Publisher/Imprint names, which don't
+    # cascade a `modified` bump onto this Issue when renamed. Arc/
+    # Character/Team/Universe/Creator names are also embedded but
+    # deliberately excluded here -- those are edited/created far more
+    # often, and mixing them in would invalidate every cached issue detail
+    # response on essentially every catalog edit anywhere, not just ones
+    # affecting this issue.
+    cache_detail_dependent_labels = (ModelLabel.PUBLISHER, ModelLabel.IMPRINT, ModelLabel.SERIES)
+
+    def get_modified_queryset(self):
+        # get_queryset() annotates average_rating/rating_count for the
+        # retrieve action -- an aggregate that survives into (pk, modified)
+        # values_list() as an extra JOIN + GROUP BY even though neither
+        # annotated field is selected. This lookup only needs the row's own
+        # pk/modified, so skip the annotation entirely.
+        return Issue.objects.all()
 
     def get_queryset(self):
         if self.action == "list":
@@ -418,7 +609,7 @@ class PublisherViewSet(
     UserTrackingMixin,
     mixins.CreateModelMixin,
     ConditionalRetrieveModelMixin,
-    mixins.ListModelMixin,
+    CachedListModelMixin,
     mixins.UpdateModelMixin,
     viewsets.GenericViewSet,
 ):
@@ -439,6 +630,7 @@ class PublisherViewSet(
     queryset = Publisher.objects.all()
     filterset_class = PublisherFilter
     parser_classes = (MultiPartParser, FormParser)
+    cache_model_label = ModelLabel.PUBLISHER
 
     def get_serializer_class(self):
         match self.action:
@@ -455,17 +647,39 @@ class PublisherViewSet(
         """
         Returns a list of series for a publisher.
         """
+        # get_object() (existence + permission check) first, same as any
+        # other detail-scoped action -- a cache hit must not bypass either
+        # of those, and must not keep serving a 200 once the publisher
+        # itself has been deleted.
         publisher = self.get_object()
+
+        # series_list's payload depends on the Series/Issue graph, not on
+        # Publisher.modified (adding a series, or issues under one, doesn't
+        # touch the publisher row) -- so this uses the version-counter list
+        # scheme, scoped to this publisher, rather than a parent-modified
+        # detail key.
+        key = list_cache_key(
+            ModelLabel.SERIES,
+            ModelLabel.ISSUE,
+            query=self.request.query_params.lists(),
+            scope=f"publisher:{pk}:series_list",
+        )
+        cached = cache.get(key)
+        if cached is not None:
+            return Response(cached)
+
         queryset = (
             publisher.series.select_related("series_type")
             .annotate(num_issues=Count("issues", distinct=True))
             .order_by("sort_name", "year_began")
         )
         page = self.paginate_queryset(queryset)
-        if page is not None:
-            serializer = SeriesListSerializer(page, many=True, context={"request": request})
-            return self.get_paginated_response(serializer.data)
-        raise Http404
+        if page is None:
+            raise Http404
+        serializer = SeriesListSerializer(page, many=True, context={"request": request})
+        response = self.get_paginated_response(serializer.data)
+        cache.set(key, response.data, LIST_CACHE_TTL)
+        return response
 
 
 class RoleViewset(mixins.ListModelMixin, viewsets.GenericViewSet):
@@ -484,7 +698,7 @@ class SeriesViewSet(
     IssueListMixin,
     mixins.CreateModelMixin,
     ConditionalRetrieveModelMixin,
-    mixins.ListModelMixin,
+    CachedListModelMixin,
     mixins.UpdateModelMixin,
     viewsets.GenericViewSet,
 ):
@@ -504,6 +718,19 @@ class SeriesViewSet(
 
     queryset = Series.objects.select_related("series_type", "publisher")
     filterset_class = SeriesFilter
+    cache_model_label = ModelLabel.SERIES
+    # Series list embeds num_issues, which changes on every Issue write.
+    cache_dependent_labels = (ModelLabel.ISSUE,)
+    # Series retrieve embeds its Publisher/Imprint name, which don't cascade
+    # a `modified` bump onto this Series when renamed.
+    cache_detail_dependent_labels = (ModelLabel.PUBLISHER, ModelLabel.IMPRINT)
+
+    def get_modified_queryset(self):
+        # get_queryset() annotates num_issues for list/retrieve -- an
+        # aggregate that survives into (pk, modified) values_list() as an
+        # extra JOIN + GROUP BY even though the annotated field isn't
+        # selected. This lookup only needs the row's own pk/modified.
+        return Series.objects.all()
 
     def get_queryset(self):
         queryset = super().get_queryset()
@@ -567,7 +794,7 @@ class TeamViewSet(
     IssueListMixin,
     mixins.CreateModelMixin,
     ConditionalRetrieveModelMixin,
-    mixins.ListModelMixin,
+    CachedListModelMixin,
     mixins.UpdateModelMixin,
     viewsets.GenericViewSet,
 ):
@@ -581,7 +808,20 @@ class TeamViewSet(
 
     queryset = Team.objects.all()
     filterset_class = ComicVineFilter
+    cache_model_label = ModelLabel.TEAM
     parser_classes = (MultiPartParser, FormParser)
+    # retrieve also embeds Creator/Universe names (TeamReadSerializer) that
+    # don't cascade a `modified` bump onto this Team either, but those are
+    # deliberately left as bounded (TTL-limited) staleness rather than a
+    # cache_detail_dependent_labels dependency -- Creators in particular
+    # are edited/added far more often than Publishers/Imprints, so tying
+    # this key to CREATOR's version would invalidate every cached Team
+    # detail on essentially any creator edit anywhere.
+    #
+    # issue_list embeds fields from Issue rows (and their Series) that
+    # don't cascade a `modified` bump onto this Team except on M2M
+    # add/remove/clear.
+    cache_action_dependent_labels = (ModelLabel.ISSUE, ModelLabel.SERIES)
 
     def get_queryset(self):
         queryset = super().get_queryset()
@@ -605,7 +845,7 @@ class UniverseViewSet(
     UserTrackingMixin,
     mixins.CreateModelMixin,
     ConditionalRetrieveModelMixin,
-    mixins.ListModelMixin,
+    CachedListModelMixin,
     mixins.UpdateModelMixin,
     viewsets.GenericViewSet,
 ):
@@ -620,6 +860,10 @@ class UniverseViewSet(
     queryset = Universe.objects.all()
     filterset_class = UniverseFilter
     parser_classes = (MultiPartParser, FormParser)
+    cache_model_label = ModelLabel.UNIVERSE
+    # Universe retrieve embeds its Publisher's name, which doesn't cascade a
+    # `modified` bump onto this Universe when renamed.
+    cache_detail_dependent_labels = (ModelLabel.PUBLISHER,)
 
     def get_queryset(self):
         queryset = super().get_queryset()
