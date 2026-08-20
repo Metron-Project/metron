@@ -101,18 +101,10 @@ def update_issue_modified_on_credit_role_change(sender, instance, action, pk_set
     bump_model_version(ModelLabel.ISSUE)
 
 
-def _make_cache_bumper(label):
-    def bump_cache(sender, instance, **kwargs):
-        bump_model_version(label)
-
-    return bump_cache
-
-
-bump_arc_cache = _make_cache_bumper(ModelLabel.ARC)
-bump_character_cache = _make_cache_bumper(ModelLabel.CHARACTER)
-bump_creator_cache = _make_cache_bumper(ModelLabel.CREATOR)
-bump_imprint_cache = _make_cache_bumper(ModelLabel.IMPRINT)
-bump_publisher_cache = _make_cache_bumper(ModelLabel.PUBLISHER)
-bump_series_cache = _make_cache_bumper(ModelLabel.SERIES)
-bump_team_cache = _make_cache_bumper(ModelLabel.TEAM)
-bump_universe_cache = _make_cache_bumper(ModelLabel.UNIVERSE)
+def bump_cache(label, sender, instance, **kwargs):
+    """Generic post_save/post_delete receiver for the models whose cache
+    invalidation is *only* "bump my own version counter" -- Arc, Character,
+    Creator, Imprint, Publisher, Series, Team, Universe. Wired up via
+    functools.partial(bump_cache, label) in comicsdb/apps.py so one
+    function covers all eight instead of eight near-identical wrappers."""
+    bump_model_version(label)

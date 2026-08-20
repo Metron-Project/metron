@@ -1,15 +1,11 @@
+from functools import partial
+
 from django.apps import AppConfig
 from django.db.models.signals import m2m_changed, post_delete, post_save, pre_delete
 
+from api.cache import ModelLabel
 from comicsdb.signals import (
-    bump_arc_cache,
-    bump_character_cache,
-    bump_creator_cache,
-    bump_imprint_cache,
-    bump_publisher_cache,
-    bump_series_cache,
-    bump_team_cache,
-    bump_universe_cache,
+    bump_cache,
     pre_delete_credit,
     pre_delete_image,
     update_arc_modified,
@@ -29,26 +25,12 @@ class ComicsdbConfig(AppConfig):
     def ready(self):
         arc = self.get_model("Arc")
         pre_delete.connect(pre_delete_image, sender=arc, dispatch_uid="pre_delete_arc")
-        post_save.connect(bump_arc_cache, sender=arc, dispatch_uid="post_save_arc_cache")
-        post_delete.connect(bump_arc_cache, sender=arc, dispatch_uid="post_delete_arc_cache")
 
         character = self.get_model("Character")
         pre_delete.connect(pre_delete_image, sender=character, dispatch_uid="pre_delete_character")
-        post_save.connect(
-            bump_character_cache, sender=character, dispatch_uid="post_save_character_cache"
-        )
-        post_delete.connect(
-            bump_character_cache, sender=character, dispatch_uid="post_delete_character_cache"
-        )
 
         creator = self.get_model("Creator")
         pre_delete.connect(pre_delete_image, sender=creator, dispatch_uid="pre_delete_creator")
-        post_save.connect(
-            bump_creator_cache, sender=creator, dispatch_uid="post_save_creator_cache"
-        )
-        post_delete.connect(
-            bump_creator_cache, sender=creator, dispatch_uid="post_delete_creator_cache"
-        )
 
         issue = self.get_model("Issue")
         pre_delete.connect(pre_delete_image, sender=issue, dispatch_uid="pre_delete_issue")
@@ -79,40 +61,16 @@ class ComicsdbConfig(AppConfig):
         )
 
         imprint = self.get_model("Imprint")
-        post_save.connect(
-            bump_imprint_cache, sender=imprint, dispatch_uid="post_save_imprint_cache"
-        )
-        post_delete.connect(
-            bump_imprint_cache, sender=imprint, dispatch_uid="post_delete_imprint_cache"
-        )
 
         publisher = self.get_model("Publisher")
         pre_delete.connect(pre_delete_image, sender=publisher, dispatch_uid="pre_delete_publisher")
-        post_save.connect(
-            bump_publisher_cache, sender=publisher, dispatch_uid="post_save_publisher_cache"
-        )
-        post_delete.connect(
-            bump_publisher_cache, sender=publisher, dispatch_uid="post_delete_publisher_cache"
-        )
 
         series = self.get_model("Series")
-        post_save.connect(bump_series_cache, sender=series, dispatch_uid="post_save_series_cache")
-        post_delete.connect(
-            bump_series_cache, sender=series, dispatch_uid="post_delete_series_cache"
-        )
 
         team = self.get_model("Team")
         pre_delete.connect(pre_delete_image, sender=team, dispatch_uid="pre_delete_team")
-        post_save.connect(bump_team_cache, sender=team, dispatch_uid="post_save_team_cache")
-        post_delete.connect(bump_team_cache, sender=team, dispatch_uid="post_delete_team_cache")
 
         universe = self.get_model("Universe")
-        post_save.connect(
-            bump_universe_cache, sender=universe, dispatch_uid="post_save_universe_cache"
-        )
-        post_delete.connect(
-            bump_universe_cache, sender=universe, dispatch_uid="post_delete_universe_cache"
-        )
 
         variant = self.get_model("Variant")
         pre_delete.connect(pre_delete_image, sender=variant, dispatch_uid="pre_delete_variant")
@@ -134,3 +92,32 @@ class ComicsdbConfig(AppConfig):
             sender=credits_.role.through,
             dispatch_uid="m2m_changed_credit_role_modified",
         )
+
+        # Models whose cache invalidation is *only* "bump my own version
+        # counter" on every save/delete -- see bump_cache() in
+        # comicsdb/signals.py. Everything above this point wires up
+        # handlers with model-specific behavior (image cleanup, modified
+        # cascades); this is the uniform remainder.
+        cache_bump_models = (
+            (arc, ModelLabel.ARC),
+            (character, ModelLabel.CHARACTER),
+            (creator, ModelLabel.CREATOR),
+            (imprint, ModelLabel.IMPRINT),
+            (publisher, ModelLabel.PUBLISHER),
+            (series, ModelLabel.SERIES),
+            (team, ModelLabel.TEAM),
+            (universe, ModelLabel.UNIVERSE),
+        )
+        for model, label in cache_bump_models:
+            bumper = partial(bump_cache, label)
+            # weak=False: `bumper` is a local `partial` with no other
+            # strong reference, so Django's default weak-reference
+            # receiver storage would let it be garbage-collected right
+            # after this loop iteration ends, silently dropping the
+            # connection.
+            post_save.connect(
+                bumper, sender=model, weak=False, dispatch_uid=f"post_save_{label}_cache"
+            )
+            post_delete.connect(
+                bumper, sender=model, weak=False, dispatch_uid=f"post_delete_{label}_cache"
+            )

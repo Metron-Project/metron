@@ -15,6 +15,7 @@ Two independent invalidation schemes are used, depending on endpoint shape:
 
 import hashlib
 from collections.abc import Iterable
+from enum import StrEnum
 from typing import Any
 
 from django.core.cache import cache
@@ -25,7 +26,7 @@ LIST_CACHE_TTL = 60 * 2  # 2min; bounds staleness from nested-object changes we 
 _VERSION_KEY_PREFIX = "cachever"
 
 
-class ModelLabel:
+class ModelLabel(StrEnum):
     """Stable cache-key labels shared between signal handlers and views."""
 
     ARC = "arc"
@@ -53,7 +54,8 @@ def detail_cache_key(model_label: str, pk: Any, modified, *dependent_labels: str
     """
     key = f"api:detail:{model_label}:{pk}:{modified.timestamp()}"
     if dependent_labels:
-        versions = "-".join(str(get_model_version(lbl)) for lbl in dependent_labels)
+        version_map = get_model_versions(dependent_labels)
+        versions = "-".join(str(version_map[lbl]) for lbl in dependent_labels)
         key = f"{key}:{versions}"
     return key
 
@@ -63,10 +65,24 @@ def get_model_version(model_label: str) -> int:
     it to 1 on first use."""
     key = f"{_VERSION_KEY_PREFIX}:{model_label}"
     version = cache.get(key)
-    if version is None:
-        cache.add(key, 1, timeout=None)
-        version = cache.get(key) or 1
-    return version
+    if version is not None:
+        return version
+    if cache.add(key, 1, timeout=None):
+        return 1
+    # Lost the initialization race to another caller -- read back what they set.
+    return cache.get(key) or 1
+
+
+def get_model_versions(model_labels: Iterable[str]) -> dict[str, int]:
+    """Batch form of get_model_version(): one Redis round trip (get_many)
+    for the common case where every counter already exists, instead of one
+    round trip per label."""
+    labels = list(dict.fromkeys(model_labels))  # de-dupe, preserve order
+    keys = {lbl: f"{_VERSION_KEY_PREFIX}:{lbl}" for lbl in labels}
+    cached = cache.get_many(keys.values())
+    return {
+        lbl: cached[key] if key in cached else get_model_version(lbl) for lbl, key in keys.items()
+    }
 
 
 def bump_model_version(model_label: str) -> None:
@@ -97,7 +113,9 @@ def list_cache_key(
     repeated params (e.g. IssueFilter's `role_id`), which would let distinct
     multi-value requests collide on the same key.
     """
-    versions = "-".join(str(get_model_version(lbl)) for lbl in (model_label, *dependent_labels))
+    labels = (model_label, *dependent_labels)
+    version_map = get_model_versions(labels)
+    versions = "-".join(str(version_map[lbl]) for lbl in labels)
     normalized = "&".join(f"{k}={v}" for k, v in sorted(query))
     digest = hashlib.sha256(normalized.encode()).hexdigest()[:16]
     return f"api:list:{model_label}:{scope}:{versions}:{digest}"
