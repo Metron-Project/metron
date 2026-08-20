@@ -119,6 +119,17 @@ class ReadingListItemsPagination(PageNumberPagination):
     page_size = 50
 
 
+def _mark_cache_status(response: Response, *, hit: bool) -> Response:
+    """Tag a response with whether it came from the Redis response cache,
+    so cache behavior can be checked in production with `curl -I` instead
+    of inspecting Redis directly. Only called on the paths that actually
+    went through a cache.get()/cache.set() -- a viewset/action with caching
+    disabled (no cache_model_label) gets no header at all, rather than a
+    misleading MISS."""
+    response["X-Cache"] = "HIT" if hit else "MISS"
+    return response
+
+
 class CachedObjectMixin:
     #: Set on concrete viewsets to enable response caching; None disables it
     #: (fail-open -- behaves exactly as before this attribute existed).
@@ -217,12 +228,12 @@ class ConditionalRetrieveModelMixin(CachedObjectMixin, mixins.RetrieveModelMixin
         )
         cached = cache.get(key)
         if cached is not None:
-            return Response(cached)
+            return _mark_cache_status(Response(cached), hit=True)
 
         response = mixins.RetrieveModelMixin.retrieve(self, request, *args, **kwargs)
         if response.status_code == status.HTTP_200_OK:
             cache.set(key, response.data, DETAIL_CACHE_TTL)
-        return response
+        return _mark_cache_status(response, hit=False)
 
 
 class UserTrackingMixin:
@@ -254,12 +265,12 @@ class CachedListModelMixin(mixins.ListModelMixin):
         )
         cached = cache.get(key)
         if cached is not None:
-            return Response(cached)
+            return _mark_cache_status(Response(cached), hit=True)
 
         response = super().list(request, *args, **kwargs)
         if response.status_code == status.HTTP_200_OK:
             cache.set(key, response.data, LIST_CACHE_TTL)
-        return response
+        return _mark_cache_status(response, hit=False)
 
 
 class CachedDetailActionMixin(CachedObjectMixin):
@@ -287,7 +298,7 @@ class CachedDetailActionMixin(CachedObjectMixin):
             )
             cached = cache.get(key)
             if cached is not None:
-                return Response(cached)
+                return _mark_cache_status(Response(cached), hit=True)
 
         obj = self.get_object()
         queryset = build_queryset(obj)
@@ -298,6 +309,7 @@ class CachedDetailActionMixin(CachedObjectMixin):
         response = self.get_paginated_response(serializer.data)
         if key is not None:
             cache.set(key, response.data, DETAIL_CACHE_TTL)
+            response = _mark_cache_status(response, hit=False)
         return response
 
 
@@ -666,7 +678,7 @@ class PublisherViewSet(
         )
         cached = cache.get(key)
         if cached is not None:
-            return Response(cached)
+            return _mark_cache_status(Response(cached), hit=True)
 
         queryset = (
             publisher.series.select_related("series_type")
@@ -679,7 +691,7 @@ class PublisherViewSet(
         serializer = SeriesListSerializer(page, many=True, context={"request": request})
         response = self.get_paginated_response(serializer.data)
         cache.set(key, response.data, LIST_CACHE_TTL)
-        return response
+        return _mark_cache_status(response, hit=False)
 
 
 class RoleViewset(mixins.ListModelMixin, viewsets.GenericViewSet):
