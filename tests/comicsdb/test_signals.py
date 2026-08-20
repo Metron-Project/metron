@@ -55,26 +55,38 @@ def test_update_related_modified_ignores_non_add_remove_actions(wwh_arc):
     assert wwh_arc.modified == old_modified
 
 
-def test_update_related_modified_post_add_from_issue(wwh_arc):
+def test_update_related_modified_post_add_from_issue(basic_issue, wwh_arc):
     past = timezone.now() - timedelta(days=1)
     Arc.objects.filter(pk=wwh_arc.pk).update(modified=past)
+    Issue.objects.filter(pk=basic_issue.pk).update(modified=past)
     wwh_arc.refresh_from_db()
-    old_modified = wwh_arc.modified
+    basic_issue.refresh_from_db()
+    old_arc_modified = wwh_arc.modified
+    old_issue_modified = basic_issue.modified
 
-    update_related_modified(Arc, MagicMock(spec=Issue), "post_add", {wwh_arc.pk})
+    update_related_modified(Arc, basic_issue, "post_add", {wwh_arc.pk})
     wwh_arc.refresh_from_db()
-    assert wwh_arc.modified > old_modified
+    basic_issue.refresh_from_db()
+    assert wwh_arc.modified > old_arc_modified
+    # The Issue side is bumped too, since instance IS the specific issue
+    # involved -- this issue's own cached detail response embeds `arcs`.
+    assert basic_issue.modified > old_issue_modified
 
 
-def test_update_related_modified_post_remove_from_issue(superman):
+def test_update_related_modified_post_remove_from_issue(basic_issue, superman):
     past = timezone.now() - timedelta(days=1)
     Character.objects.filter(pk=superman.pk).update(modified=past)
+    Issue.objects.filter(pk=basic_issue.pk).update(modified=past)
     superman.refresh_from_db()
-    old_modified = superman.modified
+    basic_issue.refresh_from_db()
+    old_character_modified = superman.modified
+    old_issue_modified = basic_issue.modified
 
-    update_related_modified(Character, MagicMock(spec=Issue), "post_remove", {superman.pk})
+    update_related_modified(Character, basic_issue, "post_remove", {superman.pk})
     superman.refresh_from_db()
-    assert superman.modified > old_modified
+    basic_issue.refresh_from_db()
+    assert superman.modified > old_character_modified
+    assert basic_issue.modified > old_issue_modified
 
 
 def test_update_related_modified_from_parent_side(wwh_arc):
@@ -88,13 +100,13 @@ def test_update_related_modified_from_parent_side(wwh_arc):
     assert wwh_arc.modified > old_modified
 
 
-def test_update_related_modified_empty_pk_set_from_issue(wwh_arc):
+def test_update_related_modified_empty_pk_set_from_issue(basic_issue, wwh_arc):
     past = timezone.now() - timedelta(days=1)
     Arc.objects.filter(pk=wwh_arc.pk).update(modified=past)
     wwh_arc.refresh_from_db()
     old_modified = wwh_arc.modified
 
-    update_related_modified(Arc, MagicMock(spec=Issue), "post_add", set())
+    update_related_modified(Arc, basic_issue, "post_add", set())
     wwh_arc.refresh_from_db()
     assert wwh_arc.modified == old_modified
 
@@ -110,17 +122,25 @@ def test_update_related_modified_post_clear_from_parent(wwh_arc):
     assert wwh_arc.modified > old_modified
 
 
-def test_update_related_modified_post_clear_from_issue_is_noop(wwh_arc):
+def test_update_related_modified_post_clear_from_issue_bumps_issue_only(basic_issue, wwh_arc):
     past = timezone.now() - timedelta(days=1)
     Arc.objects.filter(pk=wwh_arc.pk).update(modified=past)
+    Issue.objects.filter(pk=basic_issue.pk).update(modified=past)
     wwh_arc.refresh_from_db()
-    old_modified = wwh_arc.modified
+    basic_issue.refresh_from_db()
+    old_arc_modified = wwh_arc.modified
+    old_issue_modified = basic_issue.modified
 
-    # When clearing from the issue side, pk_set is None so we cannot identify
-    # which parents were affected; the update is intentionally skipped.
-    update_related_modified(Arc, MagicMock(spec=Issue), "post_clear", None)
+    # When clearing from the issue side, pk_set is None so we cannot
+    # identify which parents were affected -- that update is intentionally
+    # skipped. But we always know exactly which Issue this is (`instance`
+    # itself), so its own `modified` still bumps, invalidating its cached
+    # detail response (which embeds `arcs`).
+    update_related_modified(Arc, basic_issue, "post_clear", None)
     wwh_arc.refresh_from_db()
-    assert wwh_arc.modified == old_modified
+    basic_issue.refresh_from_db()
+    assert wwh_arc.modified == old_arc_modified
+    assert basic_issue.modified > old_issue_modified
 
 
 def test_arc_m2m_signal_updates_arc_modified(basic_issue, wwh_arc):

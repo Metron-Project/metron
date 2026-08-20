@@ -34,19 +34,33 @@ def update_series_modified_on_issue_delete(sender, instance, **kwargs):
 
 
 def update_related_modified(parent_model, instance, action, pk_set):
-    """Shared logic for M2M post_add/post_remove/post_clear on Arc, Character, Team."""
+    """Shared logic for M2M post_add/post_remove/post_clear on Arc, Character, Team.
+
+    Bumps both sides of the relationship's `modified`: the parent (Arc/
+    Character/Team -- for its own issue_list cache) and the specific
+    Issue(s) involved (for that issue's own cached detail response, which
+    embeds this relationship). Both updates are scoped by pk/pk_set to the
+    objects actually affected -- never a blanket update -- so this doesn't
+    reintroduce the cross-contamination that ModelLabel.ISSUE/SERIES had as
+    global version counters.
+    """
     if action not in ("post_add", "post_remove", "post_clear"):
         return
 
     from comicsdb.models import Issue  # noqa: PLC0415
 
+    now = timezone.now()
     if isinstance(instance, Issue):
+        # issue.arcs.add(...)/.remove()/.clear() -- instance is the Issue.
+        Issue.objects.filter(pk=instance.pk).update(modified=now)
         # pk_set is None for post_clear; skip since affected parents are unknown
         if pk_set:
-            parent_model.objects.filter(pk__in=pk_set).update(modified=timezone.now())
+            parent_model.objects.filter(pk__in=pk_set).update(modified=now)
     else:
         # instance is the parent (e.g. arc.issues.add/clear(...))
-        parent_model.objects.filter(pk=instance.pk).update(modified=timezone.now())
+        parent_model.objects.filter(pk=instance.pk).update(modified=now)
+        if pk_set:
+            Issue.objects.filter(pk__in=pk_set).update(modified=now)
 
 
 def update_arc_modified(sender, instance, action, pk_set, **kwargs):
@@ -71,6 +85,48 @@ def update_team_modified(sender, instance, action, pk_set, **kwargs):
     update_related_modified(Team, instance, action, pk_set)
     if action in ("post_add", "post_remove", "post_clear"):
         bump_model_version(ModelLabel.TEAM)
+
+
+def update_issue_modified_on_universe_change(sender, instance, action, pk_set, **kwargs):
+    """Issue.universes is a M2M, but -- unlike arcs/characters/teams --
+    Universe has no issue_list-style action needing its own side bumped,
+    so only the Issue side needs updating here for the issue's cached
+    detail response (which embeds `universes`) to invalidate."""
+    if action not in ("post_add", "post_remove", "post_clear"):
+        return
+
+    from comicsdb.models import Issue  # noqa: PLC0415
+
+    now = timezone.now()
+    if isinstance(instance, Issue):
+        Issue.objects.filter(pk=instance.pk).update(modified=now)
+    elif pk_set:
+        Issue.objects.filter(pk__in=pk_set).update(modified=now)
+
+
+def update_issue_modified_on_reprint_change(sender, instance, action, pk_set, **kwargs):
+    """Issue.reprints is a symmetric self-referential M2M -- both sides of
+    a reprints.add()/.remove() are Issue instances, so bump both the issue
+    the change was made through and the affected issue(s) on the other
+    side; both cached detail responses embed `reprints`."""
+    if action not in ("post_add", "post_remove", "post_clear"):
+        return
+
+    from comicsdb.models import Issue  # noqa: PLC0415
+
+    now = timezone.now()
+    Issue.objects.filter(pk=instance.pk).update(modified=now)
+    if pk_set:
+        Issue.objects.filter(pk__in=pk_set).update(modified=now)
+
+
+def update_issue_modified_on_variant_change(sender, instance, **kwargs):
+    """Variant changes aren't reflected on the parent Issue's `modified` by
+    default; bump it explicitly so the issue's cached detail response
+    (which embeds variants) invalidates."""
+    from comicsdb.models import Issue  # noqa: PLC0415
+
+    Issue.objects.filter(pk=instance.issue_id).update(modified=timezone.now())
 
 
 def update_issue_modified_on_credit_change(sender, instance, **kwargs):

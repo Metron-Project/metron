@@ -12,6 +12,9 @@ from comicsdb.signals import (
     update_character_modified,
     update_issue_modified_on_credit_change,
     update_issue_modified_on_credit_role_change,
+    update_issue_modified_on_reprint_change,
+    update_issue_modified_on_universe_change,
+    update_issue_modified_on_variant_change,
     update_series_modified_on_issue_delete,
     update_series_modified_on_issue_save,
     update_team_modified,
@@ -59,6 +62,16 @@ class ComicsdbConfig(AppConfig):
             sender=issue.teams.through,
             dispatch_uid="m2m_changed_issue_team_modified",
         )
+        m2m_changed.connect(
+            update_issue_modified_on_universe_change,
+            sender=issue.universes.through,
+            dispatch_uid="m2m_changed_issue_universe_modified",
+        )
+        m2m_changed.connect(
+            update_issue_modified_on_reprint_change,
+            sender=issue.reprints.through,
+            dispatch_uid="m2m_changed_issue_reprint_modified",
+        )
 
         imprint = self.get_model("Imprint")
 
@@ -74,6 +87,16 @@ class ComicsdbConfig(AppConfig):
 
         variant = self.get_model("Variant")
         pre_delete.connect(pre_delete_image, sender=variant, dispatch_uid="pre_delete_variant")
+        post_save.connect(
+            update_issue_modified_on_variant_change,
+            sender=variant,
+            dispatch_uid="post_save_variant_issue_modified",
+        )
+        post_delete.connect(
+            update_issue_modified_on_variant_change,
+            sender=variant,
+            dispatch_uid="post_delete_variant_issue_modified",
+        )
 
         credits_ = self.get_model("Credits")
         pre_delete.connect(pre_delete_credit, sender=credits_, dispatch_uid="pre_delete_credits")
