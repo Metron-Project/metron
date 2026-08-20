@@ -296,6 +296,63 @@ def test_arc_issue_list_reflects_series_rename(
     assert resp.json()["results"][0]["series"]["name"] == "Final Crisis Renamed"
 
 
+def test_issue_retrieve_x_cache_header(api_client_with_credentials, basic_issue, local_cache):
+    url = reverse("api:issue-detail", kwargs={"pk": basic_issue.pk})
+    resp = api_client_with_credentials.get(url)
+    assert resp.status_code == status.HTTP_200_OK
+    assert resp["X-Cache"] == "MISS"
+
+    resp = api_client_with_credentials.get(url)
+    assert resp.status_code == status.HTTP_200_OK
+    assert resp["X-Cache"] == "HIT"
+
+
+def test_arc_list_x_cache_header(api_client_with_credentials, wwh_arc, local_cache):
+    url = reverse("api:arc-list")
+    resp = api_client_with_credentials.get(url)
+    assert resp.status_code == status.HTTP_200_OK
+    assert resp["X-Cache"] == "MISS"
+
+    resp = api_client_with_credentials.get(url)
+    assert resp.status_code == status.HTTP_200_OK
+    assert resp["X-Cache"] == "HIT"
+
+
+def test_arc_issue_list_x_cache_header(
+    api_client_with_credentials, issue_with_arc, fc_arc, local_cache
+):
+    url = reverse("api:arc-issue-list", kwargs={"pk": fc_arc.pk})
+    resp = api_client_with_credentials.get(url)
+    assert resp.status_code == status.HTTP_200_OK
+    assert resp["X-Cache"] == "MISS"
+
+    resp = api_client_with_credentials.get(url)
+    assert resp.status_code == status.HTTP_200_OK
+    assert resp["X-Cache"] == "HIT"
+
+
+def test_publisher_series_list_x_cache_header(
+    api_client_with_credentials, dc_comics, fc_series, local_cache
+):
+    url = reverse("api:publisher-series-list", kwargs={"pk": dc_comics.pk})
+    resp = api_client_with_credentials.get(url)
+    assert resp.status_code == status.HTTP_200_OK
+    assert resp["X-Cache"] == "MISS"
+
+    resp = api_client_with_credentials.get(url)
+    assert resp.status_code == status.HTTP_200_OK
+    assert resp["X-Cache"] == "HIT"
+
+
+def test_uncached_viewset_gets_no_x_cache_header(api_client_with_credentials, local_cache):
+    """PullListViewSet uses plain mixins.ListModelMixin, not
+    CachedListModelMixin -- confirms the header is only added on the paths
+    that actually go through the response cache, not stamped unconditionally."""
+    resp = api_client_with_credentials.get(reverse("api:pull_list-list"))
+    assert resp.status_code == status.HTTP_200_OK
+    assert "X-Cache" not in resp
+
+
 def test_user_scoped_viewsets_are_not_list_cached():
     """CollectionViewSet/PullListViewSet/WishListViewSet are user-scoped
     (get_queryset filters by request.user) -- they must never use
