@@ -15,6 +15,7 @@ from comicsdb.signals import (
     update_arc_modified,
     update_character_modified,
     update_issue_modified_on_credit_change,
+    update_issue_modified_on_credit_role_change,
     update_series_modified_on_issue_delete,
     update_series_modified_on_issue_save,
     update_team_modified,
@@ -127,4 +128,9 @@ class ComicsdbConfig(AppConfig):
             update_issue_modified_on_credit_change,
             sender=credits_,
             dispatch_uid="post_delete_credit_issue_modified",
+        )
+        m2m_changed.connect(
+            update_issue_modified_on_credit_role_change,
+            sender=credits_.role.through,
+            dispatch_uid="m2m_changed_credit_role_modified",
         )

@@ -39,13 +39,23 @@ class ModelLabel:
     UNIVERSE = "universe"
 
 
-def detail_cache_key(model_label: str, pk: Any, modified) -> str:
+def detail_cache_key(model_label: str, pk: Any, modified, *dependent_labels: str) -> str:
     """Cache key for a single object's serialized detail response.
 
     Self-invalidating: a change to `modified` produces a new key, so old
     entries are simply orphaned and expire via TTL.
+
+    `dependent_labels` (optional) mix in other models' version counters, for
+    responses that embed data from a related object whose own edits don't
+    cascade a `modified` bump onto this one (e.g. a Series response embeds
+    its Publisher's name, but renaming the Publisher doesn't touch the
+    Series row).
     """
-    return f"api:detail:{model_label}:{pk}:{modified.timestamp()}"
+    key = f"api:detail:{model_label}:{pk}:{modified.timestamp()}"
+    if dependent_labels:
+        versions = "-".join(str(get_model_version(lbl)) for lbl in dependent_labels)
+        key = f"{key}:{versions}"
+    return key
 
 
 def get_model_version(model_label: str) -> int:

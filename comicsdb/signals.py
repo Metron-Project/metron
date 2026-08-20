@@ -3,6 +3,8 @@ import logging
 from django.utils import timezone
 from sorl.thumbnail import delete
 
+from api.cache import ModelLabel, bump_model_version
+
 LOGGER = logging.getLogger(__name__)
 
 
@@ -16,7 +18,6 @@ def pre_delete_credit(sender, instance, **kwargs):
 
 
 def update_series_modified_on_issue_save(sender, instance, **kwargs):
-    from api.cache import ModelLabel, bump_model_version  # noqa: PLC0415
     from comicsdb.models import Series  # noqa: PLC0415
 
     Series.objects.filter(pk=instance.series_id).update(modified=timezone.now())
@@ -25,7 +26,6 @@ def update_series_modified_on_issue_save(sender, instance, **kwargs):
 
 
 def update_series_modified_on_issue_delete(sender, instance, **kwargs):
-    from api.cache import ModelLabel, bump_model_version  # noqa: PLC0415
     from comicsdb.models import Series  # noqa: PLC0415
 
     Series.objects.filter(pk=instance.series_id).update(modified=timezone.now())
@@ -50,7 +50,6 @@ def update_related_modified(parent_model, instance, action, pk_set):
 
 
 def update_arc_modified(sender, instance, action, pk_set, **kwargs):
-    from api.cache import ModelLabel, bump_model_version  # noqa: PLC0415
     from comicsdb.models import Arc  # noqa: PLC0415
 
     update_related_modified(Arc, instance, action, pk_set)
@@ -59,7 +58,6 @@ def update_arc_modified(sender, instance, action, pk_set, **kwargs):
 
 
 def update_character_modified(sender, instance, action, pk_set, **kwargs):
-    from api.cache import ModelLabel, bump_model_version  # noqa: PLC0415
     from comicsdb.models import Character  # noqa: PLC0415
 
     update_related_modified(Character, instance, action, pk_set)
@@ -68,7 +66,6 @@ def update_character_modified(sender, instance, action, pk_set, **kwargs):
 
 
 def update_team_modified(sender, instance, action, pk_set, **kwargs):
-    from api.cache import ModelLabel, bump_model_version  # noqa: PLC0415
     from comicsdb.models import Team  # noqa: PLC0415
 
     update_related_modified(Team, instance, action, pk_set)
@@ -80,56 +77,42 @@ def update_issue_modified_on_credit_change(sender, instance, **kwargs):
     """Credits changes aren't reflected on the parent Issue's `modified` by
     default; bump it explicitly so the issue's cached detail response
     (which embeds credits) invalidates."""
-    from api.cache import ModelLabel, bump_model_version  # noqa: PLC0415
     from comicsdb.models import Issue  # noqa: PLC0415
 
     Issue.objects.filter(pk=instance.issue_id).update(modified=timezone.now())
     bump_model_version(ModelLabel.ISSUE)
 
 
-def bump_arc_cache(sender, instance, **kwargs):
-    from api.cache import ModelLabel, bump_model_version  # noqa: PLC0415
+def update_issue_modified_on_credit_role_change(sender, instance, action, pk_set, **kwargs):
+    """Credits.role is a M2M -- .add()/.remove()/.set() don't call
+    Credits.save(), so update_issue_modified_on_credit_change (a post_save
+    hook) never fires for role-only changes. In particular,
+    CreditSerializer.create() calls Credits.objects.create() (bumping
+    Issue.modified with an empty role list) and only then calls
+    credit.role.add(...): without this second bump, a request landing in
+    that window could cache the issue with an empty role list under a
+    `modified` key that's never touched again."""
+    if action not in ("post_add", "post_remove", "post_clear"):
+        return
 
-    bump_model_version(ModelLabel.ARC)
+    from comicsdb.models import Issue  # noqa: PLC0415
 
-
-def bump_character_cache(sender, instance, **kwargs):
-    from api.cache import ModelLabel, bump_model_version  # noqa: PLC0415
-
-    bump_model_version(ModelLabel.CHARACTER)
-
-
-def bump_creator_cache(sender, instance, **kwargs):
-    from api.cache import ModelLabel, bump_model_version  # noqa: PLC0415
-
-    bump_model_version(ModelLabel.CREATOR)
-
-
-def bump_imprint_cache(sender, instance, **kwargs):
-    from api.cache import ModelLabel, bump_model_version  # noqa: PLC0415
-
-    bump_model_version(ModelLabel.IMPRINT)
+    Issue.objects.filter(pk=instance.issue_id).update(modified=timezone.now())
+    bump_model_version(ModelLabel.ISSUE)
 
 
-def bump_publisher_cache(sender, instance, **kwargs):
-    from api.cache import ModelLabel, bump_model_version  # noqa: PLC0415
+def _make_cache_bumper(label):
+    def bump_cache(sender, instance, **kwargs):
+        bump_model_version(label)
 
-    bump_model_version(ModelLabel.PUBLISHER)
-
-
-def bump_series_cache(sender, instance, **kwargs):
-    from api.cache import ModelLabel, bump_model_version  # noqa: PLC0415
-
-    bump_model_version(ModelLabel.SERIES)
+    return bump_cache
 
 
-def bump_team_cache(sender, instance, **kwargs):
-    from api.cache import ModelLabel, bump_model_version  # noqa: PLC0415
-
-    bump_model_version(ModelLabel.TEAM)
-
-
-def bump_universe_cache(sender, instance, **kwargs):
-    from api.cache import ModelLabel, bump_model_version  # noqa: PLC0415
-
-    bump_model_version(ModelLabel.UNIVERSE)
+bump_arc_cache = _make_cache_bumper(ModelLabel.ARC)
+bump_character_cache = _make_cache_bumper(ModelLabel.CHARACTER)
+bump_creator_cache = _make_cache_bumper(ModelLabel.CREATOR)
+bump_imprint_cache = _make_cache_bumper(ModelLabel.IMPRINT)
+bump_publisher_cache = _make_cache_bumper(ModelLabel.PUBLISHER)
+bump_series_cache = _make_cache_bumper(ModelLabel.SERIES)
+bump_team_cache = _make_cache_bumper(ModelLabel.TEAM)
+bump_universe_cache = _make_cache_bumper(ModelLabel.UNIVERSE)

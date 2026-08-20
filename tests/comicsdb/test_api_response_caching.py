@@ -155,6 +155,73 @@ def test_publisher_series_list_reflects_new_series(
     assert resp.json()["count"] == 2
 
 
+def test_arc_issue_list_reflects_issue_field_edit(
+    api_client_with_staff_credentials, issue_with_arc, fc_arc, local_cache
+):
+    """issue_list is cached under the parent Arc's own `modified`, which
+    only bumps on M2M add/remove/clear -- not on a plain field edit to one
+    of the linked issues. cache_action_dependent_labels ties the cache key
+    to the Issue model's version counter too, so an edit like this should
+    still be visible without waiting for the parent's `modified` to catch
+    up."""
+    url = reverse("api:arc-issue-list", kwargs={"pk": fc_arc.pk})
+    resp = api_client_with_staff_credentials.get(url)
+    assert resp.status_code == status.HTTP_200_OK
+    assert resp.json()["results"][0]["number"] == "1"
+
+    issue_with_arc.number = "2"
+    issue_with_arc.save()
+
+    resp = api_client_with_staff_credentials.get(url)
+    assert resp.status_code == status.HTTP_200_OK
+    assert resp.json()["results"][0]["number"] == "2"
+
+
+def test_series_retrieve_after_publisher_rename_is_not_stale(
+    api_client_with_staff_credentials, fc_series, dc_comics, local_cache
+):
+    """Series retrieve embeds the Publisher's name, but renaming a
+    Publisher doesn't bump the owning Series' `modified`.
+    cache_detail_dependent_labels ties the Series detail cache key to the
+    Publisher model's version counter too, so the rename should show up
+    without waiting on the Series' own `modified`."""
+    url = reverse("api:series-detail", kwargs={"pk": fc_series.pk})
+    resp = api_client_with_staff_credentials.get(url)
+    assert resp.status_code == status.HTTP_200_OK
+    assert resp.json()["publisher"]["name"] == "DC Comics"
+
+    dc_comics.name = "DC Comics Renamed"
+    dc_comics.save()
+
+    resp = api_client_with_staff_credentials.get(url)
+    assert resp.status_code == status.HTTP_200_OK
+    assert resp.json()["publisher"]["name"] == "DC Comics Renamed"
+
+
+def test_credit_role_add_after_create_does_not_stick_empty_roles(
+    api_client_with_staff_credentials, basic_issue, john_byrne, writer, local_cache
+):
+    """CreditSerializer.create() calls Credits.objects.create() (bumping
+    Issue.modified once) and only then credit.role.add(...). A request
+    landing between those two steps -- simulated here by fetching before
+    role.add() runs -- must not permanently cache the issue with an empty
+    role list: the m2m_changed bump on role.add() has to produce a new
+    `modified` value so the stale entry is orphaned rather than reused."""
+    url = reverse("api:issue-detail", kwargs={"pk": basic_issue.pk})
+
+    credit = Credits.objects.create(issue=basic_issue, creator=john_byrne)
+
+    resp = api_client_with_staff_credentials.get(url)
+    assert resp.status_code == status.HTTP_200_OK
+    assert resp.json()["credits"][0]["role"] == []
+
+    credit.role.add(writer)
+
+    resp = api_client_with_staff_credentials.get(url)
+    assert resp.status_code == status.HTTP_200_OK
+    assert resp.json()["credits"][0]["role"][0]["name"] == "Writer"
+
+
 def test_user_scoped_viewsets_are_not_list_cached():
     """CollectionViewSet/PullListViewSet/WishListViewSet are user-scoped
     (get_queryset filters by request.user) -- they must never use

@@ -130,6 +130,17 @@ class CachedObjectMixin:
 
         return self._cached_object
 
+    def get_modified_queryset(self):
+        """Queryset used by get_object_modified() for its (pk, modified)
+        lookup. Defaults to get_queryset(), but a viewset whose
+        get_queryset() adds annotate() aggregates should override this to
+        return a lean, unannotated queryset with the same row-level
+        permission scoping -- an annotated aggregate still forces a JOIN +
+        GROUP BY even when values_list() doesn't select the annotated
+        field.
+        """
+        return self.get_queryset()
+
     def get_object_modified(self):
         """Cheap (pk, modified) lookup for conditional-request checks and
         cache-key computation -- does NOT trigger the full get_object()
@@ -149,12 +160,12 @@ class CachedObjectMixin:
             else:
                 lookup_url_kwarg = self.lookup_url_kwarg or self.lookup_field
                 pk = self.kwargs[lookup_url_kwarg]
-                # get_queryset()/filter_queryset(), not a bare Model.objects,
-                # so this still respects per-viewset row scoping (e.g.
-                # CollectionViewSet/PullListViewSet/WishListViewSet filtering
-                # by user).
+                # get_modified_queryset()/filter_queryset(), not a bare
+                # Model.objects, so this still respects per-viewset row
+                # scoping (e.g. CollectionViewSet/PullListViewSet/
+                # WishListViewSet filtering by user).
                 row = (
-                    self.filter_queryset(self.get_queryset())
+                    self.filter_queryset(self.get_modified_queryset())
                     .filter(**{self.lookup_field: pk})
                     .values_list(self.lookup_field, "modified")
                     .first()
@@ -165,6 +176,12 @@ class CachedObjectMixin:
 
 
 class ConditionalRetrieveModelMixin(CachedObjectMixin, mixins.RetrieveModelMixin):
+    #: Other models' cache-generation counters (see api/cache.py) to mix
+    #: into the detail cache key, for responses that embed a related
+    #: object's fields where an edit to that related object doesn't cascade
+    #: a `modified` bump onto this one.
+    cache_detail_dependent_labels: tuple[str, ...] = ()
+
     def retrieve(self, request, *args, **kwargs):
         retrieve = last_modified(last_modified_func=self._retrieve_last_modified)(
             self._cached_retrieve
@@ -185,7 +202,9 @@ class ConditionalRetrieveModelMixin(CachedObjectMixin, mixins.RetrieveModelMixin
         if not self.cache_model_label or modified is None:
             return mixins.RetrieveModelMixin.retrieve(self, request, *args, **kwargs)
 
-        key = detail_cache_key(self.cache_model_label, pk, modified)
+        key = detail_cache_key(
+            self.cache_model_label, pk, modified, *self.cache_detail_dependent_labels
+        )
         cached = cache.get(key)
         if cached is not None:
             return Response(cached)
@@ -241,11 +260,21 @@ class CachedDetailActionMixin(CachedObjectMixin):
     existing modified-cascade signals.
     """
 
+    #: Other models' cache-generation counters (see api/cache.py) to mix
+    #: into the action's cache key, for actions whose payload can change
+    #: without the parent object's own `modified` being touched (e.g.
+    #: issue_list embeds fields from Issue rows that don't cascade a
+    #: `modified` bump onto the parent Arc/Character/Team on every edit --
+    #: only on M2M add/remove/clear).
+    cache_action_dependent_labels: tuple[str, ...] = ()
+
     def _cached_paginated_action(self, *, build_queryset, serializer_class):
         pk, modified = self.get_object_modified()
         key = None
         if self.cache_model_label and modified is not None:
-            key = detail_cache_key(self.cache_model_label, pk, modified)
+            key = detail_cache_key(
+                self.cache_model_label, pk, modified, *self.cache_action_dependent_labels
+            )
             cached = cache.get(key)
             if cached is not None:
                 return Response(cached)
@@ -314,6 +343,9 @@ class ArcViewSet(
     filterset_class = ComicVineFilter
     parser_classes = (MultiPartParser, FormParser)
     cache_model_label = ModelLabel.ARC
+    # issue_list embeds fields from Issue rows that don't cascade a
+    # `modified` bump onto this Arc except on M2M add/remove/clear.
+    cache_action_dependent_labels = (ModelLabel.ISSUE,)
 
     def get_serializer_class(self):
         match self.action:
@@ -346,6 +378,9 @@ class CharacterViewSet(
     filterset_class = ComicVineFilter
     parser_classes = (MultiPartParser, FormParser)
     cache_model_label = ModelLabel.CHARACTER
+    # issue_list embeds fields from Issue rows that don't cascade a
+    # `modified` bump onto this Character except on M2M add/remove/clear.
+    cache_action_dependent_labels = (ModelLabel.ISSUE,)
 
     def get_queryset(self):
         queryset = super().get_queryset()
@@ -482,6 +517,14 @@ class IssueViewSet(
     filterset_class = IssueFilter
     parser_classes = (JSONParser, MultiPartParser, FormParser)
     cache_model_label = ModelLabel.ISSUE
+
+    def get_modified_queryset(self):
+        # get_queryset() annotates average_rating/rating_count for the
+        # retrieve action -- an aggregate that survives into (pk, modified)
+        # values_list() as an extra JOIN + GROUP BY even though neither
+        # annotated field is selected. This lookup only needs the row's own
+        # pk/modified, so skip the annotation entirely.
+        return Issue.objects.all()
 
     def get_queryset(self):
         if self.action == "list":
@@ -642,6 +685,16 @@ class SeriesViewSet(
     cache_model_label = ModelLabel.SERIES
     # Series list embeds num_issues, which changes on every Issue write.
     cache_dependent_labels = (ModelLabel.ISSUE,)
+    # Series retrieve embeds its Publisher/Imprint name, which don't cascade
+    # a `modified` bump onto this Series when renamed.
+    cache_detail_dependent_labels = (ModelLabel.PUBLISHER, ModelLabel.IMPRINT)
+
+    def get_modified_queryset(self):
+        # get_queryset() annotates num_issues for list/retrieve -- an
+        # aggregate that survives into (pk, modified) values_list() as an
+        # extra JOIN + GROUP BY even though the annotated field isn't
+        # selected. This lookup only needs the row's own pk/modified.
+        return Series.objects.all()
 
     def get_queryset(self):
         queryset = super().get_queryset()
@@ -721,6 +774,9 @@ class TeamViewSet(
     filterset_class = ComicVineFilter
     cache_model_label = ModelLabel.TEAM
     parser_classes = (MultiPartParser, FormParser)
+    # issue_list embeds fields from Issue rows that don't cascade a
+    # `modified` bump onto this Team except on M2M add/remove/clear.
+    cache_action_dependent_labels = (ModelLabel.ISSUE,)
 
     def get_queryset(self):
         queryset = super().get_queryset()
