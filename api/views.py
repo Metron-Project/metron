@@ -365,10 +365,17 @@ class ArcViewSet(
     filterset_class = ComicVineFilter
     parser_classes = (MultiPartParser, FormParser)
     cache_model_label = ModelLabel.ARC
-    # issue_list embeds fields from Issue rows (and their Series) that
-    # don't cascade a `modified` bump onto this Arc except on M2M
-    # add/remove/clear.
-    cache_action_dependent_labels = (ModelLabel.ISSUE, ModelLabel.SERIES)
+    # issue_list embeds fields from Issue rows (and their Series) that don't
+    # cascade a `modified` bump onto this Arc except on M2M add/remove/
+    # clear. ModelLabel.ISSUE/SERIES are deliberately NOT used as
+    # cache_action_dependent_labels here: both are bumped by
+    # update_series_modified_on_issue_save() on *every* issue write
+    # anywhere on the site, so tying this 24h-TTL cache to either
+    # invalidates every Arc's issue_list on essentially any issue edit
+    # site-wide -- confirmed as a live problem for IssueViewSet's own
+    # retrieve cache in production (see its cache_detail_dependent_labels
+    # comment). A plain issue field edit can show stale here for up to
+    # DETAIL_CACHE_TTL; that's the accepted tradeoff.
 
     def get_serializer_class(self):
         match self.action:
@@ -409,10 +416,14 @@ class CharacterViewSet(
     # so tying this key to CREATOR's version would invalidate every cached
     # Character detail on essentially any creator edit anywhere.
     #
-    # issue_list embeds fields from Issue rows (and their Series) that
-    # don't cascade a `modified` bump onto this Character except on M2M
-    # add/remove/clear.
-    cache_action_dependent_labels = (ModelLabel.ISSUE, ModelLabel.SERIES)
+    # issue_list embeds fields from Issue rows (and their Series) that don't
+    # cascade a `modified` bump onto this Character except on M2M add/
+    # remove/clear. ModelLabel.ISSUE/SERIES are deliberately NOT used as
+    # cache_action_dependent_labels here either, for the same reason as
+    # CREATOR above: both are bumped by update_series_modified_on_issue_save()
+    # on *every* issue write anywhere on the site, so tying this 24h-TTL
+    # cache to either invalidates every Character's issue_list on
+    # essentially any issue edit site-wide.
 
     def get_queryset(self):
         queryset = super().get_queryset()
@@ -553,13 +564,22 @@ class IssueViewSet(
     parser_classes = (JSONParser, MultiPartParser, FormParser)
     cache_model_label = ModelLabel.ISSUE
     # Issue retrieve embeds its Series/Publisher/Imprint names, which don't
-    # cascade a `modified` bump onto this Issue when renamed. Arc/
-    # Character/Team/Universe/Creator names are also embedded but
-    # deliberately excluded here -- those are edited/created far more
-    # often, and mixing them in would invalidate every cached issue detail
-    # response on essentially every catalog edit anywhere, not just ones
-    # affecting this issue.
-    cache_detail_dependent_labels = (ModelLabel.PUBLISHER, ModelLabel.IMPRINT, ModelLabel.SERIES)
+    # cascade a `modified` bump onto this Issue when renamed. Only
+    # PUBLISHER/IMPRINT are tracked here:
+    # - SERIES is deliberately excluded even though it's also embedded --
+    #   ModelLabel.SERIES is bumped by update_series_modified_on_issue_save()
+    #   on *every* issue write anywhere (PublisherViewSet.series_list needs
+    #   that), so including it here invalidated every cached issue detail
+    #   response on essentially every issue edit site-wide, not just ones
+    #   affecting this issue's own Series (confirmed in production: a
+    #   single unrelated issue write elsewhere flipped an otherwise-stable
+    #   X-Cache HIT to a MISS).
+    # - Arc/Character/Team/Universe/Creator names are also embedded but
+    #   excluded for the same reason -- edited/created far more often than
+    #   Publisher/Imprint, so mixing them in would cost far more cache
+    #   churn than the staleness they'd prevent.
+    # Both cases accept staleness up to DETAIL_CACHE_TTL as the tradeoff.
+    cache_detail_dependent_labels = (ModelLabel.PUBLISHER, ModelLabel.IMPRINT)
 
     def get_modified_queryset(self):
         # get_queryset() annotates average_rating/rating_count for the
@@ -830,10 +850,14 @@ class TeamViewSet(
     # this key to CREATOR's version would invalidate every cached Team
     # detail on essentially any creator edit anywhere.
     #
-    # issue_list embeds fields from Issue rows (and their Series) that
-    # don't cascade a `modified` bump onto this Team except on M2M
-    # add/remove/clear.
-    cache_action_dependent_labels = (ModelLabel.ISSUE, ModelLabel.SERIES)
+    # issue_list embeds fields from Issue rows (and their Series) that don't
+    # cascade a `modified` bump onto this Team except on M2M add/remove/
+    # clear. ModelLabel.ISSUE/SERIES are deliberately NOT used as
+    # cache_action_dependent_labels here either, for the same reason as
+    # CREATOR above: both are bumped by update_series_modified_on_issue_save()
+    # on *every* issue write anywhere on the site, so tying this 24h-TTL
+    # cache to either invalidates every Team's issue_list on essentially
+    # any issue edit site-wide.
 
     def get_queryset(self):
         queryset = super().get_queryset()

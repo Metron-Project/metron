@@ -90,6 +90,11 @@ def test_unauthorized_detail_view_url(api_client, wwh_arc):
 
 def test_arc_issue_list_view(api_client_with_credentials, fc_arc, issue_with_arc):
     resp = api_client_with_credentials.get(reverse("api:arc-issue-list", kwargs={"pk": fc_arc.pk}))
+    # The fixture's .arcs.add()/.characters.add() calls now also bump this
+    # issue's own `modified` (see update_related_modified), via a raw
+    # .update() that doesn't touch the in-memory instance -- refresh before
+    # comparing against the API response.
+    issue_with_arc.refresh_from_db()
     serializer = IssueListSerializer(issue_with_arc)
     assert resp.data["count"] == 1
     assert resp.data["next"] is None

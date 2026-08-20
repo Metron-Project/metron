@@ -6,10 +6,11 @@ from django.core.cache.backends.locmem import LocMemCache
 from django.db import connection
 from django.test.utils import CaptureQueriesContext
 from django.urls import reverse
+from django.utils import timezone
 from rest_framework import status
 
 from api.views import CollectionViewSet, PullListViewSet, WishListViewSet
-from comicsdb.models import Credits
+from comicsdb.models import Credits, Issue, Variant
 
 
 @pytest.fixture
@@ -172,15 +173,21 @@ def test_publisher_series_list_404s_after_publisher_deleted(
     assert resp.status_code == status.HTTP_404_NOT_FOUND
 
 
-def test_arc_issue_list_reflects_issue_field_edit(
+def test_arc_issue_list_after_issue_field_edit_is_accepted_staleness(
     api_client_with_staff_credentials, issue_with_arc, fc_arc, local_cache
 ):
     """issue_list is cached under the parent Arc's own `modified`, which
     only bumps on M2M add/remove/clear -- not on a plain field edit to one
-    of the linked issues. cache_action_dependent_labels ties the cache key
-    to the Issue model's version counter too, so an edit like this should
-    still be visible without waiting for the parent's `modified` to catch
-    up."""
+    of the linked issues. cache_action_dependent_labels deliberately does
+    NOT include ModelLabel.ISSUE/SERIES (see the comment on ArcViewSet):
+    both are bumped by update_series_modified_on_issue_save() on *every*
+    issue write anywhere on the site, so tying this 24h-TTL cache to either
+    would invalidate every Arc's issue_list on essentially any issue edit
+    site-wide -- confirmed as a live problem for IssueViewSet's own
+    retrieve cache in production. A plain issue field edit showing stale
+    here for up to DETAIL_CACHE_TTL is the accepted tradeoff; this test
+    guards against re-adding either label and reintroducing that
+    regression."""
     url = reverse("api:arc-issue-list", kwargs={"pk": fc_arc.pk})
     resp = api_client_with_staff_credentials.get(url)
     assert resp.status_code == status.HTTP_200_OK
@@ -191,7 +198,7 @@ def test_arc_issue_list_reflects_issue_field_edit(
 
     resp = api_client_with_staff_credentials.get(url)
     assert resp.status_code == status.HTTP_200_OK
-    assert resp.json()["results"][0]["number"] == "2"
+    assert resp.json()["results"][0]["number"] == "1"
 
 
 def test_series_retrieve_after_publisher_rename_is_not_stale(
@@ -239,14 +246,20 @@ def test_credit_role_add_after_create_does_not_stick_empty_roles(
     assert resp.json()["credits"][0]["role"][0]["name"] == "Writer"
 
 
-def test_issue_retrieve_after_series_rename_is_not_stale(
+def test_issue_retrieve_after_series_rename_is_accepted_staleness(
     api_client_with_staff_credentials, basic_issue, fc_series, local_cache
 ):
-    """Issue retrieve embeds its Series' name, but renaming a Series
-    doesn't bump the owning Issue's `modified`. cache_detail_dependent_labels
-    ties the Issue detail cache key to the Series model's version counter
-    too, so the rename should show up without waiting on the Issue's own
-    `modified`."""
+    """Issue retrieve embeds its Series' name, and renaming a Series
+    doesn't bump the owning Issue's `modified` -- but ModelLabel.SERIES is
+    deliberately NOT one of IssueViewSet's cache_detail_dependent_labels
+    (see the comment there): that counter is also bumped by
+    update_series_modified_on_issue_save() on every issue write anywhere,
+    so tying Issue's detail cache to it invalidated every cached issue
+    detail response on essentially any issue edit site-wide (confirmed in
+    production -- an unrelated issue write elsewhere flipped an
+    otherwise-stable X-Cache HIT to a MISS). A Series rename showing stale
+    here for up to DETAIL_CACHE_TTL is the accepted tradeoff; this test
+    guards against re-adding SERIES and reintroducing that regression."""
     url = reverse("api:issue-detail", kwargs={"pk": basic_issue.pk})
     resp = api_client_with_staff_credentials.get(url)
     assert resp.status_code == status.HTTP_200_OK
@@ -257,7 +270,27 @@ def test_issue_retrieve_after_series_rename_is_not_stale(
 
     resp = api_client_with_staff_credentials.get(url)
     assert resp.status_code == status.HTTP_200_OK
-    assert resp.json()["series"]["name"] == "Final Crisis Renamed"
+    assert resp.json()["series"]["name"] == "Final Crisis"
+
+
+def test_issue_retrieve_after_publisher_rename_is_not_stale(
+    api_client_with_staff_credentials, basic_issue, dc_comics, local_cache
+):
+    """Issue retrieve embeds its (Series') Publisher's name via
+    cache_detail_dependent_labels -- unlike SERIES, nothing else bumps
+    PUBLISHER's version counter, so this dependency doesn't have the same
+    cross-contamination problem and should still catch a rename."""
+    url = reverse("api:issue-detail", kwargs={"pk": basic_issue.pk})
+    resp = api_client_with_staff_credentials.get(url)
+    assert resp.status_code == status.HTTP_200_OK
+    assert resp.json()["publisher"]["name"] == "DC Comics"
+
+    dc_comics.name = "DC Comics Renamed"
+    dc_comics.save()
+
+    resp = api_client_with_staff_credentials.get(url)
+    assert resp.status_code == status.HTTP_200_OK
+    assert resp.json()["publisher"]["name"] == "DC Comics Renamed"
 
 
 def test_imprint_retrieve_after_publisher_rename_is_not_stale(
@@ -278,11 +311,14 @@ def test_imprint_retrieve_after_publisher_rename_is_not_stale(
     assert resp.json()["publisher"]["name"] == "DC Comics Renamed"
 
 
-def test_arc_issue_list_reflects_series_rename(
+def test_arc_issue_list_after_series_rename_is_accepted_staleness(
     api_client_with_staff_credentials, issue_with_arc, fc_arc, fc_series, local_cache
 ):
-    """issue_list nests each issue's Series name; renaming the Series
-    doesn't bump the parent Arc's `modified`."""
+    """issue_list nests each issue's Series name, and renaming the Series
+    doesn't bump the parent Arc's `modified` -- but ModelLabel.SERIES is
+    deliberately not tied to this 24h-TTL cache either, for the same
+    reason as ModelLabel.ISSUE (see the comment on ArcViewSet): it's
+    bumped on every issue write anywhere on the site, not just renames."""
     url = reverse("api:arc-issue-list", kwargs={"pk": fc_arc.pk})
     resp = api_client_with_staff_credentials.get(url)
     assert resp.status_code == status.HTTP_200_OK
@@ -293,7 +329,105 @@ def test_arc_issue_list_reflects_series_rename(
 
     resp = api_client_with_staff_credentials.get(url)
     assert resp.status_code == status.HTTP_200_OK
-    assert resp.json()["results"][0]["series"]["name"] == "Final Crisis Renamed"
+    assert resp.json()["results"][0]["series"]["name"] == "Final Crisis"
+
+
+def test_issue_retrieve_reflects_character_added(
+    api_client_with_staff_credentials, basic_issue, superman, local_cache
+):
+    """Issue retrieve embeds `characters`, and adding one doesn't touch
+    Issue.modified via Character's auto_now -- update_related_modified now
+    bumps the specific Issue's own `modified` too (in addition to the
+    Character's, for its issue_list cache), scoped by pk so it can't
+    cross-contaminate other issues."""
+    url = reverse("api:issue-detail", kwargs={"pk": basic_issue.pk})
+    resp = api_client_with_staff_credentials.get(url)
+    assert resp.status_code == status.HTTP_200_OK
+    assert resp.json()["characters"] == []
+
+    basic_issue.characters.add(superman)
+
+    resp = api_client_with_staff_credentials.get(url)
+    assert resp.status_code == status.HTTP_200_OK
+    assert len(resp.json()["characters"]) == 1
+    assert resp.json()["characters"][0]["name"] == "Superman"
+
+
+def test_issue_retrieve_reflects_character_removed(
+    api_client_with_staff_credentials, issue_with_arc, superman, local_cache
+):
+    url = reverse("api:issue-detail", kwargs={"pk": issue_with_arc.pk})
+    resp = api_client_with_staff_credentials.get(url)
+    assert resp.status_code == status.HTTP_200_OK
+    assert len(resp.json()["characters"]) == 1
+
+    issue_with_arc.characters.remove(superman)
+
+    resp = api_client_with_staff_credentials.get(url)
+    assert resp.status_code == status.HTTP_200_OK
+    assert resp.json()["characters"] == []
+
+
+def test_issue_retrieve_reflects_universe_added(
+    api_client_with_staff_credentials, basic_issue, earth_2_universe, local_cache
+):
+    """Issue.universes has no issue_list-style consumer on the Universe
+    side, so update_issue_modified_on_universe_change only needs to (and
+    does) bump the Issue's own `modified`."""
+    url = reverse("api:issue-detail", kwargs={"pk": basic_issue.pk})
+    resp = api_client_with_staff_credentials.get(url)
+    assert resp.status_code == status.HTTP_200_OK
+    assert resp.json()["universes"] == []
+
+    basic_issue.universes.add(earth_2_universe)
+
+    resp = api_client_with_staff_credentials.get(url)
+    assert resp.status_code == status.HTTP_200_OK
+    assert len(resp.json()["universes"]) == 1
+
+
+def test_issue_retrieve_reflects_reprint_added(
+    api_client_with_staff_credentials, basic_issue, create_user, fc_series, local_cache
+):
+    """Issue.reprints is a symmetric self-referential M2M; both the issue
+    the .add() was called through and the other issue involved should
+    invalidate."""
+    user = create_user()
+    other_issue = Issue.objects.create(
+        series=fc_series,
+        number="2",
+        slug="final-crisis-2",
+        cover_date=timezone.now().date(),
+        edited_by=user,
+        created_by=user,
+    )
+
+    url = reverse("api:issue-detail", kwargs={"pk": basic_issue.pk})
+    resp = api_client_with_staff_credentials.get(url)
+    assert resp.status_code == status.HTTP_200_OK
+    assert resp.json()["reprints"] == []
+
+    basic_issue.reprints.add(other_issue)
+
+    resp = api_client_with_staff_credentials.get(url)
+    assert resp.status_code == status.HTTP_200_OK
+    assert len(resp.json()["reprints"]) == 1
+
+
+def test_issue_retrieve_reflects_variant_added(
+    api_client_with_staff_credentials, basic_issue, local_cache
+):
+    url = reverse("api:issue-detail", kwargs={"pk": basic_issue.pk})
+    resp = api_client_with_staff_credentials.get(url)
+    assert resp.status_code == status.HTTP_200_OK
+    assert resp.json()["variants"] == []
+
+    Variant.objects.create(issue=basic_issue, image="", name="Foil Variant")
+
+    resp = api_client_with_staff_credentials.get(url)
+    assert resp.status_code == status.HTTP_200_OK
+    assert len(resp.json()["variants"]) == 1
+    assert resp.json()["variants"][0]["name"] == "Foil Variant"
 
 
 def test_issue_retrieve_x_cache_header(api_client_with_credentials, basic_issue, local_cache):
