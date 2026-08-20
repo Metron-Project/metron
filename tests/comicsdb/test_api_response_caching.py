@@ -155,6 +155,23 @@ def test_publisher_series_list_reflects_new_series(
     assert resp.json()["count"] == 2
 
 
+def test_publisher_series_list_404s_after_publisher_deleted(
+    api_client_with_staff_credentials, dc_comics, fc_series, local_cache
+):
+    """series_list must call get_object() (existence check) before serving
+    a cache hit -- otherwise a deleted publisher's cached series list would
+    keep returning 200 instead of 404 until the list cache TTL expires."""
+    url = reverse("api:publisher-series-list", kwargs={"pk": dc_comics.pk})
+    resp = api_client_with_staff_credentials.get(url)
+    assert resp.status_code == status.HTTP_200_OK
+
+    fc_series.delete()
+    dc_comics.delete()
+
+    resp = api_client_with_staff_credentials.get(url)
+    assert resp.status_code == status.HTTP_404_NOT_FOUND
+
+
 def test_arc_issue_list_reflects_issue_field_edit(
     api_client_with_staff_credentials, issue_with_arc, fc_arc, local_cache
 ):
@@ -220,6 +237,63 @@ def test_credit_role_add_after_create_does_not_stick_empty_roles(
     resp = api_client_with_staff_credentials.get(url)
     assert resp.status_code == status.HTTP_200_OK
     assert resp.json()["credits"][0]["role"][0]["name"] == "Writer"
+
+
+def test_issue_retrieve_after_series_rename_is_not_stale(
+    api_client_with_staff_credentials, basic_issue, fc_series, local_cache
+):
+    """Issue retrieve embeds its Series' name, but renaming a Series
+    doesn't bump the owning Issue's `modified`. cache_detail_dependent_labels
+    ties the Issue detail cache key to the Series model's version counter
+    too, so the rename should show up without waiting on the Issue's own
+    `modified`."""
+    url = reverse("api:issue-detail", kwargs={"pk": basic_issue.pk})
+    resp = api_client_with_staff_credentials.get(url)
+    assert resp.status_code == status.HTTP_200_OK
+    assert resp.json()["series"]["name"] == "Final Crisis"
+
+    fc_series.name = "Final Crisis Renamed"
+    fc_series.save()
+
+    resp = api_client_with_staff_credentials.get(url)
+    assert resp.status_code == status.HTTP_200_OK
+    assert resp.json()["series"]["name"] == "Final Crisis Renamed"
+
+
+def test_imprint_retrieve_after_publisher_rename_is_not_stale(
+    api_client_with_staff_credentials, vertigo_imprint, dc_comics, local_cache
+):
+    """Imprint retrieve embeds its Publisher's name, but renaming a
+    Publisher doesn't bump the owning Imprint's `modified`."""
+    url = reverse("api:imprint-detail", kwargs={"pk": vertigo_imprint.pk})
+    resp = api_client_with_staff_credentials.get(url)
+    assert resp.status_code == status.HTTP_200_OK
+    assert resp.json()["publisher"]["name"] == "DC Comics"
+
+    dc_comics.name = "DC Comics Renamed"
+    dc_comics.save()
+
+    resp = api_client_with_staff_credentials.get(url)
+    assert resp.status_code == status.HTTP_200_OK
+    assert resp.json()["publisher"]["name"] == "DC Comics Renamed"
+
+
+def test_arc_issue_list_reflects_series_rename(
+    api_client_with_staff_credentials, issue_with_arc, fc_arc, fc_series, local_cache
+):
+    """issue_list nests each issue's Series name; renaming the Series
+    doesn't bump the parent Arc's `modified`."""
+    url = reverse("api:arc-issue-list", kwargs={"pk": fc_arc.pk})
+    resp = api_client_with_staff_credentials.get(url)
+    assert resp.status_code == status.HTTP_200_OK
+    assert resp.json()["results"][0]["series"]["name"] == "Final Crisis"
+
+    fc_series.name = "Final Crisis Renamed"
+    fc_series.save()
+
+    resp = api_client_with_staff_credentials.get(url)
+    assert resp.status_code == status.HTTP_200_OK
+    assert resp.json()["results"][0]["series"]["name"] == "Final Crisis Renamed"
 
 
 def test_user_scoped_viewsets_are_not_list_cached():

@@ -197,7 +197,17 @@ class ConditionalRetrieveModelMixin(CachedObjectMixin, mixins.RetrieveModelMixin
     def _cached_retrieve(self, request, *args, **kwargs):
         """Reached only once rest_framework_condition's last_modified() has
         already ruled out a 304 -- i.e. exactly where a cache lookup is
-        worth doing."""
+        worth doing.
+
+        Note: a cache hit returns without calling get_object(), so
+        check_object_permissions() never runs on that path. Every
+        permission class in this project is view-level only (none override
+        has_object_permission), so this is currently inert -- but a future
+        object-level permission class on a cache_model_label-enabled
+        viewset would need get_object_modified() (or this method) to also
+        enforce it explicitly, since DRF's default only calls it from
+        get_object().
+        """
         pk, modified = self.get_object_modified()
         if not self.cache_model_label or modified is None:
             return mixins.RetrieveModelMixin.retrieve(self, request, *args, **kwargs)
@@ -343,9 +353,10 @@ class ArcViewSet(
     filterset_class = ComicVineFilter
     parser_classes = (MultiPartParser, FormParser)
     cache_model_label = ModelLabel.ARC
-    # issue_list embeds fields from Issue rows that don't cascade a
-    # `modified` bump onto this Arc except on M2M add/remove/clear.
-    cache_action_dependent_labels = (ModelLabel.ISSUE,)
+    # issue_list embeds fields from Issue rows (and their Series) that
+    # don't cascade a `modified` bump onto this Arc except on M2M
+    # add/remove/clear.
+    cache_action_dependent_labels = (ModelLabel.ISSUE, ModelLabel.SERIES)
 
     def get_serializer_class(self):
         match self.action:
@@ -378,9 +389,18 @@ class CharacterViewSet(
     filterset_class = ComicVineFilter
     parser_classes = (MultiPartParser, FormParser)
     cache_model_label = ModelLabel.CHARACTER
-    # issue_list embeds fields from Issue rows that don't cascade a
-    # `modified` bump onto this Character except on M2M add/remove/clear.
-    cache_action_dependent_labels = (ModelLabel.ISSUE,)
+    # retrieve also embeds Creator/Universe names (CharacterReadSerializer)
+    # that don't cascade a `modified` bump onto this Character either, but
+    # those are deliberately left as bounded (TTL-limited) staleness rather
+    # than a cache_detail_dependent_labels dependency -- Creators in
+    # particular are edited/added far more often than Publishers/Imprints,
+    # so tying this key to CREATOR's version would invalidate every cached
+    # Character detail on essentially any creator edit anywhere.
+    #
+    # issue_list embeds fields from Issue rows (and their Series) that
+    # don't cascade a `modified` bump onto this Character except on M2M
+    # add/remove/clear.
+    cache_action_dependent_labels = (ModelLabel.ISSUE, ModelLabel.SERIES)
 
     def get_queryset(self):
         queryset = super().get_queryset()
@@ -477,6 +497,9 @@ class ImprintViewSet(
     filterset_class = ComicVineFilter
     parser_classes = (MultiPartParser, FormParser)
     cache_model_label = ModelLabel.IMPRINT
+    # Imprint retrieve embeds its Publisher's name, which doesn't cascade a
+    # `modified` bump onto this Imprint when renamed.
+    cache_detail_dependent_labels = (ModelLabel.PUBLISHER,)
 
     def get_queryset(self):
         queryset = super().get_queryset()
@@ -517,6 +540,14 @@ class IssueViewSet(
     filterset_class = IssueFilter
     parser_classes = (JSONParser, MultiPartParser, FormParser)
     cache_model_label = ModelLabel.ISSUE
+    # Issue retrieve embeds its Series/Publisher/Imprint names, which don't
+    # cascade a `modified` bump onto this Issue when renamed. Arc/
+    # Character/Team/Universe/Creator names are also embedded but
+    # deliberately excluded here -- those are edited/created far more
+    # often, and mixing them in would invalidate every cached issue detail
+    # response on essentially every catalog edit anywhere, not just ones
+    # affecting this issue.
+    cache_detail_dependent_labels = (ModelLabel.PUBLISHER, ModelLabel.IMPRINT, ModelLabel.SERIES)
 
     def get_modified_queryset(self):
         # get_queryset() annotates average_rating/rating_count for the
@@ -616,6 +647,12 @@ class PublisherViewSet(
         """
         Returns a list of series for a publisher.
         """
+        # get_object() (existence + permission check) first, same as any
+        # other detail-scoped action -- a cache hit must not bypass either
+        # of those, and must not keep serving a 200 once the publisher
+        # itself has been deleted.
+        publisher = self.get_object()
+
         # series_list's payload depends on the Series/Issue graph, not on
         # Publisher.modified (adding a series, or issues under one, doesn't
         # touch the publisher row) -- so this uses the version-counter list
@@ -631,7 +668,6 @@ class PublisherViewSet(
         if cached is not None:
             return Response(cached)
 
-        publisher = self.get_object()
         queryset = (
             publisher.series.select_related("series_type")
             .annotate(num_issues=Count("issues", distinct=True))
@@ -774,9 +810,18 @@ class TeamViewSet(
     filterset_class = ComicVineFilter
     cache_model_label = ModelLabel.TEAM
     parser_classes = (MultiPartParser, FormParser)
-    # issue_list embeds fields from Issue rows that don't cascade a
-    # `modified` bump onto this Team except on M2M add/remove/clear.
-    cache_action_dependent_labels = (ModelLabel.ISSUE,)
+    # retrieve also embeds Creator/Universe names (TeamReadSerializer) that
+    # don't cascade a `modified` bump onto this Team either, but those are
+    # deliberately left as bounded (TTL-limited) staleness rather than a
+    # cache_detail_dependent_labels dependency -- Creators in particular
+    # are edited/added far more often than Publishers/Imprints, so tying
+    # this key to CREATOR's version would invalidate every cached Team
+    # detail on essentially any creator edit anywhere.
+    #
+    # issue_list embeds fields from Issue rows (and their Series) that
+    # don't cascade a `modified` bump onto this Team except on M2M
+    # add/remove/clear.
+    cache_action_dependent_labels = (ModelLabel.ISSUE, ModelLabel.SERIES)
 
     def get_queryset(self):
         queryset = super().get_queryset()
@@ -816,6 +861,9 @@ class UniverseViewSet(
     filterset_class = UniverseFilter
     parser_classes = (MultiPartParser, FormParser)
     cache_model_label = ModelLabel.UNIVERSE
+    # Universe retrieve embeds its Publisher's name, which doesn't cascade a
+    # `modified` bump onto this Universe when renamed.
+    cache_detail_dependent_labels = (ModelLabel.PUBLISHER,)
 
     def get_queryset(self):
         queryset = super().get_queryset()
