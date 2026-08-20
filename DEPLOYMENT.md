@@ -48,6 +48,7 @@ with Quadlet (systemd-managed containers).
 - [API observability](#api-observability)
   - [Logs](#logs)
   - [Redis counters](#redis-counters)
+  - [Response cache audit](#response-cache-audit)
 - [Account observability](#account-observability)
   - [Finding duplicate accounts by IP](#finding-duplicate-accounts-by-ip)
 - [Useful commands](#useful-commands)
@@ -966,6 +967,31 @@ for method in basic session token other; do
 done
 '
 ```
+
+### Response cache audit
+
+The API's Redis-backed response cache (`api/cache.py`) uses two TTLs —
+`DETAIL_CACHE_TTL` (24h, self-invalidating on write) and `LIST_CACHE_TTL`
+(2min, version-counter based) — that may need tuning once there's real
+production traffic to observe. `audit_response_cache` scans the Redis
+keyspace and reports key counts and estimated memory per category
+(`api:detail:<model>`, `api:list:<model>`, `cachever`, everything else),
+plus global hit rate and eviction stats:
+
+```bash
+podman exec metron-web python manage.py audit_response_cache
+```
+
+Run it right after a deploy that changes the caching feature (the
+`api:*`/`cachever:*` categories will be near-empty at that point, serving
+as a baseline), then again ~24h later once the detail cache has had a full
+TTL window to reach steady state, and optionally once more about a week
+out to catch any slow-building trend. Watch `evicted_keys` in particular —
+if it's climbing, Redis is evicting under memory pressure before the TTL
+ever gets a chance to matter, which means lowering the TTL or adding
+memory, not just adjusting based on the other numbers alone.
+
+See `--help` for `--sample-size`/`--scan-count` tuning flags.
 
 ### Contacting repeat offenders
 
