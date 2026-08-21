@@ -16,7 +16,7 @@ Two independent invalidation schemes are used, depending on endpoint shape:
 import hashlib
 from collections.abc import Iterable
 from enum import StrEnum
-from typing import Any
+from typing import Any, Protocol
 
 from django.core.cache import cache
 
@@ -40,14 +40,47 @@ class ModelLabel(StrEnum):
     UNIVERSE = "universe"
 
 
+class _CacheKeyRequest(Protocol):
+    """The subset of DRF's Request that cache-key builders need -- narrowed
+    so cache.py doesn't have to import rest_framework.request.Request just
+    to type-hint it."""
+
+    scheme: str
+
+    def get_host(self) -> str: ...
+
+    @property
+    def query_params(self) -> Any: ...
+
+
+def _request_digest(request: _CacheKeyRequest) -> str:
+    """Hash of everything about the request, beyond the object/model being
+    served, that the cached response's content depends on:
+
+    * origin (`{scheme}://{host}`) -- every cached serializer embeds a
+      `resource_url` built via `request.build_absolute_uri()`, so a
+      response cached while serving one scheme/host must not be served
+      back to a request against another.
+    * query params -- required for any paginated endpoint (list, or a
+      detail-scoped action like issue_list), otherwise `?page=1` and
+      `?page=2` compute the same digest and whichever page was cached
+      first gets served back for both. Harmless to include unconditionally
+      for unpaginated endpoints too, since those are never requested with
+      params that change the response.
+    """
+    normalized = f"origin={request.scheme}://{request.get_host()}"
+    query = request.query_params.lists()
+    normalized += "&" + "&".join(f"{k}={v}" for k, v in sorted(query))
+    return hashlib.sha256(normalized.encode()).hexdigest()[:16]
+
+
 def detail_cache_key(
     model_label: str,
     action: str,
     pk: Any,
     modified,
     *dependent_labels: str,
-    origin: str,
-    query: Iterable[tuple[str, list[str]]] | None = None,
+    request: _CacheKeyRequest,
 ) -> str:
     """Cache key for a single object's serialized detail response, or a
     paginated detail-scoped action response (e.g. issue_list).
@@ -68,27 +101,14 @@ def detail_cache_key(
     its Publisher's name, but renaming the Publisher doesn't touch the
     Series row).
 
-    `origin` should be `{request.scheme}://{request.get_host()}` -- every
-    cached serializer embeds a `resource_url` built from the request via
-    `build_absolute_uri()`, so a response cached under one scheme/host would
-    otherwise get served back verbatim, wrong host and all, to a request
-    against another.
-
-    `query` (optional) should come from `request.query_params.lists()`, same
-    as `list_cache_key()` -- required for any paginated action (e.g.
-    issue_list), otherwise `?page=1` and `?page=2` compute the same key and
-    whichever page was cached first gets served back for both. Plain
-    retrieve isn't paginated and omits it.
+    `request` supplies origin and query params -- see `_request_digest()`.
     """
     key = f"api:detail:{model_label}:{action}:{pk}:{modified.timestamp()}"
     if dependent_labels:
         version_map = get_model_versions(dependent_labels)
         versions = "-".join(str(version_map[lbl]) for lbl in dependent_labels)
         key = f"{key}:{versions}"
-    normalized = f"origin={origin}"
-    if query:
-        normalized += "&" + "&".join(f"{k}={v}" for k, v in sorted(query))
-    digest = hashlib.sha256(normalized.encode()).hexdigest()[:16]
+    digest = _request_digest(request)
     return f"{key}:{digest}"
 
 
@@ -134,26 +154,18 @@ def bump_model_version(model_label: str) -> None:
 def list_cache_key(
     model_label: str,
     *dependent_labels: str,
-    query: Iterable[tuple[str, list[str]]],
-    origin: str,
+    request: _CacheKeyRequest,
     scope: str = "",
 ) -> str:
     """Cache key for a list-type response: one or more model versions plus a
-    normalized hash of the request's query params.
-
-    `query` should come from `request.query_params.lists()` (multi-value),
+    normalized hash of the request's origin and query params -- see
+    `_request_digest()`. Uses `request.query_params.lists()` (multi-value),
     not `.dict()` -- `.dict()` silently drops all-but-the-last value for
     repeated params (e.g. IssueFilter's `role_id`), which would let distinct
     multi-value requests collide on the same key.
-
-    `origin` should be `{request.scheme}://{request.get_host()}` -- see
-    `detail_cache_key()`'s docstring; every cached list response nests
-    serialized objects whose `resource_url` is equally request-host-
-    dependent.
     """
     labels = (model_label, *dependent_labels)
     version_map = get_model_versions(labels)
     versions = "-".join(str(version_map[lbl]) for lbl in labels)
-    normalized = f"origin={origin}&" + "&".join(f"{k}={v}" for k, v in sorted(query))
-    digest = hashlib.sha256(normalized.encode()).hexdigest()[:16]
+    digest = _request_digest(request)
     return f"api:list:{model_label}:{scope}:{versions}:{digest}"

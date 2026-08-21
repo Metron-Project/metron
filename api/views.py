@@ -119,14 +119,6 @@ class ReadingListItemsPagination(PageNumberPagination):
     page_size = 50
 
 
-def _request_origin(request) -> str:
-    """`{scheme}://{host}` for the incoming request -- mixed into every
-    cache key because every cached serializer embeds a `resource_url` built
-    via `request.build_absolute_uri()`, so a response cached under one
-    scheme/host must not be served back to a request against another."""
-    return f"{request.scheme}://{request.get_host()}"
-
-
 def _mark_cache_status(response: Response, *, hit: bool) -> Response:
     """Tag a response with whether it came from the Redis response cache,
     so cache behavior can be checked in production with `curl -I` instead
@@ -237,7 +229,7 @@ class ConditionalRetrieveModelMixin(CachedObjectMixin, mixins.RetrieveModelMixin
             pk,
             modified,
             *self.cache_detail_dependent_labels,
-            origin=_request_origin(request),
+            request=request,
         )
         cached = cache.get(key)
         if cached is not None:
@@ -274,8 +266,7 @@ class CachedListModelMixin(mixins.ListModelMixin):
         key = list_cache_key(
             self.cache_model_label,
             *self.cache_dependent_labels,
-            query=request.query_params.lists(),
-            origin=_request_origin(request),
+            request=request,
         )
         cached = cache.get(key)
         if cached is not None:
@@ -313,8 +304,7 @@ class CachedDetailActionMixin(CachedObjectMixin):
                 pk,
                 modified,
                 *self.cache_action_dependent_labels,
-                origin=_request_origin(self.request),
-                query=self.request.query_params.lists(),
+                request=self.request,
             )
             cached = cache.get(key)
             if cached is not None:
@@ -713,8 +703,7 @@ class PublisherViewSet(
         key = list_cache_key(
             ModelLabel.SERIES,
             ModelLabel.ISSUE,
-            query=self.request.query_params.lists(),
-            origin=_request_origin(request),
+            request=request,
             scope=f"publisher:{pk}:series_list",
         )
         cached = cache.get(key)
