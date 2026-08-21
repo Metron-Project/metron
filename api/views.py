@@ -229,7 +229,7 @@ class ConditionalRetrieveModelMixin(CachedObjectMixin, mixins.RetrieveModelMixin
             pk,
             modified,
             *self.cache_detail_dependent_labels,
-            request=request,
+            request=self.request,
         )
         cached = cache.get(key)
         if cached is not None:

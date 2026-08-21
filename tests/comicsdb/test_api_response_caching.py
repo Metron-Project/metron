@@ -8,6 +8,7 @@ from django.test.utils import CaptureQueriesContext
 from django.urls import reverse
 from django.utils import timezone
 from rest_framework import status
+from rest_framework.pagination import PageNumberPagination
 
 from api.views import CollectionViewSet, PullListViewSet, WishListViewSet
 from comicsdb.models import Credits, Issue, Variant
@@ -489,11 +490,15 @@ def test_arc_retrieve_does_not_poison_issue_list_cache(
 
 
 def test_arc_issue_list_pagination_is_not_poisoned_across_pages(
-    api_client_with_credentials, issue_with_arc, fc_arc, fc_series, settings, local_cache
+    api_client_with_credentials, issue_with_arc, fc_arc, fc_series, monkeypatch, local_cache
 ):
     """issue_list's cache key must include the request's query string, since
     ?page=1 and ?page=2 return different data for the same (pk, modified)."""
-    settings.REST_FRAMEWORK = {**settings.REST_FRAMEWORK, "PAGE_SIZE": 1}
+    # PageNumberPagination.page_size is read from api_settings.PAGE_SIZE at
+    # class-definition time, not per-request, so overriding
+    # settings.REST_FRAMEWORK here wouldn't affect it -- patch the class
+    # attribute directly instead.
+    monkeypatch.setattr(PageNumberPagination, "page_size", 1)
 
     second_issue = Issue.objects.create(
         series=fc_series,
