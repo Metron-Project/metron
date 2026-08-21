@@ -40,11 +40,20 @@ class ModelLabel(StrEnum):
     UNIVERSE = "universe"
 
 
-def detail_cache_key(model_label: str, pk: Any, modified, *dependent_labels: str) -> str:
+def detail_cache_key(
+    model_label: str, action: str, pk: Any, modified, *dependent_labels: str
+) -> str:
     """Cache key for a single object's serialized detail response.
 
     Self-invalidating: a change to `modified` produces a new key, so old
     entries are simply orphaned and expire via TTL.
+
+    `action` (e.g. "retrieve", "issue_list") distinguishes different
+    endpoints hanging off the same object -- without it, retrieve and a
+    detail-scoped action like issue_list produce the exact same key
+    whenever their dependent_labels happen to match (the common case: both
+    default to no dependent labels), so whichever response was cached first
+    gets served back for the other, wrong shape and all.
 
     `dependent_labels` (optional) mix in other models' version counters, for
     responses that embed data from a related object whose own edits don't
@@ -52,7 +61,7 @@ def detail_cache_key(model_label: str, pk: Any, modified, *dependent_labels: str
     its Publisher's name, but renaming the Publisher doesn't touch the
     Series row).
     """
-    key = f"api:detail:{model_label}:{pk}:{modified.timestamp()}"
+    key = f"api:detail:{model_label}:{action}:{pk}:{modified.timestamp()}"
     if dependent_labels:
         version_map = get_model_versions(dependent_labels)
         versions = "-".join(str(version_map[lbl]) for lbl in dependent_labels)
