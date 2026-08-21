@@ -2,7 +2,7 @@ import logging
 
 from django.conf import global_settings
 from django.contrib.auth.mixins import LoginRequiredMixin, PermissionRequiredMixin
-from django.db.models import Count, OuterRef, Subquery
+from django.db.models import Avg, Count, DecimalField, OuterRef, Subquery
 from django.shortcuts import get_object_or_404
 from django.urls import reverse_lazy
 from django.views.generic import DetailView, ListView
@@ -21,6 +21,7 @@ from comicsdb.views.mixins import (
     SlugRedirectView,
 )
 from comicsdb.views.series_list_helpers import build_active_filters
+from issue_ratings.models import IssueRating
 from pull_list.models import PullListSeries
 
 LOGGER = logging.getLogger(__name__)
@@ -28,6 +29,20 @@ LOGGER = logging.getLogger(__name__)
 _issue_count_sq = (
     Issue.objects.filter(series=OuterRef("pk"))
     .values("series")
+    .annotate(count=Count("pk"))
+    .values("count")
+)
+
+_series_average_rating_sq = (
+    IssueRating.objects.filter(issue__series=OuterRef("pk"))
+    .values("issue__series")
+    .annotate(avg=Avg("rating", output_field=DecimalField(max_digits=3, decimal_places=2)))
+    .values("avg")
+)
+
+_series_rating_count_sq = (
+    IssueRating.objects.filter(issue__series=OuterRef("pk"))
+    .values("issue__series")
     .annotate(count=Count("pk"))
     .values("count")
 )
@@ -81,7 +96,11 @@ class SeriesDetail(DetailView):
     queryset = (
         Series.objects.select_related("publisher", "imprint", "edited_by", "series_type")
         .prefetch_related("issues")
-        .annotate(issue_count=Subquery(_issue_count_sq))
+        .annotate(
+            issue_count=Subquery(_issue_count_sq),
+            average_rating=Subquery(_series_average_rating_sq),
+            rating_count=Subquery(_series_rating_count_sq),
+        )
     )
 
     def get_context_data(self, **kwargs):

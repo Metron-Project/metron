@@ -26,6 +26,7 @@
                 <span class="has-text-grey">&middot;</span>
                 <a href="{% url 'imprint:detail' series.imprint.slug %}">{{ series.imprint }}</a>
             {% endif %}
+            {% include "partials/rating_summary.html" with rated_object=series average_rating=series.average_rating rating_count=series.rating_count %}
         </p>
     </header>
     {# Navigation Bar #}

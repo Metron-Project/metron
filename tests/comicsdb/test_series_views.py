@@ -1,10 +1,13 @@
 import pytest
 from django.urls import reverse
+from django.utils import timezone
 from pytest_django.asserts import assertTemplateUsed
 
 from comicsdb.forms.series import SeriesForm
 from comicsdb.models import Genre, Imprint, Publisher, Series, SeriesType
 from comicsdb.models.attribution import Attribution
+from comicsdb.models.issue import Issue
+from issue_ratings.models import IssueRating
 from pull_list.models import PullList, PullListSeries
 
 HTML_OK_CODE = 200
@@ -60,6 +63,43 @@ def test_series_detail_on_pull_list_true_when_on_list(sandman_series, auto_login
     resp = client.get(f"/series/{sandman_series.slug}/")
     assert resp.status_code == HTML_OK_CODE
     assert resp.context["on_pull_list"] is True
+
+
+def test_series_detail_average_rating_no_ratings(sandman_series, auto_login_user):
+    client, _ = auto_login_user()
+    resp = client.get(f"/series/{sandman_series.slug}/")
+    assert resp.status_code == HTML_OK_CODE
+    assert resp.context["series"].average_rating is None
+    assert resp.context["series"].rating_count is None
+
+
+def test_series_detail_average_rating_across_issues(sandman_series, auto_login_user, create_user):
+    client, user = auto_login_user()
+    other_user = create_user(username="other_rater")
+
+    issue_one = Issue.objects.create(
+        series=sandman_series,
+        number="1",
+        slug="sandman-1",
+        cover_date=timezone.now().date(),
+        edited_by=user,
+        created_by=user,
+    )
+    issue_two = Issue.objects.create(
+        series=sandman_series,
+        number="2",
+        slug="sandman-2",
+        cover_date=timezone.now().date(),
+        edited_by=user,
+        created_by=user,
+    )
+    IssueRating.objects.create(issue=issue_one, user=user, rating=4)
+    IssueRating.objects.create(issue=issue_two, user=other_user, rating=2)
+
+    resp = client.get(f"/series/{sandman_series.slug}/")
+    assert resp.status_code == HTML_OK_CODE
+    assert resp.context["series"].average_rating == 3.0
+    assert resp.context["series"].rating_count == 2
 
 
 def test_series_search_view_url_exists_at_desired_location(auto_login_user):
