@@ -465,6 +465,61 @@ def test_arc_issue_list_x_cache_header(
     assert resp["X-Cache"] == "HIT"
 
 
+def test_arc_retrieve_does_not_poison_issue_list_cache(
+    api_client_with_credentials, issue_with_arc, fc_arc, local_cache
+):
+    """retrieve and issue_list are both cached via detail_cache_key() keyed
+    on (cache_model_label, pk, modified, *dependent_labels). ArcViewSet sets
+    neither cache_detail_dependent_labels nor cache_action_dependent_labels,
+    so without an action discriminator in the key, the two endpoints would
+    collide on the same Redis entry -- whichever ran first would get served
+    back for the other, wrong response shape and all (confirmed live: a
+    /issue_list/ request returning the arc's own detail payload)."""
+    detail_url = reverse("api:arc-detail", kwargs={"pk": fc_arc.pk})
+    resp = api_client_with_credentials.get(detail_url)
+    assert resp.status_code == status.HTTP_200_OK
+
+    issue_list_url = reverse("api:arc-issue-list", kwargs={"pk": fc_arc.pk})
+    resp = api_client_with_credentials.get(issue_list_url)
+    assert resp.status_code == status.HTTP_200_OK
+    assert resp["X-Cache"] == "MISS"
+    body = resp.json()
+    assert "results" in body
+    assert body["results"][0]["number"] == "1"
+
+
+def test_character_retrieve_does_not_poison_issue_list_cache(
+    api_client_with_credentials, issue_with_arc, superman, local_cache
+):
+    detail_url = reverse("api:character-detail", kwargs={"pk": superman.pk})
+    resp = api_client_with_credentials.get(detail_url)
+    assert resp.status_code == status.HTTP_200_OK
+
+    issue_list_url = reverse("api:character-issue-list", kwargs={"pk": superman.pk})
+    resp = api_client_with_credentials.get(issue_list_url)
+    assert resp.status_code == status.HTTP_200_OK
+    assert resp["X-Cache"] == "MISS"
+    body = resp.json()
+    assert "results" in body
+    assert body["results"][0]["number"] == "1"
+
+
+def test_team_retrieve_does_not_poison_issue_list_cache(
+    api_client_with_credentials, multi_story_issue, teen_titans, local_cache
+):
+    detail_url = reverse("api:team-detail", kwargs={"pk": teen_titans.pk})
+    resp = api_client_with_credentials.get(detail_url)
+    assert resp.status_code == status.HTTP_200_OK
+
+    issue_list_url = reverse("api:team-issue-list", kwargs={"pk": teen_titans.pk})
+    resp = api_client_with_credentials.get(issue_list_url)
+    assert resp.status_code == status.HTTP_200_OK
+    assert resp["X-Cache"] == "MISS"
+    body = resp.json()
+    assert "results" in body
+    assert body["results"][0]["number"] == "3"
+
+
 def test_publisher_series_list_x_cache_header(
     api_client_with_credentials, dc_comics, fc_series, local_cache
 ):

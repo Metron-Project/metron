@@ -224,7 +224,7 @@ class ConditionalRetrieveModelMixin(CachedObjectMixin, mixins.RetrieveModelMixin
             return mixins.RetrieveModelMixin.retrieve(self, request, *args, **kwargs)
 
         key = detail_cache_key(
-            self.cache_model_label, pk, modified, *self.cache_detail_dependent_labels
+            self.cache_model_label, "retrieve", pk, modified, *self.cache_detail_dependent_labels
         )
         cached = cache.get(key)
         if cached is not None:
@@ -294,7 +294,11 @@ class CachedDetailActionMixin(CachedObjectMixin):
         key = None
         if self.cache_model_label and modified is not None:
             key = detail_cache_key(
-                self.cache_model_label, pk, modified, *self.cache_action_dependent_labels
+                self.cache_model_label,
+                self.action,
+                pk,
+                modified,
+                *self.cache_action_dependent_labels,
             )
             cached = cache.get(key)
             if cached is not None:
