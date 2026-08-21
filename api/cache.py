@@ -41,9 +41,16 @@ class ModelLabel(StrEnum):
 
 
 def detail_cache_key(
-    model_label: str, action: str, pk: Any, modified, *dependent_labels: str
+    model_label: str,
+    action: str,
+    pk: Any,
+    modified,
+    *dependent_labels: str,
+    origin: str,
+    query: Iterable[tuple[str, list[str]]] | None = None,
 ) -> str:
-    """Cache key for a single object's serialized detail response.
+    """Cache key for a single object's serialized detail response, or a
+    paginated detail-scoped action response (e.g. issue_list).
 
     Self-invalidating: a change to `modified` produces a new key, so old
     entries are simply orphaned and expire via TTL.
@@ -60,13 +67,29 @@ def detail_cache_key(
     cascade a `modified` bump onto this one (e.g. a Series response embeds
     its Publisher's name, but renaming the Publisher doesn't touch the
     Series row).
+
+    `origin` should be `{request.scheme}://{request.get_host()}` -- every
+    cached serializer embeds a `resource_url` built from the request via
+    `build_absolute_uri()`, so a response cached under one scheme/host would
+    otherwise get served back verbatim, wrong host and all, to a request
+    against another.
+
+    `query` (optional) should come from `request.query_params.lists()`, same
+    as `list_cache_key()` -- required for any paginated action (e.g.
+    issue_list), otherwise `?page=1` and `?page=2` compute the same key and
+    whichever page was cached first gets served back for both. Plain
+    retrieve isn't paginated and omits it.
     """
     key = f"api:detail:{model_label}:{action}:{pk}:{modified.timestamp()}"
     if dependent_labels:
         version_map = get_model_versions(dependent_labels)
         versions = "-".join(str(version_map[lbl]) for lbl in dependent_labels)
         key = f"{key}:{versions}"
-    return key
+    normalized = f"origin={origin}"
+    if query:
+        normalized += "&" + "&".join(f"{k}={v}" for k, v in sorted(query))
+    digest = hashlib.sha256(normalized.encode()).hexdigest()[:16]
+    return f"{key}:{digest}"
 
 
 def get_model_version(model_label: str) -> int:
@@ -112,6 +135,7 @@ def list_cache_key(
     model_label: str,
     *dependent_labels: str,
     query: Iterable[tuple[str, list[str]]],
+    origin: str,
     scope: str = "",
 ) -> str:
     """Cache key for a list-type response: one or more model versions plus a
@@ -121,10 +145,15 @@ def list_cache_key(
     not `.dict()` -- `.dict()` silently drops all-but-the-last value for
     repeated params (e.g. IssueFilter's `role_id`), which would let distinct
     multi-value requests collide on the same key.
+
+    `origin` should be `{request.scheme}://{request.get_host()}` -- see
+    `detail_cache_key()`'s docstring; every cached list response nests
+    serialized objects whose `resource_url` is equally request-host-
+    dependent.
     """
     labels = (model_label, *dependent_labels)
     version_map = get_model_versions(labels)
     versions = "-".join(str(version_map[lbl]) for lbl in labels)
-    normalized = "&".join(f"{k}={v}" for k, v in sorted(query))
+    normalized = f"origin={origin}&" + "&".join(f"{k}={v}" for k, v in sorted(query))
     digest = hashlib.sha256(normalized.encode()).hexdigest()[:16]
     return f"api:list:{model_label}:{scope}:{versions}:{digest}"
