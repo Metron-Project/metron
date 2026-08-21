@@ -11,6 +11,7 @@ https://docs.djangoproject.com/en/2.0/ref/settings/
 """
 
 import logging.config
+import sys
 from os import environ
 from pathlib import Path
 
@@ -178,6 +179,12 @@ AUTH_PASSWORD_VALIDATORS = [
     {"NAME": "django.contrib.auth.password_validation.CommonPasswordValidator"},
     {"NAME": "django.contrib.auth.password_validation.NumericPasswordValidator"},
 ]
+
+# Tests create hundreds of users (directly and via fixture chains), each paying the
+# full cost of the default PBKDF2 hasher (~0.5s/hash). MD5 is fine under pytest since
+# no real credentials are ever at stake.
+if "pytest" in sys.modules:
+    PASSWORD_HASHERS = ["django.contrib.auth.hashers.MD5PasswordHasher"]
 
 # Define model primary keys
 DEFAULT_AUTO_FIELD = "django.db.models.AutoField"
