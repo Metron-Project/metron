@@ -16,12 +16,6 @@ def rating_user(db, create_user):
 
 
 @pytest.fixture
-def other_rating_user(db, create_user):
-    """Create another user for issue rating tests."""
-    return create_user(username="other_rating_user")
-
-
-@pytest.fixture
 def rating_publisher(create_user):
     """Create a publisher for issue rating tests."""
     user = create_user()
