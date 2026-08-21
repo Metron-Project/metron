@@ -224,7 +224,12 @@ class ConditionalRetrieveModelMixin(CachedObjectMixin, mixins.RetrieveModelMixin
             return mixins.RetrieveModelMixin.retrieve(self, request, *args, **kwargs)
 
         key = detail_cache_key(
-            self.cache_model_label, "retrieve", pk, modified, *self.cache_detail_dependent_labels
+            self.cache_model_label,
+            "retrieve",
+            pk,
+            modified,
+            *self.cache_detail_dependent_labels,
+            request=self.request,
         )
         cached = cache.get(key)
         if cached is not None:
@@ -261,7 +266,7 @@ class CachedListModelMixin(mixins.ListModelMixin):
         key = list_cache_key(
             self.cache_model_label,
             *self.cache_dependent_labels,
-            query=request.query_params.lists(),
+            request=request,
         )
         cached = cache.get(key)
         if cached is not None:
@@ -299,6 +304,7 @@ class CachedDetailActionMixin(CachedObjectMixin):
                 pk,
                 modified,
                 *self.cache_action_dependent_labels,
+                request=self.request,
             )
             cached = cache.get(key)
             if cached is not None:
@@ -697,7 +703,7 @@ class PublisherViewSet(
         key = list_cache_key(
             ModelLabel.SERIES,
             ModelLabel.ISSUE,
-            query=self.request.query_params.lists(),
+            request=request,
             scope=f"publisher:{pk}:series_list",
         )
         cached = cache.get(key)

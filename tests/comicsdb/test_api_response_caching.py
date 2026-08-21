@@ -8,6 +8,7 @@ from django.test.utils import CaptureQueriesContext
 from django.urls import reverse
 from django.utils import timezone
 from rest_framework import status
+from rest_framework.pagination import PageNumberPagination
 
 from api.views import CollectionViewSet, PullListViewSet, WishListViewSet
 from comicsdb.models import Credits, Issue, Variant
@@ -486,6 +487,59 @@ def test_arc_retrieve_does_not_poison_issue_list_cache(
     body = resp.json()
     assert "results" in body
     assert body["results"][0]["number"] == "1"
+
+
+def test_arc_issue_list_pagination_is_not_poisoned_across_pages(
+    api_client_with_credentials, issue_with_arc, fc_arc, fc_series, monkeypatch, local_cache
+):
+    """issue_list's cache key must include the request's query string, since
+    ?page=1 and ?page=2 return different data for the same (pk, modified)."""
+    # PageNumberPagination.page_size is read from api_settings.PAGE_SIZE at
+    # class-definition time, not per-request, so overriding
+    # settings.REST_FRAMEWORK here wouldn't affect it -- patch the class
+    # attribute directly instead.
+    monkeypatch.setattr(PageNumberPagination, "page_size", 1)
+
+    second_issue = Issue.objects.create(
+        series=fc_series,
+        number="2",
+        slug="final-crisis-2",
+        cover_date=timezone.now().date(),
+        edited_by=issue_with_arc.edited_by,
+        created_by=issue_with_arc.created_by,
+    )
+    second_issue.arcs.add(fc_arc)
+
+    url = reverse("api:arc-issue-list", kwargs={"pk": fc_arc.pk})
+    page_one = api_client_with_credentials.get(url, {"page": 1})
+    assert page_one.status_code == status.HTTP_200_OK
+    assert [r["number"] for r in page_one.json()["results"]] == ["1"]
+
+    page_two = api_client_with_credentials.get(url, {"page": 2})
+    assert page_two.status_code == status.HTTP_200_OK
+    assert [r["number"] for r in page_two.json()["results"]] == ["2"]
+
+
+def test_arc_retrieve_resource_url_is_not_poisoned_across_hosts(
+    api_client_with_credentials, fc_arc, settings, local_cache
+):
+    """resource_url is built from request.build_absolute_uri(), so the
+    cache key must include the request's scheme/host -- otherwise a
+    response cached while serving one hostname gets that hostname baked
+    into resource_url for every other hostname the API is also reachable
+    under."""
+    settings.ALLOWED_HOSTS = [*settings.ALLOWED_HOSTS, "other.example"]
+    url = reverse("api:arc-detail", kwargs={"pk": fc_arc.pk})
+
+    resp = api_client_with_credentials.get(url, HTTP_HOST="testserver")
+    assert resp.status_code == status.HTTP_200_OK
+    assert resp["X-Cache"] == "MISS"
+    assert resp.json()["resource_url"].startswith("http://testserver/")
+
+    resp = api_client_with_credentials.get(url, HTTP_HOST="other.example")
+    assert resp.status_code == status.HTTP_200_OK
+    assert resp["X-Cache"] == "MISS"
+    assert resp.json()["resource_url"].startswith("http://other.example/")
 
 
 def test_character_retrieve_does_not_poison_issue_list_cache(
