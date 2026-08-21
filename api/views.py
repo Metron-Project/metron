@@ -194,8 +194,14 @@ class ConditionalRetrieveModelMixin(CachedObjectMixin, mixins.RetrieveModelMixin
     cache_detail_dependent_labels: tuple[str, ...] = ()
 
     def retrieve(self, request, *args, **kwargs):
+        # _cached_retrieve must be passed unbound: rest_framework_condition's
+        # condition() re-supplies `self` itself (it's built to decorate a
+        # plain function via Python's descriptor protocol). Passing an
+        # already-bound method here double-supplies `self`, silently
+        # rebinding _cached_retrieve's `request` param to the ViewSet
+        # instance instead of the real DRF request.
         retrieve = last_modified(last_modified_func=self._retrieve_last_modified)(
-            self._cached_retrieve
+            type(self)._cached_retrieve
         )
 
         return retrieve(self, request, *args, **kwargs)
@@ -335,8 +341,10 @@ class IssueListMixin(CachedDetailActionMixin):
     @extend_schema(responses={200: IssueListSerializer(many=True)}, filters=False)
     @action(detail=True)
     def issue_list(self, request, *args, **kwargs):
+        # See the comment in ConditionalRetrieveModelMixin.retrieve: _issue_list
+        # must be passed unbound for the same reason.
         issue_list = last_modified(last_modified_func=self._issue_list_last_modified)(
-            self._issue_list
+            type(self)._issue_list
         )
 
         return issue_list(self, request, *args, **kwargs)
