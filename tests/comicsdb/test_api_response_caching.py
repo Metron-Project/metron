@@ -9,7 +9,9 @@ from django.urls import reverse
 from django.utils import timezone
 from rest_framework import status
 from rest_framework.pagination import PageNumberPagination
+from rest_framework.request import Request
 
+from api import views as api_views
 from api.views import CollectionViewSet, PullListViewSet, WishListViewSet
 from comicsdb.models import Credits, Issue, Variant
 
@@ -594,6 +596,35 @@ def test_uncached_viewset_gets_no_x_cache_header(api_client_with_credentials, lo
     resp = api_client_with_credentials.get(reverse("api:pull_list-list"))
     assert resp.status_code == status.HTTP_200_OK
     assert "X-Cache" not in resp
+
+
+def test_cached_retrieve_receives_real_request_object(
+    api_client_with_credentials, basic_issue, local_cache, monkeypatch
+):
+    """ConditionalRetrieveModelMixin.retrieve wraps _cached_retrieve with
+    rest_framework_condition's condition() decorator, which is designed to
+    decorate a plain function and have Python's descriptor protocol supply
+    `self` -- it re-supplies `self` itself internally. Passing an
+    already-bound method there double-supplies `self`, silently rebinding
+    _cached_retrieve's `request` param to the ViewSet instance instead of
+    the real DRF Request (confirmed live: this exact bug was introduced and
+    then papered over with a `self.request` workaround in the commits
+    immediately preceding this test). Guard directly against that
+    regressing by capturing what actually reaches
+    mixins.RetrieveModelMixin.retrieve's `request` argument."""
+    captured = {}
+    original = api_views.mixins.RetrieveModelMixin.retrieve
+
+    def spy(self, request, *args, **kwargs):
+        captured["request"] = request
+        return original(self, request, *args, **kwargs)
+
+    monkeypatch.setattr(api_views.mixins.RetrieveModelMixin, "retrieve", spy)
+
+    url = reverse("api:issue-detail", kwargs={"pk": basic_issue.pk})
+    resp = api_client_with_credentials.get(url)
+    assert resp.status_code == status.HTTP_200_OK
+    assert isinstance(captured["request"], Request)
 
 
 def test_user_scoped_viewsets_are_not_list_cached():
