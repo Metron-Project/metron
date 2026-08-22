@@ -1,4 +1,4 @@
-{% load i18n %}
+{% load i18n rating_tags %}
 {% comment %}
 Generic 1-5 star rating widget, shared by reading_lists and issue_ratings.
 
@@ -20,8 +20,13 @@ Required context:
             {% if average_rating %}
                 <span class="rating-stars">
                     {% for star_num in "12345" %}
-                        <i class="{% if star_num|add:'0' <= average_rating %}fas{% else %}far{% endif %} fa-star"
-                           style="color: #ffd700"></i>
+                        <span class="rating-widget-star">
+                            <i class="far fa-star" style="color: #dbdbdb;"></i>
+                            <span class="rating-widget-star-fill"
+                                  style="width: {{ average_rating|star_fill_percent:star_num }}%;">
+                                <i class="fas fa-star" style="color: #ffd700;"></i>
+                            </span>
+                        </span>
                     {% endfor %}
                 </span>
                 <span class="rating-value">
@@ -113,6 +118,20 @@ Required context:
         .rating-widget .rating-value {
             margin-left: 0.5rem;
             color: #4a4a4a;
+        }
+
+        .rating-widget .rating-widget-star {
+            position: relative;
+            display: inline-block;
+        }
+
+        .rating-widget .rating-widget-star-fill {
+            position: absolute;
+            top: 0;
+            left: 0;
+            display: inline-block;
+            overflow: hidden;
+            white-space: nowrap;
         }
     </style>
 {% endif %}

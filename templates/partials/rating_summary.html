@@ -1,4 +1,4 @@
-{% load i18n %}
+{% load i18n rating_tags %}
 {% comment %}
 Compact average-rating summary (stars + count), used in page headers.
 
@@ -16,9 +16,15 @@ Required context:
       {% if oob %}hx-swap-oob="true"{% endif %}>
     {% if average_rating %}
         <span class="has-text-grey">&middot;</span>
-        <span style="color: #ffce54;">
+        <span class="rating-summary-stars">
             {% for star_num in "12345" %}
-                <i class="{% if star_num|add:'0' <= average_rating %}fas{% else %}far{% endif %} fa-star"></i>
+                <span class="rating-summary-star">
+                    <i class="far fa-star" style="color: #dbdbdb;"></i>
+                    <span class="rating-summary-star-fill"
+                          style="width: {{ average_rating|star_fill_percent:star_num }}%;">
+                        <i class="fas fa-star" style="color: #ffce54;"></i>
+                    </span>
+                </span>
             {% endfor %}
         </span>
         <span class="has-text-grey ml-1">
@@ -26,3 +32,18 @@ Required context:
         </span>
     {% endif %}
 </span>
+<style>
+    .rating-summary-star {
+        position: relative;
+        display: inline-block;
+    }
+
+    .rating-summary-star-fill {
+        position: absolute;
+        top: 0;
+        left: 0;
+        display: inline-block;
+        overflow: hidden;
+        white-space: nowrap;
+    }
+</style>
