@@ -144,6 +144,13 @@ def test_unauthorized_detail_view_url(api_client, fc_series):
     assert response.status_code == status.HTTP_401_UNAUTHORIZED
 
 
+def test_get_detail_with_non_numeric_pk_returns_404(api_client_with_credentials):
+    resp = api_client_with_credentials.get(
+        reverse("api:series-detail", kwargs={"pk": "does-not-exist-9999"})
+    )
+    assert resp.status_code == status.HTTP_404_NOT_FOUND
+
+
 def test_series_search(api_client_with_credentials, bat_sups_series, fc_series):
     search_term = "batman superman"
     resp = api_client_with_credentials.get(f"/api/series/?name={quote_plus(search_term)}")

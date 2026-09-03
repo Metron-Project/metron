@@ -1,4 +1,5 @@
 from django.core.cache import cache
+from django.core.exceptions import ValidationError
 from django.db import models
 from django.db.models import (
     Avg,
@@ -175,12 +176,20 @@ class CachedObjectMixin:
                 # Model.objects, so this still respects per-viewset row
                 # scoping (e.g. CollectionViewSet/PullListViewSet/
                 # WishListViewSet filtering by user).
-                row = (
-                    self.filter_queryset(self.get_modified_queryset())
-                    .filter(**{self.lookup_field: pk})
-                    .values_list(self.lookup_field, "modified")
-                    .first()
-                )
+                try:
+                    row = (
+                        self.filter_queryset(self.get_modified_queryset())
+                        .filter(**{self.lookup_field: pk})
+                        .values_list(self.lookup_field, "modified")
+                        .first()
+                    )
+                except ValueError, TypeError, ValidationError:
+                    # Mirrors get_object_or_404()'s handling of a lookup value
+                    # that can't be coerced to the field's type (e.g. a
+                    # non-numeric value against an integer pk) -- treat it as
+                    # "not found" rather than a 500, and let get_object()'s
+                    # own get_object_or_404() raise the real Http404 below.
+                    row = None
                 self._cached_object_modified = row if row else (None, None)
 
         return self._cached_object_modified
