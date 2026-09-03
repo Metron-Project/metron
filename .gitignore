@@ -82,6 +82,10 @@ celerybeat-schedule
 # dotenv
 .env
 
+# Local static/media (STATIC_ROOT/MEDIA_ROOT)
+staticfiles/
+media/
+
 # virtualenv
 .venv
 venv/
