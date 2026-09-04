@@ -3,7 +3,7 @@ from django.db.models import Count
 from django.urls import reverse
 from rest_framework import status
 
-from api.v1_0.serializers import SeriesListSerializer
+from api.v1_0.serializers import PublisherSeriesListSerializer
 from comicsdb.models import Series
 
 
@@ -199,7 +199,7 @@ def test_publisher_series_list_view(api_client_with_credentials, dc_comics, fc_s
         .annotate(num_issues=Count("issues", distinct=True))
         .first()
     )
-    serializer = SeriesListSerializer(series)
+    serializer = PublisherSeriesListSerializer(series)
     assert resp.data["count"] == 1
     assert resp.data["next"] is None
     assert resp.data["previous"] is None

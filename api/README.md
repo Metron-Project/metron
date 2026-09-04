@@ -670,6 +670,8 @@ Comic book series.
   "year_end": null,
   "volume": 1,
   "issue_count": 900,
+  "cv_id": 18693,
+  "gcd_id": 621,
   "modified": "2025-01-15T10:30:00Z"
 }
 ```
@@ -684,8 +686,6 @@ Comic book series.
     - `desc` - Description
     - `genres` - Array of genre objects
     - `associated` - Associated series
-    - `cv_id` - Comic Vine ID
-    - `gcd_id` - Grand Comics Database ID
     - `resource_url` - Link to web UI
 
 **Series Status Choices:**
