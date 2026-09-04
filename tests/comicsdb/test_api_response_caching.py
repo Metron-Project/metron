@@ -298,6 +298,27 @@ def test_issue_retrieve_after_publisher_rename_is_not_stale(
     assert resp.json()["publisher"]["name"] == "DC Comics Renamed"
 
 
+def test_issue_retrieve_after_universe_rename_is_not_stale(
+    api_client_with_staff_credentials, basic_issue, earth_2_universe, local_cache
+):
+    """IssueViewSet.cache_detail_dependent_labels includes UNIVERSE --
+    Universe's total write volume (~180 historical saves site-wide) is
+    actually lower than Publisher's, which was already tracked here, so
+    this costs no more cache churn than the Publisher/Imprint dependency."""
+    basic_issue.universes.add(earth_2_universe)
+    url = reverse("api:issue-detail", kwargs={"pk": basic_issue.pk})
+    resp = api_client_with_staff_credentials.get(url)
+    assert resp.status_code == status.HTTP_200_OK
+    assert resp.json()["universes"][0]["name"] == "Earth 2"
+
+    earth_2_universe.name = "Earth 2 Renamed"
+    earth_2_universe.save()
+
+    resp = api_client_with_staff_credentials.get(url)
+    assert resp.status_code == status.HTTP_200_OK
+    assert resp.json()["universes"][0]["name"] == "Earth 2 Renamed"
+
+
 def test_imprint_retrieve_after_publisher_rename_is_not_stale(
     api_client_with_staff_credentials, vertigo_imprint, dc_comics, local_cache
 ):
@@ -535,6 +556,27 @@ def test_character_retrieve_after_universe_rename_is_not_stale(
     resp = api_client_with_staff_credentials.get(url)
     assert resp.status_code == status.HTTP_200_OK
     assert resp.json()["universes"][0]["name"] == "Earth 2 Renamed"
+
+
+def test_character_retrieve_after_team_rename_is_not_stale(
+    api_client_with_staff_credentials, superman, teen_titans, local_cache
+):
+    """CharacterViewSet.cache_detail_dependent_labels includes TEAM --
+    moderate write volume (~3.1k historical saves site-wide) but nowhere
+    near Creator's (~18.6k), so tying the detail cache to it is a
+    reasonable tradeoff, unlike CREATOR."""
+    superman.teams.add(teen_titans)
+    url = reverse("api:character-detail", kwargs={"pk": superman.pk})
+    resp = api_client_with_staff_credentials.get(url)
+    assert resp.status_code == status.HTTP_200_OK
+    assert resp.json()["teams"][0]["name"] == "Teen Titans"
+
+    teen_titans.name = "Teen Titans Renamed"
+    teen_titans.save()
+
+    resp = api_client_with_staff_credentials.get(url)
+    assert resp.status_code == status.HTTP_200_OK
+    assert resp.json()["teams"][0]["name"] == "Teen Titans Renamed"
 
 
 def test_character_retrieve_after_creator_rename_is_accepted_staleness(
