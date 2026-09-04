@@ -55,6 +55,7 @@ from api.v1_0.serializers import (
     MissingSeriesSerializer,
     PublisherListSerializer,
     PublisherSerializer,
+    PublisherSeriesListSerializer,
     ReadingListItemSerializer,
     ReadingListListSerializer,
     ReadingListReadSerializer,
@@ -687,11 +688,11 @@ class PublisherViewSet(
             case "list":
                 return PublisherListSerializer
             case "series_list":
-                return SeriesListSerializer
+                return PublisherSeriesListSerializer
             case _:
                 return PublisherSerializer
 
-    @extend_schema(responses={200: SeriesListSerializer(many=True)}, filters=False)
+    @extend_schema(responses={200: PublisherSeriesListSerializer(many=True)}, filters=False)
     @action(detail=True)
     def series_list(self, request, pk=None):
         """
@@ -726,7 +727,7 @@ class PublisherViewSet(
         page = self.paginate_queryset(queryset)
         if page is None:
             raise Http404
-        serializer = SeriesListSerializer(page, many=True, context={"request": request})
+        serializer = PublisherSeriesListSerializer(page, many=True, context={"request": request})
         response = self.get_paginated_response(serializer.data)
         cache.set(key, response.data, LIST_CACHE_TTL)
         return _mark_cache_status(response, hit=False)

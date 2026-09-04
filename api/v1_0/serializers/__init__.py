@@ -29,6 +29,7 @@ from api.v1_0.serializers.issue import (
 from api.v1_0.serializers.rating import RatingSerializer
 from api.v1_0.serializers.series import (
     AssociatedSeriesSerializer,
+    PublisherSeriesListSerializer,
     SeriesListSerializer,
     SeriesReadSerializer,
     SeriesSerializer,
@@ -93,6 +94,7 @@ __all__ = [
     "MissingSeriesSerializer",
     "PublisherListSerializer",
     "PublisherSerializer",
+    "PublisherSeriesListSerializer",
     "RatingSerializer",
     "ReadingListItemSerializer",
     "ReadingListListSerializer",
