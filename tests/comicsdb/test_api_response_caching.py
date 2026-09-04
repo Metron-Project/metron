@@ -14,6 +14,8 @@ from rest_framework.request import Request
 from api import views as api_views
 from api.views import CollectionViewSet, PullListViewSet, WishListViewSet
 from comicsdb.models import Credits, Issue, Variant
+from comicsdb.models.genre import Genre
+from issue_ratings.models import IssueRating
 
 
 @pytest.fixture
@@ -431,6 +433,225 @@ def test_issue_retrieve_reflects_variant_added(
     assert resp.status_code == status.HTTP_200_OK
     assert len(resp.json()["variants"]) == 1
     assert resp.json()["variants"][0]["name"] == "Foil Variant"
+
+
+def test_character_retrieve_reflects_creator_added(
+    api_client_with_staff_credentials, superman, john_byrne, local_cache
+):
+    """Character.creators had no m2m_changed wiring at all -- unlike the
+    Issue-side m2m fields, adding a creator didn't even bump Character's own
+    `modified`, so the character's own listed creators would stay wrong
+    (not just cosmetically stale) until the 24h TTL lapsed."""
+    url = reverse("api:character-detail", kwargs={"pk": superman.pk})
+    resp = api_client_with_staff_credentials.get(url)
+    assert resp.status_code == status.HTTP_200_OK
+    assert resp.json()["creators"] == []
+
+    superman.creators.add(john_byrne)
+
+    resp = api_client_with_staff_credentials.get(url)
+    assert resp.status_code == status.HTTP_200_OK
+    assert len(resp.json()["creators"]) == 1
+    assert resp.json()["creators"][0]["name"] == "John Byrne"
+
+
+def test_character_retrieve_reflects_team_added(
+    api_client_with_staff_credentials, superman, teen_titans, local_cache
+):
+    url = reverse("api:character-detail", kwargs={"pk": superman.pk})
+    resp = api_client_with_staff_credentials.get(url)
+    assert resp.status_code == status.HTTP_200_OK
+    assert resp.json()["teams"] == []
+
+    superman.teams.add(teen_titans)
+
+    resp = api_client_with_staff_credentials.get(url)
+    assert resp.status_code == status.HTTP_200_OK
+    assert len(resp.json()["teams"]) == 1
+
+
+def test_character_retrieve_reflects_universe_added(
+    api_client_with_staff_credentials, superman, earth_2_universe, local_cache
+):
+    url = reverse("api:character-detail", kwargs={"pk": superman.pk})
+    resp = api_client_with_staff_credentials.get(url)
+    assert resp.status_code == status.HTTP_200_OK
+    assert resp.json()["universes"] == []
+
+    superman.universes.add(earth_2_universe)
+
+    resp = api_client_with_staff_credentials.get(url)
+    assert resp.status_code == status.HTTP_200_OK
+    assert len(resp.json()["universes"]) == 1
+
+
+def test_team_retrieve_reflects_creator_added(
+    api_client_with_staff_credentials, teen_titans, john_byrne, local_cache
+):
+    """Team.creators had the same missing-wiring gap as Character.creators."""
+    url = reverse("api:team-detail", kwargs={"pk": teen_titans.pk})
+    resp = api_client_with_staff_credentials.get(url)
+    assert resp.status_code == status.HTTP_200_OK
+    assert resp.json()["creators"] == []
+
+    teen_titans.creators.add(john_byrne)
+
+    resp = api_client_with_staff_credentials.get(url)
+    assert resp.status_code == status.HTTP_200_OK
+    assert len(resp.json()["creators"]) == 1
+
+
+def test_team_retrieve_reflects_universe_added(
+    api_client_with_staff_credentials, teen_titans, earth_2_universe, local_cache
+):
+    url = reverse("api:team-detail", kwargs={"pk": teen_titans.pk})
+    resp = api_client_with_staff_credentials.get(url)
+    assert resp.status_code == status.HTTP_200_OK
+    assert resp.json()["universes"] == []
+
+    teen_titans.universes.add(earth_2_universe)
+
+    resp = api_client_with_staff_credentials.get(url)
+    assert resp.status_code == status.HTTP_200_OK
+    assert len(resp.json()["universes"]) == 1
+
+
+def test_character_retrieve_after_universe_rename_is_not_stale(
+    api_client_with_staff_credentials, superman, earth_2_universe, local_cache
+):
+    """CharacterViewSet.cache_detail_dependent_labels includes UNIVERSE --
+    unlike CREATOR, Universe is low-churn (~180 rows site-wide) so tying the
+    detail cache to it doesn't reproduce the SERIES-style thrashing
+    problem."""
+    superman.universes.add(earth_2_universe)
+    url = reverse("api:character-detail", kwargs={"pk": superman.pk})
+    resp = api_client_with_staff_credentials.get(url)
+    assert resp.status_code == status.HTTP_200_OK
+    assert resp.json()["universes"][0]["name"] == "Earth 2"
+
+    earth_2_universe.name = "Earth 2 Renamed"
+    earth_2_universe.save()
+
+    resp = api_client_with_staff_credentials.get(url)
+    assert resp.status_code == status.HTTP_200_OK
+    assert resp.json()["universes"][0]["name"] == "Earth 2 Renamed"
+
+
+def test_character_retrieve_after_creator_rename_is_accepted_staleness(
+    api_client_with_staff_credentials, superman, john_byrne, local_cache
+):
+    """CREATOR is deliberately NOT one of CharacterViewSet's
+    cache_detail_dependent_labels (see the comment there) -- Creator's
+    write volume is ~100x Universe's, so tying the key to it would
+    invalidate every cached Character detail on essentially any creator
+    edit anywhere. This test guards against re-adding CREATOR and
+    reintroducing that regression."""
+    superman.creators.add(john_byrne)
+    url = reverse("api:character-detail", kwargs={"pk": superman.pk})
+    resp = api_client_with_staff_credentials.get(url)
+    assert resp.status_code == status.HTTP_200_OK
+    assert resp.json()["creators"][0]["name"] == "John Byrne"
+
+    john_byrne.name = "John Byrne Renamed"
+    john_byrne.save()
+
+    resp = api_client_with_staff_credentials.get(url)
+    assert resp.status_code == status.HTTP_200_OK
+    assert resp.json()["creators"][0]["name"] == "John Byrne"
+
+
+def test_team_retrieve_after_universe_rename_is_not_stale(
+    api_client_with_staff_credentials, teen_titans, earth_2_universe, local_cache
+):
+    teen_titans.universes.add(earth_2_universe)
+    url = reverse("api:team-detail", kwargs={"pk": teen_titans.pk})
+    resp = api_client_with_staff_credentials.get(url)
+    assert resp.status_code == status.HTTP_200_OK
+    assert resp.json()["universes"][0]["name"] == "Earth 2"
+
+    earth_2_universe.name = "Earth 2 Renamed"
+    earth_2_universe.save()
+
+    resp = api_client_with_staff_credentials.get(url)
+    assert resp.status_code == status.HTTP_200_OK
+    assert resp.json()["universes"][0]["name"] == "Earth 2 Renamed"
+
+
+def test_team_retrieve_after_creator_rename_is_accepted_staleness(
+    api_client_with_staff_credentials, teen_titans, john_byrne, local_cache
+):
+    """CREATOR is deliberately NOT one of TeamViewSet's
+    cache_detail_dependent_labels; see
+    test_character_retrieve_after_creator_rename_is_accepted_staleness."""
+    teen_titans.creators.add(john_byrne)
+    url = reverse("api:team-detail", kwargs={"pk": teen_titans.pk})
+    resp = api_client_with_staff_credentials.get(url)
+    assert resp.status_code == status.HTTP_200_OK
+    assert resp.json()["creators"][0]["name"] == "John Byrne"
+
+    john_byrne.name = "John Byrne Renamed"
+    john_byrne.save()
+
+    resp = api_client_with_staff_credentials.get(url)
+    assert resp.status_code == status.HTTP_200_OK
+    assert resp.json()["creators"][0]["name"] == "John Byrne"
+
+
+def test_series_retrieve_reflects_genre_added(
+    api_client_with_staff_credentials, fc_series, local_cache
+):
+    """Series.genres had the same missing-wiring gap as Character.creators."""
+    url = reverse("api:series-detail", kwargs={"pk": fc_series.pk})
+    resp = api_client_with_staff_credentials.get(url)
+    assert resp.status_code == status.HTTP_200_OK
+    assert resp.json()["genres"] == []
+
+    genre = Genre.objects.create(name="Superhero")
+    fc_series.genres.add(genre)
+
+    resp = api_client_with_staff_credentials.get(url)
+    assert resp.status_code == status.HTTP_200_OK
+    assert len(resp.json()["genres"]) == 1
+
+
+def test_series_retrieve_reflects_associated_added(
+    api_client_with_staff_credentials, fc_series, bat_sups_series, local_cache
+):
+    """Series.associated is a self-referential m2m; the same missing-wiring
+    gap applied here too."""
+    url = reverse("api:series-detail", kwargs={"pk": fc_series.pk})
+    resp = api_client_with_staff_credentials.get(url)
+    assert resp.status_code == status.HTTP_200_OK
+    assert resp.json()["associated"] == []
+
+    fc_series.associated.add(bat_sups_series)
+
+    resp = api_client_with_staff_credentials.get(url)
+    assert resp.status_code == status.HTTP_200_OK
+    assert len(resp.json()["associated"]) == 1
+
+
+def test_issue_retrieve_does_not_invalidate_on_rating_change(
+    api_client_with_staff_credentials, basic_issue, create_user, local_cache
+):
+    """average_rating/rating_count are annotated aggregates over IssueRating,
+    but rating changes are deliberately excluded from cache invalidation --
+    see the comment on IssueViewSet.get_queryset(). Ratings churn far more
+    than any other field on a popular issue (every user's vote), so
+    cascading a `modified` bump here would defeat detail caching for
+    exactly the issues most worth caching. This test locks in that
+    intentional tradeoff."""
+    url = reverse("api:issue-detail", kwargs={"pk": basic_issue.pk})
+    resp = api_client_with_staff_credentials.get(url)
+    assert resp.status_code == status.HTTP_200_OK
+    assert resp.json()["rating_count"] == 0
+
+    user = create_user()
+    IssueRating.objects.create(issue=basic_issue, user=user, rating=5)
+
+    resp = api_client_with_staff_credentials.get(url)
+    assert resp.status_code == status.HTTP_200_OK
+    assert resp.json()["rating_count"] == 0
 
 
 def test_issue_retrieve_x_cache_header(api_client_with_credentials, basic_issue, local_cache):

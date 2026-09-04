@@ -10,14 +10,21 @@ from comicsdb.signals import (
     pre_delete_image,
     update_arc_modified,
     update_character_modified,
+    update_character_modified_on_creator_change,
+    update_character_modified_on_team_change,
+    update_character_modified_on_universe_change,
     update_issue_modified_on_credit_change,
     update_issue_modified_on_credit_role_change,
     update_issue_modified_on_reprint_change,
     update_issue_modified_on_universe_change,
     update_issue_modified_on_variant_change,
+    update_series_modified_on_associated_change,
+    update_series_modified_on_genre_change,
     update_series_modified_on_issue_delete,
     update_series_modified_on_issue_save,
     update_team_modified,
+    update_team_modified_on_creator_change,
+    update_team_modified_on_universe_change,
 )
 
 
@@ -31,6 +38,21 @@ class ComicsdbConfig(AppConfig):
 
         character = self.get_model("Character")
         pre_delete.connect(pre_delete_image, sender=character, dispatch_uid="pre_delete_character")
+        m2m_changed.connect(
+            update_character_modified_on_creator_change,
+            sender=character.creators.through,
+            dispatch_uid="m2m_changed_character_creator_modified",
+        )
+        m2m_changed.connect(
+            update_character_modified_on_team_change,
+            sender=character.teams.through,
+            dispatch_uid="m2m_changed_character_team_modified",
+        )
+        m2m_changed.connect(
+            update_character_modified_on_universe_change,
+            sender=character.universes.through,
+            dispatch_uid="m2m_changed_character_universe_modified",
+        )
 
         creator = self.get_model("Creator")
         pre_delete.connect(pre_delete_image, sender=creator, dispatch_uid="pre_delete_creator")
@@ -79,9 +101,29 @@ class ComicsdbConfig(AppConfig):
         pre_delete.connect(pre_delete_image, sender=publisher, dispatch_uid="pre_delete_publisher")
 
         series = self.get_model("Series")
+        m2m_changed.connect(
+            update_series_modified_on_genre_change,
+            sender=series.genres.through,
+            dispatch_uid="m2m_changed_series_genre_modified",
+        )
+        m2m_changed.connect(
+            update_series_modified_on_associated_change,
+            sender=series.associated.through,
+            dispatch_uid="m2m_changed_series_associated_modified",
+        )
 
         team = self.get_model("Team")
         pre_delete.connect(pre_delete_image, sender=team, dispatch_uid="pre_delete_team")
+        m2m_changed.connect(
+            update_team_modified_on_creator_change,
+            sender=team.creators.through,
+            dispatch_uid="m2m_changed_team_creator_modified",
+        )
+        m2m_changed.connect(
+            update_team_modified_on_universe_change,
+            sender=team.universes.through,
+            dispatch_uid="m2m_changed_team_universe_modified",
+        )
 
         universe = self.get_model("Universe")
 
