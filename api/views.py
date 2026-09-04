@@ -436,14 +436,20 @@ class CharacterViewSet(
     filterset_class = ComicVineFilter
     parser_classes = (MultiPartParser, FormParser)
     cache_model_label = ModelLabel.CHARACTER
-    # retrieve also embeds Creator/Universe names (CharacterReadSerializer)
-    # that don't cascade a `modified` bump onto this Character either, but
-    # those are deliberately left as bounded (TTL-limited) staleness rather
-    # than a cache_detail_dependent_labels dependency -- Creators in
-    # particular are edited/added far more often than Publishers/Imprints,
-    # so tying this key to CREATOR's version would invalidate every cached
-    # Character detail on essentially any creator edit anywhere.
-    #
+    # retrieve also embeds Creator/Team/Universe names (CharacterReadSerializer)
+    # that don't cascade a `modified` bump onto this Character either.
+    # TEAM and UNIVERSE are tracked here: low-to-moderate row counts and
+    # write volume (measured via historical save counts: ~3.1k saves for
+    # Team, ~180 for Universe), so tying the key to either costs little.
+    # CREATOR is deliberately NOT tracked -- ~17.8k rows and ~100x
+    # UNIVERSE's write volume, so tying this key to CREATOR's version would
+    # invalidate every cached Character detail on essentially any creator
+    # create/edit/delete anywhere on the site, reproducing the same
+    # cache-thrashing problem already confirmed in production for
+    # ModelLabel.SERIES (see IssueViewSet). Creator-rename staleness stays
+    # bounded (TTL-limited) as the tradeoff.
+    cache_detail_dependent_labels = (ModelLabel.TEAM, ModelLabel.UNIVERSE)
+
     # issue_list embeds fields from Issue rows (and their Series) that don't
     # cascade a `modified` bump onto this Character except on M2M add/
     # remove/clear. ModelLabel.ISSUE/SERIES are deliberately NOT used as
@@ -591,9 +597,11 @@ class IssueViewSet(
     filterset_class = IssueFilter
     parser_classes = (JSONParser, MultiPartParser, FormParser)
     cache_model_label = ModelLabel.ISSUE
-    # Issue retrieve embeds its Series/Publisher/Imprint names, which don't
-    # cascade a `modified` bump onto this Issue when renamed. Only
-    # PUBLISHER/IMPRINT are tracked here:
+    # Issue retrieve embeds its Series/Publisher/Imprint/Arc/Character/Team/
+    # Universe/Creator names, none of which cascade a `modified` bump onto
+    # this Issue when renamed. PUBLISHER/IMPRINT/UNIVERSE are tracked here --
+    # all low write volume historically (a few hundred saves each, total,
+    # site-wide), so tying the key to them costs little:
     # - SERIES is deliberately excluded even though it's also embedded --
     #   ModelLabel.SERIES is bumped by update_series_modified_on_issue_save()
     #   on *every* issue write anywhere (PublisherViewSet.series_list needs
@@ -602,12 +610,16 @@ class IssueViewSet(
     #   affecting this issue's own Series (confirmed in production: a
     #   single unrelated issue write elsewhere flipped an otherwise-stable
     #   X-Cache HIT to a MISS).
-    # - Arc/Character/Team/Universe/Creator names are also embedded but
-    #   excluded for the same reason -- edited/created far more often than
-    #   Publisher/Imprint, so mixing them in would cost far more cache
-    #   churn than the staleness they'd prevent.
+    # - Arc/Character/Team/Creator names are also embedded but excluded for
+    #   the same reason -- their write volume (thousands to tens of
+    #   thousands of historical saves, Character highest of all) would cost
+    #   far more cache churn than the staleness they'd prevent.
     # Both cases accept staleness up to DETAIL_CACHE_TTL as the tradeoff.
-    cache_detail_dependent_labels = (ModelLabel.PUBLISHER, ModelLabel.IMPRINT)
+    cache_detail_dependent_labels = (
+        ModelLabel.PUBLISHER,
+        ModelLabel.IMPRINT,
+        ModelLabel.UNIVERSE,
+    )
 
     def get_modified_queryset(self):
         # get_queryset() annotates average_rating/rating_count for the
@@ -647,6 +659,14 @@ class IssueViewSet(
                     queryset=Issue.objects.select_related("series", "series__series_type"),
                 ),
             )
+            # average_rating/rating_count deliberately do NOT cascade a
+            # `modified` bump on IssueRating changes (no such signal exists
+            # anywhere in the codebase). Ratings churn far more than any
+            # other field on a popular issue -- one vote per user, every
+            # time -- so invalidating on every rating change would defeat
+            # detail caching for exactly the issues most worth caching.
+            # Accepted staleness up to DETAIL_CACHE_TTL for these two
+            # fields specifically.
             .annotate(
                 average_rating=Avg(
                     "ratings__rating", output_field=DecimalField(max_digits=3, decimal_places=2)
@@ -871,13 +891,18 @@ class TeamViewSet(
     cache_model_label = ModelLabel.TEAM
     parser_classes = (MultiPartParser, FormParser)
     # retrieve also embeds Creator/Universe names (TeamReadSerializer) that
-    # don't cascade a `modified` bump onto this Team either, but those are
-    # deliberately left as bounded (TTL-limited) staleness rather than a
-    # cache_detail_dependent_labels dependency -- Creators in particular
-    # are edited/added far more often than Publishers/Imprints, so tying
-    # this key to CREATOR's version would invalidate every cached Team
-    # detail on essentially any creator edit anywhere.
-    #
+    # don't cascade a `modified` bump onto this Team either. UNIVERSE is
+    # tracked here: only ~180 rows site-wide and genuinely low-churn (~1.03
+    # saves/row historically), so tying the key to it costs little. CREATOR
+    # is deliberately NOT tracked -- ~17.8k rows and ~100x UNIVERSE's total
+    # write volume (measured via historical save counts), so tying this key
+    # to CREATOR's version would invalidate every cached Team detail on
+    # essentially any creator create/edit/delete anywhere on the site,
+    # reproducing the same cache-thrashing problem already confirmed in
+    # production for ModelLabel.SERIES (see IssueViewSet). Creator-rename
+    # staleness stays bounded (TTL-limited) as the tradeoff.
+    cache_detail_dependent_labels = (ModelLabel.UNIVERSE,)
+
     # issue_list embeds fields from Issue rows (and their Series) that don't
     # cascade a `modified` bump onto this Team except on M2M add/remove/
     # clear. ModelLabel.ISSUE/SERIES are deliberately NOT used as
