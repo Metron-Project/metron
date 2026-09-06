@@ -670,11 +670,22 @@ Comic book series.
   "year_end": null,
   "volume": 1,
   "issue_count": 900,
+  "publisher": {
+    "id": 1,
+    "name": "Marvel"
+  },
+  "series_type": {
+    "id": 1,
+    "name": "Single Issue"
+  },
   "cv_id": 18693,
   "gcd_id": 621,
   "modified": "2025-01-15T10:30:00Z"
 }
 ```
+
+- `publisher` - Object with `id`/`name` for the series' publisher
+- `series_type` - Object with `id`/`name` (e.g. Single Issue, Trade Paperback, Hardcover)
 
 **Detail Response Fields:**
 

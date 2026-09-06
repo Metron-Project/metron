@@ -6,9 +6,17 @@ from api.v1_0.serializers.publisher import BasicPublisherSerializer
 from comicsdb.models import Series, SeriesType
 
 
+class SeriesTypeSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = SeriesType
+        fields = ("id", "name")
+
+
 class SeriesListSerializer(serializers.ModelSerializer):
     series = serializers.CharField(source="__str__")
     issue_count = serializers.IntegerField(source="num_issues", read_only=True)
+    publisher = BasicPublisherSerializer(read_only=True)
+    series_type = SeriesTypeSerializer(read_only=True)
 
     class Meta:
         model = Series
@@ -19,21 +27,12 @@ class SeriesListSerializer(serializers.ModelSerializer):
             "year_end",
             "volume",
             "issue_count",
+            "publisher",
+            "series_type",
             "cv_id",
             "gcd_id",
             "modified",
         )
-
-
-class PublisherSeriesListSerializer(SeriesListSerializer):
-    class Meta(SeriesListSerializer.Meta):
-        fields = ("id", "series", "year_began", "year_end", "volume", "issue_count", "modified")
-
-
-class SeriesTypeSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = SeriesType
-        fields = ("id", "name")
 
 
 class AssociatedSeriesSerializer(serializers.ModelSerializer):
