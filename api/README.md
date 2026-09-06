@@ -2544,6 +2544,11 @@ For questions, issues, or feature requests:
 
 ## Changelog
 
+### Version 1.11
+
+- Added `publisher` (object with `id`/`name`) and `series_type` (object with `id`/`name`) fields to the Series list endpoint
+- `GET /api/publisher/{id}/series_list/` now returns the same response shape as the top-level Series list endpoint (previously a separate serializer that omitted `cv_id`, `gcd_id`, `publisher`, and `series_type`)
+
 ### Version 1.10
 
 - Italian comics support: Issue and Variant `price` fields now support larger cover price amounts (up to 6 digits before the decimal point)
