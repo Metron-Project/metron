@@ -10,8 +10,21 @@ class PullListIssueSerializer(IssueListSerializer):
         fields = tuple(f for f in IssueListSerializer.Meta.fields if f != "cover_hash")
 
 
+class PullListSeriesInfoSerializer(SeriesListSerializer):
+    class Meta(SeriesListSerializer.Meta):
+        fields = (
+            "id",
+            "series",
+            "year_began",
+            "year_end",
+            "volume",
+            "issue_count",
+            "modified",
+        )
+
+
 class PullListSeriesSerializer(serializers.ModelSerializer):
-    series = SeriesListSerializer(read_only=True)
+    series = PullListSeriesInfoSerializer(read_only=True)
 
     class Meta:
         model = PullListSeries
