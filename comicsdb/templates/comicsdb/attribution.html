@@ -10,7 +10,7 @@
             {% for attribution in object %}
                 {% if attribution.source == "W" %}
                     <p>
-                        {% blocktrans with url=attribution.url %}This article uses material from <a href="{{ url }}" target="_blank" rel="noopener noreferrer">Wikipedia</a>, which is released under the <a href="https://creativecommons.org/licenses/by-sa/3.0/" target="_blank" rel="noopener noreferrer">Creative Commons Attribution-Share-Alike License 3.0</a>.{% endblocktrans %}
+                        {% blocktrans with url=attribution.url %}This article uses material from <a href="{{ url }}" target="_blank" rel="noopener noreferrer">Wikipedia</a>, which is released under the <a href="https://creativecommons.org/licenses/by-sa/4.0/" target="_blank" rel="noopener noreferrer">Creative Commons Attribution-Share-Alike License 4.0</a>.{% endblocktrans %}
                     </p>
                 {% elif attribution.source == "M" %}
                     <p>
