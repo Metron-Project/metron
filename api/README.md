@@ -1592,17 +1592,12 @@ Track ongoing comic book series a user is following — the digital equivalent o
       "id": 7,
       "series": {
         "id": 123,
-        "name": "Amazing Spider-Man",
+        "series": "Amazing Spider-Man (1963)",
+        "year_began": 1963,
+        "year_end": null,
         "volume": 1,
-        "series_type": {
-          "id": 1,
-          "name": "Ongoing Series"
-        },
-        "publisher": {
-          "id": 2,
-          "name": "Marvel"
-        },
-        "year_began": 1963
+        "issue_count": 900,
+        "modified": "2025-01-15T10:30:00Z"
       },
       "added_on": "2026-04-15T09:30:00Z"
     }
