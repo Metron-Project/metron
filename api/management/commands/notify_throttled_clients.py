@@ -193,7 +193,7 @@ class Command(BaseCommand):
             to=[user.email],
         )
         email.attach_alternative(html_message, "text/html")
-        email.send()
+        email.send(using="default")
 
         ThrottleNotice.objects.create(
             user=user,
@@ -230,7 +230,7 @@ class Command(BaseCommand):
             to=[user.email],
         )
         email.attach_alternative(html_message, "text/html")
-        email.send()
+        email.send(using="default")
 
         ThrottleNotice.objects.create(
             user=user,

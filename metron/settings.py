@@ -304,20 +304,35 @@ LOGIN_REDIRECT_URL = "home"
 LOGOUT_REDIRECT_URL = "home"
 
 # E-mail settings
-EMAIL_BACKEND = config("EMAIL_BACKEND", default="django.core.mail.backends.smtp.EmailBackend")
-EMAIL_HOST = config("EMAIL_HOST")
-EMAIL_PORT = 587
-EMAIL_HOST_USER = config("EMAIL_USER")
-EMAIL_HOST_PASSWORD = config("EMAIL_PASSWORD")
-EMAIL_USE_TLS = True
-DEFAULT_FROM_EMAIL = config("EMAIL_FROM", default=EMAIL_HOST_USER)
+_email_backend = config("EMAIL_BACKEND", default="django.core.mail.backends.smtp.EmailBackend")
+_email_host = config("EMAIL_HOST")
+_email_user = config("EMAIL_USER")
+_email_password = config("EMAIL_PASSWORD")
+
+MAILERS = {
+    "default": {
+        "BACKEND": _email_backend,
+        "OPTIONS": (
+            {
+                "host": _email_host,
+                "port": 587,
+                "username": _email_user,
+                "password": _email_password,
+                "use_tls": True,
+            }
+            if _email_backend == "django.core.mail.backends.smtp.EmailBackend"
+            else {}
+        ),
+    },
+}
+DEFAULT_FROM_EMAIL = config("EMAIL_FROM", default=_email_user)
 
 # drf-spectacular settings
 SPECTACULAR_SETTINGS = {
     "SERVE_PUBLIC": False,
     "TITLE": "Metron Comicbook Database",
     "DESCRIPTION": "API to retrieve comic book data",
-    "CONTACT": {"name": "API Support", "email": EMAIL_HOST_USER},
+    "CONTACT": {"name": "API Support", "email": _email_user},
     "VERSION": "1.0.0",
     "LICENSE": {
         "name": "Creative Commons License",

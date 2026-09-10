@@ -111,10 +111,9 @@ class Command(BaseCommand):
             message,
             app_settings.NYT_EMAIL_SENDER,
             [context["user"].email],
-            connection=connection,
         )
         self.logger.info("Sending to: %s", context["user"].email)
-        email.send(fail_silently=False)
+        connection.send_messages([email])
 
     def _daemonize(self):
         self.logger.info("Daemon mode enabled, forking")
@@ -173,7 +172,7 @@ class Command(BaseCommand):
             self._daemonize()
 
         # create a connection to smtp server for reuse
-        connection = mail.get_connection()
+        connection = mail.mailers.default
 
         if cron:
             if self.options.get("now"):
