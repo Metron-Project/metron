@@ -182,7 +182,7 @@ def signup(request):  # sourcery skip: extract-method
                     to=[user.email],
                 )
                 email.attach_alternative(html_message, "text/html")
-                email.send()
+                email.send(using="default")
                 # Let's send a pushover notice that a user requested an account.
                 send_pushover(f"{user} signed up for an account on Metron.")
                 ip = _client_ip(request)
