@@ -968,6 +968,53 @@ done
 '
 ```
 
+### Daily cache hit rate (from access logs)
+
+Gunicorn's access log includes `cache=HIT`/`cache=MISS` (the `X-Cache` header
+set by `_mark_cache_status` in `api/views.py`), so today's hit rate can be
+read straight from the log without touching Redis:
+
+```bash
+journalctl _SYSTEMD_USER_UNIT=metron-web.service --since today \
+  | grep -oP 'cache=\K(HIT|MISS)' \
+  | awk '{c[$0]++; t++} END {for (k in c) printf "%s: %d (%.1f%%)\n", k, c[k], 100*c[k]/t}'
+```
+
+Swap `--since today` for e.g. `--since "2026-09-10" --until "2026-09-11"` to
+check a specific past day. Note this only counts requests that hit a
+cacheable endpoint (list/detail views using `_mark_cache_status`) — other
+requests have no `cache=` field and are excluded by the `grep -oP`.
+
+List endpoints use a short 2-minute TTL (`LIST_CACHE_TTL`) and will almost
+always show as MISS, which skews the overall rate. To look at detail-style
+endpoints only (`retrieve`, `issue_list`, etc. — anything cached with the
+24h `DETAIL_CACHE_TTL`), filter out list requests by path shape: a DRF list
+endpoint is always exactly `/api/<resource>/` (2 path segments), while every
+detail-ish endpoint has at least one more segment (an id, slug, or action
+name):
+
+```bash
+journalctl _SYSTEMD_USER_UNIT=metron-web.service --since today \
+  | awk -F'"' '
+      $7 ~ /cache=(HIT|MISS)/ {
+        split($2, req, " ")
+        path = req[2]
+        sub(/\?.*/, "", path)
+        n = split(path, parts, "/")
+        segs = 0
+        for (i = 1; i <= n; i++) if (parts[i] != "") segs++
+        if (segs < 3) next   # /api/<resource>/ -> skip (list endpoint)
+        status = $7
+        sub(/.*cache=/, "", status)
+        c[status]++; t++
+      }
+      END { for (k in c) printf "%s: %d (%.1f%%)\n", k, c[k], 100*c[k]/t }'
+```
+
+(The `-F'"'` split relies on the quoted request/referrer/user-agent fields
+in the access-logformat, so `$2` is always the request line and `$7` the
+trailing `cache=` field regardless of spaces inside those quoted fields.)
+
 ### Response cache audit
 
 The API's Redis-backed response cache (`api/cache.py`) uses two TTLs —
