@@ -1,5 +1,7 @@
 # Development Setup
 
+A modern devcontainers setup is also available. Refer to its [README](/.devcontainer/README.md).
+
 ## Prerequisites
 
 - Podman
