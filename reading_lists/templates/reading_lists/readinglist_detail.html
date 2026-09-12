@@ -13,6 +13,7 @@
                             opacity: 0.45;"></div>
                 <div style="position: absolute; inset: 0;
                             background: linear-gradient(150deg, rgba(18,44,82,0.65), rgba(35,74,130,0.50));"></div>
+            {% empty %}
             {% endthumbnail %}
         {% endif %}
         <div style="position: relative; z-index: 2; padding: 3rem 2rem;">
@@ -365,6 +366,11 @@
                                                  height="{{ im.height }}"
                                                  alt="{{ character.name }}"
                                                  loading="lazy">
+                                        {% empty %}
+                                            <img class="is-rounded"
+                                                 src="{% static 'site/img/image-not-found.webp' %}"
+                                                 alt="{{ character.name }}"
+                                                 loading="lazy">
                                         {% endthumbnail %}
                                     {% else %}
                                         <img class="is-rounded"
@@ -399,6 +405,11 @@
                                                  src="{{ im.url }}"
                                                  width="{{ im.width }}"
                                                  height="{{ im.height }}"
+                                                 alt="{{ entry.creator.name }}"
+                                                 loading="lazy">
+                                        {% empty %}
+                                            <img class="is-rounded"
+                                                 src="{% static 'site/img/creator-not-found.webp' %}"
                                                  alt="{{ entry.creator.name }}"
                                                  loading="lazy">
                                         {% endthumbnail %}

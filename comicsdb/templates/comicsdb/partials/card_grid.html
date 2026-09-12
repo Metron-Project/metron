@@ -41,6 +41,10 @@
                                              height="{{ im.height }}"
                                              alt="{{ item.name }}"
                                              loading="lazy">
+                                    {% empty %}
+                                        <img src="{% static default_image %}"
+                                             alt="{% blocktrans %}No image available for {{ item.name }}{% endblocktrans %}"
+                                             loading="lazy">
                                     {% endthumbnail %}
                                 {% else %}
                                     {# Default to 2:3 ratio (320x480) for comic covers #}
@@ -49,6 +53,10 @@
                                              width="{{ im.width }}"
                                              height="{{ im.height }}"
                                              alt="{{ item.name }}"
+                                             loading="lazy">
+                                    {% empty %}
+                                        <img src="{% static default_image %}"
+                                             alt="{% blocktrans %}No image available for {{ item.name }}{% endblocktrans %}"
                                              loading="lazy">
                                     {% endthumbnail %}
                                 {% endif %}

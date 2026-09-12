@@ -14,6 +14,11 @@
                                  height="{{ im.height }}"
                                  alt="{{ universe.name }}"
                                  loading="lazy">
+                        {% empty %}
+                            <img class="is-rounded"
+                                 src="{% static 'site/img/creator-not-found.webp' %}"
+                                 alt="{% blocktrans %}No image for {{ universe.name }}{% endblocktrans %}"
+                                 loading="lazy">
                         {% endthumbnail %}
                     {% else %}
                         <img class="is-rounded"
