@@ -13,6 +13,11 @@
                                  height="{{ im.height }}"
                                  alt="{{ team }}"
                                  loading="lazy">
+                        {% empty %}
+                            <img class="is-rounded"
+                                 src="{% static 'site/img/creator-not-found.webp' %}"
+                                 alt="{% blocktrans %}No image for {{ team }}{% endblocktrans %}"
+                                 loading="lazy">
                         {% endthumbnail %}
                     {% else %}
                         <img class="is-rounded"

@@ -107,6 +107,10 @@
                                  height="{{ im.height }}"
                                  alt="{{ creator.name }}"
                                  loading="lazy">
+                        {% empty %}
+                            <img src="{% static 'site/img/creator-not-found.webp' %}"
+                                 alt="{% blocktrans %}No image for {{ creator.name }}{% endblocktrans %}"
+                                 loading="lazy">
                         {% endthumbnail %}
                     {% else %}
                         <img src="{% static 'site/img/creator-not-found.webp' %}"

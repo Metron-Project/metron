@@ -15,6 +15,12 @@
                          alt="{{ item.issue }}"
                          loading="lazy"
                          style="display: block; width: 48px; border-radius: 4px; box-shadow: 0 1px 3px rgba(0,0,0,0.2);">
+                {% empty %}
+                    <img src="{% static 'site/img/image-not-found.webp' %}"
+                         width="48"
+                         alt="{% blocktrans with issue=item.issue %}No image for {{ issue }}{% endblocktrans %}"
+                         loading="lazy"
+                         style="display: block; width: 48px; border-radius: 4px;">
                 {% endthumbnail %}
             {% else %}
                 <img src="{% static 'site/img/image-not-found.webp' %}"

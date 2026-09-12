@@ -113,6 +113,10 @@
                                  height="{{ im.height }}"
                                  alt="{{ imprint.name }}"
                                  loading="lazy">
+                        {% empty %}
+                            <img src="{% static 'site/img/image-not-found.webp' %}"
+                                 alt="{% blocktrans %}No image for {{ imprint.name }}{% endblocktrans %}"
+                                 loading="lazy">
                         {% endthumbnail %}
                     {% else %}
                         <img src="{% static 'site/img/image-not-found.webp' %}"

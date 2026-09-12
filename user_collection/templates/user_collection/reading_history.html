@@ -67,6 +67,10 @@
                                                     {% if item.issue.image %}
                                                         {% thumbnail item.issue.image "300x450" crop="center" format="WEBP" as im %}
                                                             <img src="{{ im.url }}" alt="{{ item.issue }}" loading="lazy">
+                                                        {% empty %}
+                                                            <img src="{% static 'site/img/image-not-found.webp' %}"
+                                                                 alt="{% trans 'No cover available' %}"
+                                                                 loading="lazy">
                                                         {% endthumbnail %}
                                                     {% else %}
                                                         <img src="{% static 'site/img/image-not-found.webp' %}"

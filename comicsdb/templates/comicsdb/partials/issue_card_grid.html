@@ -39,6 +39,15 @@
                                          loading="lazy">
                                 </a>
                             </figure>
+                        {% empty %}
+                            <figure class="image is-2by3">
+                                <a href="{% url 'issue:detail' issue.slug %}"
+                                   aria-label="{% blocktrans %}View details for {{ issue }}{% endblocktrans %}">
+                                    <img src="{% static 'site/img/image-not-found.webp' %}"
+                                         alt="{% blocktrans %}No image available for {{ issue }}{% endblocktrans %}"
+                                         loading="lazy">
+                                </a>
+                            </figure>
                         {% endthumbnail %}
                     {% else %}
                         <figure class="image is-2by3">

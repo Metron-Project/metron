@@ -107,6 +107,10 @@
                                  height="{{ im.height }}"
                                  alt="{{ universe.name }}"
                                  loading="lazy">
+                        {% empty %}
+                            <img src="{% static 'site/img/image-not-found.webp' %}"
+                                 alt="{% blocktrans %}No image for {{ universe.name }}{% endblocktrans %}"
+                                 loading="lazy">
                         {% endthumbnail %}
                     {% else %}
                         <img src="{% static 'site/img/image-not-found.webp' %}"
@@ -148,6 +152,11 @@
                                                          width="{{ im.width }}"
                                                          height="{{ im.height }}"
                                                          alt="{{ character }}"
+                                                         loading="lazy">
+                                                {% empty %}
+                                                    <img class="is-rounded"
+                                                         src="{% static 'site/img/creator-not-found.webp' %}"
+                                                         alt="{% blocktrans %}No image for {{ character }}{% endblocktrans %}"
                                                          loading="lazy">
                                                 {% endthumbnail %}
                                             {% else %}
@@ -199,6 +208,11 @@
                                                          width="{{ im.width }}"
                                                          height="{{ im.height }}"
                                                          alt="{{ team }}"
+                                                         loading="lazy">
+                                                {% empty %}
+                                                    <img class="is-rounded"
+                                                         src="{% static 'site/img/creator-not-found.webp' %}"
+                                                         alt="{% blocktrans %}No image for {{ team }}{% endblocktrans %}"
                                                          loading="lazy">
                                                 {% endthumbnail %}
                                             {% else %}

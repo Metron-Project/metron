@@ -63,6 +63,11 @@
                                                      height="{{ im.height }}"
                                                      alt="{% blocktrans with username=user.username %}Profile picture of {{ username }}{% endblocktrans %}"
                                                      loading="lazy">
+                                            {% empty %}
+                                                <img class="is-rounded"
+                                                     src="{% static 'site/img/user-not-found.webp' %}"
+                                                     alt="{% trans 'Default profile picture' %}"
+                                                     loading="lazy">
                                             {% endthumbnail %}
                                         {% else %}
                                             <img class="is-rounded"

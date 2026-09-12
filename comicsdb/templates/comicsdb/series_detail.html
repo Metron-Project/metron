@@ -134,6 +134,10 @@
                                      height="{{ im.height }}"
                                      alt="{{ series }}"
                                      loading="lazy">
+                            {% empty %}
+                                <img src="{% static 'site/img/image-not-found.webp' %}"
+                                     alt="{% blocktrans %}No image for {{ series }}{% endblocktrans %}"
+                                     loading="lazy">
                             {% endthumbnail %}
                         {% else %}
                             <img src="{% static 'site/img/image-not-found.webp' %}"
@@ -177,6 +181,11 @@
                                                          height="{{ im.height }}"
                                                          alt="{{ creator.creators__name }}"
                                                          loading="lazy">
+                                                {% empty %}
+                                                    <img class="is-rounded"
+                                                         src="{% static 'site/img/creator-not-found.webp' %}"
+                                                         alt="{% blocktrans %}No image for {{ creator.creators__name }}{% endblocktrans %}"
+                                                         loading="lazy">
                                                 {% endthumbnail %}
                                             {% else %}
                                                 <img class="is-rounded"
@@ -218,6 +227,11 @@
                                                          width="{{ im.width }}"
                                                          height="{{ im.height }}"
                                                          alt="{{ character.characters__name }}"
+                                                         loading="lazy">
+                                                {% empty %}
+                                                    <img class="is-rounded"
+                                                         src="{% static 'site/img/creator-not-found.webp' %}"
+                                                         alt="{% blocktrans %}No image for {{ character.characters__name }}{% endblocktrans %}"
                                                          loading="lazy">
                                                 {% endthumbnail %}
                                             {% else %}
