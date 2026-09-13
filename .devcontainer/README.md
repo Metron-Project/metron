@@ -6,7 +6,9 @@ This devcontainer setup provides a unified development environment for Metron ac
 
 - [VS Code](https://code.visualstudio.com/)
 - [Dev Containers extension](https://marketplace.visualstudio.com/items?itemName=ms-vscode-remote.remote-containers) for VS Code
-- [Docker Desktop](https://www.docker.com/products/docker-desktop/), Podman, or OrbStack
+- [Docker Desktop](https://www.docker.com/products/docker-desktop/) or [OrbStack](https://orbstack.dev/)
+
+This devcontainer setup is Docker-only. The VS Code Dev Containers extension's Podman support is unreliable in practice (rootless UID namespace mapping conflicts with bind-mounted files, and background processes started via `postStartCommand` can silently fail to launch). If you use Podman, follow the manual local setup in [DEVELOPMENT.md](../DEVELOPMENT.md) instead.
 
 ## What's Included
 
@@ -22,7 +24,8 @@ When the devcontainer opens, `.devcontainer/post-create.sh` runs automatically t
 
 1. Install project dependencies (`uv sync`)
 2. Run database migrations (`python manage.py migrate`)
-3. Provision a default superuser account:
+3. Load required fixtures (series types)
+4. Provision a default superuser account:
    - **Username**: `dev`
    - **Password**: `dev`
    - **Email**: `none@local.dev`
@@ -84,11 +87,7 @@ PostgreSQL data is stored in the named volume `postgres-data` which is independe
 To wipe the database completely: remove the volume before (re)building. Run this from the host, outside VS Code after first stopping the devcontainer:
 
 ```bash
-# Docker
 docker compose -f .devcontainer/docker-compose.yml down -v
-
-# Podman
-podman-compose -f .devcontainer/docker-compose.yml down -v
 ```
 
 The `-v` flag removes the named volumes including `postgres-data`. The next time the devcontainer starts, `db` will reinitialize from `init.sql` and `post-create.sh` will apply all migrations against a fresh database.
