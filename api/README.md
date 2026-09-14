@@ -1596,7 +1596,6 @@ Track ongoing comic book series a user is following — the digital equivalent o
         "year_began": 1963,
         "year_end": null,
         "volume": 1,
-        "issue_count": 900,
         "modified": "2025-01-15T10:30:00Z"
       },
       "added_on": "2026-04-15T09:30:00Z"

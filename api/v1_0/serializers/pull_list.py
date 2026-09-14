@@ -18,7 +18,6 @@ class PullListSeriesInfoSerializer(SeriesListSerializer):
             "year_began",
             "year_end",
             "volume",
-            "issue_count",
             "modified",
         )
 
