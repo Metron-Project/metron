@@ -463,3 +463,95 @@ def test_filter_by_upc_starts_with_no_match(api_client_with_credentials, basic_i
     )
     assert resp.status_code == status.HTTP_200_OK
     assert resp.data["count"] == 0
+
+
+def test_filter_by_cover_date_range(api_client_with_credentials, basic_issue: Issue, fc_series):
+    basic_issue.cover_date = date(2024, 1, 1)
+    basic_issue.save()
+    Issue.objects.create(
+        series=fc_series,
+        number="2",
+        cover_date=date(2024, 6, 1),
+        edited_by=basic_issue.edited_by,
+        created_by=basic_issue.created_by,
+    )
+    resp = api_client_with_credentials.get(
+        reverse("api:issue-list"),
+        {"cover_date_range_after": "2024-01-01", "cover_date_range_before": "2024-01-31"},
+    )
+    assert resp.status_code == status.HTTP_200_OK
+    assert resp.data["count"] == 1
+    assert resp.data["results"][0]["id"] == basic_issue.id
+
+
+def test_filter_by_cover_date_range_no_match(api_client_with_credentials, basic_issue: Issue):
+    basic_issue.cover_date = date(2024, 1, 1)
+    basic_issue.save()
+    resp = api_client_with_credentials.get(
+        reverse("api:issue-list"),
+        {"cover_date_range_after": "2024-02-01", "cover_date_range_before": "2024-02-28"},
+    )
+    assert resp.status_code == status.HTTP_200_OK
+    assert resp.data["count"] == 0
+
+
+def test_filter_by_store_date_range(api_client_with_credentials, basic_issue: Issue, fc_series):
+    basic_issue.store_date = date(2024, 1, 15)
+    basic_issue.save()
+    Issue.objects.create(
+        series=fc_series,
+        number="2",
+        cover_date=date(2024, 6, 1),
+        store_date=date(2024, 6, 15),
+        edited_by=basic_issue.edited_by,
+        created_by=basic_issue.created_by,
+    )
+    resp = api_client_with_credentials.get(
+        reverse("api:issue-list"),
+        {"store_date_range_after": "2024-01-01", "store_date_range_before": "2024-01-31"},
+    )
+    assert resp.status_code == status.HTTP_200_OK
+    assert resp.data["count"] == 1
+    assert resp.data["results"][0]["id"] == basic_issue.id
+
+
+def test_filter_by_store_date_range_no_match(api_client_with_credentials, basic_issue: Issue):
+    basic_issue.store_date = date(2024, 1, 15)
+    basic_issue.save()
+    resp = api_client_with_credentials.get(
+        reverse("api:issue-list"),
+        {"store_date_range_after": "2024-02-01", "store_date_range_before": "2024-02-28"},
+    )
+    assert resp.status_code == status.HTTP_200_OK
+    assert resp.data["count"] == 0
+
+
+def test_filter_by_foc_date_range(api_client_with_credentials, basic_issue: Issue, fc_series):
+    basic_issue.foc_date = date(2024, 1, 8)
+    basic_issue.save()
+    Issue.objects.create(
+        series=fc_series,
+        number="2",
+        cover_date=date(2024, 6, 1),
+        foc_date=date(2024, 6, 8),
+        edited_by=basic_issue.edited_by,
+        created_by=basic_issue.created_by,
+    )
+    resp = api_client_with_credentials.get(
+        reverse("api:issue-list"),
+        {"foc_date_range_after": "2024-01-01", "foc_date_range_before": "2024-01-31"},
+    )
+    assert resp.status_code == status.HTTP_200_OK
+    assert resp.data["count"] == 1
+    assert resp.data["results"][0]["id"] == basic_issue.id
+
+
+def test_filter_by_foc_date_range_no_match(api_client_with_credentials, basic_issue: Issue):
+    basic_issue.foc_date = date(2024, 1, 8)
+    basic_issue.save()
+    resp = api_client_with_credentials.get(
+        reverse("api:issue-list"),
+        {"foc_date_range_after": "2024-02-01", "foc_date_range_before": "2024-02-28"},
+    )
+    assert resp.status_code == status.HTTP_200_OK
+    assert resp.data["count"] == 0

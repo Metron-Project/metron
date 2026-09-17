@@ -324,6 +324,8 @@ The Issue endpoint supports the most comprehensive filtering options:
 - `foc_date` - Final order cutoff date (exact match)
 - `foc_date_range_after` - FOC date on or after
 - `foc_date_range_before` - FOC date on or before
+- `cover_date_range_after` - Cover date on or after
+- `cover_date_range_before` - Cover date on or before
 - `cover_year` - Cover date year
 - `cover_month` - Cover date month (1-12)
 
@@ -440,6 +442,9 @@ The `cover_hash` field contains a perceptual hash generated using [ImageHash](ht
 ```bash
 # Get issues from January 2025
 GET /api/issue/?store_date_range_after=2025-01-01&store_date_range_before=2025-01-31
+
+# Get issues with a cover date in January 2025
+GET /api/issue/?cover_date_range_after=2025-01-01&cover_date_range_before=2025-01-31
 
 # Find issues by series name
 GET /api/issue/?series_name=amazing spider-man
