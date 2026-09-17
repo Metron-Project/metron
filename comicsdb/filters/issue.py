@@ -80,6 +80,7 @@ class IssueFilter(df.rest_framework.FilterSet):
     series_volume = df.rest_framework.NumberFilter(
         label="Series Volume Number", field_name="series__volume", lookup_expr="exact"
     )
+    cover_date_range = df.rest_framework.DateFromToRangeFilter("cover_date")
     store_date_range = df.rest_framework.DateFromToRangeFilter("store_date")
     foc_date_range = df.rest_framework.DateFromToRangeFilter("foc_date")
     series_year_began = df.rest_framework.NumberFilter(
