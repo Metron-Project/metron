@@ -818,7 +818,8 @@ and must be queried with that field instead.
 ## Fail2ban
 
 fail2ban monitors the nginx journald logs and uses firewalld to ban IPs that
-generate excessive 429 (rate limit) or 401 (unauthorized) responses.
+generate excessive 401 (unauthorized) responses, along with other abusive
+behavior.
 
 ### Install
 
@@ -846,7 +847,6 @@ sudo systemctl restart fail2ban
 
 | Jail | Trigger | Window | Ban duration |
 |---|---|---|---|
-| `metron-nginx-429` | 30 rate-limit hits | 60 s | 1 hour |
 | `metron-nginx-499` | 20 client-closed connections | 60 s | 1 hour |
 | `metron-nginx-404` | 20 not-found responses | 2 min | 1 hour |
 | `metron-nginx-403` | 10 forbidden responses | 5 min | 24 hours |
@@ -861,7 +861,6 @@ sudo systemctl restart fail2ban
 sudo fail2ban-client status
 
 # Check a specific jail
-sudo fail2ban-client status metron-nginx-429
 sudo fail2ban-client status metron-nginx-404
 sudo fail2ban-client status metron-nginx-403
 sudo fail2ban-client status metron-nginx-401
@@ -875,8 +874,6 @@ sudo fail2ban-client set metron-nginx-401 banip <ip-address>
 sudo fail2ban-client set metron-nginx-401 unbanip <ip-address>
 
 # Test a filter against the log file
-sudo fail2ban-regex /var/log/metron-nginx/access.log \
-  /etc/fail2ban/filter.d/metron-nginx-429.conf
 sudo fail2ban-regex /var/log/metron-nginx/access.log \
   /etc/fail2ban/filter.d/metron-nginx-no-ua.conf
 sudo fail2ban-regex /var/log/metron-nginx/access.log \

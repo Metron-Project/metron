@@ -185,7 +185,7 @@ real_ip_header X-Forwarded-For;
 real_ip_recursive on;
 ```
 
-Once nginx logs the real client IP, fail2ban's existing jail configs (metron-nginx-429, 403, 404, no-ua, etc.) continue working without any changes.
+Once nginx logs the real client IP, fail2ban's existing jail configs (metron-nginx-403, 404, no-ua, etc.) continue working without any changes.
 
 **Important:** The `set_real_ip_from` directive must only trust the LB's private IP range — never `0.0.0.0/0` — or external clients could spoof their IP by injecting a fake `X-Forwarded-For` header and evade banning.
 
