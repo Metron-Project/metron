@@ -7,6 +7,27 @@ from api.client_health import record_throttled_request
 
 
 class RateLimitHeadersMixin:
+    def _expiring_entry_index(self):
+        """Return how many of the oldest history entries must expire to admit a request.
+
+        Normally that is 1 (the history is exactly at the limit). It is larger when a
+        user is above the limit, e.g. after the limit was lowered: history is only pruned
+        by age and rejected requests add no entries, so the user stays blocked until
+        enough old entries age out.
+        """
+        return max(1, len(self.history) - self.num_requests + 1)
+
+    def wait(self):
+        """Seconds until a request would be allowed again.
+
+        DRF returns None when the user is over the limit, which drops the Retry-After
+        header from the 429. Compute it from the entry that has to expire instead.
+        """
+        index = self._expiring_entry_index()
+        if index == 1:
+            return super().wait()
+        return max(0, self.history[-index] + self.duration - self.now)
+
     def allow_request(self, request, view):
         result = super().allow_request(request, view)
         if hasattr(self, "num_requests") and self.num_requests is not None:
@@ -15,7 +36,7 @@ class RateLimitHeadersMixin:
                 django_request._throttle_headers = {}
             remaining = max(0, self.num_requests - len(self.history))
             if self.history:
-                reset_time = math.ceil(self.history[-1] + self.duration)
+                reset_time = math.ceil(self.history[-self._expiring_entry_index()] + self.duration)
             else:
                 reset_time = math.ceil(self.now + self.duration)
             scope = getattr(self, "scope", "default").capitalize()

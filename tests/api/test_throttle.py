@@ -1,6 +1,9 @@
+import math
+import time
 from datetime import timedelta
 
 import pytest
+from django.core.cache import cache
 from django.http import HttpResponse
 from django.test import RequestFactory
 from django.urls import reverse
@@ -8,6 +11,7 @@ from django.utils import timezone
 from rest_framework import status
 
 from api.middleware import RateLimitHeadersMiddleware
+from api.throttle import BurstRateThrottle
 
 # ---------------------------------------------------------------------------
 # Middleware unit tests (no database required)
@@ -185,3 +189,69 @@ def test_expired_supporter_gets_default_sustained_limit(create_user, api_client)
 
     assert resp.status_code == status.HTTP_200_OK
     assert resp["X-RateLimit-Sustained-Limit"] == "5000"
+
+
+# ---------------------------------------------------------------------------
+# Over-limit history (limit lowered while a user is above the new one)
+# ---------------------------------------------------------------------------
+
+NOW = 1_700_000_000.0
+
+
+def _throttle_with_history(num_requests, ages):
+    """Build a burst throttle whose history holds requests made `ages` seconds ago."""
+    throttle = BurstRateThrottle()
+    throttle.num_requests = num_requests
+    throttle.duration = 60
+    throttle.now = NOW
+    throttle.history = [NOW - age for age in sorted(ages)]  # newest first, like DRF
+    return throttle
+
+
+def test_wait_at_the_limit_is_time_until_oldest_entry_expires():
+    throttle = _throttle_with_history(3, [5, 20, 40])
+    assert throttle.wait() == pytest.approx(20)
+
+
+def test_wait_over_the_limit_is_not_none():
+    # 5 entries against a limit of 3: the 3rd-oldest (20s old) must expire before a
+    # request fits, i.e. in 60 - 20 seconds.
+    throttle = _throttle_with_history(3, [5, 10, 20, 40, 50])
+    assert throttle.wait() == pytest.approx(40)
+
+
+def test_wait_over_the_limit_grows_with_the_excess():
+    # One more recent request means one more entry has to expire, so the wait is longer.
+    assert _throttle_with_history(3, [5, 10, 20, 40, 50]).wait() == pytest.approx(40)
+    assert _throttle_with_history(3, [2, 5, 10, 20, 40, 50]).wait() == pytest.approx(50)
+
+
+def test_wait_with_no_history_falls_back_to_drf():
+    throttle = _throttle_with_history(0, [])
+    assert throttle.wait() == 60
+
+
+@pytest.mark.django_db
+def test_over_limit_429_includes_retry_after_and_accurate_reset(create_user, api_client):
+    user = create_user()
+    api_client.force_authenticate(user=user)
+    burst_key = f"throttle_burst_{user.pk}"
+    now = time.time()
+    # 25 requests in the last 24s against a burst limit of 20 (newest first).
+    history = [now - age for age in range(1, 26)]
+    cache.set(burst_key, history, 60)
+
+    try:
+        resp = api_client.get(reverse("api:arc-list"))
+    finally:
+        cache.delete(burst_key)
+
+    assert resp.status_code == status.HTTP_429_TOO_MANY_REQUESTS
+    # 6 entries must expire (25 - 20 + 1); the 6th oldest is 20s old.
+    expected_wait = 60 - 20
+    assert "Retry-After" in resp
+    assert int(resp["Retry-After"]) == pytest.approx(expected_wait, abs=2)
+    assert resp["X-RateLimit-Burst-Remaining"] == "0"
+    assert int(resp["X-RateLimit-Burst-Reset"]) == pytest.approx(
+        math.ceil(now + expected_wait), abs=2
+    )
