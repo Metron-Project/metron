@@ -57,17 +57,13 @@ bots:
     user_agent_regex: Variant/1\.0
     action: DENY
 
-  # Deny scrapers that walk numeric issue IDs while faking an on-site Referer.
-  # The site never links to /issue/<int>/ (legacy redirect only), so an
-  # internal referer on that path means the Referer header is forged.
+  # Deny the legacy numeric-ID issue redirect. The site and API only link to
+  # slug URLs, so /issue/<int>/ is used almost exclusively by scrapers that
+  # enumerate issue IDs (rotating proxies + stock Chrome UA, 2026-09-24).
   # Temp rules to block these scrapers
-  - name: deny-forged-referer-id-walk
+  - name: deny-issue-id-walk
+    path_regex: ^/issue/[0-9]+/?$
     action: DENY
-    expression:
-      all:
-        - 'path.matches("^/issue/[0-9]+/?$")'
-        - '"Referer" in headers'
-        - 'headers["Referer"].startsWith("https://metron.cloud/")'
 
   # Pass API requests through without a proof-of-work challenge.
   # API consumers (Metron-Tron, scripts, etc.) are not browsers and cannot
