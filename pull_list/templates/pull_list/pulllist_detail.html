@@ -1,113 +1,258 @@
 {% extends parent_template|default:"base.html" %}
-{% load static i18n %}
+{% load static i18n thumbnail %}
 {% block title %}{% blocktrans with name=pull_list %}{{ name }} - Metron{% endblocktrans %}{% endblock %}
+{% block headcss %}
+    <style>
+        /* The autocomplete widget is taller than a Bulma .button; stretch the button
+           to match and join the two like a standard has-addons group. */
+        .pull-list-add .control .button { height: 100%; }
+        .pull-list-add .phac_aspc_form_autocomplete ul.ac_container {
+            border-top-right-radius: 0;
+            border-bottom-right-radius: 0;
+        }
+    </style>
+{% endblock %}
 {% block content %}
-    <header class="block">
-        <h1 class="title">{{ pull_list }}</h1>
-    </header>
-    {% if is_owner %}
-        <div class="box mb-5">
-            <h2 class="title is-5">{% trans "Add a Series" %}</h2>
-            <form method="post">
-                {% csrf_token %}
-                {% if form.non_field_errors %}
-                    <div class="notification is-danger">{{ form.non_field_errors }}</div>
-                {% endif %}
-                <div class="field">
-                    <div class="control is-expanded">
-                        {{ form.series }}
-                        {% for error in form.series.errors %}
-                            <p class="help is-danger">{{ error }}</p>
+    {% comment %}
+        Wrap everything HTMX swaps in one id so filter/view/remove/undo can re-render in place.
+        hx-target/select/swap are set per element, not inherited, so the autocomplete's own
+        HTMX requests inside this wrapper aren't affected.
+    {% endcomment %}
+    <div id="pull-list-content">
+        <header class="level is-mobile mb-5" style="flex-wrap: wrap; gap: 1rem; align-items: flex-end;">
+            <div class="level-left">
+                <div>
+                    <h1 class="title mb-2">
+                        <span class="icon-text">
+                            <span class="icon has-text-link"><i class="fas fa-rss"></i></span>
+                            <span>{% trans "My Pull List" %}</span>
+                        </span>
+                    </h1>
+                    <p class="subtitle is-6 has-text-grey">
+                        {% if series_on_list %}
+                            {% blocktrans count counter=series_on_list|length %}Following {{ counter }} series{% plural %}Following {{ counter }} series{% endblocktrans %}
+                            · {% blocktrans count counter=upcoming_issues|length %}{{ counter }} upcoming issue{% plural %}{{ counter }} upcoming issues{% endblocktrans %}
+                            {% if next_release %}· {% trans "next release" %} {{ next_release|date:"D, M j" }}{% endif %}
+                        {% else %}
+                            {% trans "Track the ongoing series you follow and never miss a new issue." %}
+                        {% endif %}
+                    </p>
+                </div>
+            </div>
+            {% if is_owner %}
+                <div class="level-right" style="flex: 0 1 380px; min-width: 260px;">
+                    <form method="post" action="{% url 'pull-list:detail' %}" style="width: 100%;">
+                        {% csrf_token %}
+                        <label class="label is-small" for="{{ form.series.id_for_label }}">{% trans "Add a series" %}</label>
+                        <div class="field has-addons pull-list-add">
+                            <div class="control is-expanded">{{ form.series }}</div>
+                            <div class="control">
+                                <button type="submit" class="button is-primary">
+                                    <span class="icon is-small"><i class="fas fa-plus"></i></span>
+                                    <span>{% trans "Add" %}</span>
+                                </button>
+                            </div>
+                        </div>
+                        {% for error in form.series.errors %}<p class="help is-danger">{{ error }}</p>{% endfor %}
+                        {% if form.non_field_errors %}<p class="help is-danger">{{ form.non_field_errors }}</p>{% endif %}
+                    </form>
+                </div>
+            {% endif %}
+        </header>
+
+        {% if undo_series_pk %}
+            {# Undo re-uses the existing add-series POST #}
+            <div class="notification is-info">
+                <form method="post" action="{% url 'pull-list:detail' %}" class="is-flex is-align-items-center" style="gap: .75rem;">
+                    {% csrf_token %}
+                    <input type="hidden" name="series" value="{{ undo_series_pk }}">
+                    <span>{% trans "Removed a series by mistake?" %}</span>
+                    <button type="submit" class="button is-small is-info is-inverted">
+                        <span class="icon is-small"><i class="fas fa-undo"></i></span>
+                        <span>{% trans "Undo" %}</span>
+                    </button>
+                </form>
+            </div>
+        {% endif %}
+
+        {% if series_on_list %}
+            {% if foc_soon_issues %}
+                <div class="notification is-warning is-light">
+                    <span class="icon"><i class="fas fa-clock"></i></span>
+                    <strong>{% trans "Final order cutoff" %} {{ foc_soon_issues.0.foc_date|date:"l, M j" }}</strong>
+                    {% trans "for" %}
+                    {% for issue in foc_soon_issues %}{{ issue }}{% if not forloop.last %}, {% endif %}{% endfor %}.
+                    {% trans "Let your shop know by then." %}
+                </div>
+            {% endif %}
+
+            <div class="columns">
+                <div class="column is-two-thirds">
+                    <div class="box">
+                        <div class="level is-mobile mb-4">
+                            <div class="level-left">
+                                <h2 class="title is-5">
+                                    {% trans "Upcoming issues" %}
+                                    <span class="has-text-grey has-text-weight-normal">({{ upcoming_issues|length }})</span>
+                                </h2>
+                            </div>
+                            <div class="level-right">
+                                <div class="buttons has-addons">
+                                    <a href="?view=list{% if active_series %}&series={{ active_series.pk }}{% endif %}"
+                                       hx-get="?view=list{% if active_series %}&series={{ active_series.pk }}{% endif %}" hx-push-url="true" hx-target="#pull-list-content" hx-select="#pull-list-content" hx-swap="outerHTML"
+                                       class="button is-small {% if view_mode == 'list' %}is-primary{% endif %}"
+                                       title="{% trans 'List view' %}" aria-label="{% trans 'List view' %}">
+                                        <span class="icon is-small"><i class="fas fa-list"></i></span>
+                                    </a>
+                                    <a href="?view=covers{% if active_series %}&series={{ active_series.pk }}{% endif %}"
+                                       hx-get="?view=covers{% if active_series %}&series={{ active_series.pk }}{% endif %}" hx-push-url="true" hx-target="#pull-list-content" hx-select="#pull-list-content" hx-swap="outerHTML"
+                                       class="button is-small {% if view_mode == 'covers' %}is-primary{% endif %}"
+                                       title="{% trans 'Cover view' %}" aria-label="{% trans 'Cover view' %}">
+                                        <span class="icon is-small"><i class="fas fa-th-large"></i></span>
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+
+                        {% if active_series %}
+                            <div class="notification is-link is-light py-2 px-3 is-flex is-justify-content-space-between">
+                                <span>{% trans "Showing only" %} <strong>{{ active_series }}</strong></span>
+                                <a href="?view={{ view_mode }}"
+                                   hx-get="?view={{ view_mode }}" hx-push-url="true" hx-target="#pull-list-content" hx-select="#pull-list-content" hx-swap="outerHTML">{% trans "Show all series" %}</a>
+                            </div>
+                        {% endif %}
+
+                        {% regroup upcoming_issues by store_date as release_days %}
+                        {% for day in release_days %}
+                            <section class="mb-5">
+                                <div class="is-flex is-justify-content-space-between is-align-items-baseline pb-2 mb-1"
+                                     style="border-bottom: 2px solid var(--bulma-border);">
+                                    <h3 class="has-text-weight-semibold">{{ day.grouper|date:"l, F j" }}</h3>
+                                    <span class="is-size-7 has-text-grey">
+                                        {% blocktrans with when=day.grouper|timeuntil %}In {{ when }}{% endblocktrans %}
+                                        · {% blocktrans count counter=day.list|length %}{{ counter }} issue{% plural %}{{ counter }} issues{% endblocktrans %}
+                                    </span>
+                                </div>
+
+                                {% if view_mode == "covers" %}
+                                    <div class="columns is-multiline is-mobile mt-2">
+                                        {% for issue in day.list %}
+                                            <div class="column is-one-third-mobile is-one-fifth-tablet">
+                                                <a href="{{ issue.get_absolute_url }}">
+                                                    <figure class="image is-2by3 mb-2">
+                                                        {% if issue.image %}
+                                                            {% thumbnail issue.image "320x480" crop="center" format="WEBP" as im %}
+                                                                <img src="{{ im.url }}" alt="{{ issue }}" loading="lazy" style="border-radius: 4px;">
+                                                            {% endthumbnail %}
+                                                        {% else %}
+                                                            <img src="{% static 'site/img/image-not-found.webp' %}" alt="" style="border-radius: 4px;">
+                                                        {% endif %}
+                                                    </figure>
+                                                    <p class="is-size-7 has-text-weight-semibold has-text-text-bold">{{ issue }}</p>
+                                                    {% if issue.foc_soon %}<p class="is-size-7 has-text-warning-dark has-text-weight-semibold">FOC {{ issue.foc_date|date:"M j" }}</p>{% endif %}
+                                                </a>
+                                            </div>
+                                        {% endfor %}
+                                    </div>
+                                {% else %}
+                                    {% for issue in day.list %}
+                                        <article class="media py-2 my-0 is-align-items-center">
+                                            <figure class="media-left mr-3">
+                                                <p class="image" style="width: 36px;">
+                                                    {% if issue.image %}
+                                                        {% thumbnail issue.image "72x108" crop="center" format="WEBP" as im %}
+                                                            <img src="{{ im.url }}" alt="" loading="lazy">
+                                                        {% endthumbnail %}
+                                                    {% else %}
+                                                        <img src="{% static 'site/img/image-not-found.webp' %}" alt="">
+                                                    {% endif %}
+                                                </p>
+                                            </figure>
+                                            <div class="media-content">
+                                                <a href="{{ issue.get_absolute_url }}" class="has-text-weight-semibold">{{ issue }}</a>
+                                                <p class="is-size-7 has-text-grey">{{ issue.series.publisher }}</p>
+                                            </div>
+                                            <div class="media-right">
+                                                {% if issue.foc_soon %}
+                                                    <span class="tag is-warning">FOC {{ issue.foc_date|date:"M j" }}</span>
+                                                {% elif issue.foc_later %}
+                                                    <span class="tag is-info">FOC {{ issue.foc_date|date:"M j" }}</span>
+                                                {% endif %}
+                                            </div>
+                                        </article>
+                                    {% endfor %}
+                                {% endif %}
+                            </section>
+                        {% empty %}
+                            <p class="has-text-grey">
+                                {% trans "No upcoming issues found yet. Store dates are added as solicitations are released." %}
+                            </p>
                         {% endfor %}
                     </div>
                 </div>
-                <div class="field is-grouped is-grouped-right">
-                    <div class="control">
-                        <button type="submit" class="button is-primary ">
-                            <span class="icon is-small"><i class="fas fa-plus"></i></span>
-                            <span>{% trans "Add" %}</span>
-                        </button>
+
+                <div class="column">
+                    <div class="box">
+                        <div class="level is-mobile mb-3">
+                            <div class="level-left">
+                                <h2 class="title is-5">
+                                    {% trans "Series" %}
+                                    <span class="has-text-grey has-text-weight-normal">({{ series_on_list|length }})</span>
+                                </h2>
+                            </div>
+                            <div class="level-right">
+                                {% if active_series %}
+                                    <a href="?view={{ view_mode }}" class="is-size-7"
+                                       hx-get="?view={{ view_mode }}" hx-push-url="true" hx-target="#pull-list-content" hx-select="#pull-list-content" hx-swap="outerHTML">
+                                        <span class="icon-text">
+                                            <span class="icon is-small"><i class="fas fa-times-circle"></i></span>
+                                            <span>{% trans "Clear filter" %}</span>
+                                        </span>
+                                    </a>
+                                {% else %}
+                                    <span class="is-size-7 has-text-grey">{% trans "Select to filter" %}</span>
+                                {% endif %}
+                            </div>
+                        </div>
+                        {% for pls in series_on_list %}
+                            {# Selecting the active series again clears the filter #}
+                            <div class="is-flex is-align-items-center py-2 px-2 {% if active_series.pk == pls.series_id %}has-background-link-soft{% endif %}"
+                                 style="gap: .5rem; border-radius: 4px; margin: 0 -.5rem;">
+                                <a href="{% if active_series.pk == pls.series_id %}?view={{ view_mode }}{% else %}?series={{ pls.series_id }}&view={{ view_mode }}{% endif %}"
+                                   hx-get="{% if active_series.pk == pls.series_id %}?view={{ view_mode }}{% else %}?series={{ pls.series_id }}&view={{ view_mode }}{% endif %}" hx-push-url="true" hx-target="#pull-list-content" hx-select="#pull-list-content" hx-swap="outerHTML"
+                                   {% if active_series.pk == pls.series_id %}aria-current="true" title="{% trans 'Show all series' %}"{% endif %}
+                                   class="is-flex-grow-1" style="min-width: 0;">
+                                    <p class="has-text-weight-semibold has-text-text-bold is-size-7-mobile" style="overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">{{ pls.series }}</p>
+                                    <p class="is-size-7 has-text-grey">{{ pls.series.publisher }}</p>
+                                    <p class="is-size-7 {% if pls.next_store_date %}has-text-text-bold{% else %}has-text-grey{% endif %}">
+                                        {% if pls.next_store_date %}{% trans "Next:" %} {{ pls.next_store_date|date:"D, M j" }}{% else %}{% trans "No upcoming issues" %}{% endif %}
+                                    </p>
+                                </a>
+                                {% if is_owner %}
+                                    <form method="post" action="{% url 'pull-list:remove-series' pls.series_id %}"
+                                          hx-post="{% url 'pull-list:remove-series' pls.series_id %}"
+                                          hx-target="#pull-list-content" hx-select="#pull-list-content" hx-swap="outerHTML">
+                                        {% csrf_token %}
+                                        <button type="submit" class="button is-small"
+                                                title="{% trans 'Remove from pull list' %}"
+                                                aria-label="{% blocktrans with series=pls.series %}Remove {{ series }} from pull list{% endblocktrans %}">
+                                            <span class="icon is-small"><i class="fas fa-times"></i></span>
+                                        </button>
+                                    </form>
+                                {% endif %}
+                            </div>
+                        {% endfor %}
                     </div>
                 </div>
-            </form>
-        </div>
-    {% endif %}
-
-    <div class="columns">
-        <div class="column is-two-thirds">
-            <div class="box">
-                <h2 class="title is-5">
-                    {% blocktrans with count=series_on_list|length %}Series on Pull List ({{ count }}){% endblocktrans %}
-                </h2>
-                {% if series_on_list %}
-                    <div class="table-container">
-                        <table class="table is-fullwidth is-striped is-hoverable">
-                            <thead>
-                                <tr>
-                                    <th>{% trans "Series" %}</th>
-                                    <th>{% trans "Publisher" %}</th>
-                                    <th>{% trans "Type" %}</th>
-                                    {% if is_owner %}<th></th>{% endif %}
-                                </tr>
-                            </thead>
-                            <tbody>
-                                {% for pls in series_on_list %}
-                                    <tr>
-                                        <td>
-                                            <a href="{{ pls.series.get_absolute_url }}">{{ pls.series }}</a>
-                                        </td>
-                                        <td>{{ pls.series.publisher }}</td>
-                                        <td>
-                                            <span class="tag is-info">{{ pls.series.series_type }}</span>
-                                        </td>
-                                        {% if is_owner %}
-                                            <td>
-                                                <a href="{% url 'pull-list:remove-series' pls.series.pk %}"
-                                                   class="button is-danger is-small is-outlined">
-                                                    <span class="icon is-small"><i class="fas fa-times"></i></span>
-                                                    <span>{% trans "Remove" %}</span>
-                                                </a>
-                                            </td>
-                                        {% endif %}
-                                    </tr>
-                                {% endfor %}
-                            </tbody>
-                        </table>
-                    </div>
-                {% else %}
-                    <p class="has-text-grey">{% trans "No series on this pull list yet." %}</p>
-                {% endif %}
             </div>
-        </div>
-
-        <div class="column">
-            <div class="box">
-                <h2 class="title is-5">{% trans "Upcoming Issues" %}</h2>
-                {% if upcoming_issues %}
-                    <div class="table-container">
-                        <table class="table is-fullwidth is-striped is-hoverable">
-                            <thead>
-                                <tr>
-                                    <th>{% trans "Issue" %}</th>
-                                    <th>{% trans "Store Date" %}</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                {% for issue in upcoming_issues %}
-                                    <tr>
-                                        <td>
-                                            <a href="{{ issue.get_absolute_url }}">{{ issue }}</a>
-                                        </td>
-                                        <td>{{ issue.store_date }}</td>
-                                    </tr>
-                                {% endfor %}
-                            </tbody>
-                        </table>
-                    </div>
-                {% else %}
-                    <p class="has-text-grey">{% trans "No upcoming issues found for series on this pull list." %}</p>
-                {% endif %}
-            </div>
-        </div>
+        {% else %}
+            <section class="box has-text-centered py-6">
+                <span class="icon is-large has-text-link"><i class="fas fa-rss fa-2x"></i></span>
+                <h2 class="title is-5 mt-3">{% trans "Your pull list is empty" %}</h2>
+                <p class="has-text-grey mb-4" style="max-width: 440px; margin: 0 auto;">
+                    {% trans "Add the ongoing series you follow and Metron will show every issue shipping to your shop, week by week. Use the search above, or tap Pull List on any series page." %}
+                </p>
+            </section>
+        {% endif %}
     </div>
 {% endblock %}
