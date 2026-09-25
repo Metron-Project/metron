@@ -1,8 +1,9 @@
 """Fixtures for pull_list app tests."""
 
-from datetime import date
+from datetime import date, timedelta
 
 import pytest
+from django.utils import timezone
 
 from comicsdb.models.issue import Issue
 from comicsdb.models.publisher import Publisher
@@ -86,3 +87,25 @@ def pull_list(pull_list_user):
 def pull_list_with_series(pull_list, pull_list_series):
     PullListSeries.objects.create(pull_list=pull_list, series=pull_list_series)
     return pull_list
+
+
+@pytest.fixture
+def make_pull_list_issue(create_user):
+    """Factory for issues with store/FOC dates relative to today."""
+    user = create_user()
+
+    def make_issue(series, number, store_in_days, foc_in_days=None):
+        today = timezone.localdate()
+        store_date = today + timedelta(days=store_in_days)
+        return Issue.objects.create(
+            series=series,
+            number=str(number),
+            slug=f"{series.slug}-{number}",
+            cover_date=store_date,
+            store_date=store_date,
+            foc_date=today + timedelta(days=foc_in_days) if foc_in_days is not None else None,
+            edited_by=user,
+            created_by=user,
+        )
+
+    return make_issue
