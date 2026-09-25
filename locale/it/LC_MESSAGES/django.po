@@ -3867,10 +3867,6 @@ msgstr ""
 msgid "Add a series"
 msgstr "Aggiungi una serie"
 
-#: pull_list/templates/pull_list/pulllist_detail.html:69
-msgid "Removed a series by mistake?"
-msgstr "Hai rimosso una serie per errore?"
-
 #: pull_list/templates/pull_list/pulllist_detail.html:72
 msgid "Undo"
 msgstr "Annulla"
@@ -3890,6 +3886,17 @@ msgstr "Avvisa il tuo negozio entro quella data."
 #: pull_list/templates/pull_list/pulllist_detail.html:95
 msgid "Upcoming issues"
 msgstr "Albi in arrivo"
+
+#: pull_list/templates/pull_list/pulllist_detail.html:137
+#, python-format
+msgid "Showing the next %(counter)s issue."
+msgid_plural "Showing the next %(counter)s issues."
+msgstr[0] "Mostra il prossimo albo."
+msgstr[1] "Mostra i prossimi %(counter)s albi."
+
+#: pull_list/templates/pull_list/pulllist_detail.html:148
+msgid "Today"
+msgstr "Oggi"
 
 #: pull_list/templates/pull_list/pulllist_detail.html:104
 msgid "List view"
@@ -3982,7 +3989,7 @@ msgstr "Aggiunto %(series)s alla tua pull list."
 msgid "%(series)s is already on your pull list."
 msgstr "%(series)s è già nella tua pull list."
 
-#: pull_list/views.py:89
+#: pull_list/templates/pull_list/pulllist_detail.html:70
 #, python-format
 msgid "Removed %(series)s from your pull list."
 msgstr "Rimosso %(series)s dalla tua pull list."
