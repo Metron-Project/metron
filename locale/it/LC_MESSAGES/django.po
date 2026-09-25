@@ -3839,6 +3839,122 @@ msgstr "Data di Uscita"
 msgid "No upcoming issues found for series on this pull list."
 msgstr "Nessun albo in arrivo trovato per le serie in questa pull list."
 
+#: pull_list/templates/pull_list/pulllist_detail.html:33
+#, python-format
+msgid "Following %(counter)s series"
+msgid_plural "Following %(counter)s series"
+msgstr[0] "Segui %(counter)s serie"
+msgstr[1] "Segui %(counter)s serie"
+
+#: pull_list/templates/pull_list/pulllist_detail.html:34
+#, python-format
+msgid "%(counter)s upcoming issue"
+msgid_plural "%(counter)s upcoming issues"
+msgstr[0] "%(counter)s albo in arrivo"
+msgstr[1] "%(counter)s albi in arrivo"
+
+#: pull_list/templates/pull_list/pulllist_detail.html:35
+msgid "next release"
+msgstr "prossima uscita"
+
+#: pull_list/templates/pull_list/pulllist_detail.html:37
+msgid "Track the ongoing series you follow and never miss a new issue."
+msgstr ""
+"Tieni traccia delle serie in corso che segui e non perdere mai un nuovo "
+"albo."
+
+#: pull_list/templates/pull_list/pulllist_detail.html:46
+msgid "Add a series"
+msgstr "Aggiungi una serie"
+
+#: pull_list/templates/pull_list/pulllist_detail.html:69
+msgid "Removed a series by mistake?"
+msgstr "Hai rimosso una serie per errore?"
+
+#: pull_list/templates/pull_list/pulllist_detail.html:72
+msgid "Undo"
+msgstr "Annulla"
+
+#: pull_list/templates/pull_list/pulllist_detail.html:82
+msgid "Final order cutoff"
+msgstr "Scadenza ordine finale"
+
+#: pull_list/templates/pull_list/pulllist_detail.html:83
+msgid "for"
+msgstr "per"
+
+#: pull_list/templates/pull_list/pulllist_detail.html:85
+msgid "Let your shop know by then."
+msgstr "Avvisa il tuo negozio entro quella data."
+
+#: pull_list/templates/pull_list/pulllist_detail.html:95
+msgid "Upcoming issues"
+msgstr "Albi in arrivo"
+
+#: pull_list/templates/pull_list/pulllist_detail.html:104
+msgid "List view"
+msgstr "Vista elenco"
+
+#: pull_list/templates/pull_list/pulllist_detail.html:110
+msgid "Cover view"
+msgstr "Vista copertine"
+
+#: pull_list/templates/pull_list/pulllist_detail.html:119
+msgid "Showing only"
+msgstr "Mostra solo"
+
+#: pull_list/templates/pull_list/pulllist_detail.html:121
+msgid "Show all series"
+msgstr "Mostra tutte le serie"
+
+#: pull_list/templates/pull_list/pulllist_detail.html:132
+#, python-format
+msgid "In %(when)s"
+msgstr "Tra %(when)s"
+
+#: pull_list/templates/pull_list/pulllist_detail.html:188
+msgid ""
+"No upcoming issues found yet. Store dates are added as solicitations are "
+"released."
+msgstr ""
+"Nessun albo in arrivo trovato. Le date di uscita vengono aggiunte man mano "
+"che vengono pubblicate le sollecitazioni."
+
+#: pull_list/templates/pull_list/pulllist_detail.html:209
+msgid "Clear filter"
+msgstr "Rimuovi filtro"
+
+#: pull_list/templates/pull_list/pulllist_detail.html:213
+msgid "Select to filter"
+msgstr "Seleziona per filtrare"
+
+#: pull_list/templates/pull_list/pulllist_detail.html:228
+msgid "Next:"
+msgstr "Prossima:"
+
+#: pull_list/templates/pull_list/pulllist_detail.html:228
+msgid "No upcoming issues"
+msgstr "Nessun albo in arrivo"
+
+#: pull_list/templates/pull_list/pulllist_detail.html:238
+#, python-format
+msgid "Remove %(series)s from pull list"
+msgstr "Rimuovi %(series)s dalla pull list"
+
+#: pull_list/templates/pull_list/pulllist_detail.html:251
+msgid "Your pull list is empty"
+msgstr "La tua pull list è vuota"
+
+#: pull_list/templates/pull_list/pulllist_detail.html:253
+msgid ""
+"Add the ongoing series you follow and Metron will show every issue "
+"shipping to your shop, week by week. Use the search above, or tap Pull "
+"List on any series page."
+msgstr ""
+"Aggiungi le serie in corso che segui e Metron ti mostrerà ogni albo in "
+"arrivo nel tuo negozio, settimana per settimana. Usa la ricerca qui sopra, "
+"oppure tocca Pull List nella pagina di qualsiasi serie."
+
 #: pull_list/templates/pull_list/remove_series_confirm.html:3
 msgid "Remove Series from Pull List - Metron"
 msgstr "Rimuovi Serie dalla Pull List - Metron"
