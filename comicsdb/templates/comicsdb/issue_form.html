@@ -122,7 +122,8 @@ document.addEventListener('DOMContentLoaded', function() {
         bulmaCalendar.attach(input, {
             type: 'date',
             dateFormat: 'yyyy-MM-dd',
-            minDate: '1900-01-01',
+            minDate: '{{ minimum_year }}-01-01',
+            displayYearsCount: 130,
             displayMode: 'default',
             showHeader: true,
             closeOnSelect: true,

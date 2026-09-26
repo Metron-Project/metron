@@ -4,6 +4,7 @@ from django.urls import reverse
 from django.utils import timezone
 from pytest_django.asserts import assertTemplateUsed
 
+from comicsdb.forms.issue import MINIMUM_YEAR
 from comicsdb.models import Credits
 from comicsdb.models.creator import Creator
 from comicsdb.models.credits import Role
@@ -31,6 +32,22 @@ def test_issue_redirect(basic_issue, auto_login_user):
     client, _ = auto_login_user()
     resp = client.get(f"/issue/{basic_issue.pk}/")
     assert resp.status_code == HTML_REDIRECT_CODE
+
+
+def test_issue_create_view_minimum_year(auto_login_user):
+    client, _ = auto_login_user()
+    resp = client.get(reverse("issue:create"))
+    assert resp.status_code == HTML_OK_CODE
+    assert resp.context["minimum_year"] == MINIMUM_YEAR
+    assert f"minDate: '{MINIMUM_YEAR}-01-01'" in resp.content.decode()
+
+
+def test_issue_update_view_minimum_year(basic_issue, auto_login_user):
+    client, _ = auto_login_user()
+    resp = client.get(reverse("issue:update", kwargs={"slug": basic_issue.slug}))
+    assert resp.status_code == HTML_OK_CODE
+    assert resp.context["minimum_year"] == MINIMUM_YEAR
+    assert f"minDate: '{MINIMUM_YEAR}-01-01'" in resp.content.decode()
 
 
 def test_issue_detail_on_wish_list_false_when_not_on_list(basic_issue, auto_login_user):
