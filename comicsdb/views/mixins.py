@@ -14,6 +14,7 @@ from django.views import View
 from django.views.generic import RedirectView
 
 from comicsdb.forms.attribution import AttributionFormSet
+from comicsdb.forms.issue import MINIMUM_YEAR
 from comicsdb.models.attribution import Attribution
 from comicsdb.views.constants import DETAIL_PAGINATE_BY
 
@@ -52,6 +53,7 @@ class AttributionCreateMixin:
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         context["title"] = self.get_title()
+        context["minimum_year"] = MINIMUM_YEAR
         if self.request.POST:
             context["attribution"] = AttributionFormSet(self.request.POST)
         else:
@@ -119,6 +121,7 @@ class AttributionUpdateMixin:
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         context["title"] = self.get_title()
+        context["minimum_year"] = MINIMUM_YEAR
         if self.request.POST:
             context["attribution"] = AttributionFormSet(
                 self.request.POST,
