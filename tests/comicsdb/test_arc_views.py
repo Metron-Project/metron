@@ -3,6 +3,7 @@ from django.urls import reverse
 from pytest_django.asserts import assertTemplateUsed
 
 from comicsdb.forms.arc import ArcForm
+from comicsdb.forms.issue import MINIMUM_YEAR
 from comicsdb.models.arc import Arc
 from comicsdb.models.attribution import Attribution
 
@@ -142,6 +143,8 @@ def test_create_arc_view(auto_login_user):
     )
     assert resp.status_code == HTML_OK_CODE
     assertTemplateUsed(resp, "comicsdb/model_with_attribution_form.html")
+    assert resp.context["minimum_year"] == MINIMUM_YEAR
+    assert f"minDate: '{MINIMUM_YEAR}-01-01'" in resp.content.decode()
 
 
 def test_create_arc_validform_view(auto_login_user, wwh_arc):
@@ -174,6 +177,8 @@ def test_arc_update_view(auto_login_user, wwh_arc):
     resp = client.get(reverse("arc:update", kwargs=k))
     assert resp.status_code == HTML_OK_CODE
     assertTemplateUsed(resp, "comicsdb/model_with_attribution_form.html")
+    assert resp.context["minimum_year"] == MINIMUM_YEAR
+    assert f"minDate: '{MINIMUM_YEAR}-01-01'" in resp.content.decode()
 
 
 # def test_arc_update_validform_view(auto_login_user, wwh_arc):

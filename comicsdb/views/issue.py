@@ -19,7 +19,7 @@ from django.views.generic.edit import CreateView, DeleteView, UpdateView
 from comicsdb.filters.issue import IssueViewFilter
 from comicsdb.forms.attribution import AttributionFormSet
 from comicsdb.forms.credits import CreditsFormSet
-from comicsdb.forms.issue import IssueForm
+from comicsdb.forms.issue import MINIMUM_YEAR, IssueForm
 from comicsdb.forms.variant import VariantFormset
 from comicsdb.models import Credits, Issue, Role
 from comicsdb.models.attribution import Attribution
@@ -237,6 +237,7 @@ class IssueCreate(LoginRequiredMixin, CreateView):
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
+        context["minimum_year"] = MINIMUM_YEAR
         if self.request.POST:
             context["credits"] = CreditsFormSet(self.request.POST, prefix="credits")
             context["variants"] = VariantFormset(
@@ -294,6 +295,7 @@ class IssueUpdate(LoginRequiredMixin, UpdateView):
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
+        context["minimum_year"] = MINIMUM_YEAR
         if self.request.POST:
             context["credits"] = CreditsFormSet(
                 self.request.POST,
