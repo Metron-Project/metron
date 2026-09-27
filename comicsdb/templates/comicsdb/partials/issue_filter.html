@@ -1,4 +1,4 @@
-{% load i18n range_tags %}
+{% load i18n range_tags static %}
 {% comment %}
     USABILITY CHANGE: the ~14 advanced filter fields are now organised
     under labelled sub-sections (Series / Issue Numbers / Dates / Codes & IDs)
@@ -255,16 +255,14 @@
                 <div class="column is-half">
                     <div class="field">
                         <label class="label" for="store_date_after">{% trans "Store Date From" %}</label>
-                        <div class="control has-icons-left">
+                        <div class="control">
                             <input class="input"
                                    type="date"
                                    id="store_date_after"
                                    name="store_date_after"
                                    value="{{ request.GET.store_date_after }}"
-                                   aria-label="{% trans 'Filter by store date from' %}">
-                            <span class="icon is-small is-left">
-                                <i class="fas fa-calendar"></i>
-                            </span>
+                                   aria-label="{% trans 'Filter by store date from' %}"
+                                   data-bulma-calendar="on">
                         </div>
                     </div>
                 </div>
@@ -272,16 +270,14 @@
                 <div class="column is-half">
                     <div class="field">
                         <label class="label" for="store_date_before">{% trans "Store Date To" %}</label>
-                        <div class="control has-icons-left">
+                        <div class="control">
                             <input class="input"
                                    type="date"
                                    id="store_date_before"
                                    name="store_date_before"
                                    value="{{ request.GET.store_date_before }}"
-                                   aria-label="{% trans 'Filter by store date to' %}">
-                            <span class="icon is-small is-left">
-                                <i class="fas fa-calendar"></i>
-                            </span>
+                                   aria-label="{% trans 'Filter by store date to' %}"
+                                   data-bulma-calendar="on">
                         </div>
                     </div>
                 </div>
@@ -289,16 +285,14 @@
                 <div class="column is-half">
                     <div class="field">
                         <label class="label" for="foc_date_after">{% trans "FOC Date From" %}</label>
-                        <div class="control has-icons-left">
+                        <div class="control">
                             <input class="input"
                                    type="date"
                                    id="foc_date_after"
                                    name="foc_date_after"
                                    value="{{ request.GET.foc_date_after }}"
-                                   aria-label="{% trans 'Filter by FOC date from' %}">
-                            <span class="icon is-small is-left">
-                                <i class="fas fa-calendar"></i>
-                            </span>
+                                   aria-label="{% trans 'Filter by FOC date from' %}"
+                                   data-bulma-calendar="on">
                         </div>
                     </div>
                 </div>
@@ -306,16 +300,14 @@
                 <div class="column is-half">
                     <div class="field">
                         <label class="label" for="foc_date_before">{% trans "FOC Date To" %}</label>
-                        <div class="control has-icons-left">
+                        <div class="control">
                             <input class="input"
                                    type="date"
                                    id="foc_date_before"
                                    name="foc_date_before"
                                    value="{{ request.GET.foc_date_before }}"
-                                   aria-label="{% trans 'Filter by FOC date to' %}">
-                            <span class="icon is-small is-left">
-                                <i class="fas fa-calendar"></i>
-                            </span>
+                                   aria-label="{% trans 'Filter by FOC date to' %}"
+                                   data-bulma-calendar="on">
                         </div>
                     </div>
                 </div>
@@ -423,6 +415,30 @@
         </div>
     </form>
 </div>
+<link rel="stylesheet" href="{% static 'site/css/bulma-calendar.min.css' %}">
+<script src="{% static 'extensions/bulma-calendar/dist/js/bulma-calendar.min.js' %}"></script>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    'use strict';
+
+    // Initialize bulma-calendar for the filter date inputs
+    var dateInputs = document.querySelectorAll('#filter-panel input[data-bulma-calendar="on"]');
+    dateInputs.forEach(function(input) {
+        bulmaCalendar.attach(input, {
+            type: 'date',
+            dateFormat: 'yyyy-MM-dd',
+            minDate: '{{ minimum_year|default:"1900" }}-01-01',
+            displayYearsCount: 130,
+            displayMode: 'default',
+            showHeader: true,
+            closeOnSelect: true,
+            todayButton: true,
+            showFooter: true,
+            weekStart: 0
+        });
+    });
+});
+</script>
 <style>
 /* Enhance details/summary styling */
 details > summary {
