@@ -57,12 +57,13 @@ bots:
     user_agent_regex: Variant/1\.0
     action: DENY
 
-  # Deny the legacy numeric-ID issue redirect. The site and API only link to
-  # slug URLs, so /issue/<int>/ is used almost exclusively by scrapers that
-  # enumerate issue IDs (rotating proxies + stock Chrome UA, 2026-09-24).
+  # Deny the legacy numeric-ID issue and series redirects. The site and API
+  # only link to slug URLs, so /issue/<int>/ and /series/<int>/ are used almost
+  # exclusively by scrapers that enumerate IDs (rotating proxies + stock
+  # Chrome UA, 2026-09-24).
   # Temp rules to block these scrapers
   - name: deny-issue-id-walk
-    path_regex: ^/issue/[0-9]+/?$
+    path_regex: ^/(issue|series)/[0-9]+/?$
     action: DENY
 
   # Pass API requests through without a proof-of-work challenge.
