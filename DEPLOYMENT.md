@@ -809,17 +809,35 @@ before this change will not be back-filled.
 Note: because the container services run under a linger session, their logs go
 to the **system** journal rather than a user-specific journal. Use
 `_SYSTEMD_USER_UNIT=` to filter them (see Useful commands below) rather than
-`journalctl --user`. The nginx container is an exception — it uses
-`LogDriver=journald`, so its logs are tagged with `CONTAINER_NAME=metron-nginx`
-and must be queried with that field instead.
+`journalctl --user`. The nginx container is an exception — its access and error
+logs are written to files in `/var/log/metron-nginx/` (see [Fail2ban](#fail2ban)),
+not to the journal.
+
+### Journal size
+
+journald's default cap is 10% of the filesystem, up to 4G. At Metron's log volume
+(mostly gunicorn's per-request access log) that only holds about a week. Raise it
+so roughly a month is kept:
+
+```bash
+sudo mkdir -p /etc/systemd/journald.conf.d
+sudo tee /etc/systemd/journald.conf.d/size.conf <<'EOF'
+[Journal]
+SystemMaxUse=15G
+MaxRetentionSec=30day
+EOF
+sudo systemctl restart systemd-journald
+```
+
+Check usage with `journalctl --disk-usage`.
 
 ---
 
 ## Fail2ban
 
-fail2ban monitors the nginx journald logs and uses firewalld to ban IPs that
-generate excessive 401 (unauthorized) responses, along with other abusive
-behavior.
+fail2ban monitors the nginx access log (`/var/log/metron-nginx/access.log`) and
+uses firewalld to ban IPs that generate excessive 401 (unauthorized) responses,
+along with other abusive behavior.
 
 ### Install
 
@@ -836,6 +854,10 @@ The filter and jail files are stored in the repo under `fail2ban/`:
 # Create the log directory (fail2ban reads from here; container writes here)
 sudo mkdir -p /var/log/metron-nginx
 sudo chown metron:metron /var/log/metron-nginx
+
+# Rotate the nginx logs daily (keeps 14 days); without this access.log grows unbounded
+sudo cp /home/metron/metron/logrotate/metron-nginx /etc/logrotate.d/
+sudo logrotate -d /etc/logrotate.d/metron-nginx
 
 sudo sh -c 'cp /home/metron/metron/fail2ban/action.d/* /etc/fail2ban/action.d/'
 sudo sh -c 'cp /home/metron/metron/fail2ban/filter.d/* /etc/fail2ban/filter.d/'
@@ -1139,15 +1161,14 @@ systemctl --user status metron-web
 journalctl _SYSTEMD_USER_UNIT=metron-web.service
 journalctl _SYSTEMD_USER_UNIT=metron-web.service -f
 
-# nginx uses LogDriver=journald, so its logs are tagged by container name
-journalctl CONTAINER_NAME=metron-nginx
-journalctl CONTAINER_NAME=metron-nginx -f
+# nginx access/error logs are files (rotated daily by logrotate), not journal entries
+tail -f /var/log/metron-nginx/access.log
+tail -f /var/log/metron-nginx/error.log
 
 # Follow logs for all metron services at once
 journalctl _SYSTEMD_USER_UNIT=metron-postgres.service \
            _SYSTEMD_USER_UNIT=metron-redis.service \
-           _SYSTEMD_USER_UNIT=metron-web.service \
-           CONTAINER_NAME=metron-nginx -f
+           _SYSTEMD_USER_UNIT=metron-web.service -f
 
 # View container logs directly via podman
 podman logs metron-web

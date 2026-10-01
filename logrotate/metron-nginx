@@ -1,0 +1,15 @@
+# nginx access/error logs written by the metron-nginx container (see
+# .quadlet/metron-nginx.container). Install to /etc/logrotate.d/metron-nginx.
+#
+# copytruncate keeps nginx writing to the same file, so no signal has to be sent
+# into the rootless container; a few lines may be lost during the copy.
+/var/log/metron-nginx/*.log {
+    su metron metron
+    daily
+    rotate 14
+    missingok
+    notifempty
+    compress
+    delaycompress
+    copytruncate
+}
