@@ -9,7 +9,10 @@ Network=metron.network
 PublishPort=127.0.0.1:6379:6379
 LogDriver=journald
 Volume=metron-redis.volume:/data
-Exec=redis-server --appendonly yes
+# Cache data is disposable, so skip AOF and snapshot only hourly (keeps the sorl-thumbnail
+# index across restarts without frequent 700MB+ disk writes stalling Redis). volatile-lru
+# evicts only keys with a TTL, protecting sorl keys and the cachever:* counters.
+Exec=redis-server --appendonly no --save "3600 1" --maxmemory 1gb --maxmemory-policy volatile-lru
 
 [Service]
 Restart=always
