@@ -192,7 +192,7 @@ DEFAULT_AUTO_FIELD = "django.db.models.AutoField"
 # Cache for Select2
 CACHES = {
     "default": {
-        "BACKEND": "django.core.cache.backends.redis.RedisCache",
+        "BACKEND": "metron.cache_backends.FailOpenRedisCache",
         "LOCATION": config("REDIS_URL"),
     },
 }
