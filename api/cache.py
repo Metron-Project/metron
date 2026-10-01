@@ -20,7 +20,7 @@ from typing import Any, Protocol
 
 from django.core.cache import cache
 
-DETAIL_CACHE_TTL = 60 * 60 * 24 * 5  # 5 days; live keys self-invalidate on write.
+DETAIL_CACHE_TTL = 60 * 60 * 24 * 4  # 4 days; live keys self-invalidate on write.
 LIST_CACHE_TTL = 60 * 2  # 2min; bounds staleness from nested-object changes we don't chase.
 
 _VERSION_KEY_PREFIX = "cachever"
