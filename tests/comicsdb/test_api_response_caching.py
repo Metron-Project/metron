@@ -337,6 +337,71 @@ def test_imprint_retrieve_after_publisher_rename_is_not_stale(
     assert resp.json()["publisher"]["name"] == "DC Comics Renamed"
 
 
+def test_issue_retrieve_survives_publisher_non_name_edit(
+    api_client_with_credentials, basic_issue, dc_comics, local_cache
+):
+    """Issue retrieve only embeds the Publisher's id/name, so a save that
+    doesn't change the name must not orphan cached issue responses."""
+    url = reverse("api:issue-detail", kwargs={"pk": basic_issue.pk})
+    resp = api_client_with_credentials.get(url)
+    assert resp["X-Cache"] == "MISS"
+
+    dc_comics.desc = "Updated description"
+    dc_comics.save()
+
+    resp = api_client_with_credentials.get(url)
+    assert resp["X-Cache"] == "HIT"
+
+
+def test_series_retrieve_survives_imprint_non_name_edit(
+    api_client_with_credentials, fc_series, vertigo_imprint, local_cache
+):
+    fc_series.imprint = vertigo_imprint
+    fc_series.save()
+    url = reverse("api:series-detail", kwargs={"pk": fc_series.pk})
+    resp = api_client_with_credentials.get(url)
+    assert resp["X-Cache"] == "MISS"
+
+    vertigo_imprint.desc = "Updated description"
+    vertigo_imprint.save()
+
+    resp = api_client_with_credentials.get(url)
+    assert resp["X-Cache"] == "HIT"
+
+
+def test_series_retrieve_after_imprint_rename_is_not_stale(
+    api_client_with_credentials, fc_series, vertigo_imprint, local_cache
+):
+    fc_series.imprint = vertigo_imprint
+    fc_series.save()
+    url = reverse("api:series-detail", kwargs={"pk": fc_series.pk})
+    resp = api_client_with_credentials.get(url)
+    assert resp.json()["imprint"]["name"] == "Vertigo"
+
+    vertigo_imprint.name = "Vertigo Renamed"
+    vertigo_imprint.save()
+
+    resp = api_client_with_credentials.get(url)
+    assert resp.json()["imprint"]["name"] == "Vertigo Renamed"
+
+
+def test_series_retrieve_after_imprint_delete_is_not_stale(
+    api_client_with_credentials, fc_series, vertigo_imprint, local_cache
+):
+    """Deleting an Imprint SET_NULLs Series.imprint via SQL without touching
+    Series.modified, so only the IMPRINT_NAME bump on delete catches it."""
+    fc_series.imprint = vertigo_imprint
+    fc_series.save()
+    url = reverse("api:series-detail", kwargs={"pk": fc_series.pk})
+    resp = api_client_with_credentials.get(url)
+    assert resp.json()["imprint"]["name"] == "Vertigo"
+
+    vertigo_imprint.delete()
+
+    resp = api_client_with_credentials.get(url)
+    assert resp.json()["imprint"] is None
+
+
 def test_arc_issue_list_after_series_rename_is_accepted_staleness(
     api_client_with_staff_credentials, issue_with_arc, fc_arc, fc_series, local_cache
 ):

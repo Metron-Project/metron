@@ -38,6 +38,14 @@ class ModelLabel(StrEnum):
     SERIES = "series"
     TEAM = "team"
     UNIVERSE = "universe"
+    # Narrower counters bumped only when the fields other models' responses
+    # embed (id/name via Basic*Serializer) actually change -- unlike
+    # PUBLISHER/IMPRINT, which version those models' own list caches and so
+    # must bump on every save. Using these as detail dependent labels keeps an
+    # unrelated Publisher/Imprint edit (desc, image, ...) from orphaning every
+    # cached Issue/Series detail response site-wide.
+    PUBLISHER_NAME = "publisher_name"
+    IMPRINT_NAME = "imprint_name"
 
 
 class _CacheKeyRequest(Protocol):
