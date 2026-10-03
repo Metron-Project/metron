@@ -10,6 +10,7 @@ from django.utils.dateparse import parse_date, parse_datetime
 
 from users.models import CustomUser, OpenCollectiveDonation, tier_for_amount
 from users.opencollective import fetch_recent_contributions
+from users.utils import send_pushover
 
 DEFAULT_LOOKBACK_DAYS = 60
 SUPPORTER_DURATION = timedelta(days=31)
@@ -74,6 +75,8 @@ class Command(BaseCommand):
             ).values_list("transaction_id", flat=True)
         )
 
+        self._check_for_missing_emails(contributions, known_transaction_ids, dry_run)
+
         # Previously-unmatched donations (e.g. the donor's OpenCollective email
         # didn't match any confirmed Metron account at the time) are retried every
         # run in case the donor has since confirmed a matching email - merged with
@@ -98,6 +101,34 @@ class Command(BaseCommand):
                 counts[result] += 1
 
         self._print_summary(dry_run, counts)
+
+    def _check_for_missing_emails(
+        self, contributions: list[dict], known_transaction_ids: set[str], dry_run: bool
+    ) -> None:
+        """Alert if every new individual contribution came back without an email.
+
+        OpenCollective silently returns `email: null` for every donor when the
+        personal token lacks the `email` scope, which leaves every donation
+        unmatched while the command still exits cleanly. Collectives and
+        organizations never expose an email, so only individuals are considered.
+        """
+        individuals = [
+            c
+            for c in contributions
+            if str(c["id"]) not in known_transaction_ids
+            and (c.get("fromAccount") or {}).get("type") == "INDIVIDUAL"
+        ]
+        if not individuals or any(c["fromAccount"].get("email") for c in individuals):
+            return
+
+        message = (
+            f"OpenCollective donor sync: all {len(individuals)} new individual contribution(s) "
+            "came back without a donor email, so none can be matched to Metron accounts. "
+            "Check that OPENCOLLECTIVE_API_KEY has the 'email' scope."
+        )
+        self.stderr.write(self.style.ERROR(message))
+        if not dry_run:
+            send_pushover(message)
 
     def _build_items(
         self, contributions: list[dict], known_transaction_ids: set[str]
