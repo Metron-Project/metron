@@ -57,6 +57,12 @@ bots:
     user_agent_regex: Variant/1\.0
     action: DENY
 
+  # Deny MetronScraper.
+  # User with multiple accounts and rotating IPs scraping the site and API.
+  - name: deny-metronscraper
+    user_agent_regex: MetronScraper/
+    action: DENY
+
   # Deny the legacy numeric-ID issue and series redirects. The site and API
   # only link to slug URLs, so /issue/<int>/ and /series/<int>/ are used almost
   # exclusively by scrapers that enumerate IDs (rotating proxies + stock
