@@ -3,7 +3,7 @@ from unittest.mock import patch
 
 import pytest
 from django.core.cache.backends.locmem import LocMemCache
-from django.db import connection
+from django.db import connection, transaction
 from django.test.utils import CaptureQueriesContext
 from django.urls import reverse
 from django.utils import timezone
@@ -12,6 +12,7 @@ from rest_framework.pagination import PageNumberPagination
 from rest_framework.request import Request
 
 from api import views as api_views
+from api.cache import ModelLabel, get_model_version
 from api.views import CollectionViewSet, PullListViewSet, WishListViewSet
 from comicsdb.models import Credits, Issue, Variant
 from comicsdb.models.genre import Genre
@@ -26,6 +27,25 @@ def local_cache():
     test_cache = LocMemCache(f"test-api-response-caching-{uuid.uuid4()}", {})
     with patch("api.views.cache", test_cache), patch("api.cache.cache", test_cache):
         yield test_cache
+
+
+def test_version_bump_is_deferred_until_commit(
+    dc_comics, local_cache, django_capture_on_commit_callbacks
+):
+    """A bump fired mid-transaction would let a concurrent request cache the
+    old (still-committed) data under the new version, so the bump must wait
+    for commit. Uses the real on_commit, overriding the conftest fixture
+    that runs bumps inline."""
+    before = get_model_version(ModelLabel.PUBLISHER)
+    with (
+        patch("api.cache.on_commit", transaction.on_commit),
+        django_capture_on_commit_callbacks(execute=True),
+    ):
+        dc_comics.name = "DC Comics Renamed"
+        dc_comics.save()
+        assert get_model_version(ModelLabel.PUBLISHER) == before
+
+    assert get_model_version(ModelLabel.PUBLISHER) == before + 1
 
 
 def test_issue_retrieve_cache_hit_skips_heavy_query(

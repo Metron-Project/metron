@@ -19,6 +19,7 @@ from enum import StrEnum
 from typing import Any, Protocol
 
 from django.core.cache import cache
+from django.db.transaction import on_commit
 
 DETAIL_CACHE_TTL = 60 * 60 * 24 * 3  # 3 days; live keys self-invalidate on write.
 LIST_CACHE_TTL = 60 * 2  # 2min; bounds staleness from nested-object changes we don't chase.
@@ -147,7 +148,17 @@ def get_model_versions(model_labels: Iterable[str]) -> dict[str, int]:
 
 def bump_model_version(model_label: str) -> None:
     """Invalidate list caches that depend on `model_label` by advancing its
-    generation counter."""
+    generation counter.
+
+    Deferred until the surrounding transaction commits (immediate outside
+    one). Bumping mid-transaction would let a concurrent request, which
+    can't see the uncommitted write yet, rebuild and cache the *old* data
+    under the *new* version -- where it would stick until the TTL expires.
+    """
+    on_commit(lambda: _bump_model_version_now(model_label))
+
+
+def _bump_model_version_now(model_label: str) -> None:
     key = f"{_VERSION_KEY_PREFIX}:{model_label}"
     try:
         cache.incr(key)
