@@ -2,6 +2,7 @@
 """Shared fixtures for all tests."""
 
 import uuid
+from unittest.mock import patch
 
 import pytest
 from django.contrib.auth.models import Group, Permission
@@ -19,6 +20,17 @@ from comicsdb.models.team import Team
 from users.models import CustomUser
 
 NUMBER_OF_ISSUES = 35
+
+
+@pytest.fixture(autouse=True)
+def run_cache_bumps_immediately():
+    """bump_model_version() defers its bump to transaction.on_commit, but
+    pytest-django wraps each test in a transaction that's rolled back, never
+    committed -- so deferred bumps would never fire. Run them inline instead,
+    matching production's autocommit behavior for writes outside an explicit
+    transaction. Tests of the deferral itself re-patch the real on_commit."""
+    with patch("api.cache.on_commit", lambda func, *args, **kwargs: func()):
+        yield
 
 
 @pytest.fixture
