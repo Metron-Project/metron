@@ -6488,6 +6488,14 @@ msgstr "La frequenza dell'ordine OpenCollective sottostante."
 msgid "Activate Your Metron Account"
 msgstr "Attiva il Tuo Account Metron"
 
+#: users/views.py
+msgid ""
+"We were unable to send your activation email. Please try again in a few "
+"minutes."
+msgstr ""
+"Non è stato possibile inviare l'email di attivazione. Riprova tra qualche "
+"minuto."
+
 #: users/templates/registration/account_activation_email.html:48
 #: users/templates/registration/account_activation_email.txt:2
 #, python-format

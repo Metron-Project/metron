@@ -456,3 +456,30 @@ def test_revoke_api_token_cannot_delete_other_users_token(auto_login_user, creat
 
     assert resp.status_code == HTTP_NOT_FOUND_CODE
     assert ApiToken.objects.filter(digest=instance.digest).exists()
+
+
+def test_signup_email_failure_removes_user_and_allows_retry(db, client):
+    ip = _unique_ip()
+    payload = _signup_payload("smtp-fail")
+    with (
+        patch("users.views.get_recaptcha_auth", return_value={"success": True}),
+        patch("users.views.send_pushover") as mock_pushover,
+        patch("users.views.EmailMultiAlternatives.send", side_effect=TimeoutError("timed out")),
+    ):
+        resp = client.post(reverse("signup"), payload, REMOTE_ADDR=ip)
+
+    assert resp.status_code == HTML_OK_CODE
+    assertTemplateUsed(resp, "registration/signup.html")
+    assert resp.context["form"].non_field_errors()
+    assert not CustomUser.objects.filter(username=payload["username"]).exists()
+    mock_pushover.assert_not_called()
+
+    # The failed attempt shouldn't count against the IP limit or hold the username.
+    with (
+        patch("users.views.get_recaptcha_auth", return_value={"success": True}),
+        patch("users.views.send_pushover"),
+    ):
+        resp = client.post(reverse("signup"), payload, REMOTE_ADDR=ip)
+
+    assert resp.status_code == HTTP_REDIRECT_FOUND_CODE
+    assert CustomUser.objects.filter(username=payload["username"]).exists()
