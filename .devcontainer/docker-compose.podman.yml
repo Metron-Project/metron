@@ -1,0 +1,10 @@
+# Podman-only override, layered on top of docker-compose.yml.
+#
+# `userns_mode: keep-id` is a Podman rootless extension (not understood by Docker,
+# which is why it lives in this separate file rather than the shared compose file).
+# It maps your host UID/GID directly into the container's user namespace, so
+# ownership of the bind-mounted workspace lines up instead of landing in Podman's
+# default subordinate UID range.
+services:
+  app:
+    userns_mode: keep-id

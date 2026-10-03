@@ -122,3 +122,19 @@ node_modules/
 # AI agents
 .claude/
 CLAUDE.md
+
+# Devcontainer HOME resolves into the workspace mount, so tool caches and
+# session data for VS Code Server, .NET, and Copilot CLI land here instead
+# of a real home directory.
+.vscode-server/
+.dotnet/
+.copilot/
+.bash_history
+.gitconfig
+
+# Dev Container CLI lifecycle markers (written into the workspace for the
+# same reason as above)
+.devcontainer/.onCreateCommandMarker
+.devcontainer/.postCreateCommandMarker
+.devcontainer/.postStartCommandMarker
+.devcontainer/.updateContentCommandMarker
