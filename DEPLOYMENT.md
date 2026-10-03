@@ -605,8 +605,11 @@ Set up a systemd user timer to run it hourly.
 
 ### Initial setup
 
-Add an OpenCollective personal token (needs the `orders` and `transactions`
-scopes on the collective) and the collective's slug to the env file:
+Add an OpenCollective personal token and the collective's slug to the env file.
+The token needs the `email`, `orders`, and `transactions` scopes. Without
+`email`, OpenCollective silently returns no donor emails and no donations can be
+matched (the command sends a Pushover alert when this happens). Leave the 2FA
+bypass option unchecked, since the sync only reads data:
 
 ```bash
 vi ~/.config/containers/metron.env

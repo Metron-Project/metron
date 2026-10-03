@@ -10,13 +10,20 @@ from django.utils import timezone
 from users.models import OpenCollectiveDonation
 
 
-def _contribution(transaction_id, email, cents=500, created_at=None, frequency="MONTHLY"):
+def _contribution(
+    transaction_id,
+    email,
+    cents=500,
+    created_at=None,
+    frequency="MONTHLY",
+    account_type="INDIVIDUAL",
+):
     created_at = created_at or timezone.now()
     return {
         "id": transaction_id,
         "createdAt": created_at.isoformat(),
         "amount": {"valueInCents": cents},
-        "fromAccount": {"email": email},
+        "fromAccount": {"type": account_type, "email": email},
         "order": {"frequency": frequency},
     }
 
@@ -32,6 +39,12 @@ def _same_day_next_month(dt):
 @pytest.fixture
 def confirmed_user(create_user):
     return create_user(username="donor", email_confirmed=True)
+
+
+@pytest.fixture
+def mock_pushover():
+    with patch("users.management.commands.sync_opencollective_donors.send_pushover") as mock:
+        yield mock
 
 
 @pytest.mark.django_db
@@ -695,3 +708,67 @@ class TestSyncOpenCollectiveDonorsCommand:
         assert user.is_supporter is False
         donation = OpenCollectiveDonation.objects.get(transaction_id="txn-retry-dry")
         assert donation.user is None
+
+    def test_alerts_when_every_new_individual_contribution_lacks_email(self, mock_pushover, capsys):
+        with patch(
+            "users.management.commands.sync_opencollective_donors.fetch_recent_contributions",
+            return_value=[
+                _contribution("txn-no-email-1", None),
+                _contribution("txn-no-email-2", None),
+            ],
+        ):
+            call_command("sync_opencollective_donors")
+
+        assert "all 2 new individual contribution(s)" in capsys.readouterr().err
+        mock_pushover.assert_called_once()
+        assert "'email' scope" in mock_pushover.call_args.args[0]
+
+    def test_missing_email_alert_is_printed_but_not_pushed_on_dry_run(self, mock_pushover, capsys):
+        with patch(
+            "users.management.commands.sync_opencollective_donors.fetch_recent_contributions",
+            return_value=[_contribution("txn-no-email-dry", None)],
+        ):
+            call_command("sync_opencollective_donors", "--dry-run")
+
+        assert "without a donor email" in capsys.readouterr().err
+        mock_pushover.assert_not_called()
+
+    def test_no_alert_when_some_individual_contributions_have_email(
+        self, confirmed_user, mock_pushover
+    ):
+        with patch(
+            "users.management.commands.sync_opencollective_donors.fetch_recent_contributions",
+            return_value=[
+                _contribution("txn-has-email", confirmed_user.email),
+                _contribution("txn-lacks-email", None),
+            ],
+        ):
+            call_command("sync_opencollective_donors")
+
+        mock_pushover.assert_not_called()
+
+    def test_no_alert_for_non_individual_contributions_without_email(self, mock_pushover):
+        with patch(
+            "users.management.commands.sync_opencollective_donors.fetch_recent_contributions",
+            return_value=[_contribution("txn-collective", None, account_type="COLLECTIVE")],
+        ):
+            call_command("sync_opencollective_donors")
+
+        mock_pushover.assert_not_called()
+
+    def test_no_alert_for_already_processed_contributions(self, confirmed_user, mock_pushover):
+        OpenCollectiveDonation.objects.create(
+            transaction_id="txn-seen",
+            email=confirmed_user.email,
+            amount=500,
+            donated_at=timezone.now(),
+            frequency="monthly",
+            user=confirmed_user,
+        )
+        with patch(
+            "users.management.commands.sync_opencollective_donors.fetch_recent_contributions",
+            return_value=[_contribution("txn-seen", None)],
+        ):
+            call_command("sync_opencollective_donors")
+
+        mock_pushover.assert_not_called()

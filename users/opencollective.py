@@ -31,6 +31,7 @@ query Contributions($slug: String!, $dateFrom: DateTime, $limit: Int!, $offset: 
         valueInCents
       }
       fromAccount {
+        type
         ... on Individual {
           email
         }
