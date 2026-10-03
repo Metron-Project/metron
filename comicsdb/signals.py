@@ -249,3 +249,23 @@ def bump_cache(label, sender, instance, **kwargs):
     functools.partial(bump_cache, label) in comicsdb/apps.py so one
     function covers all eight instead of eight near-identical wrappers."""
     bump_model_version(label)
+
+
+def track_name_change(sender, instance, update_fields=None, **kwargs):
+    """pre_save receiver recording whether this save changes `name`, for
+    bump_cache_on_name_change() to read in post_save. A new row can't be
+    embedded in any cached response yet, so creation never counts as a
+    change."""
+    if instance._state.adding or (update_fields is not None and "name" not in update_fields):
+        instance._cache_name_changed = False
+        return
+    old_name = sender.objects.filter(pk=instance.pk).values_list("name", flat=True).first()
+    instance._cache_name_changed = old_name != instance.name
+
+
+def bump_cache_on_name_change(label, sender, instance, **kwargs):
+    """post_save receiver bumping a *_NAME counter (see ModelLabel) only when
+    track_name_change() saw `name` change. Defaults to bumping if the
+    pre_save flag is missing, so an unexpected path errs toward freshness."""
+    if instance.__dict__.pop("_cache_name_changed", True):
+        bump_model_version(label)

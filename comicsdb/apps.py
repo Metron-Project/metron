@@ -1,13 +1,15 @@
 from functools import partial
 
 from django.apps import AppConfig
-from django.db.models.signals import m2m_changed, post_delete, post_save, pre_delete
+from django.db.models.signals import m2m_changed, post_delete, post_save, pre_delete, pre_save
 
 from api.cache import ModelLabel
 from comicsdb.signals import (
     bump_cache,
+    bump_cache_on_name_change,
     pre_delete_credit,
     pre_delete_image,
+    track_name_change,
     update_arc_modified,
     update_character_modified,
     update_character_modified_on_creator_change,
@@ -185,4 +187,28 @@ class ComicsdbConfig(AppConfig):
             )
             post_delete.connect(
                 bumper, sender=model, weak=False, dispatch_uid=f"post_delete_{label}_cache"
+            )
+
+        # Name-only counters (see ModelLabel.PUBLISHER_NAME): bumped on save
+        # only when `name` changed, and always on delete (e.g. deleting an
+        # Imprint SET_NULLs Series.imprint without touching Series.modified).
+        name_bump_models = (
+            (imprint, ModelLabel.IMPRINT_NAME),
+            (publisher, ModelLabel.PUBLISHER_NAME),
+        )
+        for model, label in name_bump_models:
+            pre_save.connect(
+                track_name_change, sender=model, dispatch_uid=f"pre_save_{label}_track"
+            )
+            post_save.connect(
+                partial(bump_cache_on_name_change, label),
+                sender=model,
+                weak=False,
+                dispatch_uid=f"post_save_{label}_cache",
+            )
+            post_delete.connect(
+                partial(bump_cache, label),
+                sender=model,
+                weak=False,
+                dispatch_uid=f"post_delete_{label}_cache",
             )

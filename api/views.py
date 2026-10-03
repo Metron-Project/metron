@@ -555,7 +555,7 @@ class ImprintViewSet(
     cache_model_label = ModelLabel.IMPRINT
     # Imprint retrieve embeds its Publisher's name, which doesn't cascade a
     # `modified` bump onto this Imprint when renamed.
-    cache_detail_dependent_labels = (ModelLabel.PUBLISHER,)
+    cache_detail_dependent_labels = (ModelLabel.PUBLISHER_NAME,)
 
     def get_queryset(self):
         queryset = super().get_queryset()
@@ -598,9 +598,14 @@ class IssueViewSet(
     cache_model_label = ModelLabel.ISSUE
     # Issue retrieve embeds its Series/Publisher/Imprint/Arc/Character/Team/
     # Universe/Creator names, none of which cascade a `modified` bump onto
-    # this Issue when renamed. PUBLISHER/IMPRINT/UNIVERSE are tracked here --
-    # all low write volume historically (a few hundred saves each, total,
-    # site-wide), so tying the key to them costs little:
+    # this Issue when renamed. Publisher/Imprint/Universe are tracked here --
+    # Publisher/Imprint via their name-only counters (PUBLISHER_NAME/
+    # IMPRINT_NAME), since tying the key to the every-save PUBLISHER/IMPRINT
+    # counters orphaned every cached issue on any unrelated Publisher/Imprint
+    # edit (confirmed in production: ~65% of issue detail keys were dead
+    # generations). UNIVERSE stays on its every-save counter because the
+    # embedded UniverseListSerializer includes `modified`; its write volume
+    # is low enough that this costs little:
     # - SERIES is deliberately excluded even though it's also embedded --
     #   ModelLabel.SERIES is bumped by update_series_modified_on_issue_save()
     #   on *every* issue write anywhere (PublisherViewSet.series_list needs
@@ -615,8 +620,8 @@ class IssueViewSet(
     #   far more cache churn than the staleness they'd prevent.
     # Both cases accept staleness up to DETAIL_CACHE_TTL as the tradeoff.
     cache_detail_dependent_labels = (
-        ModelLabel.PUBLISHER,
-        ModelLabel.IMPRINT,
+        ModelLabel.PUBLISHER_NAME,
+        ModelLabel.IMPRINT_NAME,
         ModelLabel.UNIVERSE,
     )
 
@@ -802,7 +807,7 @@ class SeriesViewSet(
     cache_dependent_labels = (ModelLabel.ISSUE,)
     # Series retrieve embeds its Publisher/Imprint name, which don't cascade
     # a `modified` bump onto this Series when renamed.
-    cache_detail_dependent_labels = (ModelLabel.PUBLISHER, ModelLabel.IMPRINT)
+    cache_detail_dependent_labels = (ModelLabel.PUBLISHER_NAME, ModelLabel.IMPRINT_NAME)
 
     def get_modified_queryset(self):
         # get_queryset() annotates num_issues for list/retrieve -- an
@@ -951,7 +956,7 @@ class UniverseViewSet(
     cache_model_label = ModelLabel.UNIVERSE
     # Universe retrieve embeds its Publisher's name, which doesn't cascade a
     # `modified` bump onto this Universe when renamed.
-    cache_detail_dependent_labels = (ModelLabel.PUBLISHER,)
+    cache_detail_dependent_labels = (ModelLabel.PUBLISHER_NAME,)
 
     def get_queryset(self):
         queryset = super().get_queryset()
