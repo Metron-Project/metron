@@ -319,6 +319,9 @@ MAILERS = {
                 "username": _email_user,
                 "password": _email_password,
                 "use_tls": True,
+                # Without a timeout a stalled SMTP server blocks the gunicorn
+                # worker until it's killed, turning a mail hiccup into a 500.
+                "timeout": 10,
             }
             if _email_backend == "django.core.mail.backends.smtp.EmailBackend"
             else {}

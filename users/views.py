@@ -1,4 +1,5 @@
 import logging
+import smtplib
 import time
 from datetime import date
 
@@ -161,7 +162,6 @@ def signup(request):  # sourcery skip: extract-method
                 user: CustomUser = form.save(commit=False)
                 user.is_active = False
                 user.save()
-                _record_signup(request, user.username)
                 current_site = get_current_site(request)
                 subject = _("Activate Your Metron Account")
                 context = {
@@ -182,7 +182,23 @@ def signup(request):  # sourcery skip: extract-method
                     to=[user.email],
                 )
                 email.attach_alternative(html_message, "text/html")
-                email.send(using="default")
+                try:
+                    email.send(using="default")
+                except smtplib.SMTPException, OSError:
+                    # There's no way to resend the activation email, so don't leave
+                    # behind an inactive account holding the username/email, and
+                    # don't count it against the IP limit, so the user can retry.
+                    logger.exception("Failed to send activation email to %s", user.username)
+                    user.delete()
+                    form.add_error(
+                        None,
+                        _(
+                            "We were unable to send your activation email. "
+                            "Please try again in at a later time."
+                        ),
+                    )
+                    return render(request, "registration/signup.html", {"form": form})
+                _record_signup(request, user.username)
                 # Let's send a pushover notice that a user requested an account.
                 send_pushover(f"{user} signed up for an account on Metron.")
                 ip = _client_ip(request)
