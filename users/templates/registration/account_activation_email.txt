@@ -5,7 +5,7 @@
 
 {% trans "To complete your registration and activate your account, please visit:" %}
 
-http://{{ domain }}{% url 'activate' uidb64=uid token=token %}
+{{ protocol }}://{{ domain }}{% url 'activate' uidb64=uid token=token %}
 
 {% trans "What you can do with your Metron account:" %}
 - {% trans "Contribute to the comic book database by adding and editing information" %}

@@ -14,7 +14,8 @@ LOGGER = logging.getLogger(__name__)
 def check_email_domain(email: str):
     result = None
     try:
-        conn = http.client.HTTPSConnection("mailcheck.p.rapidapi.com")
+        # Without a timeout a stalled API blocks the gunicorn worker indefinitely.
+        conn = http.client.HTTPSConnection("mailcheck.p.rapidapi.com", timeout=10)
 
         headers = {
             "X-RapidAPI-Key": RAPID_API_KEY,

@@ -1,8 +1,10 @@
+import re
 import time
 import uuid
 from unittest.mock import patch
 
 import pytest
+from django.core import mail
 from django.core.cache import cache
 from django.urls import reverse
 from pytest_django.asserts import assertTemplateUsed
@@ -206,6 +208,26 @@ def test_signup_ip_rate_limit_prefers_x_real_ip_over_remote_addr(db, client):
     assert CustomUser.objects.count() == user_count_before + SIGNUP_IP_LIMIT
 
 
+@pytest.mark.parametrize(("secure", "scheme"), [(True, "https"), (False, "http")])
+def test_signup_activation_link_uses_request_scheme(db, client, secure, scheme):
+    with (
+        patch("users.views.get_recaptcha_auth", return_value={"success": True}),
+        patch("users.views.send_pushover"),
+    ):
+        resp = client.post(
+            reverse("signup"),
+            _signup_payload(f"scheme-{scheme}"),
+            REMOTE_ADDR=_unique_ip(),
+            secure=secure,
+        )
+
+    assert resp.status_code == HTTP_REDIRECT_FOUND_CODE
+    (message,) = mail.outbox
+    ((html, _mimetype),) = message.alternatives
+    for content in (message.body, html):
+        assert re.search(rf"(?<![a-z]){scheme}://[^/\s]+/accounts/activate/", content)
+
+
 def test_signup_hcaptcha_unavailable_shows_error(db, client):
     ip = _unique_ip()
     user_count_before = CustomUser.objects.count()
@@ -289,15 +311,17 @@ def test_user_search_view_accessible_by_name(auto_login_user):
     assert resp.status_code == HTML_OK_CODE
 
 
-def test_valid_form(db):
+def test_valid_form(create_user):
+    user = create_user()
     form = CustomUserChangeForm(
         data={
             "username": "wsimonson",
             "first_name": "Walter",
             "last_name": "Simonson",
-            "email": "wsimonson@test.com",
+            "email": user.email,
             "image": "user/walter.jpg",
-        }
+        },
+        instance=user,
     )
     assert form.is_valid() is True
 
@@ -404,21 +428,31 @@ def test_delete_account_post_unauthenticated(client, create_user):
     assert CustomUser.objects.filter(pk=user_pk).exists()
 
 
-def test_delete_account_post_deletes_user(auto_login_user):
+def test_delete_account_post_deletes_user(auto_login_user, test_password):
     client, user = auto_login_user()
     user_pk = user.pk
-    resp = client.post(reverse("delete_account"))
+    resp = client.post(reverse("delete_account"), {"password": test_password})
     assert resp.status_code == HTTP_REDIRECT_FOUND_CODE
     assert resp.url == reverse("home")
     assert not CustomUser.objects.filter(pk=user_pk).exists()
 
 
-def test_delete_account_post_logs_out_user(auto_login_user):
+def test_delete_account_post_logs_out_user(auto_login_user, test_password):
     client, _ = auto_login_user()
-    client.post(reverse("delete_account"))
+    client.post(reverse("delete_account"), {"password": test_password})
     resp = client.get(reverse("change_profile"))
     assert resp.status_code == HTTP_REDIRECT_FOUND_CODE
     assert "/accounts/login/" in resp.url
+
+
+@pytest.mark.parametrize("password", ["", "wrong-password"])
+def test_delete_account_requires_correct_password(auto_login_user, password):
+    client, user = auto_login_user()
+    resp = client.post(reverse("delete_account"), {"password": password})
+    assert resp.status_code == HTML_OK_CODE
+    assertTemplateUsed(resp, "users/delete_account.html")
+    assert resp.context["form"].errors["password"]
+    assert CustomUser.objects.filter(pk=user.pk).exists()
 
 
 # --- api_tokens view tests ---

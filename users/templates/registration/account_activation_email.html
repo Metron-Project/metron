@@ -66,7 +66,7 @@
                                                 <table border="0" cellpadding="0" cellspacing="0">
                                                     <tr>
                                                         <td align="center" style="background-color: #3273dc; border-radius: 6px;">
-                                                            <a href="http://{{ domain }}{% url 'activate' uidb64=uid token=token %}"
+                                                            <a href="{{ protocol }}://{{ domain }}{% url 'activate' uidb64=uid token=token %}"
                                                                target="_blank"
                                                                style="display: inline-block;
                                                                       padding: 16px 40px;
@@ -101,7 +101,7 @@
                                                           color: #3273dc;
                                                           font-family: Courier New, monospace;
                                                           word-break: break-all">
-                                                    http://{{ domain }}{% url 'activate' uidb64=uid token=token %}
+                                                    {{ protocol }}://{{ domain }}{% url 'activate' uidb64=uid token=token %}
                                                 </p>
                                             </td>
                                         </tr>
@@ -200,43 +200,7 @@
                                     </p>
                                 </td>
                             </tr>
-                            <!-- Footer -->
-                            <tr>
-                                <td style="background-color: #363636; padding: 30px; text-align: center;">
-                                    <p style="margin: 0 0 10px 0;
-                                              font-size: 14px;
-                                              color: #ffffff;
-                                              font-family: Arial, Helvetica, sans-serif">
-                                        <strong>{% trans "Metron Comic Book Database" %}</strong>
-                                    </p>
-                                    <p style="margin: 0 0 15px 0;
-                                              font-size: 14px;
-                                              color: #b5b5b5;
-                                              font-family: Arial, Helvetica, sans-serif">
-                                        {% trans "A community-driven project for comic book enthusiasts" %}
-                                    </p>
-                                    <p style="margin: 0 0 10px 0;
-                                              font-size: 14px;
-                                              font-family: Arial, Helvetica, sans-serif">
-                                        <a href="https://metron.cloud"
-                                           style="color: #3273dc;
-                                                  text-decoration: none">{% trans "Visit Website" %}</a> &#8226;
-                                        <a href="https://github.com/Metron-Project/metron"
-                                           style="color: #3273dc;
-                                                  text-decoration: none">GitHub</a> &#8226;
-                                        <a href="mailto:admin@metron.cloud"
-                                           style="color: #3273dc;
-                                                  text-decoration: none">{% trans "Contact Us" %}</a>
-                                    </p>
-                                    <p style="margin: 15px 0 0 0;
-                                              font-size: 12px;
-                                              color: #7a7a7a;
-                                              font-family: Arial, Helvetica, sans-serif">
-                                        {% now "Y" as current_year %}
-                                        {% blocktrans %}&copy; {{ current_year }} Metron Project. All rights reserved.{% endblocktrans %}
-                                    </p>
-                                </td>
-                            </tr>
+                            {% include "registration/partials/email_footer.html" %}
                         </table>
                     </td>
                 </tr>
