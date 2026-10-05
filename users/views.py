@@ -21,6 +21,7 @@ from django.utils.http import urlsafe_base64_decode, urlsafe_base64_encode
 from django.utils.safestring import mark_safe
 from django.utils.translation import gettext as _, gettext_lazy as _lazy
 from django.views.generic import DetailView, ListView
+from rest_framework.throttling import SimpleRateThrottle
 
 # Import models for counting
 from comicsdb.models import (
@@ -414,7 +415,8 @@ def user_profile_redirect(request, pk):
 
 def get_rate_limit_usage(user):
     limit = user.supporter_daily_limit or SUSTAINED_LIMIT
-    cache_key = f"throttle_sustained_{user.pk}"
+    # DRF's own key for SustainedRateThrottle's history (scope "sustained", keyed by pk).
+    cache_key = SimpleRateThrottle.cache_format % {"scope": "sustained", "ident": user.pk}
     history = cache.get(cache_key, [])
     now = time.time()
     used = sum(1 for ts in history if ts > now - SUSTAINED_DURATION)

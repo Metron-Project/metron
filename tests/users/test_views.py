@@ -342,9 +342,9 @@ def test_form_invalid(db):
 # --- get_rate_limit_usage tests ---
 
 
-def test_rate_limit_usage_no_history(create_user):
+def test_rate_limit_usage_no_history(create_user, throttle_cache_key):
     user = create_user()
-    cache.delete(f"throttle_sustained_{user.pk}")
+    cache.delete(throttle_cache_key("sustained", user.pk))
     result = get_rate_limit_usage(user)
     assert result["used"] == 0
     assert result["remaining"] == SUSTAINED_LIMIT
@@ -352,36 +352,36 @@ def test_rate_limit_usage_no_history(create_user):
     assert result["percent_used"] == 0.0
 
 
-def test_rate_limit_usage_with_history(create_user):
+def test_rate_limit_usage_with_history(create_user, throttle_cache_key):
     user = create_user()
     now = time.time()
     # Simulate 10 recent requests
-    cache.set(f"throttle_sustained_{user.pk}", [now - i for i in range(10)])
+    cache.set(throttle_cache_key("sustained", user.pk), [now - i for i in range(10)])
     result = get_rate_limit_usage(user)
     assert result["used"] == 10
     assert result["remaining"] == SUSTAINED_LIMIT - 10
-    cache.delete(f"throttle_sustained_{user.pk}")
+    cache.delete(throttle_cache_key("sustained", user.pk))
 
 
-def test_rate_limit_usage_filters_old_timestamps(create_user):
+def test_rate_limit_usage_filters_old_timestamps(create_user, throttle_cache_key):
     user = create_user()
     now = time.time()
     recent = [now - 100, now - 200]
     old = [now - SUSTAINED_DURATION - 1, now - SUSTAINED_DURATION - 3600]
-    cache.set(f"throttle_sustained_{user.pk}", recent + old)
+    cache.set(throttle_cache_key("sustained", user.pk), recent + old)
     result = get_rate_limit_usage(user)
     assert result["used"] == 2
-    cache.delete(f"throttle_sustained_{user.pk}")
+    cache.delete(throttle_cache_key("sustained", user.pk))
 
 
-def test_rate_limit_percent_used(create_user):
+def test_rate_limit_percent_used(create_user, throttle_cache_key):
     user = create_user()
     now = time.time()
     used = 500
-    cache.set(f"throttle_sustained_{user.pk}", [now - i for i in range(used)])
+    cache.set(throttle_cache_key("sustained", user.pk), [now - i for i in range(used)])
     result = get_rate_limit_usage(user)
     assert result["percent_used"] == round(used / SUSTAINED_LIMIT * 100, 1)
-    cache.delete(f"throttle_sustained_{user.pk}")
+    cache.delete(throttle_cache_key("sustained", user.pk))
 
 
 # --- Profile view rate_limit context tests ---
