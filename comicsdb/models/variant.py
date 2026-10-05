@@ -20,8 +20,7 @@ class Variant(models.Model):
     upc = models.CharField("UPC Code", max_length=20, blank=True)
 
     class Meta:
-        indexes = [models.Index(fields=["issue"], name="issue_idx")]
-        ordering = ["issue"]
+        ordering = ["issue", "name"]
 
     def __str__(self) -> str:
         return self.name
