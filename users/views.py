@@ -40,7 +40,7 @@ from user_collection.models import CollectionItem
 from users.forms import CustomUserChangeForm, CustomUserCreationForm, DeleteAccountForm
 from users.models import ApiToken, CustomUser, SignupSettings
 from users.tokens import account_activation_token
-from users.utils import send_pushover
+from users.utils import client_ip, send_pushover
 
 logger = logging.getLogger(__name__)
 
@@ -53,17 +53,8 @@ EMAIL_CHANGE_SALT = "users.email-change"
 EMAIL_CHANGE_MAX_AGE = 60 * 60 * 24 * 3  # 3 days
 
 
-def _client_ip(request):
-    # nginx (nginx/nginx.conf) always overwrites X-Real-IP with its own
-    # observed connecting address, so it's safe to trust - unlike
-    # X-Forwarded-For, which nginx appends to rather than replaces, so it can
-    # carry a client-supplied prefix. Falls back to REMOTE_ADDR for local dev
-    # (runserver with no proxy in front, where there's no X-Real-IP header).
-    return request.META.get("HTTP_X_REAL_IP") or request.META.get("REMOTE_ADDR", "unknown")
-
-
 def _signup_ip_key(prefix, request):
-    return f"{prefix}:ip:{_client_ip(request)}:{date.today().isoformat()}"
+    return f"{prefix}:ip:{client_ip(request)}:{date.today().isoformat()}"
 
 
 def _signup_ip_count(request):
@@ -80,7 +71,7 @@ def _record_signup(request, username):
 
 
 def _notify_signup_rate_limit_hit(request):
-    ip = _client_ip(request)
+    ip = client_ip(request)
     count = _signup_ip_count(request)
     first_user = cache.get(_signup_ip_key("signup_first_user", request), "unknown")
     # cache.add only succeeds the first time per IP/day, so repeated blocked
@@ -161,7 +152,7 @@ def activate(request, uidb64, token):
     login(request, user)
     # Send pushover notification tha user activated account
     send_pushover(f"{user} activated their account on Metron.")
-    ip = _client_ip(request)
+    ip = client_ip(request)
     logger.info(
         "User activated their account on Metron (user=%s, ip=%s)",
         user.username,
@@ -247,7 +238,7 @@ def signup(request):  # sourcery skip: extract-method
                 _record_signup(request, user.username)
                 # Let's send a pushover notice that a user requested an account.
                 send_pushover(f"{user} signed up for an account on Metron.")
-                ip = _client_ip(request)
+                ip = client_ip(request)
                 logger.info(
                     "User signed up for an account on Metron (user=%s, ip=%s)",
                     user.username,
@@ -283,7 +274,9 @@ def change_profile(request):
         return redirect("login")
     if request.method == "POST":
         old_email = request.user.email
-        form = CustomUserChangeForm(request.POST, request.FILES, instance=request.user)
+        form = CustomUserChangeForm(
+            request.POST, request.FILES, instance=request.user, request=request
+        )
         if form.is_valid():
             new_email = form.pending_email
             if new_email:
@@ -371,7 +364,7 @@ def delete_account(request):
     if not request.user.is_authenticated:
         return redirect("login")
     if request.method == "POST":
-        form = DeleteAccountForm(request.user, request.POST)
+        form = DeleteAccountForm(request.user, request.POST, request=request)
         if form.is_valid():
             user = request.user
             logout(request)

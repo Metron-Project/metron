@@ -128,6 +128,8 @@ WSGI_APPLICATION = "metron.wsgi.application"
 
 # Custom User Model
 AUTH_USER_MODEL = "users.CustomUser"
+# Limits failed logins per username+IP and per IP (see users.login_throttle).
+AUTHENTICATION_BACKENDS = ["users.backends.RateLimitedModelBackend"]
 
 # Needed to override form widgets template
 FORM_RENDERER = "django.forms.renderers.TemplatesSetting"

@@ -11,6 +11,15 @@ from metron.settings import RAPID_API_HOST, RAPID_API_KEY
 LOGGER = logging.getLogger(__name__)
 
 
+def client_ip(request):
+    # nginx (nginx/nginx.conf) always overwrites X-Real-IP with its own
+    # observed connecting address, so it's safe to trust - unlike
+    # X-Forwarded-For, which nginx appends to rather than replaces, so it can
+    # carry a client-supplied prefix. Falls back to REMOTE_ADDR for local dev
+    # (runserver with no proxy in front, where there's no X-Real-IP header).
+    return request.META.get("HTTP_X_REAL_IP") or request.META.get("REMOTE_ADDR", "unknown")
+
+
 def check_email_domain(email: str):
     result = None
     try:

@@ -33,6 +33,15 @@ def run_cache_bumps_immediately():
         yield
 
 
+@pytest.fixture(autouse=True)
+def isolated_login_throttle():
+    """Give each test its own failed-login counters. Tests share the real Redis
+    cache, so otherwise wrong-password attempts from the test client's fixed IP
+    would add up across tests (and runs) until logins start being refused."""
+    with patch("users.login_throttle.KEY_PREFIX", f"login_fail:test:{uuid.uuid4().hex}"):
+        yield
+
+
 @pytest.fixture
 def test_password():
     return "strong-test-pass"

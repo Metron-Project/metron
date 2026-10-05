@@ -1,11 +1,16 @@
+from django.contrib.auth.views import LoginView
 from django.urls import path, register_converter
 
 from users import views
 from users.converters import UsernameConverter
+from users.forms import LoginForm
 
 register_converter(UsernameConverter, "username")
 
 urlpatterns = [
+    # Shadows django.contrib.auth.urls' login (included after this module in
+    # metron/urls.py) to report rate-limited logins as such.
+    path("login/", LoginView.as_view(authentication_form=LoginForm), name="login"),
     path("signup/", views.signup, name="signup"),
     path(
         "account_activation_sent/",

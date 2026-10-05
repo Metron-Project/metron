@@ -1,7 +1,8 @@
 import logging
 from typing import Any
 
-from django.contrib.auth.forms import UserChangeForm, UserCreationForm
+from django.contrib.admin.forms import AdminAuthenticationForm
+from django.contrib.auth.forms import AuthenticationForm, UserChangeForm, UserCreationForm
 from django.core.exceptions import ValidationError
 from django.forms import (
     CharField,
@@ -13,6 +14,7 @@ from django.forms import (
 )
 from django.utils.translation import gettext_lazy as _
 
+from users import login_throttle
 from users.models import CustomUser
 from users.utils import check_email_domain
 
@@ -117,8 +119,10 @@ class CustomUserChangeForm(UserChangeForm):
             "image": ClearableFileInput(),
         }
 
-    def __init__(self, *args, **kwargs):
+    def __init__(self, *args, request=None, **kwargs):
         super().__init__(*args, **kwargs)
+        # Used to rate-limit current_password guesses (see users.login_throttle).
+        self.request = request
         # Captured before validation, which writes the submitted email onto the instance.
         self.original_email = self.instance.email
 
@@ -138,7 +142,16 @@ class CustomUserChangeForm(UserChangeForm):
         cleaned_data = super().clean()
         if self.pending_email:
             password = cleaned_data.get("current_password")
-            if not password or not self.instance.check_password(password):
+            # clean() runs before the submitted fields are copied onto the instance,
+            # so this still checks (and rate-limits) the stored username's password.
+            result = (
+                login_throttle.check_password(self.request, self.instance, password)
+                if password
+                else False
+            )
+            if result is None:
+                self.add_error("current_password", login_throttle.LOCKED_MESSAGE)
+            elif not result:
                 self.add_error(
                     "current_password",
                     _("Enter your current password to change your email address."),
@@ -156,6 +169,19 @@ class CustomUserChangeForm(UserChangeForm):
         return user
 
 
+class AdminUserChangeForm(UserChangeForm):
+    """User form for the admin, where staff edit other users' accounts directly.
+
+    Unlike CustomUserChangeForm (a user editing their own profile), it doesn't ask
+    for the account's password or defer email changes to a confirmation link.
+    """
+
+    email = EmailField(max_length=254, required=True)
+
+    class Meta(UserChangeForm.Meta):
+        model = CustomUser
+
+
 class DeleteAccountForm(Form):
     password = CharField(
         label=_("Current password"),
@@ -163,12 +189,41 @@ class DeleteAccountForm(Form):
         widget=PasswordInput(attrs={"autocomplete": "current-password", "class": "input"}),
     )
 
-    def __init__(self, user, *args, **kwargs):
+    def __init__(self, user, *args, request=None, **kwargs):
         self.user = user
+        # Used to rate-limit password guesses (see users.login_throttle).
+        self.request = request
         super().__init__(*args, **kwargs)
 
     def clean_password(self):
         password = self.cleaned_data["password"]
-        if not self.user.check_password(password):
+        result = login_throttle.check_password(self.request, self.user, password)
+        if result is None:
+            raise ValidationError(login_throttle.LOCKED_MESSAGE)
+        if not result:
             raise ValidationError(_("Your password was entered incorrectly."))
         return password
+
+
+class ThrottledLoginFormMixin:
+    """Report a rate-limited login as such, rather than as a wrong password.
+
+    RateLimitedModelBackend marks the request when it refuses a login, and
+    AuthenticationForm.clean() then raises its generic invalid-login error.
+    """
+
+    def clean(self):
+        try:
+            return super().clean()
+        except ValidationError:
+            if getattr(self.request, login_throttle.LOCKED_REQUEST_ATTR, False):
+                raise ValidationError(login_throttle.LOCKED_MESSAGE, code="throttled") from None
+            raise
+
+
+class LoginForm(ThrottledLoginFormMixin, AuthenticationForm):
+    pass
+
+
+class AdminLoginForm(ThrottledLoginFormMixin, AdminAuthenticationForm):
+    pass

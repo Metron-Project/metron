@@ -6504,6 +6504,10 @@ msgstr ""
 "Al momento non è stato possibile verificare il captcha. Riprova tra qualche "
 "minuto."
 
+#: users/login_throttle.py
+msgid "Too many failed attempts. Please try again in 15 minutes."
+msgstr "Troppi tentativi non riusciti. Riprova tra 15 minuti."
+
 #: users/forms.py
 msgid "Current password"
 msgstr "Password attuale"
