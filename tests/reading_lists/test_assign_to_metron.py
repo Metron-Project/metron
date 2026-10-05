@@ -2,11 +2,13 @@
 
 from django.urls import reverse
 
+from reading_lists.models import ReadingList
 from reading_lists.views import can_assign_reading_list_to_metron
 
 HTTP_200_OK = 200
 HTTP_302_FOUND = 302
 HTTP_403_FORBIDDEN = 403
+HTTP_404_NOT_FOUND = 404
 
 
 class TestAssignReadingListToMetron:
@@ -53,6 +55,48 @@ class TestAssignReadingListToMetron:
         assert resp.status_code == HTTP_302_FOUND
         public_reading_list.refresh_from_db()
         assert public_reading_list.user == metron_user
+
+    def test_editor_cannot_assign_other_users_private_list(
+        self,
+        client,
+        reading_list_editor_user,
+        private_reading_list,
+        metron_user,
+        test_password,
+    ):
+        """Another user's private list can't be viewed or taken over by its slug."""
+        owner = private_reading_list.user
+        client.login(username=reading_list_editor_user.username, password=test_password)
+        url = reverse("reading-list:assign-to-metron", args=[private_reading_list.slug])
+
+        assert client.get(url).status_code == HTTP_404_NOT_FOUND
+        assert client.post(url).status_code == HTTP_404_NOT_FOUND
+        private_reading_list.refresh_from_db()
+        assert private_reading_list.user == owner
+
+    def test_staff_cannot_assign_other_users_private_list(
+        self, client, admin_user, private_reading_list, metron_user, test_password
+    ):
+        owner = private_reading_list.user
+        client.login(username=admin_user.username, password=test_password)
+        url = reverse("reading-list:assign-to-metron", args=[private_reading_list.slug])
+
+        assert client.post(url).status_code == HTTP_404_NOT_FOUND
+        private_reading_list.refresh_from_db()
+        assert private_reading_list.user == owner
+
+    def test_editor_can_assign_own_private_list(
+        self, client, reading_list_editor_user, metron_user, test_password
+    ):
+        own_list = ReadingList.objects.create(
+            user=reading_list_editor_user, name="Editor's Private List", is_private=True
+        )
+        client.login(username=reading_list_editor_user.username, password=test_password)
+        url = reverse("reading-list:assign-to-metron", args=[own_list.slug])
+
+        assert client.post(url).status_code == HTTP_302_FOUND
+        own_list.refresh_from_db()
+        assert own_list.user == metron_user
 
     def test_regular_user_cannot_assign_list_to_metron(
         self, client, other_user, public_reading_list, test_password

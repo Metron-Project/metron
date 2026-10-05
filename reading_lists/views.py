@@ -207,8 +207,11 @@ class ReadingListFromSlugMixin:
     calls ``test_func()``.
     """
 
+    def get_reading_list_queryset(self):
+        return ReadingList.objects.all()
+
     def dispatch(self, request, *args, **kwargs):
-        self.reading_list = get_object_or_404(ReadingList, slug=kwargs["slug"])
+        self.reading_list = get_object_or_404(self.get_reading_list_queryset(), slug=kwargs["slug"])
         return super().dispatch(request, *args, **kwargs)
 
 
@@ -582,6 +585,11 @@ class AssignReadingListToMetronView(
     ReadingListFromSlugMixin, LoginRequiredMixin, UserPassesTestMixin, View
 ):
     """Reassign a reading list's owner to the Metron account."""
+
+    def get_reading_list_queryset(self):
+        # Only lists the editor can already see: another user's private list is a 404,
+        # so it can't be taken over (or its slug confirmed) by guessing its slug.
+        return ReadingList.objects.visible_to(self.request.user)
 
     def test_func(self):
         """Only allow staff or 'reading list editor' group members."""
