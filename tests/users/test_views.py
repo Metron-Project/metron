@@ -7,6 +7,7 @@ from django.core.cache import cache
 from django.urls import reverse
 from pytest_django.asserts import assertTemplateUsed
 
+from metron.utils import HCAPTCHA_UNAVAILABLE
 from users.forms import CustomUserChangeForm
 from users.models import ApiToken, CustomUser, SignupSettings
 from users.views import SIGNUP_IP_LIMIT, SUSTAINED_DURATION, SUSTAINED_LIMIT, get_rate_limit_usage
@@ -203,6 +204,38 @@ def test_signup_ip_rate_limit_prefers_x_real_ip_over_remote_addr(db, client):
 
     assert resp.status_code == HTTP_TOO_MANY_REQUESTS_CODE
     assert CustomUser.objects.count() == user_count_before + SIGNUP_IP_LIMIT
+
+
+def test_signup_hcaptcha_unavailable_shows_error(db, client):
+    ip = _unique_ip()
+    user_count_before = CustomUser.objects.count()
+    unavailable = {"success": False, "error-codes": [HCAPTCHA_UNAVAILABLE]}
+    with (
+        patch("users.views.get_recaptcha_auth", return_value=unavailable),
+        patch("users.views.send_pushover"),
+    ):
+        resp = client.post(reverse("signup"), _signup_payload("outage"), REMOTE_ADDR=ip)
+
+        assert resp.status_code == HTML_OK_CODE
+        assertTemplateUsed(resp, "registration/signup.html")
+        assert "unable to verify the captcha" in str(resp.context["form"].non_field_errors())
+        assert CustomUser.objects.count() == user_count_before
+
+        # The outage doesn't count against the IP limit, so a retry still works.
+        with patch("users.views.get_recaptcha_auth", return_value={"success": True}):
+            resp = client.post(reverse("signup"), _signup_payload("retry"), REMOTE_ADDR=ip)
+        assert resp.status_code == HTTP_REDIRECT_FOUND_CODE
+        assert CustomUser.objects.count() == user_count_before + 1
+
+
+def test_signup_failed_hcaptcha_still_redirects_silently(db, client):
+    user_count_before = CustomUser.objects.count()
+    failed = {"success": False, "error-codes": ["invalid-input-response"]}
+    with patch("users.views.get_recaptcha_auth", return_value=failed):
+        resp = client.post(reverse("signup"), _signup_payload("bot"), REMOTE_ADDR=_unique_ip())
+
+    assert resp.status_code == HTTP_REDIRECT_FOUND_CODE
+    assert CustomUser.objects.count() == user_count_before
 
 
 def test_profile_view_url_exists_at_desired_location(auto_login_user):

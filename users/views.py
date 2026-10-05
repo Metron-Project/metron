@@ -33,7 +33,7 @@ from comicsdb.models import (
     Universe,
 )
 from comicsdb.views.mixins import SearchMixin
-from metron.utils import get_recaptcha_auth
+from metron.utils import HCAPTCHA_UNAVAILABLE, get_recaptcha_auth
 from user_collection.models import CollectionItem
 from users.forms import CustomUserChangeForm, CustomUserCreationForm
 from users.models import ApiToken, CustomUser, SignupSettings
@@ -157,6 +157,18 @@ def signup(request):  # sourcery skip: extract-method
         form = CustomUserCreationForm(request.POST)
         if form.is_valid():
             result = get_recaptcha_auth(request)
+
+            if HCAPTCHA_UNAVAILABLE in result.get("error-codes", []):
+                # An hCaptcha outage, not a failed check: tell the user to retry
+                # rather than falling through to "activation email sent".
+                form.add_error(
+                    None,
+                    _(
+                        "We were unable to verify the captcha right now. "
+                        "Please try again in a few minutes."
+                    ),
+                )
+                return render(request, "registration/signup.html", {"form": form})
 
             if result["success"]:
                 user: CustomUser = form.save(commit=False)

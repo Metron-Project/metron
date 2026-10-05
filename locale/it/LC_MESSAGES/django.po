@@ -6496,6 +6496,14 @@ msgstr ""
 "Non è stato possibile inviare l'email di attivazione. Riprova tra qualche "
 "minuto."
 
+#: users/views.py
+msgid ""
+"We were unable to verify the captcha right now. Please try again in a few "
+"minutes."
+msgstr ""
+"Al momento non è stato possibile verificare il captcha. Riprova tra qualche "
+"minuto."
+
 #: users/templates/registration/account_activation_email.html:48
 #: users/templates/registration/account_activation_email.txt:2
 #, python-format
