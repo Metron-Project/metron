@@ -467,6 +467,11 @@ class ReadingListDetailView(DetailView):
             self.request.user.is_authenticated and reading_list.user != self.request.user
         )
 
+        # Hide previous/next links to lists this viewer can't see (e.g. private ones)
+        context["previous_list"], context["next_list"] = reading_list.get_visible_nav(
+            self.request.user
+        )
+
         # Add annotated year data to context
         context["start_year"] = reading_list.start_year_annotated
         context["end_year"] = reading_list.end_year_annotated
@@ -484,6 +489,11 @@ class ReadingListCreateView(LoginRequiredMixin, CreateView):
     model = ReadingList
     form_class = ReadingListForm
     template_name = "reading_lists/readinglist_form.html"
+
+    def get_form_kwargs(self):
+        kwargs = super().get_form_kwargs()
+        kwargs["user"] = self.request.user
+        return kwargs
 
     def get_form(self, form_class=None):
         """Customize form to exclude attribution fields for non-admin users."""
@@ -520,6 +530,11 @@ class ReadingListUpdateView(LoginRequiredMixin, UserPassesTestMixin, UpdateView)
         """Only allow authorized users to edit the list."""
         reading_list = self.get_object()
         return can_manage_reading_list(self.request.user, reading_list)
+
+    def get_form_kwargs(self):
+        kwargs = super().get_form_kwargs()
+        kwargs["user"] = self.request.user
+        return kwargs
 
     def get_form(self, form_class=None):
         """Customize form to exclude attribution fields for non-admin users."""

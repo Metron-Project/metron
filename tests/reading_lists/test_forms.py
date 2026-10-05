@@ -161,19 +161,19 @@ class TestReadingListForm:
         assert not form.fields["next"].required
 
     def test_reading_list_form_valid_with_previous_and_next(
-        self, reading_list_user, public_reading_list, other_user_reading_list
+        self, reading_list_user, public_reading_list, private_reading_list
     ):
-        """Test form accepts distinct previous/next reading lists."""
+        """Test form accepts distinct previous/next reading lists the user owns."""
         form_data = {
             "name": "Test Reading List",
             "list_type": ReadingList.ListType.EVENT,
             "previous": public_reading_list.pk,
-            "next": other_user_reading_list.pk,
+            "next": private_reading_list.pk,
         }
-        form = ReadingListForm(data=form_data)
+        form = ReadingListForm(data=form_data, user=reading_list_user)
         assert form.is_valid(), form.errors
         assert form.cleaned_data["previous"] == public_reading_list
-        assert form.cleaned_data["next"] == other_user_reading_list
+        assert form.cleaned_data["next"] == private_reading_list
 
     def test_reading_list_form_excludes_self_from_previous_next(self, public_reading_list):
         """Test that editing a list excludes itself from previous/next choices."""
@@ -191,8 +191,9 @@ class TestReadingListForm:
             "previous": public_reading_list.pk,
             "next": public_reading_list.pk,
         }
-        form = ReadingListForm(data=form_data)
+        form = ReadingListForm(data=form_data, user=reading_list_user)
         assert not form.is_valid()
+        assert "__all__" in form.errors
 
     def test_reading_list_form_invalid_url(self):
         """Test form with invalid attribution URL."""

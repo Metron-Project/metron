@@ -123,25 +123,25 @@
     </div>
 
     {# ===================== READING ORDER NAV ===================== #}
-    {% if reading_list.previous or reading_list.next %}
+    {% if previous_list or next_list %}
         <nav class="level box mb-5">
             <div class="level-left">
-                {% if reading_list.previous %}
-                    <a class="level-item" href="{{ reading_list.previous.get_absolute_url }}">
+                {% if previous_list %}
+                    <a class="level-item" href="{{ previous_list.get_absolute_url }}">
                         <span class="icon"><i class="fas fa-arrow-left"></i></span>
                         <span>
                             <span class="has-text-grey is-size-7 is-block">{% trans "Previous" %}</span>
-                            <span class="has-text-weight-semibold">{{ reading_list.previous.name }}</span>
+                            <span class="has-text-weight-semibold">{{ previous_list.name }}</span>
                         </span>
                     </a>
                 {% endif %}
             </div>
             <div class="level-right">
-                {% if reading_list.next %}
-                    <a class="level-item has-text-right" href="{{ reading_list.next.get_absolute_url }}">
+                {% if next_list %}
+                    <a class="level-item has-text-right" href="{{ next_list.get_absolute_url }}">
                         <span>
                             <span class="has-text-grey is-size-7 is-block">{% trans "Next" %}</span>
-                            <span class="has-text-weight-semibold">{{ reading_list.next.name }}</span>
+                            <span class="has-text-weight-semibold">{{ next_list.name }}</span>
                         </span>
                         <span class="icon"><i class="fas fa-arrow-right"></i></span>
                     </a>

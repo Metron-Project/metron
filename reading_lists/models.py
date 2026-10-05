@@ -36,6 +36,22 @@ class ReadingListQuerySet(models.QuerySet):
 
         return self.filter(Q(is_private=False) | Q(user=user))
 
+    def manageable_by(self, user):
+        """Restrict to reading lists the given user is allowed to edit.
+
+        Mirrors ``can_manage_reading_list``: a user can manage their own lists,
+        and staff and 'reading list editor' group members can also manage
+        lists owned by the shared 'Metron' account.
+        """
+        if not user.is_authenticated:
+            return self.none()
+
+        is_editor = user.is_staff or user.groups.filter(name=READING_LIST_EDITOR_GROUP).exists()
+        if is_editor:
+            return self.filter(Q(user=user) | Q(user__username=METRON_USERNAME))
+
+        return self.filter(user=user)
+
     def with_list_stats(self):
         """Annotate with issue count, rating stats, and cover-date year range."""
         return self.annotate(
@@ -181,6 +197,24 @@ class ReadingList(CommonInfo):
 
     def get_absolute_url(self):
         return reverse("reading-list:detail", args=[self.slug])
+
+    def get_visible_nav(self, user) -> tuple[ReadingList | None, ReadingList | None]:
+        """Return (previous, next), with any list ``user`` isn't allowed to see as None.
+
+        A linked list can be private (e.g. made private after being linked), so its
+        name and URL must not be shown to viewers who can't see the list itself.
+        """
+        linked_ids = [pk for pk in (self.previous_id, self.next_id) if pk]
+        if not linked_ids:
+            return None, None
+        visible_ids = set(
+            ReadingList.objects.filter(pk__in=linked_ids)
+            .visible_to(user)
+            .values_list("pk", flat=True)
+        )
+        previous = self.previous if self.previous_id in visible_ids else None
+        next_list = self.next if self.next_id in visible_ids else None
+        return previous, next_list
 
     @property
     def start_year(self) -> int | None:
