@@ -11,6 +11,10 @@ from comicsdb.models.series import Series
 from reading_lists.autocomplete import ReadingListAutocomplete
 from reading_lists.models import ReadingList
 
+# Generous upper bound on issue_order entries (the largest lists hold ~1,100 issues),
+# so a crafted request can't make the view process an unbounded list.
+MAX_ISSUE_ORDER_LENGTH = 5000
+
 
 class ScopedReadingListWidget(SafeAutocompleteWidget):
     """Autocomplete widget that only renders a selected list within ``allowed_queryset``.
@@ -147,6 +151,20 @@ class AddIssueWithSearchForm(forms.Form):
         widget=forms.HiddenInput(),
         help_text=_("Stores the order of selected issues after drag-and-drop"),
     )
+
+    def clean_issue_order(self) -> list[int]:
+        """Parse the comma-separated issue pks into a de-duplicated list of ints."""
+        raw = self.cleaned_data.get("issue_order", "")
+        parts = [part.strip() for part in raw.split(",") if part.strip()]
+        if len(parts) > MAX_ISSUE_ORDER_LENGTH:
+            raise forms.ValidationError(
+                _("A reading list can't be ordered with more than %(max)d issues at once.")
+                % {"max": MAX_ISSUE_ORDER_LENGTH}
+            )
+        if not all(part.isdigit() for part in parts):
+            raise forms.ValidationError(_("The issue order is invalid. Please try again."))
+        # dict.fromkeys keeps the first position of any repeated pk.
+        return list(dict.fromkeys(int(part) for part in parts))
 
 
 class AddIssuesFromSeriesForm(forms.Form):

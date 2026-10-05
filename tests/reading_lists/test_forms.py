@@ -1,6 +1,9 @@
 """Tests for reading_lists forms."""
 
+import pytest
+
 from reading_lists.forms import (
+    MAX_ISSUE_ORDER_LENGTH,
     AddIssuesFromArcForm,
     AddIssuesFromSeriesForm,
     AddIssueWithSearchForm,
@@ -239,10 +242,27 @@ class TestAddIssueWithSearchForm:
         }
         form = AddIssueWithSearchForm(data=form_data)
         assert form.is_valid()
-        assert (
-            form.cleaned_data["issue_order"]
-            == f"{reading_list_issue_1.pk},{reading_list_issue_2.pk}"
-        )
+        assert form.cleaned_data["issue_order"] == [
+            reading_list_issue_1.pk,
+            reading_list_issue_2.pk,
+        ]
+
+    def test_add_issue_form_issue_order_strips_and_dedupes(self):
+        form = AddIssueWithSearchForm(data={"issues": [], "issue_order": " 3, 1,,3 ,2 "})
+        assert form.is_valid(), form.errors
+        assert form.cleaned_data["issue_order"] == [3, 1, 2]
+
+    @pytest.mark.parametrize("issue_order", ["1,abc", "1,-2", "1,2.5", "1;2"])
+    def test_add_issue_form_rejects_malformed_issue_order(self, issue_order):
+        form = AddIssueWithSearchForm(data={"issues": [], "issue_order": issue_order})
+        assert not form.is_valid()
+        assert "issue_order" in form.errors
+
+    def test_add_issue_form_rejects_oversized_issue_order(self):
+        issue_order = ",".join(str(pk) for pk in range(1, MAX_ISSUE_ORDER_LENGTH + 2))
+        form = AddIssueWithSearchForm(data={"issues": [], "issue_order": issue_order})
+        assert not form.is_valid()
+        assert "issue_order" in form.errors
 
     def test_add_issue_form_fields(self):
         """Test that form has the correct fields."""

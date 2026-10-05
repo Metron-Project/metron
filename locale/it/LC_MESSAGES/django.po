@@ -4066,6 +4066,17 @@ msgstr "Aggiungi nuovi albi e/o riordina gli albi esistenti trascinandoli"
 msgid "Stores the order of selected issues after drag-and-drop"
 msgstr "Memorizza l'ordine degli albi selezionati dopo il trascinamento"
 
+#: reading_lists/forms.py
+#, python-format
+msgid "A reading list can't be ordered with more than %(max)d issues at once."
+msgstr ""
+"Non è possibile ordinare una lista di lettura con più di %(max)d albi alla "
+"volta."
+
+#: reading_lists/forms.py
+msgid "The issue order is invalid. Please try again."
+msgstr "L'ordine degli albi non è valido. Riprova."
+
 #: reading_lists/forms.py:123 user_collection/forms.py:118
 msgid "All issues"
 msgstr "Tutti gli albi"
