@@ -4066,6 +4066,17 @@ msgstr "Aggiungi nuovi albi e/o riordina gli albi esistenti trascinandoli"
 msgid "Stores the order of selected issues after drag-and-drop"
 msgstr "Memorizza l'ordine degli albi selezionati dopo il trascinamento"
 
+#: reading_lists/forms.py
+#, python-format
+msgid "A reading list can't be ordered with more than %(max)d issues at once."
+msgstr ""
+"Non è possibile ordinare una lista di lettura con più di %(max)d albi alla "
+"volta."
+
+#: reading_lists/forms.py
+msgid "The issue order is invalid. Please try again."
+msgstr "L'ordine degli albi non è valido. Riprova."
+
 #: reading_lists/forms.py:123 user_collection/forms.py:118
 msgid "All issues"
 msgstr "Tutti gli albi"
@@ -6495,6 +6506,124 @@ msgid ""
 msgstr ""
 "Non è stato possibile inviare l'email di attivazione. Riprova tra qualche "
 "minuto."
+
+#: users/views.py
+msgid ""
+"We were unable to verify the captcha right now. Please try again in a few "
+"minutes."
+msgstr ""
+"Al momento non è stato possibile verificare il captcha. Riprova tra qualche "
+"minuto."
+
+#: users/login_throttle.py
+msgid "Too many failed attempts. Please try again in 15 minutes."
+msgstr "Troppi tentativi non riusciti. Riprova tra 15 minuti."
+
+#: users/forms.py
+msgid "Current password"
+msgstr "Password attuale"
+
+#: users/forms.py
+msgid "Required to change your email address."
+msgstr "Necessaria per modificare il tuo indirizzo email."
+
+#: users/forms.py
+msgid "Enter your current password to change your email address."
+msgstr "Inserisci la password attuale per modificare il tuo indirizzo email."
+
+#: users/forms.py
+msgid "Your password was entered incorrectly."
+msgstr "La password inserita non è corretta."
+
+#: users/views.py
+msgid "Confirm your new Metron email address"
+msgstr "Conferma il tuo nuovo indirizzo email Metron"
+
+#: users/views.py
+msgid ""
+"We were unable to send a confirmation email to that address. Please try "
+"again later."
+msgstr ""
+"Non è stato possibile inviare un'email di conferma a quell'indirizzo. "
+"Riprova più tardi."
+
+#: users/views.py
+msgid "Your Metron email address change was requested"
+msgstr "È stata richiesta la modifica del tuo indirizzo email Metron"
+
+#: users/views.py
+#, python-format
+msgid ""
+"We've sent a confirmation link to %(email)s. Your email address will change "
+"once you follow it."
+msgstr ""
+"Abbiamo inviato un link di conferma a %(email)s. Il tuo indirizzo email "
+"verrà modificato quando lo aprirai."
+
+#: users/views.py
+msgid "This email confirmation link is invalid or has expired."
+msgstr "Questo link di conferma email non è valido o è scaduto."
+
+#: users/views.py
+msgid "That email address is already in use by another account."
+msgstr "Questo indirizzo email è già utilizzato da un altro account."
+
+#: users/views.py
+msgid "Your email address has been updated."
+msgstr "Il tuo indirizzo email è stato aggiornato."
+
+#: users/templates/users/delete_account.html
+msgid "Enter your password to confirm."
+msgstr "Inserisci la tua password per confermare."
+
+#: users/templates/registration/email_change_confirm_email.txt
+#, python-format
+msgid ""
+"You asked to change the email address on your Metron account to "
+"%(new_email)s. To confirm this address, please visit:"
+msgstr ""
+"Hai chiesto di modificare l'indirizzo email del tuo account Metron in "
+"%(new_email)s. Per confermare questo indirizzo, visita:"
+
+#: users/templates/registration/email_change_confirm_email.txt
+msgid ""
+"This link expires in 3 days. Your email address won't change until you "
+"follow it."
+msgstr ""
+"Questo link scade tra 3 giorni. Il tuo indirizzo email non verrà modificato "
+"finché non lo aprirai."
+
+#: users/templates/registration/email_change_confirm_email.txt
+msgid "If you didn't request this change, you can safely ignore this email."
+msgstr "Se non hai richiesto questa modifica, puoi ignorare questa email."
+
+#: users/templates/registration/email_change_notice_email.txt
+#, python-format
+msgid ""
+"Someone asked to change the email address on your Metron account to "
+"%(new_email)s. The change only takes effect once that address confirms it."
+msgstr ""
+"Qualcuno ha chiesto di modificare l'indirizzo email del tuo account Metron "
+"in %(new_email)s. La modifica avrà effetto solo dopo la conferma da "
+"quell'indirizzo."
+
+#: users/templates/registration/email_change_confirm_email.html
+msgid "Confirm Email Address"
+msgstr "Conferma indirizzo email"
+
+#: users/templates/registration/email_change_notice_email.html
+msgid "Reset My Password"
+msgstr "Reimposta la mia password"
+
+#: users/templates/registration/email_change_notice_email.txt
+msgid "If this was you, there's nothing else to do."
+msgstr "Se sei stato tu, non devi fare nient'altro."
+
+#: users/templates/registration/email_change_notice_email.txt
+msgid "If it wasn't you, someone may know your password. Please reset it now:"
+msgstr ""
+"Se non sei stato tu, qualcuno potrebbe conoscere la tua password. "
+"Reimpostala subito:"
 
 #: users/templates/registration/account_activation_email.html:48
 #: users/templates/registration/account_activation_email.txt:2

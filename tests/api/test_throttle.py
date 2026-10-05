@@ -232,10 +232,12 @@ def test_wait_with_no_history_falls_back_to_drf():
 
 
 @pytest.mark.django_db
-def test_over_limit_429_includes_retry_after_and_accurate_reset(create_user, api_client):
+def test_over_limit_429_includes_retry_after_and_accurate_reset(
+    create_user, api_client, throttle_cache_key
+):
     user = create_user()
     api_client.force_authenticate(user=user)
-    burst_key = f"throttle_burst_{user.pk}"
+    burst_key = throttle_cache_key("burst", user.pk)
     now = time.time()
     # 25 requests in the last 24s against a burst limit of 20 (newest first).
     history = [now - age for age in range(1, 26)]

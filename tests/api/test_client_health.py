@@ -78,13 +78,15 @@ def test_record_throttled_request_increments_on_repeat():
 
 
 @pytest.mark.django_db
-def test_exceeding_burst_limit_returns_429_and_is_tracked(create_user, api_client):
+def test_exceeding_burst_limit_returns_429_and_is_tracked(
+    create_user, api_client, throttle_cache_key
+):
     user = create_user()
     api_client.force_authenticate(user=user)
-    # DRF's own burst-throttle history is Redis-backed and keyed by user pk, which
-    # test-db recreation recycles across runs — clear any stale leftover history
-    # for this pk so the test starts from a known-clean state.
-    burst_key = f"throttle_burst_{user.pk}"
+    # DRF's burst-throttle history is Redis-backed and keyed by user pk; the
+    # isolated_api_throttle fixture gives this test its own key prefix, and the
+    # delete/finally below just keep it from leaving anything behind.
+    burst_key = throttle_cache_key("burst", user.pk)
     cache.delete(burst_key)
 
     try:
@@ -96,8 +98,6 @@ def test_exceeding_burst_limit_returns_429_and_is_tracked(create_user, api_clien
         assert throttled_resp.status_code == status.HTTP_429_TOO_MANY_REQUESTS
         assert cache.get(f"throttled:burst:user:{user.username}:{TODAY}") == 1
     finally:
-        # Don't leave this pk's burst history exhausted for whatever test/run
-        # recycles it next.
         cache.delete(burst_key)
 
 

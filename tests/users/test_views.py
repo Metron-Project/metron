@@ -1,12 +1,15 @@
+import re
 import time
 import uuid
 from unittest.mock import patch
 
 import pytest
+from django.core import mail
 from django.core.cache import cache
 from django.urls import reverse
 from pytest_django.asserts import assertTemplateUsed
 
+from metron.utils import HCAPTCHA_UNAVAILABLE
 from users.forms import CustomUserChangeForm
 from users.models import ApiToken, CustomUser, SignupSettings
 from users.views import SIGNUP_IP_LIMIT, SUSTAINED_DURATION, SUSTAINED_LIMIT, get_rate_limit_usage
@@ -205,6 +208,58 @@ def test_signup_ip_rate_limit_prefers_x_real_ip_over_remote_addr(db, client):
     assert CustomUser.objects.count() == user_count_before + SIGNUP_IP_LIMIT
 
 
+@pytest.mark.parametrize(("secure", "scheme"), [(True, "https"), (False, "http")])
+def test_signup_activation_link_uses_request_scheme(db, client, secure, scheme):
+    with (
+        patch("users.views.get_recaptcha_auth", return_value={"success": True}),
+        patch("users.views.send_pushover"),
+    ):
+        resp = client.post(
+            reverse("signup"),
+            _signup_payload(f"scheme-{scheme}"),
+            REMOTE_ADDR=_unique_ip(),
+            secure=secure,
+        )
+
+    assert resp.status_code == HTTP_REDIRECT_FOUND_CODE
+    (message,) = mail.outbox
+    ((html, _mimetype),) = message.alternatives
+    for content in (message.body, html):
+        assert re.search(rf"(?<![a-z]){scheme}://[^/\s]+/accounts/activate/", content)
+
+
+def test_signup_hcaptcha_unavailable_shows_error(db, client):
+    ip = _unique_ip()
+    user_count_before = CustomUser.objects.count()
+    unavailable = {"success": False, "error-codes": [HCAPTCHA_UNAVAILABLE]}
+    with (
+        patch("users.views.get_recaptcha_auth", return_value=unavailable),
+        patch("users.views.send_pushover"),
+    ):
+        resp = client.post(reverse("signup"), _signup_payload("outage"), REMOTE_ADDR=ip)
+
+        assert resp.status_code == HTML_OK_CODE
+        assertTemplateUsed(resp, "registration/signup.html")
+        assert "unable to verify the captcha" in str(resp.context["form"].non_field_errors())
+        assert CustomUser.objects.count() == user_count_before
+
+        # The outage doesn't count against the IP limit, so a retry still works.
+        with patch("users.views.get_recaptcha_auth", return_value={"success": True}):
+            resp = client.post(reverse("signup"), _signup_payload("retry"), REMOTE_ADDR=ip)
+        assert resp.status_code == HTTP_REDIRECT_FOUND_CODE
+        assert CustomUser.objects.count() == user_count_before + 1
+
+
+def test_signup_failed_hcaptcha_still_redirects_silently(db, client):
+    user_count_before = CustomUser.objects.count()
+    failed = {"success": False, "error-codes": ["invalid-input-response"]}
+    with patch("users.views.get_recaptcha_auth", return_value=failed):
+        resp = client.post(reverse("signup"), _signup_payload("bot"), REMOTE_ADDR=_unique_ip())
+
+    assert resp.status_code == HTTP_REDIRECT_FOUND_CODE
+    assert CustomUser.objects.count() == user_count_before
+
+
 def test_profile_view_url_exists_at_desired_location(auto_login_user):
     client, user = auto_login_user()
     resp = client.get(f"/accounts/{user.username}/")
@@ -256,15 +311,17 @@ def test_user_search_view_accessible_by_name(auto_login_user):
     assert resp.status_code == HTML_OK_CODE
 
 
-def test_valid_form(db):
+def test_valid_form(create_user):
+    user = create_user()
     form = CustomUserChangeForm(
         data={
             "username": "wsimonson",
             "first_name": "Walter",
             "last_name": "Simonson",
-            "email": "wsimonson@test.com",
+            "email": user.email,
             "image": "user/walter.jpg",
-        }
+        },
+        instance=user,
     )
     assert form.is_valid() is True
 
@@ -285,9 +342,9 @@ def test_form_invalid(db):
 # --- get_rate_limit_usage tests ---
 
 
-def test_rate_limit_usage_no_history(create_user):
+def test_rate_limit_usage_no_history(create_user, throttle_cache_key):
     user = create_user()
-    cache.delete(f"throttle_sustained_{user.pk}")
+    cache.delete(throttle_cache_key("sustained", user.pk))
     result = get_rate_limit_usage(user)
     assert result["used"] == 0
     assert result["remaining"] == SUSTAINED_LIMIT
@@ -295,36 +352,36 @@ def test_rate_limit_usage_no_history(create_user):
     assert result["percent_used"] == 0.0
 
 
-def test_rate_limit_usage_with_history(create_user):
+def test_rate_limit_usage_with_history(create_user, throttle_cache_key):
     user = create_user()
     now = time.time()
     # Simulate 10 recent requests
-    cache.set(f"throttle_sustained_{user.pk}", [now - i for i in range(10)])
+    cache.set(throttle_cache_key("sustained", user.pk), [now - i for i in range(10)])
     result = get_rate_limit_usage(user)
     assert result["used"] == 10
     assert result["remaining"] == SUSTAINED_LIMIT - 10
-    cache.delete(f"throttle_sustained_{user.pk}")
+    cache.delete(throttle_cache_key("sustained", user.pk))
 
 
-def test_rate_limit_usage_filters_old_timestamps(create_user):
+def test_rate_limit_usage_filters_old_timestamps(create_user, throttle_cache_key):
     user = create_user()
     now = time.time()
     recent = [now - 100, now - 200]
     old = [now - SUSTAINED_DURATION - 1, now - SUSTAINED_DURATION - 3600]
-    cache.set(f"throttle_sustained_{user.pk}", recent + old)
+    cache.set(throttle_cache_key("sustained", user.pk), recent + old)
     result = get_rate_limit_usage(user)
     assert result["used"] == 2
-    cache.delete(f"throttle_sustained_{user.pk}")
+    cache.delete(throttle_cache_key("sustained", user.pk))
 
 
-def test_rate_limit_percent_used(create_user):
+def test_rate_limit_percent_used(create_user, throttle_cache_key):
     user = create_user()
     now = time.time()
     used = 500
-    cache.set(f"throttle_sustained_{user.pk}", [now - i for i in range(used)])
+    cache.set(throttle_cache_key("sustained", user.pk), [now - i for i in range(used)])
     result = get_rate_limit_usage(user)
     assert result["percent_used"] == round(used / SUSTAINED_LIMIT * 100, 1)
-    cache.delete(f"throttle_sustained_{user.pk}")
+    cache.delete(throttle_cache_key("sustained", user.pk))
 
 
 # --- Profile view rate_limit context tests ---
@@ -371,21 +428,31 @@ def test_delete_account_post_unauthenticated(client, create_user):
     assert CustomUser.objects.filter(pk=user_pk).exists()
 
 
-def test_delete_account_post_deletes_user(auto_login_user):
+def test_delete_account_post_deletes_user(auto_login_user, test_password):
     client, user = auto_login_user()
     user_pk = user.pk
-    resp = client.post(reverse("delete_account"))
+    resp = client.post(reverse("delete_account"), {"password": test_password})
     assert resp.status_code == HTTP_REDIRECT_FOUND_CODE
     assert resp.url == reverse("home")
     assert not CustomUser.objects.filter(pk=user_pk).exists()
 
 
-def test_delete_account_post_logs_out_user(auto_login_user):
+def test_delete_account_post_logs_out_user(auto_login_user, test_password):
     client, _ = auto_login_user()
-    client.post(reverse("delete_account"))
+    client.post(reverse("delete_account"), {"password": test_password})
     resp = client.get(reverse("change_profile"))
     assert resp.status_code == HTTP_REDIRECT_FOUND_CODE
     assert "/accounts/login/" in resp.url
+
+
+@pytest.mark.parametrize("password", ["", "wrong-password"])
+def test_delete_account_requires_correct_password(auto_login_user, password):
+    client, user = auto_login_user()
+    resp = client.post(reverse("delete_account"), {"password": password})
+    assert resp.status_code == HTML_OK_CODE
+    assertTemplateUsed(resp, "users/delete_account.html")
+    assert resp.context["form"].errors["password"]
+    assert CustomUser.objects.filter(pk=user.pk).exists()
 
 
 # --- api_tokens view tests ---

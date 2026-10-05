@@ -3,11 +3,12 @@ from urllib.parse import urlencode
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
-from django.db import models
+from django.db import models, transaction
 from django.db.models import Avg, Count, Prefetch
 from django.http import HttpResponseForbidden
 from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse, reverse_lazy
+from django.utils import timezone
 from django.utils.translation import gettext_lazy as _, ngettext
 from django.views import View
 from django.views.decorators.http import require_POST
@@ -207,8 +208,11 @@ class ReadingListFromSlugMixin:
     calls ``test_func()``.
     """
 
+    def get_reading_list_queryset(self):
+        return ReadingList.objects.all()
+
     def dispatch(self, request, *args, **kwargs):
-        self.reading_list = get_object_or_404(ReadingList, slug=kwargs["slug"])
+        self.reading_list = get_object_or_404(self.get_reading_list_queryset(), slug=kwargs["slug"])
         return super().dispatch(request, *args, **kwargs)
 
 
@@ -467,6 +471,11 @@ class ReadingListDetailView(DetailView):
             self.request.user.is_authenticated and reading_list.user != self.request.user
         )
 
+        # Hide previous/next links to lists this viewer can't see (e.g. private ones)
+        context["previous_list"], context["next_list"] = reading_list.get_visible_nav(
+            self.request.user
+        )
+
         # Add annotated year data to context
         context["start_year"] = reading_list.start_year_annotated
         context["end_year"] = reading_list.end_year_annotated
@@ -484,6 +493,11 @@ class ReadingListCreateView(LoginRequiredMixin, CreateView):
     model = ReadingList
     form_class = ReadingListForm
     template_name = "reading_lists/readinglist_form.html"
+
+    def get_form_kwargs(self):
+        kwargs = super().get_form_kwargs()
+        kwargs["user"] = self.request.user
+        return kwargs
 
     def get_form(self, form_class=None):
         """Customize form to exclude attribution fields for non-admin users."""
@@ -520,6 +534,11 @@ class ReadingListUpdateView(LoginRequiredMixin, UserPassesTestMixin, UpdateView)
         """Only allow authorized users to edit the list."""
         reading_list = self.get_object()
         return can_manage_reading_list(self.request.user, reading_list)
+
+    def get_form_kwargs(self):
+        kwargs = super().get_form_kwargs()
+        kwargs["user"] = self.request.user
+        return kwargs
 
     def get_form(self, form_class=None):
         """Customize form to exclude attribution fields for non-admin users."""
@@ -567,6 +586,11 @@ class AssignReadingListToMetronView(
     ReadingListFromSlugMixin, LoginRequiredMixin, UserPassesTestMixin, View
 ):
     """Reassign a reading list's owner to the Metron account."""
+
+    def get_reading_list_queryset(self):
+        # Only lists the editor can already see: another user's private list is a 404,
+        # so it can't be taken over (or its slug confirmed) by guessing its slug.
+        return ReadingList.objects.visible_to(self.request.user)
 
     def test_func(self):
         """Only allow staff or 'reading list editor' group members."""
@@ -631,63 +655,47 @@ class AddIssueWithAutocompleteView(
     form_class = AddIssueWithSearchForm
     template_name = "reading_lists/add_issue_autocomplete.html"
 
-    def form_valid(self, form):  # noqa: PLR0912
+    def form_valid(self, form):
         new_issues = form.cleaned_data["issues"]
-        issue_order_str = form.cleaned_data.get("issue_order", "")
+        # Already parsed into de-duplicated ints by the form (existing + new issue pks).
+        issue_order = form.cleaned_data["issue_order"]
 
-        # Parse the issue order (contains both existing and new issue IDs)
-        if issue_order_str:
-            issue_order = [int(pk) for pk in issue_order_str.split(",") if pk.strip()]
-        else:
-            # Default to existing issues + new issues
-            existing_items = self.reading_list.reading_list_items.order_by("order")
-            issue_order = [item.issue.pk for item in existing_items] + [
-                issue.pk for issue in new_issues
-            ]
+        # One query each for the list's items and the new issues, instead of per entry.
+        items_by_issue = {
+            item.issue_id: item for item in self.reading_list.reading_list_items.all()
+        }
+        new_issues_by_pk = {issue.pk: issue for issue in new_issues}
+        if not issue_order:
+            # Default to existing issues (in their current order) + new issues.
+            existing = sorted(items_by_issue.values(), key=lambda item: item.order)
+            issue_order = [item.issue_id for item in existing] + list(new_issues_by_pk)
 
-        # Get existing issue IDs in the reading list
-        existing_issue_ids = set(
-            self.reading_list.reading_list_items.values_list("issue_id", flat=True)
-        )
-        new_issue_ids = {issue.pk for issue in new_issues}
-
-        added_count = 0
-        reordered_count = 0
-        skipped_count = 0
+        items_to_update = []
+        items_to_create = []
         added_issues = []
-
-        # Process all issues in the specified order
         for new_order, issue_pk in enumerate(issue_order, start=1):
-            if issue_pk in existing_issue_ids:
-                # Update the order of an existing issue
-                item = ReadingListItem.objects.get(
-                    reading_list=self.reading_list, issue_id=issue_pk
-                )
+            if item := items_by_issue.get(issue_pk):
                 if item.order != new_order:
                     item.order = new_order
-                    item.save()
-                    reordered_count += 1
-            elif issue_pk in new_issue_ids:
-                # Check if this new issue is already in the list (shouldn't happen, but be safe)
-                if ReadingListItem.objects.filter(
-                    reading_list=self.reading_list, issue_id=issue_pk
-                ).exists():
-                    skipped_count += 1
-                    continue
+                    items_to_update.append(item)
+            elif issue := new_issues_by_pk.get(issue_pk):
+                items_to_create.append(
+                    ReadingListItem(reading_list=self.reading_list, issue=issue, order=new_order)
+                )
+                added_issues.append(str(issue))
+            # Any other pk (not on the list and not being added) is ignored.
 
-                # Create a new reading list item
-                try:
-                    issue = new_issues.get(pk=issue_pk)
-                    ReadingListItem.objects.create(
-                        reading_list=self.reading_list,
-                        issue=issue,
-                        order=new_order,
-                    )
-                    added_count += 1
-                    added_issues.append(str(issue))
-                except Issue.DoesNotExist:
-                    continue
+        with transaction.atomic():
+            ReadingListItem.objects.bulk_update(items_to_update, ["order"])
+            ReadingListItem.objects.bulk_create(items_to_create)
+            if items_to_update or items_to_create:
+                # Bulk writes skip the post_save signal that normally bumps this.
+                ReadingList.objects.filter(pk=self.reading_list.pk).update(modified=timezone.now())
+        self._report_changes(added_issues, len(items_to_update))
+        return redirect(self.get_success_url())
 
+    def _report_changes(self, added_issues, reordered_count):
+        added_count = len(added_issues)
         # Provide feedback
         message_parts = []
         if added_count > 0:
@@ -723,21 +731,8 @@ class AddIssueWithAutocompleteView(
                 % {"summary": summary, "name": self.reading_list.name},
             )
 
-        if skipped_count > 0:
-            messages.info(
-                self.request,
-                ngettext(
-                    "Skipped %(count)d duplicate issue.",
-                    "Skipped %(count)d duplicate issues.",
-                    skipped_count,
-                )
-                % {"count": skipped_count},
-            )
-
-        if added_count == 0 and reordered_count == 0 and skipped_count == 0:
+        if added_count == 0 and reordered_count == 0:
             messages.info(self.request, _("No changes were made."))
-
-        return redirect(self.get_success_url())
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)

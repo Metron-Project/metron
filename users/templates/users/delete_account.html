@@ -26,6 +26,17 @@
                 </div>
                 <form method="post">
                     {% csrf_token %}
+                    <div class="field">
+                        <label class="label" for="{{ form.password.id_for_label }}">{{ form.password.label }}</label>
+                        <div class="control has-icons-left">
+                            {{ form.password }}
+                            <span class="icon is-small is-left">
+                                <i class="fas fa-lock"></i>
+                            </span>
+                        </div>
+                        {% for error in form.password.errors %}<p class="help is-danger">{{ error }}</p>{% endfor %}
+                        <p class="help">{% trans "Enter your password to confirm." %}</p>
+                    </div>
                     <div class="field is-grouped is-grouped-centered">
                         <div class="control">
                             <button class="button is-danger is-medium" type="submit">

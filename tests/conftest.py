@@ -8,6 +8,7 @@ import pytest
 from django.contrib.auth.models import Group, Permission
 from django.contrib.contenttypes.models import ContentType
 from django.core.management import call_command
+from rest_framework.throttling import SimpleRateThrottle
 
 from comicsdb.models import Credits, Imprint, Universe
 from comicsdb.models.arc import Arc
@@ -31,6 +32,36 @@ def run_cache_bumps_immediately():
     transaction. Tests of the deferral itself re-patch the real on_commit."""
     with patch("api.cache.on_commit", lambda func, *args, **kwargs: func()):
         yield
+
+
+@pytest.fixture(autouse=True)
+def isolated_login_throttle():
+    """Give each test its own failed-login counters. Tests share the real Redis
+    cache, so otherwise wrong-password attempts from the test client's fixed IP
+    would add up across tests (and runs) until logins start being refused."""
+    with patch("users.login_throttle.KEY_PREFIX", f"login_fail:test:{uuid.uuid4().hex}"):
+        yield
+
+
+@pytest.fixture(autouse=True)
+def isolated_api_throttle():
+    """Give each test its own DRF throttle history. It's keyed by user pk in the
+    shared Redis cache, and pks repeat across xdist workers (each has its own test
+    database) and across runs, so without this one test's requests -- e.g. one that
+    deliberately exhausts the burst limit -- can get an unrelated test a 429."""
+    cache_format = f"throttle_test_{uuid.uuid4().hex}_%(scope)s_%(ident)s"
+    with patch.object(SimpleRateThrottle, "cache_format", cache_format):
+        yield
+
+
+@pytest.fixture
+def throttle_cache_key():
+    """Build DRF's throttle cache key for ``scope``/``ident`` under the current test's prefix."""
+
+    def make_key(scope, ident):
+        return SimpleRateThrottle.cache_format % {"scope": scope, "ident": ident}
+
+    return make_key
 
 
 @pytest.fixture

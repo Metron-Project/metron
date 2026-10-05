@@ -1,14 +1,17 @@
 from django.contrib import admin
 from django.contrib.auth.admin import UserAdmin
 
-from users.forms import CustomUserChangeForm, CustomUserCreationForm
+from users.forms import AdminLoginForm, AdminUserChangeForm, CustomUserCreationForm
 from users.models import CustomUser, OpenCollectiveDonation, SignupSettings
+
+# Report rate-limited admin logins as such (see users.login_throttle).
+admin.site.login_form = AdminLoginForm
 
 
 @admin.register(CustomUser)
 class CustomUserAdmin(UserAdmin):
     add_form = CustomUserCreationForm
-    form = CustomUserChangeForm
+    form = AdminUserChangeForm
     model = CustomUser
     list_display = (
         "username",

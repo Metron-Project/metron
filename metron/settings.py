@@ -128,6 +128,8 @@ WSGI_APPLICATION = "metron.wsgi.application"
 
 # Custom User Model
 AUTH_USER_MODEL = "users.CustomUser"
+# Limits failed logins per username+IP and per IP (see users.login_throttle).
+AUTHENTICATION_BACKENDS = ["users.backends.RateLimitedModelBackend"]
 
 # Needed to override form widgets template
 FORM_RENDERER = "django.forms.renderers.TemplatesSetting"
@@ -379,6 +381,8 @@ if not DEBUG:
     # Tell Django it is behind an nginx proxy that terminates SSL.
     # Without this, SECURE_SSL_REDIRECT causes an infinite redirect loop.
     SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
+    # Safe only because nginx always overwrites X-Forwarded-Host (nginx/nginx.conf);
+    # a client-supplied value would otherwise be trusted as the request's host.
     USE_X_FORWARDED_HOST = True
     SECURE_SSL_REDIRECT = True
     SECURE_HSTS_SECONDS = 15778800

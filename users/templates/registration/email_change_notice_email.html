@@ -1,0 +1,108 @@
+{% load i18n %}
+{% comment %}
+    Autoescaping stays on (unlike the activation email): new_email is user-supplied,
+    and a valid address can contain characters such as < and >.
+{% endcomment %}
+{% url 'password_reset' as reset_path %}
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+    <head>
+        <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>{% trans "Your Metron email address change was requested" %}</title>
+    </head>
+    <body style="margin: 0;
+                 padding: 0;
+                 font-family: Arial, Helvetica, sans-serif;
+                 line-height: 1.6;
+                 color: #363636;
+                 background-color: #f5f5f5">
+        <!-- Wrapper table -->
+        <table border="0"
+               cellpadding="0"
+               cellspacing="0"
+               width="100%"
+               style="background-color: #f5f5f5">
+            <tr>
+                <td align="center" style="padding: 20px 10px;">
+                    <!-- Email container -->
+                    <table border="0"
+                           cellpadding="0"
+                           cellspacing="0"
+                           width="600"
+                           style="max-width: 600px;
+                                  background-color: #ffffff">
+                        <!-- Header -->
+                        <tr>
+                            <td align="center" style="background-color: #3273dc; padding: 40px 20px;">
+                                <h1 style="margin: 0;
+                                           color: #ffffff;
+                                           font-size: 32px;
+                                           font-weight: bold;
+                                           font-family: Arial, Helvetica, sans-serif">Metron</h1>
+                            </td>
+                        </tr>
+                        <!-- Main Content -->
+                        <tr>
+                            <td style="padding: 40px 30px;">
+                                <h2 style="margin: 0 0 20px 0;
+                                           font-size: 24px;
+                                           color: #363636;
+                                           font-weight: 600;
+                                           font-family: Arial, Helvetica, sans-serif">
+                                    {% blocktrans with username=user.username %}Hi {{ username }},{% endblocktrans %}
+                                </h2>
+                                <p style="margin: 0 0 20px 0;
+                                          font-size: 16px;
+                                          color: #4a4a4a;
+                                          font-family: Arial, Helvetica, sans-serif">
+                                    {% blocktrans %}Someone asked to change the email address on your Metron account to {{ new_email }}. The change only takes effect once that address confirms it.{% endblocktrans %}
+                                </p>
+                                <p style="margin: 0 0 30px 0;
+                                          font-size: 16px;
+                                          color: #4a4a4a;
+                                          font-family: Arial, Helvetica, sans-serif">
+                                    {% trans "If this was you, there's nothing else to do." %}
+                                </p>
+                                <!-- Security Notice -->
+                                <table border="0"
+                                       cellpadding="0"
+                                       cellspacing="0"
+                                       width="100%"
+                                       style="background-color: #fff9e6;
+                                              border-left: 4px solid #ffdd57">
+                                    <tr>
+                                        <td style="padding: 20px;">
+                                            <p style="margin: 0 0 20px 0;
+                                                      font-size: 14px;
+                                                      color: #4a4a4a;
+                                                      font-family: Arial, Helvetica, sans-serif">
+                                                <strong>{% trans "If it wasn't you, someone may know your password. Please reset it now:" %}</strong>
+                                            </p>
+                                            <table border="0" cellpadding="0" cellspacing="0">
+                                                <tr>
+                                                    <td align="center" style="background-color: #3273dc; border-radius: 6px;">
+                                                        <a href="{{ protocol }}://{{ domain }}{{ reset_path }}"
+                                                           target="_blank"
+                                                           style="display: inline-block;
+                                                                  padding: 12px 30px;
+                                                                  font-size: 15px;
+                                                                  font-weight: 600;
+                                                                  color: #ffffff;
+                                                                  text-decoration: none;
+                                                                  font-family: Arial, Helvetica, sans-serif">{% trans "Reset My Password" %}</a>
+                                                    </td>
+                                                </tr>
+                                            </table>
+                                        </td>
+                                    </tr>
+                                </table>
+                            </td>
+                        </tr>
+                        {% include "registration/partials/email_footer.html" %}
+                    </table>
+                </td>
+            </tr>
+        </table>
+    </body>
+</html>

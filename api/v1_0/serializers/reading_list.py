@@ -1,4 +1,5 @@
 from django.urls import reverse
+from drf_spectacular.utils import extend_schema_field
 from rest_framework import serializers
 
 from api.v1_0.serializers.issue import IssueListSeriesSerializer
@@ -82,8 +83,25 @@ class ReadingListReadSerializer(serializers.ModelSerializer):
     average_rating = serializers.FloatField(read_only=True)
     rating_count = serializers.IntegerField(read_only=True)
     image = serializers.ImageField(read_only=True)
-    previous = ReadingListNavSerializer(read_only=True)
-    next = ReadingListNavSerializer(read_only=True)
+    previous = serializers.SerializerMethodField()
+    next = serializers.SerializerMethodField()
+
+    def _visible_nav(self, obj: ReadingList):
+        # Cached per object so previous and next share one visibility query.
+        cache = self.context.setdefault("_visible_nav", {})
+        if obj.pk not in cache:
+            cache[obj.pk] = obj.get_visible_nav(self.context["request"].user)
+        return cache[obj.pk]
+
+    @extend_schema_field(ReadingListNavSerializer(allow_null=True))
+    def get_previous(self, obj: ReadingList) -> dict | None:
+        previous, _next = self._visible_nav(obj)
+        return ReadingListNavSerializer(previous).data if previous else None
+
+    @extend_schema_field(ReadingListNavSerializer(allow_null=True))
+    def get_next(self, obj: ReadingList) -> dict | None:
+        _previous, next_list = self._visible_nav(obj)
+        return ReadingListNavSerializer(next_list).data if next_list else None
 
     def get_resource_url(self, obj: ReadingList) -> str:
         return self.context["request"].build_absolute_uri(obj.get_absolute_url())

@@ -1,0 +1,13 @@
+{% load i18n %}{% autoescape off %}{% blocktrans with username=user.username %}Hi {{ username }},{% endblocktrans %}
+
+{% blocktrans %}Someone asked to change the email address on your Metron account to {{ new_email }}. The change only takes effect once that address confirms it.{% endblocktrans %}
+
+{% trans "If this was you, there's nothing else to do." %}
+
+{% blocktrans %}If it wasn't you, someone may know your password. Please reset it now:{% endblocktrans %}
+
+{{ protocol }}://{{ domain }}{% url 'password_reset' %}
+
+---
+{% trans "Metron Comic Book Database" %}
+{% endautoescape %}

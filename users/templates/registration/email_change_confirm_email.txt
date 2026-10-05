@@ -1,0 +1,13 @@
+{% load i18n %}{% autoescape off %}{% blocktrans with username=user.username %}Hi {{ username }},{% endblocktrans %}
+
+{% blocktrans %}You asked to change the email address on your Metron account to {{ new_email }}. To confirm this address, please visit:{% endblocktrans %}
+
+{{ protocol }}://{{ domain }}{% url 'confirm_email_change' token=token %}
+
+{% trans "This link expires in 3 days. Your email address won't change until you follow it." %}
+
+{% trans "If you didn't request this change, you can safely ignore this email." %}
+
+---
+{% trans "Metron Comic Book Database" %}
+{% endautoescape %}

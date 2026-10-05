@@ -1,4 +1,6 @@
 from django import forms
+from django.core.exceptions import ValidationError
+from django.db.models import Q
 from django.utils.translation import gettext_lazy as _
 
 from comicsdb.autocomplete import ArcAutocomplete, IssueAutocomplete, SeriesAutocomplete
@@ -9,6 +11,32 @@ from comicsdb.models.series import Series
 from reading_lists.autocomplete import ReadingListAutocomplete
 from reading_lists.models import ReadingList
 
+# Generous upper bound on issue_order entries (the largest lists hold ~1,100 issues),
+# so a crafted request can't make the view process an unbounded list.
+MAX_ISSUE_ORDER_LENGTH = 5000
+
+
+class ScopedReadingListWidget(SafeAutocompleteWidget):
+    """Autocomplete widget that only renders a selected list within ``allowed_queryset``.
+
+    The widget looks up the selected value's label with no request context, and on
+    a re-rendered invalid form that value comes from the client. Dropping values
+    outside the form field's queryset keeps a submitted pk from echoing back the
+    name of a list the user isn't allowed to see.
+    """
+
+    allowed_queryset = None
+
+    def get_context(self, name, value, attrs):
+        if value not in (None, "", []) and self.allowed_queryset is not None:
+            try:
+                allowed = self.allowed_queryset.filter(pk=value).exists()
+            except ValueError, TypeError, ValidationError:
+                allowed = False
+            if not allowed:
+                value = None
+        return super().get_context(name, value, attrs)
+
 
 class ReadingListForm(forms.ModelForm):
     """Form for creating and editing reading lists."""
@@ -18,7 +46,7 @@ class ReadingListForm(forms.ModelForm):
         required=False,
         label=_("Previous List"),
         help_text=_("The reading list that comes before this one in a reading order (optional)"),
-        widget=SafeAutocompleteWidget(
+        widget=ScopedReadingListWidget(
             ac_class=ReadingListAutocomplete,
             attrs={"placeholder": _("Search for a reading list..."), "class": "input"},
         ),
@@ -28,7 +56,7 @@ class ReadingListForm(forms.ModelForm):
         required=False,
         label=_("Next List"),
         help_text=_("The reading list that comes after this one in a reading order (optional)"),
-        widget=SafeAutocompleteWidget(
+        widget=ScopedReadingListWidget(
             ac_class=ReadingListAutocomplete,
             attrs={"placeholder": _("Search for a reading list..."), "class": "input"},
         ),
@@ -80,14 +108,23 @@ class ReadingListForm(forms.ModelForm):
             "attribution_url": _("URL of the specific page for this reading list (optional)"),
         }
 
-    def __init__(self, *args, **kwargs):
+    def __init__(self, *args, user=None, **kwargs):
         super().__init__(*args, **kwargs)
-        # A reading list can't link to itself as its own previous/next entry.
-        queryset = ReadingList.objects.all()
+        # Saving a link also updates the linked list's reverse link (see
+        # ReadingList.save()), so only offer lists the user can manage. The
+        # instance's current links stay valid so a legacy link to another user's
+        # list doesn't block unrelated edits.
+        queryset = ReadingList.objects.manageable_by(user) if user else ReadingList.objects.none()
         if self.instance.pk:
+            current_ids = [pk for pk in (self.instance.previous_id, self.instance.next_id) if pk]
+            queryset = ReadingList.objects.filter(
+                Q(pk__in=queryset.values("pk")) | Q(pk__in=current_ids)
+            )
+            # A reading list can't link to itself as its own previous/next entry.
             queryset = queryset.exclude(pk=self.instance.pk)
-        self.fields["previous"].queryset = queryset
-        self.fields["next"].queryset = queryset
+        for field_name in ("previous", "next"):
+            self.fields[field_name].queryset = queryset
+            self.fields[field_name].widget.allowed_queryset = queryset
 
 
 class AddIssueWithSearchForm(forms.Form):
@@ -114,6 +151,20 @@ class AddIssueWithSearchForm(forms.Form):
         widget=forms.HiddenInput(),
         help_text=_("Stores the order of selected issues after drag-and-drop"),
     )
+
+    def clean_issue_order(self) -> list[int]:
+        """Parse the comma-separated issue pks into a de-duplicated list of ints."""
+        raw = self.cleaned_data.get("issue_order", "")
+        parts = [part.strip() for part in raw.split(",") if part.strip()]
+        if len(parts) > MAX_ISSUE_ORDER_LENGTH:
+            raise forms.ValidationError(
+                _("A reading list can't be ordered with more than %(max)d issues at once.")
+                % {"max": MAX_ISSUE_ORDER_LENGTH}
+            )
+        if not all(part.isdigit() for part in parts):
+            raise forms.ValidationError(_("The issue order is invalid. Please try again."))
+        # dict.fromkeys keeps the first position of any repeated pk.
+        return list(dict.fromkeys(int(part) for part in parts))
 
 
 class AddIssuesFromSeriesForm(forms.Form):
