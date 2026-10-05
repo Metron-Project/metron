@@ -31,7 +31,10 @@ def check_email_domain(email: str):
             "X-RapidAPI-Host": RAPID_API_HOST,
         }
 
-        conn.request("GET", f"/?domain={email}", headers=headers)
+        # Encode the address: a quoted local part may legally contain "&", "#", "="
+        # or spaces, which would otherwise alter or break the query string.
+        query = urllib.parse.urlencode({"domain": email})
+        conn.request("GET", f"/?{query}", headers=headers)
 
         res = conn.getresponse()
         match res.status:
