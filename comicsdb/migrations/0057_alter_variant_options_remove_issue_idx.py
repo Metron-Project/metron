@@ -4,18 +4,17 @@ from django.db import migrations
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
-        ('comicsdb', '0056_historicalpublisher_alt_names_and_more'),
+        ("comicsdb", "0056_historicalpublisher_alt_names_and_more"),
     ]
 
     operations = [
         migrations.AlterModelOptions(
-            name='variant',
-            options={'ordering': ['issue', 'name']},
+            name="variant",
+            options={"ordering": ["issue", "name"]},
         ),
         migrations.RemoveIndex(
-            model_name='variant',
-            name='issue_idx',
+            model_name="variant",
+            name="issue_idx",
         ),
     ]
