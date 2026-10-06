@@ -145,12 +145,6 @@ class IssueForm(ModelForm):
             raise ValidationError(_("ISBN is not a valid ISBN-10 or ISBN-13."))
         return isbn
 
-    def clean_upc(self):
-        upc = self.cleaned_data["upc"]
-        if upc and not upc.isdigit():
-            raise ValidationError(_("UPC must be numeric. No spaces or hyphens allowed."))
-        return upc
-
     def clean_title(self):
         collection_title = self.cleaned_data["title"]
         if collection_title:

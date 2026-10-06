@@ -1,3 +1,5 @@
+import json
+
 import pytest
 from django.core.management import CommandError, call_command
 from django.utils import timezone
@@ -11,6 +13,7 @@ from comicsdb.models.issue import Issue
 from comicsdb.models.series import Series
 from comicsdb.models.team import Team
 from comicsdb.models.universe import Universe
+from comicsdb.models.variant import Variant
 from users.models import CustomUser
 
 FAKE_DESC = "Duplicate Object"
@@ -352,3 +355,57 @@ def test_add_universe_to_series_empty_series(
 
     # Should not raise error, just exit gracefully
     call_command("add_universe_to_series", series=empty_series.id, universe=earth_2_universe.id)
+
+
+@pytest.fixture
+def upc_issues(series_with_issues: Series) -> list[Issue]:
+    """Give the series' issues one valid and two invalid UPCs, bypassing validation."""
+    issues = list(series_with_issues.issues.order_by("number"))
+    for issue, upc in zip(issues, ["76194137738400111", "0716585646802", "UPC 123"], strict=True):
+        Issue.objects.filter(pk=issue.pk).update(upc=upc)
+    return issues
+
+
+@pytest.fixture
+def upc_variants(upc_issues: list[Issue]) -> list[Variant]:
+    return [
+        Variant.objects.create(issue=upc_issues[0], image="variants/a.jpg", upc="123456789012"),
+        Variant.objects.create(issue=upc_issues[0], image="variants/b.jpg", upc="12345"),
+    ]
+
+
+def test_invalid_upcs_dry_run(system_user, upc_issues, upc_variants, tmp_path):
+    output = tmp_path / "upcs.json"
+    call_command("invalid_upcs", output=output)
+
+    data = json.loads(output.read_text())
+    assert [(i["id"], i["upc"], i["reason"]) for i in data["issues"]] == [
+        (upc_issues[1].pk, "0716585646802", "upc_invalid_check_digit"),
+        (upc_issues[2].pk, "UPC 123", "upc_not_numeric"),
+    ]
+    assert [(v["id"], v["reason"]) for v in data["variants"]] == [
+        (upc_variants[1].pk, "upc_invalid_length")
+    ]
+    # Nothing is cleared without --clear.
+    assert Issue.objects.get(pk=upc_issues[1].pk).upc == "0716585646802"
+    assert Variant.objects.get(pk=upc_variants[1].pk).upc == "12345"
+
+
+def test_invalid_upcs_clear(system_user, upc_issues, upc_variants, tmp_path):
+    before = {i.pk: Issue.objects.get(pk=i.pk).modified for i in upc_issues}
+    call_command("invalid_upcs", output=tmp_path / "upcs.json", clear=True)
+
+    valid, bad_check, non_numeric = (Issue.objects.get(pk=i.pk) for i in upc_issues)
+    assert valid.upc == "76194137738400111"
+    assert bad_check.upc == ""
+    assert non_numeric.upc == ""
+    assert bad_check.edited_by == system_user
+    assert bad_check.modified > before[bad_check.pk]
+    assert bad_check.history.first().history_change_reason == (
+        "Cleared invalid UPC '0716585646802' (upc_invalid_check_digit)"
+    )
+    # The valid issue's modified is bumped because one of its variants was cleared.
+    assert valid.modified > before[valid.pk]
+
+    assert Variant.objects.get(pk=upc_variants[0].pk).upc == "123456789012"
+    assert Variant.objects.get(pk=upc_variants[1].pk).upc == ""

@@ -7,6 +7,7 @@ from djmoney.models.fields import MoneyField
 from sorl.thumbnail import ImageField
 
 from comicsdb.models.issue import Issue
+from comicsdb.validators import validate_upc
 
 LOGGER = logging.getLogger(__name__)
 
@@ -17,7 +18,7 @@ class Variant(models.Model):
     name = models.CharField("Name", max_length=255, blank=True)
     price = MoneyField("Price", max_digits=8, decimal_places=2, blank=True, null=True)
     sku = models.CharField("Distributor SKU", max_length=12, blank=True)
-    upc = models.CharField("UPC Code", max_length=20, blank=True)
+    upc = models.CharField("UPC Code", max_length=20, blank=True, validators=[validate_upc])
 
     class Meta:
         ordering = ["issue", "name"]

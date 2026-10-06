@@ -7,7 +7,8 @@ from django.utils import timezone
 from djmoney.money import Money
 from rest_framework import status
 
-from comicsdb.models import Credits, Issue
+from api.v1_0.serializers import VariantSerializer
+from comicsdb.models import Credits, Issue, Variant
 from comicsdb.models.arc import Arc
 from comicsdb.models.character import Character
 from comicsdb.models.creator import Creator
@@ -83,6 +84,28 @@ def test_staff_user_put_url(api_client_with_staff_credentials, issue_with_arc, c
     )
     assert resp.status_code == status.HTTP_200_OK
     assert resp.data.get("universes") == create_put_data.get("universes")
+
+
+def test_staff_user_post_invalid_upc(api_client_with_staff_credentials, create_issue_data):
+    create_issue_data["upc"] = "76194137738500111"
+    resp = api_client_with_staff_credentials.post(reverse("api:issue-list"), data=create_issue_data)
+    assert resp.status_code == status.HTTP_400_BAD_REQUEST
+    assert resp.data["upc"][0].code == "upc_invalid_check_digit"
+
+
+def test_staff_user_patch_invalid_upc(api_client_with_staff_credentials, issue_with_arc):
+    resp = api_client_with_staff_credentials.patch(
+        reverse("api:issue-detail", kwargs={"pk": issue_with_arc.pk}), data={"upc": "12345"}
+    )
+    assert resp.status_code == status.HTTP_400_BAD_REQUEST
+    assert resp.data["upc"][0].code == "upc_invalid_length"
+
+
+def test_variant_serializer_invalid_upc(basic_issue):
+    variant = Variant.objects.create(issue=basic_issue, image="variants/test.jpg")
+    serializer = VariantSerializer(variant, data={"upc": "UPC 123"}, partial=True)
+    assert not serializer.is_valid()
+    assert serializer.errors["upc"][0].code == "upc_not_numeric"
 
 
 # Regular Tests
