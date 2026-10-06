@@ -110,20 +110,23 @@ class Command(BaseCommand):
         system_user = CustomUser.objects.get(id=1)
 
         with transaction.atomic():
-            for issue, reason in bad_issues:
+            # Re-fetch and lock the rows so an edit made since the scan isn't overwritten
+            # with stale values, and skip any UPC that has been fixed in the meantime.
+            locked_issues = Issue.objects.select_for_update().filter(
+                pk__in=[issue.pk for issue, _ in bad_issues]
+            )
+            for issue in locked_issues:
+                if not (reason := upc_error_code(issue.upc)):
+                    continue
                 issue._change_reason = f"Cleared invalid UPC '{issue.upc}' ({reason})"
                 issue.upc = ""
                 issue.edited_by = system_user
-                issue.save()
+                issue.save(update_fields=["upc", "edited_by", "modified"])
 
+            # Variant saves bump their issue's modified timestamp via a post_save signal.
             for variant, _ in bad_variants:
                 variant.upc = ""
                 variant.save(update_fields=["upc"])
-
-            # Variants have no modified timestamp, so bump their issue's so API syncers
-            # pick up the change.
-            if variant_issue_ids := {variant.issue_id for variant, _ in bad_variants}:
-                Issue.objects.filter(pk__in=variant_issue_ids).update(modified=timezone.now())
 
         self.stdout.write(
             self.style.SUCCESS(
