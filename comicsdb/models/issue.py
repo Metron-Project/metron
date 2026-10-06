@@ -27,7 +27,7 @@ from comicsdb.models.rating import Rating
 from comicsdb.models.series import Series
 from comicsdb.models.team import Team
 from comicsdb.models.universe import Universe
-from comicsdb.validators import validate_upc
+from comicsdb.validators import clean_upc, validate_upc_format
 from users.models import CustomUser
 
 LOGGER = logging.getLogger(__name__)
@@ -66,7 +66,9 @@ class Issue(CommonInfo):
     rating = models.ForeignKey(Rating, default=1, on_delete=models.SET_DEFAULT)
     sku = models.CharField(_("Distributor SKU"), max_length=12, blank=True)
     isbn = models.CharField(_("ISBN"), max_length=13, blank=True)
-    upc = models.CharField(_("UPC Code"), max_length=20, blank=True, validators=[validate_upc])
+    upc = models.CharField(
+        _("UPC Code"), max_length=20, blank=True, validators=[validate_upc_format]
+    )
     page = models.PositiveSmallIntegerField(_("Page Count"), null=True, blank=True)
     image = ImageField(_("Cover"), upload_to="issue/%Y/%m/%d/", blank=True)
     cover_hash = models.CharField(_("Cover Hash"), max_length=16, blank=True)
@@ -107,6 +109,10 @@ class Issue(CommonInfo):
     @property
     def is_released(self) -> bool:
         return self.store_date is None or date.today() >= self.store_date
+
+    def clean(self) -> None:
+        super().clean()
+        clean_upc(self.upc, self.cover_date)
 
     def save(self, *args, **kwargs) -> None:
         # Let's delete the original image if we're replacing it by uploading a new one.

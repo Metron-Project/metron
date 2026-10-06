@@ -17,7 +17,7 @@ class Migration(migrations.Migration):
             field=models.CharField(
                 blank=True,
                 max_length=20,
-                validators=[comicsdb.validators.validate_upc],
+                validators=[comicsdb.validators.validate_upc_format],
                 verbose_name="UPC Code",
             ),
         ),
@@ -27,7 +27,7 @@ class Migration(migrations.Migration):
             field=models.CharField(
                 blank=True,
                 max_length=20,
-                validators=[comicsdb.validators.validate_upc],
+                validators=[comicsdb.validators.validate_upc_format],
                 verbose_name="UPC Code",
             ),
         ),
@@ -37,7 +37,7 @@ class Migration(migrations.Migration):
             field=models.CharField(
                 blank=True,
                 max_length=20,
-                validators=[comicsdb.validators.validate_upc],
+                validators=[comicsdb.validators.validate_upc_format],
                 verbose_name="UPC Code",
             ),
         ),

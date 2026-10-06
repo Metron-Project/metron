@@ -108,6 +108,34 @@ def test_variant_serializer_invalid_upc(basic_issue):
     assert serializer.errors["upc"][0].code == "upc_not_numeric"
 
 
+def test_staff_user_patch_legacy_upc(api_client_with_staff_credentials, issue_with_arc):
+    url = reverse("api:issue-detail", kwargs={"pk": issue_with_arc.pk})
+    resp = api_client_with_staff_credentials.patch(
+        url, data={"cover_date": "1976-07-01", "upc": "0714860246207"}
+    )
+    assert resp.status_code == status.HTTP_200_OK
+
+    # Moving the cover date past the legacy cutoff makes the stored UPC's check digit apply.
+    resp = api_client_with_staff_credentials.patch(url, data={"cover_date": "1993-01-01"})
+    assert resp.status_code == status.HTTP_400_BAD_REQUEST
+    assert resp.data["upc"][0].code == "upc_invalid_check_digit"
+
+
+@pytest.mark.parametrize(
+    ("cover_date", "valid"),
+    [(date(1976, 7, 1), True), (date(2023, 1, 1), False)],
+    ids=["before_cutoff", "from_cutoff"],
+)
+def test_variant_serializer_legacy_upc(basic_issue, cover_date, valid):
+    Issue.objects.filter(pk=basic_issue.pk).update(cover_date=cover_date)
+    basic_issue.refresh_from_db()
+    variant = Variant.objects.create(issue=basic_issue, image="variants/test.jpg")
+    serializer = VariantSerializer(variant, data={"upc": "0714860246207"}, partial=True)
+    assert serializer.is_valid() is valid
+    if not valid:
+        assert serializer.errors["upc"][0].code == "upc_invalid_check_digit"
+
+
 # Regular Tests
 def test_view_url_accessible_by_name(api_client_with_credentials, list_of_issues):
     resp = api_client_with_credentials.get(reverse("api:issue-list"))

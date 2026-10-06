@@ -260,6 +260,8 @@ class IssueCreate(LoginRequiredMixin, CreateView):
                 form.instance.created_by = self.request.user
                 form.instance.edited_by = self.request.user
                 self.object = form.save()
+                # Set before validating so variant UPCs are checked against the cover date.
+                variants_form.instance = self.object
 
                 if (
                     credits_form.is_valid()
@@ -268,7 +270,6 @@ class IssueCreate(LoginRequiredMixin, CreateView):
                 ):
                     credits_form.instance = self.object
                     credits_form.save()
-                    variants_form.instance = self.object
                     variants_form.save()
                     attribution_form.instance = self.object
                     attribution_form.save()

@@ -3,7 +3,10 @@ from datetime import date
 import pytest
 
 from comicsdb.forms.issue import IssueForm
-from comicsdb.models import Rating
+from comicsdb.forms.variant import VariantFormset
+from comicsdb.models import Issue, Rating
+
+LEGACY_UPC = "0714860246207"
 
 
 @pytest.mark.django_db
@@ -97,6 +100,41 @@ class TestIssueForm:
 
         # Assert
         assert error_message in form.errors[field]
+
+    @pytest.mark.parametrize(
+        ("cover_date", "valid"),
+        [("1976-07-01", True), ("1993-01-01", False)],
+        ids=["before_cutoff", "from_cutoff"],
+    )
+    def test_legacy_upc_check_digit_depends_on_cover_date(self, issue_data, cover_date, valid):
+        issue_data.update(cover_date=cover_date, store_date="", upc=LEGACY_UPC)
+        form = IssueForm(data=issue_data)
+
+        form.is_valid()
+
+        assert ("upc" not in form.errors) is valid
+
+    @pytest.mark.parametrize(
+        ("cover_date", "valid"),
+        [(date(1976, 7, 1), True), (date(2023, 1, 1), False)],
+        ids=["before_cutoff", "from_cutoff"],
+    )
+    def test_variant_legacy_upc_uses_issue_cover_date(self, basic_issue, cover_date, valid):
+        Issue.objects.filter(pk=basic_issue.pk).update(cover_date=cover_date)
+        basic_issue.refresh_from_db()
+        data = {
+            "variants-TOTAL_FORMS": "1",
+            "variants-INITIAL_FORMS": "0",
+            "variants-0-name": "Variant",
+            "variants-0-upc": LEGACY_UPC,
+        }
+        formset = VariantFormset(
+            data, {"variants-0-image": None}, instance=basic_issue, prefix="variants"
+        )
+
+        formset.is_valid()
+
+        assert ("upc" not in formset.forms[0].errors) is valid
 
     def test_init_sets_name_delimiter(self, issue_data):
         # Arrange

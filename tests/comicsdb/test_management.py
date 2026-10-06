@@ -1,9 +1,11 @@
 import json
+from datetime import date
 
 import pytest
 from django.core.management import CommandError, call_command
 from django.utils import timezone
 
+from comicsdb.management.commands.invalid_upcs import repair_upc
 from comicsdb.models.arc import Arc
 from comicsdb.models.attribution import Attribution
 from comicsdb.models.character import Character
@@ -409,3 +411,62 @@ def test_invalid_upcs_clear(system_user, upc_issues, upc_variants, tmp_path):
 
     assert Variant.objects.get(pk=upc_variants[0].pk).upc == "123456789012"
     assert Variant.objects.get(pk=upc_variants[1].pk).upc == ""
+
+
+@pytest.mark.parametrize(
+    ("upc", "cover_date", "expected"),
+    [
+        # Values confirmed against cover images.
+        ("709893071712", date(1979, 12, 1), "0709893071712"),
+        ("596060471656311", date(2008, 8, 1), "75960604716156311"),
+        ("7619413574401011", date(2019, 6, 1), "76194135744701011"),
+        ("8442840030902511", date(2015, 2, 1), "84428400309402511"),
+        ("759606092681003111", date(2021, 10, 1), "75960609268003111"),
+        ("709893071712", date(1979, 11, 1), None),
+        ("709893071712", date(1993, 12, 1), None),
+        ("123456789012345", date(2009, 1, 1), None),
+        ("761941296330000711", date(2011, 7, 1), None),
+        ("759606092691003111", date(2021, 10, 1), None),
+        ("59606014150011X", date(2009, 1, 1), None),
+        ("5960601415001", date(2009, 1, 1), None),
+    ],
+    ids=[
+        "legacy_missing_leading_zero",
+        "marvel_15_digit",
+        "16_digit_missing_check_digit",
+        "16_digit_missing_check_digit_other_publisher",
+        "marvel_18_digit_stray_digit",
+        "legacy_missing_leading_zero_month_mismatch",
+        "legacy_missing_leading_zero_too_recent",
+        "15_digit_not_marvel",
+        "18_digit_not_marvel",
+        "marvel_18_digit_still_invalid",
+        "not_numeric",
+        "unrecognized_length",
+    ],
+)
+def test_repair_upc(upc, cover_date, expected):
+    assert repair_upc(upc, cover_date) == expected
+
+
+def test_invalid_upcs_clear_repairs_known_formats(system_user, upc_issues, upc_variants, tmp_path):
+    legacy_issue, marvel_issue = upc_issues[1], upc_issues[2]
+    # A legacy 13 digit UPC without a check digit is valid on an issue from before 1993.
+    Issue.objects.filter(pk=legacy_issue.pk).update(cover_date=date(1979, 2, 1))
+    Issue.objects.filter(pk=marvel_issue.pk).update(upc="596060141500111")
+    Variant.objects.filter(pk=upc_variants[1].pk).update(upc="596060141500211")
+    output = tmp_path / "upcs.json"
+
+    call_command("invalid_upcs", output=output, clear=True)
+
+    data = json.loads(output.read_text())
+    assert [(i["id"], i["repaired_upc"]) for i in data["issues"]] == [
+        (marvel_issue.pk, "75960601415600111")
+    ]
+    assert Issue.objects.get(pk=legacy_issue.pk).upc == "0716585646802"
+    marvel_issue.refresh_from_db()
+    assert marvel_issue.upc == "75960601415600111"
+    assert marvel_issue.history.first().history_change_reason == (
+        "Repaired UPC '596060141500111' (upc_invalid_check_digit)"
+    )
+    assert Variant.objects.get(pk=upc_variants[1].pk).upc == "75960601415600211"
