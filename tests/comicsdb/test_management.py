@@ -5,7 +5,7 @@ import pytest
 from django.core.management import CommandError, call_command
 from django.utils import timezone
 
-from comicsdb.management.commands.invalid_upcs import repair_upc
+from comicsdb.management.commands.invalid_upcs import match_title_code, repair_upc
 from comicsdb.models.arc import Arc
 from comicsdb.models.attribution import Attribution
 from comicsdb.models.character import Character
@@ -423,6 +423,7 @@ def test_invalid_upcs_clear(system_user, upc_issues, upc_variants, tmp_path):
         ("8442840030902511", date(2015, 2, 1), "84428400309402511"),
         ("759606092681003111", date(2021, 10, 1), "75960609268003111"),
         ("709893071712", date(1979, 11, 1), None),
+        ("071486024512", date(1976, 12, 1), None),
         ("709893071712", date(1993, 12, 1), None),
         ("123456789012345", date(2009, 1, 1), None),
         ("761941296330000711", date(2011, 7, 1), None),
@@ -437,6 +438,7 @@ def test_invalid_upcs_clear(system_user, upc_issues, upc_variants, tmp_path):
         "16_digit_missing_check_digit_other_publisher",
         "marvel_18_digit_stray_digit",
         "legacy_missing_leading_zero_month_mismatch",
+        "legacy_already_has_leading_zero",
         "legacy_missing_leading_zero_too_recent",
         "15_digit_not_marvel",
         "18_digit_not_marvel",
@@ -447,6 +449,30 @@ def test_invalid_upcs_clear(system_user, upc_issues, upc_variants, tmp_path):
 )
 def test_repair_upc(upc, cover_date, expected):
     assert repair_upc(upc, cover_date) == expected
+
+
+IRON_MAN_93 = ("071486024512", date(1976, 12, 1))  # Cover shows '0714860245412'.
+
+
+@pytest.mark.parametrize(
+    ("upc", "cover_date", "title_codes", "expected"),
+    [
+        (*IRON_MAN_93, {"07148602454"}, "0714860245412"),
+        (*IRON_MAN_93, {"07148602454", "07148602462"}, "0714860245412"),
+        # Archie Giant Series #455: two of the series' title codes match.
+        ("027100069901", date(1977, 1, 1), {"02710006989", "02710006991"}, None),
+        (*IRON_MAN_93, {"07148602462"}, None),
+        (*IRON_MAN_93, set(), None),
+        ("071486024512", date(1976, 11, 1), {"07148602454"}, None),
+    ],
+    ids=["match", "match_among_others", "ambiguous", "no_match", "no_title_codes", "wrong_month"],
+)
+def test_repair_upc_restores_title_code(upc, cover_date, title_codes, expected):
+    assert repair_upc(upc, cover_date, title_codes) == expected
+
+
+def test_match_title_code():
+    assert match_title_code("0714860245", {"07148602454", "07098930410"}) == "07148602454"
 
 
 def test_invalid_upcs_clear_repairs_known_formats(system_user, upc_issues, upc_variants, tmp_path):
@@ -470,3 +496,14 @@ def test_invalid_upcs_clear_repairs_known_formats(system_user, upc_issues, upc_v
         "Repaired UPC '596060141500111' (upc_invalid_check_digit)"
     )
     assert Variant.objects.get(pk=upc_variants[1].pk).upc == "75960601415600211"
+
+
+def test_invalid_upcs_clear_restores_title_code_from_series(system_user, upc_issues, tmp_path):
+    sibling, truncated = upc_issues[1], upc_issues[2]
+    # The sibling's legacy UPC gives the series' title code, '07165856468'.
+    Issue.objects.filter(pk=sibling.pk).update(cover_date=date(1979, 2, 1))
+    Issue.objects.filter(pk=truncated.pk).update(cover_date=date(1979, 4, 1), upc="071658564604")
+
+    call_command("invalid_upcs", output=tmp_path / "upcs.json", clear=True)
+
+    assert Issue.objects.get(pk=truncated.pk).upc == "0716585646804"
