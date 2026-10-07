@@ -569,6 +569,11 @@ msgstr ""
 msgid "UPC check digit is invalid."
 msgstr "La cifra di controllo dell'UPC non è valida."
 
+#: comicsdb/models/issue.py
+#, python-format
+msgid "Variant UPC %(upc)s: %(error)s"
+msgstr "UPC della variante %(upc)s: %(error)s"
+
 #: comicsdb/forms/issue.py:159
 msgid "Collection Title field is not allowed for this series.."
 msgstr "Il campo Titolo della Raccolta non è consentito per questa serie."

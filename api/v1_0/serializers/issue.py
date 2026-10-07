@@ -11,13 +11,13 @@ from api.v1_0.serializers.arc import ArcListSerializer
 from api.v1_0.serializers.character import CharacterListSerializer
 from api.v1_0.serializers.genre import GenreSerializer
 from api.v1_0.serializers.imprint import BasicImprintSerializer
+from api.v1_0.serializers.mixins import ModelCleanMixin
 from api.v1_0.serializers.publisher import BasicPublisherSerializer
 from api.v1_0.serializers.rating import RatingSerializer
 from api.v1_0.serializers.series import SeriesTypeSerializer
 from api.v1_0.serializers.team import TeamListSerializer
 from api.v1_0.serializers.universe import UniverseListSerializer
 from comicsdb.models import Issue, Series, Variant
-from comicsdb.validators import clean_upc
 from metron.choices import CURRENCY_CHOICES
 
 
@@ -200,7 +200,7 @@ class ReprintSerializer(serializers.ModelSerializer):
 
 # TODO: Refactor this so reuse Issue serializer for read-only also.
 #       Need to handle variants & credits sets.
-class IssueSerializer(serializers.ModelSerializer):
+class IssueSerializer(ModelCleanMixin, serializers.ModelSerializer):
     price = PriceField(required=False, allow_null=True)
     reprints = serializers.PrimaryKeyRelatedField(
         many=True,
@@ -214,13 +214,13 @@ class IssueSerializer(serializers.ModelSerializer):
 
     def validate(self, attrs):
         """
-        Validate the UPC's check digit against the cover date, falling back to the
-        instance's values for whichever a partial update omits.
+        Run `Issue.clean()`, and when the cover date changes, re-check the stored variants'
+        UPCs against it, since variants can't be edited in the same request.
         """
-        clean_upc(
-            attrs.get("upc", getattr(self.instance, "upc", "")),
-            attrs.get("cover_date", getattr(self.instance, "cover_date", None)),
-        )
+        issue = self.build_instance(attrs)
+        issue.clean()
+        if self.instance is not None and "cover_date" in attrs:
+            issue.clean_variant_upcs()
         return attrs
 
     def create(self, validated_data):
