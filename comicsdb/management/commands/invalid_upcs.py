@@ -2,11 +2,13 @@ import json
 from collections import Counter, defaultdict
 from collections.abc import Collection
 from datetime import date
+from itertools import chain
 from pathlib import Path
 
 from django.core.exceptions import ValidationError
 from django.core.management.base import BaseCommand
 from django.db import transaction
+from django.db.models import QuerySet
 from django.db.models.functions import Length
 from django.utils import timezone
 
@@ -15,6 +17,7 @@ from comicsdb.validators import (
     LEGACY_UPC_LENGTH,
     LEGACY_UPC_YEAR,
     upc_check_digit,
+    upc_is_numeric,
     validate_upc,
 )
 from users.models import CustomUser
@@ -40,7 +43,7 @@ def legacy_title_codes() -> dict[int, set[str]]:
         upc_length=LEGACY_UPC_LENGTH, cover_date__year__lt=LEGACY_UPC_YEAR
     )
     for series_id, upc in legacy_issues.values_list("series_id", "upc").iterator():
-        if upc.isascii() and upc.isdigit():
+        if upc_is_numeric(upc):
             codes[series_id].add(upc[:LEGACY_TITLE_CODE_LENGTH])
     return codes
 
@@ -85,7 +88,7 @@ def repair_upc(upc: str, cover_date: date, title_codes: Collection[str] = ()) ->
         The repaired UPC, or None if the UPC isn't in a recognized format or the repaired
         value still fails validation.
     """
-    if not (upc.isascii() and upc.isdigit()):
+    if not upc_is_numeric(upc):
         return None
     legacy_month = cover_date.year < LEGACY_UPC_YEAR and int(upc[-2:]) == cover_date.month
     match len(upc):
@@ -103,6 +106,37 @@ def repair_upc(upc: str, cover_date: date, title_codes: Collection[str] = ()) ->
         case _:
             return None
     return repaired if upc_error_code(repaired, cover_date) is None else None
+
+
+def check_upc(obj: Issue | Variant, title_codes: dict[int, set[str]]) -> tuple[str, str | None]:
+    """
+    Check the UPC of an issue or variant against its issue's cover date.
+
+    Args:
+        obj: The issue or variant. A variant's issue must be loaded with it.
+        title_codes: The title codes of each series' legacy UPCs.
+
+    Returns:
+        The validation error code and the repaired UPC (None if it can't be repaired), or
+        an empty error code if the UPC is valid.
+    """
+    issue = obj if isinstance(obj, Issue) else obj.issue
+    if not (reason := upc_error_code(obj.upc, issue.cover_date)):
+        return "", None
+    return reason, repair_upc(obj.upc, issue.cover_date, title_codes[issue.series_id])
+
+
+def find_invalid_upcs(
+    queryset: QuerySet, title_codes: dict[int, set[str]]
+) -> list[tuple[Issue | Variant, str, str | None]]:
+    """Return each issue or variant in the queryset with an invalid UPC, with its error code
+    and repaired UPC."""
+    invalid = []
+    for obj in queryset.iterator():
+        reason, repaired = check_upc(obj, title_codes)
+        if reason:
+            invalid.append((obj, reason, repaired))
+    return invalid
 
 
 class Command(BaseCommand):
@@ -143,24 +177,10 @@ class Command(BaseCommand):
             None
         """
         title_codes = legacy_title_codes()
-
-        bad_issues: list[tuple[Issue, str, str | None]] = []
-        for issue in (
-            Issue.objects.exclude(upc="").select_related("series").order_by("pk").iterator()
-        ):
-            if reason := upc_error_code(issue.upc, issue.cover_date):
-                repaired = repair_upc(issue.upc, issue.cover_date, title_codes[issue.series_id])
-                bad_issues.append((issue, reason, repaired))
-
-        bad_variants: list[tuple[Variant, str, str | None]] = []
-        for variant in (
-            Variant.objects.exclude(upc="").select_related("issue").order_by("pk").iterator()
-        ):
-            if reason := upc_error_code(variant.upc, variant.issue.cover_date):
-                repaired = repair_upc(
-                    variant.upc, variant.issue.cover_date, title_codes[variant.issue.series_id]
-                )
-                bad_variants.append((variant, reason, repaired))
+        issues = Issue.objects.exclude(upc="").select_related("series").order_by("pk")
+        variants = Variant.objects.exclude(upc="").select_related("issue").order_by("pk")
+        bad_issues = find_invalid_upcs(issues, title_codes)
+        bad_variants = find_invalid_upcs(variants, title_codes)
 
         export = {
             "generated": timezone.now().isoformat(),
@@ -235,41 +255,33 @@ class Command(BaseCommand):
         system_user = CustomUser.objects.get(id=1)
         repaired_count = cleared_count = 0
 
-        with transaction.atomic():
-            # Re-fetch and lock the rows so an edit made since the scan isn't overwritten
-            # with stale values, and skip any UPC that has been fixed in the meantime.
-            locked_issues = Issue.objects.select_for_update().filter(pk__in=issue_ids)
-            for issue in locked_issues:
-                if not (reason := upc_error_code(issue.upc, issue.cover_date)):
-                    continue
-                if repaired := repair_upc(
-                    issue.upc, issue.cover_date, title_codes[issue.series_id]
-                ):
-                    issue._change_reason = f"Repaired UPC '{issue.upc}' ({reason})"
-                    repaired_count += 1
-                else:
-                    issue._change_reason = f"Cleared invalid UPC '{issue.upc}' ({reason})"
-                    cleared_count += 1
-                issue.upc = repaired or ""
-                issue.edited_by = system_user
-                issue.save(update_fields=["upc", "edited_by", "modified"])
+        # Re-fetch and lock the rows so an edit made since the scan isn't overwritten with
+        # stale values, and skip any UPC that has been fixed in the meantime.
+        locked_issues = Issue.objects.select_for_update().filter(pk__in=issue_ids)
+        locked_variants = (
+            Variant.objects.select_for_update(of=("self",))
+            .select_related("issue")
+            .filter(pk__in=variant_ids)
+        )
 
-            # Variant saves bump their issue's modified timestamp via a post_save signal.
-            locked_variants = (
-                Variant.objects.select_for_update(of=("self",))
-                .select_related("issue")
-                .filter(pk__in=variant_ids)
-            )
-            for variant in locked_variants:
-                if not upc_error_code(variant.upc, variant.issue.cover_date):
+        with transaction.atomic():
+            for obj in chain(locked_issues, locked_variants):
+                reason, repaired = check_upc(obj, title_codes)
+                if not reason:
                     continue
-                if repaired := repair_upc(
-                    variant.upc, variant.issue.cover_date, title_codes[variant.issue.series_id]
-                ):
+                if repaired:
                     repaired_count += 1
+                    change_reason = f"Repaired UPC '{obj.upc}' ({reason})"
                 else:
                     cleared_count += 1
-                variant.upc = repaired or ""
-                variant.save(update_fields=["upc"])
+                    change_reason = f"Cleared invalid UPC '{obj.upc}' ({reason})"
+                obj.upc = repaired or ""
+                if isinstance(obj, Issue):
+                    obj._change_reason = change_reason
+                    obj.edited_by = system_user
+                    obj.save(update_fields=["upc", "edited_by", "modified"])
+                else:
+                    # Variant saves bump their issue's modified timestamp via a post_save signal.
+                    obj.save(update_fields=["upc"])
 
         return repaired_count, cleared_count

@@ -25,11 +25,16 @@ def upc_check_digit_valid(code: str) -> bool:
     return upc_check_digit(code[:-1]) == code[-1]
 
 
+def upc_is_numeric(value: str) -> bool:
+    """Return True if a UPC is made up only of ASCII digits."""
+    # isascii() rules out non-ASCII digits (e.g. "²" or fullwidth digits) that isdigit() allows.
+    return value.isascii() and value.isdigit()
+
+
 def validate_upc_format(value: str) -> None:
     """Validate that a UPC is numeric and has the length of a UPC-A or EAN-13 code, optionally
     followed by a 2 or 5 digit add-on."""
-    # isascii() rules out non-ASCII digits (e.g. "²" or fullwidth digits) that isdigit() allows.
-    if not (value.isascii() and value.isdigit()):
+    if not upc_is_numeric(value):
         raise ValidationError(
             _("UPC must be numeric. No spaces or hyphens allowed."), code="upc_not_numeric"
         )
