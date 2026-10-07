@@ -6,7 +6,7 @@ from datetime import date
 import imagehash
 from django.contrib.contenttypes.fields import GenericRelation
 from django.contrib.postgres.fields import ArrayField
-from django.core.exceptions import ObjectDoesNotExist
+from django.core.exceptions import ObjectDoesNotExist, ValidationError
 from django.db import models
 from django.db.models.functions import Upper
 from django.db.models.signals import pre_save
@@ -113,6 +113,38 @@ class Issue(CommonInfo):
     def clean(self) -> None:
         super().clean()
         clean_upc(self.upc, self.cover_date)
+
+    def clean_variant_upcs(self) -> None:
+        """
+        Validate the stored variants' UPCs against this issue's cover date.
+
+        Not called from `clean()`: the site and admin validate variants in a formset against
+        the edited issue, so a cover date change can be submitted together with the variant
+        UPC fixes it needs. Callers that can't edit variants alongside the issue, like the API,
+        call this when the cover date changes.
+
+        Raises:
+            ValidationError: Keyed on the `cover_date` field for each variant whose UPC is
+                invalid for the cover date.
+        """
+        if self.pk is None:
+            return
+        errors = []
+        for variant in self.variants.all():
+            variant.issue = self
+            try:
+                variant.clean()
+            except ValidationError as exc:
+                errors.extend(
+                    ValidationError(
+                        _("Variant UPC %(upc)s: %(error)s"),
+                        code=error.code,
+                        params={"upc": variant.upc, "error": " ".join(error.messages)},
+                    )
+                    for error in exc.error_dict.get("upc", [])
+                )
+        if errors:
+            raise ValidationError({"cover_date": errors})
 
     def save(self, *args, **kwargs) -> None:
         # Let's delete the original image if we're replacing it by uploading a new one.

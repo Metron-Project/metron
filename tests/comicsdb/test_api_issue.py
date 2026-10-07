@@ -1,10 +1,13 @@
 from datetime import date
 from decimal import Decimal
+from io import BytesIO
 
 import pytest
+from django.core.files.uploadedfile import SimpleUploadedFile
 from django.urls import reverse
 from django.utils import timezone
 from djmoney.money import Money
+from PIL import Image as PILImage
 from rest_framework import status
 
 from api.v1_0.serializers import VariantSerializer
@@ -134,6 +137,39 @@ def test_variant_serializer_legacy_upc(basic_issue, cover_date, valid):
     assert serializer.is_valid() is valid
     if not valid:
         assert serializer.errors["upc"][0].code == "upc_invalid_check_digit"
+
+
+def test_variant_serializer_create_legacy_upc(basic_issue):
+    Issue.objects.filter(pk=basic_issue.pk).update(cover_date=date(2023, 1, 1))
+    image = BytesIO()
+    PILImage.new("RGB", (1, 1)).save(image, format="PNG")
+    image = SimpleUploadedFile("variant.png", image.getvalue(), "image/png")
+    data = {"issue": basic_issue.pk, "image": image, "upc": "0714860246207"}
+    serializer = VariantSerializer(data=data)
+    assert not serializer.is_valid()
+    assert set(serializer.errors) == {"upc"}
+    assert serializer.errors["upc"][0].code == "upc_invalid_check_digit"
+
+
+def test_staff_user_patch_cover_date_rechecks_variant_upcs(
+    api_client_with_staff_credentials, issue_with_arc
+):
+    Issue.objects.filter(pk=issue_with_arc.pk).update(cover_date=date(1976, 7, 1))
+    Variant.objects.create(issue=issue_with_arc, image="variants/test.jpg", upc="0714860246207")
+    url = reverse("api:issue-detail", kwargs={"pk": issue_with_arc.pk})
+
+    # Still before the legacy cutoff, so the variant's UPC needs no check digit.
+    resp = api_client_with_staff_credentials.patch(url, data={"cover_date": "1980-01-01"})
+    assert resp.status_code == status.HTTP_200_OK
+
+    resp = api_client_with_staff_credentials.patch(url, data={"cover_date": "1993-01-01"})
+    assert resp.status_code == status.HTTP_400_BAD_REQUEST
+    assert resp.data["cover_date"][0].code == "upc_invalid_check_digit"
+    assert "0714860246207" in resp.data["cover_date"][0]
+
+    # Updates that leave the cover date alone don't re-check the variants.
+    resp = api_client_with_staff_credentials.patch(url, data={"title": "New Title"})
+    assert resp.status_code == status.HTTP_200_OK
 
 
 # Regular Tests
