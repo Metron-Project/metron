@@ -238,16 +238,18 @@ class IssueCreate(LoginRequiredMixin, CreateView):
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         context["minimum_year"] = MINIMUM_YEAR
-        if self.request.POST:
-            context["credits"] = CreditsFormSet(self.request.POST, prefix="credits")
-            context["variants"] = VariantFormset(
-                self.request.POST, self.request.FILES, prefix="variants"
-            )
-            context["attribution"] = AttributionFormSet(self.request.POST, prefix="attribution")
-        else:
-            context["credits"] = CreditsFormSet(prefix="credits")
-            context["variants"] = VariantFormset(prefix="variants")
-            context["attribution"] = AttributionFormSet(prefix="attribution")
+        # Formsets passed in (already validated by form_valid) are kept so their errors show.
+        if "credits" not in context:
+            if self.request.POST:
+                context["credits"] = CreditsFormSet(self.request.POST, prefix="credits")
+                context["variants"] = VariantFormset(
+                    self.request.POST, self.request.FILES, prefix="variants"
+                )
+                context["attribution"] = AttributionFormSet(self.request.POST, prefix="attribution")
+            else:
+                context["credits"] = CreditsFormSet(prefix="credits")
+                context["variants"] = VariantFormset(prefix="variants")
+                context["attribution"] = AttributionFormSet(prefix="attribution")
         return context
 
     def form_valid(self, form):
@@ -255,23 +257,31 @@ class IssueCreate(LoginRequiredMixin, CreateView):
         credits_form = context["credits"]
         variants_form = context["variants"]
         attribution_form = context["attribution"]
+        # Validate against the unsaved issue so variant UPCs are checked against its cover date.
+        variants_form.instance = form.instance
+        formsets_valid = [
+            formset.is_valid() for formset in (credits_form, variants_form, attribution_form)
+        ]
+        if not all(formsets_valid):
+            return self.render_to_response(
+                self.get_context_data(
+                    form=form,
+                    credits=credits_form,
+                    variants=variants_form,
+                    attribution=attribution_form,
+                )
+            )
         try:
             with transaction.atomic():
                 form.instance.created_by = self.request.user
                 form.instance.edited_by = self.request.user
                 self.object = form.save()
-
-                if (
-                    credits_form.is_valid()
-                    and variants_form.is_valid()
-                    and attribution_form.is_valid()
-                ):
-                    credits_form.instance = self.object
-                    credits_form.save()
-                    variants_form.instance = self.object
-                    variants_form.save()
-                    attribution_form.instance = self.object
-                    attribution_form.save()
+                credits_form.instance = self.object
+                credits_form.save()
+                variants_form.instance = self.object
+                variants_form.save()
+                attribution_form.instance = self.object
+                attribution_form.save()
 
                 LOGGER.info(
                     "Issue: %s #%s was created by %s",

@@ -7,6 +7,7 @@ from djmoney.models.fields import MoneyField
 from sorl.thumbnail import ImageField
 
 from comicsdb.models.issue import Issue
+from comicsdb.validators import clean_upc, validate_upc_format
 
 LOGGER = logging.getLogger(__name__)
 
@@ -17,7 +18,7 @@ class Variant(models.Model):
     name = models.CharField("Name", max_length=255, blank=True)
     price = MoneyField("Price", max_digits=8, decimal_places=2, blank=True, null=True)
     sku = models.CharField("Distributor SKU", max_length=12, blank=True)
-    upc = models.CharField("UPC Code", max_length=20, blank=True)
+    upc = models.CharField("UPC Code", max_length=20, blank=True, validators=[validate_upc_format])
 
     class Meta:
         ordering = ["issue", "name"]
@@ -36,3 +37,9 @@ class Variant(models.Model):
                     LOGGER.info("Replacing '%s' with 'None'.", this.image)
                 this.image.delete(save=False)
         return super().save(*args, **kwargs)
+
+    def clean(self) -> None:
+        super().clean()
+        # The issue can be unset, e.g. on an unsaved variant with no issue assigned yet.
+        if issue := getattr(self, "issue", None):
+            clean_upc(self.upc, issue.cover_date)

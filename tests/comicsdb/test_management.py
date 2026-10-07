@@ -1,7 +1,11 @@
+import json
+from datetime import date
+
 import pytest
 from django.core.management import CommandError, call_command
 from django.utils import timezone
 
+from comicsdb.management.commands.invalid_upcs import match_title_code, repair_upc
 from comicsdb.models.arc import Arc
 from comicsdb.models.attribution import Attribution
 from comicsdb.models.character import Character
@@ -11,6 +15,7 @@ from comicsdb.models.issue import Issue
 from comicsdb.models.series import Series
 from comicsdb.models.team import Team
 from comicsdb.models.universe import Universe
+from comicsdb.models.variant import Variant
 from users.models import CustomUser
 
 FAKE_DESC = "Duplicate Object"
@@ -352,3 +357,167 @@ def test_add_universe_to_series_empty_series(
 
     # Should not raise error, just exit gracefully
     call_command("add_universe_to_series", series=empty_series.id, universe=earth_2_universe.id)
+
+
+@pytest.fixture
+def upc_issues(series_with_issues: Series) -> list[Issue]:
+    """Give the series' issues one valid and two invalid UPCs, bypassing validation."""
+    issues = list(series_with_issues.issues.order_by("number"))
+    for issue, upc in zip(issues, ["76194137738400111", "0716585646802", "UPC 123"], strict=True):
+        Issue.objects.filter(pk=issue.pk).update(upc=upc)
+    return issues
+
+
+@pytest.fixture
+def upc_variants(upc_issues: list[Issue]) -> list[Variant]:
+    return [
+        Variant.objects.create(issue=upc_issues[0], image="variants/a.jpg", upc="123456789012"),
+        Variant.objects.create(issue=upc_issues[0], image="variants/b.jpg", upc="12345"),
+    ]
+
+
+def test_invalid_upcs_dry_run(system_user, upc_issues, upc_variants, tmp_path):
+    output = tmp_path / "upcs.json"
+    call_command("invalid_upcs", output=output)
+
+    data = json.loads(output.read_text())
+    assert [(i["id"], i["upc"], i["reason"]) for i in data["issues"]] == [
+        (upc_issues[1].pk, "0716585646802", "upc_invalid_check_digit"),
+        (upc_issues[2].pk, "UPC 123", "upc_not_numeric"),
+    ]
+    assert [(v["id"], v["reason"]) for v in data["variants"]] == [
+        (upc_variants[1].pk, "upc_invalid_length")
+    ]
+    # Nothing is cleared without --clear.
+    assert Issue.objects.get(pk=upc_issues[1].pk).upc == "0716585646802"
+    assert Variant.objects.get(pk=upc_variants[1].pk).upc == "12345"
+
+
+def test_invalid_upcs_clear(system_user, upc_issues, upc_variants, tmp_path):
+    before = {i.pk: Issue.objects.get(pk=i.pk).modified for i in upc_issues}
+    call_command("invalid_upcs", output=tmp_path / "upcs.json", clear=True)
+
+    valid, bad_check, non_numeric = (Issue.objects.get(pk=i.pk) for i in upc_issues)
+    assert valid.upc == "76194137738400111"
+    assert bad_check.upc == ""
+    assert non_numeric.upc == ""
+    assert bad_check.edited_by == system_user
+    assert bad_check.modified > before[bad_check.pk]
+    assert bad_check.history.first().history_change_reason == (
+        "Cleared invalid UPC '0716585646802' (upc_invalid_check_digit)"
+    )
+    # The valid issue's modified is bumped because one of its variants was cleared.
+    assert valid.modified > before[valid.pk]
+
+    assert Variant.objects.get(pk=upc_variants[0].pk).upc == "123456789012"
+    assert Variant.objects.get(pk=upc_variants[1].pk).upc == ""
+
+
+@pytest.mark.parametrize(
+    ("upc", "cover_date", "expected"),
+    [
+        # Values confirmed against cover images.
+        ("596060471656311", date(2008, 8, 1), "75960604716156311"),
+        ("7619413574401011", date(2019, 6, 1), "76194135744701011"),
+        ("8442840030902511", date(2015, 2, 1), "84428400309402511"),
+        ("759606092681003111", date(2021, 10, 1), "75960609268003111"),
+        ("071486024512", date(1976, 12, 1), None),
+        ("123456789012345", date(2009, 1, 1), None),
+        ("761941296330000711", date(2011, 7, 1), None),
+        ("759606092691003111", date(2021, 10, 1), None),
+        ("59606014150011X", date(2009, 1, 1), None),
+        ("5960601415001", date(2009, 1, 1), None),
+    ],
+    ids=[
+        "marvel_15_digit",
+        "16_digit_missing_check_digit",
+        "16_digit_missing_check_digit_other_publisher",
+        "marvel_18_digit_stray_digit",
+        "legacy_already_has_leading_zero",
+        "15_digit_not_marvel",
+        "18_digit_not_marvel",
+        "marvel_18_digit_still_invalid",
+        "not_numeric",
+        "unrecognized_length",
+    ],
+)
+def test_repair_upc(upc, cover_date, expected):
+    assert repair_upc(upc, cover_date) == expected
+
+
+# Values confirmed against cover images.
+IRON_MAN_93 = ("071486024512", date(1976, 12, 1))  # '0714860245412'
+WEIRD_WAR_TALES_82 = ("709893071712", date(1979, 12, 1))  # '0709893071712'
+
+
+@pytest.mark.parametrize(
+    ("upc", "cover_date", "title_codes", "expected"),
+    [
+        (*WEIRD_WAR_TALES_82, {"07098930717"}, "0709893071712"),
+        (*WEIRD_WAR_TALES_82, set(), None),
+        ("709893071712", date(1979, 11, 1), {"07098930717"}, None),
+        ("709893071712", date(1993, 12, 1), {"07098930717"}, None),
+        # Sad Sack and the Sarge #152: '718' is also a typo for the series' '716'.
+        ("718585186412", date(1981, 12, 1), {"07165851864"}, None),
+        (*IRON_MAN_93, {"07148602454"}, "0714860245412"),
+        (*IRON_MAN_93, {"07148602454", "07148602462"}, "0714860245412"),
+        # Archie Giant Series #455: two of the series' title codes match.
+        ("027100069901", date(1977, 1, 1), {"02710006989", "02710006991"}, None),
+        (*IRON_MAN_93, {"07148602462"}, None),
+        (*IRON_MAN_93, set(), None),
+        ("071486024512", date(1976, 11, 1), {"07148602454"}, None),
+    ],
+    ids=[
+        "leading_zero",
+        "leading_zero_no_title_codes",
+        "leading_zero_wrong_month",
+        "leading_zero_too_recent",
+        "leading_zero_title_code_mismatch",
+        "title_code_match",
+        "title_code_match_among_others",
+        "title_code_ambiguous",
+        "title_code_no_match",
+        "title_code_no_title_codes",
+        "title_code_wrong_month",
+    ],
+)
+def test_repair_upc_legacy_12_digit(upc, cover_date, title_codes, expected):
+    assert repair_upc(upc, cover_date, title_codes) == expected
+
+
+def test_match_title_code():
+    assert match_title_code("0714860245", {"07148602454", "07098930410"}) == "07148602454"
+
+
+def test_invalid_upcs_clear_repairs_known_formats(system_user, upc_issues, upc_variants, tmp_path):
+    legacy_issue, marvel_issue = upc_issues[1], upc_issues[2]
+    # A legacy 13 digit UPC without a check digit is valid on an issue from before 1993.
+    Issue.objects.filter(pk=legacy_issue.pk).update(cover_date=date(1979, 2, 1))
+    Issue.objects.filter(pk=marvel_issue.pk).update(upc="596060141500111")
+    Variant.objects.filter(pk=upc_variants[1].pk).update(upc="596060141500211")
+    output = tmp_path / "upcs.json"
+
+    call_command("invalid_upcs", output=output, clear=True)
+
+    data = json.loads(output.read_text())
+    assert [(i["id"], i["repaired_upc"]) for i in data["issues"]] == [
+        (marvel_issue.pk, "75960601415600111")
+    ]
+    assert Issue.objects.get(pk=legacy_issue.pk).upc == "0716585646802"
+    marvel_issue.refresh_from_db()
+    assert marvel_issue.upc == "75960601415600111"
+    assert marvel_issue.history.first().history_change_reason == (
+        "Repaired UPC '596060141500111' (upc_invalid_check_digit)"
+    )
+    assert Variant.objects.get(pk=upc_variants[1].pk).upc == "75960601415600211"
+
+
+def test_invalid_upcs_clear_restores_title_code_from_series(system_user, upc_issues, tmp_path):
+    sibling, truncated = upc_issues[1], upc_issues[2]
+    # The sibling's legacy UPC gives the series' title code, '07165856468'.
+    Issue.objects.filter(pk=sibling.pk).update(cover_date=date(1979, 2, 1))
+    Issue.objects.filter(pk=truncated.pk).update(cover_date=date(1979, 4, 1), upc="071658564604")
+
+    call_command("invalid_upcs", output=tmp_path / "upcs.json", clear=True)
+
+    assert Issue.objects.get(pk=truncated.pk).upc == "0716585646804"

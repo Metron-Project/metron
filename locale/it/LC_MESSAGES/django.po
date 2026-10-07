@@ -555,9 +555,19 @@ msgstr "Lo SKU deve essere alfanumerico. Non sono ammessi spazi o trattini."
 msgid "ISBN is not a valid ISBN-10 or ISBN-13."
 msgstr "L'ISBN non è un ISBN-10 o ISBN-13 valido."
 
-#: comicsdb/forms/issue.py:151
+#: comicsdb/validators.py:21
 msgid "UPC must be numeric. No spaces or hyphens allowed."
 msgstr "L'UPC deve essere numerico. Non sono ammessi spazi o trattini."
+
+#: comicsdb/validators.py:26
+msgid "UPC must be 12 or 13 digits, optionally followed by a 2 or 5 digit add-on."
+msgstr ""
+"L'UPC deve essere di 12 o 13 cifre, eventualmente seguite da un'estensione di "
+"2 o 5 cifre."
+
+#: comicsdb/validators.py:30
+msgid "UPC check digit is invalid."
+msgstr "La cifra di controllo dell'UPC non è valida."
 
 #: comicsdb/forms/issue.py:159
 msgid "Collection Title field is not allowed for this series.."

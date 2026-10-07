@@ -17,6 +17,7 @@ from api.v1_0.serializers.series import SeriesTypeSerializer
 from api.v1_0.serializers.team import TeamListSerializer
 from api.v1_0.serializers.universe import UniverseListSerializer
 from comicsdb.models import Issue, Series, Variant
+from comicsdb.validators import clean_upc
 from metron.choices import CURRENCY_CHOICES
 
 
@@ -210,6 +211,17 @@ class IssueSerializer(serializers.ModelSerializer):
 
     def get_resource_url(self, obj: Issue) -> str:
         return self.context["request"].build_absolute_uri(obj.get_absolute_url())
+
+    def validate(self, attrs):
+        """
+        Validate the UPC's check digit against the cover date, falling back to the
+        instance's values for whichever a partial update omits.
+        """
+        clean_upc(
+            attrs.get("upc", getattr(self.instance, "upc", "")),
+            attrs.get("cover_date", getattr(self.instance, "cover_date", None)),
+        )
+        return attrs
 
     def create(self, validated_data):
         """

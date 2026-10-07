@@ -1,11 +1,15 @@
 from datetime import date, datetime, timedelta
+from io import BytesIO
 
+import pytest
+from django.core.files.uploadedfile import SimpleUploadedFile
 from django.urls import reverse
 from django.utils import timezone
+from PIL import Image
 from pytest_django.asserts import assertTemplateUsed
 
 from comicsdb.forms.issue import MINIMUM_YEAR
-from comicsdb.models import Credits
+from comicsdb.models import Credits, Rating
 from comicsdb.models.creator import Creator
 from comicsdb.models.credits import Role
 from comicsdb.models.issue import Issue
@@ -2115,3 +2119,43 @@ def test_issue_filter_by_foc_date_range_same_date(
     assert resp.status_code == HTML_OK_CODE
     assert target_issue in resp.context["issue_list"]
     assert resp.context["issue_list"].count() == 1
+
+
+@pytest.mark.parametrize(
+    ("cover_date", "valid"),
+    [("1976-07-01", True), ("2023-01-01", False)],
+    ids=["legacy_upc_before_cutoff", "legacy_upc_from_cutoff"],
+)
+def test_issue_create_checks_variant_upc_against_cover_date(
+    settings, tmp_path, auto_login_user, fc_series, cover_date, valid
+):
+    settings.MEDIA_ROOT = tmp_path
+    image = BytesIO()
+    Image.new("RGB", (1, 1)).save(image, format="PNG")
+    client, _ = auto_login_user()
+    data = {
+        "series": fc_series.pk,
+        "number": "1",
+        "cover_date": cover_date,
+        "rating": Rating.objects.create(name="Test Rating").pk,
+        **{
+            f"{prefix}-{field}": "0"
+            for prefix in ("credits", "variants", "attribution")
+            for field in ("TOTAL_FORMS", "INITIAL_FORMS")
+        },
+        "variants-TOTAL_FORMS": "1",
+        "variants-0-name": "Variant",
+        "variants-0-upc": "0714860246207",
+        "variants-0-image": SimpleUploadedFile("v.png", image.getvalue(), "image/png"),
+    }
+
+    resp = client.post(reverse("issue:create"), data=data)
+
+    if valid:
+        issue = Issue.objects.get(series=fc_series, number="1")
+        assert issue.variants.filter(upc="0714860246207").exists()
+    else:
+        # An invalid variant re-renders the form with its error instead of saving the issue.
+        assert resp.status_code == HTML_OK_CODE
+        assert not Issue.objects.filter(series=fc_series, number="1").exists()
+        assert resp.context["variants"].forms[0].errors["upc"] == ["UPC check digit is invalid."]
