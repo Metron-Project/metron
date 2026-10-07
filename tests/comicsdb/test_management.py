@@ -417,14 +417,11 @@ def test_invalid_upcs_clear(system_user, upc_issues, upc_variants, tmp_path):
     ("upc", "cover_date", "expected"),
     [
         # Values confirmed against cover images.
-        ("709893071712", date(1979, 12, 1), "0709893071712"),
         ("596060471656311", date(2008, 8, 1), "75960604716156311"),
         ("7619413574401011", date(2019, 6, 1), "76194135744701011"),
         ("8442840030902511", date(2015, 2, 1), "84428400309402511"),
         ("759606092681003111", date(2021, 10, 1), "75960609268003111"),
-        ("709893071712", date(1979, 11, 1), None),
         ("071486024512", date(1976, 12, 1), None),
-        ("709893071712", date(1993, 12, 1), None),
         ("123456789012345", date(2009, 1, 1), None),
         ("761941296330000711", date(2011, 7, 1), None),
         ("759606092691003111", date(2021, 10, 1), None),
@@ -432,14 +429,11 @@ def test_invalid_upcs_clear(system_user, upc_issues, upc_variants, tmp_path):
         ("5960601415001", date(2009, 1, 1), None),
     ],
     ids=[
-        "legacy_missing_leading_zero",
         "marvel_15_digit",
         "16_digit_missing_check_digit",
         "16_digit_missing_check_digit_other_publisher",
         "marvel_18_digit_stray_digit",
-        "legacy_missing_leading_zero_month_mismatch",
         "legacy_already_has_leading_zero",
-        "legacy_missing_leading_zero_too_recent",
         "15_digit_not_marvel",
         "18_digit_not_marvel",
         "marvel_18_digit_still_invalid",
@@ -451,12 +445,20 @@ def test_repair_upc(upc, cover_date, expected):
     assert repair_upc(upc, cover_date) == expected
 
 
-IRON_MAN_93 = ("071486024512", date(1976, 12, 1))  # Cover shows '0714860245412'.
+# Values confirmed against cover images.
+IRON_MAN_93 = ("071486024512", date(1976, 12, 1))  # '0714860245412'
+WEIRD_WAR_TALES_82 = ("709893071712", date(1979, 12, 1))  # '0709893071712'
 
 
 @pytest.mark.parametrize(
     ("upc", "cover_date", "title_codes", "expected"),
     [
+        (*WEIRD_WAR_TALES_82, {"07098930717"}, "0709893071712"),
+        (*WEIRD_WAR_TALES_82, set(), None),
+        ("709893071712", date(1979, 11, 1), {"07098930717"}, None),
+        ("709893071712", date(1993, 12, 1), {"07098930717"}, None),
+        # Sad Sack and the Sarge #152: '718' is also a typo for the series' '716'.
+        ("718585186412", date(1981, 12, 1), {"07165851864"}, None),
         (*IRON_MAN_93, {"07148602454"}, "0714860245412"),
         (*IRON_MAN_93, {"07148602454", "07148602462"}, "0714860245412"),
         # Archie Giant Series #455: two of the series' title codes match.
@@ -465,9 +467,21 @@ IRON_MAN_93 = ("071486024512", date(1976, 12, 1))  # Cover shows '0714860245412'
         (*IRON_MAN_93, set(), None),
         ("071486024512", date(1976, 11, 1), {"07148602454"}, None),
     ],
-    ids=["match", "match_among_others", "ambiguous", "no_match", "no_title_codes", "wrong_month"],
+    ids=[
+        "leading_zero",
+        "leading_zero_no_title_codes",
+        "leading_zero_wrong_month",
+        "leading_zero_too_recent",
+        "leading_zero_title_code_mismatch",
+        "title_code_match",
+        "title_code_match_among_others",
+        "title_code_ambiguous",
+        "title_code_no_match",
+        "title_code_no_title_codes",
+        "title_code_wrong_month",
+    ],
 )
-def test_repair_upc_restores_title_code(upc, cover_date, title_codes, expected):
+def test_repair_upc_legacy_12_digit(upc, cover_date, title_codes, expected):
     assert repair_upc(upc, cover_date, title_codes) == expected
 
 

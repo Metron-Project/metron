@@ -2122,12 +2122,12 @@ def test_issue_filter_by_foc_date_range_same_date(
 
 
 @pytest.mark.parametrize(
-    ("cover_date", "saved"),
+    ("cover_date", "valid"),
     [("1976-07-01", True), ("2023-01-01", False)],
     ids=["legacy_upc_before_cutoff", "legacy_upc_from_cutoff"],
 )
 def test_issue_create_checks_variant_upc_against_cover_date(
-    settings, tmp_path, auto_login_user, fc_series, cover_date, saved
+    settings, tmp_path, auto_login_user, fc_series, cover_date, valid
 ):
     settings.MEDIA_ROOT = tmp_path
     image = BytesIO()
@@ -2149,7 +2149,13 @@ def test_issue_create_checks_variant_upc_against_cover_date(
         "variants-0-image": SimpleUploadedFile("v.png", image.getvalue(), "image/png"),
     }
 
-    client.post(reverse("issue:create"), data=data)
+    resp = client.post(reverse("issue:create"), data=data)
 
-    issue = Issue.objects.get(series=fc_series, number="1")
-    assert issue.variants.filter(upc="0714860246207").exists() is saved
+    if valid:
+        issue = Issue.objects.get(series=fc_series, number="1")
+        assert issue.variants.filter(upc="0714860246207").exists()
+    else:
+        # An invalid variant re-renders the form with its error instead of saving the issue.
+        assert resp.status_code == HTML_OK_CODE
+        assert not Issue.objects.filter(series=fc_series, number="1").exists()
+        assert resp.context["variants"].forms[0].errors["upc"] == ["UPC check digit is invalid."]

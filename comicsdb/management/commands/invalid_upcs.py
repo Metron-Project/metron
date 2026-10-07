@@ -63,6 +63,8 @@ def repair_upc(upc: str, cover_date: date, title_codes: Collection[str] = ()) ->
 
     - 12 digits on a legacy issue, not starting with '0' and ending in its cover month: a
       legacy 13 digit UPC without its leading '0', e.g. '709893071712' -> '0709893071712'.
+      Legacy UPCs have no check digit to confirm the result, so it must also match one of
+      the series' other legacy title codes.
     - 12 digits on a legacy issue, starting with '0' and ending in its cover month: a
       legacy 13 digit UPC with a digit dropped from its title code. The title code is
       restored from the series' other legacy UPCs when exactly one of them matches, e.g.
@@ -87,7 +89,7 @@ def repair_upc(upc: str, cover_date: date, title_codes: Collection[str] = ()) ->
         return None
     legacy_month = cover_date.year < LEGACY_UPC_YEAR and int(upc[-2:]) == cover_date.month
     match len(upc):
-        case 12 if legacy_month and not upc.startswith("0"):
+        case 12 if legacy_month and not upc.startswith("0") and "0" + upc[:10] in title_codes:
             repaired = "0" + upc
         case 12 if legacy_month and (code := match_title_code(upc[:10], title_codes)):
             repaired = code + upc[10:]
