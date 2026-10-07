@@ -155,11 +155,11 @@ class IssueAdmin(AdminImageMixin, SimpleHistoryAdmin):
 
     @admin.action(description="Add current Marvel EIC")
     def add_marvel_credits(self, request, queryset) -> None:
-        cb = Creator.objects.get(slug="c-b-cebulski")
+        stephen_wacker = Creator.objects.get(slug="stephen-wacker")
         eic = Role.objects.get(name__iexact="editor in chief")
         count = 0
         for i in queryset:
-            cred, create = Credits.objects.get_or_create(issue=i, creator=cb)
+            cred, create = Credits.objects.get_or_create(issue=i, creator=stephen_wacker)
             if create:
                 cred.role.add(eic)
                 count += 1
