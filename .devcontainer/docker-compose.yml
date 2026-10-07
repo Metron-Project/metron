@@ -1,0 +1,64 @@
+services:
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    volumes:
+      - ..:/workspace:cached
+    environment:
+      - DB_NAME=metron
+      - DB_USER=metron
+      - DB_PASSWORD=metron
+      - DB_HOST=db
+      - REDIS_URL=redis://redis:6379/0
+      - THUMBNAIL_REDIS_HOST=redis
+      - SECRET_KEY=dev-secret-key-for-local-development-only-12345
+      - DEBUG=True
+      - ALLOWED_HOSTS=localhost,127.0.0.1,0.0.0.0,app
+      - PUSHOVER_TOKEN=dummy
+      - PUSHOVER_USER_KEY=dummy
+      - EMAIL_BACKEND=django.core.mail.backends.console.EmailBackend
+      - EMAIL_HOST=localhost
+      - EMAIL_USER=dev@example.com
+      - EMAIL_PASSWORD=dev
+      - EMAIL_FROM=dev@example.com
+      - HCAPTCHA_SECRET_KEY=dummy
+      - RAPID_API_KEY=dummy
+      - RAPID_API_HOST=dummy
+      - OPENCOLLECTIVE_API_KEY=dummy
+      - OPENCOLLECTIVE_SLUG=metron
+      - STATIC_ROOT=/workspace/staticfiles
+      - MEDIA_ROOT=/workspace/media
+    command: sleep infinity
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_started
+
+  db:
+    image: postgres:16
+    restart: unless-stopped
+    environment:
+      - POSTGRES_DB=metron
+      - POSTGRES_USER=metron
+      - POSTGRES_PASSWORD=metron
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+      - ./init.sql:/docker-entrypoint-initdb.d/init.sql:ro
+    ports:
+      - "5432:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U metron -d metron"]
+      interval: 3s
+      timeout: 5s
+      retries: 5
+
+  redis:
+    image: redis:7-alpine
+    restart: unless-stopped
+    ports:
+      - "6379:6379"
+
+volumes:
+  postgres-data:
