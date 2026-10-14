@@ -1,0 +1,23 @@
+name: Django Probe
+
+on:
+  schedule:
+    # Runs monthly. Choose a different minute and hour to help spread load on our servers.
+    - cron: "17 4 1 * *"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  django-probe:
+    uses: tim-schilling/django-probe/.github/workflows/django-probe-submit-uv.yml@0.4.1
+    with:
+      # Path to the Django project to scan, relative to the repository root.
+      path: "."
+      # Environment to gate the submit job behind. Empty submits without an approval gate.
+      environment: ""
+      # Python version for uv to set up. Empty lets uv resolve its own.
+      python-version: ""
+    secrets:
+      DJANGO_PROBE_TOKEN: ${{ secrets.DJANGO_PROBE_TOKEN }}
