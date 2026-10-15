@@ -2350,6 +2350,10 @@ msgstr "Relazioni"
 msgid "Variant Covers"
 msgstr "Copertine Varianti"
 
+#: comicsdb/templates/comicsdb/issue_form.html
+msgid "The issue wasn't saved. Fix the errors in these sections:"
+msgstr "Il numero non è stato salvato. Correggi gli errori in queste sezioni:"
+
 #: comicsdb/templates/comicsdb/issue_list.html:6
 msgid "Issues - Metron"
 msgstr "Albi - Metron"

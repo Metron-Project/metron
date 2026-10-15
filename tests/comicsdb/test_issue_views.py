@@ -15,6 +15,7 @@ from comicsdb.models.credits import Role
 from comicsdb.models.issue import Issue
 from comicsdb.models.publisher import Publisher
 from comicsdb.models.series import Series, SeriesType
+from comicsdb.models.variant import Variant
 from issue_ratings.models import IssueRating
 from wish_list.models import WishList, WishListItem
 
@@ -2159,3 +2160,43 @@ def test_issue_create_checks_variant_upc_against_cover_date(
         assert resp.status_code == HTML_OK_CODE
         assert not Issue.objects.filter(series=fc_series, number="1").exists()
         assert resp.context["variants"].forms[0].errors["upc"] == ["UPC check digit is invalid."]
+        assert b'id="section-errors"' in resp.content
+        assert b'href="#section-variants"' in resp.content
+
+
+def test_issue_update_flags_variant_errors_at_top(auto_login_user, basic_issue):
+    Variant.objects.create(issue=basic_issue, name="Variant")  # No image, so it's invalid.
+    client, _ = auto_login_user()
+    variant = basic_issue.variants.get()
+    data = {
+        "series": basic_issue.series.pk,
+        "number": basic_issue.number,
+        "cover_date": basic_issue.cover_date,
+        "rating": basic_issue.rating.pk,
+        **{
+            f"{prefix}-{field}": "0"
+            for prefix in ("credits", "attribution")
+            for field in ("TOTAL_FORMS", "INITIAL_FORMS")
+        },
+        "variants-TOTAL_FORMS": "1",
+        "variants-INITIAL_FORMS": "1",
+        "variants-0-id": variant.pk,
+        "variants-0-issue": basic_issue.pk,
+        "variants-0-name": "Variant",
+    }
+
+    resp = client.post(reverse("issue:update", kwargs={"slug": basic_issue.slug}), data=data)
+
+    assert resp.status_code == HTML_OK_CODE
+    content = resp.content.decode()
+    summary = content[content.index('id="section-errors"') :]
+    summary = summary[: summary.index("</ul>")]
+    assert 'href="#section-variants"' in summary
+    assert 'href="#section-credits"' not in summary
+
+
+def test_issue_update_form_has_no_error_summary(auto_login_user, basic_issue):
+    client, _ = auto_login_user()
+    resp = client.get(reverse("issue:update", kwargs={"slug": basic_issue.slug}))
+    assert resp.status_code == HTML_OK_CODE
+    assert b'id="section-errors"' not in resp.content

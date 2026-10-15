@@ -37,6 +37,31 @@
                 <a href="#section-attribution">{% trans "Attribution" %}</a>
             </nav>
         </div>
+        {# Errors in the formsets render inside their own sections far down the page, so flag them here. #}
+        {% if credits.total_error_count or variants.total_error_count or attribution.total_error_count %}
+            <div class="notification is-danger" id="section-errors" role="alert">
+                <p class="mb-2">
+                    <strong>{% trans "The issue wasn't saved. Fix the errors in these sections:" %}</strong>
+                </p>
+                <ul>
+                    {% if credits.total_error_count %}
+                        <li>
+                            <a href="#section-credits">{% trans "Credits" %}</a>
+                        </li>
+                    {% endif %}
+                    {% if variants.total_error_count %}
+                        <li>
+                            <a href="#section-variants">{% trans "Variant Covers" %}</a>
+                        </li>
+                    {% endif %}
+                    {% if attribution.total_error_count %}
+                        <li>
+                            <a href="#section-attribution">{% trans "Attribution" %}</a>
+                        </li>
+                    {% endif %}
+                </ul>
+            </div>
+        {% endif %}
         <!-- Primary Information Section -->
         <div class="box" id="section-primary">
             <h2 class="title is-5">{% trans "Primary Information" %}</h2>
