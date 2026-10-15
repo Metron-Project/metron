@@ -78,6 +78,7 @@
                     <div class="column is-half">{% include "comicsdb/partials/form_field.html" with field=form.title %}</div>
                     <div class="column is-full">{% include "comicsdb/partials/form_field.html" with field=form.name %}</div>
                     <div class="column is-full">{% include "comicsdb/partials/form_field.html" with field=form.desc %}</div>
+                    <div class="column is-full">{% include "comicsdb/partials/form_field.html" with field=form.desc_is_solicitation %}</div>
                 </div>
             </div>
 
@@ -158,6 +159,25 @@ document.addEventListener('DOMContentLoaded', function() {
             weekStart: 0
         });
     });
+
+    // A solicitation flag belongs to the description it was set on. Uncheck it once the
+    // description is edited; re-checking it marks it as deliberately kept for the server.
+    var desc = document.getElementById('id_desc');
+    var solicitation = document.getElementById('id_desc_is_solicitation');
+    var solicitationKept = document.getElementById('id_desc_solicitation_kept');
+    if (desc && solicitation && solicitationKept && solicitation.checked) {
+        var originalDesc = desc.value;
+        var descEdited = false;
+        desc.addEventListener('input', function() {
+            if (!descEdited && desc.value !== originalDesc) {
+                descEdited = true;
+                solicitation.checked = false;
+            }
+        });
+        solicitation.addEventListener('change', function() {
+            solicitationKept.value = descEdited && solicitation.checked ? 'True' : '';
+        });
+    }
 });
 
 /**

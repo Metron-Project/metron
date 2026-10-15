@@ -56,6 +56,7 @@ class IssueAdmin(AdminImageMixin, SimpleHistoryAdmin):
         "store_date",
         "cover_date",
         "series__publisher",
+        "desc_is_solicitation",
     )
     autocomplete_fields = ["series", "characters", "teams", "arcs", "universes", "reprints"]
     list_select_related = ("series",)
@@ -90,6 +91,7 @@ class IssueAdmin(AdminImageMixin, SimpleHistoryAdmin):
                     "upc",
                     "page",
                     "desc",
+                    "desc_is_solicitation",
                     "characters",
                     "teams",
                     "arcs",

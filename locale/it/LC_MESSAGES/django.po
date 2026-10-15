@@ -768,6 +768,28 @@ msgstr "ID Comic Vine"
 msgid "GCD ID"
 msgstr "ID GCD"
 
+#: comicsdb/models/issue.py
+msgid "Description is a solicitation"
+msgstr "La descrizione è una sollecitazione"
+
+#: comicsdb/models/issue.py
+msgid "The description is the publisher's solicitation text."
+msgstr "La descrizione è il testo di sollecitazione dell'editore."
+
+#: comicsdb/forms/issue.py
+msgid ""
+"Check if the description is the publisher's solicitation text. Changing the "
+"description clears this unless you check it again."
+msgstr ""
+"Seleziona se la descrizione è il testo di sollecitazione dell'editore. "
+"Modificando la descrizione questa opzione viene deselezionata, a meno che tu "
+"non la selezioni di nuovo."
+
+#: comicsdb/templates/comicsdb/issue_detail.html
+#: comicsdb/views/issue_list_helpers.py
+msgid "Solicitation"
+msgstr "Sollecitazione"
+
 #: comicsdb/models/common.py:59
 msgid "Star rating (1-5)"
 msgstr "Valutazione a stelle (1-5)"
@@ -2140,6 +2162,10 @@ msgstr "Titoli delle Storie"
 #: comicsdb/templates/comicsdb/issue_detail.html:303
 msgid "No summary available."
 msgstr "Nessun riassunto disponibile."
+
+#: comicsdb/templates/comicsdb/issue_detail.html
+msgid "This summary is the publisher's solicitation text."
+msgstr "Questo riassunto è il testo di sollecitazione dell'editore."
 
 #: comicsdb/templates/comicsdb/issue_detail.html:313
 #, python-format

@@ -2164,6 +2164,25 @@ def test_issue_create_checks_variant_upc_against_cover_date(
         assert b'href="#section-variants"' in resp.content
 
 
+def test_issue_detail_shows_solicitation_tag(basic_issue, auto_login_user):
+    basic_issue.desc = "Solicitation text"
+    basic_issue.desc_is_solicitation = True
+    basic_issue.save()
+    client, _ = auto_login_user()
+    resp = client.get(reverse("issue:detail", kwargs={"slug": basic_issue.slug}))
+    assert resp.status_code == HTML_OK_CODE
+    assert b'<span class="tag is-info ml-2"' in resp.content
+
+
+def test_issue_detail_hides_solicitation_tag(basic_issue, auto_login_user):
+    basic_issue.desc = "Editor-written text"
+    basic_issue.save()
+    client, _ = auto_login_user()
+    resp = client.get(reverse("issue:detail", kwargs={"slug": basic_issue.slug}))
+    assert resp.status_code == HTML_OK_CODE
+    assert b'<span class="tag is-info ml-2"' not in resp.content
+
+
 def test_issue_update_flags_variant_errors_at_top(auto_login_user, basic_issue):
     Variant.objects.create(issue=basic_issue, name="Variant")  # No image, so it's invalid.
     client, _ = auto_login_user()

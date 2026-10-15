@@ -1,6 +1,8 @@
 from django.forms import (
+    BooleanField,
     ClearableFileInput,
     DateInput,
+    HiddenInput,
     ModelChoiceField,
     ModelForm,
     ValidationError,
@@ -54,6 +56,10 @@ class IssueForm(ModelForm):
 
     rating = ModelChoiceField(queryset=Rating.objects.all(), empty_label=None)
 
+    # Set by the form's JavaScript when the editor re-checks `desc_is_solicitation` after
+    # changing the description, so `clean()` can tell a deliberate keep from a stale flag.
+    desc_solicitation_kept = BooleanField(required=False, widget=HiddenInput)
+
     class Meta:
         model = Issue
         # exclude 'creators' field
@@ -75,6 +81,7 @@ class IssueForm(ModelForm):
             "cv_id",
             "gcd_id",
             "desc",
+            "desc_is_solicitation",
             "characters",
             "teams",
             "arcs",
@@ -101,6 +108,10 @@ class IssueForm(ModelForm):
             "price": _("USD for US publishers, GBP for UK publishers"),
             "reprints": _("Search using 'Series Name (Year) #Number' format."),
             "foc_date": _("This date should be earlier than the store date"),
+            "desc_is_solicitation": _(
+                "Check if the description is the publisher's solicitation text. Changing the "
+                "description clears this unless you check it again."
+            ),
         }
         labels = {
             "name": _("Story Title"),
@@ -160,3 +171,16 @@ class IssueForm(ModelForm):
             if series.series_type.id in self.collections:
                 raise ValidationError(_("Arcs cannot be added to Trade Paperbacks."))
         return arcs
+
+    def clean(self):
+        cleaned_data = super().clean()
+        # Clear a solicitation flag left over from the old description, unless the editor
+        # explicitly kept it after changing the description.
+        if (
+            "desc" in self.changed_data
+            and self.initial.get("desc_is_solicitation")
+            and cleaned_data.get("desc_is_solicitation")
+            and not cleaned_data.get("desc_solicitation_kept")
+        ):
+            cleaned_data["desc_is_solicitation"] = False
+        return cleaned_data

@@ -212,3 +212,7 @@ def test_universe_absolute_url(auto_login_user, earth_2_universe):
     client, _ = auto_login_user()
     resp = client.get(earth_2_universe.get_absolute_url())
     assert resp.status_code == HTTP_200_OK
+
+
+def test_issue_desc_is_solicitation_defaults_to_false(basic_issue):
+    assert basic_issue.desc_is_solicitation is False

@@ -72,6 +72,11 @@ class Issue(CommonInfo):
     page = models.PositiveSmallIntegerField(_("Page Count"), null=True, blank=True)
     image = ImageField(_("Cover"), upload_to="issue/%Y/%m/%d/", blank=True)
     cover_hash = models.CharField(_("Cover Hash"), max_length=16, blank=True)
+    desc_is_solicitation = models.BooleanField(
+        _("Description is a solicitation"),
+        default=False,
+        help_text=_("The description is the publisher's solicitation text."),
+    )
     arcs = models.ManyToManyField(Arc, blank=True, related_name="issues")
     creators = models.ManyToManyField(Creator, through="Credits", blank=True, related_name="issues")
     characters = models.ManyToManyField(Character, blank=True, related_name="issues")
