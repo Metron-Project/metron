@@ -2183,6 +2183,37 @@ def test_issue_detail_hides_solicitation_tag(basic_issue, auto_login_user):
     assert b'<span class="tag is-info ml-2"' not in resp.content
 
 
+def test_issue_list_filters_released_solicitations(auto_login_user, create_user, fc_series):
+    user = create_user()
+    today = timezone.now().date()
+    common = {"series": fc_series, "edited_by": user, "created_by": user}
+    released = Issue.objects.create(
+        number="1",
+        cover_date=today - timedelta(days=60),
+        store_date=today - timedelta(days=30),
+        desc_is_solicitation=True,
+        **common,
+    )
+    # No store date, so the cover date decides whether it's out.
+    released_no_store_date = Issue.objects.create(
+        number="2", cover_date=today - timedelta(days=1), desc_is_solicitation=True, **common
+    )
+    Issue.objects.create(
+        number="3",
+        cover_date=today + timedelta(days=60),
+        store_date=today + timedelta(days=30),
+        desc_is_solicitation=True,
+        **common,
+    )
+    Issue.objects.create(
+        number="4", cover_date=today - timedelta(days=60), store_date=today, **common
+    )
+    client, _ = auto_login_user()
+    resp = client.get(reverse("issue:list"), {"desc_is_solicitation": "true", "released": "true"})
+    assert resp.status_code == HTML_OK_CODE
+    assert set(resp.context["issue_list"]) == {released, released_no_store_date}
+
+
 def test_issue_update_flags_variant_errors_at_top(auto_login_user, basic_issue):
     Variant.objects.create(issue=basic_issue, name="Variant")  # No image, so it's invalid.
     client, _ = auto_login_user()
