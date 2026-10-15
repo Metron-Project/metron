@@ -256,6 +256,15 @@ class IssueSerializer(ModelCleanMixin, serializers.ModelSerializer):
         universes_data = validated_data.pop("universes", None)
         reprints_data = validated_data.pop("reprints", None)
 
+        # A solicitation flag belongs to the description it was set on, so clear it when the
+        # description changes, unless the request sets the flag explicitly.
+        if (
+            "desc" in validated_data
+            and validated_data["desc"] != instance.desc
+            and "desc_is_solicitation" not in validated_data
+        ):
+            validated_data["desc_is_solicitation"] = False
+
         # Update all regular fields at once
         for attr, value in validated_data.items():
             setattr(instance, attr, value)
@@ -294,6 +303,7 @@ class IssueSerializer(ModelCleanMixin, serializers.ModelSerializer):
             "upc",
             "page",
             "desc",
+            "desc_is_solicitation",
             "image",
             "arcs",
             "characters",
@@ -357,6 +367,7 @@ class IssueReadSerializer(serializers.ModelSerializer):
             "upc",
             "page",
             "desc",
+            "desc_is_solicitation",
             "image",
             "cover_hash",
             "average_rating",

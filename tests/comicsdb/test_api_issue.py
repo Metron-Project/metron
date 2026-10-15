@@ -642,3 +642,66 @@ def test_filter_by_foc_date_range_no_match(api_client_with_credentials, basic_is
     )
     assert resp.status_code == status.HTTP_200_OK
     assert resp.data["count"] == 0
+
+
+@pytest.fixture
+def solicited_issue(basic_issue: Issue) -> Issue:
+    basic_issue.desc = "Solicitation text"
+    basic_issue.desc_is_solicitation = True
+    basic_issue.save()
+    return basic_issue
+
+
+def test_detail_includes_desc_is_solicitation(api_client_with_credentials, solicited_issue):
+    resp = api_client_with_credentials.get(
+        reverse("api:issue-detail", kwargs={"pk": solicited_issue.pk})
+    )
+    assert resp.status_code == status.HTTP_200_OK
+    assert resp.data["desc_is_solicitation"] is True
+
+
+@pytest.mark.parametrize(("value", "expected_count"), [("true", 1), ("false", 0)])
+def test_filter_by_desc_is_solicitation(
+    api_client_with_credentials, solicited_issue, value, expected_count
+):
+    resp = api_client_with_credentials.get(
+        reverse("api:issue-list"), {"desc_is_solicitation": value}
+    )
+    assert resp.status_code == status.HTTP_200_OK
+    assert resp.data["count"] == expected_count
+
+
+def test_staff_user_patch_desc_clears_solicitation(
+    api_client_with_staff_credentials, solicited_issue
+):
+    resp = api_client_with_staff_credentials.patch(
+        reverse("api:issue-detail", kwargs={"pk": solicited_issue.pk}),
+        data={"desc": "Rewritten by an editor"},
+    )
+    assert resp.status_code == status.HTTP_200_OK
+    assert resp.data["desc_is_solicitation"] is False
+    solicited_issue.refresh_from_db()
+    assert solicited_issue.desc_is_solicitation is False
+
+
+def test_staff_user_patch_desc_keeps_explicit_solicitation(
+    api_client_with_staff_credentials, solicited_issue
+):
+    resp = api_client_with_staff_credentials.patch(
+        reverse("api:issue-detail", kwargs={"pk": solicited_issue.pk}),
+        data={"desc": "Updated solicitation text", "desc_is_solicitation": True},
+    )
+    assert resp.status_code == status.HTTP_200_OK
+    solicited_issue.refresh_from_db()
+    assert solicited_issue.desc_is_solicitation is True
+
+
+def test_staff_user_patch_other_field_keeps_solicitation(
+    api_client_with_staff_credentials, solicited_issue
+):
+    resp = api_client_with_staff_credentials.patch(
+        reverse("api:issue-detail", kwargs={"pk": solicited_issue.pk}), data={"page": 32}
+    )
+    assert resp.status_code == status.HTTP_200_OK
+    solicited_issue.refresh_from_db()
+    assert solicited_issue.desc_is_solicitation is True

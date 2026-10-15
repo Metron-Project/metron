@@ -37,7 +37,7 @@ class IssueSeriesQuickSearch(df.rest_framework.CharFilter):
         return super().filter(qs, value)
 
 
-def filter_released(qs, _name, value):
+def filter_released(qs, name, value):
     """
     Filter on whether an issue is out: its store date, or its cover date when it has no store
     date, is on or before today.
@@ -140,6 +140,9 @@ class IssueFilter(df.rest_framework.FilterSet):
     )
     role_id = NumberInFilter(
         label="Role Metron ID", field_name="credits__role__id", lookup_expr="in", distinct=True
+    )
+    desc_is_solicitation = df.rest_framework.BooleanFilter(
+        label="Description is the publisher's solicitation text"
     )
 
     class Meta:
