@@ -14,7 +14,7 @@ from rest_framework.test import APIRequestFactory
 
 from api.cache import ModelLabel, get_model_version
 from api.v1_0.serializers.attribution import SOURCE_NAMES
-from comicsdb.models import Attribution, Character
+from comicsdb.models import Attribution, Character, Rating
 
 # (fixture name, API basename) for every resource whose detail response embeds attribution.
 ATTRIBUTED_RESOURCES = [
@@ -224,3 +224,42 @@ def test_attribution_queryset_delete_bumps_parent(batman, local_cache):
 
     batman.refresh_from_db()
     assert batman.modified > past
+
+
+def test_attribution_on_model_without_modified_saves(db, local_cache):
+    rating = Rating.objects.create(name="Test Rating")
+
+    attribution = Attribution.objects.create(
+        source=Attribution.Source.WIKIPEDIA, url=WIKI_URL, content_object=rating
+    )
+    attribution.delete()
+
+
+def test_edit_view_writes_parent_row_once(auto_login_user, dc_comics, local_cache):
+    """The edit view saves the parent itself, so the attribution signal
+    mustn't also UPDATE it once per formset row."""
+    client, _ = auto_login_user()
+    data = {
+        "name": dc_comics.name,
+        "country": "US",
+        "attribution-TOTAL_FORMS": 2,
+        "attribution-INITIAL_FORMS": 0,
+        "attribution-0-source": "W",
+        "attribution-0-url": WIKI_URL,
+        "attribution-1-source": "D",
+        "attribution-1-url": "https://www.dc.com/example",
+    }
+    past = timezone.now() - timedelta(days=1)
+    type(dc_comics).objects.filter(pk=dc_comics.pk).update(modified=past)
+
+    with CaptureQueriesContext(connection) as ctx:
+        resp = client.post(reverse("publisher:update", kwargs={"slug": dc_comics.slug}), data)
+
+    assert resp.status_code == status.HTTP_302_FOUND
+    assert dc_comics.attribution.count() == 2
+    parent_updates = [
+        q for q in ctx.captured_queries if q["sql"].startswith('UPDATE "comicsdb_publisher"')
+    ]
+    assert len(parent_updates) == 1
+    dc_comics.refresh_from_db()
+    assert dc_comics.modified > past

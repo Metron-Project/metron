@@ -1,5 +1,8 @@
 import logging
+from contextlib import contextmanager
+from contextvars import ContextVar
 
+from django.core.exceptions import FieldDoesNotExist
 from django.db.models import QuerySet
 from django.utils import timezone
 from sorl.thumbnail import delete
@@ -272,6 +275,26 @@ def bump_cache_on_name_change(label, sender, instance, **kwargs):
         bump_model_version(label)
 
 
+_attribution_parent_saved_separately = ContextVar(
+    "attribution_parent_saved_separately", default=False
+)
+
+
+@contextmanager
+def attribution_parent_saved_separately():
+    """Skip the attribution signals' parent bump inside this block.
+
+    For edit views that save the parent itself in the same transaction as
+    its attribution formset: that save already updates `modified` (auto_now)
+    and bumps the parent's cache version, so bumping it again per
+    attribution row would only duplicate the work."""
+    token = _attribution_parent_saved_separately.set(True)
+    try:
+        yield
+    finally:
+        _attribution_parent_saved_separately.reset(token)
+
+
 def _touch_attribution_parent(content_type_id, object_id):
     """Attribution is a generic relation, so saving or deleting one doesn't
     touch its parent row. Bump the parent's `modified` explicitly so its
@@ -279,9 +302,16 @@ def _touch_attribution_parent(content_type_id, object_id):
     and its cache version, since its list response embeds `modified`."""
     from django.contrib.contenttypes.models import ContentType  # noqa: PLC0415
 
+    if _attribution_parent_saved_separately.get():
+        return
     # get_for_id() is served from ContentType's in-process cache.
     model = ContentType.objects.get_for_id(content_type_id).model_class()
     if model is None:
+        return
+    # The generic FK accepts any model; only bump ones that track `modified`.
+    try:
+        model._meta.get_field("modified")
+    except FieldDoesNotExist:
         return
     model.objects.filter(pk=object_id).update(modified=timezone.now())
     try:
@@ -296,7 +326,7 @@ def track_attribution_parent(sender, instance, raw=False, **kwargs):
     at before this save, so update_parent_modified_on_attribution_save() can
     also bump the old parent when the attribution is reassigned."""
     instance._previous_parent = None
-    if raw or instance._state.adding:
+    if raw or instance._state.adding or _attribution_parent_saved_separately.get():
         return
     instance._previous_parent = (
         sender.objects.filter(pk=instance.pk).values_list("content_type_id", "object_id").first()

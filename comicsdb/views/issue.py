@@ -25,6 +25,7 @@ from comicsdb.models import Credits, Issue, Role
 from comicsdb.models.attribution import Attribution
 from comicsdb.models.series import SeriesType
 from comicsdb.models.variant import Variant
+from comicsdb.signals import attribution_parent_saved_separately
 from comicsdb.views.constants import DETAIL_PAGINATE_BY, PAGINATE_BY
 from comicsdb.views.history import HistoryListView
 from comicsdb.views.issue_list_helpers import (
@@ -281,7 +282,9 @@ class IssueCreate(LoginRequiredMixin, CreateView):
                 variants_form.instance = self.object
                 variants_form.save()
                 attribution_form.instance = self.object
-                attribution_form.save()
+                # The issue was just saved, so there's nothing for the rows to bump.
+                with attribution_parent_saved_separately():
+                    attribution_form.save()
 
                 LOGGER.info(
                     "Issue: %s #%s was created by %s",
@@ -362,7 +365,8 @@ class IssueUpdate(LoginRequiredMixin, UpdateView):
                 attribution_form.instance = self.object
                 credits_form.save()
                 variants_form.save()
-                attribution_form.save()
+                with attribution_parent_saved_separately():
+                    attribution_form.save()
             else:
                 return super().form_invalid(form)
 
@@ -372,7 +376,9 @@ class IssueUpdate(LoginRequiredMixin, UpdateView):
                 form.instance.number,
                 self.request.user,
             )
-        return super().form_valid(form)
+            # Saves the issue, whose `modified`/cache bump also covers the
+            # attribution changes -- so it must commit with them.
+            return super().form_valid(form)
 
 
 class IssueFormsetAddRowView(LoginRequiredMixin, View):

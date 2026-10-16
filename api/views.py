@@ -198,6 +198,17 @@ class CachedObjectMixin:
         return self._cached_object_modified
 
 
+class AttributionRetrieveMixin:
+    """For viewsets whose retrieve serializer embeds `attribution`: prefetch
+    it on retrieve. Concrete get_queryset() overrides must call super()."""
+
+    def get_queryset(self):
+        queryset = super().get_queryset()
+        if self.action == "retrieve":
+            queryset = queryset.prefetch_related("attribution")
+        return queryset
+
+
 class ConditionalRetrieveModelMixin(CachedObjectMixin, mixins.RetrieveModelMixin):
     #: Other models' cache-generation counters (see api/cache.py) to mix
     #: into the detail cache key, for responses that embed a related
@@ -378,6 +389,7 @@ class ArcViewSet(
     UserTrackingMixin,
     IssueListMixin,
     mixins.CreateModelMixin,
+    AttributionRetrieveMixin,
     ConditionalRetrieveModelMixin,
     CachedListModelMixin,
     mixins.UpdateModelMixin,
@@ -407,12 +419,6 @@ class ArcViewSet(
     # comment). A plain issue field edit can show stale here for up to
     # DETAIL_CACHE_TTL; that's the accepted tradeoff.
 
-    def get_queryset(self):
-        queryset = super().get_queryset()
-        if self.action == "retrieve":
-            queryset = queryset.prefetch_related("attribution")
-        return queryset
-
     def get_serializer_class(self):
         match self.action:
             case "list":
@@ -429,6 +435,7 @@ class CharacterViewSet(
     UserTrackingMixin,
     IssueListMixin,
     mixins.CreateModelMixin,
+    AttributionRetrieveMixin,
     ConditionalRetrieveModelMixin,
     CachedListModelMixin,
     mixins.UpdateModelMixin,
@@ -472,7 +479,7 @@ class CharacterViewSet(
     def get_queryset(self):
         queryset = super().get_queryset()
         if self.action == "retrieve":
-            queryset = queryset.prefetch_related("creators", "teams", "universes", "attribution")
+            queryset = queryset.prefetch_related("creators", "teams", "universes")
         return queryset
 
     def get_serializer_class(self):
@@ -490,6 +497,7 @@ class CharacterViewSet(
 class CreatorViewSet(
     UserTrackingMixin,
     mixins.CreateModelMixin,
+    AttributionRetrieveMixin,
     ConditionalRetrieveModelMixin,
     CachedListModelMixin,
     mixins.UpdateModelMixin,
@@ -507,12 +515,6 @@ class CreatorViewSet(
     filterset_class = ComicVineFilter
     parser_classes = (MultiPartParser, FormParser)
     cache_model_label = ModelLabel.CREATOR
-
-    def get_queryset(self):
-        queryset = super().get_queryset()
-        if self.action == "retrieve":
-            queryset = queryset.prefetch_related("attribution")
-        return queryset
 
     def get_serializer_class(self):
         match self.action:
@@ -549,6 +551,7 @@ class CreditViewset(
 class ImprintViewSet(
     UserTrackingMixin,
     mixins.CreateModelMixin,
+    AttributionRetrieveMixin,
     ConditionalRetrieveModelMixin,
     CachedListModelMixin,
     mixins.UpdateModelMixin,
@@ -579,7 +582,7 @@ class ImprintViewSet(
     def get_queryset(self):
         queryset = super().get_queryset()
         if self.action == "retrieve":
-            queryset = queryset.select_related("publisher").prefetch_related("attribution")
+            queryset = queryset.select_related("publisher")
         return queryset
 
     def get_serializer_class(self):
@@ -595,6 +598,7 @@ class ImprintViewSet(
 class IssueViewSet(
     UserTrackingMixin,
     mixins.CreateModelMixin,
+    AttributionRetrieveMixin,
     ConditionalRetrieveModelMixin,
     CachedListModelMixin,
     mixins.UpdateModelMixin,
@@ -654,9 +658,11 @@ class IssueViewSet(
 
     def get_queryset(self):
         if self.action == "list":
-            return Issue.objects.select_related("series", "series__series_type")
+            return super().get_queryset().select_related("series", "series__series_type")
         return (
-            Issue.objects.select_related(
+            super()
+            .get_queryset()
+            .select_related(
                 "series",
                 "series__series_type",
                 "series__publisher",
@@ -670,7 +676,6 @@ class IssueViewSet(
                 "teams",
                 "universes",
                 "variants",
-                "attribution",
                 Prefetch(
                     "credits_set",
                     queryset=Credits.objects.order_by("creator__name")
@@ -712,6 +717,7 @@ class IssueViewSet(
 class PublisherViewSet(
     UserTrackingMixin,
     mixins.CreateModelMixin,
+    AttributionRetrieveMixin,
     ConditionalRetrieveModelMixin,
     CachedListModelMixin,
     mixins.UpdateModelMixin,
@@ -735,12 +741,6 @@ class PublisherViewSet(
     filterset_class = PublisherFilter
     parser_classes = (MultiPartParser, FormParser)
     cache_model_label = ModelLabel.PUBLISHER
-
-    def get_queryset(self):
-        queryset = super().get_queryset()
-        if self.action == "retrieve":
-            queryset = queryset.prefetch_related("attribution")
-        return queryset
 
     def get_serializer_class(self):
         match self.action:
@@ -809,6 +809,7 @@ class SeriesViewSet(
     UserTrackingMixin,
     IssueListMixin,
     mixins.CreateModelMixin,
+    AttributionRetrieveMixin,
     ConditionalRetrieveModelMixin,
     CachedListModelMixin,
     mixins.UpdateModelMixin,
@@ -854,7 +855,7 @@ class SeriesViewSet(
             case "retrieve":
                 queryset = (
                     queryset.select_related("imprint")
-                    .prefetch_related("genres", "associated", "attribution")
+                    .prefetch_related("genres", "associated")
                     .annotate(num_issues=Count("issues", distinct=True))
                 )
         return queryset
@@ -905,6 +906,7 @@ class TeamViewSet(
     UserTrackingMixin,
     IssueListMixin,
     mixins.CreateModelMixin,
+    AttributionRetrieveMixin,
     ConditionalRetrieveModelMixin,
     CachedListModelMixin,
     mixins.UpdateModelMixin,
@@ -947,7 +949,7 @@ class TeamViewSet(
     def get_queryset(self):
         queryset = super().get_queryset()
         if self.action == "retrieve":
-            queryset = queryset.prefetch_related("creators", "universes", "attribution")
+            queryset = queryset.prefetch_related("creators", "universes")
         return queryset
 
     def get_serializer_class(self):
@@ -965,6 +967,7 @@ class TeamViewSet(
 class UniverseViewSet(
     UserTrackingMixin,
     mixins.CreateModelMixin,
+    AttributionRetrieveMixin,
     ConditionalRetrieveModelMixin,
     CachedListModelMixin,
     mixins.UpdateModelMixin,
@@ -989,7 +992,7 @@ class UniverseViewSet(
     def get_queryset(self):
         queryset = super().get_queryset()
         if self.action == "retrieve":
-            queryset = queryset.select_related("publisher").prefetch_related("attribution")
+            queryset = queryset.select_related("publisher")
         return queryset
 
     def get_serializer_class(self):
