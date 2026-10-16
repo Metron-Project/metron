@@ -20,6 +20,7 @@ from comicsdb.forms.team import TeamsWidget
 from comicsdb.forms.universe import UniversesWidget
 from comicsdb.forms.widgets import BulmaMoneyWidget, SafeAutocompleteWidget
 from comicsdb.models import Issue, Rating, Series
+from comicsdb.models.issue import desc_changed
 
 MINIMUM_YEAR = 1900
 
@@ -177,8 +178,8 @@ class IssueForm(ModelForm):
         # Clear a solicitation flag left over from the old description, unless the editor
         # explicitly kept it after changing the description.
         if (
-            "desc" in self.changed_data
-            and self.initial.get("desc_is_solicitation")
+            self.initial.get("desc_is_solicitation")
+            and desc_changed(self.initial.get("desc"), cleaned_data.get("desc"))
             and cleaned_data.get("desc_is_solicitation")
             and not cleaned_data.get("desc_solicitation_kept")
         ):

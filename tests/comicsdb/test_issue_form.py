@@ -175,6 +175,13 @@ class TestIssueFormSolicitationFlag:
     def test_unchanged_desc_keeps_flag(self, issue_data, solicited_issue):
         assert self._cleaned_flag(issue_data, solicited_issue) is True
 
+    def test_crlf_resubmission_of_lf_desc_keeps_flag(self, issue_data, solicited_issue):
+        solicited_issue.desc = "Line one\nLine two"
+        solicited_issue.save()
+        issue_data["desc"] = "Line one\r\nLine two"
+
+        assert self._cleaned_flag(issue_data, solicited_issue) is True
+
     def test_changed_desc_clears_flag(self, issue_data, solicited_issue):
         issue_data["desc"] = "Rewritten by an editor"
 

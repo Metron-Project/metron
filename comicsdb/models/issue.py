@@ -191,6 +191,19 @@ class Issue(CommonInfo):
         unique_together = ["series", "number"]
 
 
+def desc_changed(old: str | None, new: str | None) -> bool:
+    """Compare descriptions, ignoring line-ending and surrounding whitespace differences.
+
+    Browsers submit textarea newlines as CRLF, while API clients usually send LF, so the same
+    text can arrive in different forms.
+    """
+
+    def normalize(desc: str | None) -> str:
+        return (desc or "").replace("\r\n", "\n").replace("\r", "\n").strip()
+
+    return normalize(old) != normalize(new)
+
+
 def generate_issue_slug(instance: Issue):
     base_slug = slugify(f"{instance.series.slug}-{instance.number}")
 
