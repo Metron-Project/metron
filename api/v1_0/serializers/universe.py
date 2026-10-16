@@ -1,6 +1,7 @@
 from rest_framework import serializers
 
 from api.v1_0.serializers import BasicPublisherSerializer
+from api.v1_0.serializers.attribution import AttributionSerializer
 from comicsdb.models import Universe
 
 
@@ -42,3 +43,7 @@ class UniverseSerializer(serializers.ModelSerializer):
 
 class UniverseReadSerializer(UniverseSerializer):
     publisher = BasicPublisherSerializer(read_only=True)
+    attribution = AttributionSerializer(many=True, read_only=True)
+
+    class Meta(UniverseSerializer.Meta):
+        fields = (*UniverseSerializer.Meta.fields, "attribution")

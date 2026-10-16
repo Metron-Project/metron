@@ -1,5 +1,6 @@
 from rest_framework import serializers
 
+from api.v1_0.serializers.attribution import AttributionSerializer
 from api.v1_0.serializers.creator import CreatorListSerializer
 from api.v1_0.serializers.team import TeamListSerializer
 from api.v1_0.serializers.universe import UniverseListSerializer
@@ -77,3 +78,7 @@ class CharacterReadSerializer(CharacterSerializer):
     creators = CreatorListSerializer(many=True, read_only=True)
     teams = TeamListSerializer(many=True, read_only=True)
     universes = UniverseListSerializer(many=True, read_only=True)
+    attribution = AttributionSerializer(many=True, read_only=True)
+
+    class Meta(CharacterSerializer.Meta):
+        fields = (*CharacterSerializer.Meta.fields, "attribution")

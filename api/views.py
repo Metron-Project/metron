@@ -35,6 +35,7 @@ from api.cache import (
 )
 from api.v1_0.serializers import (
     ArcListSerializer,
+    ArcReadSerializer,
     ArcSerializer,
     CharacterListSerializer,
     CharacterReadSerializer,
@@ -44,6 +45,7 @@ from api.v1_0.serializers import (
     CollectionRatingUpdateSerializer,
     CollectionReadSerializer,
     CreatorListSerializer,
+    CreatorReadSerializer,
     CreatorSerializer,
     CreditSerializer,
     ImprintListSerializer,
@@ -55,6 +57,7 @@ from api.v1_0.serializers import (
     MissingIssueSerializer,
     MissingSeriesSerializer,
     PublisherListSerializer,
+    PublisherReadSerializer,
     PublisherSerializer,
     ReadingListItemSerializer,
     ReadingListListSerializer,
@@ -404,12 +407,20 @@ class ArcViewSet(
     # comment). A plain issue field edit can show stale here for up to
     # DETAIL_CACHE_TTL; that's the accepted tradeoff.
 
+    def get_queryset(self):
+        queryset = super().get_queryset()
+        if self.action == "retrieve":
+            queryset = queryset.prefetch_related("attribution")
+        return queryset
+
     def get_serializer_class(self):
         match self.action:
             case "list":
                 return ArcListSerializer
             case "issue_list":
                 return IssueListSerializer
+            case "retrieve":
+                return ArcReadSerializer
             case _:
                 return ArcSerializer
 
@@ -461,7 +472,7 @@ class CharacterViewSet(
     def get_queryset(self):
         queryset = super().get_queryset()
         if self.action == "retrieve":
-            queryset = queryset.prefetch_related("creators", "teams", "universes")
+            queryset = queryset.prefetch_related("creators", "teams", "universes", "attribution")
         return queryset
 
     def get_serializer_class(self):
@@ -497,10 +508,18 @@ class CreatorViewSet(
     parser_classes = (MultiPartParser, FormParser)
     cache_model_label = ModelLabel.CREATOR
 
+    def get_queryset(self):
+        queryset = super().get_queryset()
+        if self.action == "retrieve":
+            queryset = queryset.prefetch_related("attribution")
+        return queryset
+
     def get_serializer_class(self):
         match self.action:
             case "list":
                 return CreatorListSerializer
+            case "retrieve":
+                return CreatorReadSerializer
             case _:
                 return CreatorSerializer
 
@@ -560,7 +579,7 @@ class ImprintViewSet(
     def get_queryset(self):
         queryset = super().get_queryset()
         if self.action == "retrieve":
-            queryset = queryset.select_related("publisher")
+            queryset = queryset.select_related("publisher").prefetch_related("attribution")
         return queryset
 
     def get_serializer_class(self):
@@ -651,6 +670,7 @@ class IssueViewSet(
                 "teams",
                 "universes",
                 "variants",
+                "attribution",
                 Prefetch(
                     "credits_set",
                     queryset=Credits.objects.order_by("creator__name")
@@ -716,12 +736,20 @@ class PublisherViewSet(
     parser_classes = (MultiPartParser, FormParser)
     cache_model_label = ModelLabel.PUBLISHER
 
+    def get_queryset(self):
+        queryset = super().get_queryset()
+        if self.action == "retrieve":
+            queryset = queryset.prefetch_related("attribution")
+        return queryset
+
     def get_serializer_class(self):
         match self.action:
             case "list":
                 return PublisherListSerializer
             case "series_list":
                 return SeriesListSerializer
+            case "retrieve":
+                return PublisherReadSerializer
             case _:
                 return PublisherSerializer
 
@@ -826,7 +854,7 @@ class SeriesViewSet(
             case "retrieve":
                 queryset = (
                     queryset.select_related("imprint")
-                    .prefetch_related("genres", "associated")
+                    .prefetch_related("genres", "associated", "attribution")
                     .annotate(num_issues=Count("issues", distinct=True))
                 )
         return queryset
@@ -919,7 +947,7 @@ class TeamViewSet(
     def get_queryset(self):
         queryset = super().get_queryset()
         if self.action == "retrieve":
-            queryset = queryset.prefetch_related("creators", "universes")
+            queryset = queryset.prefetch_related("creators", "universes", "attribution")
         return queryset
 
     def get_serializer_class(self):
@@ -961,7 +989,7 @@ class UniverseViewSet(
     def get_queryset(self):
         queryset = super().get_queryset()
         if self.action == "retrieve":
-            queryset = queryset.select_related("publisher")
+            queryset = queryset.select_related("publisher").prefetch_related("attribution")
         return queryset
 
     def get_serializer_class(self):

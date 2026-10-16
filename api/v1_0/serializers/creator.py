@@ -1,5 +1,6 @@
 from rest_framework import serializers
 
+from api.v1_0.serializers.attribution import AttributionSerializer
 from comicsdb.models import Creator, Credits, Role
 
 
@@ -39,6 +40,13 @@ class CreatorSerializer(serializers.ModelSerializer):
             "resource_url",
             "modified",
         )
+
+
+class CreatorReadSerializer(CreatorSerializer):
+    attribution = AttributionSerializer(many=True, read_only=True)
+
+    class Meta(CreatorSerializer.Meta):
+        fields = (*CreatorSerializer.Meta.fields, "attribution")
 
 
 class RoleSerializer(serializers.ModelSerializer):

@@ -1,6 +1,7 @@
 from rest_framework import serializers
 
 from api.v1_0.serializers import BasicPublisherSerializer
+from api.v1_0.serializers.attribution import AttributionSerializer
 from comicsdb.models import Imprint
 
 
@@ -40,6 +41,10 @@ class ImprintSerializer(serializers.ModelSerializer):
 
 class ImprintReadSerializer(ImprintSerializer):
     publisher = BasicPublisherSerializer(read_only=True)
+    attribution = AttributionSerializer(many=True, read_only=True)
+
+    class Meta(ImprintSerializer.Meta):
+        fields = (*ImprintSerializer.Meta.fields, "attribution")
 
 
 class BasicImprintSerializer(serializers.ModelSerializer):

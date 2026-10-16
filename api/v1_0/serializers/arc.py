@@ -1,5 +1,6 @@
 from rest_framework import serializers
 
+from api.v1_0.serializers.attribution import AttributionSerializer
 from comicsdb.models import Arc
 
 
@@ -27,3 +28,10 @@ class ArcSerializer(serializers.ModelSerializer):
     class Meta:
         model = Arc
         fields = ("id", "name", "desc", "image", "cv_id", "gcd_id", "resource_url", "modified")
+
+
+class ArcReadSerializer(ArcSerializer):
+    attribution = AttributionSerializer(many=True, read_only=True)
+
+    class Meta(ArcSerializer.Meta):
+        fields = (*ArcSerializer.Meta.fields, "attribution")

@@ -269,3 +269,19 @@ def bump_cache_on_name_change(label, sender, instance, **kwargs):
     pre_save flag is missing, so an unexpected path errs toward freshness."""
     if instance.__dict__.pop("_cache_name_changed", True):
         bump_model_version(label)
+
+
+def update_parent_modified_on_attribution_change(sender, instance, **kwargs):
+    """Attribution is a generic relation, so saving or deleting one doesn't
+    touch its parent row. Bump the parent's `modified` explicitly so its
+    cached detail response (which embeds `attribution`) self-invalidates,
+    and its cache version, since its list response embeds `modified`."""
+    model = instance.content_type.model_class()
+    if model is None:
+        return
+    model.objects.filter(pk=instance.object_id).update(modified=timezone.now())
+    try:
+        label = ModelLabel(model._meta.model_name)
+    except ValueError:
+        return
+    bump_model_version(label)

@@ -20,6 +20,7 @@ from comicsdb.signals import (
     update_issue_modified_on_reprint_change,
     update_issue_modified_on_universe_change,
     update_issue_modified_on_variant_change,
+    update_parent_modified_on_attribution_change,
     update_series_modified_on_associated_change,
     update_series_modified_on_genre_change,
     update_series_modified_on_issue_delete,
@@ -140,6 +141,18 @@ class ComicsdbConfig(AppConfig):
             update_issue_modified_on_variant_change,
             sender=variant,
             dispatch_uid="post_delete_variant_issue_modified",
+        )
+
+        attribution = self.get_model("Attribution")
+        post_save.connect(
+            update_parent_modified_on_attribution_change,
+            sender=attribution,
+            dispatch_uid="post_save_attribution_parent_modified",
+        )
+        post_delete.connect(
+            update_parent_modified_on_attribution_change,
+            sender=attribution,
+            dispatch_uid="post_delete_attribution_parent_modified",
         )
 
         credits_ = self.get_model("Credits")
