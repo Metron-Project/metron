@@ -55,6 +55,47 @@ def test_issue_update_view_minimum_year(basic_issue, auto_login_user):
     assert f"minDate: '{MINIMUM_YEAR}-01-01'" in resp.content.decode()
 
 
+def test_issue_update_view_embeds_stored_solicitation_desc(basic_issue, auto_login_user):
+    basic_issue.desc = "Solicitation text"
+    basic_issue.desc_is_solicitation = True
+    basic_issue.save()
+    client, _ = auto_login_user()
+    resp = client.get(reverse("issue:update", kwargs={"slug": basic_issue.slug}))
+    assert resp.status_code == HTML_OK_CODE
+    assert (
+        '<script id="stored-solicitation-desc" type="application/json">"Solicitation text"'
+        in resp.content.decode()
+    )
+
+
+def test_issue_update_view_failed_submit_embeds_stored_solicitation_desc(
+    basic_issue, auto_login_user
+):
+    basic_issue.desc = "Solicitation text"
+    basic_issue.desc_is_solicitation = True
+    basic_issue.save()
+    client, _ = auto_login_user()
+    # Missing required fields, so the form re-renders with the posted description.
+    resp = client.post(
+        reverse("issue:update", kwargs={"slug": basic_issue.slug}),
+        {"desc": "Rewritten by an editor"},
+    )
+    assert resp.status_code == HTML_OK_CODE
+    content = resp.content.decode()
+    assert "Rewritten by an editor</textarea>" in content
+    assert (
+        '<script id="stored-solicitation-desc" type="application/json">"Solicitation text"'
+        in content
+    )
+
+
+def test_issue_update_view_omits_stored_desc_when_not_solicitation(basic_issue, auto_login_user):
+    client, _ = auto_login_user()
+    resp = client.get(reverse("issue:update", kwargs={"slug": basic_issue.slug}))
+    assert resp.status_code == HTML_OK_CODE
+    assert 'id="stored-solicitation-desc"' not in resp.content.decode()
+
+
 def test_issue_detail_on_wish_list_false_when_not_on_list(basic_issue, auto_login_user):
     client, _ = auto_login_user()
     resp = client.get(f"/issue/{basic_issue.slug}/")

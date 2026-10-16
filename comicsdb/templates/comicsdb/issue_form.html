@@ -134,6 +134,9 @@
             {% include "comicsdb/partials/attribution_formset.html" with formset=attribution %}
         </div>
     </form>
+    {% if form.initial.desc_is_solicitation %}
+        {{ form.initial.desc|json_script:"stored-solicitation-desc" }}
+    {% endif %}
 {% endblock %}
 {% block js %}
     {{ form.media.js }}
@@ -161,21 +164,33 @@ document.addEventListener('DOMContentLoaded', function() {
     });
 
     // A solicitation flag belongs to the description it was set on. Uncheck it once the
-    // description is edited; re-checking it marks it as deliberately kept for the server.
+    // description is edited; if it is checked when the form is submitted with a changed
+    // description, mark it as deliberately kept for the server. Compare against the stored
+    // description (not the re-rendered value after a failed submit), normalized the same way
+    // as desc_changed() on the server.
     var desc = document.getElementById('id_desc');
     var solicitation = document.getElementById('id_desc_is_solicitation');
     var solicitationKept = document.getElementById('id_desc_solicitation_kept');
-    if (desc && solicitation && solicitationKept && solicitation.checked) {
-        var originalDesc = desc.value;
-        var descEdited = false;
+    var storedDescScript = document.getElementById('stored-solicitation-desc');
+    if (desc && solicitation && solicitationKept && storedDescScript) {
+        var normalizeDesc = function(value) {
+            return (value || '').replace(/\r\n?/g, '\n').trim();
+        };
+        var storedDesc = normalizeDesc(JSON.parse(storedDescScript.textContent));
+        var descChanged = function() {
+            return normalizeDesc(desc.value) !== storedDesc;
+        };
+        // After a failed submit the description may already differ; the box state then
+        // reflects what the editor chose, so don't uncheck it again.
+        var autoUnchecked = descChanged();
         desc.addEventListener('input', function() {
-            if (!descEdited && desc.value !== originalDesc) {
-                descEdited = true;
+            if (!autoUnchecked && descChanged()) {
+                autoUnchecked = true;
                 solicitation.checked = false;
             }
         });
-        solicitation.addEventListener('change', function() {
-            solicitationKept.value = descEdited && solicitation.checked ? 'True' : '';
+        document.getElementById('issueForm').addEventListener('submit', function() {
+            solicitationKept.value = solicitation.checked && descChanged() ? 'True' : '';
         });
     }
 });
