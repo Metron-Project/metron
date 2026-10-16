@@ -1,6 +1,8 @@
 from datetime import date
 
 import pytest
+from django.contrib import admin
+from django.forms.models import model_to_dict
 
 from comicsdb.forms.issue import IssueForm
 from comicsdb.forms.variant import VariantFormset
@@ -145,3 +147,91 @@ class TestIssueForm:
 
         # Assert
         assert delimiter == ";"
+
+
+@pytest.mark.django_db
+class TestIssueFormSolicitationFlag:
+    @pytest.fixture
+    def issue_data(self, fc_series):
+        return {
+            "series": fc_series.id,
+            "number": "1",
+            "cover_date": "2023-01-01",
+            "rating": Rating.objects.create(name="Test Rating").id,
+            "desc": "Solicitation text",
+            "desc_is_solicitation": True,
+        }
+
+    def _cleaned_flag(self, data, instance=None):
+        form = IssueForm(data=data, instance=instance)
+        assert form.is_valid(), form.errors
+        return form.cleaned_data["desc_is_solicitation"]
+
+    def test_unchanged_desc_keeps_flag(self, issue_data, solicited_issue):
+        assert self._cleaned_flag(issue_data, solicited_issue) is True
+
+    def test_crlf_resubmission_of_lf_desc_keeps_flag(self, issue_data, solicited_issue):
+        solicited_issue.desc = "Line one\nLine two"
+        solicited_issue.save()
+        issue_data["desc"] = "Line one\r\nLine two"
+
+        assert self._cleaned_flag(issue_data, solicited_issue) is True
+
+    def test_changed_desc_clears_flag(self, issue_data, solicited_issue):
+        issue_data["desc"] = "Rewritten by an editor"
+
+        assert self._cleaned_flag(issue_data, solicited_issue) is False
+
+    def test_changed_desc_keeps_flag_when_kept(self, issue_data, solicited_issue):
+        issue_data.update(desc="Updated solicitation text", desc_solicitation_kept="True")
+
+        assert self._cleaned_flag(issue_data, solicited_issue) is True
+
+    def test_changed_desc_can_be_newly_flagged(self, issue_data, basic_issue):
+        issue_data["desc"] = "New solicitation text"
+
+        assert self._cleaned_flag(issue_data, basic_issue) is True
+
+    def test_flag_can_be_unchecked(self, issue_data, solicited_issue):
+        del issue_data["desc_is_solicitation"]
+
+        assert self._cleaned_flag(issue_data, solicited_issue) is False
+
+    def test_new_issue_can_be_flagged(self, issue_data):
+        assert self._cleaned_flag(issue_data) is True
+
+    def _admin_cleaned_flag(self, rf, create_staff_user, issue, **changes):
+        request = rf.get("/")
+        request.user = create_staff_user
+        form_class = admin.site._registry[Issue].get_form(request, issue)
+        data = {
+            key: value
+            for key, value in model_to_dict(issue).items()
+            if value is not None and key not in {"image", "price"}
+        }
+        data["rating"] = Rating.objects.create(name="Test Rating").id
+        data.update(changes)
+        form = form_class(data=data, instance=issue)
+        assert form.is_valid(), form.errors
+        return form.cleaned_data["desc_is_solicitation"]
+
+    def test_admin_changed_desc_clears_flag(self, rf, create_staff_user, solicited_issue):
+        flag = self._admin_cleaned_flag(
+            rf, create_staff_user, solicited_issue, desc="Rewritten by an admin"
+        )
+
+        assert flag is False
+
+    def test_admin_other_change_keeps_flag(self, rf, create_staff_user, solicited_issue):
+        flag = self._admin_cleaned_flag(rf, create_staff_user, solicited_issue, page=32)
+
+        assert flag is True
+
+    def test_admin_help_text_explains_saving_again(self, rf, create_staff_user, solicited_issue):
+        request = rf.get("/")
+        request.user = create_staff_user
+        form_class = admin.site._registry[Issue].get_form(request, solicited_issue)
+
+        help_text = str(form_class.base_fields["desc_is_solicitation"].help_text)
+
+        assert "save once more" in help_text

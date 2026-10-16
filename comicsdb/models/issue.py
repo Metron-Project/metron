@@ -72,6 +72,11 @@ class Issue(CommonInfo):
     page = models.PositiveSmallIntegerField(_("Page Count"), null=True, blank=True)
     image = ImageField(_("Cover"), upload_to="issue/%Y/%m/%d/", blank=True)
     cover_hash = models.CharField(_("Cover Hash"), max_length=16, blank=True)
+    desc_is_solicitation = models.BooleanField(
+        _("Description is a solicitation"),
+        default=False,
+        help_text=_("The description is the publisher's solicitation text."),
+    )
     arcs = models.ManyToManyField(Arc, blank=True, related_name="issues")
     creators = models.ManyToManyField(Creator, through="Credits", blank=True, related_name="issues")
     characters = models.ManyToManyField(Character, blank=True, related_name="issues")
@@ -186,6 +191,19 @@ class Issue(CommonInfo):
         unique_together = ["series", "number"]
 
 
+def desc_changed(old: str | None, new: str | None) -> bool:
+    """Compare descriptions, ignoring line-ending and surrounding whitespace differences.
+
+    Browsers submit textarea newlines as CRLF, while API clients usually send LF, so the same
+    text can arrive in different forms.
+    """
+
+    def normalize(desc: str | None) -> str:
+        return (desc or "").replace("\r\n", "\n").replace("\r", "\n").strip()
+
+    return normalize(old) != normalize(new)
+
+
 def generate_issue_slug(instance: Issue):
     base_slug = slugify(f"{instance.series.slug}-{instance.number}")
 
@@ -247,5 +265,12 @@ def pre_save_cover_hash(sender, instance: Issue, *args, **kwargs) -> None:
         return
 
 
+def pre_save_desc_is_solicitation(sender, instance: Issue, *args, **kwargs) -> None:
+    # There is no solicitation text without a description.
+    if instance.desc_is_solicitation and not (instance.desc or "").strip():
+        instance.desc_is_solicitation = False
+
+
 pre_save.connect(pre_save_issue_slug, sender=Issue)
 pre_save.connect(pre_save_cover_hash, sender=Issue)
+pre_save.connect(pre_save_desc_is_solicitation, sender=Issue)

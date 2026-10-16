@@ -128,6 +128,9 @@ class IssueFilter(df.rest_framework.FilterSet):
     role_id = NumberInFilter(
         label="Role Metron ID", field_name="credits__role__id", lookup_expr="in", distinct=True
     )
+    desc_is_solicitation = df.rest_framework.BooleanFilter(
+        label="Description is the publisher's solicitation text"
+    )
 
     class Meta:
         model = Issue
@@ -177,6 +180,7 @@ class IssueViewFilter(df.FilterSet):
     gcd_id = df.rest_framework.NumberFilter(
         label="Grand Comics Database ID", field_name="gcd_id", lookup_expr="exact"
     )
+    desc_is_solicitation = df.BooleanFilter(label="Solicitation Description")
 
     class Meta:
         model = Issue

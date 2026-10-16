@@ -37,6 +37,36 @@
                 <a href="#section-attribution">{% trans "Attribution" %}</a>
             </nav>
         </div>
+        {# Errors render next to their fields, often far down the page, so flag the sections here. #}
+        {% if form.errors or credits.total_error_count or variants.total_error_count or attribution.total_error_count %}
+            <div class="notification is-danger" id="section-errors" role="alert">
+                <p class="mb-2">
+                    <strong>{% trans "The issue wasn't saved. Fix the errors in these sections:" %}</strong>
+                </p>
+                <ul>
+                    {% if form.errors %}
+                        <li>
+                            <a href="#section-primary">{% trans "Primary Information" %}</a>
+                        </li>
+                    {% endif %}
+                    {% if credits.total_error_count %}
+                        <li>
+                            <a href="#section-credits">{% trans "Credits" %}</a>
+                        </li>
+                    {% endif %}
+                    {% if variants.total_error_count %}
+                        <li>
+                            <a href="#section-variants">{% trans "Variant Covers" %}</a>
+                        </li>
+                    {% endif %}
+                    {% if attribution.total_error_count %}
+                        <li>
+                            <a href="#section-attribution">{% trans "Attribution" %}</a>
+                        </li>
+                    {% endif %}
+                </ul>
+            </div>
+        {% endif %}
         <!-- Primary Information Section -->
         <div class="box" id="section-primary">
             <h2 class="title is-5">{% trans "Primary Information" %}</h2>
@@ -53,6 +83,7 @@
                     <div class="column is-half">{% include "comicsdb/partials/form_field.html" with field=form.title %}</div>
                     <div class="column is-full">{% include "comicsdb/partials/form_field.html" with field=form.name %}</div>
                     <div class="column is-full">{% include "comicsdb/partials/form_field.html" with field=form.desc %}</div>
+                    <div class="column is-full">{% include "comicsdb/partials/form_field.html" with field=form.desc_is_solicitation %}</div>
                 </div>
             </div>
 
@@ -108,6 +139,9 @@
             {% include "comicsdb/partials/attribution_formset.html" with formset=attribution %}
         </div>
     </form>
+    {% if form.initial.desc_is_solicitation %}
+        {{ form.initial.desc|json_script:"stored-solicitation-desc" }}
+    {% endif %}
 {% endblock %}
 {% block js %}
     {{ form.media.js }}
@@ -133,6 +167,56 @@ document.addEventListener('DOMContentLoaded', function() {
             weekStart: 0
         });
     });
+
+    // A solicitation flag belongs to the description it was set on. Uncheck it once the
+    // description is edited; if it is checked when the form is submitted with a changed
+    // description, mark it as deliberately kept for the server. Compare against the stored
+    // description (not the re-rendered value after a failed submit), normalized the same way
+    // as desc_changed() on the server.
+    var desc = document.getElementById('id_desc');
+    var solicitation = document.getElementById('id_desc_is_solicitation');
+    var solicitationKept = document.getElementById('id_desc_solicitation_kept');
+    var storedDescScript = document.getElementById('stored-solicitation-desc');
+    if (desc && solicitation && solicitationKept && storedDescScript) {
+        var normalizeDesc = function(value) {
+            return (value || '').replace(/\r\n?/g, '\n').trim();
+        };
+        var storedDesc = normalizeDesc(JSON.parse(storedDescScript.textContent));
+        var descChanged = function() {
+            return normalizeDesc(desc.value) !== storedDesc;
+        };
+        // After a failed submit the description may already differ; the box state then
+        // reflects what the editor chose, so don't uncheck it again.
+        var autoUnchecked = descChanged();
+        // Whether the box is unchecked only because this script unchecked it, so it can be
+        // restored if the editor reverts the description.
+        var uncheckedByScript = false;
+        desc.addEventListener('input', function() {
+            if (descChanged()) {
+                if (!autoUnchecked) {
+                    autoUnchecked = true;
+                    if (solicitation.checked) {
+                        solicitation.checked = false;
+                        uncheckedByScript = true;
+                    }
+                }
+            } else {
+                // Back to the stored description, so the next edit is a fresh change.
+                autoUnchecked = false;
+                if (uncheckedByScript) {
+                    solicitation.checked = true;
+                    uncheckedByScript = false;
+                }
+            }
+        });
+        solicitation.addEventListener('change', function() {
+            // The editor chose the box state, so don't override it.
+            uncheckedByScript = false;
+        });
+        document.getElementById('issueForm').addEventListener('submit', function() {
+            solicitationKept.value = solicitation.checked && descChanged() ? 'True' : '';
+        });
+    }
 });
 
 /**

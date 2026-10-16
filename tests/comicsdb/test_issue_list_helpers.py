@@ -139,3 +139,12 @@ def test_build_active_filters_fetches_series_type_from_db_when_not_supplied(rf):
     request = rf.get("/", {"series_type": str(st.id)})
     chips = build_active_filters(request)
     assert chips[0]["value"] == st.name
+
+
+@pytest.mark.parametrize(("value", "expected"), [("true", "Yes"), ("false", "No")])
+def test_build_active_filters_boolean_chip(rf, value, expected):
+    request = rf.get("/", {"desc_is_solicitation": value})
+    chips = build_active_filters(request, type_names={})
+    assert len(chips) == 1
+    assert chips[0]["label"] == "Solicitation"
+    assert chips[0]["value"] == expected

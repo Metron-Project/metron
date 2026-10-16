@@ -361,6 +361,7 @@ The Issue endpoint supports the most comprehensive filtering options:
 **Content Filters:**
 
 - `rating` - Content rating (exact match)
+- `desc_is_solicitation` - Boolean, issues whose description is (or isn't) the publisher's solicitation text
 
 **Creator/Role Filters:**
 
@@ -402,6 +403,7 @@ The Issue endpoint supports the most comprehensive filtering options:
 
 - All list fields plus:
     - `desc` - Issue description
+    - `desc_is_solicitation` - Boolean, `true` when `desc` is the publisher's solicitation text rather than a description written by a Metron editor. Editors can set it on POST/PUT/PATCH, and it defaults to `false`. A PUT or PATCH that changes `desc` without sending `desc_is_solicitation` resets it to `false`; send `desc_is_solicitation` with the new `desc` to set it explicitly. Differences only in line endings or leading/trailing whitespace don't count as a change. An issue with an empty `desc` is always stored with `desc_is_solicitation` set to `false`.
     - `series` - Expanded compared to the list view, adding `sort_name`, `series_type` (object with `id`/`name`), `genres` (array of genre objects), `alt_names` (array of alternate series names), and `language` (ISO 639-1 code, e.g. `"en"`, `"it"`)
     - `price` - Cover price amount as a decimal string (e.g. `"3.99"`). See `price_currency` for the currency.
     - `price_currency` - ISO 4217 currency code for the cover price (e.g. `"USD"`, `"GBP"`).
@@ -454,6 +456,9 @@ GET /api/issue/?publisher_name=marvel
 
 # Find issues without Comic Vine IDs
 GET /api/issue/?missing_cv_id=true
+
+# Find issues whose description is the publisher's solicitation text
+GET /api/issue/?desc_is_solicitation=true
 
 # Search by cover year and month
 GET /api/issue/?cover_year=2024&cover_month=12

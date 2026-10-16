@@ -768,6 +768,49 @@ msgstr "ID Comic Vine"
 msgid "GCD ID"
 msgstr "ID GCD"
 
+#: comicsdb/models/issue.py
+msgid "Description is a solicitation"
+msgstr "La descrizione è una sollecitazione"
+
+#: comicsdb/models/issue.py
+msgid "The description is the publisher's solicitation text."
+msgstr "La descrizione è il testo di sollecitazione dell'editore."
+
+#: comicsdb/forms/issue.py
+msgid ""
+"Check if the description is the publisher's solicitation text. Changing the "
+"description clears this unless you check it again."
+msgstr ""
+"Seleziona se la descrizione è il testo di sollecitazione dell'editore. "
+"Modificando la descrizione questa opzione viene deselezionata, a meno che tu "
+"non la selezioni di nuovo."
+
+#: comicsdb/admin/issue.py
+msgid ""
+"Check if the description is the publisher's solicitation text. Changing the "
+"description clears this; if the new description is also a solicitation, "
+"check it again and save once more."
+msgstr ""
+"Seleziona se la descrizione è il testo di sollecitazione dell'editore. "
+"Modificando la descrizione questa opzione viene deselezionata; se anche la "
+"nuova descrizione è una sollecitazione, selezionala di nuovo e salva ancora "
+"una volta."
+
+#: comicsdb/templates/comicsdb/issue_detail.html
+#: comicsdb/views/issue_list_helpers.py
+msgid "Solicitation"
+msgstr "Sollecitazione"
+
+#: comicsdb/templates/comicsdb/partials/issue_filter.html
+#: comicsdb/views/issue_list_helpers.py
+msgid "Yes"
+msgstr "Sì"
+
+#: comicsdb/templates/comicsdb/partials/issue_filter.html
+#: comicsdb/views/issue_list_helpers.py
+msgid "No"
+msgstr "No"
+
 #: comicsdb/models/common.py:59
 msgid "Star rating (1-5)"
 msgstr "Valutazione a stelle (1-5)"
@@ -2141,6 +2184,10 @@ msgstr "Titoli delle Storie"
 msgid "No summary available."
 msgstr "Nessun riassunto disponibile."
 
+#: comicsdb/templates/comicsdb/issue_detail.html
+msgid "This summary is the publisher's solicitation text."
+msgstr "Questo riassunto è il testo di sollecitazione dell'editore."
+
 #: comicsdb/templates/comicsdb/issue_detail.html:313
 #, python-format
 msgid "Credit (%(counter)s)"
@@ -2349,6 +2396,10 @@ msgstr "Relazioni"
 #: comicsdb/templates/comicsdb/issue_form.html:102
 msgid "Variant Covers"
 msgstr "Copertine Varianti"
+
+#: comicsdb/templates/comicsdb/issue_form.html
+msgid "The issue wasn't saved. Fix the errors in these sections:"
+msgstr "Il numero non è stato salvato. Correggi gli errori in queste sezioni:"
 
 #: comicsdb/templates/comicsdb/issue_list.html:6
 msgid "Issues - Metron"
@@ -2799,6 +2850,18 @@ msgstr "es. 67890"
 #: comicsdb/templates/comicsdb/partials/issue_filter.html:394
 msgid "Filter by GCD ID"
 msgstr "Filtra per ID GCD"
+
+#: comicsdb/templates/comicsdb/partials/issue_filter.html
+msgid "Solicitation Description"
+msgstr "Descrizione di sollecitazione"
+
+#: comicsdb/templates/comicsdb/partials/issue_filter.html
+msgid "Filter by solicitation description"
+msgstr "Filtra per descrizione di sollecitazione"
+
+#: comicsdb/templates/comicsdb/partials/issue_filter.html
+msgid "Any"
+msgstr "Qualsiasi"
 
 #: comicsdb/templates/comicsdb/partials/issue_filter.html:410
 #: comicsdb/templates/comicsdb/partials/series_filter.html:230

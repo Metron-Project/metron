@@ -309,7 +309,13 @@
                     {% endwith %}
                 {% endif %}
                 {# Summary #}
-                <h2 class="title is-5">{% trans "Summary" %}</h2>
+                <h2 class="title is-5">
+                    {% trans "Summary" %}
+                    {% if issue.desc and issue.desc_is_solicitation %}
+                        <span class="tag is-info ml-2"
+                              title="{% trans "This summary is the publisher's solicitation text." %}">{% trans "Solicitation" %}</span>
+                    {% endif %}
+                </h2>
                 {% if issue.desc %}
                     <div class="content">{{ issue.desc|linebreaksbr }}</div>
                 {% else %}

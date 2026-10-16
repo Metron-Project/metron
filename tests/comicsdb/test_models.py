@@ -1,5 +1,7 @@
 from datetime import date
 
+import pytest
+
 from comicsdb.models import (
     Announcement,
     Arc,
@@ -212,3 +214,17 @@ def test_universe_absolute_url(auto_login_user, earth_2_universe):
     client, _ = auto_login_user()
     resp = client.get(earth_2_universe.get_absolute_url())
     assert resp.status_code == HTTP_200_OK
+
+
+def test_issue_desc_is_solicitation_defaults_to_false(basic_issue):
+    assert basic_issue.desc_is_solicitation is False
+
+
+@pytest.mark.parametrize(("desc", "expected"), [("", False), ("  \n ", False), ("Text", True)])
+def test_issue_desc_is_solicitation_requires_desc(basic_issue, desc, expected):
+    basic_issue.desc = desc
+    basic_issue.desc_is_solicitation = True
+    basic_issue.save()
+
+    basic_issue.refresh_from_db()
+    assert basic_issue.desc_is_solicitation is expected

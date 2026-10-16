@@ -72,7 +72,12 @@ FILTER_LABELS = {
     "sku": _("SKU"),
     "cv_id": _("Comic Vine ID"),
     "gcd_id": _("GCD ID"),
+    "desc_is_solicitation": _("Solicitation"),
 }
+
+# Boolean filter params, whose ``true``/``false`` values render as Yes/No.
+_BOOLEAN_PARAMS = {"desc_is_solicitation"}
+_BOOLEAN_DISPLAY = {"true": _("Yes"), "false": _("No")}
 
 _MONTHS = {
     "1": _("January"),
@@ -118,6 +123,8 @@ def build_active_filters(request, type_names=None):
             display = type_names.get(value, value)
         elif key == "cover_month":
             display = _MONTHS.get(value, value)
+        elif key in _BOOLEAN_PARAMS:
+            display = _BOOLEAN_DISPLAY.get(value, value)
 
         # Every current param except the one being removed and the page cursor.
         kept = [(k, v) for k, v in get.items() if k not in (key, "page")]

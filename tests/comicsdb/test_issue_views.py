@@ -15,6 +15,7 @@ from comicsdb.models.credits import Role
 from comicsdb.models.issue import Issue
 from comicsdb.models.publisher import Publisher
 from comicsdb.models.series import Series, SeriesType
+from comicsdb.models.variant import Variant
 from issue_ratings.models import IssueRating
 from wish_list.models import WishList, WishListItem
 
@@ -52,6 +53,41 @@ def test_issue_update_view_minimum_year(basic_issue, auto_login_user):
     assert resp.status_code == HTML_OK_CODE
     assert resp.context["minimum_year"] == MINIMUM_YEAR
     assert f"minDate: '{MINIMUM_YEAR}-01-01'" in resp.content.decode()
+
+
+def test_issue_update_view_embeds_stored_solicitation_desc(solicited_issue, auto_login_user):
+    client, _ = auto_login_user()
+    resp = client.get(reverse("issue:update", kwargs={"slug": solicited_issue.slug}))
+    assert resp.status_code == HTML_OK_CODE
+    assert (
+        '<script id="stored-solicitation-desc" type="application/json">"Solicitation text"'
+        in resp.content.decode()
+    )
+
+
+def test_issue_update_view_failed_submit_embeds_stored_solicitation_desc(
+    solicited_issue, auto_login_user
+):
+    client, _ = auto_login_user()
+    # Missing required fields, so the form re-renders with the posted description.
+    resp = client.post(
+        reverse("issue:update", kwargs={"slug": solicited_issue.slug}),
+        {"desc": "Rewritten by an editor"},
+    )
+    assert resp.status_code == HTML_OK_CODE
+    content = resp.content.decode()
+    assert "Rewritten by an editor</textarea>" in content
+    assert (
+        '<script id="stored-solicitation-desc" type="application/json">"Solicitation text"'
+        in content
+    )
+
+
+def test_issue_update_view_omits_stored_desc_when_not_solicitation(basic_issue, auto_login_user):
+    client, _ = auto_login_user()
+    resp = client.get(reverse("issue:update", kwargs={"slug": basic_issue.slug}))
+    assert resp.status_code == HTML_OK_CODE
+    assert 'id="stored-solicitation-desc"' not in resp.content.decode()
 
 
 def test_issue_detail_on_wish_list_false_when_not_on_list(basic_issue, auto_login_user):
@@ -2159,3 +2195,98 @@ def test_issue_create_checks_variant_upc_against_cover_date(
         assert resp.status_code == HTML_OK_CODE
         assert not Issue.objects.filter(series=fc_series, number="1").exists()
         assert resp.context["variants"].forms[0].errors["upc"] == ["UPC check digit is invalid."]
+        assert b'id="section-errors"' in resp.content
+        assert b'href="#section-variants"' in resp.content
+
+
+def test_issue_detail_shows_solicitation_tag(solicited_issue, auto_login_user):
+    client, _ = auto_login_user()
+    resp = client.get(reverse("issue:detail", kwargs={"slug": solicited_issue.slug}))
+    assert resp.status_code == HTML_OK_CODE
+    assert b'<span class="tag is-info ml-2"' in resp.content
+
+
+def test_issue_detail_hides_solicitation_tag(basic_issue, auto_login_user):
+    basic_issue.desc = "Editor-written text"
+    basic_issue.save()
+    client, _ = auto_login_user()
+    resp = client.get(reverse("issue:detail", kwargs={"slug": basic_issue.slug}))
+    assert resp.status_code == HTML_OK_CODE
+    assert b'<span class="tag is-info ml-2"' not in resp.content
+
+
+def test_issue_list_filters_solicitations(auto_login_user, create_user, fc_series):
+    user = create_user()
+    common = {"series": fc_series, "cover_date": timezone.now().date(), "edited_by": user}
+    solicited = Issue.objects.create(
+        number="1", desc="Solicitation text", desc_is_solicitation=True, **common
+    )
+    Issue.objects.create(number="2", **common)
+    client, _ = auto_login_user()
+    resp = client.get(reverse("issue:list"), {"desc_is_solicitation": "true"})
+    assert resp.status_code == HTML_OK_CODE
+    assert list(resp.context["issue_list"]) == [solicited]
+
+
+def test_issue_update_flags_variant_errors_at_top(auto_login_user, basic_issue):
+    Variant.objects.create(issue=basic_issue, name="Variant")  # No image, so it's invalid.
+    client, _ = auto_login_user()
+    variant = basic_issue.variants.get()
+    data = {
+        "series": basic_issue.series.pk,
+        "number": basic_issue.number,
+        "cover_date": basic_issue.cover_date,
+        "rating": basic_issue.rating.pk,
+        **{
+            f"{prefix}-{field}": "0"
+            for prefix in ("credits", "attribution")
+            for field in ("TOTAL_FORMS", "INITIAL_FORMS")
+        },
+        "variants-TOTAL_FORMS": "1",
+        "variants-INITIAL_FORMS": "1",
+        "variants-0-id": variant.pk,
+        "variants-0-issue": basic_issue.pk,
+        "variants-0-name": "Variant",
+    }
+
+    resp = client.post(reverse("issue:update", kwargs={"slug": basic_issue.slug}), data=data)
+
+    assert resp.status_code == HTML_OK_CODE
+    content = resp.content.decode()
+    summary = content[content.index('id="section-errors"') :]
+    summary = summary[: summary.index("</ul>")]
+    assert 'href="#section-variants"' in summary
+    assert 'href="#section-credits"' not in summary
+
+
+def test_issue_update_flags_primary_errors_at_top(auto_login_user, basic_issue):
+    client, _ = auto_login_user()
+    data = {
+        "series": basic_issue.series.pk,
+        "number": basic_issue.number,
+        "cover_date": basic_issue.cover_date,
+        "rating": basic_issue.rating.pk,
+        "sku": "NOT-VALID",  # SKUs must be alphanumeric.
+        **{
+            f"{prefix}-{field}": "0"
+            for prefix in ("credits", "variants", "attribution")
+            for field in ("TOTAL_FORMS", "INITIAL_FORMS")
+        },
+    }
+
+    resp = client.post(reverse("issue:update", kwargs={"slug": basic_issue.slug}), data=data)
+
+    assert resp.status_code == HTML_OK_CODE
+    assert resp.context["form"].errors["sku"]
+    content = resp.content.decode()
+    summary = content[content.index('id="section-errors"') :]
+    summary = summary[: summary.index("</ul>")]
+    assert 'href="#section-primary"' in summary
+    assert 'href="#section-variants"' not in summary
+
+
+def test_issue_update_form_has_no_error_summary(auto_login_user, basic_issue):
+    client, _ = auto_login_user()
+    resp = client.get(reverse("issue:update", kwargs={"slug": basic_issue.slug}))
+    assert resp.status_code == HTML_OK_CODE
+    assert b'id="section-errors"' not in resp.content

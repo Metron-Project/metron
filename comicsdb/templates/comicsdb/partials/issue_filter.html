@@ -391,6 +391,37 @@
                     </div>
                 </div>
             </div>
+
+            {# ── Group: Description ──────────────────────────────────────── #}
+            <h4 class="title is-6 has-text-grey mt-4 mb-3">{% trans "Description" %}</h4>
+            <div class="columns is-multiline">
+                {# Solicitation Description Filter #}
+                <div class="column is-half">
+                    <div class="field">
+                        <label class="label" for="desc_is_solicitation">{% trans "Solicitation Description" %}</label>
+                        <div class="control has-icons-left">
+                            <div class="select is-fullwidth">
+                                <select id="desc_is_solicitation"
+                                        name="desc_is_solicitation"
+                                        aria-label="{% trans 'Filter by solicitation description' %}">
+                                    <option value="">{% trans "Any" %}</option>
+                                    <option value="true"
+                                            {% if request.GET.desc_is_solicitation == "true" %}selected{% endif %}>
+                                        {% trans "Yes" %}
+                                    </option>
+                                    <option value="false"
+                                            {% if request.GET.desc_is_solicitation == "false" %}selected{% endif %}>
+                                        {% trans "No" %}
+                                    </option>
+                                </select>
+                            </div>
+                            <span class="icon is-small is-left">
+                                <i class="fas fa-bullhorn"></i>
+                            </span>
+                        </div>
+                    </div>
+                </div>
+            </div>
         </details>
         {# Action Buttons #}
         <div class="field is-grouped filter-buttons mt-4">
