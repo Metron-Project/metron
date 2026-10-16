@@ -2571,6 +2571,11 @@ For questions, issues, or feature requests:
 
 ## Changelog
 
+### Version 1.12
+
+- Added read-only `attribution` field to the Arc, Character, Creator, Imprint, Issue, Publisher, Series, Team, and Universe detail endpoints: a list of `{"source", "url"}` objects naming where descriptive content was adapted from
+- Added `cover_date_range_after` and `cover_date_range_before` filters to the Issue endpoint
+
 ### Version 1.11
 
 - Added `publisher` (object with `id`/`name`) and `series_type` (object with `id`/`name`) fields to the Series list endpoint
