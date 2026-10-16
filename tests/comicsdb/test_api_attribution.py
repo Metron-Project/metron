@@ -14,6 +14,7 @@ from rest_framework import status
 from api.cache import ModelLabel, get_model_version
 from api.v1_0.serializers.attribution import SOURCE_NAMES
 from comicsdb.models import Attribution, Character, Publisher, Rating
+from reading_lists.models import ReadingList
 
 # (fixture name, API basename) for every resource whose detail response embeds attribution.
 ATTRIBUTED_RESOURCES = [
@@ -248,8 +249,10 @@ def test_attribution_queryset_delete_bumps_each_parent_once(batman, superman, lo
 
 def test_schema_names_attribution_source_enum(db):
     schemas = SchemaGenerator().get_schema(request=None, public=True)["components"]["schemas"]
-    assert schemas["AttributionSourceEnum"]["enum"] == list(SOURCE_NAMES.values())
+    assert schemas["ResourceAttributionSourceEnum"]["enum"] == list(SOURCE_NAMES.values())
     assert "SourceEnum" not in schemas
+    # The reading list's attribution_source enum keeps its name and its own choices.
+    assert schemas["AttributionSourceEnum"]["enum"] == ReadingList.AttributionSource.values
 
 
 def test_unknown_source_code_falls_back_to_stored_value(
