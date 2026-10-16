@@ -1,6 +1,8 @@
 from datetime import date
 
 import pytest
+from django.contrib import admin
+from django.forms.models import model_to_dict
 
 from comicsdb.forms.issue import IssueForm
 from comicsdb.forms.variant import VariantFormset
@@ -204,3 +206,30 @@ class TestIssueFormSolicitationFlag:
 
     def test_new_issue_can_be_flagged(self, issue_data):
         assert self._cleaned_flag(issue_data) is True
+
+    def _admin_cleaned_flag(self, rf, create_staff_user, issue, **changes):
+        request = rf.get("/")
+        request.user = create_staff_user
+        form_class = admin.site._registry[Issue].get_form(request, issue)
+        data = {
+            key: value
+            for key, value in model_to_dict(issue).items()
+            if value is not None and key not in {"image", "price"}
+        }
+        data["rating"] = Rating.objects.create(name="Test Rating").id
+        data.update(changes)
+        form = form_class(data=data, instance=issue)
+        assert form.is_valid(), form.errors
+        return form.cleaned_data["desc_is_solicitation"]
+
+    def test_admin_changed_desc_clears_flag(self, rf, create_staff_user, solicited_issue):
+        flag = self._admin_cleaned_flag(
+            rf, create_staff_user, solicited_issue, desc="Rewritten by an admin"
+        )
+
+        assert flag is False
+
+    def test_admin_other_change_keeps_flag(self, rf, create_staff_user, solicited_issue):
+        flag = self._admin_cleaned_flag(rf, create_staff_user, solicited_issue, page=32)
+
+        assert flag is True

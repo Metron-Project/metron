@@ -14,7 +14,8 @@ class Command(BaseCommand):
         qs = Issue.objects.filter(series=series)
         for i in qs:
             i.desc = ""
-        Issue.objects.bulk_update(qs, ["desc"])
+            i.desc_is_solicitation = False
+        Issue.objects.bulk_update(qs, ["desc", "desc_is_solicitation"])
         self.stdout.write(self.style.SUCCESS(f"Removed story summary for {len(qs)} issues"))
 
     def _correct_roles(self, credit: Credits, good: Role, bad: list[Role]) -> bool:

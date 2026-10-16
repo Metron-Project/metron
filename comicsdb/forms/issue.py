@@ -2,6 +2,7 @@ from django.forms import (
     BooleanField,
     ClearableFileInput,
     DateInput,
+    Form,
     HiddenInput,
     ModelChoiceField,
     ModelForm,
@@ -44,7 +45,31 @@ IssuesWidget = SafeAutocompleteWidget(
 )
 
 
-class IssueForm(ModelForm):
+class SolicitationFlagFormMixin(Form):
+    """Clear a solicitation flag left over from the old description.
+
+    A solicitation flag belongs to the description it was set on, so it is cleared when the
+    description changes, unless the editor explicitly kept it after changing the description.
+    """
+
+    # Set by the issue form's JavaScript when the editor re-checks `desc_is_solicitation`
+    # after changing the description, so `clean()` can tell a deliberate keep from a stale
+    # flag. Forms without that script (e.g. the admin) never set it.
+    desc_solicitation_kept = BooleanField(required=False, widget=HiddenInput)
+
+    def clean(self):
+        cleaned_data = super().clean()
+        if (
+            self.initial.get("desc_is_solicitation")
+            and desc_changed(self.initial.get("desc"), cleaned_data.get("desc"))
+            and cleaned_data.get("desc_is_solicitation")
+            and not cleaned_data.get("desc_solicitation_kept")
+        ):
+            cleaned_data["desc_is_solicitation"] = False
+        return cleaned_data
+
+
+class IssueForm(SolicitationFlagFormMixin, ModelForm):
     series = ModelChoiceField(
         queryset=Series.objects.all(),
         widget=SafeAutocompleteWidget(
@@ -56,10 +81,6 @@ class IssueForm(ModelForm):
     )
 
     rating = ModelChoiceField(queryset=Rating.objects.all(), empty_label=None)
-
-    # Set by the form's JavaScript when the editor re-checks `desc_is_solicitation` after
-    # changing the description, so `clean()` can tell a deliberate keep from a stale flag.
-    desc_solicitation_kept = BooleanField(required=False, widget=HiddenInput)
 
     class Meta:
         model = Issue
@@ -172,16 +193,3 @@ class IssueForm(ModelForm):
             if series.series_type.id in self.collections:
                 raise ValidationError(_("Arcs cannot be added to Trade Paperbacks."))
         return arcs
-
-    def clean(self):
-        cleaned_data = super().clean()
-        # Clear a solicitation flag left over from the old description, unless the editor
-        # explicitly kept it after changing the description.
-        if (
-            self.initial.get("desc_is_solicitation")
-            and desc_changed(self.initial.get("desc"), cleaned_data.get("desc"))
-            and cleaned_data.get("desc_is_solicitation")
-            and not cleaned_data.get("desc_solicitation_kept")
-        ):
-            cleaned_data["desc_is_solicitation"] = False
-        return cleaned_data

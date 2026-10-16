@@ -3,11 +3,13 @@ from typing import Any
 
 from django.contrib import admin, messages
 from django.db.models.query import QuerySet
+from django.forms import ModelForm
 from django.utils.translation import ngettext
 from simple_history.admin import SimpleHistoryAdmin
 from sorl.thumbnail.admin.current import AdminImageMixin
 
 from comicsdb.admin.util import AttributionInline, CreatedOnDateListFilter
+from comicsdb.forms.issue import SolicitationFlagFormMixin
 from comicsdb.models import Creator, Credits, Issue, Rating, Role, Variant
 
 MAX_STORIES = 1
@@ -45,8 +47,17 @@ class VariantInline(admin.TabularInline):
     extra = 1
 
 
+class IssueAdminForm(SolicitationFlagFormMixin, ModelForm):
+    class Meta:
+        model = Issue
+        # The admin builds the form from `IssueAdmin.fieldsets`; these are the fields `clean()`
+        # relies on.
+        fields = ("desc", "desc_is_solicitation")
+
+
 @admin.register(Issue)
 class IssueAdmin(AdminImageMixin, SimpleHistoryAdmin):
+    form = IssueAdminForm
     search_fields = ("series__name", "number", "alt_number")
     list_display = ("__str__", "cover_date", "store_date", "created_on")
     list_filter = (
