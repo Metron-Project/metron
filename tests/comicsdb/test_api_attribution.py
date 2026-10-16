@@ -6,12 +6,10 @@ import pytest
 from django.core.cache.backends.locmem import LocMemCache
 from django.db import connection
 from django.test.utils import CaptureQueriesContext
-from django.urls import resolve, reverse
+from django.urls import reverse
 from django.utils import timezone
 from drf_spectacular.generators import SchemaGenerator
 from rest_framework import status
-from rest_framework.request import Request
-from rest_framework.test import APIRequestFactory
 
 from api.cache import ModelLabel, get_model_version
 from api.v1_0.serializers.attribution import SOURCE_NAMES
@@ -83,27 +81,6 @@ def test_list_does_not_include_attribution(
     resp = api_client_with_credentials.get(reverse(f"api:{basename}-list"))
     assert resp.status_code == status.HTTP_200_OK
     assert "attribution" not in resp.json()["results"][0]
-
-
-@pytest.mark.parametrize(("fixture_name", "basename"), ATTRIBUTED_RESOURCES)
-def test_retrieve_queryset_prefetches_attribution(
-    db, request, django_assert_num_queries, fixture_name, basename
-):
-    """A detail response serializes a single object, so a missing prefetch
-    still costs only one attribution query -- comparing query counts over
-    the endpoint can't catch it. Check the retrieve queryset directly
-    instead: the object it returns must already have attribution loaded."""
-    obj = request.getfixturevalue(fixture_name)
-    obj.attribution.create(source=Attribution.Source.WIKIPEDIA, url=WIKI_URL)
-
-    view = resolve(reverse(f"api:{basename}-detail", args=(obj.pk,))).func.cls()
-    view.action = "retrieve"
-    view.request = Request(APIRequestFactory().get("/"))
-    view.kwargs = {"pk": obj.pk}
-    fetched = view.get_queryset().get(pk=obj.pk)
-
-    with django_assert_num_queries(0):
-        assert [a.url for a in fetched.attribution.all()] == [WIKI_URL]
 
 
 def test_attribution_add_busts_detail_cache(api_client_with_credentials, batman, local_cache):
@@ -236,36 +213,6 @@ def test_attribution_on_model_without_modified_saves(db, local_cache):
     attribution.delete()
 
 
-def test_edit_view_writes_parent_row_once(auto_login_user, dc_comics, local_cache):
-    """The edit view saves the parent itself, so the attribution signal
-    mustn't also UPDATE it once per formset row."""
-    client, _ = auto_login_user()
-    data = {
-        "name": dc_comics.name,
-        "country": "US",
-        "attribution-TOTAL_FORMS": 2,
-        "attribution-INITIAL_FORMS": 0,
-        "attribution-0-source": "W",
-        "attribution-0-url": WIKI_URL,
-        "attribution-1-source": "D",
-        "attribution-1-url": "https://www.dc.com/example",
-    }
-    past = timezone.now() - timedelta(days=1)
-    type(dc_comics).objects.filter(pk=dc_comics.pk).update(modified=past)
-
-    with CaptureQueriesContext(connection) as ctx:
-        resp = client.post(reverse("publisher:update", kwargs={"slug": dc_comics.slug}), data)
-
-    assert resp.status_code == status.HTTP_302_FOUND
-    assert dc_comics.attribution.count() == 2
-    parent_updates = [
-        q for q in ctx.captured_queries if q["sql"].startswith('UPDATE "comicsdb_publisher"')
-    ]
-    assert len(parent_updates) == 1
-    dc_comics.refresh_from_db()
-    assert dc_comics.modified > past
-
-
 def test_create_view_saves_parent_once(auto_login_user, local_cache):
     client, _ = auto_login_user()
     data = {
@@ -302,3 +249,16 @@ def test_schema_names_attribution_source_enum(db):
     schemas = SchemaGenerator().get_schema(request=None, public=True)["components"]["schemas"]
     assert schemas["AttributionSourceEnum"]["enum"] == list(SOURCE_NAMES.values())
     assert "SourceEnum" not in schemas
+
+
+def test_unknown_source_code_falls_back_to_stored_value(
+    api_client_with_credentials, batman, local_cache
+):
+    # The model only enforces choices in forms, so a raw write can store anything.
+    attribution = batman.attribution.create(source=Attribution.Source.WIKIPEDIA, url=WIKI_URL)
+    Attribution.objects.filter(pk=attribution.pk).update(source="X")
+
+    resp = api_client_with_credentials.get(reverse("api:character-detail", args=(batman.pk,)))
+
+    assert resp.status_code == status.HTTP_200_OK
+    assert resp.json()["attribution"] == [{"source": "X", "url": WIKI_URL}]

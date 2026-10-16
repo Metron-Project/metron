@@ -198,17 +198,6 @@ class CachedObjectMixin:
         return self._cached_object_modified
 
 
-class AttributionRetrieveMixin:
-    """For viewsets whose retrieve serializer embeds `attribution`: prefetch
-    it on retrieve. Concrete get_queryset() overrides must call super()."""
-
-    def get_queryset(self):
-        queryset = super().get_queryset()
-        if self.action == "retrieve":
-            queryset = queryset.prefetch_related("attribution")
-        return queryset
-
-
 class ConditionalRetrieveModelMixin(CachedObjectMixin, mixins.RetrieveModelMixin):
     #: Other models' cache-generation counters (see api/cache.py) to mix
     #: into the detail cache key, for responses that embed a related
@@ -389,7 +378,6 @@ class ArcViewSet(
     UserTrackingMixin,
     IssueListMixin,
     mixins.CreateModelMixin,
-    AttributionRetrieveMixin,
     ConditionalRetrieveModelMixin,
     CachedListModelMixin,
     mixins.UpdateModelMixin,
@@ -435,7 +423,6 @@ class CharacterViewSet(
     UserTrackingMixin,
     IssueListMixin,
     mixins.CreateModelMixin,
-    AttributionRetrieveMixin,
     ConditionalRetrieveModelMixin,
     CachedListModelMixin,
     mixins.UpdateModelMixin,
@@ -497,7 +484,6 @@ class CharacterViewSet(
 class CreatorViewSet(
     UserTrackingMixin,
     mixins.CreateModelMixin,
-    AttributionRetrieveMixin,
     ConditionalRetrieveModelMixin,
     CachedListModelMixin,
     mixins.UpdateModelMixin,
@@ -551,7 +537,6 @@ class CreditViewset(
 class ImprintViewSet(
     UserTrackingMixin,
     mixins.CreateModelMixin,
-    AttributionRetrieveMixin,
     ConditionalRetrieveModelMixin,
     CachedListModelMixin,
     mixins.UpdateModelMixin,
@@ -598,7 +583,6 @@ class ImprintViewSet(
 class IssueViewSet(
     UserTrackingMixin,
     mixins.CreateModelMixin,
-    AttributionRetrieveMixin,
     ConditionalRetrieveModelMixin,
     CachedListModelMixin,
     mixins.UpdateModelMixin,
@@ -658,11 +642,9 @@ class IssueViewSet(
 
     def get_queryset(self):
         if self.action == "list":
-            return super().get_queryset().select_related("series", "series__series_type")
+            return Issue.objects.select_related("series", "series__series_type")
         return (
-            super()
-            .get_queryset()
-            .select_related(
+            Issue.objects.select_related(
                 "series",
                 "series__series_type",
                 "series__publisher",
@@ -717,7 +699,6 @@ class IssueViewSet(
 class PublisherViewSet(
     UserTrackingMixin,
     mixins.CreateModelMixin,
-    AttributionRetrieveMixin,
     ConditionalRetrieveModelMixin,
     CachedListModelMixin,
     mixins.UpdateModelMixin,
@@ -809,7 +790,6 @@ class SeriesViewSet(
     UserTrackingMixin,
     IssueListMixin,
     mixins.CreateModelMixin,
-    AttributionRetrieveMixin,
     ConditionalRetrieveModelMixin,
     CachedListModelMixin,
     mixins.UpdateModelMixin,
@@ -906,7 +886,6 @@ class TeamViewSet(
     UserTrackingMixin,
     IssueListMixin,
     mixins.CreateModelMixin,
-    AttributionRetrieveMixin,
     ConditionalRetrieveModelMixin,
     CachedListModelMixin,
     mixins.UpdateModelMixin,
@@ -967,7 +946,6 @@ class TeamViewSet(
 class UniverseViewSet(
     UserTrackingMixin,
     mixins.CreateModelMixin,
-    AttributionRetrieveMixin,
     ConditionalRetrieveModelMixin,
     CachedListModelMixin,
     mixins.UpdateModelMixin,

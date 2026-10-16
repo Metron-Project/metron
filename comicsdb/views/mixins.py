@@ -17,7 +17,6 @@ from django.views.generic import RedirectView
 from comicsdb.forms.attribution import AttributionFormSet
 from comicsdb.forms.issue import MINIMUM_YEAR
 from comicsdb.models.attribution import Attribution
-from comicsdb.signals import attribution_parent_saved_separately
 from comicsdb.views.constants import DETAIL_PAGINATE_BY
 
 LOGGER = logging.getLogger(__name__)
@@ -71,9 +70,7 @@ class AttributionCreateMixin:
             if attribution_form.is_valid():
                 self.object = form.save()
                 attribution_form.instance = self.object
-                # The parent was just saved, so there's nothing for the rows to bump.
-                with attribution_parent_saved_separately():
-                    attribution_form.save()
+                attribution_form.save()
             else:
                 return super().form_invalid(form)
 
@@ -151,16 +148,12 @@ class AttributionUpdateMixin:
             if attribution_form.is_valid():
                 self.object = form.save(commit=False)
                 attribution_form.instance = self.object
-                with attribution_parent_saved_separately():
-                    attribution_form.save()
+                attribution_form.save()
             else:
                 return super().form_invalid(form)
-            # Saves the parent, whose `modified`/cache bump also covers the
-            # attribution changes -- so it must commit with them.
-            response = super().form_valid(form)
 
         LOGGER.info(self.get_log_message(), form.instance.name, self.request.user)
-        return response
+        return super().form_valid(form)
 
 
 class NavigationMixin:

@@ -24,4 +24,5 @@ class AttributionSerializer(serializers.ModelSerializer):
 
     @extend_schema_field(serializers.ChoiceField(choices=SOURCE_CHOICES))
     def get_source(self, obj: Attribution) -> str:
-        return SOURCE_NAMES[obj.source]
+        # Fall back to the stored code rather than 500 on a value outside the choices.
+        return SOURCE_NAMES.get(obj.source, obj.source)
