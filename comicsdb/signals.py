@@ -1,5 +1,6 @@
 import logging
 
+from django.db.models import QuerySet
 from django.utils import timezone
 from sorl.thumbnail import delete
 
@@ -271,17 +272,54 @@ def bump_cache_on_name_change(label, sender, instance, **kwargs):
         bump_model_version(label)
 
 
-def update_parent_modified_on_attribution_change(sender, instance, **kwargs):
+def _touch_attribution_parent(content_type_id, object_id):
     """Attribution is a generic relation, so saving or deleting one doesn't
     touch its parent row. Bump the parent's `modified` explicitly so its
     cached detail response (which embeds `attribution`) self-invalidates,
     and its cache version, since its list response embeds `modified`."""
-    model = instance.content_type.model_class()
+    from django.contrib.contenttypes.models import ContentType  # noqa: PLC0415
+
+    # get_for_id() is served from ContentType's in-process cache.
+    model = ContentType.objects.get_for_id(content_type_id).model_class()
     if model is None:
         return
-    model.objects.filter(pk=instance.object_id).update(modified=timezone.now())
+    model.objects.filter(pk=object_id).update(modified=timezone.now())
     try:
         label = ModelLabel(model._meta.model_name)
     except ValueError:
         return
     bump_model_version(label)
+
+
+def track_attribution_parent(sender, instance, raw=False, **kwargs):
+    """pre_save receiver recording the parent an existing attribution points
+    at before this save, so update_parent_modified_on_attribution_save() can
+    also bump the old parent when the attribution is reassigned."""
+    instance._previous_parent = None
+    if raw or instance._state.adding:
+        return
+    instance._previous_parent = (
+        sender.objects.filter(pk=instance.pk).values_list("content_type_id", "object_id").first()
+    )
+
+
+def update_parent_modified_on_attribution_save(sender, instance, raw=False, **kwargs):
+    # Fixture loading may run before the ContentType/parent rows exist.
+    if raw:
+        return
+    current = (instance.content_type_id, instance.object_id)
+    _touch_attribution_parent(*current)
+    previous = instance.__dict__.pop("_previous_parent", None)
+    if previous is not None and previous != current:
+        _touch_attribution_parent(*previous)
+
+
+def update_parent_modified_on_attribution_delete(sender, instance, origin=None, **kwargs):
+    # Attributions are only deleted on their own (instance or queryset
+    # delete) or by cascade when their parent is deleted. In the cascade
+    # case the parent is going away too, so there's nothing to bump.
+    deleted_directly = isinstance(origin, sender) or (
+        isinstance(origin, QuerySet) and origin.model is sender
+    )
+    if deleted_directly:
+        _touch_attribution_parent(instance.content_type_id, instance.object_id)

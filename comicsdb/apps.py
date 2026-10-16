@@ -9,6 +9,7 @@ from comicsdb.signals import (
     bump_cache_on_name_change,
     pre_delete_credit,
     pre_delete_image,
+    track_attribution_parent,
     track_name_change,
     update_arc_modified,
     update_character_modified,
@@ -20,7 +21,8 @@ from comicsdb.signals import (
     update_issue_modified_on_reprint_change,
     update_issue_modified_on_universe_change,
     update_issue_modified_on_variant_change,
-    update_parent_modified_on_attribution_change,
+    update_parent_modified_on_attribution_delete,
+    update_parent_modified_on_attribution_save,
     update_series_modified_on_associated_change,
     update_series_modified_on_genre_change,
     update_series_modified_on_issue_delete,
@@ -144,13 +146,18 @@ class ComicsdbConfig(AppConfig):
         )
 
         attribution = self.get_model("Attribution")
+        pre_save.connect(
+            track_attribution_parent,
+            sender=attribution,
+            dispatch_uid="pre_save_attribution_track_parent",
+        )
         post_save.connect(
-            update_parent_modified_on_attribution_change,
+            update_parent_modified_on_attribution_save,
             sender=attribution,
             dispatch_uid="post_save_attribution_parent_modified",
         )
         post_delete.connect(
-            update_parent_modified_on_attribution_change,
+            update_parent_modified_on_attribution_delete,
             sender=attribution,
             dispatch_uid="post_delete_attribution_parent_modified",
         )

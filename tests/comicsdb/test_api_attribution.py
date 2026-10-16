@@ -4,6 +4,8 @@ from unittest.mock import patch
 
 import pytest
 from django.core.cache.backends.locmem import LocMemCache
+from django.db import connection
+from django.test.utils import CaptureQueriesContext
 from django.urls import resolve, reverse
 from django.utils import timezone
 from rest_framework import status
@@ -166,3 +168,59 @@ def test_attribution_change_bumps_parent_modified_and_cache_version(batman, loca
     batman.refresh_from_db()
     assert batman.modified > past
     assert get_model_version(ModelLabel.CHARACTER) == before + 2
+
+
+def test_attribution_reassignment_bumps_old_and_new_parent(batman, superman, local_cache):
+    past = timezone.now() - timedelta(days=1)
+    attribution = batman.attribution.create(source=Attribution.Source.WIKIPEDIA, url=WIKI_URL)
+    Character.objects.filter(pk__in=(batman.pk, superman.pk)).update(modified=past)
+
+    attribution.object_id = superman.pk
+    attribution.save()
+
+    batman.refresh_from_db()
+    superman.refresh_from_db()
+    assert batman.modified > past
+    assert superman.modified > past
+
+
+def test_attribution_save_does_not_query_content_type(batman, local_cache):
+    attribution = batman.attribution.create(source=Attribution.Source.WIKIPEDIA, url=WIKI_URL)
+    attribution = Attribution.objects.get(pk=attribution.pk)  # fresh instance, no cached FK
+
+    with CaptureQueriesContext(connection) as ctx:
+        attribution.save()
+        attribution.delete()
+
+    assert not [q for q in ctx.captured_queries if "django_content_type" in q["sql"]]
+
+
+def test_attribution_raw_save_skips_parent_bump(batman, local_cache):
+    attribution = Attribution(
+        source=Attribution.Source.WIKIPEDIA, url=WIKI_URL, content_object=batman
+    )
+    with patch("comicsdb.signals._touch_attribution_parent") as touch:
+        attribution.save_base(raw=True)
+    touch.assert_not_called()
+
+
+def test_parent_delete_skips_attribution_parent_bump(batman, local_cache):
+    batman.attribution.create(source=Attribution.Source.WIKIPEDIA, url=WIKI_URL)
+    batman.attribution.create(source=Attribution.Source.MARVEL, url=MARVEL_URL)
+
+    with patch("comicsdb.signals._touch_attribution_parent") as touch:
+        batman.delete()
+
+    touch.assert_not_called()
+    assert not Attribution.objects.exists()
+
+
+def test_attribution_queryset_delete_bumps_parent(batman, local_cache):
+    batman.attribution.create(source=Attribution.Source.WIKIPEDIA, url=WIKI_URL)
+    past = timezone.now() - timedelta(days=1)
+    Character.objects.filter(pk=batman.pk).update(modified=past)
+
+    batman.attribution.all().delete()
+
+    batman.refresh_from_db()
+    assert batman.modified > past
