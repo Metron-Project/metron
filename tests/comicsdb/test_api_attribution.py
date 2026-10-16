@@ -4,11 +4,11 @@ from unittest.mock import patch
 
 import pytest
 from django.core.cache.backends.locmem import LocMemCache
-from django.db import connection
-from django.test.utils import CaptureQueriesContext
-from django.urls import reverse
+from django.urls import resolve, reverse
 from django.utils import timezone
 from rest_framework import status
+from rest_framework.request import Request
+from rest_framework.test import APIRequestFactory
 
 from api.cache import ModelLabel, get_model_version
 from comicsdb.models import Attribution, Character
@@ -77,26 +77,24 @@ def test_list_does_not_include_attribution(
 
 
 @pytest.mark.parametrize(("fixture_name", "basename"), ATTRIBUTED_RESOURCES)
-def test_detail_attribution_query_count_is_constant(
-    request, api_client_with_credentials, local_cache, fixture_name, basename
+def test_retrieve_queryset_prefetches_attribution(
+    db, request, django_assert_num_queries, fixture_name, basename
 ):
+    """A detail response serializes a single object, so a missing prefetch
+    still costs only one attribution query -- comparing query counts over
+    the endpoint can't catch it. Check the retrieve queryset directly
+    instead: the object it returns must already have attribution loaded."""
     obj = request.getfixturevalue(fixture_name)
-    url = reverse(f"api:{basename}-detail", args=(obj.pk,))
     obj.attribution.create(source=Attribution.Source.WIKIPEDIA, url=WIKI_URL)
 
-    local_cache.clear()
-    with CaptureQueriesContext(connection) as one:
-        api_client_with_credentials.get(url)
+    view = resolve(reverse(f"api:{basename}-detail", args=(obj.pk,))).func.cls()
+    view.action = "retrieve"
+    view.request = Request(APIRequestFactory().get("/"))
+    view.kwargs = {"pk": obj.pk}
+    fetched = view.get_queryset().get(pk=obj.pk)
 
-    obj.attribution.create(source=Attribution.Source.MARVEL, url=MARVEL_URL)
-    obj.attribution.create(source=Attribution.Source.GCD, url="https://www.comics.org/x/")
-
-    local_cache.clear()
-    with CaptureQueriesContext(connection) as three:
-        resp = api_client_with_credentials.get(url)
-
-    assert len(resp.json()["attribution"]) == 3
-    assert len(three) == len(one)
+    with django_assert_num_queries(0):
+        assert [a.url for a in fetched.attribution.all()] == [WIKI_URL]
 
 
 def test_attribution_add_busts_detail_cache(api_client_with_credentials, batman, local_cache):
