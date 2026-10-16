@@ -344,7 +344,9 @@ SPECTACULAR_SETTINGS = {
         "url": "https://creativecommons.org/licenses/by-sa/4.0/",
     },
     "ENUM_NAME_OVERRIDES": {
-        "AttributionSourceEnum": "api.v1_0.serializers.attribution.SOURCE_CHOICES",
+        # Pin the reading list's enum so the resource attribution enum below can't claim its name.
+        "AttributionSourceEnum": "reading_lists.models.ReadingList.AttributionSource",
+        "ResourceAttributionSourceEnum": "api.v1_0.serializers.attribution.SOURCE_CHOICES",
         "CurrencyEnum": "metron.choices.CURRENCY_CHOICES",
         "DesiredGradeEnum": "user_collection.models.GRADE_CHOICES",
     },
