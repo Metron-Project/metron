@@ -23,6 +23,10 @@ from django.db.transaction import on_commit
 
 DETAIL_CACHE_TTL = 60 * 60 * 24 * 3  # 3 days; live keys self-invalidate on write.
 LIST_CACHE_TTL = 60 * 2  # 2min; bounds staleness from nested-object changes we don't chase.
+# Bump when a detail response's shape changes (e.g. a field is added), so entries cached in the
+# old shape aren't served for up to DETAIL_CACHE_TTL after deploy. List keys don't need this:
+# LIST_CACHE_TTL is short enough to ride out.
+DETAIL_CACHE_SCHEMA_VERSION = 2
 
 _VERSION_KEY_PREFIX = "cachever"
 
@@ -112,7 +116,12 @@ def detail_cache_key(
 
     `request` supplies origin and query params -- see `_request_digest()`.
     """
-    key = f"api:detail:{model_label}:{action}:{pk}:{modified.timestamp()}"
+    # The schema version goes after the model label, which audit_response_cache
+    # reads as the key's category.
+    key = (
+        f"api:detail:{model_label}:v{DETAIL_CACHE_SCHEMA_VERSION}:{action}:{pk}:"
+        f"{modified.timestamp()}"
+    )
     if dependent_labels:
         version_map = get_model_versions(dependent_labels)
         versions = "-".join(str(version_map[lbl]) for lbl in dependent_labels)

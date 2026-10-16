@@ -11,7 +11,7 @@ from rest_framework import status
 from rest_framework.pagination import PageNumberPagination
 from rest_framework.request import Request
 
-from api import views as api_views
+from api import cache as api_cache, views as api_views
 from api.cache import ModelLabel, get_model_version
 from api.views import CollectionViewSet, PullListViewSet, WishListViewSet
 from comicsdb.models import Credits, Issue, Variant
@@ -837,6 +837,20 @@ def test_arc_retrieve_does_not_poison_issue_list_cache(
     body = resp.json()
     assert "results" in body
     assert body["results"][0]["number"] == "1"
+
+
+def test_detail_schema_version_bump_orphans_cached_responses(
+    api_client_with_credentials, fc_arc, monkeypatch, local_cache
+):
+    """Entries cached before a detail response's shape changed must not be
+    served after DETAIL_CACHE_SCHEMA_VERSION is bumped."""
+    url = reverse("api:arc-detail", kwargs={"pk": fc_arc.pk})
+    assert api_client_with_credentials.get(url)["X-Cache"] == "MISS"
+    assert api_client_with_credentials.get(url)["X-Cache"] == "HIT"
+
+    monkeypatch.setattr(api_cache, "DETAIL_CACHE_SCHEMA_VERSION", 3)
+
+    assert api_client_with_credentials.get(url)["X-Cache"] == "MISS"
 
 
 def test_arc_issue_list_pagination_is_not_poisoned_across_pages(
