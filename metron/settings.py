@@ -344,6 +344,7 @@ SPECTACULAR_SETTINGS = {
         "url": "https://creativecommons.org/licenses/by-sa/4.0/",
     },
     "ENUM_NAME_OVERRIDES": {
+        "AttributionSourceEnum": "api.v1_0.serializers.attribution.SOURCE_CHOICES",
         "CurrencyEnum": "metron.choices.CURRENCY_CHOICES",
         "DesiredGradeEnum": "user_collection.models.GRADE_CHOICES",
     },

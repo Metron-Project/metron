@@ -8,6 +8,7 @@ from functools import reduce
 
 from django.db import transaction
 from django.db.models import Q
+from django.http import HttpResponseRedirect
 from django.shortcuts import get_object_or_404, render
 from django.urls import reverse
 from django.views import View
@@ -77,7 +78,8 @@ class AttributionCreateMixin:
                 return super().form_invalid(form)
 
         LOGGER.info(self.get_log_message(), form.instance.name, self.request.user)
-        return super().form_valid(form)
+        # Not super().form_valid(): it would call form.save() a second time.
+        return HttpResponseRedirect(self.get_success_url())
 
 
 class AttributionUpdateMixin:

@@ -299,7 +299,8 @@ class IssueCreate(LoginRequiredMixin, CreateView):
                 "It may have been created by another user.",
             )
             return self.form_invalid(form)
-        return super().form_valid(form)
+        # Not super().form_valid(): it would call form.save() a second time.
+        return HttpResponseRedirect(self.get_success_url())
 
 
 class IssueUpdate(LoginRequiredMixin, UpdateView):

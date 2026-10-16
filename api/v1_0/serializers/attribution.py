@@ -11,6 +11,8 @@ SOURCE_NAMES = {
     Attribution.Source.GCD: "Grand Comics Database",
     Attribution.Source.DC: "DC",
 }
+# Referenced by SPECTACULAR_SETTINGS["ENUM_NAME_OVERRIDES"].
+SOURCE_CHOICES = list(SOURCE_NAMES.values())
 
 
 class AttributionSerializer(serializers.ModelSerializer):
@@ -20,6 +22,6 @@ class AttributionSerializer(serializers.ModelSerializer):
         model = Attribution
         fields = ("source", "url")
 
-    @extend_schema_field(serializers.ChoiceField(choices=list(SOURCE_NAMES.values())))
+    @extend_schema_field(serializers.ChoiceField(choices=SOURCE_CHOICES))
     def get_source(self, obj: Attribution) -> str:
         return SOURCE_NAMES[obj.source]

@@ -2199,6 +2199,29 @@ def test_issue_create_checks_variant_upc_against_cover_date(
         assert b'href="#section-variants"' in resp.content
 
 
+def test_issue_create_saves_issue_once(auto_login_user, fc_series):
+    client, _ = auto_login_user()
+    data = {
+        "series": fc_series.pk,
+        "number": "1",
+        "cover_date": "2023-01-01",
+        "rating": Rating.objects.create(name="Test Rating").pk,
+        **{
+            f"{prefix}-{field}": "0"
+            for prefix in ("credits", "variants", "attribution")
+            for field in ("TOTAL_FORMS", "INITIAL_FORMS")
+        },
+    }
+
+    resp = client.post(reverse("issue:create"), data=data)
+
+    issue = Issue.objects.get(series=fc_series, number="1")
+    assert resp.status_code == HTML_REDIRECT_CODE
+    assert resp.url == issue.get_absolute_url()
+    # One history row per save.
+    assert issue.history.count() == 1
+
+
 def test_issue_detail_shows_solicitation_tag(solicited_issue, auto_login_user):
     client, _ = auto_login_user()
     resp = client.get(reverse("issue:detail", kwargs={"slug": solicited_issue.slug}))

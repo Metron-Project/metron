@@ -8,13 +8,14 @@ from django.db import connection
 from django.test.utils import CaptureQueriesContext
 from django.urls import resolve, reverse
 from django.utils import timezone
+from drf_spectacular.generators import SchemaGenerator
 from rest_framework import status
 from rest_framework.request import Request
 from rest_framework.test import APIRequestFactory
 
 from api.cache import ModelLabel, get_model_version
 from api.v1_0.serializers.attribution import SOURCE_NAMES
-from comicsdb.models import Attribution, Character, Rating
+from comicsdb.models import Attribution, Character, Publisher, Rating
 
 # (fixture name, API basename) for every resource whose detail response embeds attribution.
 ATTRIBUTED_RESOURCES = [
@@ -263,3 +264,41 @@ def test_edit_view_writes_parent_row_once(auto_login_user, dc_comics, local_cach
     assert len(parent_updates) == 1
     dc_comics.refresh_from_db()
     assert dc_comics.modified > past
+
+
+def test_create_view_saves_parent_once(auto_login_user, local_cache):
+    client, _ = auto_login_user()
+    data = {
+        "name": "Ahoy Comics",
+        "country": "US",
+        "comicsdb-attribution-content_type-object_id-TOTAL_FORMS": 1,
+        "comicsdb-attribution-content_type-object_id-INITIAL_FORMS": 0,
+        "comicsdb-attribution-content_type-object_id-0-source": "W",
+        "comicsdb-attribution-content_type-object_id-0-url": WIKI_URL,
+    }
+
+    resp = client.post(reverse("publisher:create"), data=data)
+
+    assert resp.status_code == status.HTTP_302_FOUND
+    ahoy = Publisher.objects.get(name="Ahoy Comics")
+    assert resp.url == ahoy.get_absolute_url()
+    assert ahoy.attribution.count() == 1
+    # One history row per save.
+    assert ahoy.history.count() == 1
+
+
+def test_attribution_queryset_delete_bumps_each_parent_once(batman, superman, local_cache):
+    batman.attribution.create(source=Attribution.Source.WIKIPEDIA, url=WIKI_URL)
+    batman.attribution.create(source=Attribution.Source.MARVEL, url=MARVEL_URL)
+    superman.attribution.create(source=Attribution.Source.WIKIPEDIA, url=WIKI_URL)
+
+    with patch("comicsdb.signals._touch_attribution_parent") as touch:
+        Attribution.objects.all().delete()
+
+    assert touch.call_count == 2
+
+
+def test_schema_names_attribution_source_enum(db):
+    schemas = SchemaGenerator().get_schema(request=None, public=True)["components"]["schemas"]
+    assert schemas["AttributionSourceEnum"]["enum"] == list(SOURCE_NAMES.values())
+    assert "SourceEnum" not in schemas

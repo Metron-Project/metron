@@ -348,8 +348,12 @@ def update_parent_modified_on_attribution_delete(sender, instance, origin=None, 
     # Attributions are only deleted on their own (instance or queryset
     # delete) or by cascade when their parent is deleted. In the cascade
     # case the parent is going away too, so there's nothing to bump.
-    deleted_directly = isinstance(origin, sender) or (
-        isinstance(origin, QuerySet) and origin.model is sender
-    )
-    if deleted_directly:
-        _touch_attribution_parent(instance.content_type_id, instance.object_id)
+    parent = (instance.content_type_id, instance.object_id)
+    if isinstance(origin, sender):
+        _touch_attribution_parent(*parent)
+    elif isinstance(origin, QuerySet) and origin.model is sender:
+        # A queryset delete sends post_delete per row; bump each parent once.
+        touched = origin.__dict__.setdefault("_touched_attribution_parents", set())
+        if parent not in touched:
+            touched.add(parent)
+            _touch_attribution_parent(*parent)
