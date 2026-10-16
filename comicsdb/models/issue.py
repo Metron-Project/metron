@@ -265,5 +265,12 @@ def pre_save_cover_hash(sender, instance: Issue, *args, **kwargs) -> None:
         return
 
 
+def pre_save_desc_is_solicitation(sender, instance: Issue, *args, **kwargs) -> None:
+    # There is no solicitation text without a description.
+    if instance.desc_is_solicitation and not (instance.desc or "").strip():
+        instance.desc_is_solicitation = False
+
+
 pre_save.connect(pre_save_issue_slug, sender=Issue)
 pre_save.connect(pre_save_cover_hash, sender=Issue)
+pre_save.connect(pre_save_desc_is_solicitation, sender=Issue)

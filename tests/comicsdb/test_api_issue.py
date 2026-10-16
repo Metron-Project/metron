@@ -721,3 +721,16 @@ def test_staff_user_patch_other_field_keeps_solicitation(
     assert resp.status_code == status.HTTP_200_OK
     solicited_issue.refresh_from_db()
     assert solicited_issue.desc_is_solicitation is True
+
+
+def test_staff_user_patch_empty_desc_clears_explicit_solicitation(
+    api_client_with_staff_credentials, solicited_issue
+):
+    resp = api_client_with_staff_credentials.patch(
+        reverse("api:issue-detail", kwargs={"pk": solicited_issue.pk}),
+        data={"desc": "", "desc_is_solicitation": True},
+    )
+    assert resp.status_code == status.HTTP_200_OK
+    assert resp.data["desc_is_solicitation"] is False
+    solicited_issue.refresh_from_db()
+    assert solicited_issue.desc_is_solicitation is False

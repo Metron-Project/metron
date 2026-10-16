@@ -2227,7 +2227,9 @@ def test_issue_detail_hides_solicitation_tag(basic_issue, auto_login_user):
 def test_issue_list_filters_solicitations(auto_login_user, create_user, fc_series):
     user = create_user()
     common = {"series": fc_series, "cover_date": timezone.now().date(), "edited_by": user}
-    solicited = Issue.objects.create(number="1", desc_is_solicitation=True, **common)
+    solicited = Issue.objects.create(
+        number="1", desc="Solicitation text", desc_is_solicitation=True, **common
+    )
     Issue.objects.create(number="2", **common)
     client, _ = auto_login_user()
     resp = client.get(reverse("issue:list"), {"desc_is_solicitation": "true"})
