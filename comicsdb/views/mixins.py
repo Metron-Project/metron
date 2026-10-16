@@ -146,14 +146,16 @@ class AttributionUpdateMixin:
         with transaction.atomic():
             form.instance.edited_by = self.request.user
             if attribution_form.is_valid():
-                self.object = form.save(commit=False)
+                self.object = form.save()
                 attribution_form.instance = self.object
                 attribution_form.save()
             else:
                 return super().form_invalid(form)
 
         LOGGER.info(self.get_log_message(), form.instance.name, self.request.user)
-        return super().form_valid(form)
+        # Not super().form_valid(): it would call form.save() a second time, outside the
+        # transaction.
+        return HttpResponseRedirect(self.get_success_url())
 
 
 class NavigationMixin:
