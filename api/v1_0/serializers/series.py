@@ -1,5 +1,6 @@
 from rest_framework import serializers
 
+from api.v1_0.serializers.attribution import AttributionSerializer
 from api.v1_0.serializers.genre import GenreSerializer
 from api.v1_0.serializers.imprint import BasicImprintSerializer
 from api.v1_0.serializers.publisher import BasicPublisherSerializer
@@ -116,3 +117,7 @@ class SeriesReadSerializer(SeriesSerializer):
     issue_count = serializers.IntegerField(source="num_issues", read_only=True)
     associated = AssociatedSeriesSerializer(many=True, read_only=True)
     genres = GenreSerializer(many=True, read_only=True)
+    attribution = AttributionSerializer(many=True, read_only=True)
+
+    class Meta(SeriesSerializer.Meta):
+        fields = (*SeriesSerializer.Meta.fields, "attribution")

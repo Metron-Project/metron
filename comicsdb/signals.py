@@ -1,5 +1,7 @@
 import logging
 
+from django.core.exceptions import FieldDoesNotExist
+from django.db.models import QuerySet
 from django.utils import timezone
 from sorl.thumbnail import delete
 
@@ -269,3 +271,51 @@ def bump_cache_on_name_change(label, sender, instance, **kwargs):
     pre_save flag is missing, so an unexpected path errs toward freshness."""
     if instance.__dict__.pop("_cache_name_changed", True):
         bump_model_version(label)
+
+
+def _touch_attribution_parent(content_type_id, object_id):
+    """Attribution is a generic relation, so saving or deleting one doesn't
+    touch its parent row. Bump the parent's `modified` explicitly so its
+    cached detail response (which embeds `attribution`) self-invalidates,
+    and its cache version, since its list response embeds `modified`."""
+    from django.contrib.contenttypes.models import ContentType  # noqa: PLC0415
+
+    # get_for_id() is served from ContentType's in-process cache.
+    model = ContentType.objects.get_for_id(content_type_id).model_class()
+    if model is None:
+        return
+    # The generic FK accepts any model; only bump ones that track `modified`.
+    try:
+        model._meta.get_field("modified")
+    except FieldDoesNotExist:
+        return
+    model.objects.filter(pk=object_id).update(modified=timezone.now())
+    try:
+        label = ModelLabel(model._meta.model_name)
+    except ValueError:
+        return
+    bump_model_version(label)
+
+
+def update_parent_modified_on_attribution_save(sender, instance, raw=False, **kwargs):
+    # Fixture loading may run before the ContentType/parent rows exist.
+    if raw:
+        return
+    # Only the current parent is bumped: nothing reassigns an attribution to a
+    # different parent, so code that does must bump the old parent itself.
+    _touch_attribution_parent(instance.content_type_id, instance.object_id)
+
+
+def update_parent_modified_on_attribution_delete(sender, instance, origin=None, **kwargs):
+    # Attributions are only deleted on their own (instance or queryset
+    # delete) or by cascade when their parent is deleted. In the cascade
+    # case the parent is going away too, so there's nothing to bump.
+    parent = (instance.content_type_id, instance.object_id)
+    if isinstance(origin, sender):
+        _touch_attribution_parent(*parent)
+    elif isinstance(origin, QuerySet) and origin.model is sender:
+        # A queryset delete sends post_delete per row; bump each parent once.
+        touched = origin.__dict__.setdefault("_touched_attribution_parents", set())
+        if parent not in touched:
+            touched.add(parent)
+            _touch_attribution_parent(*parent)

@@ -35,6 +35,7 @@ from api.cache import (
 )
 from api.v1_0.serializers import (
     ArcListSerializer,
+    ArcReadSerializer,
     ArcSerializer,
     CharacterListSerializer,
     CharacterReadSerializer,
@@ -44,6 +45,7 @@ from api.v1_0.serializers import (
     CollectionRatingUpdateSerializer,
     CollectionReadSerializer,
     CreatorListSerializer,
+    CreatorReadSerializer,
     CreatorSerializer,
     CreditSerializer,
     ImprintListSerializer,
@@ -55,6 +57,7 @@ from api.v1_0.serializers import (
     MissingIssueSerializer,
     MissingSeriesSerializer,
     PublisherListSerializer,
+    PublisherReadSerializer,
     PublisherSerializer,
     ReadingListItemSerializer,
     ReadingListListSerializer,
@@ -410,6 +413,8 @@ class ArcViewSet(
                 return ArcListSerializer
             case "issue_list":
                 return IssueListSerializer
+            case "retrieve":
+                return ArcReadSerializer
             case _:
                 return ArcSerializer
 
@@ -501,6 +506,8 @@ class CreatorViewSet(
         match self.action:
             case "list":
                 return CreatorListSerializer
+            case "retrieve":
+                return CreatorReadSerializer
             case _:
                 return CreatorSerializer
 
@@ -722,6 +729,8 @@ class PublisherViewSet(
                 return PublisherListSerializer
             case "series_list":
                 return SeriesListSerializer
+            case "retrieve":
+                return PublisherReadSerializer
             case _:
                 return PublisherSerializer
 

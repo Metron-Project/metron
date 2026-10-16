@@ -116,6 +116,20 @@ Most resources follow a standard pattern:
 - **Create:** `POST /api/{resource}/` - Create new item (requires editor or admin)
 - **Update:** `PUT/PATCH /api/{resource}/{id}/` - Update item (requires editor or admin)
 
+### Attribution
+
+Detail responses for arcs, characters, creators, imprints, issues, publishers, series, teams, and
+universes include a read-only `attribution` list naming where descriptive content (such as `desc`)
+was adapted from. If you reuse that content, credit these sources, since some licenses require it
+(Wikipedia's CC BY-SA, for example). List responses don't include it.
+
+```json
+"attribution": [
+  {"source": "Wikipedia", "url": "https://en.wikipedia.org/wiki/Spider-Man"},
+  {"source": "Marvel", "url": "https://www.marvel.com/characters/spider-man-peter-parker"}
+]
+```
+
 ### Nested Resources
 
 Some resources include nested actions:
@@ -175,6 +189,7 @@ Story arcs that span multiple issues, often across different series.
     - `cv_id` - Comic Vine ID
     - `gcd_id` - Grand Comics Database ID
     - `resource_url` - Link to web UI
+    - `attribution` - Sources the descriptive content was adapted from, as a list of `{"source", "url"}` objects (empty if none). `source` is one of `Wikipedia`, `Marvel`, `DC`, or `Grand Comics Database`
 
 **Example:**
 
@@ -232,6 +247,7 @@ Comic book characters appearing in issues.
     - `cv_id` - Comic Vine ID
     - `gcd_id` - Grand Comics Database ID
     - `resource_url` - Link to web UI
+    - `attribution` - Sources the descriptive content was adapted from, as a list of `{"source", "url"}` objects (empty if none). `source` is one of `Wikipedia`, `Marvel`, `DC`, or `Grand Comics Database`
 
 **Example:**
 
@@ -286,6 +302,7 @@ Writers, artists, and other comic book creators.
     - `cv_id` - Comic Vine ID
     - `gcd_id` - Grand Comics Database ID
     - `resource_url` - Link to web UI
+    - `attribution` - Sources the descriptive content was adapted from, as a list of `{"source", "url"}` objects (empty if none). `source` is one of `Wikipedia`, `Marvel`, `DC`, or `Grand Comics Database`
 
 **Example:**
 
@@ -426,6 +443,7 @@ The Issue endpoint supports the most comprehensive filtering options:
     - `cover_hash` - Perceptual image hash
     - `foc_date` - Final order cutoff date
     - `resource_url` - Link to web UI
+    - `attribution` - Sources the descriptive content was adapted from, as a list of `{"source", "url"}` objects (empty if none). `source` is one of `Wikipedia`, `Marvel`, `DC`, or `Grand Comics Database`
 
 **Cover Price (Write):**
 
@@ -535,6 +553,7 @@ Comic book publishers.
     - `cv_id` - Comic Vine ID
     - `gcd_id` - Grand Comics Database ID
     - `resource_url` - Link to web UI
+    - `attribution` - Sources the descriptive content was adapted from, as a list of `{"source", "url"}` objects (empty if none). `source` is one of `Wikipedia`, `Marvel`, `DC`, or `Grand Comics Database`
 
 **Country (Write):**
 
@@ -599,6 +618,7 @@ Publisher imprints (e.g., Vertigo, MAX).
     - `cv_id` - Comic Vine ID
     - `gcd_id` - Grand Comics Database ID
     - `resource_url` - Link to web UI
+    - `attribution` - Sources the descriptive content was adapted from, as a list of `{"source", "url"}` objects (empty if none). `source` is one of `Wikipedia`, `Marvel`, `DC`, or `Grand Comics Database`
 
 **Example:**
 
@@ -708,6 +728,7 @@ Comic book series.
     - `genres` - Array of genre objects
     - `associated` - Associated series
     - `resource_url` - Link to web UI
+    - `attribution` - Sources the descriptive content was adapted from, as a list of `{"source", "url"}` objects (empty if none). `source` is one of `Wikipedia`, `Marvel`, `DC`, or `Grand Comics Database`
 
 **Series Status Choices:**
 
@@ -813,6 +834,7 @@ Superhero teams and groups.
     - `cv_id` - Comic Vine ID
     - `gcd_id` - Grand Comics Database ID
     - `resource_url` - Link to web UI
+    - `attribution` - Sources the descriptive content was adapted from, as a list of `{"source", "url"}` objects (empty if none). `source` is one of `Wikipedia`, `Marvel`, `DC`, or `Grand Comics Database`
 
 **Example:**
 
@@ -864,6 +886,7 @@ Comic book universes (e.g., Earth-616, Earth-1).
     - `desc` - Description
     - `image` - Universe image URL
     - `resource_url` - Link to web UI
+    - `attribution` - Sources the descriptive content was adapted from, as a list of `{"source", "url"}` objects (empty if none). `source` is one of `Wikipedia`, `Marvel`, `DC`, or `Grand Comics Database`
 
 **Example:**
 
@@ -2547,6 +2570,11 @@ For questions, issues, or feature requests:
 ---
 
 ## Changelog
+
+### Version 1.12
+
+- Added read-only `attribution` field to the Arc, Character, Creator, Imprint, Issue, Publisher, Series, Team, and Universe detail endpoints: a list of `{"source", "url"}` objects naming where descriptive content was adapted from
+- Added `cover_date_range_after` and `cover_date_range_before` filters to the Issue endpoint
 
 ### Version 1.11
 

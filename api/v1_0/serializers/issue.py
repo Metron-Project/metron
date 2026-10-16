@@ -8,6 +8,7 @@ from rest_framework import serializers
 
 from api.v1_0.serializers import CreditReadSerializer
 from api.v1_0.serializers.arc import ArcListSerializer
+from api.v1_0.serializers.attribution import AttributionSerializer
 from api.v1_0.serializers.character import CharacterListSerializer
 from api.v1_0.serializers.genre import GenreSerializer
 from api.v1_0.serializers.imprint import BasicImprintSerializer
@@ -331,6 +332,7 @@ class IssueReadSerializer(serializers.ModelSerializer):
     series = IssueSeriesSerializer(read_only=True)
     reprints = ReprintSerializer(many=True, read_only=True)
     rating = RatingSerializer(read_only=True)
+    attribution = AttributionSerializer(many=True, read_only=True)
     average_rating = serializers.DecimalField(
         max_digits=3, decimal_places=2, coerce_to_string=False, read_only=True
     )
@@ -384,4 +386,5 @@ class IssueReadSerializer(serializers.ModelSerializer):
             "gcd_id",
             "resource_url",
             "modified",
+            "attribution",
         )

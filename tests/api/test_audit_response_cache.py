@@ -20,6 +20,11 @@ def test_categorize_detail_key_with_dependent_labels_still_extracts_model():
     assert Command._categorize(key) == "api:detail:series"
 
 
+def test_categorize_detail_key_with_schema_version_still_extracts_model():
+    key = ":1:api:detail:arc:v2:retrieve:7:1704085200.0:abcdef0123456789"
+    assert Command._categorize(key) == "api:detail:arc"
+
+
 def test_categorize_list_key_extracts_model_label():
     key = ":1:api:list:arc::4-2:abcdef0123456789"
     assert Command._categorize(key) == "api:list:arc"

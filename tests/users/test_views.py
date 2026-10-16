@@ -29,7 +29,7 @@ def test_view_url_exists_at_desired_location(auto_login_user, url):
     assert resp.status_code == HTML_OK_CODE
 
 
-# @pytest.mark.parametrize("url", ["/accounts/update", "/accounts/password", "/accounts/signup"])  # noqa: E501
+# @pytest.mark.parametrize("url", ["/accounts/update", "/accounts/password", "/accounts/signup"])
 # def test_view_url_exists_at_desired_location_redirected(auto_login_user, url):
 #     client, _ = auto_login_user()
 #     resp = client.get(url)

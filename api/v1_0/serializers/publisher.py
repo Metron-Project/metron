@@ -1,6 +1,7 @@
 from django_countries.serializers import CountryFieldMixin
 from rest_framework import serializers
 
+from api.v1_0.serializers.attribution import AttributionSerializer
 from comicsdb.models import Publisher
 
 
@@ -40,6 +41,13 @@ class PublisherSerializer(CountryFieldMixin, serializers.ModelSerializer):
             "resource_url",
             "modified",
         )
+
+
+class PublisherReadSerializer(PublisherSerializer):
+    attribution = AttributionSerializer(many=True, read_only=True)
+
+    class Meta(PublisherSerializer.Meta):
+        fields = (*PublisherSerializer.Meta.fields, "attribution")
 
 
 class BasicPublisherSerializer(serializers.ModelSerializer):
