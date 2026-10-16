@@ -20,7 +20,7 @@ class Attribution(models.Model):
 
     class Meta:
         indexes = [models.Index(fields=["content_type", "object_id"], name="ct_obj_id_idx")]
-        ordering = ["content_type", "object_id"]
+        ordering = ["content_type", "object_id", "id"]
 
     def __str__(self) -> str:
         return f"{self.source} Attribution"

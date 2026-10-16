@@ -11,6 +11,7 @@ from rest_framework.request import Request
 from rest_framework.test import APIRequestFactory
 
 from api.cache import ModelLabel, get_model_version
+from api.v1_0.serializers.attribution import SOURCE_NAMES
 from comicsdb.models import Attribution, Character
 
 # (fixture name, API basename) for every resource whose detail response embeds attribution.
@@ -58,10 +59,15 @@ def test_detail_attribution_returns_source_label_and_url(
 
     resp = api_client_with_credentials.get(reverse(f"api:{basename}-detail", args=(obj.pk,)))
     assert resp.status_code == status.HTTP_200_OK
-    assert sorted(resp.json()["attribution"], key=lambda a: a["source"]) == [
-        {"source": "Marvel", "url": MARVEL_URL},
+    # Ordered by creation within one object, so the response is stable across cache misses.
+    assert resp.json()["attribution"] == [
         {"source": "Wikipedia", "url": WIKI_URL},
+        {"source": "Marvel", "url": MARVEL_URL},
     ]
+
+
+def test_every_attribution_source_has_an_api_name():
+    assert set(SOURCE_NAMES) == set(Attribution.Source)
 
 
 @pytest.mark.parametrize(("fixture_name", "basename"), ATTRIBUTED_RESOURCES)
