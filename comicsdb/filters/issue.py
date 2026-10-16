@@ -1,5 +1,4 @@
 import operator
-from datetime import date
 from functools import reduce
 
 import django_filters as df
@@ -35,18 +34,6 @@ class IssueSeriesQuickSearch(df.rest_framework.CharFilter):
                 )
             )
         return super().filter(qs, value)
-
-
-def filter_released(qs, name, value):
-    """
-    Filter on whether an issue is out: its store date, or its cover date when it has no store
-    date, is on or before today.
-    """
-    if value is None:
-        return qs
-    today = date.today()
-    released = Q(store_date__lte=today) | Q(store_date__isnull=True, cover_date__lte=today)
-    return qs.filter(released) if value else qs.exclude(released)
 
 
 class NumberInFilter(df.rest_framework.BaseInFilter, df.rest_framework.NumberFilter):
@@ -194,7 +181,6 @@ class IssueViewFilter(df.FilterSet):
         label="Grand Comics Database ID", field_name="gcd_id", lookup_expr="exact"
     )
     desc_is_solicitation = df.BooleanFilter(label="Solicitation Description")
-    released = df.BooleanFilter(label="Released", method=filter_released)
 
     class Meta:
         model = Issue

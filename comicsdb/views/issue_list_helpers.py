@@ -73,11 +73,10 @@ FILTER_LABELS = {
     "cv_id": _("Comic Vine ID"),
     "gcd_id": _("GCD ID"),
     "desc_is_solicitation": _("Solicitation"),
-    "released": _("Released"),
 }
 
 # Boolean filter params, whose ``true``/``false`` values render as Yes/No.
-_BOOLEAN_PARAMS = {"desc_is_solicitation", "released"}
+_BOOLEAN_PARAMS = {"desc_is_solicitation"}
 _BOOLEAN_DISPLAY = {"true": _("Yes"), "false": _("No")}
 
 _MONTHS = {

@@ -421,32 +421,7 @@
                         </div>
                     </div>
                 </div>
-                {# Released Filter #}
-                <div class="column is-half">
-                    <div class="field">
-                        <label class="label" for="released">{% trans "Released" %}</label>
-                        <div class="control has-icons-left">
-                            <div class="select is-fullwidth">
-                                <select id="released"
-                                        name="released"
-                                        aria-label="{% trans 'Filter by release status' %}">
-                                    <option value="">{% trans "Any" %}</option>
-                                    <option value="true" {% if request.GET.released == "true" %}selected{% endif %}>{% trans "Yes" %}</option>
-                                    <option value="false" {% if request.GET.released == "false" %}selected{% endif %}>{% trans "No" %}</option>
-                                </select>
-                            </div>
-                            <span class="icon is-small is-left">
-                                <i class="fas fa-store"></i>
-                            </span>
-                        </div>
-                    </div>
-                </div>
             </div>
-            {% if user.is_authenticated %}
-                <p class="help mb-3">
-                    <a href="{% url 'issue:list' %}?desc_is_solicitation=true&amp;released=true">{% trans "Show released issues whose description is still solicitation text" %}</a>
-                </p>
-            {% endif %}
         </details>
         {# Action Buttons #}
         <div class="field is-grouped filter-buttons mt-4">

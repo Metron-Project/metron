@@ -792,11 +792,6 @@ msgstr "Sollecitazione"
 
 #: comicsdb/templates/comicsdb/partials/issue_filter.html
 #: comicsdb/views/issue_list_helpers.py
-msgid "Released"
-msgstr "Pubblicato"
-
-#: comicsdb/templates/comicsdb/partials/issue_filter.html
-#: comicsdb/views/issue_list_helpers.py
 msgid "Yes"
 msgstr "Sì"
 
@@ -2856,16 +2851,6 @@ msgstr "Filtra per descrizione di sollecitazione"
 #: comicsdb/templates/comicsdb/partials/issue_filter.html
 msgid "Any"
 msgstr "Qualsiasi"
-
-#: comicsdb/templates/comicsdb/partials/issue_filter.html
-msgid "Filter by release status"
-msgstr "Filtra per stato di pubblicazione"
-
-#: comicsdb/templates/comicsdb/partials/issue_filter.html
-msgid "Show released issues whose description is still solicitation text"
-msgstr ""
-"Mostra i numeri pubblicati la cui descrizione è ancora il testo di "
-"sollecitazione"
 
 #: comicsdb/templates/comicsdb/partials/issue_filter.html:410
 #: comicsdb/templates/comicsdb/partials/series_filter.html:230
