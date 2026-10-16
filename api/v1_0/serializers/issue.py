@@ -18,6 +18,7 @@ from api.v1_0.serializers.series import SeriesTypeSerializer
 from api.v1_0.serializers.team import TeamListSerializer
 from api.v1_0.serializers.universe import UniverseListSerializer
 from comicsdb.models import Issue, Series, Variant
+from comicsdb.models.issue import desc_changed
 from metron.choices import CURRENCY_CHOICES
 
 
@@ -260,7 +261,7 @@ class IssueSerializer(ModelCleanMixin, serializers.ModelSerializer):
         # description changes, unless the request sets the flag explicitly.
         if (
             "desc" in validated_data
-            and validated_data["desc"] != instance.desc
+            and desc_changed(instance.desc, validated_data["desc"])
             and "desc_is_solicitation" not in validated_data
         ):
             validated_data["desc_is_solicitation"] = False

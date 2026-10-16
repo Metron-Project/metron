@@ -684,6 +684,22 @@ def test_staff_user_patch_desc_clears_solicitation(
     assert solicited_issue.desc_is_solicitation is False
 
 
+def test_staff_user_patch_lf_copy_of_crlf_desc_keeps_solicitation(
+    api_client_with_staff_credentials, solicited_issue
+):
+    # Descriptions saved through the web form are stored with CRLF newlines.
+    solicited_issue.desc = "Line one\r\nLine two"
+    solicited_issue.save()
+    resp = api_client_with_staff_credentials.patch(
+        reverse("api:issue-detail", kwargs={"pk": solicited_issue.pk}),
+        data={"desc": "Line one\nLine two"},
+        format="json",
+    )
+    assert resp.status_code == status.HTTP_200_OK
+    solicited_issue.refresh_from_db()
+    assert solicited_issue.desc_is_solicitation is True
+
+
 def test_staff_user_patch_desc_keeps_explicit_solicitation(
     api_client_with_staff_credentials, solicited_issue
 ):
