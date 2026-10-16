@@ -2268,6 +2268,32 @@ def test_issue_update_flags_variant_errors_at_top(auto_login_user, basic_issue):
     assert 'href="#section-credits"' not in summary
 
 
+def test_issue_update_flags_primary_errors_at_top(auto_login_user, basic_issue):
+    client, _ = auto_login_user()
+    data = {
+        "series": basic_issue.series.pk,
+        "number": basic_issue.number,
+        "cover_date": basic_issue.cover_date,
+        "rating": basic_issue.rating.pk,
+        "sku": "NOT-VALID",  # SKUs must be alphanumeric.
+        **{
+            f"{prefix}-{field}": "0"
+            for prefix in ("credits", "variants", "attribution")
+            for field in ("TOTAL_FORMS", "INITIAL_FORMS")
+        },
+    }
+
+    resp = client.post(reverse("issue:update", kwargs={"slug": basic_issue.slug}), data=data)
+
+    assert resp.status_code == HTML_OK_CODE
+    assert resp.context["form"].errors["sku"]
+    content = resp.content.decode()
+    summary = content[content.index('id="section-errors"') :]
+    summary = summary[: summary.index("</ul>")]
+    assert 'href="#section-primary"' in summary
+    assert 'href="#section-variants"' not in summary
+
+
 def test_issue_update_form_has_no_error_summary(auto_login_user, basic_issue):
     client, _ = auto_login_user()
     resp = client.get(reverse("issue:update", kwargs={"slug": basic_issue.slug}))
