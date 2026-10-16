@@ -297,27 +297,18 @@ def _touch_attribution_parent(content_type_id, object_id):
     bump_model_version(label)
 
 
-def track_attribution_parent(sender, instance, raw=False, **kwargs):
-    """pre_save receiver recording the parent an existing attribution points
-    at before this save, so update_parent_modified_on_attribution_save() can
-    also bump the old parent when the attribution is reassigned."""
-    instance._previous_parent = None
-    if raw or instance._state.adding:
-        return
-    instance._previous_parent = (
-        sender.objects.filter(pk=instance.pk).values_list("content_type_id", "object_id").first()
-    )
-
-
 def update_parent_modified_on_attribution_save(sender, instance, raw=False, **kwargs):
     # Fixture loading may run before the ContentType/parent rows exist.
     if raw:
         return
     current = (instance.content_type_id, instance.object_id)
     _touch_attribution_parent(*current)
-    previous = instance.__dict__.pop("_previous_parent", None)
+    # Also bump the old parent if the attribution was reassigned (see
+    # Attribution.from_db()), then track the new one for the next save.
+    previous = instance.loaded_parent
     if previous is not None and previous != current:
         _touch_attribution_parent(*previous)
+    instance.loaded_parent = current
 
 
 def update_parent_modified_on_attribution_delete(sender, instance, origin=None, **kwargs):

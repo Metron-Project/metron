@@ -162,6 +162,56 @@ def test_attribution_reassignment_bumps_old_and_new_parent(batman, superman, loc
     assert superman.modified > past
 
 
+def test_attribution_reassignment_of_loaded_instance_bumps_old_parent(
+    batman, superman, local_cache
+):
+    created = batman.attribution.create(source=Attribution.Source.WIKIPEDIA, url=WIKI_URL)
+    attribution = Attribution.objects.get(pk=created.pk)
+    past = timezone.now() - timedelta(days=1)
+    Character.objects.filter(pk__in=(batman.pk, superman.pk)).update(modified=past)
+
+    attribution.object_id = superman.pk
+    attribution.save()
+    batman.refresh_from_db()
+    assert batman.modified > past
+
+    # The instance now tracks superman, so moving it back bumps superman.
+    Character.objects.filter(pk=superman.pk).update(modified=past)
+    attribution.object_id = batman.pk
+    attribution.save()
+    superman.refresh_from_db()
+    assert superman.modified > past
+
+
+def test_attribution_save_does_not_reread_its_row(batman, local_cache):
+    created = batman.attribution.create(source=Attribution.Source.WIKIPEDIA, url=WIKI_URL)
+    attribution = Attribution.objects.get(pk=created.pk)
+    attribution.url = MARVEL_URL
+
+    with CaptureQueriesContext(connection) as ctx:
+        attribution.save()
+
+    assert not [
+        q
+        for q in ctx.captured_queries
+        if q["sql"].startswith("SELECT") and "comicsdb_attribution" in q["sql"]
+    ]
+
+
+def test_attribution_save_with_deferred_parent_fields(batman, local_cache):
+    created = batman.attribution.create(source=Attribution.Source.WIKIPEDIA, url=WIKI_URL)
+    attribution = Attribution.objects.only("url").get(pk=created.pk)
+    assert attribution.loaded_parent is None
+    past = timezone.now() - timedelta(days=1)
+    Character.objects.filter(pk=batman.pk).update(modified=past)
+
+    attribution.url = MARVEL_URL
+    attribution.save()
+
+    batman.refresh_from_db()
+    assert batman.modified > past
+
+
 def test_attribution_save_does_not_query_content_type(batman, local_cache):
     attribution = batman.attribution.create(source=Attribution.Source.WIKIPEDIA, url=WIKI_URL)
     attribution = Attribution.objects.get(pk=attribution.pk)  # fresh instance, no cached FK
