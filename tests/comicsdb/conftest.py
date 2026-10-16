@@ -285,6 +285,14 @@ def basic_issue(create_user, fc_series):
 
 
 @pytest.fixture
+def solicited_issue(basic_issue):
+    basic_issue.desc = "Solicitation text"
+    basic_issue.desc_is_solicitation = True
+    basic_issue.save()
+    return basic_issue
+
+
+@pytest.fixture
 def list_of_issues(create_user, fc_series):
     user = create_user()
 

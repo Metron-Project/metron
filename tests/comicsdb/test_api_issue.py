@@ -644,14 +644,6 @@ def test_filter_by_foc_date_range_no_match(api_client_with_credentials, basic_is
     assert resp.data["count"] == 0
 
 
-@pytest.fixture
-def solicited_issue(basic_issue: Issue) -> Issue:
-    basic_issue.desc = "Solicitation text"
-    basic_issue.desc_is_solicitation = True
-    basic_issue.save()
-    return basic_issue
-
-
 def test_detail_includes_desc_is_solicitation(api_client_with_credentials, solicited_issue):
     resp = api_client_with_credentials.get(
         reverse("api:issue-detail", kwargs={"pk": solicited_issue.pk})

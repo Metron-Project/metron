@@ -162,13 +162,6 @@ class TestIssueFormSolicitationFlag:
             "desc_is_solicitation": True,
         }
 
-    @pytest.fixture
-    def solicited_issue(self, basic_issue):
-        basic_issue.desc = "Solicitation text"
-        basic_issue.desc_is_solicitation = True
-        basic_issue.save()
-        return basic_issue
-
     def _cleaned_flag(self, data, instance=None):
         form = IssueForm(data=data, instance=instance)
         assert form.is_valid(), form.errors

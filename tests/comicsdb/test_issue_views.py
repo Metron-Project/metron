@@ -55,12 +55,9 @@ def test_issue_update_view_minimum_year(basic_issue, auto_login_user):
     assert f"minDate: '{MINIMUM_YEAR}-01-01'" in resp.content.decode()
 
 
-def test_issue_update_view_embeds_stored_solicitation_desc(basic_issue, auto_login_user):
-    basic_issue.desc = "Solicitation text"
-    basic_issue.desc_is_solicitation = True
-    basic_issue.save()
+def test_issue_update_view_embeds_stored_solicitation_desc(solicited_issue, auto_login_user):
     client, _ = auto_login_user()
-    resp = client.get(reverse("issue:update", kwargs={"slug": basic_issue.slug}))
+    resp = client.get(reverse("issue:update", kwargs={"slug": solicited_issue.slug}))
     assert resp.status_code == HTML_OK_CODE
     assert (
         '<script id="stored-solicitation-desc" type="application/json">"Solicitation text"'
@@ -69,15 +66,12 @@ def test_issue_update_view_embeds_stored_solicitation_desc(basic_issue, auto_log
 
 
 def test_issue_update_view_failed_submit_embeds_stored_solicitation_desc(
-    basic_issue, auto_login_user
+    solicited_issue, auto_login_user
 ):
-    basic_issue.desc = "Solicitation text"
-    basic_issue.desc_is_solicitation = True
-    basic_issue.save()
     client, _ = auto_login_user()
     # Missing required fields, so the form re-renders with the posted description.
     resp = client.post(
-        reverse("issue:update", kwargs={"slug": basic_issue.slug}),
+        reverse("issue:update", kwargs={"slug": solicited_issue.slug}),
         {"desc": "Rewritten by an editor"},
     )
     assert resp.status_code == HTML_OK_CODE
@@ -2205,12 +2199,9 @@ def test_issue_create_checks_variant_upc_against_cover_date(
         assert b'href="#section-variants"' in resp.content
 
 
-def test_issue_detail_shows_solicitation_tag(basic_issue, auto_login_user):
-    basic_issue.desc = "Solicitation text"
-    basic_issue.desc_is_solicitation = True
-    basic_issue.save()
+def test_issue_detail_shows_solicitation_tag(solicited_issue, auto_login_user):
     client, _ = auto_login_user()
-    resp = client.get(reverse("issue:detail", kwargs={"slug": basic_issue.slug}))
+    resp = client.get(reverse("issue:detail", kwargs={"slug": solicited_issue.slug}))
     assert resp.status_code == HTML_OK_CODE
     assert b'<span class="tag is-info ml-2"' in resp.content
 
