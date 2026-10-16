@@ -226,3 +226,12 @@ class TestIssueFormSolicitationFlag:
         flag = self._admin_cleaned_flag(rf, create_staff_user, solicited_issue, page=32)
 
         assert flag is True
+
+    def test_admin_help_text_explains_saving_again(self, rf, create_staff_user, solicited_issue):
+        request = rf.get("/")
+        request.user = create_staff_user
+        form_class = admin.site._registry[Issue].get_form(request, solicited_issue)
+
+        help_text = str(form_class.base_fields["desc_is_solicitation"].help_text)
+
+        assert "save once more" in help_text

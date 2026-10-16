@@ -188,11 +188,30 @@ document.addEventListener('DOMContentLoaded', function() {
         // After a failed submit the description may already differ; the box state then
         // reflects what the editor chose, so don't uncheck it again.
         var autoUnchecked = descChanged();
+        // Whether the box is unchecked only because this script unchecked it, so it can be
+        // restored if the editor reverts the description.
+        var uncheckedByScript = false;
         desc.addEventListener('input', function() {
-            if (!autoUnchecked && descChanged()) {
-                autoUnchecked = true;
-                solicitation.checked = false;
+            if (descChanged()) {
+                if (!autoUnchecked) {
+                    autoUnchecked = true;
+                    if (solicitation.checked) {
+                        solicitation.checked = false;
+                        uncheckedByScript = true;
+                    }
+                }
+            } else {
+                // Back to the stored description, so the next edit is a fresh change.
+                autoUnchecked = false;
+                if (uncheckedByScript) {
+                    solicitation.checked = true;
+                    uncheckedByScript = false;
+                }
             }
+        });
+        solicitation.addEventListener('change', function() {
+            // The editor chose the box state, so don't override it.
+            uncheckedByScript = false;
         });
         document.getElementById('issueForm').addEventListener('submit', function() {
             solicitationKept.value = solicitation.checked && descChanged() ? 'True' : '';

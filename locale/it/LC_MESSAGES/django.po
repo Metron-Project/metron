@@ -785,6 +785,17 @@ msgstr ""
 "Modificando la descrizione questa opzione viene deselezionata, a meno che tu "
 "non la selezioni di nuovo."
 
+#: comicsdb/admin/issue.py
+msgid ""
+"Check if the description is the publisher's solicitation text. Changing the "
+"description clears this; if the new description is also a solicitation, "
+"check it again and save once more."
+msgstr ""
+"Seleziona se la descrizione è il testo di sollecitazione dell'editore. "
+"Modificando la descrizione questa opzione viene deselezionata; se anche la "
+"nuova descrizione è una sollecitazione, selezionala di nuovo e salva ancora "
+"una volta."
+
 #: comicsdb/templates/comicsdb/issue_detail.html
 #: comicsdb/views/issue_list_helpers.py
 msgid "Solicitation"

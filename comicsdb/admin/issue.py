@@ -4,7 +4,7 @@ from typing import Any
 from django.contrib import admin, messages
 from django.db.models.query import QuerySet
 from django.forms import ModelForm
-from django.utils.translation import ngettext
+from django.utils.translation import gettext_lazy as _, ngettext
 from simple_history.admin import SimpleHistoryAdmin
 from sorl.thumbnail.admin.current import AdminImageMixin
 
@@ -53,6 +53,13 @@ class IssueAdminForm(SolicitationFlagFormMixin, ModelForm):
         # The admin builds the form from `IssueAdmin.fieldsets`; these are the fields `clean()`
         # relies on.
         fields = ("desc", "desc_is_solicitation")
+        help_texts = {
+            "desc_is_solicitation": _(
+                "Check if the description is the publisher's solicitation text. Changing the "
+                "description clears this; if the new description is also a solicitation, "
+                "check it again and save once more."
+            ),
+        }
 
 
 @admin.register(Issue)
