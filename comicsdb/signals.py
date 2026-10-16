@@ -301,14 +301,9 @@ def update_parent_modified_on_attribution_save(sender, instance, raw=False, **kw
     # Fixture loading may run before the ContentType/parent rows exist.
     if raw:
         return
-    current = (instance.content_type_id, instance.object_id)
-    _touch_attribution_parent(*current)
-    # Also bump the old parent if the attribution was reassigned (see
-    # Attribution.from_db()), then track the new one for the next save.
-    previous = instance.loaded_parent
-    if previous is not None and previous != current:
-        _touch_attribution_parent(*previous)
-    instance.loaded_parent = current
+    # Only the current parent is bumped: nothing reassigns an attribution to a
+    # different parent, so code that does must bump the old parent itself.
+    _touch_attribution_parent(instance.content_type_id, instance.object_id)
 
 
 def update_parent_modified_on_attribution_delete(sender, instance, origin=None, **kwargs):
