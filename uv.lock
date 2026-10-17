@@ -202,6 +202,15 @@ wheels = [
 ]
 
 [[package]]
+name = "disposable-email-domains"
+version = "0.0.281"
+source = { registry = "https://pypi.org/simple" }
+sdist = { url = "https://files.pythonhosted.org/packages/03/7e/c4c7f9672e7c2ef813d79dedc70a0b1226b124cf48f5ca420fc9475f5dd8/disposable_email_domains-0.0.281.tar.gz", hash = "sha256:9fc890a1708c17399b7125de8f67624541601918bb5f3545d14d552151f39d4b", size = 119652, upload-time = "2026-10-16T17:02:52.27Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/7b/5d/75be3e22fd06dc0cc692bde8d23ad341ca9c1b3305e9ab0e15a9252ffb66/disposable_email_domains-0.0.281-py3-none-any.whl", hash = "sha256:872cdbce38e163788cc7d699256c2a2c9ad9f5dba2a088cfc3951522377765d9", size = 61473, upload-time = "2026-10-16T17:02:50.643Z" },
+]
+
+[[package]]
 name = "distlib"
 version = "0.4.3"
 source = { registry = "https://pypi.org/simple" }
@@ -668,6 +677,7 @@ dependencies = [
     { name = "bleach", extra = ["css"] },
     { name = "boto3" },
     { name = "chartkick" },
+    { name = "disposable-email-domains" },
     { name = "django" },
     { name = "django-countries" },
     { name = "django-filter" },
@@ -714,6 +724,7 @@ requires-dist = [
     { name = "bleach", extras = ["css"] },
     { name = "boto3" },
     { name = "chartkick" },
+    { name = "disposable-email-domains", specifier = ">=0.0.281" },
     { name = "django" },
     { name = "django-countries" },
     { name = "django-filter" },

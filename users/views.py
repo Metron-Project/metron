@@ -175,7 +175,65 @@ def activate(request, uidb64, token):
     return redirect("home")
 
 
-def signup(request):  # sourcery skip: extract-method
+def _create_account(request, form):
+    """Create an inactive account from a valid signup ``form`` and email its activation link.
+
+    Returns False, with an error added to ``form``, if the email couldn't be sent.
+    """
+    user: CustomUser = form.save(commit=False)
+    user.is_active = False
+    user.save()
+    context = {
+        "user": user,
+        "uid": urlsafe_base64_encode(force_bytes(user.pk)),
+        "token": account_activation_token.make_token(user),
+    }
+    try:
+        _send_email(
+            request,
+            _("Activate Your Metron Account"),
+            "registration/account_activation_email",
+            context,
+            user.email,
+        )
+    except smtplib.SMTPException, OSError:
+        # There's no way to resend the activation email, so don't leave
+        # behind an inactive account holding the username/email, and
+        # don't count it against the IP limit, so the user can retry.
+        logger.exception("Failed to send activation email to %s", user.username)
+        user.delete()
+        form.add_error(
+            None,
+            _("We were unable to send your activation email. Please try again in at a later time."),
+        )
+        return False
+    _record_signup(request, user.username)
+    # Let's send a pushover notice that a user requested an account.
+    send_pushover(f"{user} signed up for an account on Metron.")
+    ip = client_ip(request)
+    logger.info(
+        "User signed up for an account on Metron (user=%s, ip=%s)",
+        user.username,
+        ip,
+        extra={"username": user.username, "ip": ip},
+    )
+    return True
+
+
+def _rerender_signup(request, message):
+    """Show the signup page again with ``message``, keeping the username and email.
+
+    The form is unbound: displaying a bound form's errors would validate it, which
+    looks the email up with UserCheck - the lookup a failed captcha mustn't reach.
+    """
+    form = CustomUserCreationForm(
+        initial={field: request.POST.get(field, "") for field in ("username", "email")}
+    )
+    messages.error(request, message)
+    return render(request, "registration/signup.html", {"form": form})
+
+
+def signup(request):
     settings_obj = SignupSettings.get_solo()
     if not settings_obj.signups_enabled:
         return render(
@@ -189,64 +247,25 @@ def signup(request):  # sourcery skip: extract-method
             _notify_signup_rate_limit_hit(request)
             return render(request, "registration/signup_rate_limited.html", status=429)
 
+        # Verify the captcha before validating the form: validation looks the email
+        # up with UserCheck, so checking first makes every (metered) lookup cost a
+        # solved captcha rather than just a POST.
+        result = get_recaptcha_auth(request)
+
+        if HCAPTCHA_UNAVAILABLE in result.get("error-codes", []):
+            # An hCaptcha outage, not a failed check, so the user can just retry.
+            return _rerender_signup(
+                request,
+                _(
+                    "We were unable to verify the captcha right now. "
+                    "Please try again in a few minutes."
+                ),
+            )
+        if not result["success"]:
+            return _rerender_signup(request, _("Please complete the captcha and try again."))
+
         form = CustomUserCreationForm(request.POST)
-        if form.is_valid():
-            result = get_recaptcha_auth(request)
-
-            if HCAPTCHA_UNAVAILABLE in result.get("error-codes", []):
-                # An hCaptcha outage, not a failed check: tell the user to retry
-                # rather than falling through to "activation email sent".
-                form.add_error(
-                    None,
-                    _(
-                        "We were unable to verify the captcha right now. "
-                        "Please try again in a few minutes."
-                    ),
-                )
-                return render(request, "registration/signup.html", {"form": form})
-
-            if result["success"]:
-                user: CustomUser = form.save(commit=False)
-                user.is_active = False
-                user.save()
-                context = {
-                    "user": user,
-                    "uid": urlsafe_base64_encode(force_bytes(user.pk)),
-                    "token": account_activation_token.make_token(user),
-                }
-                try:
-                    _send_email(
-                        request,
-                        _("Activate Your Metron Account"),
-                        "registration/account_activation_email",
-                        context,
-                        user.email,
-                    )
-                except smtplib.SMTPException, OSError:
-                    # There's no way to resend the activation email, so don't leave
-                    # behind an inactive account holding the username/email, and
-                    # don't count it against the IP limit, so the user can retry.
-                    logger.exception("Failed to send activation email to %s", user.username)
-                    user.delete()
-                    form.add_error(
-                        None,
-                        _(
-                            "We were unable to send your activation email. "
-                            "Please try again in at a later time."
-                        ),
-                    )
-                    return render(request, "registration/signup.html", {"form": form})
-                _record_signup(request, user.username)
-                # Let's send a pushover notice that a user requested an account.
-                send_pushover(f"{user} signed up for an account on Metron.")
-                ip = client_ip(request)
-                logger.info(
-                    "User signed up for an account on Metron (user=%s, ip=%s)",
-                    user.username,
-                    ip,
-                    extra={"username": user.username, "ip": ip},
-                )
-
+        if form.is_valid() and _create_account(request, form):
             return redirect("account_activation_sent")
     else:
         form = CustomUserCreationForm()

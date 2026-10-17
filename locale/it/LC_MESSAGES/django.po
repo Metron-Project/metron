@@ -6515,9 +6515,22 @@ msgstr "L'email esiste già"
 msgid "Temporary email addresses are not allowed."
 msgstr "Gli indirizzi email temporanei non sono ammessi."
 
-#: users/forms.py:61
-msgid "Error creating account. Contact the site administrator."
-msgstr "Errore nella creazione dell'account. Contatta l'amministratore del sito."
+#: users/forms.py
+msgid "Email forwarding addresses are not allowed."
+msgstr "Gli indirizzi email di inoltro non sono ammessi."
+
+#: users/forms.py
+#, python-format
+msgid "Did you mean %(suggestion)s?"
+msgstr "Intendevi %(suggestion)s?"
+
+#: users/forms.py
+msgid ""
+"We couldn't verify your email address right now. Please try again in a "
+"moment."
+msgstr ""
+"Al momento non è stato possibile verificare il tuo indirizzo email. Riprova "
+"tra qualche istante."
 
 #: users/forms.py:78
 msgid "Required. Enter a valid email address."
@@ -6592,6 +6605,10 @@ msgid ""
 msgstr ""
 "Al momento non è stato possibile verificare il captcha. Riprova tra qualche "
 "minuto."
+
+#: users/views.py
+msgid "Please complete the captcha and try again."
+msgstr "Completa il captcha e riprova."
 
 #: users/login_throttle.py
 msgid "Too many failed attempts. Please try again in 15 minutes."

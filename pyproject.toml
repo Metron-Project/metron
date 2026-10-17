@@ -6,6 +6,7 @@ dependencies = [
     "bleach[css]",
     "boto3",
     "chartkick",
+    "disposable-email-domains>=0.0.281",
     "django",
     "django-countries",
     "django-filter",

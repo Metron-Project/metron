@@ -57,6 +57,31 @@ def isolated_login_throttle():
         yield
 
 
+CLEAN_EMAIL_VERDICT = {
+    "disposable": False,
+    "spam": False,
+    "relay_domain": False,
+    "mx": True,
+    "suggested_domain": None,
+}
+
+
+@pytest.fixture(autouse=True)
+def isolated_usercheck():
+    """Keep tests off the real UserCheck API, and give each test its own verdict
+    cache, alert flag and credit status in the shared Redis cache. Forms see a clean verdict for
+    any address not caught by the local blocklists; tests that need another verdict
+    re-patch users.forms.check_email_domain, and the inner patch takes precedence."""
+    suffix = uuid.uuid4().hex
+    with (
+        patch("users.utils.CACHE_PREFIX", f"usercheck:test:{suffix}"),
+        patch("users.utils.ALERT_KEY", f"usercheck:alerted:test:{suffix}"),
+        patch("users.utils.CREDITS_KEY", f"usercheck:has_credits:test:{suffix}"),
+        patch("users.forms.check_email_domain", return_value=CLEAN_EMAIL_VERDICT),
+    ):
+        yield
+
+
 @pytest.fixture(autouse=True)
 def isolated_api_throttle():
     """Give each test its own DRF throttle history. It's keyed by user pk in the

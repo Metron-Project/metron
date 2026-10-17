@@ -368,8 +368,8 @@ BULMA_SETTINGS = {
 }
 
 HCAPTCHA_SECRET_KEY = config("HCAPTCHA_SECRET_KEY")
-RAPID_API_KEY = config("RAPID_API_KEY")
-RAPID_API_HOST = config("RAPID_API_HOST")
+# Optional: without a key, signups are checked against the local blocklists only.
+USERCHECK_API_KEY = config("USERCHECK_API_KEY", default="")
 
 OPENCOLLECTIVE_API_KEY = config("OPENCOLLECTIVE_API_KEY")
 OPENCOLLECTIVE_SLUG = config("OPENCOLLECTIVE_SLUG", default="metron")
