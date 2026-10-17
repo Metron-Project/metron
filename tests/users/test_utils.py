@@ -31,16 +31,24 @@ def usercheck_api_key(settings):
 
 
 def _mock_connection(*statuses, body=None):
-    """A connection whose successive responses have the given statuses (default: one 200)."""
+    """A connection whose successive responses have the given statuses (default: one 200).
+
+    ``body`` replaces every response's body (default: a clean verdict for a 200, a
+    generic error otherwise).
+    """
     conn = MagicMock()
     responses = []
     for status in statuses or (200,):
         response = MagicMock()
         response.status = status
         response.reason = "OK" if status == 200 else "Error"
-        response.read.return_value = json.dumps(
-            (body or USERCHECK_BODY) if status == 200 else {"status": status, "error": "Error"}
-        ).encode()
+        if body is not None:
+            content = body
+        elif status == 200:
+            content = USERCHECK_BODY
+        else:
+            content = {"status": status, "error": "Error"}
+        response.read.return_value = json.dumps(content).encode()
         responses.append(response)
     conn.getresponse.side_effect = responses
     return conn
@@ -124,8 +132,31 @@ def test_check_email_domain_does_not_cache_failures():
 
 
 def test_check_email_domain_flags_malformed_address():
-    with patch(HTTPS_CONNECTION, return_value=_mock_connection(400)):
+    body = {"status": 400, "error": "The email address is invalid."}
+    with (
+        patch(HTTPS_CONNECTION, return_value=_mock_connection(400, body=body)),
+        patch(PUSHOVER) as mock_pushover,
+    ):
         assert check_email_domain("x@example.org", "example.org") == {"invalid": True}
+    mock_pushover.assert_not_called()
+
+
+@pytest.mark.parametrize(
+    "body",
+    [
+        {"status": 400, "error": "Missing or malformed path."},
+        {"status": 400},
+        "Bad Request",
+        [],
+    ],
+)
+def test_check_email_domain_fails_open_on_other_400s(body):
+    with (
+        patch(HTTPS_CONNECTION, return_value=_mock_connection(400, body=body)),
+        patch(PUSHOVER) as mock_pushover,
+    ):
+        assert check_email_domain("x@example.org", "example.org") is None
+    mock_pushover.assert_called_once()
 
 
 def test_check_email_domain_retries_once_when_rate_limited():

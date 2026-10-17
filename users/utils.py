@@ -30,6 +30,9 @@ ALERT_INTERVAL = 60 * 60
 # when lookups keep getting a 429, so a short cache is plenty.
 CREDITS_KEY = "usercheck:has_credits"
 CREDITS_CACHE_TIMEOUT = 60 * 10
+# The error UserCheck documents for its only 400: a malformed address. Any other
+# 400 points at our request (or an API change), which mustn't block the user.
+MALFORMED_EMAIL_ERROR = "The email address is invalid."
 
 
 def client_ip(request):
@@ -93,6 +96,14 @@ def _has_credits() -> bool | None:
     has_credits = remaining > 0
     cache.set(CREDITS_KEY, has_credits, timeout=CREDITS_CACHE_TIMEOUT)
     return has_credits
+
+
+def _is_malformed_email_error(body: bytes) -> bool:
+    try:
+        data = json.loads(body.decode("utf-8"))
+    except ValueError:
+        return False
+    return isinstance(data, dict) and data.get("error") == MALFORMED_EMAIL_ERROR
 
 
 def _parse_verdict(body: bytes) -> dict | None:
@@ -161,7 +172,7 @@ def _verdict_from_response(status: int, reason: str, body: bytes, cache_key: str
                 timeout = NO_MX_CACHE_TIMEOUT if verdict["mx"] is False else CACHE_TIMEOUT
                 cache.set(cache_key, verdict, timeout=timeout)
             return verdict
-        case 400:
+        case 400 if _is_malformed_email_error(body):
             # Specific to the address, so not cached.
             return {"invalid": True}
         case 429 if _has_credits():
@@ -171,7 +182,8 @@ def _verdict_from_response(status: int, reason: str, body: bytes, cache_key: str
             LOGGER.warning("UserCheck lookups are still rate-limited after a retry")
             return {"rate_limited": True}
         case _:
-            # Includes a 429 from an exhausted quota (or one /status couldn't explain).
+            # Includes a 429 from an exhausted quota (or one /status couldn't explain),
+            # and a 400 for anything other than a malformed address.
             _alert_usercheck_failure(f"{status} {reason}")
             return None
 
