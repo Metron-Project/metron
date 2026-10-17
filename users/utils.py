@@ -11,6 +11,9 @@ from django.core.cache import cache
 LOGGER = logging.getLogger(__name__)
 
 USERCHECK_HOST = "api.usercheck.com"
+# Lookups run inside the signup request, so keep this short: a healthy lookup
+# takes well under a second, and if it's slower we fail open anyway.
+REQUEST_TIMEOUT = 3
 # Verdicts are about the domain, not the mailbox, so one lookup covers every
 # address on it - caching them saves credits on the (metered) UserCheck plan.
 CACHE_PREFIX = "usercheck:domain"
@@ -54,7 +57,7 @@ def _usercheck_request(email: str) -> tuple[int, str, bytes]:
     conn = None
     try:
         # Without a timeout a stalled API blocks the gunicorn worker indefinitely.
-        conn = http.client.HTTPSConnection(USERCHECK_HOST, timeout=10)
+        conn = http.client.HTTPSConnection(USERCHECK_HOST, timeout=REQUEST_TIMEOUT)
         # Encode the address: a quoted local part may legally contain "/", "?", "#"
         # or spaces, which would otherwise alter or break the path.
         path = f"/email/{urllib.parse.quote(email, safe='')}"
