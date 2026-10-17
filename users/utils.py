@@ -36,10 +36,15 @@ def _alert_usercheck_failure(reason: str) -> None:
     # cache.add only succeeds once per interval, so an outage (or running out of
     # credits) sends one notification rather than one per signup attempt.
     if cache.add(ALERT_KEY, True, timeout=ALERT_INTERVAL):
-        send_pushover(
-            f"UserCheck email lookups are failing ({reason}). "
-            "Signups are being allowed without the remote check."
-        )
+        # This runs when the network is likely unhealthy, so Pushover may be
+        # failing too - that mustn't turn the caller's fail-open into a 500.
+        try:
+            send_pushover(
+                f"UserCheck email lookups are failing ({reason}). "
+                "Signups are being allowed without the remote check."
+            )
+        except http.client.HTTPException, OSError:
+            LOGGER.exception("Failed to send UserCheck failure alert")
 
 
 def _usercheck_request(email: str) -> tuple[int, str, bytes]:
@@ -59,6 +64,28 @@ def _usercheck_request(email: str) -> tuple[int, str, bytes]:
             conn.close()
 
 
+def _parse_verdict(body: bytes) -> dict | None:
+    try:
+        data = json.loads(body.decode("utf-8"))
+    except ValueError as e:
+        _alert_usercheck_failure(f"invalid JSON: {e}")
+        return None
+    if not isinstance(data, dict):
+        _alert_usercheck_failure(f"unexpected response: {type(data).__name__}")
+        return None
+    did_you_mean = data.get("did_you_mean")
+    if not isinstance(did_you_mean, str):
+        did_you_mean = None
+    return {
+        "disposable": bool(data.get("disposable")),
+        "spam": bool(data.get("spam")),
+        "relay_domain": bool(data.get("relay_domain")),
+        # None means UserCheck couldn't tell, which isn't grounds to reject.
+        "mx": data.get("mx"),
+        "suggested_domain": did_you_mean.rsplit("@", 1)[-1] if did_you_mean else None,
+    }
+
+
 def check_email_domain(email: str) -> dict | None:
     """Look up ``email`` with UserCheck and return a verdict for its domain.
 
@@ -67,6 +94,10 @@ def check_email_domain(email: str) -> dict | None:
     rejects as malformed. Returns None when no answer could be had (network error,
     out of credits, ...), leaving the caller to decide whether to fail open.
     """
+    if not settings.USERCHECK_API_KEY:
+        LOGGER.warning("USERCHECK_API_KEY is not set; skipping UserCheck lookup")
+        return None
+
     domain = email.rsplit("@", 1)[-1].lower()
     cache_key = f"{CACHE_PREFIX}:{domain}"
     if (cached := cache.get(cache_key)) is not None:
@@ -83,21 +114,9 @@ def check_email_domain(email: str) -> dict | None:
 
     match status:
         case 200:
-            try:
-                data = json.loads(body.decode("utf-8"))
-            except ValueError as e:
-                _alert_usercheck_failure(f"invalid JSON: {e}")
-                return None
-            did_you_mean = data.get("did_you_mean")
-            verdict = {
-                "disposable": bool(data.get("disposable")),
-                "spam": bool(data.get("spam")),
-                "relay_domain": bool(data.get("relay_domain")),
-                # None means UserCheck couldn't tell, which isn't grounds to reject.
-                "mx": data.get("mx"),
-                "suggested_domain": did_you_mean.rsplit("@", 1)[-1] if did_you_mean else None,
-            }
-            cache.set(cache_key, verdict, timeout=CACHE_TIMEOUT)
+            verdict = _parse_verdict(body)
+            if verdict is not None:
+                cache.set(cache_key, verdict, timeout=CACHE_TIMEOUT)
             return verdict
         case 400:
             # Specific to the address, so not cached.
@@ -113,17 +132,20 @@ def send_pushover(message):
     user_keys = [key.strip() for key in settings.PUSHOVER_USER_KEY.split(",") if key.strip()]
     for user_key in user_keys:
         context = ssl.create_default_context()
-        conn = http.client.HTTPSConnection("api.pushover.net:443", context=context)
-        conn.request(
-            "POST",
-            "/1/messages.json",
-            urllib.parse.urlencode(
-                {
-                    "token": settings.PUSHOVER_TOKEN,
-                    "user": user_key,
-                    "message": message,
-                }
-            ),
-            {"Content-type": "application/x-www-form-urlencoded"},
-        )
-        conn.getresponse()
+        conn = http.client.HTTPSConnection("api.pushover.net:443", context=context, timeout=10)
+        try:
+            conn.request(
+                "POST",
+                "/1/messages.json",
+                urllib.parse.urlencode(
+                    {
+                        "token": settings.PUSHOVER_TOKEN,
+                        "user": user_key,
+                        "message": message,
+                    }
+                ),
+                {"Content-type": "application/x-www-form-urlencoded"},
+            )
+            conn.getresponse()
+        finally:
+            conn.close()

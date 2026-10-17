@@ -24,6 +24,11 @@ USERCHECK_BODY = {
 }
 
 
+@pytest.fixture(autouse=True)
+def usercheck_api_key(settings):
+    settings.USERCHECK_API_KEY = "test-key"
+
+
 def _mock_connection(*statuses, body=None):
     """A connection whose successive responses have the given statuses (default: one 200)."""
     conn = MagicMock()
@@ -154,3 +159,37 @@ def test_check_email_domain_returns_none_on_network_error():
 def test_check_email_domain_returns_none_when_connection_fails():
     with patch(HTTPS_CONNECTION, side_effect=OSError("unreachable")):
         assert check_email_domain("x@example.org") is None
+
+
+def test_check_email_domain_skips_lookup_without_api_key(settings):
+    settings.USERCHECK_API_KEY = ""
+    with patch(HTTPS_CONNECTION) as mock_conn, patch(PUSHOVER) as mock_pushover:
+        assert check_email_domain("x@example.org") is None
+    mock_conn.assert_not_called()
+    mock_pushover.assert_not_called()
+
+
+def test_check_email_domain_fails_open_when_alert_fails():
+    with (
+        patch(HTTPS_CONNECTION, side_effect=OSError("unreachable")),
+        patch(PUSHOVER, side_effect=OSError("pushover unreachable")) as mock_pushover,
+    ):
+        assert check_email_domain("x@example.org") is None
+    mock_pushover.assert_called_once()
+
+
+@pytest.mark.parametrize("body", [[], None, "ok"])
+def test_check_email_domain_returns_none_on_unexpected_response_shape(body):
+    conn = _mock_connection()
+    conn.getresponse.side_effect = None
+    conn.getresponse.return_value.status = 200
+    conn.getresponse.return_value.read.return_value = json.dumps(body).encode()
+    with patch(HTTPS_CONNECTION, return_value=conn), patch(PUSHOVER) as mock_pushover:
+        assert check_email_domain("x@example.org") is None
+    mock_pushover.assert_called_once()
+
+
+def test_check_email_domain_ignores_non_string_suggestion():
+    body = {**USERCHECK_BODY, "did_you_mean": {"email": "x@gmail.com"}}
+    with patch(HTTPS_CONNECTION, return_value=_mock_connection(body=body)):
+        assert check_email_domain("x@example.org")["suggested_domain"] is None
