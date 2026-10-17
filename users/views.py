@@ -220,6 +220,19 @@ def _create_account(request, form):
     return True
 
 
+def _rerender_signup(request, message):
+    """Show the signup page again with ``message``, keeping the username and email.
+
+    The form is unbound: displaying a bound form's errors would validate it, which
+    looks the email up with UserCheck - the lookup a failed captcha mustn't reach.
+    """
+    form = CustomUserCreationForm(
+        initial={field: request.POST.get(field, "") for field in ("username", "email")}
+    )
+    messages.error(request, message)
+    return render(request, "registration/signup.html", {"form": form})
+
+
 def signup(request):
     settings_obj = SignupSettings.get_solo()
     if not settings_obj.signups_enabled:
@@ -234,31 +247,24 @@ def signup(request):
             _notify_signup_rate_limit_hit(request)
             return render(request, "registration/signup_rate_limited.html", status=429)
 
-        form = CustomUserCreationForm(request.POST)
         # Verify the captcha before validating the form: validation looks the email
         # up with UserCheck, so checking first makes every (metered) lookup cost a
         # solved captcha rather than just a POST.
         result = get_recaptcha_auth(request)
 
         if HCAPTCHA_UNAVAILABLE in result.get("error-codes", []):
-            # An hCaptcha outage, not a failed check: tell the user to retry
-            # rather than falling through to "activation email sent". Re-render an
-            # unbound form, since displaying a bound one's errors would validate it.
-            form = CustomUserCreationForm(
-                initial={field: request.POST.get(field, "") for field in ("username", "email")}
-            )
-            messages.error(
+            # An hCaptcha outage, not a failed check, so the user can just retry.
+            return _rerender_signup(
                 request,
                 _(
                     "We were unable to verify the captcha right now. "
                     "Please try again in a few minutes."
                 ),
             )
-            return render(request, "registration/signup.html", {"form": form})
-
         if not result["success"]:
-            return redirect("account_activation_sent")
+            return _rerender_signup(request, _("Please complete the captcha and try again."))
 
+        form = CustomUserCreationForm(request.POST)
         if form.is_valid() and _create_account(request, form):
             return redirect("account_activation_sent")
     else:

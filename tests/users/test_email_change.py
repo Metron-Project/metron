@@ -153,6 +153,17 @@ class TestEmailChangeRequest:
         mock_check.assert_called_once_with("x@example.org", "example.org")
         assert resp.context["form"].errors["email"]
 
+    @pytest.mark.parametrize("password", ["", "not-my-password"])
+    def test_lookup_waits_for_correct_password(self, auto_login_user, password):
+        client, user = auto_login_user()
+        with patch("users.forms.check_email_domain") as mock_check:
+            resp = client.post(
+                reverse("change_profile"),
+                _profile_data(user, email="x@example.org", current_password=password),
+            )
+        mock_check.assert_not_called()
+        assert resp.context["form"].errors["current_password"]
+
     def test_send_failure_saves_nothing(self, auto_login_user, test_password, test_email):
         client, user = auto_login_user()
         with patch(

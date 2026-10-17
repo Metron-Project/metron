@@ -39,11 +39,15 @@ EMAIL_DOMAIN_BLOCKLIST = {
 EMAIL_DOMAIN_ALLOWLIST = {"gmail.com", "yahoo.com", "proton.me"}
 
 
-def validate_email_allowed(email: str, exclude_pk: int | None = None) -> None:
+def validate_email_allowed(
+    email: str, exclude_pk: int | None = None, *, remote: bool = True
+) -> None:
     """Raise ValidationError unless ``email`` may be used for an account.
 
     Shared by signup and email changes so a profile edit can't bypass the
     signup checks. ``exclude_pk`` skips the user changing their own address.
+    With ``remote=False`` only the local checks run, and the caller must call
+    validate_email_remotely() itself once it's ok to spend a (metered) lookup.
     """
     others = CustomUser.objects.filter(email__iexact=email)
     if exclude_pk is not None:
@@ -52,17 +56,18 @@ def validate_email_allowed(email: str, exclude_pk: int | None = None) -> None:
         LOGGER.warning("'%s' already exists", email)
         raise ValidationError(_("Email already exists"))
 
-    # Split on the last "@": a quoted local part may itself legally contain one.
-    local, sep, domain = email.rpartition("@")
-    if not sep or not local or not domain:
-        LOGGER.warning("'%s' has no local part or domain", email)
-        raise ValidationError(_("Email address is not valid."))
-    domain = domain.lower()
-
+    _local, domain = _split_email(email)
     if _is_blocklisted(domain):
         LOGGER.warning("'%s' is a temporary email address.", email)
         raise ValidationError(_("Temporary email addresses are not allowed."))
 
+    if remote:
+        validate_email_remotely(email)
+
+
+def validate_email_remotely(email: str) -> None:
+    """Raise ValidationError if UserCheck says ``email`` can't be used for an account."""
+    local, domain = _split_email(email)
     if domain in EMAIL_DOMAIN_ALLOWLIST:
         return
 
@@ -93,6 +98,16 @@ def validate_email_allowed(email: str, exclude_pk: int | None = None) -> None:
                 _("Did you mean %(suggestion)s?"), params={"suggestion": f"{local}@{suggested}"}
             )
         raise ValidationError(_("Email address is not valid."))
+
+
+def _split_email(email: str) -> tuple[str, str]:
+    """Split ``email`` into its local part and lowercased domain."""
+    # Split on the last "@": a quoted local part may itself legally contain one.
+    local, sep, domain = email.rpartition("@")
+    if not sep or not local or not domain:
+        LOGGER.warning("'%s' has no local part or domain", email)
+        raise ValidationError(_("Email address is not valid."))
+    return local, domain.lower()
 
 
 def _is_blocklisted(domain: str) -> bool:
@@ -168,7 +183,8 @@ class CustomUserChangeForm(UserChangeForm):
     def clean_email(self):
         email = self.cleaned_data["email"]
         if email != self.original_email:
-            validate_email_allowed(email, exclude_pk=self.instance.pk)
+            # The UserCheck lookup waits for clean(), once the password checks out.
+            validate_email_allowed(email, exclude_pk=self.instance.pk, remote=False)
         return email
 
     def clean(self):
@@ -189,6 +205,13 @@ class CustomUserChangeForm(UserChangeForm):
                     "current_password",
                     _("Enter your current password to change your email address."),
                 )
+            else:
+                # Only spend a (metered) UserCheck lookup on a confirmed password, so
+                # a logged-in session alone can't be used to burn through credits.
+                try:
+                    validate_email_remotely(self.pending_email)
+                except ValidationError as e:
+                    self.add_error("email", e)
         return cleaned_data
 
     def save(self, commit=True):

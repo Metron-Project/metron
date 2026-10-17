@@ -252,14 +252,17 @@ def test_signup_hcaptcha_unavailable_shows_error(db, client):
 
 def test_signup_failed_captcha_skips_email_lookup(db, client):
     user_count_before = CustomUser.objects.count()
+    payload = _signup_payload("bot")
     with (
         patch("users.views.get_recaptcha_auth", return_value={"success": False}),
         patch("users.forms.check_email_domain") as mock_check,
     ):
-        resp = client.post(reverse("signup"), _signup_payload("bot"), REMOTE_ADDR=_unique_ip())
+        resp = client.post(reverse("signup"), payload, REMOTE_ADDR=_unique_ip())
+        # Rendering the form must not validate it either.
+        content = resp.content.decode()
 
-    assert resp.status_code == HTTP_REDIRECT_FOUND_CODE
     mock_check.assert_not_called()
+    assert payload["email"] in content
     assert CustomUser.objects.count() == user_count_before
 
 
@@ -289,13 +292,17 @@ def test_signup_invalid_form_after_captcha_shows_errors(db, client):
     assert CustomUser.objects.count() == user_count_before
 
 
-def test_signup_failed_hcaptcha_still_redirects_silently(db, client):
+def test_signup_failed_hcaptcha_asks_to_complete_captcha(db, client):
     user_count_before = CustomUser.objects.count()
     failed = {"success": False, "error-codes": ["invalid-input-response"]}
     with patch("users.views.get_recaptcha_auth", return_value=failed):
         resp = client.post(reverse("signup"), _signup_payload("bot"), REMOTE_ADDR=_unique_ip())
 
-    assert resp.status_code == HTTP_REDIRECT_FOUND_CODE
+    # Not the "activation email sent" redirect: no account was created, so a real
+    # user would otherwise wait for an email that never comes.
+    assert resp.status_code == HTML_OK_CODE
+    assertTemplateUsed(resp, "registration/signup.html")
+    assert "Please complete the captcha and try again." in resp.content.decode()
     assert CustomUser.objects.count() == user_count_before
 
 
