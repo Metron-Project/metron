@@ -26,6 +26,10 @@ NO_MX_CACHE_TIMEOUT = 60 * 60
 RETRY_DELAY = 1
 ALERT_KEY = "usercheck:alerted"
 ALERT_INTERVAL = 60 * 60
+# Whether the plan has credits left, from the /status endpoint - only consulted
+# when lookups keep getting a 429, so a short cache is plenty.
+CREDITS_KEY = "usercheck:has_credits"
+CREDITS_CACHE_TIMEOUT = 60 * 10
 
 
 def client_ip(request):
@@ -53,14 +57,11 @@ def _alert_usercheck_failure(reason: str) -> None:
             LOGGER.exception("Failed to send UserCheck failure alert")
 
 
-def _usercheck_request(email: str) -> tuple[int, str, bytes]:
+def _usercheck_request(path: str) -> tuple[int, str, bytes]:
     conn = None
     try:
         # Without a timeout a stalled API blocks the gunicorn worker indefinitely.
         conn = http.client.HTTPSConnection(USERCHECK_HOST, timeout=REQUEST_TIMEOUT)
-        # Encode the address: a quoted local part may legally contain "/", "?", "#"
-        # or spaces, which would otherwise alter or break the path.
-        path = f"/email/{urllib.parse.quote(email, safe='')}"
         headers = {"Authorization": f"Bearer {settings.USERCHECK_API_KEY}"}
         conn.request("GET", path, headers=headers)
         res = conn.getresponse()
@@ -68,6 +69,30 @@ def _usercheck_request(email: str) -> tuple[int, str, bytes]:
     finally:
         if conn is not None:
             conn.close()
+
+
+def _has_credits() -> bool | None:
+    """Whether the UserCheck plan has credits left, or None if that can't be told.
+
+    The /email endpoint answers 429 both for the per-second limit and for an
+    exhausted monthly quota, with identical bodies; /status tells them apart.
+    """
+    if (cached := cache.get(CREDITS_KEY)) is not None:
+        return cached
+    try:
+        status, reason, body = _usercheck_request("/status")
+        data = json.loads(body.decode("utf-8")) if status == 200 else None  # noqa: PLR2004
+    except (http.client.HTTPException, OSError, ValueError) as e:
+        LOGGER.warning("UserCheck status lookup failed: %s: %s", type(e).__name__, e)
+        return None
+    usage = data.get("usage") if isinstance(data, dict) else None
+    remaining = usage.get("remaining") if isinstance(usage, dict) else None
+    if not isinstance(remaining, int | float):
+        LOGGER.warning("UserCheck status lookup failed: %s %s", status, reason)
+        return None
+    has_credits = remaining > 0
+    cache.set(CREDITS_KEY, has_credits, timeout=CREDITS_CACHE_TIMEOUT)
+    return has_credits
 
 
 def _parse_verdict(body: bytes) -> dict | None:
@@ -100,8 +125,10 @@ def check_email_domain(email: str, domain: str) -> dict | None:
 
     The verdict has ``disposable``, ``spam``, ``relay_domain``, ``mx`` and
     ``suggested_domain`` keys, or is ``{"invalid": True}`` for an address UserCheck
-    rejects as malformed. Returns None when no answer could be had (network error,
-    out of credits, ...), leaving the caller to decide whether to fail open.
+    rejects as malformed, or ``{"rate_limited": True}`` when lookups are still being
+    throttled after a retry although the plan has credits left. Returns None when no
+    answer could be had (network error, out of credits, ...), leaving the caller to
+    decide whether to fail open.
     """
     if not settings.USERCHECK_API_KEY:
         LOGGER.warning("USERCHECK_API_KEY is not set; skipping UserCheck lookup")
@@ -111,15 +138,22 @@ def check_email_domain(email: str, domain: str) -> dict | None:
     if (cached := cache.get(cache_key)) is not None:
         return cached
 
+    # Encode the address: a quoted local part may legally contain "/", "?", "#"
+    # or spaces, which would otherwise alter or break the path.
+    path = f"/email/{urllib.parse.quote(email, safe='')}"
     try:
-        status, reason, body = _usercheck_request(email)
+        status, reason, body = _usercheck_request(path)
         if status == 429:  # noqa: PLR2004
             time.sleep(RETRY_DELAY)
-            status, reason, body = _usercheck_request(email)
+            status, reason, body = _usercheck_request(path)
     except (http.client.HTTPException, OSError) as e:
         _alert_usercheck_failure(f"{type(e).__name__}: {e}")
         return None
 
+    return _verdict_from_response(status, reason, body, cache_key)
+
+
+def _verdict_from_response(status: int, reason: str, body: bytes, cache_key: str) -> dict | None:
     match status:
         case 200:
             verdict = _parse_verdict(body)
@@ -130,7 +164,14 @@ def check_email_domain(email: str, domain: str) -> dict | None:
         case 400:
             # Specific to the address, so not cached.
             return {"invalid": True}
+        case 429 if _has_credits():
+            # Credits remain, so this is the per-second limit rather than an exhausted
+            # quota. Failing open here would let anyone who can trigger it (by flooding
+            # lookups) skip the check, so the caller asks the user to retry instead.
+            LOGGER.warning("UserCheck lookups are still rate-limited after a retry")
+            return {"rate_limited": True}
         case _:
+            # Includes a 429 from an exhausted quota (or one /status couldn't explain).
             _alert_usercheck_failure(f"{status} {reason}")
             return None
 

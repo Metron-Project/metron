@@ -140,15 +140,87 @@ def test_check_email_domain_retries_once_when_rate_limited():
     mock_pushover.assert_not_called()
 
 
-def test_check_email_domain_alerts_when_still_rate_limited():
+def _mock_status(remaining=None, status=200):
+    """A connection answering the /status endpoint with ``remaining`` credits."""
+    conn = MagicMock()
+    response = conn.getresponse.return_value
+    response.status = status
+    response.reason = "OK" if status == 200 else "Error"
+    response.read.return_value = json.dumps({"usage": {"remaining": remaining}}).encode()
+    return conn
+
+
+def test_check_email_domain_rejects_when_rate_limited_with_credits_left():
+    status_conn = _mock_status(remaining=500)
     with (
-        patch(HTTPS_CONNECTION, side_effect=[_mock_connection(429), _mock_connection(429)]),
+        patch(
+            HTTPS_CONNECTION,
+            side_effect=[_mock_connection(429), _mock_connection(429), status_conn],
+        ),
+        patch(SLEEP),
+        patch(PUSHOVER) as mock_pushover,
+    ):
+        assert check_email_domain("x@example.org", "example.org") == {"rate_limited": True}
+
+    assert status_conn.request.call_args.args[:2] == ("GET", "/status")
+    mock_pushover.assert_not_called()
+
+
+@pytest.mark.parametrize(
+    "status_conn",
+    [
+        _mock_status(remaining=0),  # quota exhausted
+        _mock_status(status=500),  # /status itself failing
+        _mock_status(remaining="lots"),  # unexpected body
+    ],
+)
+def test_check_email_domain_alerts_when_rate_limited_without_known_credits(status_conn):
+    with (
+        patch(
+            HTTPS_CONNECTION,
+            side_effect=[_mock_connection(429), _mock_connection(429), status_conn],
+        ),
         patch(SLEEP),
         patch(PUSHOVER) as mock_pushover,
     ):
         assert check_email_domain("x@example.org", "example.org") is None
 
     mock_pushover.assert_called_once()
+
+
+def test_check_email_domain_alerts_when_status_lookup_errors():
+    with (
+        patch(
+            HTTPS_CONNECTION,
+            side_effect=[_mock_connection(429), _mock_connection(429), OSError("unreachable")],
+        ),
+        patch(SLEEP),
+        patch(PUSHOVER) as mock_pushover,
+    ):
+        assert check_email_domain("x@example.org", "example.org") is None
+
+    mock_pushover.assert_called_once()
+
+
+def test_check_email_domain_caches_credit_status():
+    with (
+        patch(
+            HTTPS_CONNECTION,
+            side_effect=[
+                _mock_connection(429),
+                _mock_connection(429),
+                _mock_status(remaining=500),
+                # The second lookup reuses the cached credit status: no /status call.
+                _mock_connection(429),
+                _mock_connection(429),
+            ],
+        ) as mock_conn,
+        patch(SLEEP),
+    ):
+        assert check_email_domain("x@example.org", "example.org") == {"rate_limited": True}
+        assert check_email_domain("y@example.net", "example.net") == {"rate_limited": True}
+
+    assert mock_conn.call_count == 5
 
 
 def test_check_email_domain_alerts_at_most_once_per_interval():

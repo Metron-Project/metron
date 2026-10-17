@@ -6524,6 +6524,14 @@ msgstr "Gli indirizzi email di inoltro non sono ammessi."
 msgid "Did you mean %(suggestion)s?"
 msgstr "Intendevi %(suggestion)s?"
 
+#: users/forms.py
+msgid ""
+"We couldn't verify your email address right now. Please try again in a "
+"moment."
+msgstr ""
+"Al momento non è stato possibile verificare il tuo indirizzo email. Riprova "
+"tra qualche istante."
+
 #: users/forms.py:78
 msgid "Required. Enter a valid email address."
 msgstr "Obbligatorio. Inserisci un indirizzo email valido."

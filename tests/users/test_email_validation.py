@@ -90,6 +90,13 @@ def test_malformed_address_is_rejected():
     assert message == "Email address is not valid."
 
 
+def test_rate_limited_lookup_asks_user_to_retry():
+    message, _mock = _error("x@example.org", verdict={"rate_limited": True})
+    assert message == (
+        "We couldn't verify your email address right now. Please try again in a moment."
+    )
+
+
 def test_address_without_domain_is_rejected():
     message, mock_check = _error("no-at-sign")
     assert message == "Email address is not valid."

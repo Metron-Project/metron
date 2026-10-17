@@ -72,6 +72,11 @@ def validate_email_allowed(email: str, exclude_pk: int | None = None) -> None:
         # check_email_domain has alerted us that the remote check is down.
         LOGGER.warning("Allowing '%s' without a UserCheck verdict", email)
         return
+    if verdict.get("rate_limited"):
+        LOGGER.warning("'%s' couldn't be checked: UserCheck is rate-limiting lookups", email)
+        raise ValidationError(
+            _("We couldn't verify your email address right now. Please try again in a moment.")
+        )
     if verdict.get("invalid"):
         LOGGER.warning("'%s' is not a valid email address.", email)
         raise ValidationError(_("Email address is not valid."))

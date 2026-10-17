@@ -240,7 +240,7 @@ def test_signup_hcaptcha_unavailable_shows_error(db, client):
 
         assert resp.status_code == HTML_OK_CODE
         assertTemplateUsed(resp, "registration/signup.html")
-        assert "unable to verify the captcha" in str(resp.context["form"].non_field_errors())
+        assert "unable to verify the captcha" in resp.content.decode()
         assert CustomUser.objects.count() == user_count_before
 
         # The outage doesn't count against the IP limit, so a retry still works.
@@ -248,6 +248,45 @@ def test_signup_hcaptcha_unavailable_shows_error(db, client):
             resp = client.post(reverse("signup"), _signup_payload("retry"), REMOTE_ADDR=ip)
         assert resp.status_code == HTTP_REDIRECT_FOUND_CODE
         assert CustomUser.objects.count() == user_count_before + 1
+
+
+def test_signup_failed_captcha_skips_email_lookup(db, client):
+    user_count_before = CustomUser.objects.count()
+    with (
+        patch("users.views.get_recaptcha_auth", return_value={"success": False}),
+        patch("users.forms.check_email_domain") as mock_check,
+    ):
+        resp = client.post(reverse("signup"), _signup_payload("bot"), REMOTE_ADDR=_unique_ip())
+
+    assert resp.status_code == HTTP_REDIRECT_FOUND_CODE
+    mock_check.assert_not_called()
+    assert CustomUser.objects.count() == user_count_before
+
+
+def test_signup_hcaptcha_unavailable_skips_email_lookup(db, client):
+    unavailable = {"success": False, "error-codes": [HCAPTCHA_UNAVAILABLE]}
+    payload = _signup_payload("outage-lookup")
+    with (
+        patch("users.views.get_recaptcha_auth", return_value=unavailable),
+        patch("users.forms.check_email_domain") as mock_check,
+    ):
+        resp = client.post(reverse("signup"), payload, REMOTE_ADDR=_unique_ip())
+        # Rendering the form's errors must not validate it either.
+        content = resp.content.decode()
+
+    mock_check.assert_not_called()
+    assert payload["email"] in content
+
+
+def test_signup_invalid_form_after_captcha_shows_errors(db, client):
+    user_count_before = CustomUser.objects.count()
+    payload = {**_signup_payload("mismatch"), "password2": "something-else-entirely-2"}
+    with patch("users.views.get_recaptcha_auth", return_value={"success": True}):
+        resp = client.post(reverse("signup"), payload, REMOTE_ADDR=_unique_ip())
+
+    assert resp.status_code == HTML_OK_CODE
+    assert resp.context["form"].errors["password2"]
+    assert CustomUser.objects.count() == user_count_before
 
 
 def test_signup_failed_hcaptcha_still_redirects_silently(db, client):
