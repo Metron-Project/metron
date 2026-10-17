@@ -35,6 +35,20 @@ def run_cache_bumps_immediately():
 
 
 @pytest.fixture(autouse=True)
+def block_pushover():
+    """Never send real Pushover notifications from tests. Callers import
+    send_pushover by name, so each import site is patched; tests that assert on
+    it re-patch the same target, and the inner patch takes precedence."""
+    with (
+        patch("users.utils.send_pushover"),
+        patch("users.views.send_pushover"),
+        patch("users.management.commands.sync_opencollective_donors.send_pushover"),
+        patch("api.management.commands.notify_throttled_clients.send_pushover"),
+    ):
+        yield
+
+
+@pytest.fixture(autouse=True)
 def isolated_login_throttle():
     """Give each test its own failed-login counters. Tests share the real Redis
     cache, so otherwise wrong-password attempts from the test client's fixed IP
