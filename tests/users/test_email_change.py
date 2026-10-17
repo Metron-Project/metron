@@ -150,7 +150,7 @@ class TestEmailChangeRequest:
                 reverse("change_profile"),
                 _profile_data(user, email="x@example.org", current_password=test_password),
             )
-        mock_check.assert_called_once_with("x@example.org")
+        mock_check.assert_called_once_with("x@example.org", "example.org")
         assert resp.context["form"].errors["email"]
 
     def test_send_failure_saves_nothing(self, auto_login_user, test_password, test_email):

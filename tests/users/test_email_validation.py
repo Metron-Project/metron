@@ -52,7 +52,13 @@ def test_allowlisted_domain_skips_lookup():
 def test_clean_verdict_is_allowed():
     message, mock_check = _error("x@example.org")
     assert message is None
-    mock_check.assert_called_once_with("x@example.org")
+    mock_check.assert_called_once_with("x@example.org", "example.org")
+
+
+def test_lookup_gets_normalized_domain():
+    message, mock_check = _error("x@Example.ORG")
+    assert message is None
+    mock_check.assert_called_once_with("x@Example.ORG", "example.org")
 
 
 def test_fails_open_without_verdict():

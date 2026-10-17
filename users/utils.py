@@ -92,8 +92,11 @@ def _parse_verdict(body: bytes) -> dict | None:
     }
 
 
-def check_email_domain(email: str) -> dict | None:
+def check_email_domain(email: str, domain: str) -> dict | None:
     """Look up ``email`` with UserCheck and return a verdict for its domain.
+
+    ``domain`` is the caller's already-normalized (lowercased) domain of ``email``,
+    used as the cache key so it matches what the caller checked its blocklists with.
 
     The verdict has ``disposable``, ``spam``, ``relay_domain``, ``mx`` and
     ``suggested_domain`` keys, or is ``{"invalid": True}`` for an address UserCheck
@@ -104,7 +107,6 @@ def check_email_domain(email: str) -> dict | None:
         LOGGER.warning("USERCHECK_API_KEY is not set; skipping UserCheck lookup")
         return None
 
-    domain = email.rsplit("@", 1)[-1].lower()
     cache_key = f"{CACHE_PREFIX}:{domain}"
     if (cached := cache.get(cache_key)) is not None:
         return cached

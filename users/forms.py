@@ -66,7 +66,7 @@ def validate_email_allowed(email: str, exclude_pk: int | None = None) -> None:
     if domain in EMAIL_DOMAIN_ALLOWLIST:
         return
 
-    verdict = check_email_domain(email)
+    verdict = check_email_domain(email, domain)
     if verdict is None:
         # Fail open: the address already passed the local blocklists, and
         # check_email_domain has alerted us that the remote check is down.
