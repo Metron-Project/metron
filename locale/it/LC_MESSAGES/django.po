@@ -6515,9 +6515,14 @@ msgstr "L'email esiste già"
 msgid "Temporary email addresses are not allowed."
 msgstr "Gli indirizzi email temporanei non sono ammessi."
 
-#: users/forms.py:61
-msgid "Error creating account. Contact the site administrator."
-msgstr "Errore nella creazione dell'account. Contatta l'amministratore del sito."
+#: users/forms.py
+msgid "Email forwarding addresses are not allowed."
+msgstr "Gli indirizzi email di inoltro non sono ammessi."
+
+#: users/forms.py
+#, python-format
+msgid "Did you mean %(suggestion)s?"
+msgstr "Intendevi %(suggestion)s?"
 
 #: users/forms.py:78
 msgid "Required. Enter a valid email address."

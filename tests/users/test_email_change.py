@@ -15,7 +15,7 @@ from users.views import EMAIL_CHANGE_SALT
 
 HTML_OK_CODE = 200
 HTTP_REDIRECT_FOUND_CODE = 302
-NEW_EMAIL = "new-address@gmail.com"  # Allowlisted domain: skips the RapidAPI check.
+NEW_EMAIL = "new-address@gmail.com"  # Allowlisted domain: skips the UserCheck lookup.
 
 
 def _profile_data(user, **overrides):
@@ -138,7 +138,13 @@ class TestEmailChangeRequest:
 
     def test_runs_domain_check_for_unlisted_domains(self, auto_login_user, test_password):
         client, user = auto_login_user()
-        blocked = {"block": True, "disposable": True}
+        blocked = {
+            "disposable": True,
+            "spam": False,
+            "relay_domain": False,
+            "mx": True,
+            "suggested_domain": None,
+        }
         with patch("users.forms.check_email_domain", return_value=blocked) as mock_check:
             resp = client.post(
                 reverse("change_profile"),

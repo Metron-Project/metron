@@ -1,6 +1,7 @@
 import logging
 from typing import Any
 
+from disposable_email_domains import blocklist as DISPOSABLE_DOMAINS  # noqa: N812
 from django.contrib.admin.forms import AdminAuthenticationForm
 from django.contrib.auth.forms import AuthenticationForm, UserChangeForm, UserCreationForm
 from django.core.exceptions import ValidationError
@@ -20,7 +21,8 @@ from users.utils import check_email_domain
 
 LOGGER = logging.getLogger(__name__)
 
-# Providers that hand out temporary email addresses.
+# Providers that hand out temporary email addresses, on top of the
+# disposable-email-domains package's list.
 EMAIL_DOMAIN_BLOCKLIST = {
     "cloudinbox.top",
     "duck.com",
@@ -50,26 +52,52 @@ def validate_email_allowed(email: str, exclude_pk: int | None = None) -> None:
         LOGGER.warning("'%s' already exists", email)
         raise ValidationError(_("Email already exists"))
 
-    try:
-        _unused, domain = email.split("@")
-    except ValueError as exc:
-        LOGGER.warning("Email: %s | Error: %s", email, exc)
-        raise ValidationError(_("Email address is not valid.")) from exc
+    # Split on the last "@": a quoted local part may itself legally contain one.
+    local, sep, domain = email.rpartition("@")
+    if not sep or not local or not domain:
+        LOGGER.warning("'%s' has no local part or domain", email)
+        raise ValidationError(_("Email address is not valid."))
+    domain = domain.lower()
 
-    if domain in EMAIL_DOMAIN_BLOCKLIST:
+    if _is_blocklisted(domain):
         LOGGER.warning("'%s' is a temporary email address.", email)
         raise ValidationError(_("Temporary email addresses are not allowed."))
 
-    if domain not in EMAIL_DOMAIN_ALLOWLIST:
-        resp = check_email_domain(email)
-        if resp is None:
-            raise ValidationError(_("Error creating account. Contact the site administrator."))
-        if resp["block"] is True:
-            if resp["disposable"] is True:
-                LOGGER.warning("'%s' is a temporary email address.", email)
-                raise ValidationError(_("Temporary email addresses are not allowed."))
-            LOGGER.warning("'%s' is not a valid email address.", email)
-            raise ValidationError(_("Email address is not valid."))
+    if domain in EMAIL_DOMAIN_ALLOWLIST:
+        return
+
+    verdict = check_email_domain(email)
+    if verdict is None:
+        # Fail open: the address already passed the local blocklists, and
+        # check_email_domain has alerted us that the remote check is down.
+        LOGGER.warning("Allowing '%s' without a UserCheck verdict", email)
+        return
+    if verdict.get("invalid"):
+        LOGGER.warning("'%s' is not a valid email address.", email)
+        raise ValidationError(_("Email address is not valid."))
+    if verdict["disposable"] or verdict["spam"]:
+        LOGGER.warning("'%s' is a temporary or spam email address.", email)
+        raise ValidationError(_("Temporary email addresses are not allowed."))
+    if verdict["relay_domain"]:
+        LOGGER.warning("'%s' is an email forwarding address.", email)
+        raise ValidationError(_("Email forwarding addresses are not allowed."))
+    if verdict["mx"] is False:
+        LOGGER.warning("'%s' can't receive mail.", email)
+        if suggested := verdict["suggested_domain"]:
+            raise ValidationError(
+                _("Did you mean %(suggestion)s?"), params={"suggestion": f"{local}@{suggested}"}
+            )
+        raise ValidationError(_("Email address is not valid."))
+
+
+def _is_blocklisted(domain: str) -> bool:
+    """Whether ``domain``, or any domain it's a subdomain of, is a known throwaway provider."""
+    labels = domain.split(".")
+    for i in range(len(labels) - 1):
+        candidate = ".".join(labels[i:])
+        if candidate in EMAIL_DOMAIN_BLOCKLIST or candidate in DISPOSABLE_DOMAINS:
+            return True
+    return False
 
 
 class CustomUserCreationForm(UserCreationForm):

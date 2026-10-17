@@ -14,7 +14,7 @@ from users.models import CustomUser
 HTML_OK_CODE = 200
 HTTP_REDIRECT_FOUND_CODE = 302
 LOCKED_TEXT = "Too many failed attempts"
-NEW_EMAIL = "new-address@gmail.com"  # Allowlisted domain: skips the RapidAPI check.
+NEW_EMAIL = "new-address@gmail.com"  # Allowlisted domain: skips the UserCheck lookup.
 
 
 def _login(client, username, password, ip="203.0.113.10"):
