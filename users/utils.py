@@ -15,6 +15,9 @@ USERCHECK_HOST = "api.usercheck.com"
 # address on it - caching them saves credits on the (metered) UserCheck plan.
 CACHE_PREFIX = "usercheck:domain"
 CACHE_TIMEOUT = 60 * 60 * 24 * 30
+# A missing MX record can be a passing DNS failure, and caching it for the full
+# period would block every address on the domain until it expired.
+NO_MX_CACHE_TIMEOUT = 60 * 60
 # The free plan allows 1 request/second, so a 429 is often just two lookups
 # landing in the same second; one retry after this delay covers that.
 RETRY_DELAY = 1
@@ -116,7 +119,8 @@ def check_email_domain(email: str) -> dict | None:
         case 200:
             verdict = _parse_verdict(body)
             if verdict is not None:
-                cache.set(cache_key, verdict, timeout=CACHE_TIMEOUT)
+                timeout = NO_MX_CACHE_TIMEOUT if verdict["mx"] is False else CACHE_TIMEOUT
+                cache.set(cache_key, verdict, timeout=timeout)
             return verdict
         case 400:
             # Specific to the address, so not cached.

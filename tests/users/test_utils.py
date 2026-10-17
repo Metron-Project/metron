@@ -4,8 +4,9 @@ import json
 from unittest.mock import MagicMock, patch
 
 import pytest
+from django.core.cache import cache
 
-from users.utils import check_email_domain
+from users.utils import CACHE_TIMEOUT, NO_MX_CACHE_TIMEOUT, check_email_domain
 
 HTTPS_CONNECTION = "users.utils.http.client.HTTPSConnection"
 SLEEP = "users.utils.time.sleep"
@@ -100,6 +101,20 @@ def test_check_email_domain_caches_verdict_per_domain():
 
     assert first == second
     mock_conn.assert_called_once()
+
+
+@pytest.mark.parametrize(
+    ("mx", "expected_timeout"),
+    [(True, CACHE_TIMEOUT), (None, CACHE_TIMEOUT), (False, NO_MX_CACHE_TIMEOUT)],
+)
+def test_check_email_domain_caches_missing_mx_briefly(mx, expected_timeout):
+    body = {**USERCHECK_BODY, "mx": mx}
+    with (
+        patch(HTTPS_CONNECTION, return_value=_mock_connection(body=body)),
+        patch.object(cache, "set") as mock_set,
+    ):
+        check_email_domain("x@example.org")
+    assert mock_set.call_args.kwargs["timeout"] == expected_timeout
 
 
 def test_check_email_domain_does_not_cache_failures():
