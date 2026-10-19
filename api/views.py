@@ -133,12 +133,6 @@ _series_issue_count = Coalesce(
     0,
 )
 
-# (sort_name, year_began) isn't unique -- e.g. two "Miles Morales: Spider-Man"
-# series began in 2019 -- and Postgres may return tied rows in a different
-# order per query, so paginated clients could see one twice and miss the
-# other. "id" makes the order total.
-_SERIES_LIST_ORDERING = ("sort_name", "year_began", "id")
-
 
 class ReadingListItemsPagination(PageNumberPagination):
     """Custom pagination for reading list items with 50 items per page."""
@@ -784,10 +778,8 @@ class PublisherViewSet(
         if cached is not None:
             return _mark_cache_status(Response(cached), hit=True)
 
-        queryset = (
-            publisher.series.select_related("series_type", "publisher")
-            .annotate(num_issues=_series_issue_count)
-            .order_by(*_SERIES_LIST_ORDERING)
+        queryset = publisher.series.select_related("series_type", "publisher").annotate(
+            num_issues=_series_issue_count
         )
         page = self.paginate_queryset(queryset)
         if page is None:
@@ -851,9 +843,7 @@ class SeriesViewSet(
         queryset = super().get_queryset()
         match self.action:
             case "list":
-                queryset = queryset.annotate(num_issues=_series_issue_count).order_by(
-                    *_SERIES_LIST_ORDERING
-                )
+                queryset = queryset.annotate(num_issues=_series_issue_count)
             case "retrieve":
                 queryset = (
                     queryset.select_related("imprint")
