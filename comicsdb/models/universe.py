@@ -78,7 +78,7 @@ class Universe(CommonInfo):
             models.Index(fields=["cv_id"], name="universe_cv_id_idx"),
             models.Index(fields=["gcd_id"], name="universe_gcd_id_idx"),
         ]
-        ordering = ["name", "designation"]
+        ordering = ["name", "designation", "id"]
         unique_together = ["publisher", "name", "designation"]
         db_table_comment = "Publisher Universes"
 

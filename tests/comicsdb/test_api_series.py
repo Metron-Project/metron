@@ -5,10 +5,11 @@ from urllib.parse import quote_plus
 import pytest
 from django.db.models import Count, Q
 from django.urls import reverse
+from django.utils import timezone
 from rest_framework import status
 
 from api.v1_0.serializers import SeriesListSerializer
-from comicsdb.models import Credits, Series
+from comicsdb.models import Credits, Issue, Series
 from comicsdb.models.character import Character
 from comicsdb.models.creator import Creator
 from comicsdb.models.credits import Role
@@ -393,3 +394,60 @@ def test_list_series_year_end_set(
     assert resp.status_code == status.HTTP_200_OK
     completed = next(r for r in resp.data["results"] if r["year_end"] is not None)
     assert completed["year_end"] == 2005
+
+
+def test_issue_count(
+    api_client_with_credentials, create_user, dc_comics, fc_series: Series, bat_sups_series
+):
+    user = create_user()
+    for number in ("1", "2"):
+        Issue.objects.create(
+            series=fc_series,
+            number=number,
+            cover_date=timezone.now().date(),
+            edited_by=user,
+            created_by=user,
+        )
+    expected = {fc_series.id: 2, bat_sups_series.id: 0}
+
+    for url in (
+        reverse("api:series-list"),
+        reverse("api:publisher-series-list", kwargs={"pk": dc_comics.pk}),
+    ):
+        resp = api_client_with_credentials.get(url)
+        assert resp.status_code == status.HTTP_200_OK
+        assert {r["id"]: r["issue_count"] for r in resp.data["results"]} == expected
+
+    for pk, count in expected.items():
+        resp = api_client_with_credentials.get(reverse("api:series-detail", kwargs={"pk": pk}))
+        assert resp.status_code == status.HTTP_200_OK
+        assert resp.data["issue_count"] == count
+
+
+def test_list_orders_ties_by_id(
+    api_client_with_credentials, create_user, dc_comics, single_issue_type
+):
+    user = create_user()
+    tied = [
+        Series.objects.create(
+            name="Miles Morales: Spider-Man",
+            sort_name="Miles Morales: Spider-Man",
+            publisher=dc_comics,
+            volume=volume,
+            year_began=2019,
+            series_type=single_issue_type,
+            status=Series.Status.ONGOING,
+            edited_by=user,
+            created_by=user,
+        )
+        for volume in (1, 2)
+    ]
+    expected = sorted(s.id for s in tied)
+
+    for url in (
+        reverse("api:series-list"),
+        reverse("api:publisher-series-list", kwargs={"pk": dc_comics.pk}),
+    ):
+        resp = api_client_with_credentials.get(url)
+        assert resp.status_code == status.HTTP_200_OK
+        assert [r["id"] for r in resp.data["results"]] == expected

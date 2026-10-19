@@ -81,7 +81,7 @@ class Publisher(CommonInfo):
             models.Index(fields=["cv_id"], name="publisher_cv_id_idx"),
             models.Index(fields=["gcd_id"], name="publisher_gcd_id_idx"),
         ]
-        ordering = ["name"]
+        ordering = ["name", "id"]
 
 
 pre_save.connect(pre_save_slug, sender=Publisher, dispatch_uid="pre_save_publisher")
