@@ -123,7 +123,7 @@ class Series(CommonInfo):
             models.Index(fields=["cv_id"], name="series_cv_id_idx"),
             models.Index(fields=["gcd_id"], name="series_gcd_id_idx"),
         ]
-        ordering = ["sort_name", "year_began"]
+        ordering = ["sort_name", "year_began", "id"]
         unique_together = ["publisher", "name", "volume", "series_type"]
         verbose_name_plural = _("Series")
 

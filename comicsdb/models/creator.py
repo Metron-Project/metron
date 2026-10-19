@@ -73,7 +73,7 @@ class Creator(CommonInfo):
             models.Index(fields=["cv_id"], name="creator_cv_id_idx"),
             models.Index(fields=["gcd_id"], name="creator_gcd_id_idx"),
         ]
-        ordering = ["name"]
+        ordering = ["name", "id"]
 
 
 pre_save.connect(pre_save_slug, sender=Creator, dispatch_uid="pre_save_creator")

@@ -68,7 +68,7 @@ class Imprint(CommonInfo):
             models.Index(fields=["cv_id"], name="imprint_cv_id_idx"),
             models.Index(fields=["gcd_id"], name="imprint_gcd_id_idx"),
         ]
-        ordering = ["name"]
+        ordering = ["name", "id"]
 
 
 pre_save.connect(pre_save_slug, sender=Imprint, dispatch_uid="pre_save_imprint")

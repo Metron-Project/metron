@@ -187,7 +187,7 @@ class Issue(CommonInfo):
             models.Index(fields=["cv_id"], name="issue_cv_id_idx"),
             models.Index(fields=["gcd_id"], name="issue_gcd_id_idx"),
         ]
-        ordering = ["series__sort_name", "cover_date", "store_date", "number"]
+        ordering = ["series__sort_name", "cover_date", "store_date", "number", "id"]
         unique_together = ["series", "number"]
 
 
