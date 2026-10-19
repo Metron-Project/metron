@@ -8,11 +8,14 @@ from django.db.models import (
     DecimalField,
     F,
     IntegerField,
+    OuterRef,
     Prefetch,
     Q,
+    Subquery,
     Sum,
     When,
 )
+from django.db.models.functions import Coalesce
 from django.http import Http404
 from django.shortcuts import get_object_or_404
 from django.utils import timezone
@@ -115,6 +118,20 @@ from reading_lists.models import ReadingList
 from user_collection.models import CollectionItem
 from users.models import CustomUser
 from wish_list.models import WishList, WishListItem
+
+# Correlated per-series issue count. Unlike Count("issues") -- which joins and
+# GROUPs BY every issue row before sorting and paginating -- Postgres only
+# evaluates this for the rows actually returned, and the pagination COUNT(*)
+# drops it entirely. Coalesce because a series with no issues yields no row.
+_series_issue_count = Coalesce(
+    Subquery(
+        Issue.objects.filter(series=OuterRef("pk"))
+        .values("series")
+        .annotate(count=Count("pk"))
+        .values("count")
+    ),
+    0,
+)
 
 
 class ReadingListItemsPagination(PageNumberPagination):
@@ -763,7 +780,7 @@ class PublisherViewSet(
 
         queryset = (
             publisher.series.select_related("series_type", "publisher")
-            .annotate(num_issues=Count("issues", distinct=True))
+            .annotate(num_issues=_series_issue_count)
             .order_by("sort_name", "year_began")
         )
         page = self.paginate_queryset(queryset)
@@ -819,24 +836,23 @@ class SeriesViewSet(
     cache_detail_dependent_labels = (ModelLabel.PUBLISHER_NAME, ModelLabel.IMPRINT_NAME)
 
     def get_modified_queryset(self):
-        # get_queryset() annotates num_issues for list/retrieve -- an
-        # aggregate that survives into (pk, modified) values_list() as an
-        # extra JOIN + GROUP BY even though the annotated field isn't
-        # selected. This lookup only needs the row's own pk/modified.
+        # get_queryset() adds select_related joins and a num_issues
+        # subquery for list/retrieve. This lookup only needs the row's own
+        # pk/modified.
         return Series.objects.all()
 
     def get_queryset(self):
         queryset = super().get_queryset()
         match self.action:
             case "list":
-                queryset = queryset.annotate(num_issues=Count("issues", distinct=True)).order_by(
+                queryset = queryset.annotate(num_issues=_series_issue_count).order_by(
                     "sort_name", "year_began"
                 )
             case "retrieve":
                 queryset = (
                     queryset.select_related("imprint")
                     .prefetch_related("genres", "associated")
-                    .annotate(num_issues=Count("issues", distinct=True))
+                    .annotate(num_issues=_series_issue_count)
                 )
         return queryset
 
