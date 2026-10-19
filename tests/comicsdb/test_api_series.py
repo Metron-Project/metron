@@ -422,3 +422,32 @@ def test_issue_count(
         resp = api_client_with_credentials.get(reverse("api:series-detail", kwargs={"pk": pk}))
         assert resp.status_code == status.HTTP_200_OK
         assert resp.data["issue_count"] == count
+
+
+def test_list_orders_ties_by_id(
+    api_client_with_credentials, create_user, dc_comics, single_issue_type
+):
+    user = create_user()
+    tied = [
+        Series.objects.create(
+            name="Miles Morales: Spider-Man",
+            sort_name="Miles Morales: Spider-Man",
+            publisher=dc_comics,
+            volume=volume,
+            year_began=2019,
+            series_type=single_issue_type,
+            status=Series.Status.ONGOING,
+            edited_by=user,
+            created_by=user,
+        )
+        for volume in (1, 2)
+    ]
+    expected = sorted(s.id for s in tied)
+
+    for url in (
+        reverse("api:series-list"),
+        reverse("api:publisher-series-list", kwargs={"pk": dc_comics.pk}),
+    ):
+        resp = api_client_with_credentials.get(url)
+        assert resp.status_code == status.HTTP_200_OK
+        assert [r["id"] for r in resp.data["results"]] == expected
