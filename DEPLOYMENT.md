@@ -862,6 +862,11 @@ sudo chown metron:metron /var/log/metron-nginx
 sudo cp /home/metron/metron/logrotate/metron-nginx /etc/logrotate.d/
 sudo logrotate -d /etc/logrotate.d/metron-nginx
 
+# The logs must be owned by metron, or rotation fails (logrotate truncates as metron).
+# If `ls -l` shows a numeric owner such as 655460, nginx was told to reopen its
+# logs and changed their owner to its worker user. Fix it with:
+sudo chown metron:metron /var/log/metron-nginx/*.log
+
 sudo sh -c 'cp /home/metron/metron/fail2ban/action.d/* /etc/fail2ban/action.d/'
 sudo sh -c 'cp /home/metron/metron/fail2ban/filter.d/* /etc/fail2ban/filter.d/'
 sudo sh -c 'cp /home/metron/metron/fail2ban/jail.d/metron.conf /etc/fail2ban/jail.d/'

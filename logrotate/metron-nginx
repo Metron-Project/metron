@@ -3,6 +3,10 @@
 #
 # copytruncate keeps nginx writing to the same file, so no signal has to be sent
 # into the rootless container; a few lines may be lost during the copy.
+#
+# The logs must stay owned by metron, since truncating needs write access. Never
+# run `nginx -s reopen` (USR1) in the container: nginx then chowns the logs to its
+# worker user (a host subuid), and every rotation fails with permission denied.
 /var/log/metron-nginx/*.log {
     su metron metron
     daily
