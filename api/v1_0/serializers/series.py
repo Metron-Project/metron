@@ -4,7 +4,7 @@ from api.v1_0.serializers.attribution import AttributionSerializer
 from api.v1_0.serializers.genre import GenreSerializer
 from api.v1_0.serializers.imprint import BasicImprintSerializer
 from api.v1_0.serializers.publisher import BasicPublisherSerializer
-from comicsdb.models import Series, SeriesType
+from comicsdb.models import Issue, Series, SeriesType
 
 
 class SeriesTypeSerializer(serializers.ModelSerializer):
@@ -13,7 +13,36 @@ class SeriesTypeSerializer(serializers.ModelSerializer):
         fields = ("id", "name")
 
 
-class SeriesListSerializer(serializers.ModelSerializer):
+class SeriesImageMixin(serializers.Serializer):
+    """
+    Adds a read-only `image` URL to a series serializer.
+
+    Prefers a dedicated `Series.image` if the model ever grows one, otherwise falls
+    back to the first issue's cover. Viewsets should annotate `first_issue_image`
+    (see `api.views._series_first_issue_image`) so list responses don't query per row.
+    """
+
+    image = serializers.SerializerMethodField()
+
+    def get_image(self, obj: Series) -> str | None:
+        image = getattr(obj, "image", None)
+        if not image:
+            if hasattr(obj, "first_issue_image"):
+                image = obj.first_issue_image
+            else:
+                image = obj.first_issue_cover()
+        if not image:
+            return None
+        if hasattr(image, "url"):
+            url = image.url
+        else:
+            # Annotated value is a bare storage path rather than a FieldFile.
+            url = Issue._meta.get_field("image").storage.url(image)
+        request = self.context.get("request")
+        return request.build_absolute_uri(url) if request else url
+
+
+class SeriesListSerializer(SeriesImageMixin, serializers.ModelSerializer):
     series = serializers.CharField(source="__str__")
     issue_count = serializers.IntegerField(source="num_issues", read_only=True)
     publisher = BasicPublisherSerializer(read_only=True)
@@ -30,6 +59,7 @@ class SeriesListSerializer(serializers.ModelSerializer):
             "issue_count",
             "publisher",
             "series_type",
+            "image",
             "cv_id",
             "gcd_id",
             "modified",
@@ -44,7 +74,7 @@ class AssociatedSeriesSerializer(serializers.ModelSerializer):
         fields = ("id", "series")
 
 
-class SeriesSerializer(serializers.ModelSerializer):
+class SeriesSerializer(SeriesImageMixin, serializers.ModelSerializer):
     issue_count = serializers.IntegerField(read_only=True)
     resource_url = serializers.SerializerMethodField("get_resource_url")
     status = serializers.ChoiceField(choices=Series.Status.choices)
@@ -102,6 +132,7 @@ class SeriesSerializer(serializers.ModelSerializer):
             "issue_count",
             "genres",
             "associated",
+            "image",
             "cv_id",
             "gcd_id",
             "resource_url",
