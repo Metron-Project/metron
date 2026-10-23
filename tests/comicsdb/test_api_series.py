@@ -1,9 +1,12 @@
 import operator
+from datetime import date
 from functools import reduce
 from urllib.parse import quote_plus
 
 import pytest
+from django.db import connection
 from django.db.models import Count, Q
+from django.test.utils import CaptureQueriesContext
 from django.urls import reverse
 from django.utils import timezone
 from rest_framework import status
@@ -451,3 +454,118 @@ def test_list_orders_ties_by_id(
         resp = api_client_with_credentials.get(url)
         assert resp.status_code == status.HTTP_200_OK
         assert [r["id"] for r in resp.data["results"]] == expected
+
+
+# Image fallback tests
+def _set_cover(issue: Issue, path: str) -> None:
+    # update() skips Issue.save(), which would try to open and hash the image file.
+    Issue.objects.filter(pk=issue.pk).update(image=path)
+
+
+def test_series_image_is_null_without_issues(api_client_with_credentials, fc_series):
+    resp = api_client_with_credentials.get(
+        reverse("api:series-detail", kwargs={"pk": fc_series.pk})
+    )
+    assert resp.status_code == status.HTTP_200_OK
+    assert resp.data["image"] is None
+
+
+def test_series_image_is_null_when_first_issue_has_no_cover(
+    api_client_with_credentials, fc_series, basic_issue
+):
+    resp = api_client_with_credentials.get(
+        reverse("api:series-detail", kwargs={"pk": fc_series.pk})
+    )
+    assert resp.status_code == status.HTTP_200_OK
+    assert resp.data["image"] is None
+
+
+def test_series_detail_image_falls_back_to_first_issue(
+    api_client_with_credentials, fc_series, create_user
+):
+    user = create_user()
+    first = Issue.objects.create(
+        series=fc_series,
+        number="1",
+        slug="final-crisis-1",
+        cover_date=date(2008, 5, 1),
+        edited_by=user,
+        created_by=user,
+    )
+    second = Issue.objects.create(
+        series=fc_series,
+        number="2",
+        slug="final-crisis-2",
+        cover_date=date(2008, 6, 1),
+        edited_by=user,
+        created_by=user,
+    )
+    _set_cover(first, "issue/2008/05/01/first.jpg")
+    _set_cover(second, "issue/2008/06/01/second.jpg")
+
+    resp = api_client_with_credentials.get(
+        reverse("api:series-detail", kwargs={"pk": fc_series.pk})
+    )
+    assert resp.status_code == status.HTTP_200_OK
+    assert resp.data["image"].startswith("http")
+    assert resp.data["image"].endswith("issue/2008/05/01/first.jpg")
+
+
+def test_series_list_image_falls_back_to_first_issue(
+    api_client_with_credentials, fc_series, bat_sups_series, basic_issue
+):
+    _set_cover(basic_issue, "issue/2008/05/01/first.jpg")
+
+    resp = api_client_with_credentials.get(reverse("api:series-list"))
+    assert resp.status_code == status.HTTP_200_OK
+    by_id = {row["id"]: row for row in resp.data["results"]}
+    assert by_id[fc_series.pk]["image"].endswith("issue/2008/05/01/first.jpg")
+    # A series with no issues has nothing to fall back to.
+    assert by_id[bat_sups_series.pk]["image"] is None
+
+
+def test_series_list_image_does_not_query_per_series(
+    api_client_with_credentials, fc_series, bat_sups_series, sandman_series, basic_issue
+):
+    _set_cover(basic_issue, "issue/2008/05/01/first.jpg")
+    url = reverse("api:series-list")
+
+    def count_queries(query: str) -> int:
+        # Different query strings avoid hitting the list cache.
+        with CaptureQueriesContext(connection) as ctx:
+            resp = api_client_with_credentials.get(f"{url}?{query}")
+        assert resp.status_code == status.HTTP_200_OK
+        return len(ctx)
+
+    one = count_queries(f"name={quote_plus(fc_series.name)}")
+    many = count_queries("")
+    # A per-row cover lookup would add queries as the result set grows.
+    assert many <= one + 1
+
+
+def test_series_dedicated_image_takes_precedence(fc_series, basic_issue):
+    # Series has no image field today; this guards the "prefer a dedicated image" branch
+    # for whenever one is added.
+    _set_cover(basic_issue, "issue/2008/05/01/first.jpg")
+    fc_series.image = "series/2008/05/01/dedicated.jpg"
+    serializer = SeriesListSerializer(fc_series)
+    assert serializer.data["image"].endswith("series/2008/05/01/dedicated.jpg")
+
+
+def test_series_serializer_falls_back_without_annotation(fc_series, basic_issue):
+    _set_cover(basic_issue, "issue/2008/05/01/first.jpg")
+    series = Series.objects.get(pk=fc_series.pk)
+    assert not hasattr(series, "first_issue_image")
+    assert SeriesListSerializer(series).data["image"].endswith("issue/2008/05/01/first.jpg")
+
+
+def test_publisher_series_list_includes_image(
+    api_client_with_credentials, dc_comics, fc_series, basic_issue
+):
+    _set_cover(basic_issue, "issue/2008/05/01/first.jpg")
+    resp = api_client_with_credentials.get(
+        reverse("api:publisher-series-list", kwargs={"pk": dc_comics.pk})
+    )
+    assert resp.status_code == status.HTTP_200_OK
+    row = next(r for r in resp.data["results"] if r["id"] == fc_series.pk)
+    assert row["image"].endswith("issue/2008/05/01/first.jpg")

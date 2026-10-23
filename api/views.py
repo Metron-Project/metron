@@ -133,6 +133,14 @@ _series_issue_count = Coalesce(
     0,
 )
 
+# Cover of the series' first issue, used as the series `image` when the series has
+# no image of its own. Ordered explicitly so it matches `Series.first_issue_cover`.
+_series_first_issue_image = Subquery(
+    Issue.objects.filter(series=OuterRef("pk"))
+    .order_by("cover_date", "store_date", "number", "id")
+    .values("image")[:1]
+)
+
 
 class ReadingListItemsPagination(PageNumberPagination):
     """Custom pagination for reading list items with 50 items per page."""
@@ -779,7 +787,7 @@ class PublisherViewSet(
             return _mark_cache_status(Response(cached), hit=True)
 
         queryset = publisher.series.select_related("series_type", "publisher").annotate(
-            num_issues=_series_issue_count
+            num_issues=_series_issue_count, first_issue_image=_series_first_issue_image
         )
         page = self.paginate_queryset(queryset)
         if page is None:
@@ -831,7 +839,12 @@ class SeriesViewSet(
     cache_dependent_labels = (ModelLabel.ISSUE,)
     # Series retrieve embeds its Publisher/Imprint name, which don't cascade
     # a `modified` bump onto this Series when renamed.
-    cache_detail_dependent_labels = (ModelLabel.PUBLISHER_NAME, ModelLabel.IMPRINT_NAME)
+    cache_detail_dependent_labels = (
+        ModelLabel.PUBLISHER_NAME,
+        ModelLabel.IMPRINT_NAME,
+        # The fallback image is the first issue's cover.
+        ModelLabel.ISSUE,
+    )
 
     def get_modified_queryset(self):
         # get_queryset() adds select_related joins and a num_issues
@@ -843,12 +856,18 @@ class SeriesViewSet(
         queryset = super().get_queryset()
         match self.action:
             case "list":
-                queryset = queryset.annotate(num_issues=_series_issue_count)
+                queryset = queryset.annotate(
+                    num_issues=_series_issue_count,
+                    first_issue_image=_series_first_issue_image,
+                )
             case "retrieve":
                 queryset = (
                     queryset.select_related("imprint")
                     .prefetch_related("genres", "associated")
-                    .annotate(num_issues=_series_issue_count)
+                    .annotate(
+                        num_issues=_series_issue_count,
+                        first_issue_image=_series_first_issue_image,
+                    )
                 )
         return queryset
 
