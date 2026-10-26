@@ -197,6 +197,8 @@ User-agent: Citoid
 Disallow:/
 User-agent: Claritybot
 Disallow:/
+User-agent: Claude-SearchBot
+Disallow:/
 User-agent: ClaudeBot
 Disallow:/
 User-agent: Cliqzbot

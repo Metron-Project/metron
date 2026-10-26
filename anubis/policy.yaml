@@ -78,6 +78,11 @@ bots:
     user_agent_regex: FourColorComic/
     action: DENY
 
+  # Deny Anthropic's Claude-SearchBot crawler.
+  - name: deny-claude-searchbot
+    user_agent_regex: Claude-SearchBot/
+    action: DENY
+
   # Deny the legacy numeric-ID issue and series redirects. The site and API
   # only link to slug URLs, so /issue/<int>/ and /series/<int>/ are used almost
   # exclusively by scrapers that enumerate IDs (rotating proxies + stock
