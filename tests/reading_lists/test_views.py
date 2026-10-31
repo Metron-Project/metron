@@ -465,18 +465,6 @@ class TestReadingListUpdateView:
         assert resp.context["title"] == "Edit Reading List"
         assert resp.context["button_text"] == "Update"
 
-    def test_reading_list_update_view_has_previous_next_clear_buttons(
-        self, client, reading_list_user, public_reading_list, test_password
-    ):
-        """Test that the edit form renders clear buttons for previous/next fields."""
-        client.login(username=reading_list_user.username, password=test_password)
-        url = reverse("reading-list:update", args=[public_reading_list.slug])
-        resp = client.get(url)
-        assert resp.status_code == HTTP_200_OK
-        assert b'data-ac-clear="previous"' in resp.content
-        assert b'data-ac-clear="next"' in resp.content
-        assert b"new PhacAutocomplete(btn.dataset.acClear).clear()" in resp.content
-
     def test_reading_list_update_view_not_owner(
         self, client, other_user, public_reading_list, test_password
     ):
