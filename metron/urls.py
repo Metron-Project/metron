@@ -48,6 +48,7 @@ urlpatterns = [
     path("api/", include(api_urls)),
     path("api-auth/", include("rest_framework.urls")),
     path("autocomplete/", include((autocomplete_urls[0], autocomplete_urls[1]))),
+    path("izaya/", include("izaya.urls")),
     path("arc/", include(arc_urls)),
     path("character/", include(character_urls)),
     path("creator/", include(creator_urls)),

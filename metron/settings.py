@@ -72,6 +72,7 @@ INSTALLED_APPS = [
     "wiki.plugins.macros.apps.MacrosConfig",
     "django_htmx",
     "autocomplete",
+    "izaya",
     "knox",
     "api",
     "comicsdb",
@@ -359,6 +360,15 @@ STATICFILES_FINDERS = [
     # Now add our custom SimpleBulma one.
     "django_simple_bulma.finders.SimpleBulmaFinder",
 ]
+
+IZAYA_CLASSES = {
+    "input": "input",
+    "chip": "tag is-info",
+    "remove": "delete is-small ml-1",
+    "listbox": "box p-1",
+    "option": "dropdown-item is-clickable",
+    "option_active": "has-background-link has-text-white",
+}
 
 # Custom settings for django-simple-bulma
 BULMA_SETTINGS = {

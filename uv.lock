@@ -607,6 +607,18 @@ wheels = [
 ]
 
 [[package]]
+name = "izaya"
+version = "0.1.0"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "django" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/2f/ad/e2a20e51bc62a9661c27f0cdd392267b97222d867d94040216603c721526/izaya-0.1.0.tar.gz", hash = "sha256:8447275a57c6d2f2b4d0e80bd8d73a4875a6f7f89327862e48acffe988d18fca", size = 24628, upload-time = "2026-10-31T18:55:58.968Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/f0/0f/8224ba304605258d3ae36d89d49f4b633d14bbcde151356eb9bcfd130e94/izaya-0.1.0-py3-none-any.whl", hash = "sha256:7e4b240c0b6d293aa8ca1c6c198abb03a5a78e5b852225ba917133a38fe48331", size = 25138, upload-time = "2026-10-31T18:55:57.92Z" },
+]
+
+[[package]]
 name = "jmespath"
 version = "1.1.0"
 source = { registry = "https://pypi.org/simple" }
@@ -712,6 +724,7 @@ dependencies = [
     { name = "gunicorn" },
     { name = "imagehash" },
     { name = "isbnlib" },
+    { name = "izaya" },
     { name = "markdown" },
     { name = "pillow" },
     { name = "psycopg", extra = ["binary", "pool"] },
@@ -759,6 +772,7 @@ requires-dist = [
     { name = "gunicorn" },
     { name = "imagehash" },
     { name = "isbnlib" },
+    { name = "izaya" },
     { name = "markdown" },
     { name = "pillow" },
     { name = "psycopg", extras = ["binary", "pool"] },

@@ -1,0 +1,64 @@
+/* Izaya lookup widget: selected chips sit inside an input-style box. All colours come from
+   Bulma's theme variables so they follow light and dark mode. */
+.izaya {
+    position: relative;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.25rem;
+    min-height: var(--bulma-control-height);
+    padding: 0.125rem 0.5rem;
+    background-color: var(--bulma-scheme-main);
+    border: 1px solid var(--bulma-border);
+    border-radius: var(--bulma-radius);
+}
+
+.izaya:focus-within {
+    border-color: var(--bulma-link);
+    box-shadow: 0 0 0 0.125em var(--bulma-link-soft);
+}
+
+.izaya:has(.input.is-danger) {
+    border-color: var(--bulma-danger);
+}
+
+/* Lets the chips and the input wrap together as items of the box. */
+.izaya-selection {
+    display: contents;
+}
+
+.izaya-chip {
+    max-width: 100%;
+}
+
+.izaya-chip-label {
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.izaya input.izaya-input,
+.izaya input.izaya-input:focus {
+    flex: 1 1 8rem;
+    width: auto;
+    min-width: 8rem;
+    height: 2em;
+    padding: 0 0.25rem;
+    background-color: transparent;
+    border: none;
+    box-shadow: none;
+}
+
+.izaya-listbox {
+    position: absolute;
+    z-index: 10;
+    top: calc(100% + 0.25rem);
+    left: 0;
+    right: 0;
+    max-height: 20rem;
+    overflow-y: auto;
+}
+
+.izaya-option:hover {
+    background-color: var(--bulma-link-soft);
+    color: var(--bulma-link-soft-invert);
+}
