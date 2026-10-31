@@ -10,39 +10,23 @@ from django.forms import (
 )
 from django.utils.translation import gettext_lazy as _
 from isbnlib import canonical, is_isbn10, is_isbn13
+from izaya import LookupWidget
 
-from comicsdb.autocomplete import (
-    ArcAutocomplete,
-    CharacterAutocomplete,
-    IssueAutocomplete,
-    SeriesAutocomplete,
-)
 from comicsdb.forms.team import TeamsWidget
 from comicsdb.forms.universe import UniversesWidget
-from comicsdb.forms.widgets import BulmaMoneyWidget, SafeAutocompleteWidget
+from comicsdb.forms.widgets import BulmaMoneyWidget
+from comicsdb.lookups import ArcLookup, CharacterLookup, IssueLookup, SeriesLookup
 from comicsdb.models import Issue, Rating, Series
 from comicsdb.models.issue import desc_changed
 
 MINIMUM_YEAR = 1900
 
 
-ArcsWidget = SafeAutocompleteWidget(
-    ac_class=ArcAutocomplete,
-    attrs={"class": "input"},
-    options={"multiselect": True},
-)
+ArcsWidget = LookupWidget(ArcLookup, multiple=True)
 
-CharactersWidget = SafeAutocompleteWidget(
-    ac_class=CharacterAutocomplete,
-    attrs={"class": "input"},
-    options={"multiselect": True},
-)
+CharactersWidget = LookupWidget(CharacterLookup, multiple=True)
 
-IssuesWidget = SafeAutocompleteWidget(
-    ac_class=IssueAutocomplete,
-    attrs={"class": "input"},
-    options={"multiselect": True},
-)
+IssuesWidget = LookupWidget(IssueLookup, multiple=True)
 
 
 class SolicitationFlagFormMixin(Form):
@@ -72,12 +56,7 @@ class SolicitationFlagFormMixin(Form):
 class IssueForm(SolicitationFlagFormMixin, ModelForm):
     series = ModelChoiceField(
         queryset=Series.objects.all(),
-        widget=SafeAutocompleteWidget(
-            ac_class=SeriesAutocomplete,
-            attrs={
-                "placeholder": _("Autocomplete..."),
-            },
-        ),
+        widget=LookupWidget(SeriesLookup, attrs={"placeholder": _("Autocomplete...")}),
     )
 
     rating = ModelChoiceField(queryset=Rating.objects.all(), empty_label=None)

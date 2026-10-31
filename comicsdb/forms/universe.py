@@ -1,15 +1,11 @@
 from django.forms import ClearableFileInput, ModelForm
 from django.utils.translation import gettext_lazy as _
+from izaya import LookupWidget
 
-from comicsdb.autocomplete import UniverseAutocomplete
-from comicsdb.forms.widgets import SafeAutocompleteWidget
+from comicsdb.lookups import UniverseLookup
 from comicsdb.models import Universe
 
-UniversesWidget = SafeAutocompleteWidget(
-    ac_class=UniverseAutocomplete,
-    attrs={"class": "input"},
-    options={"multiselect": True},
-)
+UniversesWidget = LookupWidget(UniverseLookup, multiple=True)
 
 
 class UniverseForm(ModelForm):

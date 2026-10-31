@@ -1,16 +1,12 @@
 from django.forms import ClearableFileInput, ModelForm
+from izaya import LookupWidget
 
-from comicsdb.autocomplete import TeamAutocomplete
 from comicsdb.forms.creator import CreatorsWidget
 from comicsdb.forms.universe import UniversesWidget
-from comicsdb.forms.widgets import SafeAutocompleteWidget
+from comicsdb.lookups import TeamLookup
 from comicsdb.models import Team
 
-TeamsWidget = SafeAutocompleteWidget(
-    ac_class=TeamAutocomplete,
-    attrs={"class": "input"},
-    options={"multiselect": True},
-)
+TeamsWidget = LookupWidget(TeamLookup, multiple=True)
 
 
 class TeamForm(ModelForm):

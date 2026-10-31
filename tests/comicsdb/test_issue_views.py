@@ -1333,7 +1333,7 @@ def test_credits_add_row_returns_form_html(auto_login_user):
     # Should contain creator field (uses autocomplete widget)
     assert b"credits-2-creator" in resp.content
     # Should contain role field (uses autocomplete widget)
-    assert b"credits-2-role__textinput" in resp.content
+    assert b'name="credits-2-role"' in resp.content
 
 
 def test_credits_add_row_uses_correct_index(auto_login_user):
@@ -1345,14 +1345,14 @@ def test_credits_add_row_uses_correct_index(auto_login_user):
     assert resp.status_code == HTML_OK_CODE
     assert b"credits-0" in resp.content
     assert b"credits-0-creator" in resp.content
-    assert b"credits-0-role__textinput" in resp.content
+    assert b'name="credits-0-role"' in resp.content
 
     # Test with index 5
     resp = client.get(reverse("issue:credits-add-row"), {"form_idx": "5"})
     assert resp.status_code == HTML_OK_CODE
     assert b"credits-5" in resp.content
     assert b"credits-5-creator" in resp.content
-    assert b"credits-5-role__textinput" in resp.content
+    assert b'name="credits-5-role"' in resp.content
 
 
 def test_credits_add_row_sequential_indices(auto_login_user):

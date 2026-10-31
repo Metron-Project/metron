@@ -5,9 +5,9 @@ from django.forms import (
     inlineformset_factory,
 )
 from django.utils.translation import gettext_lazy as _
+from izaya import LookupWidget
 
-from comicsdb.autocomplete import CreatorAutocomplete, RoleAutocomplete
-from comicsdb.forms.widgets import SafeAutocompleteWidget
+from comicsdb.lookups import CreatorLookup, RoleLookup
 from comicsdb.models import Creator, Credits, Issue
 from comicsdb.models.credits import Role
 
@@ -15,20 +15,11 @@ from comicsdb.models.credits import Role
 class CreditsForm(ModelForm):
     creator = ModelChoiceField(
         queryset=Creator.objects.all(),
-        widget=SafeAutocompleteWidget(
-            ac_class=CreatorAutocomplete,
-            attrs={
-                "placeholder": _("Autocomplete..."),
-            },
-        ),
+        widget=LookupWidget(CreatorLookup, attrs={"placeholder": _("Autocomplete...")}),
     )
     role = ModelMultipleChoiceField(
         queryset=Role.objects.all(),
-        widget=SafeAutocompleteWidget(
-            ac_class=RoleAutocomplete,
-            attrs={"class": "input"},
-            options={"multiselect": True},
-        ),
+        widget=LookupWidget(RoleLookup, multiple=True),
     )
 
     class Meta:

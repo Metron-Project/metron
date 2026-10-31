@@ -251,21 +251,6 @@ function updateFormsetManagement(prefix, increment = 0) {
     }
 }
 
-// Listen for htmx events to handle autocomplete widget initialization on new rows
-document.body.addEventListener('htmx:afterSwap', function(event) {
-    // Check if this was a formset row addition
-    if (event.detail.target.id && event.detail.target.id.includes('TableBody')) {
-        // Trigger any autocomplete initialization if needed
-        var newRow = event.detail.target.lastElementChild;
-        if (newRow && window.autocomplete && window.autocomplete.init) {
-            // Initialize autocomplete widgets in the new row
-            var autocompleteInputs = newRow.querySelectorAll('[data-autocomplete]');
-            autocompleteInputs.forEach(function(input) {
-                window.autocomplete.init(input);
-            });
-        }
-    }
-});
     </script>
     {# Usability behaviour — section nav active-state #}
     <script src="{% static 'site/js/issue-form-usability.js' %}"></script>

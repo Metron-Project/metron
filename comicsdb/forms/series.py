@@ -2,9 +2,9 @@ from django.conf import settings
 from django.contrib.postgres.forms import SimpleArrayField
 from django.forms import CharField, ModelChoiceField, ModelForm, ValidationError
 from django.utils.translation import gettext_lazy as _
+from izaya import LookupWidget
 
-from comicsdb.autocomplete import ImprintAutocomplete, PublisherAutocomplete, SeriesAutocomplete
-from comicsdb.forms.widgets import SafeAutocompleteWidget
+from comicsdb.lookups import ImprintLookup, PublisherLookup, SeriesLookup
 from comicsdb.models import Imprint, Publisher, Series
 
 # Series_Type objects id's
@@ -13,28 +13,21 @@ OMNI = 15
 TPB = 10
 
 
-SeriesWidget = SafeAutocompleteWidget(
-    ac_class=SeriesAutocomplete,
-    attrs={"class": "input"},
-)
+SeriesWidget = LookupWidget(SeriesLookup)
 
-MultiSeriesWidget = SafeAutocompleteWidget(
-    ac_class=SeriesAutocomplete,
-    attrs={"class": "input"},
-    options={"multiselect": True},
-)
+MultiSeriesWidget = LookupWidget(SeriesLookup, multiple=True)
 
 
 class SeriesForm(ModelForm):
     publisher = ModelChoiceField(
         queryset=Publisher.objects.all(),
         label=_("Publisher"),
-        widget=SafeAutocompleteWidget(ac_class=PublisherAutocomplete),
+        widget=LookupWidget(PublisherLookup),
     )
     imprint = ModelChoiceField(
         queryset=Imprint.objects.all(),
         label=_("Imprint"),
-        widget=SafeAutocompleteWidget(ac_class=ImprintAutocomplete),
+        widget=LookupWidget(ImprintLookup),
         required=False,
     )
     alt_names = SimpleArrayField(
