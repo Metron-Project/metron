@@ -3,10 +3,10 @@
 {% block title %}{% blocktrans with name=pull_list %}{{ name }} - Metron{% endblocktrans %}{% endblock %}
 {% block headcss %}
     <style>
-        /* The autocomplete widget is taller than a Bulma .button; stretch the button
-           to match and join the two like a standard has-addons group. */
+        /* The lookup widget grows as series are selected; stretch the button to match
+           and join the two like a standard has-addons group. */
         .pull-list-add .control .button { height: 100%; }
-        .pull-list-add .phac_aspc_form_autocomplete ul.ac_container {
+        .pull-list-add .izaya {
             border-top-right-radius: 0;
             border-bottom-right-radius: 0;
         }
@@ -269,4 +269,7 @@
             </section>
         {% endif %}
     </div>
+{% endblock %}
+{% block js %}
+    {{ form.media.js }}
 {% endblock %}

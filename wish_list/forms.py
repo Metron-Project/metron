@@ -1,9 +1,10 @@
 from django import forms
 from django.utils.translation import gettext_lazy as _
 from djmoney.forms.fields import MoneyField
+from izaya import LookupWidget
 
-from comicsdb.autocomplete import IssueAutocomplete
-from comicsdb.forms.widgets import BulmaMoneyWidget, SafeAutocompleteWidget
+from comicsdb.forms.widgets import BulmaMoneyWidget
+from comicsdb.lookups import IssueLookup
 from wish_list.models import WishListItem
 
 
@@ -19,13 +20,7 @@ class WishListItemForm(forms.ModelForm):
             "notes",
         )
         widgets = {
-            "issue": SafeAutocompleteWidget(
-                ac_class=IssueAutocomplete,
-                attrs={
-                    "placeholder": _("Search for an issue..."),
-                    "class": "input",
-                },
-            ),
+            "issue": LookupWidget(IssueLookup, attrs={"placeholder": _("Search for an issue...")}),
             "priority": forms.Select(),
             "status": forms.Select(),
             "desired_grade": forms.Select(attrs={"class": "select"}),

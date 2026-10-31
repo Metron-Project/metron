@@ -1,8 +1,9 @@
 from django import forms
 from django.utils.translation import gettext_lazy as _
+from izaya import LookupWidget
 
-from comicsdb.autocomplete import IssueAutocomplete, SeriesAutocomplete
-from comicsdb.forms.widgets import BulmaMoneyWidget, SafeAutocompleteWidget
+from comicsdb.forms.widgets import BulmaMoneyWidget
+from comicsdb.lookups import IssueLookup, SeriesLookup
 from comicsdb.models.series import Series
 from user_collection.models import CollectionItem
 
@@ -26,13 +27,7 @@ class CollectionItemForm(forms.ModelForm):
             "is_read",
         )
         widgets = {
-            "issue": SafeAutocompleteWidget(
-                ac_class=IssueAutocomplete,
-                attrs={
-                    "placeholder": _("Search for an issue..."),
-                    "class": "input",
-                },
-            ),
+            "issue": LookupWidget(IssueLookup, attrs={"placeholder": _("Search for an issue...")}),
             "quantity": forms.NumberInput(attrs={"min": 1, "placeholder": "1"}),
             "book_format": forms.Select(),
             "grade": forms.Select(attrs={"class": "select"}),
@@ -122,13 +117,7 @@ class AddIssuesFromSeriesForm(forms.Form):
     series = forms.ModelChoiceField(
         queryset=Series.objects.select_related("series_type").all(),
         required=True,
-        widget=SafeAutocompleteWidget(
-            ac_class=SeriesAutocomplete,
-            attrs={
-                "placeholder": _("Search for a series..."),
-                "class": "input",
-            },
-        ),
+        widget=LookupWidget(SeriesLookup, attrs={"placeholder": _("Search for a series...")}),
         label=_("Series"),
         help_text=_("Select the series to add issues from"),
     )
