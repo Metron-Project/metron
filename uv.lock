@@ -297,18 +297,6 @@ wheels = [
 ]
 
 [[package]]
-name = "django-htmx-autocomplete"
-version = "1.0.17"
-source = { registry = "https://pypi.org/simple" }
-dependencies = [
-    { name = "django" },
-]
-sdist = { url = "https://files.pythonhosted.org/packages/79/27/a2e58351e52a3462e9cfdc52b5dcd58e99f0098f87fc7ce33359b35fdf3f/django_htmx_autocomplete-1.0.17.tar.gz", hash = "sha256:5956dc4e2a8982e180348fec7711fadbe919a8e746c3a8b4b1c8ac70d8597ff4", size = 33981, upload-time = "2026-02-09T16:40:09.322Z" }
-wheels = [
-    { url = "https://files.pythonhosted.org/packages/01/c4/6a33a676c10e653b3275d6718805fb7e8d7f81fa38e50fb48b658ccd142c/django_htmx_autocomplete-1.0.17-py3-none-any.whl", hash = "sha256:03766542640e198fb59202dd1ebabf00a4580bc46cf6fee1e10592f9d6ad2080", size = 38551, upload-time = "2026-02-09T16:40:07.871Z" },
-]
-
-[[package]]
 name = "django-js-asset"
 version = "4.2.0"
 source = { registry = "https://pypi.org/simple" }
@@ -710,7 +698,6 @@ dependencies = [
     { name = "django-countries" },
     { name = "django-filter" },
     { name = "django-htmx" },
-    { name = "django-htmx-autocomplete" },
     { name = "django-money" },
     { name = "django-mptt" },
     { name = "django-rest-framework-condition" },
@@ -758,7 +745,6 @@ requires-dist = [
     { name = "django-countries" },
     { name = "django-filter" },
     { name = "django-htmx" },
-    { name = "django-htmx-autocomplete" },
     { name = "django-money" },
     { name = "django-mptt" },
     { name = "django-rest-framework-condition" },
