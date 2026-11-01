@@ -4,6 +4,7 @@ from datetime import date
 
 import pytest
 from django.urls import reverse
+from izaya.lookups import registry
 
 from comicsdb.lookups import (
     ArcLookup,
@@ -27,6 +28,7 @@ from comicsdb.models.team import Team
 from comicsdb.models.universe import Universe
 
 HTTP_200_OK = 200
+HTTP_403_FORBIDDEN = 403
 
 
 @pytest.fixture
@@ -1034,16 +1036,29 @@ class TestLookupRanking:
 class TestLookupSearchEndpoint:
     """Tests for searching through the izaya endpoint, as the widget does."""
 
-    def test_returns_matching_options(self, client, spider_man_issue_1):
+    def test_returns_matching_options(self, client, create_user, spider_man_issue_1):
+        client.force_login(create_user())
         resp = client.get(reverse("izaya:search", args=["IssueLookup"]), {"q": "Spider#1"})
         assert resp.status_code == HTTP_200_OK
         assert str(spider_man_issue_1).encode() in resp.content
         assert f'data-izaya-key="{spider_man_issue_1.pk}"'.encode() in resp.content
 
-    def test_short_query_returns_no_options(self, client, spider_man_issue_1):
+    def test_short_query_returns_no_options(self, client, create_user, spider_man_issue_1):
+        client.force_login(create_user())
         resp = client.get(reverse("izaya:search", args=["IssueLookup"]), {"q": "sp"})
         assert resp.status_code == HTTP_200_OK
         assert b"data-izaya-key" not in resp.content
+
+    def test_anonymous_search_is_denied(self, client, spider_man_issue_1):
+        resp = client.get(reverse("izaya:search", args=["IssueLookup"]), {"q": "Spider#1"})
+        assert resp.status_code == HTTP_403_FORBIDDEN
+        assert resp.headers["X-Izaya-Denied"] == "true"
+        assert b"data-izaya-key" not in resp.content
+
+    @pytest.mark.parametrize("lookup", sorted(registry))
+    def test_every_lookup_denies_anonymous_searches(self, client, lookup):
+        resp = client.get(reverse("izaya:search", args=[lookup]), {"q": "Spider"})
+        assert resp.status_code == HTTP_403_FORBIDDEN
 
 
 @pytest.mark.django_db

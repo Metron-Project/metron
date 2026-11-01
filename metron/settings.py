@@ -369,6 +369,9 @@ IZAYA_CLASSES = {
     "option_active": "has-background-link has-text-white",
 }
 
+# Every form with a lookup widget is behind a login.
+IZAYA_LOGIN_REQUIRED = True
+
 # Custom settings for django-simple-bulma
 BULMA_SETTINGS = {
     "extensions": ["bulma-calendar"],

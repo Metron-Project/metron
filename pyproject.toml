@@ -24,7 +24,7 @@ dependencies = [
     "gunicorn",
     "imagehash",
     "isbnlib",
-    "izaya>=0.2.0",
+    "izaya>=0.3.0",
     "markdown",
     "pillow",
     "psycopg[binary,pool]",

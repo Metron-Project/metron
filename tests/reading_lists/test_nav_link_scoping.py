@@ -140,10 +140,10 @@ class TestReadingListLookupScoping:
         results = ReadingListLookup().search("List", _request_for(reading_list_editor_user))
         assert set(results) == {metron_reading_list}
 
-    def test_search_endpoint_is_empty_for_anonymous_users(self, client, public_reading_list):
+    def test_search_endpoint_denies_anonymous_users(self, client, public_reading_list):
         url = reverse("izaya:search", args=["ReadingListLookup"])
         resp = client.get(url, {"q": "List"})
-        assert resp.status_code == HTTP_200_OK
+        assert resp.status_code == status.HTTP_403_FORBIDDEN
         assert public_reading_list.name.encode() not in resp.content
 
 
