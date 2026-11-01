@@ -40,6 +40,18 @@ class NumberInFilter(df.rest_framework.BaseInFilter, df.rest_framework.NumberFil
     pass
 
 
+class IssueCoverIdentifier(df.CharFilter):
+    """Find each parent issue once when its main cover or a variant matches."""
+
+    def filter(self, qs, value):
+        if not value:
+            return super().filter(qs, value)
+        return qs.filter(
+            Q(**{f"{self.field_name}__{self.lookup_expr}": value})
+            | Q(**{f"variants__{self.field_name}__{self.lookup_expr}": value})
+        ).distinct()
+
+
 class IssueFilter(df.rest_framework.FilterSet):
     cover_year = df.rest_framework.NumberFilter(
         label="Cover Year", field_name="cover_date", lookup_expr="year"
@@ -92,13 +104,15 @@ class IssueFilter(df.rest_framework.FilterSet):
     rating = df.rest_framework.CharFilter(
         label="Rating", field_name="rating__name", lookup_expr="iexact"
     )
-    sku = df.rest_framework.CharFilter(
-        label="Distributor SKU", field_name="sku", lookup_expr="iexact"
+    sku = IssueCoverIdentifier(
+        label="Distributor SKU (main or variant cover)", field_name="sku", lookup_expr="iexact"
     )
-    upc = df.rest_framework.CharFilter(label="UPC Code", field_name="upc", lookup_expr="iexact")
-    upc_starts_with = df.rest_framework.CharFilter(
-        label="UPC Code starts with (e.g. the 12-digit UPC-A read by a mobile scanner "
-        "that strips the 5-digit EAN supplemental)",
+    upc = IssueCoverIdentifier(
+        label="UPC Code (main or variant cover)", field_name="upc", lookup_expr="iexact"
+    )
+    upc_starts_with = IssueCoverIdentifier(
+        label="Main or variant UPC Code starts with (e.g. the 12-digit UPC-A read by a "
+        "mobile scanner that strips the 5-digit EAN supplemental)",
         field_name="upc",
         lookup_expr="startswith",
     )
@@ -172,8 +186,12 @@ class IssueViewFilter(df.FilterSet):
     series_year_began = df.NumberFilter(
         label="Series Beginning Year", field_name="series__year_began", lookup_expr="exact"
     )
-    sku = df.CharFilter(label="Distributor SKU", field_name="sku", lookup_expr="iexact")
-    upc = df.CharFilter(label="UPC Code", field_name="upc", lookup_expr="iexact")
+    sku = IssueCoverIdentifier(
+        label="Distributor SKU (main or variant cover)", field_name="sku", lookup_expr="iexact"
+    )
+    upc = IssueCoverIdentifier(
+        label="UPC Code (main or variant cover)", field_name="upc", lookup_expr="iexact"
+    )
     cv_id = df.rest_framework.NumberFilter(
         label="Comic Vine ID", field_name="cv_id", lookup_expr="exact"
     )
