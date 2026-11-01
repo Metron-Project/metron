@@ -1,7 +1,6 @@
 /* Izaya lookup widget: selected chips sit inside an input-style box. All colours come from
    Bulma's theme variables so they follow light and dark mode. */
 .izaya {
-    position: relative;
     display: flex;
     flex-wrap: wrap;
     align-items: center;
@@ -29,11 +28,19 @@
 
 .izaya-chip {
     max-width: 100%;
+    border-radius: var(--bulma-radius-small);
 }
 
 .izaya-chip-label {
     overflow: hidden;
     text-overflow: ellipsis;
+}
+
+/* Bulma's .delete draws its own x, so izaya's text one is hidden. Only the x shows until the
+   button is hovered or focused. */
+.izaya-remove {
+    --bulma-delete-background-alpha: 0;
+    font-size: 0;
 }
 
 .izaya input.izaya-input,
@@ -48,14 +55,18 @@
     box-shadow: none;
 }
 
+/* A single-value widget's chip is the whole value, so it replaces the prompt. */
+.izaya:not([data-izaya-multiple]):has(.izaya-chip) input.izaya-input::placeholder {
+    color: transparent;
+}
+
 .izaya-listbox {
-    position: absolute;
-    z-index: 10;
     top: calc(100% + 0.25rem);
-    left: 0;
-    right: 0;
-    max-height: 20rem;
-    overflow-y: auto;
+}
+
+.izaya-option {
+    padding-block: 0.5rem;
+    color: var(--bulma-text-strong);
 }
 
 .izaya-option:hover {

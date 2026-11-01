@@ -362,7 +362,7 @@ STATICFILES_FINDERS = [
 
 IZAYA_CLASSES = {
     "input": "input",
-    "chip": "tag is-info",
+    "chip": "tag is-link is-medium",
     "remove": "delete is-small ml-1",
     "listbox": "box p-1",
     "option": "dropdown-item is-clickable",
