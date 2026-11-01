@@ -55,11 +55,6 @@
     box-shadow: none;
 }
 
-/* A single-value widget's chip is the whole value, so it replaces the prompt. */
-.izaya:not([data-izaya-multiple]):has(.izaya-chip) input.izaya-input::placeholder {
-    color: transparent;
-}
-
 .izaya-listbox {
     top: calc(100% + 0.25rem);
 }

@@ -971,6 +971,66 @@ class TestImprintLookup:
 
 
 @pytest.mark.django_db
+class TestLookupRanking:
+    """Tests for the relevance order of lookup results."""
+
+    @pytest.fixture
+    def storm_characters(self, create_user):
+        """Create characters that each match "storm" at a different tier."""
+        user = create_user()
+        return [
+            Character.objects.create(name=name, slug=f"storm-{i}", edited_by=user, created_by=user)
+            for i, name in enumerate(("Argos (Wildstorm)", "Acid Storm", "Stormavik", "Störm"))
+        ]
+
+    def test_closest_matches_come_first(self, storm_characters):
+        """Test the whole name, then its start, then a word's start, then everything else."""
+        names = [c.name for c in CharacterLookup().search("storm", None)]
+
+        assert names == ["Störm", "Stormavik", "Acid Storm", "Argos (Wildstorm)"]
+
+    def test_best_match_survives_max_results(self, storm_characters):
+        """Test that the exact match isn't lost when the results are cut off."""
+        cut_off = CharacterLookup().search("storm", None)[:1]
+
+        assert [c.name for c in cut_off] == ["Störm"]
+
+    def test_alias_match_stays_in_results(self, create_user, storm_characters):
+        """Test that a record matching only on alias is still found, after the name matches."""
+        user = create_user()
+        Character.objects.create(
+            name="Ororo Munroe",
+            slug="ororo-munroe",
+            alias=["Storm"],
+            edited_by=user,
+            created_by=user,
+        )
+
+        names = [c.name for c in CharacterLookup().search("storm", None)]
+
+        assert names[-1] == "Ororo Munroe"
+
+    def test_series_ties_keep_model_order(self, create_user, lookup_publisher, single_issue_type):
+        """Test that equally ranked series stay in the model's order."""
+        user = create_user()
+        for name, year in (("Absolute Batman", 2024), ("Batman", 2016), ("Batman", 1940)):
+            Series.objects.create(
+                name=name,
+                slug=f"batman-{year}",
+                publisher=lookup_publisher,
+                volume=year,
+                year_began=year,
+                series_type=single_issue_type,
+                status=Series.Status.ONGOING,
+                edited_by=user,
+                created_by=user,
+            )
+
+        results = [(s.name, s.year_began) for s in SeriesLookup().search("batman", None)]
+
+        assert results == [("Batman", 1940), ("Batman", 2016), ("Absolute Batman", 2024)]
+
+
 class TestLookupSearchEndpoint:
     """Tests for searching through the izaya endpoint, as the widget does."""
 

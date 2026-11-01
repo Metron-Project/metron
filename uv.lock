@@ -596,14 +596,14 @@ wheels = [
 
 [[package]]
 name = "izaya"
-version = "0.1.1"
+version = "0.2.0"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "django" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/5b/7e/a1224503b0ffced1d1681cf1973c5b1e418df14c8c8ccd19d165cff7bcd0/izaya-0.1.1.tar.gz", hash = "sha256:487d808ab02442177e24ac57fe857c2727aac608b5e9dc120e4e34c57ebd0b9c", size = 25376, upload-time = "2026-11-01T14:01:49.025Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/3a/ec/72cb095f79e01a903201757bd5676d7815c2257516dd0b74bd880e7b37bd/izaya-0.2.0.tar.gz", hash = "sha256:228ff9406294cfa2eaa8a15c1f05b71daf9537a80752455409116375891668e3", size = 29233, upload-time = "2026-11-01T16:30:02.743Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/70/71/b5d3d5a2bd673f71e0bf1876327aa20a0e58623acc256ed22a86bcf47454/izaya-0.1.1-py3-none-any.whl", hash = "sha256:a02802b0dd2659ff8e442971be9ad0a13012f16fe9b56663633e4223eb587f8a", size = 25604, upload-time = "2026-11-01T14:01:48.094Z" },
+    { url = "https://files.pythonhosted.org/packages/19/1c/3d62b4194ddc21c3024f51f3288bbce22b3aca7b032426652618a85d11d6/izaya-0.2.0-py3-none-any.whl", hash = "sha256:bb62d75b8c83914dd3f15cf130cd36b1fcbef7cb137b6cd0686dadd37b1f4cdd", size = 28540, upload-time = "2026-11-01T16:30:01.752Z" },
 ]
 
 [[package]]
@@ -758,7 +758,7 @@ requires-dist = [
     { name = "gunicorn" },
     { name = "imagehash" },
     { name = "isbnlib" },
-    { name = "izaya", specifier = ">=0.1.1" },
+    { name = "izaya", specifier = ">=0.2.0" },
     { name = "markdown" },
     { name = "pillow" },
     { name = "psycopg", extras = ["binary", "pool"] },

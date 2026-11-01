@@ -19,6 +19,7 @@ class ArcLookup(ModelLookup):
 
     model = Arc
     search_fields = ["name__unaccent__icontains"]
+    rank_fields = ["name__unaccent"]
 
 
 @register
@@ -30,6 +31,7 @@ class CharacterLookup(ModelLookup):
 
     model = Character
     search_fields = ["name__unaccent__icontains", "alias__icontains"]
+    rank_fields = ["name__unaccent"]
 
 
 @register
@@ -41,6 +43,7 @@ class CreatorLookup(ModelLookup):
 
     model = Creator
     search_fields = ["name__unaccent__icontains", "alias__icontains"]
+    rank_fields = ["name__unaccent"]
 
 
 @register
@@ -57,6 +60,7 @@ class PublisherLookup(ModelLookup):
 
     model = Publisher
     search_fields = ["name__unaccent__icontains"]
+    rank_fields = ["name__unaccent"]
 
 
 @register
@@ -69,6 +73,7 @@ class SeriesLookup(ModelLookup):
 
     model = Series
     search_fields = ["name__unaccent__icontains", "alt_names__joined__icontains"]
+    rank_fields = ["name__unaccent"]
 
     def get_base_queryset(self):
         return super().get_base_queryset().select_related("series_type")
@@ -80,6 +85,7 @@ class TeamLookup(ModelLookup):
 
     model = Team
     search_fields = ["name__unaccent__icontains"]
+    rank_fields = ["name__unaccent"]
 
 
 @register
@@ -88,6 +94,7 @@ class UniverseLookup(ModelLookup):
 
     model = Universe
     search_fields = ["name__unaccent__icontains", "designation__unaccent__icontains"]
+    rank_fields = ["name__unaccent"]
 
     def get_base_queryset(self):
         return super().get_base_queryset().select_related("publisher")
@@ -99,6 +106,7 @@ class ImprintLookup(ModelLookup):
 
     model = Imprint
     search_fields = ["name__unaccent__icontains"]
+    rank_fields = ["name__unaccent"]
 
     def get_base_queryset(self):
         return super().get_base_queryset().select_related("publisher")
