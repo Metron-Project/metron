@@ -2,15 +2,12 @@ from django.conf import settings
 from django.contrib.postgres.forms import SimpleArrayField
 from django.forms import CharField, ClearableFileInput, ModelForm, ValidationError
 from django.utils.translation import gettext_lazy as _
+from izaya import LookupWidget
 
-from comicsdb.autocomplete import PublisherAutocomplete
-from comicsdb.forms.widgets import SafeAutocompleteWidget
+from comicsdb.lookups import PublisherLookup
 from comicsdb.models import Publisher
 
-PublisherWidget = SafeAutocompleteWidget(
-    ac_class=PublisherAutocomplete,
-    attrs={"class": "input"},
-)
+PublisherWidget = LookupWidget(PublisherLookup)
 
 
 class PublisherForm(ModelForm):

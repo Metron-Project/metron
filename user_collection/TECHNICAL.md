@@ -10,7 +10,7 @@ Developer documentation for the `user_collection` Django app.
 - [Forms](#forms)
 - [Filters](#filters)
 - [HTMX Integration](#htmx-integration)
-- [Autocomplete](#autocomplete)
+- [Lookups](#lookups)
 - [Templates](#templates)
 - [Database Optimization](#database-optimization)
 - [API Integration](#api-integration)
@@ -31,7 +31,7 @@ The user_collection app follows Django's MTV (Model-Template-View) pattern with:
 **Key Dependencies:**
 
 - Django's class-based views
-- `autocomplete` package for issue search
+- `izaya` package for issue and series search
 - `django-filter` for advanced filtering
 - `django-money` for currency fields
 - `comicsdb` app for Issue, Series, Publisher models
@@ -829,7 +829,7 @@ class CollectionItemForm(forms.ModelForm):
 
 **Custom Widgets:**
 
-- **Issue**: `AutocompleteWidget` with `IssueAutocomplete`
+- **Issue**: `LookupWidget` with `IssueLookup`
 - **Purchase Date**: HTML5 date input with Bulma calendar
 - **Date Read**: HTML5 date input with Bulma calendar
 - **Purchase Price**: `BulmaMoneyWidget` for currency formatting
@@ -884,7 +884,7 @@ class AddIssuesFromSeriesForm(forms.Form):
 
     series = forms.ModelChoiceField(
         queryset=Series.objects.select_related("series_type").all(),
-        widget=widgets.AutocompleteWidget(ac_class=SeriesAutocomplete),
+        widget=LookupWidget(SeriesLookup),
     )
 
     range_type = forms.ChoiceField(
@@ -1249,16 +1249,17 @@ The bulk addition form uses HTMX for showing/hiding range input fields:
 - Hides fields when "All issues" selected
 - ~50% reduction in JavaScript vs separate file
 
-## Autocomplete
+## Lookups
 
-**File:** `comicsdb/autocomplete.py`
+**File:** `comicsdb/lookups.py`
 
-### IssueAutocomplete
+### IssueLookup
 
 ```python
-class IssueAutocomplete(ModelAutocomplete):
+@register
+class IssueLookup(ModelLookup):
     model = Issue
-    search_attrs = ["series__name", "number", "alt_number"]
+    search_fields = ["series__name__icontains", "number__icontains", "alt_number__icontains"]
 ```
 
 Used in `CollectionItemForm` for issue selection.
@@ -1293,21 +1294,21 @@ Used in `CollectionItemForm` for issue selection.
 queryset = Issue.objects.select_related("series", "series__series_type")
 ```
 
-### SeriesAutocomplete
+### SeriesLookup
 
 ```python
-class SeriesAutocomplete(ModelAutocomplete):
+@register
+class SeriesLookup(ModelLookup):
     model = Series
-    search_attrs = ["name"]
+    search_fields = ["name__unaccent__icontains", "alt_names__joined__icontains"]
 ```
 
 Used in `AddIssuesFromSeriesForm` for bulk addition.
 
 **Features:**
 
-- Simple name-based search
+- Accent-insensitive name search, plus alternate names
 - Optimized with `select_related("series_type")`
-- Returns formatted results with series type
 
 ## Templates
 
@@ -1538,10 +1539,10 @@ Used for user ownership and authentication.
 
 ### External Dependencies
 
-**autocomplete package:**
+**izaya package:**
 
 ```python
-from autocomplete import ModelAutocomplete, register, widgets
+from izaya import LookupWidget, ModelLookup, register
 ```
 
 Provides autocomplete functionality for issue and series search.

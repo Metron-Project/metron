@@ -9,7 +9,7 @@ Developer documentation for the `reading_lists` Django app.
 - [Views and URLs](#views-and-urls)
 - [Forms](#forms)
 - [Permissions](#permissions)
-- [Autocomplete](#autocomplete)
+- [Lookups](#lookups)
 - [Filters](#filters)
 - [Templates](#templates)
 - [Database Optimization](#database-optimization)
@@ -32,7 +32,7 @@ The reading_lists app follows Django's MTV (Model-Template-View) pattern with:
 **Key Dependencies:**
 
 - Django's class-based views
-- `autocomplete` package for issue, series, and arc search
+- `izaya` package for issue, series, arc, and reading list search
 - `django-filter` for API and web filtering
 - `sorl-thumbnail` for cover image resizing
 - `comicsdb` app for Issue, Publisher, Character, Creator, Credits, and Role models
@@ -819,10 +819,7 @@ Attribution fields (`attribution_source`, `attribution_url`) are removed in the 
 class AddIssueWithSearchForm(forms.Form):
     issues = forms.ModelMultipleChoiceField(
         queryset=Issue.objects.select_related("series", "series__series_type").all(),
-        widget=widgets.AutocompleteWidget(
-            ac_class=IssueAutocomplete,
-            options={"multiselect": True},
-        ),
+        widget=LookupWidget(IssueLookup, multiple=True),
     )
     issue_order = forms.CharField(widget=forms.HiddenInput())
 ```
@@ -836,7 +833,7 @@ class AddIssueWithSearchForm(forms.Form):
 class AddIssuesFromSeriesForm(forms.Form):
     series = forms.ModelChoiceField(
         queryset=Series.objects.select_related("series_type").all(),
-        widget=widgets.AutocompleteWidget(ac_class=SeriesAutocomplete),
+        widget=LookupWidget(SeriesLookup),
     )
     range_type = forms.ChoiceField(
         choices=[("all", "All issues"), ("range", "Issue range")],
@@ -852,7 +849,7 @@ class AddIssuesFromSeriesForm(forms.Form):
 
 **Features:**
 
-- **Series autocomplete**: Uses `SeriesAutocomplete` for efficient search
+- **Series autocomplete**: Uses `SeriesLookup` for efficient search
 - **Radio buttons**: HTMX-based UI for range type selection
 - **Flexible range**: Optional start/end numbers
 - **Position control**: Add at beginning or end of list
@@ -876,7 +873,7 @@ Designed for bulk operations where users need to add 10-1000+ issues from a sing
 class AddIssuesFromArcForm(forms.Form):
     arc = forms.ModelChoiceField(
         queryset=Arc.objects.all(),
-        widget=widgets.AutocompleteWidget(ac_class=ArcAutocomplete),
+        widget=LookupWidget(ArcLookup),
     )
     position = forms.ChoiceField(
         choices=[("end", "At the end"), ("beginning", "At the beginning")],
@@ -886,7 +883,7 @@ class AddIssuesFromArcForm(forms.Form):
 
 **Features:**
 
-- **Arc autocomplete**: Uses `ArcAutocomplete` for efficient search
+- **Arc autocomplete**: Uses `ArcLookup` for efficient search
 - **Radio buttons**: Simple UI for position selection
 - **Position control**: Add at beginning or end of list
 
@@ -1020,76 +1017,72 @@ def visible_to(self, user):
 
 Note the web views include the "reading list editor" group in the Metron-visibility branch alongside `is_staff`; the API's `ReadingListViewSet.get_queryset()` (a separate, un-refactored implementation) currently only checks `is_staff` for that branch (editor-group members still see their own + public lists via the API, just not Metron's private ones).
 
-## Autocomplete
+## Lookups
 
-**File:** `comicsdb/autocomplete.py`
+**File:** `comicsdb/lookups.py`
 
-### IssueAutocomplete
+### IssueLookup
 
 ```python
-class IssueAutocomplete(ModelAutocomplete):
+@register
+class IssueLookup(ModelLookup):
     model = Issue
-    search_attrs = ["series__name", "number"]
+    search_fields = ["series__name__icontains", "number__icontains", "alt_number__icontains"]
 ```
 
 **Smart Search Implementation:**
 
+`search()` is overridden to handle queries containing `#`; anything else falls back to `search_fields`:
+
 ```python
-def get_query_filtered_queryset(cls, search, context):
-    base_qs = cls.get_queryset()
+def search(self, query, request):
+    if "#" not in query:
+        return super().search(query, request)
 
-    if "#" in search:
-        parts = search.split("#", 1)
-        series_part = parts[0].strip()
-        number_part = parts[1].strip()
+    queryset = self.get_queryset(request)
+    series_part, number_part = (part.strip() for part in query.split("#", 1))
+    conditions = []
+    if series_part:
+        # A trailing "(YYYY)" filters on series__year_began; every remaining word must match
+        conditions.extend(Q(series__name__unaccent__icontains=word) for word in series_part.split())
+    if number_part:
+        conditions.append(Q(number__iexact=number_part) | Q(alt_number__iexact=number_part))
 
-        conditions = []
-        if series_part:
-            conditions.append(Q(series__name__icontains=series_part))
-        if number_part:
-            conditions.append(Q(number__icontains=number_part))
-
-        return base_qs.filter(reduce(operator.and_, conditions))
-    else:
-        conditions = [Q(**{f"{attr}__icontains": search}) for attr in cls.search_attrs]
-        return base_qs.filter(reduce(operator.or_, conditions))
+    if not conditions:
+        return queryset.none()
+    return queryset.filter(reduce(operator.and_, conditions))
 ```
 
 **Features:**
 
-- Basic search: OR across series name and number
-- Smart search: AND between series and number when `#` present
+- Basic search: OR across series name, number, and alt number
+- Smart search: AND between series words, year, and number when `#` present
 - Optimized queryset with `select_related("series", "series__series_type")`
 
-### SeriesAutocomplete
+### SeriesLookup
 
 ```python
-class SeriesAutocomplete(ModelAutocomplete):
+@register
+class SeriesLookup(ModelLookup):
     model = Series
-    search_attrs = ["name"]
+    search_fields = ["name__unaccent__icontains", "alt_names__joined__icontains"]
 ```
 
 **Usage:**
 Used in `AddIssuesFromSeriesForm` for bulk addition feature.
 
-**Queryset:**
-
-```python
-queryset = Series.objects.select_related("series_type").all()
-```
-
 **Features:**
 
-- Simple name-based search
-- Optimized with `select_related()` for series type
-- Returns formatted results with series type information
+- Accent-insensitive name search, plus alternate names
+- Optimized with `select_related("series_type")`
 
-### ArcAutocomplete
+### ArcLookup
 
 ```python
-class ArcAutocomplete(ModelAutocomplete):
+@register
+class ArcLookup(ModelLookup):
     model = Arc
-    search_attrs = ["name"]
+    search_fields = ["name__unaccent__icontains"]
 ```
 
 **Usage:**
@@ -1097,9 +1090,25 @@ Used in `AddIssuesFromArcForm` for arc-based bulk addition feature.
 
 **Features:**
 
-- Simple name-based search
-- Returns formatted results with arc names
+- Accent-insensitive name search
 - Enables quick selection of story arcs
+
+### ReadingListLookup
+
+**File:** `reading_lists/lookups.py`
+
+```python
+@register
+class ReadingListLookup(ModelLookup):
+    model = ReadingList
+    search_fields = ["name__unaccent__icontains"]
+
+    def get_queryset(self, request):
+        return super().get_queryset(request).manageable_by(request.user)
+```
+
+**Usage:**
+Used for the `previous` and `next` fields of `ReadingListForm`. Results are limited to lists the requesting user can manage, and `LookupWidget` only renders selected values that are in the form field's queryset, so a submitted pk can't echo back the name of a list the user can't see.
 
 ## Filters
 
@@ -1656,13 +1665,13 @@ Used for user ownership and permissions.
 
 ### External Dependencies
 
-**autocomplete package:**
+**izaya package:**
 
 ```python
-from autocomplete import ModelAutocomplete, register, widgets
+from izaya import LookupWidget, ModelLookup, register
 ```
 
-Provides autocomplete functionality for issue and arc search.
+Provides autocomplete functionality for issue, series, arc, and reading list search.
 
 ## Management Commands
 

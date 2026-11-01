@@ -1,0 +1,83 @@
+/* Izaya lookup widget: selected chips sit inside an input-style box. All colours come from
+   Bulma's theme variables so they follow light and dark mode. */
+.izaya {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.25rem;
+    min-height: var(--bulma-control-height);
+    padding: 0.125rem 0.5rem;
+    background-color: var(--bulma-scheme-main);
+    border: 1px solid var(--bulma-border);
+    border-radius: var(--bulma-radius);
+}
+
+.izaya:focus-within {
+    border-color: var(--bulma-link);
+    box-shadow: 0 0 0 0.125em var(--bulma-link-soft);
+}
+
+.izaya:has(.input.is-danger) {
+    border-color: var(--bulma-danger);
+}
+
+/* Lets the chips and the input wrap together as items of the box. */
+.izaya-selection {
+    display: contents;
+}
+
+.izaya-chip {
+    max-width: 100%;
+    border-radius: var(--bulma-radius-small);
+}
+
+.izaya-chip-label {
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+/* Bulma's .delete draws its own x, so izaya's text one is hidden. Only the x shows until the
+   button is hovered or focused. */
+.izaya-remove {
+    --bulma-delete-background-alpha: 0;
+    font-size: 0;
+}
+
+.izaya input.izaya-input,
+.izaya input.izaya-input:focus {
+    flex: 1 1 8rem;
+    width: auto;
+    min-width: 8rem;
+    height: 2em;
+    padding: 0 0.25rem;
+    background-color: transparent;
+    border: none;
+    box-shadow: none;
+}
+
+.izaya-listbox {
+    top: calc(100% + 0.25rem);
+}
+
+.izaya-option {
+    padding-block: 0.5rem;
+    color: var(--bulma-text-strong);
+}
+
+.izaya-option:hover {
+    background-color: var(--bulma-link-soft);
+    color: var(--bulma-link-soft-invert);
+}
+
+/* Clicking a selected option removes it, so selected ones need to stand out. */
+.izaya-option[aria-selected="true"] {
+    position: relative;
+    padding-inline-end: 2rem;
+    font-weight: var(--bulma-weight-semibold);
+}
+
+.izaya-option[aria-selected="true"]::after {
+    content: "\2713";
+    position: absolute;
+    right: 0.75rem;
+}

@@ -1,41 +1,18 @@
 from django import forms
-from django.core.exceptions import ValidationError
 from django.db.models import Q
 from django.utils.translation import gettext_lazy as _
+from izaya import LookupWidget
 
-from comicsdb.autocomplete import ArcAutocomplete, IssueAutocomplete, SeriesAutocomplete
-from comicsdb.forms.widgets import SafeAutocompleteWidget
+from comicsdb.lookups import ArcLookup, IssueLookup, SeriesLookup
 from comicsdb.models.arc import Arc
 from comicsdb.models.issue import Issue
 from comicsdb.models.series import Series
-from reading_lists.autocomplete import ReadingListAutocomplete
+from reading_lists.lookups import ReadingListLookup
 from reading_lists.models import ReadingList
 
 # Generous upper bound on issue_order entries (the largest lists hold ~1,100 issues),
 # so a crafted request can't make the view process an unbounded list.
 MAX_ISSUE_ORDER_LENGTH = 5000
-
-
-class ScopedReadingListWidget(SafeAutocompleteWidget):
-    """Autocomplete widget that only renders a selected list within ``allowed_queryset``.
-
-    The widget looks up the selected value's label with no request context, and on
-    a re-rendered invalid form that value comes from the client. Dropping values
-    outside the form field's queryset keeps a submitted pk from echoing back the
-    name of a list the user isn't allowed to see.
-    """
-
-    allowed_queryset = None
-
-    def get_context(self, name, value, attrs):
-        if value not in (None, "", []) and self.allowed_queryset is not None:
-            try:
-                allowed = self.allowed_queryset.filter(pk=value).exists()
-            except ValueError, TypeError, ValidationError:
-                allowed = False
-            if not allowed:
-                value = None
-        return super().get_context(name, value, attrs)
 
 
 class ReadingListForm(forms.ModelForm):
@@ -46,9 +23,8 @@ class ReadingListForm(forms.ModelForm):
         required=False,
         label=_("Previous List"),
         help_text=_("The reading list that comes before this one in a reading order (optional)"),
-        widget=ScopedReadingListWidget(
-            ac_class=ReadingListAutocomplete,
-            attrs={"placeholder": _("Search for a reading list..."), "class": "input"},
+        widget=LookupWidget(
+            ReadingListLookup, attrs={"placeholder": _("Search for a reading list...")}
         ),
     )
     next = forms.ModelChoiceField(
@@ -56,9 +32,8 @@ class ReadingListForm(forms.ModelForm):
         required=False,
         label=_("Next List"),
         help_text=_("The reading list that comes after this one in a reading order (optional)"),
-        widget=ScopedReadingListWidget(
-            ac_class=ReadingListAutocomplete,
-            attrs={"placeholder": _("Search for a reading list..."), "class": "input"},
+        widget=LookupWidget(
+            ReadingListLookup, attrs={"placeholder": _("Search for a reading list...")}
         ),
     )
 
@@ -124,7 +99,6 @@ class ReadingListForm(forms.ModelForm):
             queryset = queryset.exclude(pk=self.instance.pk)
         for field_name in ("previous", "next"):
             self.fields[field_name].queryset = queryset
-            self.fields[field_name].widget.allowed_queryset = queryset
 
 
 class AddIssueWithSearchForm(forms.Form):
@@ -133,15 +107,8 @@ class AddIssueWithSearchForm(forms.Form):
     issues = forms.ModelMultipleChoiceField(
         queryset=Issue.objects.select_related("series", "series__series_type").all(),
         required=False,
-        widget=SafeAutocompleteWidget(
-            ac_class=IssueAutocomplete,
-            attrs={
-                "placeholder": _("Search for issues..."),
-                "class": "input",
-            },
-            options={
-                "multiselect": True,
-            },
+        widget=LookupWidget(
+            IssueLookup, multiple=True, attrs={"placeholder": _("Search for issues...")}
         ),
         label=_("Search for Issues (Optional)"),
         help_text=_("Add new issues and/or reorder existing issues by dragging"),
@@ -178,13 +145,7 @@ class AddIssuesFromSeriesForm(forms.Form):
     series = forms.ModelChoiceField(
         queryset=Series.objects.select_related("series_type").all(),
         required=True,
-        widget=SafeAutocompleteWidget(
-            ac_class=SeriesAutocomplete,
-            attrs={
-                "placeholder": _("Search for a series..."),
-                "class": "input",
-            },
-        ),
+        widget=LookupWidget(SeriesLookup, attrs={"placeholder": _("Search for a series...")}),
         label=_("Series"),
         help_text=_("Select the series to add issues from"),
     )
@@ -245,13 +206,7 @@ class AddIssuesFromArcForm(forms.Form):
     arc = forms.ModelChoiceField(
         queryset=Arc.objects.all(),
         required=True,
-        widget=SafeAutocompleteWidget(
-            ac_class=ArcAutocomplete,
-            attrs={
-                "placeholder": _("Search for a story arc..."),
-                "class": "input",
-            },
-        ),
+        widget=LookupWidget(ArcLookup, attrs={"placeholder": _("Search for a story arc...")}),
         label=_("Story Arc"),
         help_text=_("Select the story arc to add issues from"),
     )

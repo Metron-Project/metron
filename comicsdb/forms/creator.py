@@ -1,15 +1,11 @@
 from django.forms import ClearableFileInput, DateInput, ModelForm
 from django.utils.translation import gettext_lazy as _
+from izaya import LookupWidget
 
-from comicsdb.autocomplete import CreatorAutocomplete
-from comicsdb.forms.widgets import SafeAutocompleteWidget
+from comicsdb.lookups import CreatorLookup
 from comicsdb.models import Creator
 
-CreatorsWidget = SafeAutocompleteWidget(
-    ac_class=CreatorAutocomplete,
-    attrs={"class": "input"},
-    options={"multiselect": True},
-)
+CreatorsWidget = LookupWidget(CreatorLookup, multiple=True)
 
 
 class CreatorForm(ModelForm):

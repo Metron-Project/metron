@@ -6,14 +6,13 @@ must not have its name or URL exposed.
 """
 
 import pytest
-from autocomplete.core import ContextArg
 from django.test import RequestFactory
 from django.urls import reverse
 from django.utils.html import escape
 from rest_framework import status
 
-from reading_lists.autocomplete import ReadingListAutocomplete
 from reading_lists.forms import ReadingListForm
+from reading_lists.lookups import ReadingListLookup
 from reading_lists.models import ReadingList
 
 HTTP_200_OK = 200
@@ -46,10 +45,10 @@ def _form_data(**links):
     return {"name": "Linked List", "list_type": ReadingList.ListType.EVENT, **links}
 
 
-def _context_for(user):
+def _request_for(user):
     request = RequestFactory().get("/")
     request.user = user
-    return ContextArg(request=request, client_kwargs={})
+    return request
 
 
 class TestReadingListFormLinkScoping:
@@ -106,8 +105,24 @@ class TestReadingListFormLinkScoping:
         assert not form.is_valid()
         assert other_user_private_list.name not in str(form["previous"])
 
+    def test_removing_selected_link_clears_it(
+        self, reading_list_user, public_reading_list, private_reading_list
+    ):
+        public_reading_list.previous = private_reading_list
+        public_reading_list.save()
 
-class TestReadingListAutocompleteScoping:
+        form = ReadingListForm(instance=public_reading_list, user=reading_list_user)
+        assert private_reading_list.name in str(form["previous"])
+
+        # A removed chip takes its hidden input with it, so the field is simply not submitted.
+        form = ReadingListForm(
+            data=_form_data(), instance=public_reading_list, user=reading_list_user
+        )
+        assert form.is_valid(), form.errors
+        assert form.save().previous is None
+
+
+class TestReadingListLookupScoping:
     def test_search_only_returns_users_own_lists(
         self,
         reading_list_user,
@@ -116,27 +131,33 @@ class TestReadingListAutocompleteScoping:
         other_user_reading_list,
         other_user_private_list,
     ):
-        results = ReadingListAutocomplete.search_items("List", _context_for(reading_list_user))
-        keys = {item["key"] for item in results}
-        assert keys == {public_reading_list.pk, private_reading_list.pk}
+        results = ReadingListLookup().search("List", _request_for(reading_list_user))
+        assert set(results) == {public_reading_list, private_reading_list}
 
     def test_search_includes_metron_lists_for_editor(
         self, reading_list_editor_user, metron_reading_list, other_user_reading_list
     ):
-        results = ReadingListAutocomplete.search_items(
-            "List", _context_for(reading_list_editor_user)
-        )
-        keys = {item["key"] for item in results}
-        assert keys == {metron_reading_list.pk}
+        results = ReadingListLookup().search("List", _request_for(reading_list_editor_user))
+        assert set(results) == {metron_reading_list}
 
-    def test_items_from_keys_drops_other_users_lists(
-        self, reading_list_user, public_reading_list, other_user_private_list
+    def test_labels_do_not_query_each_lists_owner(
+        self,
+        reading_list_user,
+        public_reading_list,
+        private_reading_list,
+        django_assert_num_queries,
     ):
-        items = ReadingListAutocomplete.get_items_from_keys(
-            [public_reading_list.pk, other_user_private_list.pk],
-            _context_for(reading_list_user),
-        )
-        assert [item["key"] for item in items] == [public_reading_list.pk]
+        lookup = ReadingListLookup()
+        results = lookup.search("List", _request_for(reading_list_user))
+        with django_assert_num_queries(1):
+            items = [lookup.to_item(result) for result in results]
+        assert len(items) == 2
+
+    def test_search_endpoint_denies_anonymous_users(self, client, public_reading_list):
+        url = reverse("izaya:search", args=["ReadingListLookup"])
+        resp = client.get(url, {"q": "List"})
+        assert resp.status_code == status.HTTP_403_FORBIDDEN
+        assert public_reading_list.name.encode() not in resp.content
 
 
 class TestReadingListNavVisibility:

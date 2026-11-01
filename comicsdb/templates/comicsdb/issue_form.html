@@ -5,7 +5,6 @@
     {% trans "Issue Form" %}
 {% endblock title %}
 {% block headcss %}
-    {{ form.media.css }}
     <link rel="stylesheet"
           href="{% static 'site/css/bulma-calendar.min.css' %}">
     {# Sticky bar, section nav, grouped fields #}
@@ -144,7 +143,6 @@
     {% endif %}
 {% endblock %}
 {% block js %}
-    {{ form.media.js }}
     <script src="{% static 'extensions/bulma-calendar/dist/js/bulma-calendar.min.js' %}"></script>
     <script>
 document.addEventListener('DOMContentLoaded', function() {
@@ -251,21 +249,6 @@ function updateFormsetManagement(prefix, increment = 0) {
     }
 }
 
-// Listen for htmx events to handle autocomplete widget initialization on new rows
-document.body.addEventListener('htmx:afterSwap', function(event) {
-    // Check if this was a formset row addition
-    if (event.detail.target.id && event.detail.target.id.includes('TableBody')) {
-        // Trigger any autocomplete initialization if needed
-        var newRow = event.detail.target.lastElementChild;
-        if (newRow && window.autocomplete && window.autocomplete.init) {
-            // Initialize autocomplete widgets in the new row
-            var autocompleteInputs = newRow.querySelectorAll('[data-autocomplete]');
-            autocompleteInputs.forEach(function(input) {
-                window.autocomplete.init(input);
-            });
-        }
-    }
-});
     </script>
     {# Usability behaviour — section nav active-state #}
     <script src="{% static 'site/js/issue-form-usability.js' %}"></script>

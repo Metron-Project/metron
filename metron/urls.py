@@ -2,7 +2,6 @@
 Metron URL Configuration
 """
 
-from autocomplete import urls as autocomplete_urls
 from django.conf import settings
 from django.conf.urls.static import static as static_url
 from django.contrib import admin
@@ -47,7 +46,7 @@ urlpatterns = [
     path("admin/", admin.site.urls),
     path("api/", include(api_urls)),
     path("api-auth/", include("rest_framework.urls")),
-    path("autocomplete/", include((autocomplete_urls[0], autocomplete_urls[1]))),
+    path("izaya/", include("izaya.urls")),
     path("arc/", include(arc_urls)),
     path("character/", include(character_urls)),
     path("creator/", include(creator_urls)),

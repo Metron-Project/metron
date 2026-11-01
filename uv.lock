@@ -297,18 +297,6 @@ wheels = [
 ]
 
 [[package]]
-name = "django-htmx-autocomplete"
-version = "1.0.17"
-source = { registry = "https://pypi.org/simple" }
-dependencies = [
-    { name = "django" },
-]
-sdist = { url = "https://files.pythonhosted.org/packages/79/27/a2e58351e52a3462e9cfdc52b5dcd58e99f0098f87fc7ce33359b35fdf3f/django_htmx_autocomplete-1.0.17.tar.gz", hash = "sha256:5956dc4e2a8982e180348fec7711fadbe919a8e746c3a8b4b1c8ac70d8597ff4", size = 33981, upload-time = "2026-02-09T16:40:09.322Z" }
-wheels = [
-    { url = "https://files.pythonhosted.org/packages/01/c4/6a33a676c10e653b3275d6718805fb7e8d7f81fa38e50fb48b658ccd142c/django_htmx_autocomplete-1.0.17-py3-none-any.whl", hash = "sha256:03766542640e198fb59202dd1ebabf00a4580bc46cf6fee1e10592f9d6ad2080", size = 38551, upload-time = "2026-02-09T16:40:07.871Z" },
-]
-
-[[package]]
 name = "django-js-asset"
 version = "4.2.0"
 source = { registry = "https://pypi.org/simple" }
@@ -607,6 +595,18 @@ wheels = [
 ]
 
 [[package]]
+name = "izaya"
+version = "0.3.0"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "django" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/34/a5/3dd8d822e93aa60c95be587d9b9bed1dbd2bb209b63ed890e9f3f8d10ae3/izaya-0.3.0.tar.gz", hash = "sha256:9dc27cbe42d3a66c0009cad83a5cc56d077af97fd9003a02c1855bd32eae540a", size = 30770, upload-time = "2026-11-01T19:45:04.45Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/54/1b/e8920af7b1b1d0cb59003180154c8b37155d3a218f64f055fac010e20289/izaya-0.3.0-py3-none-any.whl", hash = "sha256:a12602812507e1a4332681e0d39723bf80307272053ef93cbf0427875282776e", size = 29797, upload-time = "2026-11-01T19:45:03.458Z" },
+]
+
+[[package]]
 name = "jmespath"
 version = "1.1.0"
 source = { registry = "https://pypi.org/simple" }
@@ -698,7 +698,6 @@ dependencies = [
     { name = "django-countries" },
     { name = "django-filter" },
     { name = "django-htmx" },
-    { name = "django-htmx-autocomplete" },
     { name = "django-money" },
     { name = "django-mptt" },
     { name = "django-rest-framework-condition" },
@@ -712,6 +711,7 @@ dependencies = [
     { name = "gunicorn" },
     { name = "imagehash" },
     { name = "isbnlib" },
+    { name = "izaya" },
     { name = "markdown" },
     { name = "pillow" },
     { name = "psycopg", extra = ["binary", "pool"] },
@@ -745,7 +745,6 @@ requires-dist = [
     { name = "django-countries" },
     { name = "django-filter" },
     { name = "django-htmx" },
-    { name = "django-htmx-autocomplete" },
     { name = "django-money" },
     { name = "django-mptt" },
     { name = "django-rest-framework-condition" },
@@ -759,6 +758,7 @@ requires-dist = [
     { name = "gunicorn" },
     { name = "imagehash" },
     { name = "isbnlib" },
+    { name = "izaya", specifier = ">=0.3.0" },
     { name = "markdown" },
     { name = "pillow" },
     { name = "psycopg", extras = ["binary", "pool"] },

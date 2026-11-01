@@ -35,9 +35,13 @@
         {% bulma %}
         {% font_awesome %}
         <link rel="stylesheet" href="{% static 'site/css/base.css' %}">
+        <link rel="stylesheet" href="{% static 'izaya/layout.css' %}">
+        <link rel="stylesheet" href="{% static 'site/css/izaya.css' %}">
         {% block headcss %}{% endblock %}
         {# Head Scripts #}
         {% htmx_script %}
+        {# Lookup widgets rely on this; it only adds document listeners, so every page can load it #}
+        <script src="{% static 'izaya/izaya.js' %}" defer></script>
         {% block headscripts %}{% endblock %}
     </head>
     <body class="has-navbar-fixed-top"

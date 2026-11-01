@@ -3,10 +3,10 @@
 {% block title %}{% blocktrans with name=pull_list %}{{ name }} - Metron{% endblocktrans %}{% endblock %}
 {% block headcss %}
     <style>
-        /* The autocomplete widget is taller than a Bulma .button; stretch the button
+        /* The lookup widget's chip and input can wrap onto two lines; stretch the button
            to match and join the two like a standard has-addons group. */
         .pull-list-add .control .button { height: 100%; }
-        .pull-list-add .phac_aspc_form_autocomplete ul.ac_container {
+        .pull-list-add .izaya {
             border-top-right-radius: 0;
             border-bottom-right-radius: 0;
         }
@@ -15,7 +15,7 @@
 {% block content %}
     {% comment %}
         Wrap everything HTMX swaps in one id so filter/view/remove/undo can re-render in place.
-        hx-target/select/swap are set per element, not inherited, so the autocomplete's own
+        hx-target/select/swap are set per element, not inherited, so the lookup widget's own
         HTMX requests inside this wrapper aren't affected.
     {% endcomment %}
     <div id="pull-list-content">

@@ -2,7 +2,6 @@
 {% load static i18n %}
 {% block title %}{% blocktrans with name=reading_list.name %}Manage Issues - {{ name }} - Metron{% endblocktrans %}{% endblock %}
 {% block js %}
-    {{ form.media }}
     <script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.0/Sortable.min.js"></script>
 {% endblock js %}
 {% block content %}
@@ -68,7 +67,7 @@
             const issueOrderField = document.querySelector('[name="issue_order"]');
 
             // Store issue data: id -> label mapping
-            // This will be populated from the autocomplete widget's data
+            // This will be populated from the lookup widget's chips
             const issueData = {};
 
             // Cache for fetched issue labels
@@ -89,57 +88,26 @@
                 existingIssueIds.add(issue.id);
             });
 
-            // Find the autocomplete container
-            const autocompleteContainer = document.querySelector('.phac_aspc_form_autocomplete');
+            // Find the lookup widget
+            const lookupWidget = document.querySelector('[data-izaya]');
 
-            if (!autocompleteContainer) {
-                console.error('Autocomplete container not found');
-                return;
+            // Each selected issue is a chip holding a hidden input with name="issues"
+            function getChips() {
+                return Array.from(lookupWidget.querySelectorAll('[data-izaya-chip]'));
             }
 
-            // Function to get selected issues from the autocomplete widget
+            // Function to get selected issues from the lookup widget
             function getSelectedIssues() {
-                // The autocomplete widget creates hidden inputs with name="issues"
-                const hiddenInputs = autocompleteContainer.querySelectorAll('input[name="issues"][type="hidden"]');
-                const issues = [];
-
-                hiddenInputs.forEach(input => {
-                    if (input.value && !input.classList.contains('ac_required_input')) {
-                        issues.push(input.value);
-                    }
-                });
-
-                return issues;
+                return getChips().map(chip => chip.querySelector('input[name="issues"]').value);
             }
 
-            // Function to get issue labels from the autocomplete chips
+            // Function to get issue labels from the chips
             function updateIssueDataFromChips() {
-                // The autocomplete widget shows selected items as chips
-                const chips = autocompleteContainer.querySelectorAll('li.chip');
-                chips.forEach(chip => {
-                    // Get the label from the span element (first span in the chip)
-                    const labelSpan = chip.querySelector('span');
-                    if (!labelSpan) return;
-
-                    const label = labelSpan.textContent.trim();
-
-                    // Get the issue ID from the hx-vals attribute on the anchor tag
-                    const anchor = chip.querySelector('a[hx-vals]');
-                    if (anchor) {
-                        const hxVals = anchor.getAttribute('hx-vals');
-                        // Parse the JSON-like hx-vals to extract the item ID
-                        try {
-                            // The hx-vals contains: {"remove": true, "item": "12345"}
-                            const match = hxVals.match(/"item"\s*:\s*"(\d+)"/);
-                            if (match) {
-                                const issueId = match[1];
-                                issueData[issueId] = label;
-                                issueLabelCache[issueId] = label;
-                            }
-                        } catch (e) {
-                            console.error('Error parsing hx-vals:', e);
-                        }
-                    }
+                getChips().forEach(chip => {
+                    const issueId = chip.querySelector('input[name="issues"]').value;
+                    const label = chip.querySelector('[data-izaya-chip-label]').textContent.trim();
+                    issueData[issueId] = label;
+                    issueLabelCache[issueId] = label;
                 });
             }
 
@@ -198,9 +166,11 @@
                         <span class="icon is-small" style="vertical-align: middle;">
                             <i class="fas fa-grip-vertical"></i>
                         </span>
-                        <span style="vertical-align: middle;">${issueLabel}</span>
+                        <span class="issue-label" style="vertical-align: middle;"></span>
                         ${badge}
                     `;
+                    // Issue and series names are plain text, not HTML
+                    div.querySelector('.issue-label').textContent = issueLabel;
                     selectedIssuesList.appendChild(div);
                 });
 
@@ -226,48 +196,12 @@
                 });
             }
 
-            // Listen for HTMX events from the autocomplete widget
-            document.body.addEventListener('htmx:afterSettle', function(event) {
-                // Check if the event is from our autocomplete widget
-                if (autocompleteContainer.contains(event.target)) {
-                    updateSelectedIssuesList();
-                }
-            });
-
-            // Also use MutationObserver to watch for changes to hidden inputs
-            const observer = new MutationObserver(function(mutations) {
-                let shouldUpdate = false;
-                mutations.forEach(mutation => {
-                    if (mutation.type === 'childList') {
-                        // Check if hidden inputs were added or removed
-                        mutation.addedNodes.forEach(node => {
-                            if (node.nodeName === 'SPAN' && node.querySelector && node.querySelector('input[name="issues"]')) {
-                                shouldUpdate = true;
-                            }
-                        });
-                        mutation.removedNodes.forEach(node => {
-                            if (node.nodeName === 'SPAN' && node.querySelector && node.querySelector('input[name="issues"]')) {
-                                shouldUpdate = true;
-                            }
-                        });
-                    }
-                });
-                if (shouldUpdate) {
-                    setTimeout(updateSelectedIssuesList, 100);
-                }
-            });
-
-            // Start observing the container that holds the hidden inputs
-            const hiddenInputContainer = autocompleteContainer.querySelector('div[id]');
-            if (hiddenInputContainer) {
-                observer.observe(hiddenInputContainer, {
-                    childList: true,
-                    subtree: true
-                });
-            }
+            // Listen for selection changes from the lookup widget
+            lookupWidget.addEventListener('izaya:select', updateSelectedIssuesList);
+            lookupWidget.addEventListener('izaya:remove', updateSelectedIssuesList);
 
             // Initial update
-            setTimeout(updateSelectedIssuesList, 500);
+            updateSelectedIssuesList();
         });
     </script>
     <style>

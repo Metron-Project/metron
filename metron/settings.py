@@ -71,7 +71,7 @@ INSTALLED_APPS = [
     "wiki.plugins.images.apps.ImagesConfig",
     "wiki.plugins.macros.apps.MacrosConfig",
     "django_htmx",
-    "autocomplete",
+    "izaya",
     "knox",
     "api",
     "comicsdb",
@@ -359,6 +359,18 @@ STATICFILES_FINDERS = [
     # Now add our custom SimpleBulma one.
     "django_simple_bulma.finders.SimpleBulmaFinder",
 ]
+
+IZAYA_CLASSES = {
+    "input": "input",
+    "chip": "tag is-link is-medium",
+    "remove": "delete is-small ml-1",
+    "listbox": "box p-1",
+    "option": "dropdown-item is-clickable",
+    "option_active": "has-background-link has-text-white",
+}
+
+# Every form with a lookup widget is behind a login.
+IZAYA_LOGIN_REQUIRED = True
 
 # Custom settings for django-simple-bulma
 BULMA_SETTINGS = {
