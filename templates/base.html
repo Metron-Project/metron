@@ -40,6 +40,8 @@
         {% block headcss %}{% endblock %}
         {# Head Scripts #}
         {% htmx_script %}
+        {# Lookup widgets rely on this; it only adds document listeners, so every page can load it #}
+        <script src="{% static 'izaya/izaya.js' %}" defer></script>
         {% block headscripts %}{% endblock %}
     </head>
     <body class="has-navbar-fixed-top"

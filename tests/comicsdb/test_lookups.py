@@ -1064,9 +1064,9 @@ class TestLookupSearchEndpoint:
 @pytest.mark.django_db
 @pytest.mark.parametrize("url_name", ["pull-list:detail", "wish-list:detail"])
 def test_page_with_lookup_widget_loads_its_script(client, create_user, test_password, url_name):
-    """These pages render the form by hand, so they must include the form's media themselves."""
+    """The base template loads the script once, so pages don't include the form's media."""
     user = create_user()
     client.login(username=user.username, password=test_password)
     resp = client.get(reverse(url_name))
     assert resp.status_code == HTTP_200_OK
-    assert b"izaya/izaya.js" in resp.content
+    assert resp.content.count(b"izaya/izaya.js") == 1

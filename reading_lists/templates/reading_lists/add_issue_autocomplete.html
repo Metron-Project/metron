@@ -2,7 +2,6 @@
 {% load static i18n %}
 {% block title %}{% blocktrans with name=reading_list.name %}Manage Issues - {{ name }} - Metron{% endblocktrans %}{% endblock %}
 {% block js %}
-    {{ form.media }}
     <script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.0/Sortable.min.js"></script>
 {% endblock js %}
 {% block content %}
@@ -167,9 +166,11 @@
                         <span class="icon is-small" style="vertical-align: middle;">
                             <i class="fas fa-grip-vertical"></i>
                         </span>
-                        <span style="vertical-align: middle;">${issueLabel}</span>
+                        <span class="issue-label" style="vertical-align: middle;"></span>
                         ${badge}
                     `;
+                    // Issue and series names are plain text, not HTML
+                    div.querySelector('.issue-label').textContent = issueLabel;
                     selectedIssuesList.appendChild(div);
                 });
 

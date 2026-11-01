@@ -140,6 +140,19 @@ class TestReadingListLookupScoping:
         results = ReadingListLookup().search("List", _request_for(reading_list_editor_user))
         assert set(results) == {metron_reading_list}
 
+    def test_labels_do_not_query_each_lists_owner(
+        self,
+        reading_list_user,
+        public_reading_list,
+        private_reading_list,
+        django_assert_num_queries,
+    ):
+        lookup = ReadingListLookup()
+        results = lookup.search("List", _request_for(reading_list_user))
+        with django_assert_num_queries(1):
+            items = [lookup.to_item(result) for result in results]
+        assert len(items) == 2
+
     def test_search_endpoint_denies_anonymous_users(self, client, public_reading_list):
         url = reverse("izaya:search", args=["ReadingListLookup"])
         resp = client.get(url, {"q": "List"})

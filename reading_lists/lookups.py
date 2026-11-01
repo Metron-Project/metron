@@ -17,5 +17,8 @@ class ReadingListLookup(ModelLookup):
     search_fields = ["name__unaccent__icontains"]
     rank_fields = ["name__unaccent"]
 
+    def get_base_queryset(self):
+        return super().get_base_queryset().select_related("user")
+
     def get_queryset(self, request):
         return super().get_queryset(request).manageable_by(request.user)

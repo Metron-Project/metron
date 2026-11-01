@@ -68,3 +68,16 @@
     background-color: var(--bulma-link-soft);
     color: var(--bulma-link-soft-invert);
 }
+
+/* Clicking a selected option removes it, so selected ones need to stand out. */
+.izaya-option[aria-selected="true"] {
+    position: relative;
+    padding-inline-end: 2rem;
+    font-weight: var(--bulma-weight-semibold);
+}
+
+.izaya-option[aria-selected="true"]::after {
+    content: "\2713";
+    position: absolute;
+    right: 0.75rem;
+}

@@ -1,9 +1,6 @@
 {% extends parent_template|default:"base.html" %}
 {% load static bulma_tags i18n %}
 {% block title %}{% blocktrans %}{{ title }} - Metron{% endblocktrans %}{% endblock %}
-{% block headcss %}
-    {{ form.media.css }}
-{% endblock %}
 {% block content %}
     <header class="block has-text-centered">
         <h1 class="title">{{ title }}</h1>
@@ -115,7 +112,4 @@
             </div>
         </div>
     </section>
-{% endblock %}
-{% block js %}
-    {{ form.media.js }}
 {% endblock %}

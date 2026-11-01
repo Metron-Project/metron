@@ -6,7 +6,6 @@
     {{ title|default:default_title }}
 {% endblock title %}
 {% block headcss %}
-    {{ form.media.css }}
     <link rel="stylesheet"
           href="{% static 'site/css/bulma-calendar.min.css' %}">
     {# usability styles — shared with issue_form.html #}
@@ -54,7 +53,6 @@
     </form>
 {% endblock %}
 {% block js %}
-    {{ form.media.js }}
     <script src="{% static 'extensions/bulma-calendar/dist/js/bulma-calendar.min.js' %}"></script>
     <script>
 document.addEventListener('DOMContentLoaded', function() {

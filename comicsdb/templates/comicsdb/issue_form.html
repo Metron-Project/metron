@@ -5,7 +5,6 @@
     {% trans "Issue Form" %}
 {% endblock title %}
 {% block headcss %}
-    {{ form.media.css }}
     <link rel="stylesheet"
           href="{% static 'site/css/bulma-calendar.min.css' %}">
     {# Sticky bar, section nav, grouped fields #}
@@ -144,7 +143,6 @@
     {% endif %}
 {% endblock %}
 {% block js %}
-    {{ form.media.js }}
     <script src="{% static 'extensions/bulma-calendar/dist/js/bulma-calendar.min.js' %}"></script>
     <script>
 document.addEventListener('DOMContentLoaded', function() {
