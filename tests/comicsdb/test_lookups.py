@@ -758,14 +758,14 @@ class TestSeriesLookup:
 
         assert queryset.count() == 0
 
-    def test_get_queryset_includes_series_type(self, fc_series):
-        """Test that get_queryset includes related series_type information."""
+    def test_get_queryset_includes_publisher(self, fc_series):
+        """Test that get_queryset includes related publisher information."""
         queryset = SeriesLookup().get_base_queryset()
         series = queryset.get(id=fc_series.id)
 
-        # Should have series_type prefetched (no additional queries)
-        assert series.series_type is not None
-        assert series.series_type.name is not None
+        # Should have publisher prefetched (no additional queries)
+        assert series.publisher is not None
+        assert series.publisher.name == "DC Comics"
 
     def test_get_label_for_record(self, fc_series):
         """Test that get_label_for_record includes the volume and publisher name."""
@@ -970,6 +970,44 @@ class TestImprintLookup:
 
         assert isinstance(label, str)
         assert label == f"{vertigo_imprint} · {vertigo_imprint.publisher.name}"
+
+
+@pytest.mark.django_db
+class TestPublisherLabelQueries:
+    """Tests that publisher labels don't cost a query per result."""
+
+    @pytest.fixture(
+        params=[
+            (SeriesLookup, ("fc_series", "bat_sups_series"), "a"),
+            (UniverseLookup, ("earth_2_universe",), "earth"),
+            (ImprintLookup, ("vertigo_imprint", "black_label_imprint"), "e"),
+        ],
+        ids=["series", "universe", "imprint"],
+    )
+    def lookup_case(self, request):
+        """Return a lookup, its records, and a query matching all of them."""
+        lookup_class, fixture_names, query = request.param
+        records = [request.getfixturevalue(name) for name in fixture_names]
+        return lookup_class(), records, query
+
+    def test_search_labels_use_one_query(self, lookup_case, django_assert_num_queries):
+        """Test that labelling search results doesn't query each result's publisher."""
+        lookup, records, query = lookup_case
+
+        with django_assert_num_queries(1):
+            items = [lookup.to_item(result) for result in lookup.search(query, None)]
+
+        assert len(items) == len(records)
+
+    def test_selected_labels_use_one_query(self, lookup_case, django_assert_num_queries):
+        """Test that labelling selected values doesn't query each record's publisher."""
+        lookup, records, _ = lookup_case
+        keys = [str(record.pk) for record in records]
+
+        with django_assert_num_queries(1):
+            items = [lookup.to_item(result) for result in lookup.get_selected(keys)]
+
+        assert len(items) == len(records)
 
 
 @pytest.mark.django_db
