@@ -883,7 +883,7 @@ sudo systemctl restart fail2ban
 | `metron-nginx-401` | 10 auth failures | 5 min | 24 hours |
 | `metron-nginx-no-ua` | 5 no-user-agent requests | 60 s | 24 hours |
 | `metron-nginx-comictagger` | 1 comictagger user-agent request | 60 s | 24 hours |
-| `metron-nginx-id-walk` | 5 numeric issue/series requests answered 302 or 429 | 10 min | 7 days |
+| `metron-nginx-id-walk` | 15 numeric issue requests answered 302 or 429 | 10 min | 7 days |
 
 ### Useful fail2ban commands
 
