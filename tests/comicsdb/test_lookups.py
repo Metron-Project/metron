@@ -768,11 +768,11 @@ class TestSeriesLookup:
         assert series.series_type.name is not None
 
     def test_get_label_for_record(self, fc_series):
-        """Test that get_label_for_record returns string representation."""
+        """Test that get_label_for_record includes the volume and publisher name."""
         label = SeriesLookup().label(fc_series)
 
         assert isinstance(label, str)
-        assert label == str(fc_series)
+        assert label == f"{fc_series} · v{fc_series.volume} · {fc_series.publisher.name}"
 
 
 class TestTeamLookup:
@@ -898,11 +898,11 @@ class TestUniverseLookup:
         assert universe.publisher.name == "DC Comics"
 
     def test_get_label_for_record(self, earth_2_universe):
-        """Test that get_label_for_record returns string representation."""
+        """Test that get_label_for_record includes the publisher name."""
         label = UniverseLookup().label(earth_2_universe)
 
         assert isinstance(label, str)
-        assert label == str(earth_2_universe)
+        assert label == f"{earth_2_universe} · {earth_2_universe.publisher.name}"
 
 
 class TestImprintLookup:
@@ -965,11 +965,11 @@ class TestImprintLookup:
         assert imprint.publisher.name == "DC Comics"
 
     def test_get_label_for_record(self, vertigo_imprint):
-        """Test that get_label_for_record returns string representation."""
+        """Test that get_label_for_record includes the publisher name."""
         label = ImprintLookup().label(vertigo_imprint)
 
         assert isinstance(label, str)
-        assert label == str(vertigo_imprint)
+        assert label == f"{vertigo_imprint} · {vertigo_imprint.publisher.name}"
 
 
 @pytest.mark.django_db

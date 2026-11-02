@@ -4,7 +4,7 @@ import operator
 import re
 from functools import reduce
 
-from django.db.models import Q
+from django.db.models import Q, QuerySet
 from izaya import ModelLookup, register
 
 from comicsdb.models import Arc, Character, Creator, Publisher, Series, Team, Universe
@@ -75,8 +75,12 @@ class SeriesLookup(ModelLookup):
     search_fields = ["name__unaccent__icontains", "alt_names__joined__icontains"]
     rank_fields = ["name__unaccent"]
 
-    def get_base_queryset(self):
-        return super().get_base_queryset().select_related("series_type")
+    def get_base_queryset(self) -> QuerySet:
+        return super().get_base_queryset().select_related("series_type", "publisher")
+
+    def label(self, record: Series) -> str:
+        """Return a label for the series, including the publisher name and volume number."""
+        return f"{record} · v{record.volume} · {record.publisher.name}"
 
 
 @register
@@ -96,8 +100,12 @@ class UniverseLookup(ModelLookup):
     search_fields = ["name__unaccent__icontains", "designation__unaccent__icontains"]
     rank_fields = ["name__unaccent"]
 
-    def get_base_queryset(self):
+    def get_base_queryset(self) -> QuerySet:
         return super().get_base_queryset().select_related("publisher")
+
+    def label(self, record: Universe) -> str:
+        """Return a label for the universe, including the publisher name."""
+        return f"{record} · {record.publisher.name}"
 
 
 @register
@@ -108,8 +116,12 @@ class ImprintLookup(ModelLookup):
     search_fields = ["name__unaccent__icontains"]
     rank_fields = ["name__unaccent"]
 
-    def get_base_queryset(self):
+    def get_base_queryset(self) -> QuerySet:
         return super().get_base_queryset().select_related("publisher")
+
+    def label(self, record: Imprint) -> str:
+        """Return a label for the imprint, including the publisher name."""
+        return f"{record} · {record.publisher.name}"
 
 
 @register
@@ -119,7 +131,7 @@ class IssueLookup(ModelLookup):
     model = Issue
     search_fields = ["series__name__icontains", "number__icontains", "alt_number__icontains"]
 
-    def get_base_queryset(self):
+    def get_base_queryset(self) -> QuerySet:
         return super().get_base_queryset().select_related("series", "series__series_type")
 
     def search(self, query, request):
