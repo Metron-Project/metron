@@ -4,6 +4,7 @@ import operator
 import re
 from functools import reduce
 
+from django.db import connection
 from django.db.models import Case, Q, QuerySet, Value, When
 from izaya import ModelLookup, register
 
@@ -11,6 +12,43 @@ from comicsdb.models import Arc, Character, Creator, Publisher, Series, Team, Un
 from comicsdb.models.credits import Role
 from comicsdb.models.imprint import Imprint
 from comicsdb.models.issue import Issue
+
+
+def unaccent(text: str) -> str:
+    """Return ``text`` with accents removed by PostgreSQL's ``unaccent()``.
+
+    Searches compare ``unaccent(field)`` with the query, so the query has to be unaccented by
+    the same rules too, or an accented query like "Peña" never matches. ASCII text is returned
+    as is, which saves a query for most searches.
+    """
+    if text.isascii():
+        return text
+    with connection.cursor() as cursor:
+        cursor.execute("SELECT unaccent(%s)", [text])
+        return cursor.fetchone()[0]
+
+
+class UnaccentModelLookup(ModelLookup):
+    """A ModelLookup that also strips accents from the query.
+
+    ``search_fields`` that go through ``__unaccent__`` get the unaccented query, while others,
+    such as ArrayFields, get the query as typed. ``rank_fields`` must all be unaccented.
+    """
+
+    def filter_queryset(self, query: str, request) -> QuerySet:
+        """Return the records where any of ``search_fields`` match ``query``."""
+        plain = unaccent(query)
+        conditions = [
+            Q(**{field: plain if "__unaccent__" in field else query})
+            for field in self.search_fields
+        ]
+        queryset = self.get_queryset(request).filter(reduce(operator.or_, conditions))
+        if self.spawns_duplicates(self.search_fields):
+            queryset = queryset.distinct()
+        return queryset
+
+    def search(self, query, request):
+        return self.rank(self.filter_queryset(query, request), unaccent(query))
 
 
 class PublisherLabelMixin:
@@ -24,7 +62,7 @@ class PublisherLabelMixin:
 
 
 @register
-class ArcLookup(ModelLookup):
+class ArcLookup(UnaccentModelLookup):
     """Lookup for searching story arcs."""
 
     model = Arc
@@ -33,7 +71,7 @@ class ArcLookup(ModelLookup):
 
 
 @register
-class CharacterLookup(ModelLookup):
+class CharacterLookup(UnaccentModelLookup):
     """Lookup for searching characters.
 
     Note: alias uses regular icontains as it's an ArrayField.
@@ -45,7 +83,7 @@ class CharacterLookup(ModelLookup):
 
 
 @register
-class CreatorLookup(ModelLookup):
+class CreatorLookup(UnaccentModelLookup):
     """Lookup for searching creators.
 
     Note: alias uses regular icontains as it's an ArrayField.
@@ -78,12 +116,13 @@ class CreatorLookup(ModelLookup):
             return super().search(query, request)
 
         query = f" {query.lstrip()}"
-        conditions = [Q(**{field: query}) for field in self.search_fields]
-        queryset = self.get_queryset(request).filter(reduce(operator.or_, conditions))
-        surname_rank = Case(When(name__unaccent__iendswith=query, then=Value(0)), default=Value(1))
-        if self.spawns_duplicates(self.search_fields):
+        queryset = self.filter_queryset(query, request)
+        surname_rank = Case(
+            When(name__unaccent__iendswith=unaccent(query), then=Value(0)), default=Value(1)
+        )
+        if queryset.query.distinct:
             # SELECT DISTINCT needs the ordering expression in the select list.
-            queryset = queryset.distinct().annotate(surname_rank=surname_rank)
+            queryset = queryset.annotate(surname_rank=surname_rank)
         else:
             queryset = queryset.alias(surname_rank=surname_rank)
         # rank() isn't used here: it would rank names starting with the stripped query (matched
@@ -100,7 +139,7 @@ class RoleLookup(ModelLookup):
 
 
 @register
-class PublisherLookup(ModelLookup):
+class PublisherLookup(UnaccentModelLookup):
     """Lookup for searching publishers."""
 
     model = Publisher
@@ -109,7 +148,7 @@ class PublisherLookup(ModelLookup):
 
 
 @register
-class SeriesLookup(PublisherLabelMixin, ModelLookup):
+class SeriesLookup(PublisherLabelMixin, UnaccentModelLookup):
     """Lookup for searching series.
 
     Note: alt_names uses the `joined` transform so the search can hit the trigram index on
@@ -126,7 +165,7 @@ class SeriesLookup(PublisherLabelMixin, ModelLookup):
 
 
 @register
-class TeamLookup(ModelLookup):
+class TeamLookup(UnaccentModelLookup):
     """Lookup for searching teams."""
 
     model = Team
@@ -135,7 +174,7 @@ class TeamLookup(ModelLookup):
 
 
 @register
-class UniverseLookup(PublisherLabelMixin, ModelLookup):
+class UniverseLookup(PublisherLabelMixin, UnaccentModelLookup):
     """Lookup for searching universes."""
 
     model = Universe
@@ -144,7 +183,7 @@ class UniverseLookup(PublisherLabelMixin, ModelLookup):
 
 
 @register
-class ImprintLookup(PublisherLabelMixin, ModelLookup):
+class ImprintLookup(PublisherLabelMixin, UnaccentModelLookup):
     """Lookup for searching imprints."""
 
     model = Imprint
@@ -194,7 +233,7 @@ class IssueLookup(ModelLookup):
 
             # All series name words must match (if any remain after removing year)
             conditions.extend(
-                Q(series__name__unaccent__icontains=word) for word in series_part.split()
+                Q(series__name__unaccent__icontains=word) for word in unaccent(series_part).split()
             )
 
         # Add number filter if there's text after '#'

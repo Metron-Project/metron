@@ -17,6 +17,7 @@ from comicsdb.lookups import (
     SeriesLookup,
     TeamLookup,
     UniverseLookup,
+    unaccent,
 )
 from comicsdb.models.arc import Arc
 from comicsdb.models.character import Character
@@ -336,6 +337,12 @@ class TestIssueLookup:
         # Should return empty queryset
         assert queryset.count() == 0
 
+    def test_search_with_pound_sign_and_accented_series(self, all_test_issues):
+        """Test that accents in the series part of a '#' search are ignored."""
+        queryset = IssueLookup().search("Spíder#1", None)
+
+        assert list(queryset) == [all_test_issues[0]]
+
     def test_get_queryset_includes_series_info(self, spider_man_issue_1):
         """Test that get_queryset includes related series information."""
         queryset = IssueLookup().get_base_queryset()
@@ -607,6 +614,38 @@ class TestCreatorLookup:
         creator_ids = list(queryset.values_list("id", flat=True))
 
         assert creator.id in creator_ids
+
+    def test_search_with_accented_query(self, create_user):
+        """Test that an accented query matches, since the query is unaccented as well."""
+        user = create_user()
+        creator = Creator.objects.create(
+            name="Ana Peña", slug="ana-pena", edited_by=user, created_by=user
+        )
+
+        assert creator in CreatorLookup().search("Peña", None)
+
+    def test_leading_space_with_accented_query(self, create_user):
+        """Test that an accented surname search matches and gets surname priority."""
+        user = create_user()
+        for name in ("Peña Ruiz", "Luis Peñaloza", "Ana Peña"):
+            Creator.objects.create(name=name, slug=slugify(name), edited_by=user, created_by=user)
+
+        names = list(CreatorLookup().search(" Peña", None).values_list("name", flat=True))
+
+        assert names == ["Ana Peña", "Luis Peñaloza"]
+
+    def test_accented_query_matches_accented_alias(self, create_user):
+        """Test that aliases, which aren't unaccented, still get the query as typed."""
+        user = create_user()
+        creator = Creator.objects.create(
+            name="John Smith",
+            slug="john-smith",
+            alias=["Señor Smith"],
+            edited_by=user,
+            created_by=user,
+        )
+
+        assert creator in CreatorLookup().search("Señor", None)
 
     def test_search_partial_match(self, john_byrne):
         """Test searching with partial name match."""
@@ -1107,6 +1146,19 @@ class TestPublisherLabelQueries:
 
 
 @pytest.mark.django_db
+class TestUnaccent:
+    """Tests for the unaccent() helper."""
+
+    def test_uses_postgres_rules(self):
+        """Test that the query is unaccented by the same rules as the indexed field."""
+        assert unaccent("Łódź Straße") == "Lodz Strasse"
+
+    def test_ascii_text_skips_the_database(self, django_assert_num_queries):
+        """Test that plain ASCII text is returned without a query."""
+        with django_assert_num_queries(0):
+            assert unaccent("Cameron") == "Cameron"
+
+
 class TestLookupRanking:
     """Tests for the relevance order of lookup results."""
 
