@@ -192,11 +192,15 @@ class ImprintLookup(PublisherLabelMixin, UnaccentModelLookup):
 
 
 @register
-class IssueLookup(ModelLookup):
+class IssueLookup(UnaccentModelLookup):
     """Lookup for searching issues."""
 
     model = Issue
-    search_fields = ["series__name__icontains", "number__icontains", "alt_number__icontains"]
+    search_fields = [
+        "series__name__unaccent__icontains",
+        "number__icontains",
+        "alt_number__icontains",
+    ]
 
     def get_base_queryset(self) -> QuerySet:
         return super().get_base_queryset().select_related("series", "series__series_type")

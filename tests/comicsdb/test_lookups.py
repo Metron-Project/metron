@@ -337,6 +337,12 @@ class TestIssueLookup:
         # Should return empty queryset
         assert queryset.count() == 0
 
+    def test_search_without_pound_sign_and_accented_series(self, all_test_issues):
+        """Test that accents are ignored when searching series names without '#'."""
+        queryset = IssueLookup().search("Spíder", None)
+
+        assert set(queryset) == set(all_test_issues[:3])
+
     def test_search_with_pound_sign_and_accented_series(self, all_test_issues):
         """Test that accents in the series part of a '#' search are ignored."""
         queryset = IssueLookup().search("Spíder#1", None)
