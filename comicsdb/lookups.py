@@ -4,7 +4,7 @@ import operator
 import re
 from functools import reduce
 
-from django.db.models import Q, QuerySet
+from django.db.models import Case, Q, QuerySet, Value, When
 from izaya import ModelLookup, register
 
 from comicsdb.models import Arc, Character, Creator, Publisher, Series, Team, Universe
@@ -54,6 +54,33 @@ class CreatorLookup(ModelLookup):
     model = Creator
     search_fields = ["name__unaccent__icontains", "alias__icontains"]
     rank_fields = ["name__unaccent"]
+
+    def clean_query(self, query: str) -> str:
+        """Keep one leading space, which editors type to search by surname (e.g. " Cameron")."""
+        text = query.strip()
+        return f" {text}" if text and query[0].isspace() else text
+
+    def search(self, query, request):
+        """
+        Search creators, treating a leading space as a search for a later name.
+
+        " Cameron" only matches names with "Cameron" after a space, so "Don Cameron" matches but
+        "Cameron Stewart" doesn't. Names ending with the search text come first.
+        """
+        if not query.startswith(" "):
+            return super().search(query, request)
+
+        queryset = (
+            self.get_queryset(request)
+            .filter(Q(name__unaccent__icontains=query) | Q(alias__icontains=query))
+            .alias(
+                surname_rank=Case(
+                    When(name__unaccent__iendswith=query, then=Value(0)), default=Value(1)
+                )
+            )
+            .order_by("surname_rank", *self.model._meta.ordering)
+        )
+        return self.rank(queryset, query.strip())
 
 
 @register

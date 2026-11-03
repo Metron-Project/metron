@@ -4,6 +4,7 @@ from datetime import date
 
 import pytest
 from django.urls import reverse
+from django.utils.text import slugify
 from izaya.lookups import registry
 
 from comicsdb.lookups import (
@@ -620,6 +621,67 @@ class TestCreatorLookup:
         queryset = CreatorLookup().search("stan lee", None)
 
         assert queryset.count() == 0
+
+    @pytest.fixture
+    def camerons(self, create_user):
+        """Create creators with "Cameron" as a first, middle and last name."""
+        user = create_user()
+        return {
+            name: Creator.objects.create(
+                name=name, slug=slugify(name), edited_by=user, created_by=user
+            )
+            for name in ("Cameron Stewart", "Don Cameron", "Jo Cameron Smith", "Ann Camerons")
+        }
+
+    def test_leading_space_is_kept(self):
+        """Test that one leading space survives cleaning, so it can mean a surname search."""
+        assert CreatorLookup().clean_query("   Cameron  ") == " Cameron"
+
+    def test_surrounding_whitespace_is_stripped_without_a_leading_space(self):
+        """Test that a query without a leading space is stripped as usual."""
+        assert CreatorLookup().clean_query("Cameron  ") == "Cameron"
+
+    def test_leading_space_skips_first_names(self, camerons):
+        """Test that a leading space only matches names after the first."""
+        names = list(CreatorLookup().search(" cameron", None).values_list("name", flat=True))
+
+        assert "Cameron Stewart" not in names
+        assert set(names) == {"Don Cameron", "Jo Cameron Smith", "Ann Camerons"}
+
+    def test_leading_space_puts_names_ending_with_the_query_first(self, camerons):
+        """Test that surname matches come before middle names and partial words."""
+        names = list(CreatorLookup().search(" cameron", None).values_list("name", flat=True))
+
+        assert names[0] == "Don Cameron"
+
+    def test_leading_space_matches_aliases(self, create_user):
+        """Test that a leading space also searches later names in aliases."""
+        user = create_user()
+        creator = Creator.objects.create(
+            name="Frank Miller",
+            slug="frank-miller",
+            alias=["Frank Miller Sr."],
+            edited_by=user,
+            created_by=user,
+        )
+
+        assert creator in CreatorLookup().search(" sr.", None)
+
+    def test_without_leading_space_first_names_match(self, camerons):
+        """Test that a plain query still matches first names, ranked first."""
+        names = list(CreatorLookup().search("cameron", None).values_list("name", flat=True))
+
+        assert names[0] == "Cameron Stewart"
+        assert len(names) == len(camerons)
+
+    def test_search_endpoint_keeps_leading_space(self, client, create_user, camerons):
+        """Test that the search endpoint passes the leading space through to the lookup."""
+        client.force_login(create_user())
+        resp = client.get(reverse("izaya:search", args=["CreatorLookup"]), {"q": " Cameron"})
+
+        assert resp.status_code == HTTP_200_OK
+        assert b"Don Cameron" in resp.content
+        assert b"Cameron Stewart" not in resp.content
 
     def test_get_label_for_record(self, john_byrne):
         """Test that get_label_for_record returns string representation."""
