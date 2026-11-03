@@ -368,14 +368,15 @@ The Issue endpoint supports the most comprehensive filtering options:
 - `alt_number` - Alternate number (case-insensitive, exact match)
 - `sku` - Distributor SKU (case-insensitive exact match against the main cover or any variant cover).
 - `upc` - UPC code (exact match against the main cover or any variant cover).
-- `upc_starts_with` - UPC code prefix match against the main cover or any variant cover. Useful for mobile barcode scanners (e.g. Google ML Kit, AVFoundation) that only read the 12-digit UPC-A and drop the 5-digit EAN supplemental — pass just those 12 digits to find matching parent issues.
+- `upc_starts_with` - UPC code prefix match. Useful for mobile barcode scanners (e.g. Google ML Kit, AVFoundation) that only read the 12-digit UPC-A and drop the 5-digit EAN supplemental — pass just those 12 digits to match issues whose stored `upc` begins with them.
 - `cv_id` - Comic Vine ID
 - `gcd_id` - Grand Comics Database ID
 - `missing_cv_id` - Boolean, issues without Comic Vine ID
 - `missing_gcd_id` - Boolean, issues without GCD ID
 - `cover_hash` - Perceptual hash for cover matching
 
-The SKU and UPC filters return each matching parent issue once, even when multiple covers match.
+The `sku` and `upc` filters match main and variant covers and return each matching parent issue once,
+even when multiple covers match. Variant matching applies only to `upc` and `sku`, not `upc_starts_with`.
 The list response keeps the issue's main cover; retrieve the issue detail to inspect its
 `variants` and identify the cover with the matching SKU or UPC. Other supplied filters still apply.
 The website's issue search also supports exact SKU and UPC matches against main and variant covers.

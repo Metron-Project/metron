@@ -110,9 +110,9 @@ class IssueFilter(df.rest_framework.FilterSet):
     upc = IssueCoverIdentifier(
         label="UPC Code (main or variant cover)", field_name="upc", lookup_expr="iexact"
     )
-    upc_starts_with = IssueCoverIdentifier(
-        label="Main or variant UPC Code starts with (e.g. the 12-digit UPC-A read by a "
-        "mobile scanner that strips the 5-digit EAN supplemental)",
+    upc_starts_with = df.rest_framework.CharFilter(
+        label="UPC Code starts with (e.g. the 12-digit UPC-A read by a mobile scanner "
+        "that strips the 5-digit EAN supplemental)",
         field_name="upc",
         lookup_expr="startswith",
     )

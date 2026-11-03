@@ -10,21 +10,18 @@ VARIANT_UPC = "76194137738400121"
 OTHER_UPC = "75960609558200111"
 
 
-@pytest.fixture(params=["api_exact", "api_prefix", "website_exact"])
+@pytest.fixture(params=["api_exact", "website_exact"])
 def upc_search(request, api_client_with_credentials, auto_login_user):
-    """Exercise both API filters and the website's exact filter via real requests."""
+    """Exercise the API and website's exact filters via real requests."""
     if request.param == "website_exact":
         client, _ = auto_login_user()
         url = reverse("issue:list")
     else:
         client = api_client_with_credentials
         url = reverse("api:issue-list")
-    prefix = request.param == "api_prefix"
-    field = "upc_starts_with" if prefix else "upc"
 
     def search(value, **filters):
-        value = value[:12] if prefix else value
-        response = client.get(url, {field: value, **filters})
+        response = client.get(url, {"upc": value, **filters})
         assert response.status_code == 200
         if request.param == "website_exact":
             return [issue.pk for issue in response.context["issue_list"]]
@@ -34,6 +31,19 @@ def upc_search(request, api_client_with_credentials, auto_login_user):
         return ids
 
     return search
+
+
+def test_upc_prefix_matches_main_cover(api_client_with_credentials, basic_issue):
+    basic_issue.upc = MAIN_UPC
+    basic_issue.save()
+    Variant.objects.create(issue=basic_issue, name="B", upc=VARIANT_UPC)
+    response = api_client_with_credentials.get(
+        reverse("api:issue-list"), {"upc_starts_with": MAIN_UPC[:12]}
+    )
+    assert response.status_code == 200
+    data = response.json()
+    assert data["count"] == 1
+    assert [row["id"] for row in data["results"]] == [basic_issue.pk]
 
 
 def test_upc_main_cover_without_variants(upc_search, basic_issue):
