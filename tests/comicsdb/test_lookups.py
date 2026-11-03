@@ -4,6 +4,7 @@ from datetime import date
 
 import pytest
 from django.urls import reverse
+from django.utils.text import slugify
 from izaya.lookups import registry
 
 from comicsdb.lookups import (
@@ -16,6 +17,7 @@ from comicsdb.lookups import (
     SeriesLookup,
     TeamLookup,
     UniverseLookup,
+    unaccent,
 )
 from comicsdb.models.arc import Arc
 from comicsdb.models.character import Character
@@ -335,6 +337,18 @@ class TestIssueLookup:
         # Should return empty queryset
         assert queryset.count() == 0
 
+    def test_search_without_pound_sign_and_accented_series(self, all_test_issues):
+        """Test that accents are ignored when searching series names without '#'."""
+        queryset = IssueLookup().search("Spíder", None)
+
+        assert set(queryset) == set(all_test_issues[:3])
+
+    def test_search_with_pound_sign_and_accented_series(self, all_test_issues):
+        """Test that accents in the series part of a '#' search are ignored."""
+        queryset = IssueLookup().search("Spíder#1", None)
+
+        assert list(queryset) == [all_test_issues[0]]
+
     def test_get_queryset_includes_series_info(self, spider_man_issue_1):
         """Test that get_queryset includes related series information."""
         queryset = IssueLookup().get_base_queryset()
@@ -607,6 +621,38 @@ class TestCreatorLookup:
 
         assert creator.id in creator_ids
 
+    def test_search_with_accented_query(self, create_user):
+        """Test that an accented query matches, since the query is unaccented as well."""
+        user = create_user()
+        creator = Creator.objects.create(
+            name="Ana Peña", slug="ana-pena", edited_by=user, created_by=user
+        )
+
+        assert creator in CreatorLookup().search("Peña", None)
+
+    def test_leading_space_with_accented_query(self, create_user):
+        """Test that an accented surname search matches and gets surname priority."""
+        user = create_user()
+        for name in ("Peña Ruiz", "Luis Peñaloza", "Ana Peña"):
+            Creator.objects.create(name=name, slug=slugify(name), edited_by=user, created_by=user)
+
+        names = list(CreatorLookup().search(" Peña", None).values_list("name", flat=True))
+
+        assert names == ["Ana Peña", "Luis Peñaloza"]
+
+    def test_accented_query_matches_accented_alias(self, create_user):
+        """Test that aliases, which aren't unaccented, still get the query as typed."""
+        user = create_user()
+        creator = Creator.objects.create(
+            name="John Smith",
+            slug="john-smith",
+            alias=["Señor Smith"],
+            edited_by=user,
+            created_by=user,
+        )
+
+        assert creator in CreatorLookup().search("Señor", None)
+
     def test_search_partial_match(self, john_byrne):
         """Test searching with partial name match."""
         queryset = CreatorLookup().search("john", None)
@@ -620,6 +666,101 @@ class TestCreatorLookup:
         queryset = CreatorLookup().search("stan lee", None)
 
         assert queryset.count() == 0
+
+    @pytest.fixture
+    def camerons(self, create_user):
+        """Create creators with "Cameron" as a first, middle and last name."""
+        user = create_user()
+        return {
+            name: Creator.objects.create(
+                name=name, slug=slugify(name), edited_by=user, created_by=user
+            )
+            for name in ("Cameron Stewart", "Don Cameron", "Jo Cameron Smith", "Ann Camerons")
+        }
+
+    def test_leading_space_is_kept(self):
+        """Test that one leading space survives cleaning, so it can mean a surname search."""
+        assert CreatorLookup().clean_query("   Cameron  ") == " Cameron"
+
+    def test_surrounding_whitespace_is_stripped_without_a_leading_space(self):
+        """Test that a query without a leading space is stripped as usual."""
+        assert CreatorLookup().clean_query("Cameron  ") == "Cameron"
+
+    def test_leading_space_skips_first_names(self, camerons):
+        """Test that a leading space only matches names after the first."""
+        names = list(CreatorLookup().search(" cameron", None).values_list("name", flat=True))
+
+        assert "Cameron Stewart" not in names
+        assert set(names) == {"Don Cameron", "Jo Cameron Smith", "Ann Camerons"}
+
+    def test_leading_space_puts_names_ending_with_the_query_first(self, camerons):
+        """Test that surname matches come before middle names and partial words."""
+        names = list(CreatorLookup().search(" cameron", None).values_list("name", flat=True))
+
+        assert names[0] == "Don Cameron"
+
+    def test_short_leading_space_query_drops_the_space(self):
+        """Test that the leading space doesn't count toward the minimum length."""
+        assert CreatorLookup().clean_query(" Ca") == "Ca"
+
+    def test_leading_non_space_whitespace_is_stripped(self):
+        """Test that a leading tab or NBSP doesn't trigger a surname search."""
+        assert CreatorLookup().clean_query("\tCameron") == "Cameron"
+        assert CreatorLookup().clean_query("\u00a0Cameron") == "Cameron"
+
+    def test_several_leading_spaces_search_by_surname(self, camerons):
+        """Test that search() treats several leading spaces like one."""
+        names = list(CreatorLookup().search("   cameron", None).values_list("name", flat=True))
+
+        assert set(names) == {"Don Cameron", "Jo Cameron Smith", "Ann Camerons"}
+
+    def test_leading_space_alias_match_does_not_outrank_surnames(self, camerons):
+        """Test that a first-name match found through an alias sorts after surname matches."""
+        creator = camerons["Cameron Stewart"]
+        creator.alias = ["John Cameron Jr."]
+        creator.save()
+
+        names = list(CreatorLookup().search(" cameron", None).values_list("name", flat=True))
+
+        assert names[0] == "Don Cameron"
+        assert names.index("Cameron Stewart") > names.index("Don Cameron")
+
+    def test_short_leading_space_query_shows_min_length_message(self, client, create_user):
+        """Test that the endpoint asks for more text when only two characters follow the space."""
+        client.force_login(create_user())
+        resp = client.get(reverse("izaya:search", args=["CreatorLookup"]), {"q": " Ca"})
+
+        assert resp.status_code == HTTP_200_OK
+        assert str(CreatorLookup.min_length) in resp.content.decode()
+
+    def test_leading_space_matches_aliases(self, create_user):
+        """Test that a leading space also searches later names in aliases."""
+        user = create_user()
+        creator = Creator.objects.create(
+            name="Frank Miller",
+            slug="frank-miller",
+            alias=["Frank Miller Sr."],
+            edited_by=user,
+            created_by=user,
+        )
+
+        assert creator in CreatorLookup().search(" sr.", None)
+
+    def test_without_leading_space_first_names_match(self, camerons):
+        """Test that a plain query still matches first names, ranked first."""
+        names = list(CreatorLookup().search("cameron", None).values_list("name", flat=True))
+
+        assert names[0] == "Cameron Stewart"
+        assert len(names) == len(camerons)
+
+    def test_search_endpoint_keeps_leading_space(self, client, create_user, camerons):
+        """Test that the search endpoint passes the leading space through to the lookup."""
+        client.force_login(create_user())
+        resp = client.get(reverse("izaya:search", args=["CreatorLookup"]), {"q": " Cameron"})
+
+        assert resp.status_code == HTTP_200_OK
+        assert b"Don Cameron" in resp.content
+        assert b"Cameron Stewart" not in resp.content
 
     def test_get_label_for_record(self, john_byrne):
         """Test that get_label_for_record returns string representation."""
@@ -1011,6 +1152,19 @@ class TestPublisherLabelQueries:
 
 
 @pytest.mark.django_db
+class TestUnaccent:
+    """Tests for the unaccent() helper."""
+
+    def test_uses_postgres_rules(self):
+        """Test that the query is unaccented by the same rules as the indexed field."""
+        assert unaccent("Łódź Straße") == "Lodz Strasse"
+
+    def test_ascii_text_skips_the_database(self, django_assert_num_queries):
+        """Test that plain ASCII text is returned without a query."""
+        with django_assert_num_queries(0):
+            assert unaccent("Cameron") == "Cameron"
+
+
 class TestLookupRanking:
     """Tests for the relevance order of lookup results."""
 
