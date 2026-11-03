@@ -56,9 +56,16 @@ class CreatorLookup(ModelLookup):
     rank_fields = ["name__unaccent"]
 
     def clean_query(self, query: str) -> str:
-        """Keep one leading space, which editors type to search by surname (e.g. " Cameron")."""
+        """Keep one leading space, which editors type to search by surname (e.g. " Cameron").
+
+        Only a plain space counts, so pasted text with a leading tab or NBSP searches normally.
+        The space is dropped when too little text follows it, so the view's ``min_length`` check
+        counts only the characters actually typed.
+        """
         text = query.strip()
-        return f" {text}" if text and query[0].isspace() else text
+        if query.startswith(" ") and len(text) >= self.min_length:
+            return f" {text}"
+        return text
 
     def search(self, query, request):
         """
@@ -70,17 +77,18 @@ class CreatorLookup(ModelLookup):
         if not query.startswith(" "):
             return super().search(query, request)
 
-        queryset = (
-            self.get_queryset(request)
-            .filter(Q(name__unaccent__icontains=query) | Q(alias__icontains=query))
-            .alias(
-                surname_rank=Case(
-                    When(name__unaccent__iendswith=query, then=Value(0)), default=Value(1)
-                )
-            )
-            .order_by("surname_rank", *self.model._meta.ordering)
-        )
-        return self.rank(queryset, query.strip())
+        query = f" {query.lstrip()}"
+        conditions = [Q(**{field: query}) for field in self.search_fields]
+        queryset = self.get_queryset(request).filter(reduce(operator.or_, conditions))
+        surname_rank = Case(When(name__unaccent__iendswith=query, then=Value(0)), default=Value(1))
+        if self.spawns_duplicates(self.search_fields):
+            # SELECT DISTINCT needs the ordering expression in the select list.
+            queryset = queryset.distinct().annotate(surname_rank=surname_rank)
+        else:
+            queryset = queryset.alias(surname_rank=surname_rank)
+        # rank() isn't used here: it would rank names starting with the stripped query (matched
+        # only through an alias) ahead of the surname matches.
+        return queryset.order_by("surname_rank", *self.model._meta.ordering, "pk")
 
 
 @register

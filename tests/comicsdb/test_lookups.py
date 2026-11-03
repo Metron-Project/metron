@@ -654,6 +654,40 @@ class TestCreatorLookup:
 
         assert names[0] == "Don Cameron"
 
+    def test_short_leading_space_query_drops_the_space(self):
+        """Test that the leading space doesn't count toward the minimum length."""
+        assert CreatorLookup().clean_query(" Ca") == "Ca"
+
+    def test_leading_non_space_whitespace_is_stripped(self):
+        """Test that a leading tab or NBSP doesn't trigger a surname search."""
+        assert CreatorLookup().clean_query("\tCameron") == "Cameron"
+        assert CreatorLookup().clean_query("\u00a0Cameron") == "Cameron"
+
+    def test_several_leading_spaces_search_by_surname(self, camerons):
+        """Test that search() treats several leading spaces like one."""
+        names = list(CreatorLookup().search("   cameron", None).values_list("name", flat=True))
+
+        assert set(names) == {"Don Cameron", "Jo Cameron Smith", "Ann Camerons"}
+
+    def test_leading_space_alias_match_does_not_outrank_surnames(self, camerons):
+        """Test that a first-name match found through an alias sorts after surname matches."""
+        creator = camerons["Cameron Stewart"]
+        creator.alias = ["John Cameron Jr."]
+        creator.save()
+
+        names = list(CreatorLookup().search(" cameron", None).values_list("name", flat=True))
+
+        assert names[0] == "Don Cameron"
+        assert names.index("Cameron Stewart") > names.index("Don Cameron")
+
+    def test_short_leading_space_query_shows_min_length_message(self, client, create_user):
+        """Test that the endpoint asks for more text when only two characters follow the space."""
+        client.force_login(create_user())
+        resp = client.get(reverse("izaya:search", args=["CreatorLookup"]), {"q": " Ca"})
+
+        assert resp.status_code == HTTP_200_OK
+        assert str(CreatorLookup.min_length) in resp.content.decode()
+
     def test_leading_space_matches_aliases(self, create_user):
         """Test that a leading space also searches later names in aliases."""
         user = create_user()
