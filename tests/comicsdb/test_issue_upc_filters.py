@@ -60,8 +60,10 @@ def test_upc_main_cover_with_multiple_variants_is_unique(upc_search, basic_issue
     assert upc_search(MAIN_UPC) == [basic_issue.pk]
 
 
-@pytest.mark.parametrize("main_upc", [OTHER_UPC, ""])
+@pytest.mark.parametrize("main_upc", [MAIN_UPC, ""], ids=["shared_base", "blank_main"])
 def test_upc_variant_cover_only(upc_search, basic_issue, main_upc):
+    # Variants share the main cover's 12-digit UPC-A and differ only in the add-on,
+    # so the full 17-digit variant UPC matches only through the variant.
     basic_issue.upc = main_upc
     basic_issue.save()
     Variant.objects.create(issue=basic_issue, name="B", upc=VARIANT_UPC)
