@@ -62,6 +62,7 @@
 .izaya-option {
     padding-block: 0.5rem;
     color: var(--bulma-text-strong);
+    border-radius: var(--bulma-radius-small);
 }
 
 .izaya-option:hover {
