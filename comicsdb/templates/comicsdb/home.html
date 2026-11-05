@@ -1,8 +1,10 @@
 {% extends parent_template|default:"base.html" %}
-{% load i18n static %}
+{% load i18n static compress %}
 {% load cache %}
 {% block headcss %}
-    <link rel="stylesheet" href="{% static 'site/css/home/index.css' %}">
+    {% compress css %}
+        <link rel="stylesheet" href="{% static 'site/css/home/index.css' %}">
+    {% endcompress %}
 {% endblock %}
 {% block sitedesc %}
     {% trans "Metron is a community-based comic book database with a public REST API. Search and discover comic books with comprehensive metadata." as home_description %}

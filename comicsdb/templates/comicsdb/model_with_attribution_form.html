@@ -1,16 +1,18 @@
 {% extends parent_template|default:"base.html" %}
-{% load i18n static %}
+{% load i18n static compress %}
 {% load bulma_tags %}
 {% block title %}
     {% trans "Form" as default_title %}
     {{ title|default:default_title }}
 {% endblock title %}
 {% block headcss %}
-    <link rel="stylesheet"
-          href="{% static 'site/css/bulma-calendar.min.css' %}">
-    {# usability styles — shared with issue_form.html #}
-    <link rel="stylesheet"
-          href="{% static 'site/css/issue-form-usability.css' %}">
+    {% compress css %}
+        <link rel="stylesheet"
+              href="{% static 'site/css/bulma-calendar.min.css' %}">
+        {# usability styles — shared with issue_form.html #}
+        <link rel="stylesheet"
+              href="{% static 'site/css/issue-form-usability.css' %}">
+    {% endcompress %}
 {% endblock %}
 {% block content %}
     {% trans "Form" as default_title %}
@@ -53,7 +55,11 @@
     </form>
 {% endblock %}
 {% block js %}
-    <script src="{% static 'extensions/bulma-calendar/dist/js/bulma-calendar.min.js' %}"></script>
+    {% compress js %}
+        <script src="{% static 'extensions/bulma-calendar/dist/js/bulma-calendar.min.js' %}"></script>
+        {# Usability behaviour (section nav active-state); independent of the inline script below #}
+        <script src="{% static 'site/js/issue-form-usability.js' %}"></script>
+    {% endcompress %}
     <script>
 document.addEventListener('DOMContentLoaded', function() {
     'use strict';
@@ -110,6 +116,4 @@ function updateFormsetManagement(prefix, increment = 0) {
 }
 
     </script>
-    {# Tier 3 usability behaviour — shared with issue_form.html (section nav; role chips no-op here) #}
-    <script src="{% static 'site/js/issue-form-usability.js' %}"></script>
 {% endblock %}

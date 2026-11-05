@@ -1,52 +1,54 @@
 {% extends parent_template|default:"base.html" %}
-{% load static i18n %}
+{% load static i18n compress %}
 {% block headscripts %}
-    <script src="{% static 'chartkick/Chart.bundle.js' %}"></script>
-    <script>
-        (function () {
-            var dark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
-            if (!dark) return;
+    {% compress js %}
+        <script src="{% static 'chartkick/Chart.bundle.js' %}"></script>
+        <script>
+            (function () {
+                var dark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+                if (!dark) return;
 
-            // Fix tick labels, grid lines, and legend text via Chart.js defaults.
-            // Use a placeholder; the real value is read from the DOM once it's ready.
-            Chart.defaults.color = '#d0d0d0';
-            Chart.defaults.borderColor = 'rgba(255, 255, 255, 0.15)';
-            Chart.defaults.plugins.legend.labels.color = '#d0d0d0';
+                // Fix tick labels, grid lines, and legend text via Chart.js defaults.
+                // Use a placeholder; the real value is read from the DOM once it's ready.
+                Chart.defaults.color = '#d0d0d0';
+                Chart.defaults.borderColor = 'rgba(255, 255, 255, 0.15)';
+                Chart.defaults.plugins.legend.labels.color = '#d0d0d0';
 
-            // Chartkick hardcodes color: "#333" for titles in its own baseOptions,
-            // so Chart.defaults won't help there. Patch each chart after rendering.
-            window.addEventListener('chartkick:load', function () {
-                // Read the computed color from Bulma's .title class now that the DOM is ready
-                var probe = document.createElement('p');
-                probe.className = 'title';
-                probe.style.cssText = 'position:absolute;visibility:hidden';
-                document.body.appendChild(probe);
-                var titleColor = getComputedStyle(probe).color || '#d0d0d0';
-                document.body.removeChild(probe);
+                // Chartkick hardcodes color: "#333" for titles in its own baseOptions,
+                // so Chart.defaults won't help there. Patch each chart after rendering.
+                window.addEventListener('chartkick:load', function () {
+                    // Read the computed color from Bulma's .title class now that the DOM is ready
+                    var probe = document.createElement('p');
+                    probe.className = 'title';
+                    probe.style.cssText = 'position:absolute;visibility:hidden';
+                    document.body.appendChild(probe);
+                    var titleColor = getComputedStyle(probe).color || '#d0d0d0';
+                    document.body.removeChild(probe);
 
-                // Update Chart.defaults now that we have the real color
-                Chart.defaults.color = titleColor;
-                Chart.defaults.plugins.legend.labels.color = titleColor;
+                    // Update Chart.defaults now that we have the real color
+                    Chart.defaults.color = titleColor;
+                    Chart.defaults.plugins.legend.labels.color = titleColor;
 
-                Object.values(Chartkick.charts).forEach(function (ckChart) {
-                    var chartObj = ckChart.getChartObject();
-                    if (!chartObj) return;
-                    var title = chartObj.options.plugins && chartObj.options.plugins.title;
-                    if (title) title.color = titleColor;
-                    var scales = chartObj.options.scales;
-                    if (scales) {
-                        ['x', 'y'].forEach(function (axis) {
-                            if (scales[axis] && scales[axis].title) {
-                                scales[axis].title.color = titleColor;
-                            }
-                        });
-                    }
-                    chartObj.update();
+                    Object.values(Chartkick.charts).forEach(function (ckChart) {
+                        var chartObj = ckChart.getChartObject();
+                        if (!chartObj) return;
+                        var title = chartObj.options.plugins && chartObj.options.plugins.title;
+                        if (title) title.color = titleColor;
+                        var scales = chartObj.options.scales;
+                        if (scales) {
+                            ['x', 'y'].forEach(function (axis) {
+                                if (scales[axis] && scales[axis].title) {
+                                    scales[axis].title.color = titleColor;
+                                }
+                            });
+                        }
+                        chartObj.update();
+                    });
                 });
-            });
-        })();
-    </script>
-    <script src="{% static 'chartkick/chartkick.js' %}"></script>
+            })();
+        </script>
+        <script src="{% static 'chartkick/chartkick.js' %}"></script>
+    {% endcompress %}
 {% endblock %}
 {% block title %}{% trans "Collection Statistics - Metron" %}{% endblock %}
 {% block content %}
