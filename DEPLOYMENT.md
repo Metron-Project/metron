@@ -411,11 +411,20 @@ systemctl --user start metron-nginx
 > ```bash
 > podman exec metron-web python manage.py migrate
 > podman exec metron-web python manage.py collectstatic --no-input
+> podman exec metron-web python manage.py compress --force
+> systemctl --user restart metron-web
 > ```
 >
 > When restoring from an existing droplet the schema and static files are
 > already in place — `migrate` is a no-op and static files live on
-> DigitalOcean Spaces, so `collectstatic` is not needed either.
+> DigitalOcean Spaces, so `collectstatic` is not needed either. Run
+> `compress` anyway if the bucket has no `static/CACHE/manifest.json` yet.
+>
+> `compress` builds the minified CSS/JS bundles for every `{% compress %}`
+> block in the templates (django-compressor, offline mode) and uploads them
+> plus `static/CACHE/manifest.json` to Spaces. Each gunicorn worker caches
+> the manifest in memory, so restart `metron-web` after compressing. A page
+> whose bundle is missing from the manifest fails with `OfflineGenerationError`.
 
 The container services start automatically on boot without needing
 `systemctl enable` — the `WantedBy=default.target` line in each `.container`
@@ -542,12 +551,26 @@ cp ~/metron/.quadlet/* ~/.config/containers/systemd/
 systemctl --user daemon-reload
 
 podman build -t localhost/metron:latest .
+
+# Re-run collectstatic only if static assets changed:
+# podman run --rm --network host --env-file ~/.config/containers/metron.env \
+#     localhost/metron:latest python manage.py collectstatic --no-input
+
+# Rebuild the CSS/JS bundles and manifest from the *new* image before restarting,
+# so workers never start with templates the manifest doesn't know about.
+podman run --rm --network host --env-file ~/.config/containers/metron.env \
+    localhost/metron:latest python manage.py compress --force
+
 systemctl --user restart metron-web metron-anubis
 
 podman exec metron-web python manage.py migrate
-# Re-run collectstatic only if static assets changed:
-# podman exec metron-web python manage.py collectstatic --no-input
 ```
+
+> **Why `compress` every deploy:** production uses django-compressor in offline
+> mode. If a template's `{% compress %}` block or any bundled CSS/JS file changes
+> and `compress` isn't re-run, those pages fail with `OfflineGenerationError`.
+> It is cheap to run, so run it on every deploy. (The "Invalid template
+> django_filters/rest_framework/crispy_form.html" warning it prints is harmless.)
 
 ---
 
