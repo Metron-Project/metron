@@ -50,6 +50,7 @@ INSTALLED_APPS = [
     "django.contrib.messages",
     "django.contrib.postgres",
     "django.contrib.staticfiles",
+    "compressor",
     "django.contrib.sites",
     "django.contrib.humanize",
     "django.forms",
@@ -358,7 +359,22 @@ STATICFILES_FINDERS = [
     "django.contrib.staticfiles.finders.AppDirectoriesFinder",
     # Now add our custom SimpleBulma one.
     "django_simple_bulma.finders.SimpleBulmaFinder",
+    "compressor.finders.CompressorFinder",
 ]
+
+# django-compressor: bundles and minifies the local CSS/JS inside {% compress %} blocks.
+# COMPRESS_ENABLED defaults to `not DEBUG`, so development serves the original files.
+# Production compresses offline: run `manage.py compress` after `collectstatic` on deploy.
+COMPRESS_OFFLINE = not DEBUG
+COMPRESS_FILTERS = {
+    "css": [
+        "compressor.filters.css_default.CssAbsoluteFilter",
+        "compressor.filters.cssmin.rCSSMinFilter",
+    ],
+    "js": ["compressor.filters.jsmin.rJSMinFilter"],
+}
+# Pin the alias name: django-compressor 4.6 defaults to the misspelled "compressor-offine".
+COMPRESS_OFFLINE_MANIFEST_STORAGE_ALIAS = "compressor-offline"
 
 IZAYA_CLASSES = {
     "input": "input",
@@ -433,10 +449,19 @@ if not DEBUG:
     STORAGES = {
         "default": {"BACKEND": "metron.storage_backends.MediaStorage"},
         "staticfiles": {"BACKEND": "storages.backends.s3boto3.S3Boto3Storage"},
+        # Compressed bundles and the offline manifest live alongside the other static files.
+        "compressor": {"BACKEND": "storages.backends.s3boto3.S3Boto3Storage"},
+        "compressor-offline": {"BACKEND": "storages.backends.s3boto3.S3Boto3Storage"},
     }
 
     STATICFILES_DIRS = (BASE_DIR / "static",)
     STATIC_URL = f"{AWS_S3_CUSTOM_DOMAIN}/{AWS_LOCATION}/"
+
+    COMPRESS_URL = STATIC_URL
+    # There is no STATIC_ROOT in production; compressor only reads source files from here
+    # (falling back to the staticfiles finders) and writes its output to S3.
+    COMPRESS_ROOT = BASE_DIR / "static"
+    COMPRESS_OFFLINE_MANIFEST = "CACHE/manifest.json"
 
 else:
     STATICFILES_DIRS = (BASE_DIR / "static",)
