@@ -1,21 +1,21 @@
 """Smoke tests for the django-compressor integration.
 
 Compression is disabled under DEBUG (development and tests), so these tests switch it on
-with online compression and send the generated bundles to a temporary directory.
-Note that compressor caches rendered tag output in the default (Redis) cache, so a run may
-reuse output from a previous run instead of writing new bundles.
+with online compression, send the generated bundles to a temporary directory, and give
+compressor a fresh in-memory cache so rendered output is never reused from an earlier run.
 """
 
 import re
 
 import pytest
+from django.core.cache.backends.locmem import LocMemCache
 from django.urls import reverse
 
 HTML_OK_CODE = 200
 
 
 @pytest.fixture
-def compress_enabled(settings, tmp_path):
+def compress_enabled(settings, tmp_path, monkeypatch):
     settings.COMPRESS_ENABLED = True
     settings.COMPRESS_OFFLINE = False
     settings.STORAGES = {
@@ -25,6 +25,11 @@ def compress_enabled(settings, tmp_path):
             "OPTIONS": {"location": str(tmp_path), "base_url": "/static/"},
         },
     }
+    # Compressor resolves its cache lazily once per process, so patch the object itself
+    # rather than COMPRESS_CACHE_BACKEND.
+    cache = LocMemCache(f"compress-test-{tmp_path.name}", {})
+    monkeypatch.setattr("compressor.cache.cache", cache)
+    monkeypatch.setattr("compressor.filters.base.cache", cache)
     return tmp_path
 
 
@@ -40,7 +45,7 @@ def test_base_template_assets_are_bundled(db, client, compress_enabled):
     # The izaya bundle keeps its defer attribute.
     assert re.search(r'<script src="/static/CACHE/js/output\.\w+\.js" defer></script>', content)
     # Bulma itself is intentionally left outside the compress blocks.
-    assert "bulma" in content
+    assert '<link rel="stylesheet" href="/static/css/bulma.css" id="bulma-css">' in content
 
 
 def test_assets_are_not_bundled_when_disabled(db, client, settings):

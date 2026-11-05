@@ -458,11 +458,16 @@ if not DEBUG:
     STATICFILES_DIRS = (BASE_DIR / "static",)
     STATIC_URL = f"{AWS_S3_CUSTOM_DOMAIN}/{AWS_LOCATION}/"
 
-    COMPRESS_URL = STATIC_URL
+    # S3Boto3Storage.url() emits absolute https:// URLs, and compressor only bundles files
+    # whose URL starts with COMPRESS_URL, so this must include the scheme (STATIC_URL doesn't).
+    COMPRESS_URL = f"https://{AWS_S3_CUSTOM_DOMAIN}/{AWS_LOCATION}/"
     # There is no STATIC_ROOT in production; compressor only reads source files from here
     # (falling back to the staticfiles finders) and writes its output to S3.
     COMPRESS_ROOT = BASE_DIR / "static"
-    COMPRESS_OFFLINE_MANIFEST = "CACHE/manifest.json"
+    # One manifest per release (METRON_RELEASE is baked into the image at build time), so
+    # running `compress` for a new release never changes the manifest the old containers read,
+    # and rolling back to an earlier image finds that image's manifest still in place.
+    COMPRESS_OFFLINE_MANIFEST = f"CACHE/manifest-{config('METRON_RELEASE', default='dev')}.json"
 
 else:
     STATICFILES_DIRS = (BASE_DIR / "static",)

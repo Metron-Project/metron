@@ -25,6 +25,10 @@ COPY . .
 
 ENV PATH="/app/.venv/bin:$PATH"
 
+# Release id (e.g. git short SHA); selects this image's django-compressor offline manifest.
+ARG METRON_RELEASE=dev
+ENV METRON_RELEASE=$METRON_RELEASE
+
 # Compile translation catalogs into the image. Uses django-admin (not
 # manage.py) so it doesn't require settings/env vars (DB, SECRET_KEY, etc.)
 # to be configured at build time. gettext (msgfmt) is only needed here, so

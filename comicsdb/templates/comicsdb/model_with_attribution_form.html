@@ -9,6 +9,8 @@
     {% compress css %}
         <link rel="stylesheet"
               href="{% static 'site/css/bulma-calendar.min.css' %}">
+    {% endcompress %}
+    {% compress css %}
         {# usability styles — shared with issue_form.html #}
         <link rel="stylesheet"
               href="{% static 'site/css/issue-form-usability.css' %}">
@@ -57,6 +59,8 @@
 {% block js %}
     {% compress js %}
         <script src="{% static 'extensions/bulma-calendar/dist/js/bulma-calendar.min.js' %}"></script>
+    {% endcompress %}
+    {% compress js %}
         {# Usability behaviour (section nav active-state); independent of the inline script below #}
         <script src="{% static 'site/js/issue-form-usability.js' %}"></script>
     {% endcompress %}
