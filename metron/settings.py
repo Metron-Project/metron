@@ -374,6 +374,7 @@ COMPRESS_FILTERS = {
     "js": ["compressor.filters.jsmin.rJSMinFilter"],
 }
 # Pin the alias name: django-compressor 4.6 defaults to the misspelled "compressor-offine".
+# This bug was fixed upstream in #1325, remove once a release includes it
 COMPRESS_OFFLINE_MANIFEST_STORAGE_ALIAS = "compressor-offline"
 
 IZAYA_CLASSES = {
