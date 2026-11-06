@@ -1,4 +1,4 @@
-{% load i18n range_tags static %}
+{% load i18n range_tags static compress %}
 {% comment %}
     USABILITY CHANGE: the ~14 advanced filter fields are now organised
     under labelled sub-sections (Series / Issue Numbers / Dates / Codes & IDs)
@@ -446,8 +446,12 @@
         </div>
     </form>
 </div>
-<link rel="stylesheet" href="{% static 'site/css/bulma-calendar.min.css' %}">
-<script src="{% static 'extensions/bulma-calendar/dist/js/bulma-calendar.min.js' %}"></script>
+{% compress css %}
+    <link rel="stylesheet" href="{% static 'site/css/bulma-calendar.min.css' %}">
+{% endcompress %}
+{% compress js %}
+    <script src="{% static 'extensions/bulma-calendar/dist/js/bulma-calendar.min.js' %}"></script>
+{% endcompress %}
 <script>
 document.addEventListener('DOMContentLoaded', function() {
     'use strict';

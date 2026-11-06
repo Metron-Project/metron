@@ -1,7 +1,9 @@
 {% extends parent_template|default:"base.html" %}
-{% load static i18n %}
+{% load static i18n compress %}
 {% block headscripts %}
-    <script src="{% static 'chartkick/Chart.bundle.js' %}"></script>
+    {% compress js %}
+        <script src="{% static 'chartkick/Chart.bundle.js' %}"></script>
+    {% endcompress %}
     <script>
         (function () {
             var dark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
@@ -46,7 +48,9 @@
             });
         })();
     </script>
-    <script src="{% static 'chartkick/chartkick.js' %}"></script>
+    {% compress js %}
+        <script src="{% static 'chartkick/chartkick.js' %}"></script>
+    {% endcompress %}
 {% endblock %}
 {% block title %}{% trans "Collection Statistics - Metron" %}{% endblock %}
 {% block content %}

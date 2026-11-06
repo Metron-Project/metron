@@ -50,6 +50,7 @@ INSTALLED_APPS = [
     "django.contrib.messages",
     "django.contrib.postgres",
     "django.contrib.staticfiles",
+    "compressor",
     "django.contrib.sites",
     "django.contrib.humanize",
     "django.forms",
@@ -358,7 +359,23 @@ STATICFILES_FINDERS = [
     "django.contrib.staticfiles.finders.AppDirectoriesFinder",
     # Now add our custom SimpleBulma one.
     "django_simple_bulma.finders.SimpleBulmaFinder",
+    "compressor.finders.CompressorFinder",
 ]
+
+# django-compressor: bundles and minifies the local CSS/JS inside {% compress %} blocks.
+# COMPRESS_ENABLED defaults to `not DEBUG`, so development serves the original files.
+# Production compresses offline: run `manage.py compress` after `collectstatic` on deploy.
+COMPRESS_OFFLINE = not DEBUG
+COMPRESS_FILTERS = {
+    "css": [
+        "compressor.filters.css_default.CssAbsoluteFilter",
+        "compressor.filters.cssmin.rCSSMinFilter",
+    ],
+    "js": ["compressor.filters.jsmin.rJSMinFilter"],
+}
+# Pin the alias name: django-compressor 4.6 defaults to the misspelled "compressor-offine".
+# This bug was fixed upstream in #1325, remove once a release includes it
+COMPRESS_OFFLINE_MANIFEST_STORAGE_ALIAS = "compressor-offline"
 
 IZAYA_CLASSES = {
     "input": "input",
@@ -433,10 +450,24 @@ if not DEBUG:
     STORAGES = {
         "default": {"BACKEND": "metron.storage_backends.MediaStorage"},
         "staticfiles": {"BACKEND": "storages.backends.s3boto3.S3Boto3Storage"},
+        # Compressed bundles and the offline manifest live alongside the other static files.
+        "compressor": {"BACKEND": "storages.backends.s3boto3.S3Boto3Storage"},
+        "compressor-offline": {"BACKEND": "storages.backends.s3boto3.S3Boto3Storage"},
     }
 
     STATICFILES_DIRS = (BASE_DIR / "static",)
     STATIC_URL = f"{AWS_S3_CUSTOM_DOMAIN}/{AWS_LOCATION}/"
+
+    # S3Boto3Storage.url() emits absolute https:// URLs, and compressor only bundles files
+    # whose URL starts with COMPRESS_URL, so this must include the scheme (STATIC_URL doesn't).
+    COMPRESS_URL = f"https://{AWS_S3_CUSTOM_DOMAIN}/{AWS_LOCATION}/"
+    # There is no STATIC_ROOT in production; compressor only reads source files from here
+    # (falling back to the staticfiles finders) and writes its output to S3.
+    COMPRESS_ROOT = BASE_DIR / "static"
+    # One manifest per release (METRON_RELEASE is baked into the image at build time), so
+    # running `compress` for a new release never changes the manifest the old containers read,
+    # and rolling back to an earlier image finds that image's manifest still in place.
+    COMPRESS_OFFLINE_MANIFEST = f"CACHE/manifest-{config('METRON_RELEASE', default='dev')}.json"
 
 else:
     STATICFILES_DIRS = (BASE_DIR / "static",)
