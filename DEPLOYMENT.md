@@ -38,6 +38,9 @@ with Quadlet (systemd-managed containers).
   - [Manual backup](#manual-backup)
   - [Automated backups with a systemd timer](#automated-backups-with-a-systemd-timer)
   - [Restoring from a backup](#restoring-from-a-backup)
+- [Upgrading PostgreSQL](#upgrading-postgresql)
+  - [Minor version updates](#minor-version-updates)
+  - [Major version upgrade (16 → 18)](#major-version-upgrade-16--18)
 - [Enable persistent journals](#enable-persistent-journals)
 - [Fail2ban](#fail2ban)
   - [Install](#install)
@@ -821,6 +824,171 @@ podman exec metron-postgres pg_restore \
 # Clean up and restart
 podman exec metron-postgres rm /tmp/metron.dump
 systemctl --user start metron-web
+```
+
+---
+
+## Upgrading PostgreSQL
+
+### Minor version updates
+
+Minor releases (e.g. 16.4 → 16.10) never change the on-disk format, so updating
+is just a pull and restart:
+
+```bash
+podman pull docker.io/library/postgres:16
+systemctl --user restart metron-postgres
+podman exec metron-postgres postgres --version
+```
+
+### Major version upgrade (16 → 18)
+
+A new major version uses a different data-directory format, and `postgres:18`
+will not start on a volume initialized by 16, so changing the `Image=` tag alone
+does not work. The procedure below dumps the database, starts 18 on a **new**
+volume, and restores into it. The old volume is left in place as the rollback.
+Restoring from a dump also rebuilds every index, which avoids the collation
+problems that can come with a newer glibc in the new image.
+
+Two things are different from a normal restore:
+
+1. **The 18 image moved its data directory.** `PGDATA` is now
+   `/var/lib/postgresql/18/docker`, and the volume must be mounted at
+   `/var/lib/postgresql`, not `/var/lib/postgresql/data`.
+2. **The `unaccent` change must be redone before restoring.** Migration
+   `0050` runs `ALTER FUNCTION unaccent(text) IMMUTABLE`. `unaccent(text)`
+   belongs to the `unaccent` extension, and `pg_dump` does not save changes
+   made to extension members. A fresh database therefore gets the stock
+   STABLE `unaccent()`, and the five `*_name_unaccent_trgm_idx` indexes fail
+   with *"functions in index expression must be marked IMMUTABLE"*. `pg_restore`
+   logs the error and keeps going, so the site comes up with slow name
+   searches and nothing obviously broken. Step 6 below handles this.
+
+Expect downtime from step 2 until step 9. Rehearse the restore locally against
+a production dump first: it shows how long the restore takes and catches problems
+before you're working on production.
+
+**1. Record a baseline** to compare against after the restore:
+
+```bash
+podman exec metron-postgres psql -U {db_username} -d metron -Atc \
+  "SELECT count(*) FROM pg_indexes WHERE schemaname = 'public';"
+podman exec metron-postgres psql -U {db_username} -d metron -Atc \
+  "SELECT count(*) FROM comicsdb_issue;"
+```
+
+**2. Stop everything that writes to the database**, including the timers:
+
+```bash
+systemctl --user stop metron-nginx metron-anubis metron-web
+systemctl --user stop metron-backup.timer metron-history-cleanup.timer \
+    metron-opencollective-sync.timer
+```
+
+**3. Take the final dump.** Run the backup script first so there is also an
+off-site copy in Spaces:
+
+```bash
+bash ~/metron/scripts/backup.sh
+podman exec metron-postgres pg_dump -U {db_username} -Fc metron -f /tmp/final.dump
+podman cp metron-postgres:/tmp/final.dump ~/backups/metron-pg16-final.dump
+```
+
+**4. Stop Postgres 16.** Do not remove its volume (`systemd-metron-postgres`):
+it is the rollback.
+
+```bash
+systemctl --user stop metron-postgres
+```
+
+**5. Point the quadlet at 18 and a new volume.** Create the volume unit:
+
+```bash
+printf '[Volume]\n' > ~/.config/containers/systemd/metron-postgres18.volume
+```
+
+Then edit `~/.config/containers/systemd/metron-postgres.container` and change
+these two lines:
+
+```ini
+Image=docker.io/library/postgres:18
+Volume=metron-postgres18.volume:/var/lib/postgresql
+```
+
+Make the same change in the repo's `.quadlet/` files, but merge it only when you
+do the upgrade. Otherwise the next routine deploy (`cp ~/metron/.quadlet/* ...`)
+would switch Postgres over by accident.
+
+```bash
+systemctl --user daemon-reload
+systemctl --user start metron-postgres     # initializes the empty volume
+podman exec metron-postgres postgres --version
+```
+
+**6. Prepare the empty database before restoring.** The dump uses
+`CREATE EXTENSION IF NOT EXISTS`, so creating the extensions first doesn't
+conflict with the restore:
+
+```bash
+podman exec metron-postgres psql -U {db_username} -d metron -c "
+  CREATE EXTENSION IF NOT EXISTS unaccent;
+  CREATE EXTENSION IF NOT EXISTS pg_trgm;
+  ALTER FUNCTION unaccent(text) IMMUTABLE;"
+```
+
+**7. Restore, then rebuild planner statistics.** A dump does not carry
+statistics, and queries will be slow until `ANALYZE` has run:
+
+```bash
+podman cp ~/backups/metron-pg16-final.dump metron-postgres:/tmp/final.dump
+podman exec metron-postgres pg_restore \
+  --username {db_username} \
+  --dbname metron \
+  --no-owner \
+  --role {db_username} \
+  /tmp/final.dump 2>&1 | tee ~/pg18-restore.log
+
+grep -i error ~/pg18-restore.log            # should print nothing
+podman exec metron-postgres vacuumdb -U {db_username} -d metron --analyze-in-stages
+podman exec metron-postgres rm /tmp/final.dump
+```
+
+**8. Verify** that both counts match the baseline from step 1, and that the
+`unaccent` indexes exist:
+
+```bash
+podman exec metron-postgres psql -U {db_username} -d metron -Atc \
+  "SELECT count(*) FROM pg_indexes WHERE schemaname = 'public';"
+podman exec metron-postgres psql -U {db_username} -d metron -Atc \
+  "SELECT count(*) FROM comicsdb_issue;"
+podman exec metron-postgres psql -U {db_username} -d metron -Atc \
+  "SELECT indexname FROM pg_indexes WHERE indexname LIKE '%unaccent_trgm_idx';"
+```
+
+**9. Bring the site back** and restart the timers:
+
+```bash
+systemctl --user start metron-web metron-anubis metron-nginx
+systemctl --user start metron-backup.timer metron-history-cleanup.timer \
+    metron-opencollective-sync.timer
+```
+
+Check that the site loads, that a name search with an accented name works
+(e.g. "Pokémon"), and that `journalctl --user -u metron-web -n 50` is free of
+database errors. Run the backup service once (`systemctl --user start
+metron-backup`) to confirm backups work against 18.
+
+**Rollback:** stop `metron-postgres`, put the old `Image=` and `Volume=` lines
+back (`postgres:16`, `metron-postgres.volume:/var/lib/postgresql/data`), run
+`systemctl --user daemon-reload`, and start it again. Anything written after the
+cutover is lost, so decide early.
+
+**Cleanup:** after a week or two without problems, remove the old volume and
+image:
+
+```bash
+podman volume rm systemd-metron-postgres
+podman rmi docker.io/library/postgres:16
 ```
 
 ---
