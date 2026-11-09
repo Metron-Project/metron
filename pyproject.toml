@@ -8,6 +8,7 @@ dependencies = [
     "chartkick",
     "disposable-email-domains>=0.0.281",
     "django",
+    "django-compressor>=4.6.0",
     "django-countries",
     "django-filter",
     "django-htmx",

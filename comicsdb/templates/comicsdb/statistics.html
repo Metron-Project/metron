@@ -1,9 +1,13 @@
 {% extends parent_template|default:"base.html" %}
-{% load i18n static %}
+{% load i18n static compress %}
 {% load humanize %}
 {% block headscripts %}
-    <script src="{% static 'chartkick/Chart.bundle.js' %}"></script>
-    <script src="{% static 'chartkick/chartkick.js' %}"></script>
+    {% compress js %}
+        <script src="{% static 'chartkick/Chart.bundle.js' %}"></script>
+    {% endcompress %}
+    {% compress js %}
+        <script src="{% static 'chartkick/chartkick.js' %}"></script>
+    {% endcompress %}
 {% endblock %}
 {% block title %}
     {% trans "Statistics - Metron" %}

@@ -1,4 +1,4 @@
-{% load static django_htmx i18n %}
+{% load static django_htmx i18n compress %}
 <!DOCTYPE html>
 <html lang="{{ LANGUAGE_CODE }}">
     <head>
@@ -34,14 +34,18 @@
         {% load django_simple_bulma %}
         {% bulma %}
         {% font_awesome %}
-        <link rel="stylesheet" href="{% static 'site/css/base.css' %}">
-        <link rel="stylesheet" href="{% static 'izaya/layout.css' %}">
-        <link rel="stylesheet" href="{% static 'site/css/izaya.css' %}">
+        {% compress css %}
+            <link rel="stylesheet" href="{% static 'site/css/base.css' %}">
+            <link rel="stylesheet" href="{% static 'izaya/layout.css' %}">
+            <link rel="stylesheet" href="{% static 'site/css/izaya.css' %}">
+        {% endcompress %}
         {% block headcss %}{% endblock %}
         {# Head Scripts #}
         {% htmx_script %}
         {# Lookup widgets rely on this; it only adds document listeners, so every page can load it #}
-        <script src="{% static 'izaya/izaya.js' %}" defer></script>
+        {% compress js %}
+            <script src="{% static 'izaya/izaya.js' %}" defer></script>
+        {% endcompress %}
         {% block headscripts %}{% endblock %}
     </head>
     <body class="has-navbar-fixed-top"

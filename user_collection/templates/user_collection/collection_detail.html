@@ -1,10 +1,12 @@
 {% extends parent_template|default:"base.html" %}
-{% load static i18n %}
+{% load static i18n compress %}
 {% load thumbnail %}
 {% block title %}{% blocktrans with issue=item.issue %}{{ issue }} - My Collection - Metron{% endblocktrans %}{% endblock %}
 {% block headcss %}
-    <link rel="stylesheet"
-          href="{% static 'site/css/bulma-calendar.min.css' %}">
+    {% compress css %}
+        <link rel="stylesheet"
+              href="{% static 'site/css/bulma-calendar.min.css' %}">
+    {% endcompress %}
 {% endblock %}
 {% block content %}
     <header class="block">
@@ -196,7 +198,9 @@
     </div>
 {% endblock %}
 {% block js %}
-    <script src="{% static 'extensions/bulma-calendar/dist/js/bulma-calendar.min.js' %}"></script>
+    {% compress js %}
+        <script src="{% static 'extensions/bulma-calendar/dist/js/bulma-calendar.min.js' %}"></script>
+    {% endcompress %}
     <script>
         // Initialize Bulma Calendar for datetime inputs
         function initializeDateTimePickers(root) {

@@ -1,5 +1,5 @@
 {% extends parent_template|default:"base.html" %}
-{% load static bulma_tags i18n %}
+{% load static bulma_tags i18n compress %}
 {% block title %}
     {% if object %}
         {% trans "Edit Collection Item - Metron" %}
@@ -8,8 +8,10 @@
     {% endif %}
 {% endblock %}
 {% block headcss %}
-    <link rel="stylesheet"
-          href="{% static 'site/css/bulma-calendar.min.css' %}">
+    {% compress css %}
+        <link rel="stylesheet"
+              href="{% static 'site/css/bulma-calendar.min.css' %}">
+    {% endcompress %}
 {% endblock %}
 {% block content %}
     <header class="block has-text-centered">
@@ -88,7 +90,9 @@
     </section>
 {% endblock %}
 {% block js %}
-    <script src="{% static 'extensions/bulma-calendar/dist/js/bulma-calendar.min.js' %}"></script>
+    {% compress js %}
+        <script src="{% static 'extensions/bulma-calendar/dist/js/bulma-calendar.min.js' %}"></script>
+    {% endcompress %}
     <script>
 document.addEventListener('DOMContentLoaded', function() {
     'use strict';
