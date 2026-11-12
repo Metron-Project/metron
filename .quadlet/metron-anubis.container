@@ -4,13 +4,14 @@ After=metron-web.service
 Requires=metron-web.service
 
 [Container]
-Image=ghcr.io/techarohq/anubis:latest
+Image=ghcr.io/techarohq/anubis:v1.28.2
 ContainerName=metron-anubis
 Network=metron.network
 PublishPort=127.0.0.1:8923:8923
 Environment=BIND=:8923
 Environment=TARGET=http://host.containers.internal:8000
 Environment=POLICY_FNAME=/etc/anubis/policy.yaml
+Environment=REDIRECT_DOMAINS=metron.cloud,www.metron.cloud
 EnvironmentFile=%h/.config/containers/metron.env
 Volume=%h/metron/anubis/policy.yaml:/etc/anubis/policy.yaml:ro,Z
 Volume=metron-anubis.volume:/data:Z
