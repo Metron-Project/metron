@@ -2,7 +2,7 @@ import operator
 from functools import reduce
 
 import django_filters as df
-from django.db.models import Q
+from django.db.models import Func, IntegerField, Q
 
 from comicsdb.models import Issue
 
@@ -34,6 +34,19 @@ class IssueSeriesQuickSearch(df.rest_framework.CharFilter):
                 )
             )
         return super().filter(qs, value)
+
+
+class CoverHashDistance(Func):
+    """Hamming distance between two 64-bit hex phash strings.
+
+    Renders as ``bit_count(('x' || a)::bit(64) # ('x' || b)::bit(64))`` (PostgreSQL 14+), where
+    ``#`` is bit-string XOR. Both operands must be 16-character hexadecimal strings.
+    """
+
+    template = "bit_count(('x' || %(expressions)s)::bit(64))"
+    arg_joiner = ")::bit(64) # ('x' || "
+    arity = 2
+    output_field = IntegerField()
 
 
 class NumberInFilter(df.rest_framework.BaseInFilter, df.rest_framework.NumberFilter):
