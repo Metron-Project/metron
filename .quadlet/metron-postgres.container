@@ -3,12 +3,12 @@ Description=Metron PostgreSQL Database
 After=network-online.target
 
 [Container]
-Image=docker.io/library/postgres:16
+Image=docker.io/library/postgres:18
 ContainerName=metron-postgres
 Network=metron.network
 PublishPort=127.0.0.1:5432:5432
 LogDriver=journald
-Volume=metron-postgres.volume:/var/lib/postgresql/data
+Volume=metron-postgres18.volume:/var/lib/postgresql
 EnvironmentFile=%h/.config/containers/metron.env
 HealthCmd=/bin/sh -c 'pg_isready -U "$POSTGRES_USER" -d "$POSTGRES_DB"'
 HealthInterval=10s
