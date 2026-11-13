@@ -2,9 +2,19 @@ import operator
 from functools import reduce
 
 import django_filters as df
-from django.db.models import Func, IntegerField, Q
+from django import forms
+from django.core.validators import RegexValidator
+from django.db.models import F, Func, IntegerField, Q, Value
 
 from comicsdb.models import Issue
+
+#: Default and maximum Hamming distance (in bits, of 64) for the ``cover_hash_near`` filter.
+DEFAULT_COVER_HASH_DISTANCE = 10
+MAX_COVER_HASH_DISTANCE = 16
+
+validate_phash = RegexValidator(
+    r"^[0-9a-fA-F]{16}$", "Enter a 16-character hexadecimal perceptual hash."
+)
 
 
 class IssueSeriesName(df.rest_framework.CharFilter):
@@ -47,6 +57,10 @@ class CoverHashDistance(Func):
     arg_joiner = ")::bit(64) # ('x' || "
     arity = 2
     output_field = IntegerField()
+
+
+class IntegerFilter(df.rest_framework.NumberFilter):
+    field_class = forms.IntegerField
 
 
 class NumberInFilter(df.rest_framework.BaseInFilter, df.rest_framework.NumberFilter):
@@ -140,6 +154,18 @@ class IssueFilter(df.rest_framework.FilterSet):
     cover_hash = df.rest_framework.CharFilter(
         label="Cover Hash", field_name="cover_hash", lookup_expr="iexact"
     )
+    cover_hash_near = df.rest_framework.CharFilter(
+        label="Cover Hash near match (16-character hex phash; results sorted closest first)",
+        method="filter_cover_hash_near",
+        validators=[validate_phash],
+    )
+    cover_hash_max_distance = IntegerFilter(
+        label=f"Maximum Hamming distance for cover_hash_near "
+        f"(0-{MAX_COVER_HASH_DISTANCE}, default {DEFAULT_COVER_HASH_DISTANCE})",
+        method="filter_cover_hash_max_distance",
+        min_value=0,
+        max_value=MAX_COVER_HASH_DISTANCE,
+    )
     creator_id = df.rest_framework.NumberFilter(
         label="Creator Metron ID", field_name="creators__id", lookup_expr="exact", distinct=True
     )
@@ -162,6 +188,24 @@ class IssueFilter(df.rest_framework.FilterSet):
     class Meta:
         model = Issue
         fields = ["store_date", "foc_date"]
+
+    def filter_cover_hash_near(self, qs, name, value: str):
+        if not value:
+            return qs
+        max_distance = self.form.cleaned_data.get("cover_hash_max_distance")
+        if max_distance is None:
+            max_distance = DEFAULT_COVER_HASH_DISTANCE
+        return (
+            qs.exclude(cover_hash="")
+            .annotate(cover_hash_distance=CoverHashDistance(F("cover_hash"), Value(value.lower())))
+            .filter(cover_hash_distance__lte=max_distance)
+            .order_by("cover_hash_distance", *Issue._meta.ordering)
+        )
+
+    @staticmethod
+    def filter_cover_hash_max_distance(qs, name, value: int):
+        # Only modifies cover_hash_near, which reads it from the form's cleaned data.
+        return qs
 
 
 class IssueViewFilter(df.FilterSet):
