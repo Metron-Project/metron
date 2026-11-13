@@ -374,6 +374,8 @@ The Issue endpoint supports the most comprehensive filtering options:
 - `missing_cv_id` - Boolean, issues without Comic Vine ID
 - `missing_gcd_id` - Boolean, issues without GCD ID
 - `cover_hash` - Perceptual hash for cover matching
+- `cover_hash_near` - Perceptual hash near match: returns issues whose main cover hash is within `cover_hash_max_distance` bits of the supplied 16-character hex hash, sorted closest first
+- `cover_hash_max_distance` - Maximum Hamming distance (0-16, default 10) for `cover_hash_near`; ignored on its own
 
 The `sku` and `upc` filters match main and variant covers and return each matching parent issue once,
 even when multiple covers match. Variant matching applies only to `upc` and `sku`, not `upc_starts_with`.
@@ -464,6 +466,21 @@ Supported currencies: `USD`, `GBP`, `EUR`, `ITL`. Unsupported currency codes wil
 **Cover Hash:**
 The `cover_hash` field contains a perceptual hash generated using [ImageHash](https://github.com/JohannesBuchner/imagehash). This allows for finding similar or duplicate covers.
 
+To identify an issue from a cover scan or photo, compute its hash with `imagehash.phash()` using the
+default settings (an 8×8, 64-bit hash, sent as its 16-character hex string) and pass it to
+`cover_hash_near`. Two images of the same cover rarely hash identically, so `cover_hash_near` matches
+by Hamming distance, the number of differing bits, instead of requiring equality. Lower values for
+`cover_hash_max_distance` are stricter; the default of 10 suits most scans, while values near 16 return
+more unrelated covers. Only main covers are searched, not variants. Issues without a cover hash are
+never returned, and an invalid hash or distance returns `400 Bad Request`.
+
+```python
+import imagehash
+from PIL import Image
+
+cover_hash = str(imagehash.phash(Image.open("cover.jpg")))  # e.g. "c585eb18bf1e5423"
+```
+
 **Examples:**
 
 ```bash
@@ -493,6 +510,12 @@ GET /api/issue/?upc=75960609558200111
 
 # Find by the 12-digit UPC-A from a mobile barcode scanner (no EAN supplemental)
 GET /api/issue/?upc_starts_with=759606095582
+
+# Find issues whose cover looks like a scanned cover (closest first)
+GET /api/issue/?cover_hash_near=c585eb18bf1e5423
+
+# Same, but stricter, and limited to one series
+GET /api/issue/?cover_hash_near=c585eb18bf1e5423&cover_hash_max_distance=6&series_id=123
 
 # Get all issues with a credit for a specific creator
 GET /api/issue/?creator_id=123

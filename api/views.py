@@ -614,6 +614,9 @@ class IssueViewSet(
 
     Note: cover_hash is a Perceptual hashing created with
     ImageHash. https://github.com/JohannesBuchner/imagehash
+    Use cover_hash_near (with an optional cover_hash_max_distance, default 10)
+    to find issues whose cover hash is within that Hamming distance of a
+    supplied hash, sorted closest first.
     """
 
     queryset = Issue.objects.all()
