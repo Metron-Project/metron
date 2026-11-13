@@ -375,7 +375,7 @@ The Issue endpoint supports the most comprehensive filtering options:
 - `missing_gcd_id` - Boolean, issues without GCD ID
 - `cover_hash` - Perceptual hash for cover matching
 - `cover_hash_near` - Perceptual hash near match: returns issues whose main cover hash is within `cover_hash_max_distance` bits of the supplied 16-character hex hash, sorted closest first
-- `cover_hash_max_distance` - Maximum Hamming distance (0-16, default 10) for `cover_hash_near`; ignored on its own
+- `cover_hash_max_distance` - Maximum Hamming distance (0-24, default 16) for `cover_hash_near`; ignored on its own
 
 The `sku` and `upc` filters match main and variant covers and return each matching parent issue once,
 even when multiple covers match. Variant matching applies only to `upc` and `sku`, not `upc_starts_with`.
@@ -469,9 +469,11 @@ The `cover_hash` field contains a perceptual hash generated using [ImageHash](ht
 To identify an issue from a cover scan or photo, compute its hash with `imagehash.phash()` using the
 default settings (an 8×8, 64-bit hash, sent as its 16-character hex string) and pass it to
 `cover_hash_near`. Two images of the same cover rarely hash identically, so `cover_hash_near` matches
-by Hamming distance, the number of differing bits, instead of requiring equality. Lower values for
-`cover_hash_max_distance` are stricter; the default of 10 suits most scans, while values near 16 return
-more unrelated covers. Only main covers are searched, not variants. Issues without a cover hash are
+by Hamming distance, the number of differing bits, instead of requiring equality. Camera scans of the
+correct cover commonly differ by up to 16 bits, and unrelated covers can be just as close, so a
+distance alone doesn't confirm a match: results are sorted closest first, and the top few should be
+checked against the scanned cover. Lowering `cover_hash_max_distance` returns fewer unrelated covers but
+can miss the right one. Only main covers are searched, not variants. Issues without a cover hash are
 never returned, and an invalid hash or distance returns `400 Bad Request`.
 
 ```python

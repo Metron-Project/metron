@@ -9,8 +9,11 @@ from django.db.models import F, Func, IntegerField, Q, Value
 from comicsdb.models import Issue
 
 #: Default and maximum Hamming distance (in bits, of 64) for the ``cover_hash_near`` filter.
-DEFAULT_COVER_HASH_DISTANCE = 10
-MAX_COVER_HASH_DISTANCE = 16
+# Camera scans of the correct cover were typically 6-16 bits off, while the closest wrong cover in
+# a 40k-hash corpus was 12-18 bits off (Metron discussion #680). No threshold separates the two,
+# so the default is generous and results are sorted closest first.
+DEFAULT_COVER_HASH_DISTANCE = 16
+MAX_COVER_HASH_DISTANCE = 24
 
 validate_phash = RegexValidator(
     r"^[0-9a-fA-F]{16}$", "Enter a 16-character hexadecimal perceptual hash."

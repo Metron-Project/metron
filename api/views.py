@@ -293,9 +293,15 @@ class CachedListModelMixin(mixins.ListModelMixin):
 
     cache_model_label: str | None = None
     cache_dependent_labels: tuple[str, ...] = ()
+    #: Query params whose (non-empty) presence bypasses the cache, for
+    #: lookups whose values are nearly always unique (e.g. a scanned cover's
+    #: phash), where caching would only fill Redis with entries never re-read.
+    uncached_list_params: tuple[str, ...] = ()
 
     def list(self, request, *args, **kwargs):
-        if not self.cache_model_label:
+        if not self.cache_model_label or any(
+            request.query_params.get(param) for param in self.uncached_list_params
+        ):
             return super().list(request, *args, **kwargs)
 
         key = list_cache_key(
@@ -614,7 +620,7 @@ class IssueViewSet(
 
     Note: cover_hash is a Perceptual hashing created with
     ImageHash. https://github.com/JohannesBuchner/imagehash
-    Use cover_hash_near (with an optional cover_hash_max_distance, default 10)
+    Use cover_hash_near (with an optional cover_hash_max_distance, default 16)
     to find issues whose cover hash is within that Hamming distance of a
     supplied hash, sorted closest first.
     """
@@ -623,6 +629,9 @@ class IssueViewSet(
     filterset_class = IssueFilter
     parser_classes = (JSONParser, MultiPartParser, FormParser)
     cache_model_label = ModelLabel.ISSUE
+    # Each scanned cover yields a practically unique phash, so near-match
+    # results would almost never be served from the cache.
+    uncached_list_params = ("cover_hash_near",)
     # Issue retrieve embeds its Series/Publisher/Imprint/Arc/Character/Team/
     # Universe/Creator names, none of which cascade a `modified` bump onto
     # this Issue when renamed. Publisher/Imprint/Universe are tracked here --
