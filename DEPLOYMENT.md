@@ -19,9 +19,9 @@ with Quadlet (systemd-managed containers).
   - [Certificate renewal](#certificate-renewal)
 - [8. Build the app image](#8-build-the-app-image)
 - [9. Migrate data from the existing droplet](#9-migrate-data-from-the-existing-droplet)
-  - [8a. Dump the database on the old droplet](#8a-dump-the-database-on-the-old-droplet)
-  - [8b. Transfer the dump to the new droplet](#8b-transfer-the-dump-to-the-new-droplet)
-  - [8c. Restore the database on the new droplet](#8c-restore-the-database-on-the-new-droplet)
+  - [9a. Dump the database on the old droplet](#9a-dump-the-database-on-the-old-droplet)
+  - [9b. Transfer the dump to the new droplet](#9b-transfer-the-dump-to-the-new-droplet)
+  - [9c. Restore the database on the new droplet](#9c-restore-the-database-on-the-new-droplet)
 - [10. Start services](#10-start-services)
 - [Pre-cutover testing](#pre-cutover-testing)
   - [Copy the existing TLS certificates from the old droplet](#copy-the-existing-tls-certificates-from-the-old-droplet)
@@ -334,7 +334,7 @@ podman build -t localhost/metron:latest .
 
 Follow these steps when rebuilding from an existing droplet to preserve all database data.
 
-### 8a. Dump the database on the old droplet
+### 9a. Dump the database on the old droplet
 
 SSH into the old Ubuntu droplet and create a dump. Stop the web service first to avoid writes during the dump:
 
@@ -348,7 +348,7 @@ sudo -u postgres pg_dump -Fc metron -f /tmp/metron.dump
 ls -lh /tmp/metron.dump
 ```
 
-### 8b. Transfer the dump to the new droplet
+### 9b. Transfer the dump to the new droplet
 
 From your local machine, or directly between droplets:
 
@@ -361,15 +361,25 @@ scp /tmp/metron.dump new-droplet:/tmp/metron.dump
 scp /tmp/metron.dump metron@<new-droplet-ip>:/tmp/metron.dump
 ```
 
-### 8c. Restore the database on the new droplet
+### 9c. Restore the database on the new droplet
 
 Start only Postgres first (the web service must not run until data is restored):
 
 ```bash
 systemctl --user start metron-postgres
 
-# Wait for Postgres to be ready
-sleep 5
+# Wait for the first-start initialization to finish. During init the entrypoint
+# runs a temporary server on the Unix socket, so pg_isready alone is not enough.
+until podman logs metron-postgres 2>&1 | grep -q 'PostgreSQL init process complete'; do sleep 1; done
+until podman exec metron-postgres pg_isready -U {db_username} -d metron; do sleep 1; done
+
+# Re-apply the unaccent IMMUTABLE change from migration 0050. pg_dump does not
+# save changes to extension members, so without this the *_name_unaccent_trgm_idx
+# indexes fail to restore (see "Major version upgrade" below for details).
+podman exec metron-postgres psql -U {db_username} -d metron -c "
+  CREATE EXTENSION IF NOT EXISTS unaccent;
+  CREATE EXTENSION IF NOT EXISTS pg_trgm;
+  ALTER FUNCTION unaccent(text) IMMUTABLE;"
 
 # Restore the dump into the running container
 podman exec -i metron-postgres pg_restore \
@@ -709,9 +719,15 @@ vi ~/.config/containers/metron.env
 
 ### Manual backup
 
+Start the backup service rather than running `scripts/backup.sh` directly. The
+script needs the variables from `metron.env` (`POSTGRES_*`, `DO_*`), which the
+service loads via `EnvironmentFile=` but a login shell does not. Run directly,
+it exits with an "unbound variable" error. Starting the service works even when
+its timer is stopped:
+
 ```bash
-# Run the backup script directly
-bash ~/metron/scripts/backup.sh
+systemctl --user start metron-backup
+journalctl --user -u metron-backup -n 20
 ```
 
 ### Automated backups with a systemd timer
@@ -836,7 +852,15 @@ Two things are different from a normal restore:
 
 Expect downtime from step 2 until step 9. Rehearse the restore locally against
 a production dump first: it shows how long the restore takes and catches problems
-before you're working on production.
+before you're working on production. A local `postgres:18` container must also
+mount its volume at `/var/lib/postgresql` (e.g. `-v metron-pg18data:/var/lib/postgresql`),
+not `/var/lib/postgresql/data` as in the CLAUDE.md setup command, and needs the
+step 6 `ALTER FUNCTION` before the restore.
+
+Schedule the window away from the certbot renewal times (03:00 and 15:00, plus
+up to an hour). The timer is stopped in step 2 regardless, because its
+`ExecStartPost` restarts `metron-nginx`, which pulls in anubis, web and Postgres
+through their `Requires=` dependencies.
 
 **1. Record a baseline** to compare against after the restore:
 
@@ -847,19 +871,23 @@ podman exec metron-postgres psql -U {db_username} -d metron -Atc \
   "SELECT count(*) FROM comicsdb_issue;"
 ```
 
-**2. Stop everything that writes to the database**, including the timers:
+**2. Stop everything that writes to the database**, including the timers.
+`certbot-renew.timer` doesn't touch the database, but a renewal restarts
+`metron-nginx`, which would start the whole stack again mid-upgrade:
 
 ```bash
 systemctl --user stop metron-nginx metron-anubis metron-web
 systemctl --user stop metron-backup.timer metron-history-cleanup.timer \
-    metron-opencollective-sync.timer
+    metron-opencollective-sync.timer certbot-renew.timer
 ```
 
-**3. Take the final dump.** Run the backup script first so there is also an
-off-site copy in Spaces:
+**3. Take the final dump.** Run the backup service first so there is also an
+off-site copy in Spaces. Use the service, not `bash scripts/backup.sh`: the
+script needs the variables from `metron.env`, which only the service loads.
 
 ```bash
-bash ~/metron/scripts/backup.sh
+systemctl --user start metron-backup
+journalctl --user -u metron-backup -n 20    # should end with "Backup complete"
 podman exec metron-postgres pg_dump -U {db_username} -Fc metron -f /tmp/final.dump
 podman cp metron-postgres:/tmp/final.dump ~/backups/metron-pg16-final.dump
 ```
@@ -885,14 +913,26 @@ Image=docker.io/library/postgres:18
 Volume=metron-postgres18.volume:/var/lib/postgresql
 ```
 
-Make the same change in the repo's `.quadlet/` files, but merge it only when you
-do the upgrade. Otherwise the next routine deploy (`cp ~/metron/.quadlet/* ...`)
-would switch Postgres over by accident.
+Make the same change in the repo: edit those two lines in
+`.quadlet/metron-postgres.container` **and** add `.quadlet/metron-postgres18.volume`
+(containing just `[Volume]`). Merge it only when you do the upgrade. Otherwise
+the next routine deploy (`cp ~/metron/.quadlet/* ...`) would switch Postgres over
+by accident.
 
 ```bash
 systemctl --user daemon-reload
 systemctl --user start metron-postgres     # initializes the empty volume
 podman exec metron-postgres postgres --version
+```
+
+`systemctl start` returns before the first-start initialization finishes. During
+init the entrypoint runs a temporary server on the Unix socket, so `pg_isready`
+and the healthcheck report ready too early. Wait for init to complete before
+step 6:
+
+```bash
+until podman logs metron-postgres 2>&1 | grep -q 'PostgreSQL init process complete'; do sleep 1; done
+until podman exec metron-postgres pg_isready -U {db_username} -d metron; do sleep 1; done
 ```
 
 **6. Prepare the empty database before restoring.** The dump uses
@@ -907,7 +947,9 @@ podman exec metron-postgres psql -U {db_username} -d metron -c "
 ```
 
 **7. Restore, then rebuild planner statistics.** A dump does not carry
-statistics, and queries will be slow until `ANALYZE` has run:
+statistics, and queries will be slow until `ANALYZE` has run. `--jobs` restores
+tables and builds indexes in parallel, which shortens the downtime; set it to
+about the droplet's CPU count:
 
 ```bash
 podman cp ~/backups/metron-pg16-final.dump metron-postgres:/tmp/final.dump
@@ -916,6 +958,7 @@ podman exec metron-postgres pg_restore \
   --dbname metron \
   --no-owner \
   --role {db_username} \
+  --jobs 4 \
   /tmp/final.dump 2>&1 | tee ~/pg18-restore.log
 
 grep -i error ~/pg18-restore.log            # should print nothing
@@ -940,7 +983,7 @@ podman exec metron-postgres psql -U {db_username} -d metron -Atc \
 ```bash
 systemctl --user start metron-web metron-anubis metron-nginx
 systemctl --user start metron-backup.timer metron-history-cleanup.timer \
-    metron-opencollective-sync.timer
+    metron-opencollective-sync.timer certbot-renew.timer
 ```
 
 Check that the site loads, that a name search with an accented name works
@@ -948,15 +991,30 @@ Check that the site loads, that a name search with an accented name works
 database errors. Run the backup service once (`systemctl --user start
 metron-backup`) to confirm backups work against 18.
 
-**Rollback:** stop `metron-postgres`, put the old `Image=` and `Volume=` lines
-back (`postgres:16`, `metron-postgres.volume:/var/lib/postgresql/data`), run
-`systemctl --user daemon-reload`, and start it again. Anything written after the
-cutover is lost, so decide early.
-
-**Cleanup:** after a week or two without problems, remove the old volume and
-image:
+**Rollback:** anything written after the cutover is lost, so decide early.
+Put the old `Image=` and `Volume=` lines back in
+`~/.config/containers/systemd/metron-postgres.container` (`postgres:16`,
+`metron-postgres.volume:/var/lib/postgresql/data`), then:
 
 ```bash
+systemctl --user stop metron-nginx metron-anubis metron-web metron-postgres
+systemctl --user daemon-reload
+systemctl --user start metron-postgres
+systemctl --user start metron-web metron-anubis metron-nginx
+systemctl --user start metron-backup.timer metron-history-cleanup.timer \
+    metron-opencollective-sync.timer certbot-renew.timer
+```
+
+If the repo `.quadlet/` change was already merged, revert it too. Otherwise the
+next deploy switches back to 18.
+
+**Cleanup:** after a week or two without problems, remove the old volume, its
+quadlet unit (on the droplet and in the repo's `.quadlet/`, or every deploy
+copies it back) and the old image:
+
+```bash
+rm ~/.config/containers/systemd/metron-postgres.volume
+systemctl --user daemon-reload
 podman volume rm systemd-metron-postgres
 podman rmi docker.io/library/postgres:16
 ```
