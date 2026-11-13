@@ -18,7 +18,7 @@ alternative to Comic Vine and as an educational exercise.
 ## 🤝 Contributing
 
 if you're interested in helping add comics to the database, head over to <https://metron.cloud> and read
-the [Editing Guidelines](https://metron.cloud/pages/guidelines/editing/) before signing up for an account.
+the [Editing Guidelines](https://metron.cloud/wiki/user-documentation/editing-guidelines/) before signing up for an account.
 
 If you got knowledge of Python, Django or System Administration, I'm always looking for help with the technical side of
 the project, so please contact me.
