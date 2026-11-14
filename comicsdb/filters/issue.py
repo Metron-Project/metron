@@ -202,7 +202,9 @@ class IssueFilter(df.rest_framework.FilterSet):
         if max_distance is None:
             max_distance = DEFAULT_COVER_HASH_DISTANCE
         return (
-            qs.exclude(cover_hash="")
+            # Only well-formed 16-hex-digit hashes: anything else would make the
+            # ::bit(64) cast raise (non-hex) or silently zero-pad (too short).
+            qs.filter(cover_hash__regex=r"^[0-9a-fA-F]{16}$")
             .annotate(cover_hash_distance=CoverHashDistance(F("cover_hash"), Value(value.lower())))
             .filter(cover_hash_distance__lte=max_distance)
             .order_by("cover_hash_distance", *Issue._meta.ordering)

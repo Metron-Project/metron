@@ -1013,6 +1013,9 @@ def test_issue_list_cover_hash_near_bypasses_cache(
 
     resp = api_client_with_credentials.get(url, {"cover_hash_near": ""})
     assert resp["X-Cache"] == "MISS"
+    # Whitespace-only is stripped to empty by the filter, so it is cached too.
+    resp = api_client_with_credentials.get(url, {"cover_hash_near": "  "})
+    assert "X-Cache" in resp
     resp = api_client_with_credentials.get(url)
     assert resp["X-Cache"] == "MISS"
     resp = api_client_with_credentials.get(url)

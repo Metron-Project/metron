@@ -91,6 +91,13 @@ def test_issues_without_cover_hash_are_excluded(search, make_issue):
     assert search(cover_hash_near="0000000000000000", cover_hash_max_distance=24) == []
 
 
+@pytest.mark.parametrize("bad_hash", ["c585eb18bf1e542", "c585eb18bf1e542z", " c585eb18bf1e542"])
+def test_malformed_stored_hashes_are_skipped(search, make_issue, bad_hash):
+    make_issue("1", bad_hash)
+    good = make_issue("2", QUERY_HASH)
+    assert search(cover_hash_near=QUERY_HASH, cover_hash_max_distance=24) == [good]
+
+
 def test_uppercase_query_matches(search, make_issue):
     pk = make_issue("1", QUERY_HASH)
     assert search(cover_hash_near=QUERY_HASH.upper()) == [pk]

@@ -300,7 +300,10 @@ class CachedListModelMixin(mixins.ListModelMixin):
 
     def list(self, request, *args, **kwargs):
         if not self.cache_model_label or any(
-            request.query_params.get(param) for param in self.uncached_list_params
+            # Strip to match the filter form's cleaned value, so whitespace-only
+            # input (which the filter ignores) is cached like the plain list.
+            request.query_params.get(param, "").strip()
+            for param in self.uncached_list_params
         ):
             return super().list(request, *args, **kwargs)
 
