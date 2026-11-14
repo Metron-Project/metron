@@ -4,9 +4,10 @@ from functools import reduce
 import django_filters as df
 from django import forms
 from django.core.validators import RegexValidator
-from django.db.models import BigIntegerField, F, Func, IntegerField, Q, Value
+from django.db.models import F, Func, IntegerField, Q, Value
 
 from comicsdb.models import Issue
+from comicsdb.models.issue import PHASH_REGEX, HexToBigint
 
 #: Default and maximum Hamming distance (in bits, of 64) for the ``cover_hash_near`` filter.
 # The default targets digital comic files: in a sample of 595 tagged digital comics, 98.8% of
@@ -18,9 +19,7 @@ from comicsdb.models import Issue
 DEFAULT_COVER_HASH_DISTANCE = 10
 MAX_COVER_HASH_DISTANCE = 24
 
-validate_phash = RegexValidator(
-    r"^[0-9a-fA-F]{16}$", "Enter a 16-character hexadecimal perceptual hash."
-)
+validate_phash = RegexValidator(PHASH_REGEX, "Enter a 16-character hexadecimal perceptual hash.")
 
 
 class IssueSeriesName(df.rest_framework.CharFilter):
@@ -62,12 +61,6 @@ class CoverHashDistance(Func):
     arg_joiner = " # "
     arity = 2
     output_field = IntegerField()
-
-
-def phash_to_bigint(value: str) -> int:
-    """Convert a 16-character hex phash to the signed 64-bit form of Issue.cover_hash_bits."""
-    n = int(value, 16)
-    return n - (1 << 64) if n >= 1 << 63 else n
 
 
 class IntegerFilter(df.rest_framework.NumberFilter):
@@ -206,9 +199,9 @@ class IssueFilter(df.rest_framework.FilterSet):
         max_distance = self.form.cleaned_data.get("cover_hash_max_distance")
         if max_distance is None:
             max_distance = DEFAULT_COVER_HASH_DISTANCE
-        distance = CoverHashDistance(
-            F("cover_hash_bits"), Value(phash_to_bigint(value), output_field=BigIntegerField())
-        )
+        # Convert the query hash with the same SQL as the generated column, so the two can't
+        # disagree; PostgreSQL folds it to a constant once per query.
+        distance = CoverHashDistance(F("cover_hash_bits"), HexToBigint(Value(value)))
         # Fetch the matching ids first, as their own query: it is an index-only scan of
         # issue_cover_hash_bits_idx, and the outer query then becomes a primary-key lookup.
         # Inlined as an IN (subquery), the planner can't estimate how few rows match and

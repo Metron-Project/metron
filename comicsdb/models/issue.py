@@ -53,6 +53,10 @@ class TradePaperbackManager(models.Manager):
         )
 
 
+#: A perceptual hash (ImageHash phash) as stored in Issue.cover_hash: 16 hex digits (64 bits).
+PHASH_REGEX = r"^[0-9a-fA-F]{16}$"
+
+
 class HexToBigint(models.Func):
     """Reinterpret a 16-character hex string as a signed 64-bit integer (PostgreSQL)."""
 
@@ -84,7 +88,7 @@ class Issue(CommonInfo):
     # instead of the issue table.
     cover_hash_bits = models.GeneratedField(
         expression=models.Case(
-            models.When(cover_hash__regex=r"^[0-9a-fA-F]{16}$", then=HexToBigint("cover_hash")),
+            models.When(cover_hash__regex=PHASH_REGEX, then=HexToBigint("cover_hash")),
             default=None,
         ),
         output_field=models.BigIntegerField(null=True),
