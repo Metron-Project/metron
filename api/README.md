@@ -2635,6 +2635,12 @@ For questions, issues, or feature requests:
 
 ## Changelog
 
+### Version 1.13
+
+- Added `cover_hash_near` and `cover_hash_max_distance` filters to the Issue endpoint: find issues whose main cover's perceptual hash is within a Hamming distance (0-20, default 10) of a supplied 16-character hex hash, sorted closest first. See **Cover Hash** under [Issue](#issue) for computing a compatible hash
+- The Issue endpoint's `upc` and `sku` filters now also match variant covers, returning each matching parent issue once (`upc_starts_with` still matches only the main cover)
+- Added `desc_is_solicitation` field to the Issue detail endpoint and a matching filter on the Issue list: `true` when `desc` is the publisher's solicitation text. Editors can set it on POST/PUT/PATCH
+
 ### Version 1.12
 
 - Added read-only `attribution` field to the Arc, Character, Creator, Imprint, Issue, Publisher, Series, Team, and Universe detail endpoints: a list of `{"source", "url"}` objects naming where descriptive content was adapted from
