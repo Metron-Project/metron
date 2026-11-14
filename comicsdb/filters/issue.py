@@ -4,7 +4,7 @@ from functools import reduce
 import django_filters as df
 from django import forms
 from django.core.validators import RegexValidator
-from django.db.models import F, Func, IntegerField, Q, Value
+from django.db.models import BigIntegerField, F, Func, IntegerField, Q, Value
 
 from comicsdb.models import Issue
 
@@ -53,16 +53,21 @@ class IssueSeriesQuickSearch(df.rest_framework.CharFilter):
 
 
 class CoverHashDistance(Func):
-    """Hamming distance between two 64-bit hex phash strings.
+    """Hamming distance between two 64-bit phashes stored as signed bigints.
 
-    Renders as ``bit_count(('x' || a)::bit(64) # ('x' || b)::bit(64))`` (PostgreSQL 14+), where
-    ``#`` is bit-string XOR. Both operands must be 16-character hexadecimal strings.
+    Renders as ``bit_count((a # b)::bit(64))`` (PostgreSQL 14+), where ``#`` is integer XOR.
     """
 
-    template = "bit_count(('x' || %(expressions)s)::bit(64))"
-    arg_joiner = ")::bit(64) # ('x' || "
+    template = "bit_count((%(expressions)s)::bit(64))"
+    arg_joiner = " # "
     arity = 2
     output_field = IntegerField()
+
+
+def phash_to_bigint(value: str) -> int:
+    """Convert a 16-character hex phash to the signed 64-bit form of Issue.cover_hash_bits."""
+    n = int(value, 16)
+    return n - (1 << 64) if n >= 1 << 63 else n
 
 
 class IntegerFilter(df.rest_framework.NumberFilter):
@@ -201,12 +206,23 @@ class IssueFilter(df.rest_framework.FilterSet):
         max_distance = self.form.cleaned_data.get("cover_hash_max_distance")
         if max_distance is None:
             max_distance = DEFAULT_COVER_HASH_DISTANCE
-        return (
-            # Only well-formed 16-hex-digit hashes: anything else would make the
-            # ::bit(64) cast raise (non-hex) or silently zero-pad (too short).
-            qs.filter(cover_hash__regex=r"^[0-9a-fA-F]{16}$")
-            .annotate(cover_hash_distance=CoverHashDistance(F("cover_hash"), Value(value.lower())))
+        distance = CoverHashDistance(
+            F("cover_hash_bits"), Value(phash_to_bigint(value), output_field=BigIntegerField())
+        )
+        # Fetch the matching ids first, as their own query: it is an index-only scan of
+        # issue_cover_hash_bits_idx, and the outer query then becomes a primary-key lookup.
+        # Inlined as an IN (subquery), the planner can't estimate how few rows match and
+        # falls back to scanning the whole issue table.
+        ids = list(
+            Issue.objects.filter(cover_hash_bits__isnull=False)
+            .alias(cover_hash_distance=distance)
             .filter(cover_hash_distance__lte=max_distance)
+            .order_by()
+            .values_list("pk", flat=True)
+        )
+        return (
+            qs.filter(pk__in=ids)
+            .annotate(cover_hash_distance=distance)
             .order_by("cover_hash_distance", *Issue._meta.ordering)
         )
 
