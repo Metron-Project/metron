@@ -375,7 +375,7 @@ The Issue endpoint supports the most comprehensive filtering options:
 - `missing_gcd_id` - Boolean, issues without GCD ID
 - `cover_hash` - Perceptual hash for cover matching
 - `cover_hash_near` - Perceptual hash near match: returns issues whose main cover hash is within `cover_hash_max_distance` bits of the supplied 16-character hex hash, sorted closest first
-- `cover_hash_max_distance` - Maximum Hamming distance (0-24, default 10) for `cover_hash_near`; ignored on its own
+- `cover_hash_max_distance` - Maximum Hamming distance (0-24, default 10) for `cover_hash_near`. Has no effect without `cover_hash_near`, but out-of-range values are still rejected with a 400
 
 The `sku` and `upc` filters match main and variant covers and return each matching parent issue once,
 even when multiple covers match. Variant matching applies only to `upc` and `sku`, not `upc_starts_with`.

@@ -4,7 +4,7 @@ import pytest
 from django.urls import reverse
 from django.utils import timezone
 
-from comicsdb.models import Issue
+from comicsdb.models import Credits, Issue, Variant
 
 QUERY_HASH = "c585eb18bf1e5423"
 ONE_BIT_OFF = "c585eb18bf1e5422"
@@ -115,6 +115,38 @@ def test_combines_with_other_filters(search, make_issue, bat_sups_series):
     assert search(cover_hash_near=QUERY_HASH, series_id=bat_sups_series.pk) == [other]
 
 
+# These filters join to-many relations and add DISTINCT, which interacts with the distance
+# ordering; each case must return every match once, still closest first.
+
+
+def test_combines_with_upc_filter_matching_main_and_variants(search, make_issue):
+    upc = "76194134182900111"
+    exact = make_issue("1", QUERY_HASH)
+    four = make_issue("2", FOUR_BITS_OFF)
+    make_issue("3", ONE_BIT_OFF)  # near, but no matching UPC
+    Issue.objects.filter(pk__in=[exact, four]).update(upc=upc)
+    for name in ("B", "C"):
+        Variant.objects.create(issue_id=exact, name=name, upc=upc)
+    assert search(cover_hash_near=QUERY_HASH, upc=upc) == [exact, four]
+
+
+def test_combines_with_creator_and_role_filters(
+    search, make_issue, john_byrne, walter_simonson, writer
+):
+    exact = make_issue("1", QUERY_HASH)
+    four = make_issue("2", FOUR_BITS_OFF)
+    make_issue("3", ONE_BIT_OFF)  # near, but uncredited
+    # Two writers on one issue would duplicate it without DISTINCT on the role join.
+    for issue_id, creator in ((four, john_byrne), (exact, john_byrne), (exact, walter_simonson)):
+        Credits.objects.create(issue_id=issue_id, creator=creator).role.add(writer)
+    assert search(cover_hash_near=QUERY_HASH, role_id=writer.pk) == [exact, four]
+    assert search(cover_hash_near=QUERY_HASH, creator_id=john_byrne.pk) == [exact, four]
+    assert search(cover_hash_near=QUERY_HASH, creator_id=john_byrne.pk, role_id=writer.pk) == [
+        exact,
+        four,
+    ]
+
+
 @pytest.mark.parametrize(
     "params",
     [
@@ -124,6 +156,7 @@ def test_combines_with_other_filters(search, make_issue, bat_sups_series):
         {"cover_hash_near": QUERY_HASH, "cover_hash_max_distance": -1},
         {"cover_hash_near": QUERY_HASH, "cover_hash_max_distance": 25},
         {"cover_hash_near": QUERY_HASH, "cover_hash_max_distance": 2.5},
+        {"cover_hash_max_distance": 25},  # still validated without cover_hash_near
     ],
 )
 def test_invalid_input_is_rejected(search, params):
