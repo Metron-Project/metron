@@ -479,6 +479,14 @@ bits away. Camera scans of the correct cover commonly differ by up to 16 bits. I
 default returns nothing, retry with a larger `cover_hash_max_distance` (up to 24) and treat the
 results as candidates rather than a confirmed match: wider searches return more unrelated covers.
 
+Some digital comics use a wraparound, double-page spread as the cover: the back cover on the left
+half and the front cover on the right. Metron stores only the front cover, so hashing the whole
+spread won't match. When the cover is clearly landscape (width/height above about 1.2; single covers
+are about 0.65 and spreads about 1.3), split it exactly at the midpoint and search with the hash of
+each half: usually the right half, or the left half for right-to-left books such as manga. Don't
+adjust the cut for spines or margins, since moving it even a pixel can change the hash by a few bits.
+[Metron-Tagger](https://github.com/Metron-Project/metron-tagger) does this when matching covers.
+
 Unrelated covers can be as close as 8 bits, and collected editions (trade paperbacks, hardcovers)
 often reuse an issue's cover exactly, so a distance alone doesn't confirm a match. Check the top few
 results against the scanned cover. Only main covers are searched, not variants. Issues without a
@@ -489,6 +497,14 @@ import imagehash
 from PIL import Image
 
 cover_hash = str(imagehash.phash(Image.open("cover.jpg")))  # e.g. "c585eb18bf1e5423"
+
+# Wraparound spread: also hash each half, split exactly at the midpoint
+img = Image.open("cover.jpg")
+width, height = img.size
+if width / height > 1.2:
+    mid = width // 2
+    front_hash = str(imagehash.phash(img.crop((mid, 0, width, height))))  # right half
+    back_hash = str(imagehash.phash(img.crop((0, 0, mid, height))))  # left half (manga front)
 ```
 
 ```bash
