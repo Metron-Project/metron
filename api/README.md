@@ -469,20 +469,34 @@ The `cover_hash` field contains a perceptual hash generated using [ImageHash](ht
 To identify an issue from a cover scan or photo, compute its hash with `imagehash.phash()` using the
 default settings (an 8×8, 64-bit hash, sent as its 16-character hex string) and pass it to
 `cover_hash_near`. Two images of the same cover rarely hash identically, so `cover_hash_near` matches
-by Hamming distance, the number of differing bits, instead of requiring equality. The default distance
-of 10 suits covers taken from digital comic files, which are usually within a few bits of the correct
-issue. Camera scans of the correct cover commonly differ by up to 16 bits, so raise
-`cover_hash_max_distance` when matching photos. Unrelated covers can be as close as 8 bits, so a
-distance alone doesn't confirm a match: results are sorted closest first, and the top few should be
-checked against the scanned cover. Raising `cover_hash_max_distance` can find the right cover from a
-noisier image but returns more unrelated covers. Only main covers are searched, not variants. Issues without a cover hash are
-never returned, and an invalid hash or distance returns `400 Bad Request`.
+by Hamming distance, the number of differing bits, instead of requiring equality. Results are sorted
+closest first.
+
+The default distance of 10 suits covers taken from digital comic files, which are usually within a
+few bits of the correct issue. Some digital editions use different trade dress from the print cover
+stored on Metron (for example, no price or UPC barcode box), which can put the correct issue 12-18
+bits away. Camera scans of the correct cover commonly differ by up to 16 bits. If a search at the
+default returns nothing, retry with a larger `cover_hash_max_distance` (up to 24) and treat the
+results as candidates rather than a confirmed match: wider searches return more unrelated covers.
+
+Unrelated covers can be as close as 8 bits, and collected editions (trade paperbacks, hardcovers)
+often reuse an issue's cover exactly, so a distance alone doesn't confirm a match. Check the top few
+results against the scanned cover. Only main covers are searched, not variants. Issues without a
+cover hash are never returned, and an invalid hash or distance returns `400 Bad Request`.
 
 ```python
 import imagehash
 from PIL import Image
 
 cover_hash = str(imagehash.phash(Image.open("cover.jpg")))  # e.g. "c585eb18bf1e5423"
+```
+
+```bash
+# Find issues whose cover is within the default distance (10 bits)
+GET /api/issue/?cover_hash_near=c585eb18bf1e5423
+
+# Nothing found? Retry with a wider distance and check the candidates
+GET /api/issue/?cover_hash_near=c585eb18bf1e5423&cover_hash_max_distance=16
 ```
 
 **Examples:**
