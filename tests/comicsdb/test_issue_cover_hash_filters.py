@@ -9,6 +9,7 @@ from comicsdb.models import Issue
 QUERY_HASH = "c585eb18bf1e5423"
 ONE_BIT_OFF = "c585eb18bf1e5422"
 FOUR_BITS_OFF = "c585eb18bf1e542c"
+EIGHT_BITS_OFF = "c585eb18bf1e54dc"  # last two nibbles complemented
 TWELVE_BITS_OFF = "c585eb18bf1eabdc"  # last three nibbles complemented
 TWENTY_BITS_OFF = "c585eb18bf11abdc"  # last five nibbles complemented
 FAR_AWAY = "3a7a14e740e1abdc"  # bitwise complement: 64 bits off
@@ -70,12 +71,13 @@ def test_max_distance_excludes_farther_covers(search, make_issue):
     assert search(cover_hash_near=QUERY_HASH, cover_hash_max_distance=0) == [exact]
 
 
-def test_default_max_distance_is_sixteen(search, make_issue):
+def test_default_max_distance_is_ten(search, make_issue):
     four = make_issue("1", FOUR_BITS_OFF)
-    twelve = make_issue("2", TWELVE_BITS_OFF)
-    make_issue("3", TWENTY_BITS_OFF)
-    make_issue("4", FAR_AWAY)
-    assert search(cover_hash_near=QUERY_HASH) == [four, twelve]
+    eight = make_issue("2", EIGHT_BITS_OFF)
+    make_issue("3", TWELVE_BITS_OFF)
+    make_issue("4", TWENTY_BITS_OFF)
+    make_issue("5", FAR_AWAY)
+    assert search(cover_hash_near=QUERY_HASH) == [four, eight]
 
 
 def test_max_distance_can_be_raised_to_twenty_four(search, make_issue):
