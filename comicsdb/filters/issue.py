@@ -15,9 +15,11 @@ from comicsdb.models.issue import PHASH_REGEX, HexToBigint
 # ~184k-hash corpus was 8-16 bits off (mostly 12-14). At 10 the correct issue was the only result
 # 94.5% of the time; at 16 every query also returned unrelated covers. Camera scans are noisier
 # (typically 6-16 bits off, Metron discussion #680), so callers can raise the distance up to the
-# maximum. Results are sorted closest first.
+# maximum. In camera testing (discussion #680) no top-8 match was more than 16 bits off, so 20
+# leaves headroom; at 24 a query matched ~11k covers and cost ~4x as much. Results are sorted
+# closest first.
 DEFAULT_COVER_HASH_DISTANCE = 10
-MAX_COVER_HASH_DISTANCE = 24
+MAX_COVER_HASH_DISTANCE = 20
 
 validate_phash = RegexValidator(PHASH_REGEX, "Enter a 16-character hexadecimal perceptual hash.")
 

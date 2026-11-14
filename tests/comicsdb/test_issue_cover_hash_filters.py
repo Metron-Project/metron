@@ -80,22 +80,23 @@ def test_default_max_distance_is_ten(search, make_issue):
     assert search(cover_hash_near=QUERY_HASH) == [four, eight]
 
 
-def test_max_distance_can_be_raised_to_twenty_four(search, make_issue):
+def test_max_distance_can_be_raised_to_twenty(search, make_issue):
     twenty = make_issue("1", TWENTY_BITS_OFF)
     make_issue("2", FAR_AWAY)
-    assert search(cover_hash_near=QUERY_HASH, cover_hash_max_distance=24) == [twenty]
+    assert search(cover_hash_near=QUERY_HASH, cover_hash_max_distance=20) == [twenty]
+    assert search(cover_hash_near=QUERY_HASH, cover_hash_max_distance=19) == []
 
 
 def test_issues_without_cover_hash_are_excluded(search, make_issue):
     make_issue("1", "")
-    assert search(cover_hash_near="0000000000000000", cover_hash_max_distance=24) == []
+    assert search(cover_hash_near="0000000000000000", cover_hash_max_distance=20) == []
 
 
 @pytest.mark.parametrize("bad_hash", ["c585eb18bf1e542", "c585eb18bf1e542z", " c585eb18bf1e542"])
 def test_malformed_stored_hashes_are_skipped(search, make_issue, bad_hash):
     make_issue("1", bad_hash)
     good = make_issue("2", QUERY_HASH)
-    assert search(cover_hash_near=QUERY_HASH, cover_hash_max_distance=24) == [good]
+    assert search(cover_hash_near=QUERY_HASH, cover_hash_max_distance=20) == [good]
 
 
 def test_uppercase_query_matches(search, make_issue):
@@ -154,9 +155,9 @@ def test_combines_with_creator_and_role_filters(
         {"cover_hash_near": "c585eb18bf1e54233"},  # too long
         {"cover_hash_near": "g585eb18bf1e5423"},  # not hex
         {"cover_hash_near": QUERY_HASH, "cover_hash_max_distance": -1},
-        {"cover_hash_near": QUERY_HASH, "cover_hash_max_distance": 25},
+        {"cover_hash_near": QUERY_HASH, "cover_hash_max_distance": 21},
         {"cover_hash_near": QUERY_HASH, "cover_hash_max_distance": 2.5},
-        {"cover_hash_max_distance": 25},  # still validated without cover_hash_near
+        {"cover_hash_max_distance": 21},  # still validated without cover_hash_near
     ],
 )
 def test_invalid_input_is_rejected(search, params):

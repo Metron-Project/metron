@@ -375,7 +375,7 @@ The Issue endpoint supports the most comprehensive filtering options:
 - `missing_gcd_id` - Boolean, issues without GCD ID
 - `cover_hash` - Perceptual hash for cover matching
 - `cover_hash_near` - Perceptual hash near match: returns issues whose main cover hash is within `cover_hash_max_distance` bits of the supplied 16-character hex hash, sorted closest first
-- `cover_hash_max_distance` - Maximum Hamming distance (0-24, default 10) for `cover_hash_near`. Has no effect without `cover_hash_near`, but out-of-range values are still rejected with a 400
+- `cover_hash_max_distance` - Maximum Hamming distance (0-20, default 10) for `cover_hash_near`. Has no effect without `cover_hash_near`, but out-of-range values are still rejected with a 400
 
 The `sku` and `upc` filters match main and variant covers and return each matching parent issue once,
 even when multiple covers match. Variant matching applies only to `upc` and `sku`, not `upc_starts_with`.
@@ -476,7 +476,7 @@ The default distance of 10 suits covers taken from digital comic files, which ar
 few bits of the correct issue. Some digital editions use different trade dress from the print cover
 stored on Metron (for example, no price or UPC barcode box), which can put the correct issue 12-18
 bits away. Camera scans of the correct cover commonly differ by up to 16 bits. If a search at the
-default returns nothing, retry with a larger `cover_hash_max_distance` (up to 24) and treat the
+default returns nothing, retry with a larger `cover_hash_max_distance` (up to 20) and treat the
 results as candidates rather than a confirmed match: wider searches return more unrelated covers.
 
 Some digital comics use a wraparound, double-page spread as the cover: the back cover on the left
