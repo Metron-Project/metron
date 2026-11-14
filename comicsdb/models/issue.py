@@ -53,6 +53,17 @@ class TradePaperbackManager(models.Manager):
         )
 
 
+#: A perceptual hash (ImageHash phash) as stored in Issue.cover_hash: 16 hex digits (64 bits).
+PHASH_REGEX = r"^[0-9a-fA-F]{16}$"
+
+
+class HexToBigint(models.Func):
+    """Reinterpret a 16-character hex string as a signed 64-bit integer (PostgreSQL)."""
+
+    template = "('x' || %(expressions)s)::bit(64)::bigint"
+    output_field = models.BigIntegerField()
+
+
 class Issue(CommonInfo):
     series = models.ForeignKey(Series, on_delete=models.CASCADE, related_name="issues")
     name = ArrayField(models.CharField(_("Story Title"), max_length=150), blank=True, default=list)
@@ -72,6 +83,17 @@ class Issue(CommonInfo):
     page = models.PositiveSmallIntegerField(_("Page Count"), null=True, blank=True)
     image = ImageField(_("Cover"), upload_to="issue/%Y/%m/%d/", blank=True)
     cover_hash = models.CharField(_("Cover Hash"), max_length=16, blank=True)
+    # cover_hash as a 64-bit integer for fast Hamming-distance search; NULL when the hash is
+    # blank or malformed. Indexed (covering id) so near-match searches can scan the small index
+    # instead of the issue table.
+    cover_hash_bits = models.GeneratedField(
+        expression=models.Case(
+            models.When(cover_hash__regex=PHASH_REGEX, then=HexToBigint("cover_hash")),
+            default=None,
+        ),
+        output_field=models.BigIntegerField(null=True),
+        db_persist=True,
+    )
     desc_is_solicitation = models.BooleanField(
         _("Description is a solicitation"),
         default=False,
@@ -90,7 +112,10 @@ class Issue(CommonInfo):
     edited_by = models.ForeignKey(
         CustomUser, default=1, on_delete=models.SET_DEFAULT, related_name="issues_edited"
     )
-    history = HistoricalRecords(m2m_fields=[arcs, characters, teams, universes, reprints])
+    history = HistoricalRecords(
+        m2m_fields=[arcs, characters, teams, universes, reprints],
+        excluded_fields=["cover_hash_bits"],
+    )
 
     objects = models.Manager()
     graphic_novels = GraphicNovelManager()
@@ -186,6 +211,12 @@ class Issue(CommonInfo):
             models.Index(fields=["foc_date"], name="issue_foc_date_idx"),
             models.Index(fields=["cv_id"], name="issue_cv_id_idx"),
             models.Index(fields=["gcd_id"], name="issue_gcd_id_idx"),
+            models.Index(
+                fields=["cover_hash_bits"],
+                include=["id"],
+                condition=models.Q(cover_hash_bits__isnull=False),
+                name="issue_cover_hash_bits_idx",
+            ),
         ]
         ordering = ["series__sort_name", "cover_date", "store_date", "number", "id"]
         unique_together = ["series", "number"]

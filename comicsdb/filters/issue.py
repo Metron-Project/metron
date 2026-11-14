@@ -2,9 +2,26 @@ import operator
 from functools import reduce
 
 import django_filters as df
-from django.db.models import Q
+from django import forms
+from django.core.validators import RegexValidator
+from django.db.models import F, Func, IntegerField, Q, Value
 
 from comicsdb.models import Issue
+from comicsdb.models.issue import PHASH_REGEX, HexToBigint
+
+#: Default and maximum Hamming distance (in bits, of 64) for the ``cover_hash_near`` filter.
+# The default targets digital comic files: in a sample of 595 tagged digital comics, 98.8% of
+# covers were within 8 bits of the correct issue, while the closest wrong cover in the full
+# ~184k-hash corpus was 8-16 bits off (mostly 12-14). At 10 the correct issue was the only result
+# 94.5% of the time; at 16 every query also returned unrelated covers. Camera scans are noisier
+# (typically 6-16 bits off, Metron discussion #680), so callers can raise the distance up to the
+# maximum. In camera testing (discussion #680) no top-8 match was more than 16 bits off, so 20
+# leaves headroom; at 24 a query matched ~11k covers and cost ~4x as much. Results are sorted
+# closest first.
+DEFAULT_COVER_HASH_DISTANCE = 10
+MAX_COVER_HASH_DISTANCE = 20
+
+validate_phash = RegexValidator(PHASH_REGEX, "Enter a 16-character hexadecimal perceptual hash.")
 
 
 class IssueSeriesName(df.rest_framework.CharFilter):
@@ -34,6 +51,22 @@ class IssueSeriesQuickSearch(df.rest_framework.CharFilter):
                 )
             )
         return super().filter(qs, value)
+
+
+class CoverHashDistance(Func):
+    """Hamming distance between two 64-bit phashes stored as signed bigints.
+
+    Renders as ``bit_count((a # b)::bit(64))`` (PostgreSQL 14+), where ``#`` is integer XOR.
+    """
+
+    template = "bit_count((%(expressions)s)::bit(64))"
+    arg_joiner = " # "
+    arity = 2
+    output_field = IntegerField()
+
+
+class IntegerFilter(df.rest_framework.NumberFilter):
+    field_class = forms.IntegerField
 
 
 class NumberInFilter(df.rest_framework.BaseInFilter, df.rest_framework.NumberFilter):
@@ -127,6 +160,18 @@ class IssueFilter(df.rest_framework.FilterSet):
     cover_hash = df.rest_framework.CharFilter(
         label="Cover Hash", field_name="cover_hash", lookup_expr="iexact"
     )
+    cover_hash_near = df.rest_framework.CharFilter(
+        label="Cover Hash near match (16-character hex phash; results sorted closest first)",
+        method="filter_cover_hash_near",
+        validators=[validate_phash],
+    )
+    cover_hash_max_distance = IntegerFilter(
+        label=f"Maximum Hamming distance for cover_hash_near "
+        f"(0-{MAX_COVER_HASH_DISTANCE}, default {DEFAULT_COVER_HASH_DISTANCE})",
+        method="filter_cover_hash_max_distance",
+        min_value=0,
+        max_value=MAX_COVER_HASH_DISTANCE,
+    )
     creator_id = df.rest_framework.NumberFilter(
         label="Creator Metron ID", field_name="creators__id", lookup_expr="exact", distinct=True
     )
@@ -149,6 +194,37 @@ class IssueFilter(df.rest_framework.FilterSet):
     class Meta:
         model = Issue
         fields = ["store_date", "foc_date"]
+
+    def filter_cover_hash_near(self, qs, name, value: str):
+        if not value:
+            return qs
+        max_distance = self.form.cleaned_data.get("cover_hash_max_distance")
+        if max_distance is None:
+            max_distance = DEFAULT_COVER_HASH_DISTANCE
+        # Convert the query hash with the same SQL as the generated column, so the two can't
+        # disagree; PostgreSQL folds it to a constant once per query.
+        distance = CoverHashDistance(F("cover_hash_bits"), HexToBigint(Value(value)))
+        # Fetch the matching ids first, as their own query: it is an index-only scan of
+        # issue_cover_hash_bits_idx, and the outer query then becomes a primary-key lookup.
+        # Inlined as an IN (subquery), the planner can't estimate how few rows match and
+        # falls back to scanning the whole issue table.
+        ids = list(
+            Issue.objects.filter(cover_hash_bits__isnull=False)
+            .alias(cover_hash_distance=distance)
+            .filter(cover_hash_distance__lte=max_distance)
+            .order_by()
+            .values_list("pk", flat=True)
+        )
+        return (
+            qs.filter(pk__in=ids)
+            .annotate(cover_hash_distance=distance)
+            .order_by("cover_hash_distance", *Issue._meta.ordering)
+        )
+
+    @staticmethod
+    def filter_cover_hash_max_distance(qs, name, value: int):
+        # Only modifies cover_hash_near, which reads it from the form's cleaned data.
+        return qs
 
 
 class IssueViewFilter(df.FilterSet):

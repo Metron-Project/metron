@@ -374,6 +374,8 @@ The Issue endpoint supports the most comprehensive filtering options:
 - `missing_cv_id` - Boolean, issues without Comic Vine ID
 - `missing_gcd_id` - Boolean, issues without GCD ID
 - `cover_hash` - Perceptual hash for cover matching
+- `cover_hash_near` - Perceptual hash near match: returns issues whose main cover hash is within `cover_hash_max_distance` bits of the supplied 16-character hex hash, sorted closest first
+- `cover_hash_max_distance` - Maximum Hamming distance (0-20, default 10) for `cover_hash_near`. Has no effect without `cover_hash_near`, but out-of-range values are still rejected with a 400
 
 The `sku` and `upc` filters match main and variant covers and return each matching parent issue once,
 even when multiple covers match. Variant matching applies only to `upc` and `sku`, not `upc_starts_with`.
@@ -464,6 +466,55 @@ Supported currencies: `USD`, `GBP`, `EUR`, `ITL`. Unsupported currency codes wil
 **Cover Hash:**
 The `cover_hash` field contains a perceptual hash generated using [ImageHash](https://github.com/JohannesBuchner/imagehash). This allows for finding similar or duplicate covers.
 
+To identify an issue from a cover scan or photo, compute its hash with `imagehash.phash()` using the
+default settings (an 8×8, 64-bit hash, sent as its 16-character hex string) and pass it to
+`cover_hash_near`. Two images of the same cover rarely hash identically, so `cover_hash_near` matches
+by Hamming distance, the number of differing bits, instead of requiring equality. Results are sorted
+closest first.
+
+The default distance of 10 suits covers taken from digital comic files, which are usually within a
+few bits of the correct issue. Some digital editions use different trade dress from the print cover
+stored on Metron (for example, no price or UPC barcode box), which can put the correct issue 12-18
+bits away. Camera scans of the correct cover commonly differ by up to 16 bits. If a search at the
+default returns nothing, retry with a larger `cover_hash_max_distance` (up to 20) and treat the
+results as candidates rather than a confirmed match: wider searches return more unrelated covers.
+
+Some digital comics use a wraparound, double-page spread as the cover: the back cover on the left
+half and the front cover on the right. Metron stores only the front cover, so hashing the whole
+spread won't match. When the cover is clearly landscape (width/height above about 1.2; single covers
+are about 0.65 and spreads about 1.3), split it exactly at the midpoint and search with the hash of
+each half: usually the right half, or the left half for right-to-left books such as manga. Don't
+adjust the cut for spines or margins, since moving it even a pixel can change the hash by a few bits.
+[Metron-Tagger](https://github.com/Metron-Project/metron-tagger) does this when matching covers.
+
+Unrelated covers can be as close as 8 bits, and collected editions (trade paperbacks, hardcovers)
+often reuse an issue's cover exactly, so a distance alone doesn't confirm a match. Check the top few
+results against the scanned cover. Only main covers are searched, not variants. Issues without a
+cover hash are never returned, and an invalid hash or distance returns `400 Bad Request`.
+
+```python
+import imagehash
+from PIL import Image
+
+cover_hash = str(imagehash.phash(Image.open("cover.jpg")))  # e.g. "c585eb18bf1e5423"
+
+# Wraparound spread: also hash each half, split exactly at the midpoint
+img = Image.open("cover.jpg")
+width, height = img.size
+if width / height > 1.2:
+    mid = width // 2
+    front_hash = str(imagehash.phash(img.crop((mid, 0, width, height))))  # right half
+    back_hash = str(imagehash.phash(img.crop((0, 0, mid, height))))  # left half (manga front)
+```
+
+```bash
+# Find issues whose cover is within the default distance (10 bits)
+GET /api/issue/?cover_hash_near=c585eb18bf1e5423
+
+# Nothing found? Retry with a wider distance and check the candidates
+GET /api/issue/?cover_hash_near=c585eb18bf1e5423&cover_hash_max_distance=16
+```
+
 **Examples:**
 
 ```bash
@@ -493,6 +544,12 @@ GET /api/issue/?upc=75960609558200111
 
 # Find by the 12-digit UPC-A from a mobile barcode scanner (no EAN supplemental)
 GET /api/issue/?upc_starts_with=759606095582
+
+# Find issues whose cover looks like a scanned cover (closest first)
+GET /api/issue/?cover_hash_near=c585eb18bf1e5423
+
+# Same, but stricter, and limited to one series
+GET /api/issue/?cover_hash_near=c585eb18bf1e5423&cover_hash_max_distance=6&series_id=123
 
 # Get all issues with a credit for a specific creator
 GET /api/issue/?creator_id=123

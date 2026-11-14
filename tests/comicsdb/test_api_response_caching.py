@@ -997,3 +997,26 @@ def test_user_scoped_viewsets_are_not_list_cached():
     that intentional exclusion; see api/views.py."""
     for viewset in (CollectionViewSet, PullListViewSet, WishListViewSet):
         assert getattr(viewset, "cache_model_label", None) is None
+
+
+def test_issue_list_cover_hash_near_bypasses_cache(
+    api_client_with_credentials, basic_issue, local_cache
+):
+    """Near-match phash searches are effectively unique per scan, so they skip
+    the response cache entirely instead of filling it with dead entries."""
+    url = reverse("api:issue-list")
+    for _ in range(2):
+        resp = api_client_with_credentials.get(url, {"cover_hash_near": "c585eb18bf1e5423"})
+        assert resp.status_code == status.HTTP_200_OK
+        assert "X-Cache" not in resp
+    assert not [k for k in local_cache._cache if "cachever" not in k]
+
+    resp = api_client_with_credentials.get(url, {"cover_hash_near": ""})
+    assert resp["X-Cache"] == "MISS"
+    # Whitespace-only is stripped to empty by the filter, so it is cached too.
+    resp = api_client_with_credentials.get(url, {"cover_hash_near": "  "})
+    assert "X-Cache" in resp
+    resp = api_client_with_credentials.get(url)
+    assert resp["X-Cache"] == "MISS"
+    resp = api_client_with_credentials.get(url)
+    assert resp["X-Cache"] == "HIT"
