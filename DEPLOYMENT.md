@@ -44,9 +44,11 @@ with Quadlet (systemd-managed containers).
 - [Enable persistent journals](#enable-persistent-journals)
 - [Fail2ban](#fail2ban)
   - [Install](#install)
+  - [Ban ipset setup](#ban-ipset-setup)
   - [Deploy filters and jail config](#deploy-filters-and-jail-config)
   - [Thresholds](#thresholds)
   - [Useful fail2ban commands](#useful-fail2ban-commands)
+  - [Manually blocked IP ranges](#manually-blocked-ip-ranges)
   - [Updating filters or jail config](#updating-filters-or-jail-config)
 - [API observability](#api-observability)
   - [Logs](#logs)
@@ -1075,6 +1077,45 @@ sudo dnf install -y fail2ban conntrack-tools
 sudo systemctl enable --now fail2ban
 ```
 
+### Ban ipset setup
+
+All jails ban through a single firewalld ipset, `f2b-metron`, which is bound to
+the drop zone as one source. The drop zone matches before DNAT port
+forwarding, so bans work even though 80/443 are forwarded to 8080/8443. Create
+it once:
+
+```bash
+sudo firewall-cmd --permanent --new-ipset=f2b-metron --type=hash:ip
+sudo firewall-cmd --permanent --zone=drop --add-source=ipset:f2b-metron
+sudo firewall-cmd --reload
+sudo firewall-cmd --zone=drop --list-sources   # should include ipset:f2b-metron
+```
+
+> **Warning:** Never ban IPs by adding them as individual drop-zone sources
+> (`--zone=drop --add-source=<ip>`), and never ban with `--permanent`. Each zone
+> source makes firewalld generate its own rules in several chains. With about
+> 140 of them, firewalld 2.4 pegged a CPU core and grew to several GB of memory
+> at startup, and every fail2ban "Restore Ban" took ~20 s, which left the site
+> unreachable after a reboot. Permanent entries also pile up, because they are
+> removed only if fail2ban is running when the ban expires. fail2ban restores
+> active bans from its own database, so runtime ipset entries are enough.
+
+Runtime ipset entries are cleared by `firewall-cmd --reload` or a firewalld
+restart. Afterwards, run `sudo systemctl restart fail2ban` to re-apply active
+bans (this now takes seconds).
+
+**Migrating from the old per-IP action:** if `drop.xml` still has single-IP
+sources from the previous action, stop fail2ban and firewalld, remove the
+entries, then start firewalld, do the setup above, and start fail2ban:
+
+```bash
+sudo systemctl stop fail2ban
+sudo systemctl stop firewalld        # if it hangs: sudo systemctl kill -s KILL firewalld
+sudo cp -a /etc/firewalld/zones/drop.xml /root/drop.xml.bak.$(date +%F-%H%M)
+sudo sed -i -E '/<source address="[0-9.]+"\/>/d' /etc/firewalld/zones/drop.xml
+sudo systemctl start firewalld
+```
+
 ### Deploy filters and jail config
 
 The filter and jail files are stored in the repo under `fail2ban/`:
@@ -1131,6 +1172,12 @@ sudo fail2ban-client set metron-nginx-401 banip <ip-address>
 # Manually unban an IP
 sudo fail2ban-client set metron-nginx-401 unbanip <ip-address>
 
+# List every IP currently in the ban ipset (all jails)
+sudo firewall-cmd --ipset=f2b-metron --get-entries
+
+# Check firewalld's health (should be near 0% CPU, tens of MB of memory)
+top -p $(pgrep -x firewalld)
+
 # Test a filter against the log file
 sudo fail2ban-regex /var/log/metron-nginx/access.log \
   /etc/fail2ban/filter.d/metron-nginx-no-ua.conf
@@ -1142,7 +1189,9 @@ sudo fail2ban-regex /var/log/metron-nginx/access.log \
 
 Some abusive networks are blocked permanently in the firewalld drop zone rather
 than relying on fail2ban, because they use rotating IPs that never accumulate
-enough hits per address to trigger a jail.
+enough hits per address to trigger a jail. Keep this list to a handful of
+CIDR ranges: every drop-zone source adds firewalld rules (see the warning in
+[Ban ipset setup](#ban-ipset-setup)), so never add single IPs here.
 
 | CIDR | Provider | Reason |
 |------|----------|--------|
