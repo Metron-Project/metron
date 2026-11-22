@@ -12,7 +12,7 @@ from comicsdb.models.arc import Arc
 from comicsdb.models.issue import Issue
 from comicsdb.views.constants import DETAIL_PAGINATE_BY, PAGINATE_BY
 from comicsdb.views.history import HistoryListView
-from comicsdb.views.issue_list_helpers import SORT_OPTIONS, apply_sort
+from comicsdb.views.issue_list_helpers import apply_sort
 from comicsdb.views.mixins import (
     AttributionCreateMixin,
     AttributionUpdateMixin,
@@ -20,6 +20,7 @@ from comicsdb.views.mixins import (
     NavigationMixin,
     SearchMixin,
     SlugRedirectView,
+    SortableIssueListMixin,
 )
 
 LOGGER = logging.getLogger(__name__)
@@ -38,7 +39,7 @@ class ArcList(ListView):
     queryset = Arc.objects.annotate(issue_count=Subquery(_issue_count_sq)).order_by("name")
 
 
-class ArcIssueList(ListView):
+class ArcIssueList(SortableIssueListMixin, ListView):
     template_name = "comicsdb/issue_list.html"
     paginate_by = PAGINATE_BY
 
@@ -50,8 +51,6 @@ class ArcIssueList(ListView):
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         context["title"] = self.arc
-        context["sort_options"] = SORT_OPTIONS
-        context["current_sort"] = self.request.GET.get("sort", "")
         return context
 
 

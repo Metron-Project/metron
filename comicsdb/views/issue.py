@@ -1,6 +1,5 @@
 import logging
 from datetime import date, timedelta
-from typing import Any
 
 from django.contrib import messages
 from django.contrib.auth.mixins import LoginRequiredMixin, PermissionRequiredMixin
@@ -23,23 +22,18 @@ from comicsdb.forms.issue import MINIMUM_YEAR, IssueForm
 from comicsdb.forms.variant import VariantFormset
 from comicsdb.models import Credits, Issue, Role
 from comicsdb.models.attribution import Attribution
-from comicsdb.models.series import SeriesType
 from comicsdb.models.variant import Variant
 from comicsdb.views.constants import DETAIL_PAGINATE_BY, PAGINATE_BY
 from comicsdb.views.history import HistoryListView
-from comicsdb.views.issue_list_helpers import (
-    SORT_OPTIONS,
-    apply_sort,
-    build_active_filters,
-)
-from comicsdb.views.mixins import LazyLoadMixin, SlugRedirectView
+from comicsdb.views.issue_list_helpers import apply_sort
+from comicsdb.views.mixins import FilterableIssueListMixin, LazyLoadMixin, SlugRedirectView
 from issue_ratings.models import IssueRating
 from wish_list.models import WishListItem
 
 LOGGER = logging.getLogger(__name__)
 
 
-class IssueList(ListView):
+class IssueList(FilterableIssueListMixin, ListView):
     model = Issue
     paginate_by = PAGINATE_BY
 
@@ -50,18 +44,6 @@ class IssueList(ListView):
         # Apply filters
         filtered = IssueViewFilter(self.request.GET, queryset=queryset)
         return apply_sort(filtered.qs, self.request)
-
-    def get_context_data(self, **kwargs: Any) -> dict[str, Any]:
-        context = super().get_context_data(**kwargs)
-        series_types = list(SeriesType.objects.values("id", "name").order_by("name"))
-        context["series_type"] = series_types
-        # Active filters = any GET param that isn't paging or sorting.
-        context["has_active_filters"] = any(key not in ("page", "sort") for key in self.request.GET)
-        type_names = {str(t["id"]): t["name"] for t in series_types}
-        context["active_filters"] = build_active_filters(self.request, type_names=type_names)
-        context["sort_options"] = SORT_OPTIONS
-        context["current_sort"] = self.request.GET.get("sort", "")
-        return context
 
 
 class IssueDetail(DetailView):
@@ -747,7 +729,7 @@ class IssueHistory(HistoryListView):
     model = Issue
 
 
-class _ReleaseWeekListBase(ListView):
+class _ReleaseWeekListBase(FilterableIssueListMixin, ListView):
     """Issues by store date, relative to an ISO week (Monday-Sunday).
 
     Subclasses set ``week_offset`` (0 = this week, 1 = next week) and ``future``.
@@ -782,14 +764,6 @@ class _ReleaseWeekListBase(ListView):
         context = super().get_context_data(**kwargs)
         context["release_day"] = self.get_week_start()
         context["future"] = self.future
-        series_types = list(SeriesType.objects.values("id", "name").order_by("name"))
-        context["series_type"] = series_types
-        # Active filters = any GET param that isn't paging or sorting.
-        context["has_active_filters"] = any(key not in ("page", "sort") for key in self.request.GET)
-        type_names = {str(t["id"]): t["name"] for t in series_types}
-        context["active_filters"] = build_active_filters(self.request, type_names=type_names)
-        context["sort_options"] = SORT_OPTIONS
-        context["current_sort"] = self.request.GET.get("sort", "")
         return context
 
 

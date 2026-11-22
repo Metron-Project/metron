@@ -17,9 +17,41 @@ from django.views.generic import RedirectView
 from comicsdb.forms.attribution import AttributionFormSet
 from comicsdb.forms.issue import MINIMUM_YEAR
 from comicsdb.models.attribution import Attribution
+from comicsdb.models.series import SeriesType
 from comicsdb.views.constants import DETAIL_PAGINATE_BY
+from comicsdb.views.issue_list_helpers import SORT_OPTIONS, build_active_filters
 
 LOGGER = logging.getLogger(__name__)
+
+
+class SortableIssueListMixin:
+    """Add the issue sort dropdown (``sort_options`` / ``current_sort``) to the context.
+
+    The view is still responsible for ordering its queryset with ``apply_sort``.
+    """
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context["sort_options"] = SORT_OPTIONS
+        context["current_sort"] = self.request.GET.get("sort", "")
+        return context
+
+
+class FilterableIssueListMixin(SortableIssueListMixin):
+    """Add the issue filter form choices and active-filter chips to the context.
+
+    For views whose queryset is filtered with ``IssueViewFilter``.
+    """
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        series_types = list(SeriesType.objects.values("id", "name").order_by("name"))
+        context["series_type"] = series_types
+        # Active filters = any GET param that isn't paging or sorting.
+        context["has_active_filters"] = any(key not in ("page", "sort") for key in self.request.GET)
+        type_names = {str(t["id"]): t["name"] for t in series_types}
+        context["active_filters"] = build_active_filters(self.request, type_names=type_names)
+        return context
 
 
 class AttributionCreateMixin:

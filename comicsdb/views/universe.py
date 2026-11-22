@@ -13,7 +13,7 @@ from comicsdb.models.team import Team
 from comicsdb.models.universe import Universe
 from comicsdb.views.constants import DETAIL_PAGINATE_BY, PAGINATE_BY
 from comicsdb.views.history import HistoryListView
-from comicsdb.views.issue_list_helpers import SORT_OPTIONS, apply_sort
+from comicsdb.views.issue_list_helpers import apply_sort
 from comicsdb.views.mixins import (
     AttributionCreateMixin,
     AttributionUpdateMixin,
@@ -21,6 +21,7 @@ from comicsdb.views.mixins import (
     NavigationMixin,
     SearchMixin,
     SlugRedirectView,
+    SortableIssueListMixin,
 )
 
 LOGGER = logging.getLogger(__name__)
@@ -47,7 +48,7 @@ _team_count_sq = (
 )
 
 
-class UniverseSeriesList(ListView):
+class UniverseSeriesList(SortableIssueListMixin, ListView):
     paginate_by = PAGINATE_BY
     template_name = "comicsdb/issue_list.html"
 
@@ -60,12 +61,6 @@ class UniverseSeriesList(ListView):
         )
         return apply_sort(queryset, self.request)
 
-    def get_context_data(self, **kwargs):
-        context = super().get_context_data(**kwargs)
-        context["sort_options"] = SORT_OPTIONS
-        context["current_sort"] = self.request.GET.get("sort", "")
-        return context
-
 
 class UniverseList(ListView):
     model = Universe
@@ -73,7 +68,7 @@ class UniverseList(ListView):
     queryset = Universe.objects.annotate(issue_count=Subquery(_issue_count_sq))
 
 
-class UniverseIssueList(ListView):
+class UniverseIssueList(SortableIssueListMixin, ListView):
     paginate_by = PAGINATE_BY
     template_name = "comicsdb/issue_list.html"
 
@@ -85,8 +80,6 @@ class UniverseIssueList(ListView):
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         context["title"] = self.universe
-        context["sort_options"] = SORT_OPTIONS
-        context["current_sort"] = self.request.GET.get("sort", "")
         return context
 
 
