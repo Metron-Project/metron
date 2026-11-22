@@ -1275,7 +1275,7 @@ done
 ### Daily cache hit rate (from access logs)
 
 Gunicorn's access log includes `cache=HIT`/`cache=MISS` (the `X-Cache` header
-set by `_mark_cache_status` in `api/views.py`), so today's hit rate can be
+set by `mark_cache_status` in `api/v1_0/views/mixins.py`), so today's hit rate can be
 read straight from the log without touching Redis:
 
 ```bash

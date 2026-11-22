@@ -1,7 +1,7 @@
 from django.urls import include, path
 from rest_framework import routers
 
-from api.views import (
+from api.v1_0.views import (
     ArcViewSet,
     CharacterViewSet,
     CollectionViewSet,

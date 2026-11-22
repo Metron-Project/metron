@@ -1724,7 +1724,7 @@ python manage.py import_reading_lists <path> [<path> ...] [--dry-run] [--skip-mi
 
 ### REST API Endpoints
 
-The reading lists feature provides read-only REST API endpoints via `ReadingListViewSet` (`api/views.py`), registered at basename `reading_list`. Complete API documentation is available in the main [API README](/api/README.md).
+The reading lists feature provides read-only REST API endpoints via `ReadingListViewSet` (`api/v1_0/views/reading_list.py`), registered at basename `reading_list`. Complete API documentation is available in the main [API README](/api/README.md).
 
 **Available Endpoints:**
 

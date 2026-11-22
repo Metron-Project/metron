@@ -680,7 +680,7 @@ def scrobble(self, request):
     """
 ```
 
-**File:** `api/views.py` (CollectionViewSet)
+**File:** `api/v1_0/views/collection.py` (CollectionViewSet)
 
 **Purpose:** Quick scrobble endpoint for marking issues as read via API.
 
