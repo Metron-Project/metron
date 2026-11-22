@@ -1,10 +1,11 @@
 """Statistics and charts for a user's collection (stats page and API ``stats`` action)."""
 
-from datetime import datetime, timedelta
+from datetime import timedelta
 
 from chartkick.django import BarChart, ColumnChart, PieChart
 from django.db.models import Count, Q, Sum
 from django.db.models.functions import TruncDate, TruncMonth
+from django.utils import timezone
 from django.utils.translation import gettext as _
 
 from comicsdb.models.credits import ARTIST_ROLE_NAMES, WRITER_ROLE_NAMES, Credits
@@ -89,7 +90,7 @@ def _reading_charts(user):
         .order_by("-day")[:DAILY_READS_DAYS]
     )
     daily_counts = {row["day"]: row["c"] for row in daily_reads}
-    today = datetime.now().date()
+    today = timezone.localdate()
     days = [today - timedelta(days=i) for i in range(DAILY_READS_DAYS - 1, -1, -1)]
     daily_chart = ColumnChart(
         {day.strftime("%m/%d"): daily_counts.get(day, 0) for day in days},

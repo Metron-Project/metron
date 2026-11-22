@@ -162,8 +162,8 @@ def reprint_sync_blocker(issue: Issue) -> tuple[int, str] | None:
                 "pk", "name"
             )
         )
-        types = [names[pk] for pk in COLLECTED_EDITION_SERIES_TYPES]
-        type_list = f"{', '.join(types[:-1])} and {types[-1]}"
+        types = [names[pk] for pk in COLLECTED_EDITION_SERIES_TYPES if pk in names]
+        type_list = f"{', '.join(types[:-1])} and {types[-1]}" if len(types) > 1 else "".join(types)
         return messages.ERROR, _(
             "This function only works for %(types)s series types. "
             "This issue is of type '%(current_type)s'."

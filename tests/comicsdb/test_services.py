@@ -48,3 +48,22 @@ def test_reprint_sync_blocker_lists_types_by_name(basic_issue):
     assert level == messages.ERROR
     assert "Trade Paperback, Omnibus and Hardcover" in message
     assert basic_issue.series.series_type.name in message
+
+
+@pytest.mark.parametrize(
+    ("missing", "expected"),
+    [
+        ([SeriesType.OMNIBUS], "only works for Trade Paperback and Hardcover series types"),
+        (
+            [SeriesType.OMNIBUS, SeriesType.HARDCOVER],
+            "only works for Trade Paperback series types",
+        ),
+        (COLLECTED, "only works for  series types"),
+    ],
+)
+def test_reprint_sync_blocker_skips_missing_series_types(basic_issue, missing, expected):
+    """A collected-edition SeriesType row missing from the DB is left out, not a KeyError."""
+    SeriesType.objects.filter(pk__in=missing).delete()
+    level, message = reprint_sync_blocker(basic_issue)
+    assert level == messages.ERROR
+    assert expected in message

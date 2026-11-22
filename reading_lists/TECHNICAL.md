@@ -377,7 +377,7 @@ A standalone function, separate from `get_context_data()`, that takes the prefet
 
 - `issue_type_breakdown`: Per-`issue_type` counts (Prologue/Core/Tie-In/Epilogue) with a display label and bar color (from module-level `_ISSUE_TYPE_META`), computed in Python from the items
 - `series_breakdown` / `publisher_breakdown`: Per-series and per-publisher issue counts, also computed from the items (no extra queries)
-- `featured_creators`: Top 6 creators by issue count across the list's issues (roles in module-level `_CREDIT_ROLE_NAMES`), with a `roles` string ("Writer", "Artist", or both) built from `_CREDIT_ROLE_DISPLAY`
+- `featured_creators`: Top 6 creators by issue count across the list's issues (roles in module-level `_CREDIT_ROLE_NAMES`, built from the shared `WRITER_ROLE_NAMES` and `ARTIST_ROLE_NAMES` in `comicsdb/models/credits.py`, so secondary roles such as Plot, Layouts and Breakdowns count too), with a `roles` string ("Writer", "Artist", or both) built from `_CREDIT_ROLE_DISPLAY`
 - `top_characters`: Top 12 characters by appearance count across the list's issues
 
 **Query Optimizations:**
