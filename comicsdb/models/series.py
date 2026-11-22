@@ -27,6 +27,12 @@ if TYPE_CHECKING:
 
 
 class SeriesType(models.Model):
+    # Primary keys of the series type rows loaded from comicsdb/fixtures/series_type.yaml.
+    HARDCOVER = 8
+    GRAPHIC_NOVEL = 9
+    TRADE_PAPERBACK = 10
+    DIGITAL_CHAPTERS = 12
+
     name = models.CharField(max_length=255)
     notes = models.TextField(blank=True)
     modified = models.DateTimeField(auto_now=True)
@@ -92,13 +98,13 @@ class Series(CommonInfo):
 
     def __str__(self) -> str:
         match self.series_type_id:
-            case 12:
+            case SeriesType.DIGITAL_CHAPTERS:
                 return f"{self.name} ({self.year_began}) Digital"
-            case 10:
+            case SeriesType.TRADE_PAPERBACK:
                 return f"{self.name} TPB ({self.year_began})"
-            case 8:
+            case SeriesType.HARDCOVER:
                 return f"{self.name} HC ({self.year_began})"
-            case 9:
+            case SeriesType.GRAPHIC_NOVEL:
                 return f"{self.name} GN ({self.year_began})"
             case _:
                 return f"{self.name} ({self.year_began})"
