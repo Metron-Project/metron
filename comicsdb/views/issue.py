@@ -1,6 +1,6 @@
 import logging
 from dataclasses import dataclass, field
-from datetime import date, timedelta
+from datetime import date
 
 from django.contrib import messages
 from django.contrib.auth.mixins import LoginRequiredMixin, PermissionRequiredMixin
@@ -24,6 +24,7 @@ from comicsdb.forms.variant import VariantFormset
 from comicsdb.models import Credits, Issue, Role
 from comicsdb.models.attribution import Attribution
 from comicsdb.models.variant import Variant
+from comicsdb.release_week import release_week_bounds
 from comicsdb.views.constants import DETAIL_PAGINATE_BY, PAGINATE_BY
 from comicsdb.views.history import HistoryListView
 from comicsdb.views.issue_list_helpers import apply_sort
@@ -746,13 +747,10 @@ class _ReleaseWeekListBase(FilterableIssueListMixin, ListView):
 
     def get_week_start(self) -> date:
         """Return the Monday of the target ISO week."""
-        today = date.today()
-        this_monday = today - timedelta(days=today.weekday())
-        return this_monday + timedelta(weeks=self.week_offset)
+        return release_week_bounds(self.week_offset)[0]
 
     def get_queryset(self):
-        week_start = self.get_week_start()
-        week_end = week_start + timedelta(days=6)
+        week_start, week_end = release_week_bounds(self.week_offset)
         if self.future:
             queryset = Issue.objects.filter(store_date__gt=week_end)
         else:
