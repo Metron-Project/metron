@@ -1,8 +1,9 @@
 """Tests for the release-week issue lists (this week, next week, future)."""
 
-from datetime import date, datetime, timedelta
+from datetime import datetime, timedelta
 
 from django.urls import reverse
+from django.utils import timezone
 from pytest_django.asserts import assertTemplateUsed
 
 from comicsdb.models.issue import Issue
@@ -111,7 +112,7 @@ def test_week_list_shows_current_week_issues(
     client, user = auto_login_user()
 
     # Get current week info
-    today = date.today()
+    today = timezone.localdate()
 
     # Create series
     series = Series.objects.create(
@@ -160,7 +161,7 @@ def test_next_week_list_shows_next_week_issues(
     client, user = auto_login_user()
 
     # Get current and next week info
-    today = date.today()
+    today = timezone.localdate()
     year, week, _ = today.isocalendar()
 
     # Calculate next week
@@ -237,7 +238,7 @@ def test_future_list_shows_future_issues(
     """Test that FutureList shows issues beyond next week."""
     client, user = auto_login_user()
 
-    today = date.today()
+    today = timezone.localdate()
 
     # Create series
     series = Series.objects.create(

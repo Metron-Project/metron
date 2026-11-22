@@ -1,12 +1,12 @@
 """Tests for release-week date ranges and the admin "future store week" filter."""
 
-from datetime import date
+from datetime import UTC, date, datetime
 
 import pytest
 from django.contrib.admin.sites import site
 from django.test import RequestFactory
+from django.utils import timezone
 
-from comicsdb import release_week
 from comicsdb.admin.issue import FutureStoreDateListFilter
 from comicsdb.models.issue import Issue
 from comicsdb.release_week import release_week_bounds
@@ -35,22 +35,33 @@ def test_release_week_bounds(today, week_offset, expected):
 
 def test_release_week_bounds_defaults_to_today():
     monday, sunday = release_week_bounds()
-    assert monday <= date.today() <= sunday
+    assert monday <= timezone.localdate() <= sunday
     assert monday.weekday() == 0
     assert (sunday - monday).days == 6
 
 
+@pytest.mark.parametrize(
+    ("now_utc", "expected"),
+    [
+        # Mon Jun 22 02:00 UTC is still Sun Jun 21 in New York: stay on the Jun 15-21 week.
+        (datetime(2026, 6, 22, 2, 0, tzinfo=UTC), (date(2026, 6, 15), date(2026, 6, 21))),
+        # Mon Jun 22 05:00 UTC is Mon Jun 22 01:00 in New York: the new week has started.
+        (datetime(2026, 6, 22, 5, 0, tzinfo=UTC), (date(2026, 6, 22), date(2026, 6, 28))),
+    ],
+)
+def test_release_week_bounds_uses_site_timezone(settings, monkeypatch, now_utc, expected):
+    """The default ``today`` follows ``TIME_ZONE``, not the UTC (or OS) date."""
+    settings.TIME_ZONE = "America/New_York"
+    monkeypatch.setattr(timezone, "now", lambda: now_utc)
+    assert release_week_bounds() == expected
+
+
 @pytest.fixture
 def frozen_today(monkeypatch):
-    """Make ``release_week`` see a fixed ``date.today()``."""
+    """Make ``release_week`` see a fixed ``timezone.localdate()``."""
 
     def freeze(day):
-        class FrozenDate(date):
-            @classmethod
-            def today(cls):
-                return day
-
-        monkeypatch.setattr(release_week, "date", FrozenDate)
+        monkeypatch.setattr(timezone, "localdate", lambda: day)
 
     return freeze
 

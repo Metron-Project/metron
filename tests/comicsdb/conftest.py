@@ -1,6 +1,6 @@
 # ruff: noqa: PLC0415
 import uuid
-from datetime import date, datetime
+from datetime import datetime
 
 import pytest
 from django.contrib.auth.models import Group, Permission
@@ -297,12 +297,12 @@ def list_of_issues(create_user, fc_series):
     user = create_user()
 
     # Create the store date for this week
-    year, week, _ = date.today().isocalendar()
+    year, week, _ = timezone.localdate().isocalendar()
     # The "3" is the weekday (Wednesday)
     wednesday = f"{year}-{week}-3"
     # Dates used in Issue creating
     in_store_date = datetime.strptime(wednesday, "%G-%V-%u")
-    cover_date = date.today()
+    cover_date = timezone.localdate()
 
     for i_num in range(NUMBER_OF_ISSUES):
         Issue.objects.create(
