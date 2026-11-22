@@ -6,11 +6,9 @@ Kept in its own module so the four issue list views
 diff to ``views/issue.py`` stays small. No new dependencies.
 """
 
-from urllib.parse import urlencode
-
 from django.utils.translation import gettext_lazy as _
 
-from comicsdb.models.series import SeriesType
+from comicsdb.views.filter_chips import build_filter_chips, series_type_names
 
 # ---------------------------------------------------------------------------
 # Sorting
@@ -97,48 +95,17 @@ _MONTHS = {
 
 
 def build_active_filters(request, type_names=None):
-    """Build a list of ``{label, value, remove_url}`` dicts for the chip bar.
-
-    ``remove_url`` drops that one param (and resets ``page``) while preserving
-    every other active filter and the current sort.
+    """Build the issue list's filter chips (see ``build_filter_chips``).
 
     Pass ``type_names`` (a ``{str(id): name}`` dict) to avoid a second DB hit
     when the caller has already fetched SeriesType rows for the filter form.
     """
-    get = request.GET
-    if type_names is None and get.get("series_type"):
-        type_names = {str(t["id"]): t["name"] for t in SeriesType.objects.values("id", "name")}
-    if type_names is None:
-        type_names = {}
-
-    chips = []
-    for key in get:
-        if key in _NON_FILTER_PARAMS:
-            continue
-        value = get.get(key)
-        if not value:
-            continue
-
-        display = value
-        if key == "series_type":
-            display = type_names.get(value, value)
-        elif key == "cover_month":
-            display = _MONTHS.get(value, value)
-        elif key in _BOOLEAN_PARAMS:
-            display = _BOOLEAN_DISPLAY.get(value, value)
-
-        # Every current param except the one being removed and the page cursor.
-        kept = [(k, v) for k, v in get.items() if k not in (key, "page")]
-        remove_url = f"?{urlencode(kept)}" if kept else "?"
-
-        chips.append(
-            {
-                "label": FILTER_LABELS.get(key, key.replace("_", " ").title()),
-                "value": display,
-                "remove_url": remove_url,
-            }
-        )
-    return chips
+    display_maps = {
+        "series_type": series_type_names(request, type_names),
+        "cover_month": _MONTHS,
+        **dict.fromkeys(_BOOLEAN_PARAMS, _BOOLEAN_DISPLAY),
+    }
+    return build_filter_chips(request, FILTER_LABELS, display_maps, skip=_NON_FILTER_PARAMS)
 
 
 # ---------------------------------------------------------------------------

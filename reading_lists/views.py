@@ -1,5 +1,3 @@
-from urllib.parse import urlencode
-
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
@@ -19,6 +17,7 @@ from comicsdb.models.character import Character
 from comicsdb.models.creator import Creator
 from comicsdb.models.credits import Credits, Role
 from comicsdb.models.issue import Issue
+from comicsdb.views.filter_chips import build_filter_chips
 from comicsdb.views.issue_list_helpers import filter_issues_by_number_range
 from comicsdb.views.mixins import LazyLoadMixin, SearchMixin
 from comicsdb.views.ratings import apply_rating_update
@@ -38,8 +37,6 @@ from users.models import CustomUser
 
 # Pagination constant for reading list detail view
 READING_LIST_DETAIL_PAGINATE_BY = 50
-
-_NON_FILTER_PARAMS = {"page"}
 
 _FILTER_LABELS = {
     "q": _("Search"),
@@ -84,41 +81,14 @@ _CREDIT_ROLE_DISPLAY = {
 
 
 def build_active_filters(request):
-    """Build a list of ``{label, value, remove_url}`` dicts for the chip bar."""
-    get = request.GET
-    list_type_names = dict(ReadingList.ListType.choices)
-    attribution_names = dict(ReadingList.AttributionSource.choices)
-
-    chips = []
-    for key in get:
-        if key in _NON_FILTER_PARAMS:
-            continue
-        value = get.get(key)
-        if not value:
-            continue
-
-        if key == "list_type":
-            display = list_type_names.get(value, value)
-        elif key == "attribution_source":
-            display = attribution_names.get(value, value)
-        elif key == "average_rating__gte":
-            display = _RATING_DISPLAY.get(value, value)
-        elif key == "is_private":
-            display = _PRIVACY_DISPLAY.get(value, value)
-        else:
-            display = value
-
-        kept = [(k, v) for k, v in get.items() if k not in (key, "page")]
-        remove_url = f"?{urlencode(kept)}" if kept else "?"
-
-        chips.append(
-            {
-                "label": _FILTER_LABELS.get(key, key.replace("_", " ").title()),
-                "value": display,
-                "remove_url": remove_url,
-            }
-        )
-    return chips
+    """Build the reading list filter chips (see ``build_filter_chips``)."""
+    display_maps = {
+        "list_type": dict(ReadingList.ListType.choices),
+        "attribution_source": dict(ReadingList.AttributionSource.choices),
+        "average_rating__gte": _RATING_DISPLAY,
+        "is_private": _PRIVACY_DISPLAY,
+    }
+    return build_filter_chips(request, _FILTER_LABELS, display_maps)
 
 
 def can_manage_reading_list(user, reading_list):

@@ -1,17 +1,10 @@
-"""Shared helpers for series list views: active-filter chips.
-
-Mirrors the structure of issue_list_helpers but covers the series filter
-params exposed by SeriesViewFilter.
-"""
-
-from urllib.parse import urlencode
+"""Active-filter chips for the series list (the params exposed by SeriesViewFilter)."""
 
 from django.conf import global_settings
 from django.utils.translation import gettext_lazy as _
 
-from comicsdb.models import Series, SeriesType
-
-_NON_FILTER_PARAMS = {"page"}
+from comicsdb.models import Series
+from comicsdb.views.filter_chips import build_filter_chips, series_type_names
 
 FILTER_LABELS = {
     "q": _("Search"),
@@ -36,44 +29,14 @@ _LANGUAGE_LABELS = dict(global_settings.LANGUAGES)
 
 
 def build_active_filters(request, type_names=None):
-    """Build a list of ``{label, value, remove_url}`` dicts for the chip bar.
-
-    ``remove_url`` drops that one param (and resets ``page``) while preserving
-    every other active filter.
+    """Build the series list's filter chips (see ``build_filter_chips``).
 
     Pass ``type_names`` (a ``{str(id): name}`` dict) to avoid a second DB hit
     when the caller has already fetched SeriesType rows for the filter form.
     """
-    get = request.GET
-    if type_names is None and get.get("series_type"):
-        type_names = {str(t["id"]): t["name"] for t in SeriesType.objects.values("id", "name")}
-    if type_names is None:
-        type_names = {}
-
-    chips = []
-    for key in get:
-        if key in _NON_FILTER_PARAMS:
-            continue
-        value = get.get(key)
-        if not value:
-            continue
-
-        display = value
-        if key == "series_type":
-            display = type_names.get(value, value)
-        elif key == "status":
-            display = _STATUS_LABELS.get(value, value)
-        elif key == "language":
-            display = _LANGUAGE_LABELS.get(value, value)
-
-        kept = [(k, v) for k, v in get.items() if k not in (key, "page")]
-        remove_url = f"?{urlencode(kept)}" if kept else "?"
-
-        chips.append(
-            {
-                "label": FILTER_LABELS.get(key, key.replace("_", " ").title()),
-                "value": display,
-                "remove_url": remove_url,
-            }
-        )
-    return chips
+    display_maps = {
+        "series_type": series_type_names(request, type_names),
+        "status": _STATUS_LABELS,
+        "language": _LANGUAGE_LABELS,
+    }
+    return build_filter_chips(request, FILTER_LABELS, display_maps)
