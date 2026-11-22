@@ -11,22 +11,13 @@ from api.v1_0.serializers import (
     RoleSerializer,
 )
 from api.v1_0.views.mixins import (
-    CachedListModelMixin,
-    ConditionalRetrieveModelMixin,
-    UserTrackingMixin,
+    CatalogViewSet,
 )
 from comicsdb.filters.name import ComicVineFilter, NameFilter
 from comicsdb.models import Creator, Credits, Role
 
 
-class CreatorViewSet(
-    UserTrackingMixin,
-    mixins.CreateModelMixin,
-    ConditionalRetrieveModelMixin,
-    CachedListModelMixin,
-    mixins.UpdateModelMixin,
-    viewsets.GenericViewSet,
-):
+class CreatorViewSet(CatalogViewSet):
     """
     list:
     Return a list of all the creators.
@@ -36,18 +27,14 @@ class CreatorViewSet(
     """
 
     queryset = Creator.objects.all()
+    serializer_class = CreatorSerializer
+    serializer_classes = {
+        "list": CreatorListSerializer,
+        "retrieve": CreatorReadSerializer,
+    }
     filterset_class = ComicVineFilter
     parser_classes = (MultiPartParser, FormParser)
     cache_model_label = ModelLabel.CREATOR
-
-    def get_serializer_class(self):
-        match self.action:
-            case "list":
-                return CreatorListSerializer
-            case "retrieve":
-                return CreatorReadSerializer
-            case _:
-                return CreatorSerializer
 
 
 class CreditViewset(

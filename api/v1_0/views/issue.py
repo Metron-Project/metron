@@ -1,26 +1,16 @@
 from django.db.models import Avg, Count, DecimalField, Prefetch
-from rest_framework import mixins, viewsets
 from rest_framework.parsers import FormParser, JSONParser, MultiPartParser
 
 from api.cache import ModelLabel
 from api.v1_0.serializers import IssueListSerializer, IssueReadSerializer, IssueSerializer
 from api.v1_0.views.mixins import (
-    CachedListModelMixin,
-    ConditionalRetrieveModelMixin,
-    UserTrackingMixin,
+    CatalogViewSet,
 )
 from comicsdb.filters.issue import IssueFilter
 from comicsdb.models import Credits, Issue
 
 
-class IssueViewSet(
-    UserTrackingMixin,
-    mixins.CreateModelMixin,
-    ConditionalRetrieveModelMixin,
-    CachedListModelMixin,
-    mixins.UpdateModelMixin,
-    viewsets.GenericViewSet,
-):
+class IssueViewSet(CatalogViewSet):
     """
     list:
     Return a list of all the issues.
@@ -36,6 +26,11 @@ class IssueViewSet(
     """
 
     queryset = Issue.objects.all()
+    serializer_class = IssueSerializer
+    serializer_classes = {
+        "list": IssueListSerializer,
+        "retrieve": IssueReadSerializer,
+    }
     filterset_class = IssueFilter
     parser_classes = (JSONParser, MultiPartParser, FormParser)
     cache_model_label = ModelLabel.ISSUE
@@ -124,12 +119,3 @@ class IssueViewSet(
                 rating_count=Count("ratings", distinct=True),
             )
         )
-
-    def get_serializer_class(self):
-        match self.action:
-            case "list":
-                return IssueListSerializer
-            case "retrieve":
-                return IssueReadSerializer
-            case _:
-                return IssueSerializer

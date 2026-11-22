@@ -1,25 +1,13 @@
-from rest_framework import mixins, viewsets
 from rest_framework.parsers import FormParser, MultiPartParser
 
 from api.cache import ModelLabel
 from api.v1_0.serializers import ImprintListSerializer, ImprintReadSerializer, ImprintSerializer
-from api.v1_0.views.mixins import (
-    CachedListModelMixin,
-    ConditionalRetrieveModelMixin,
-    UserTrackingMixin,
-)
+from api.v1_0.views.mixins import CatalogViewSet
 from comicsdb.filters.name import ComicVineFilter
 from comicsdb.models import Imprint
 
 
-class ImprintViewSet(
-    UserTrackingMixin,
-    mixins.CreateModelMixin,
-    ConditionalRetrieveModelMixin,
-    CachedListModelMixin,
-    mixins.UpdateModelMixin,
-    viewsets.GenericViewSet,
-):
+class ImprintViewSet(CatalogViewSet):
     """
     list:
     Returns a list of all imprints.
@@ -35,6 +23,11 @@ class ImprintViewSet(
     """
 
     queryset = Imprint.objects.all()
+    serializer_class = ImprintSerializer
+    serializer_classes = {
+        "list": ImprintListSerializer,
+        "retrieve": ImprintReadSerializer,
+    }
     filterset_class = ComicVineFilter
     parser_classes = (MultiPartParser, FormParser)
     cache_model_label = ModelLabel.IMPRINT
@@ -47,12 +40,3 @@ class ImprintViewSet(
         if self.action == "retrieve":
             queryset = queryset.select_related("publisher")
         return queryset
-
-    def get_serializer_class(self):
-        match self.action:
-            case "list":
-                return ImprintListSerializer
-            case "retrieve":
-                return ImprintReadSerializer
-            case _:
-                return ImprintSerializer

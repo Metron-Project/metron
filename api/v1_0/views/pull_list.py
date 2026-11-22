@@ -11,17 +11,23 @@ from api.v1_0.serializers.pull_list import (
     PullListReadSerializer,
     PullListSeriesSerializer,
 )
-from api.v1_0.views.mixins import ConditionalRetrieveModelMixin
+from api.v1_0.views.mixins import ActionSerializerMixin, ConditionalRetrieveModelMixin
 from comicsdb.models import Issue, Series
 from pull_list.models import PullList, PullListSeries
 
 
 class PullListViewSet(
+    ActionSerializerMixin,
     ConditionalRetrieveModelMixin,
     mixins.ListModelMixin,
     viewsets.GenericViewSet,
 ):
     permission_classes = [IsAuthenticated]
+    serializer_class = PullListReadSerializer
+    serializer_classes = {
+        "series": PullListSeriesSerializer,
+        "issues": PullListIssueSerializer,
+    }
 
     def get_queryset(self):
         return (
@@ -29,13 +35,6 @@ class PullListViewSet(
             .annotate(series_count=Count("series", distinct=True))
             .order_by("user")
         )
-
-    def get_serializer_class(self):
-        if self.action == "series":
-            return PullListSeriesSerializer
-        if self.action == "issues":
-            return PullListIssueSerializer
-        return PullListReadSerializer
 
     @extend_schema(responses=PullListSeriesSerializer(many=True))
     @action(detail=False, methods=["get"])

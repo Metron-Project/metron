@@ -18,13 +18,14 @@ from api.v1_0.serializers import (
     ScrobbleRequestSerializer,
     ScrobbleResponseSerializer,
 )
-from api.v1_0.views.mixins import ConditionalRetrieveModelMixin
+from api.v1_0.views.mixins import ActionSerializerMixin, ConditionalRetrieveModelMixin
 from comicsdb.filters.collection import CollectionFilter
 from comicsdb.models import Issue, Series
 from user_collection.models import CollectionItem
 
 
 class CollectionViewSet(
+    ActionSerializerMixin,
     ConditionalRetrieveModelMixin,
     mixins.ListModelMixin,
     mixins.UpdateModelMixin,
@@ -57,6 +58,12 @@ class CollectionViewSet(
 
     permission_classes = [IsAuthenticated]
     filterset_class = CollectionFilter
+    serializer_class = CollectionReadSerializer
+    serializer_classes = {
+        "list": CollectionListSerializer,
+        "update": CollectionRatingUpdateSerializer,
+        "partial_update": CollectionRatingUpdateSerializer,
+    }
 
     def get_queryset(self):
         """Only return collection items belonging to the authenticated user."""
@@ -65,13 +72,6 @@ class CollectionViewSet(
             .select_related("issue__series__series_type", "issue__series__publisher")
             .prefetch_related("read_dates")
         )
-
-    def get_serializer_class(self):
-        if self.action == "list":
-            return CollectionListSerializer
-        if self.action in ("update", "partial_update"):
-            return CollectionRatingUpdateSerializer
-        return CollectionReadSerializer
 
     @extend_schema(
         request=CollectionAddItemSerializer,

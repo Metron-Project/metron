@@ -11,10 +11,8 @@ from api.v1_0.serializers import (
     SeriesTypeSerializer,
 )
 from api.v1_0.views.mixins import (
-    CachedListModelMixin,
-    ConditionalRetrieveModelMixin,
+    CatalogViewSet,
     IssueListMixin,
-    UserTrackingMixin,
 )
 from comicsdb.filters.name import NameFilter
 from comicsdb.filters.series import SeriesFilter
@@ -36,15 +34,7 @@ series_issue_count = Coalesce(
 )
 
 
-class SeriesViewSet(
-    UserTrackingMixin,
-    IssueListMixin,
-    mixins.CreateModelMixin,
-    ConditionalRetrieveModelMixin,
-    CachedListModelMixin,
-    mixins.UpdateModelMixin,
-    viewsets.GenericViewSet,
-):
+class SeriesViewSet(IssueListMixin, CatalogViewSet):
     """
     list:
     Returns a list of all the comic series.
@@ -60,6 +50,12 @@ class SeriesViewSet(
     """
 
     queryset = Series.objects.select_related("series_type", "publisher")
+    serializer_class = SeriesSerializer
+    serializer_classes = {
+        "list": SeriesListSerializer,
+        "issue_list": IssueListSerializer,
+        "retrieve": SeriesReadSerializer,
+    }
     filterset_class = SeriesFilter
     cache_model_label = ModelLabel.SERIES
     # Series list embeds num_issues, which changes on every Issue write.
@@ -86,17 +82,6 @@ class SeriesViewSet(
                     .annotate(num_issues=series_issue_count)
                 )
         return queryset
-
-    def get_serializer_class(self):
-        match self.action:
-            case "list":
-                return SeriesListSerializer
-            case "issue_list":
-                return IssueListSerializer
-            case "retrieve":
-                return SeriesReadSerializer
-            case _:
-                return SeriesSerializer
 
     def get_serializer(self, *args, **kwargs):
         serializer_class = self.get_serializer_class()

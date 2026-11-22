@@ -1,7 +1,6 @@
 from django.core.cache import cache
 from django.http import Http404
 from drf_spectacular.utils import extend_schema
-from rest_framework import mixins, viewsets
 from rest_framework.decorators import action
 from rest_framework.parsers import FormParser, MultiPartParser
 from rest_framework.response import Response
@@ -14,9 +13,7 @@ from api.v1_0.serializers import (
     SeriesListSerializer,
 )
 from api.v1_0.views.mixins import (
-    CachedListModelMixin,
-    ConditionalRetrieveModelMixin,
-    UserTrackingMixin,
+    CatalogViewSet,
     mark_cache_status,
 )
 from api.v1_0.views.series import series_issue_count
@@ -24,14 +21,7 @@ from comicsdb.filters.publisher import PublisherFilter
 from comicsdb.models import Publisher
 
 
-class PublisherViewSet(
-    UserTrackingMixin,
-    mixins.CreateModelMixin,
-    ConditionalRetrieveModelMixin,
-    CachedListModelMixin,
-    mixins.UpdateModelMixin,
-    viewsets.GenericViewSet,
-):
+class PublisherViewSet(CatalogViewSet):
     """
     list:
     Returns a list of all publishers.
@@ -47,20 +37,15 @@ class PublisherViewSet(
     """
 
     queryset = Publisher.objects.all()
+    serializer_class = PublisherSerializer
+    serializer_classes = {
+        "list": PublisherListSerializer,
+        "series_list": SeriesListSerializer,
+        "retrieve": PublisherReadSerializer,
+    }
     filterset_class = PublisherFilter
     parser_classes = (MultiPartParser, FormParser)
     cache_model_label = ModelLabel.PUBLISHER
-
-    def get_serializer_class(self):
-        match self.action:
-            case "list":
-                return PublisherListSerializer
-            case "series_list":
-                return SeriesListSerializer
-            case "retrieve":
-                return PublisherReadSerializer
-            case _:
-                return PublisherSerializer
 
     @extend_schema(responses={200: SeriesListSerializer(many=True)}, filters=False)
     @action(detail=True)

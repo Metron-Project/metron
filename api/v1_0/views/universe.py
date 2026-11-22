@@ -1,25 +1,13 @@
-from rest_framework import mixins, viewsets
 from rest_framework.parsers import FormParser, MultiPartParser
 
 from api.cache import ModelLabel
 from api.v1_0.serializers import UniverseListSerializer, UniverseReadSerializer, UniverseSerializer
-from api.v1_0.views.mixins import (
-    CachedListModelMixin,
-    ConditionalRetrieveModelMixin,
-    UserTrackingMixin,
-)
+from api.v1_0.views.mixins import CatalogViewSet
 from comicsdb.filters.name import UniverseFilter
 from comicsdb.models import Universe
 
 
-class UniverseViewSet(
-    UserTrackingMixin,
-    mixins.CreateModelMixin,
-    ConditionalRetrieveModelMixin,
-    CachedListModelMixin,
-    mixins.UpdateModelMixin,
-    viewsets.GenericViewSet,
-):
+class UniverseViewSet(CatalogViewSet):
     """
     list:
     Return a list of all the universes.
@@ -29,6 +17,11 @@ class UniverseViewSet(
     """
 
     queryset = Universe.objects.all()
+    serializer_class = UniverseSerializer
+    serializer_classes = {
+        "list": UniverseListSerializer,
+        "retrieve": UniverseReadSerializer,
+    }
     filterset_class = UniverseFilter
     parser_classes = (MultiPartParser, FormParser)
     cache_model_label = ModelLabel.UNIVERSE
@@ -41,12 +34,3 @@ class UniverseViewSet(
         if self.action == "retrieve":
             queryset = queryset.select_related("publisher")
         return queryset
-
-    def get_serializer_class(self):
-        match self.action:
-            case "list":
-                return UniverseListSerializer
-            case "retrieve":
-                return UniverseReadSerializer
-            case _:
-                return UniverseSerializer

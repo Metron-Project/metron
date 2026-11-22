@@ -1,10 +1,11 @@
-"""Shared mixins for the v1.0 API viewsets: response caching and user tracking."""
+"""Shared mixins and base classes for the v1.0 API viewsets: response caching,
+user tracking and per-action serializer selection."""
 
 from django.core.cache import cache
 from django.core.exceptions import ValidationError
 from django.http import Http404
 from drf_spectacular.utils import extend_schema
-from rest_framework import mixins, status
+from rest_framework import mixins, status, viewsets
 from rest_framework.decorators import action
 from rest_framework.response import Response
 from rest_framework_condition import last_modified
@@ -209,6 +210,16 @@ class CachedDetailActionMixin(CachedObjectMixin):
     #: issue_list embeds fields from Issue rows that don't cascade a
     #: `modified` bump onto the parent Arc/Character/Team on every edit --
     #: only on M2M add/remove/clear).
+    #:
+    #: ModelLabel.ISSUE/SERIES are deliberately NOT used here by any
+    #: issue_list viewset: both are bumped by
+    #: update_series_modified_on_issue_save() on *every* issue write anywhere
+    #: on the site, so tying this 24h-TTL cache to either would invalidate
+    #: every parent's issue_list on essentially any issue edit site-wide --
+    #: confirmed as a live problem for IssueViewSet's own retrieve cache in
+    #: production (see its cache_detail_dependent_labels comment). A plain
+    #: issue field edit can show stale in issue_list for up to
+    #: DETAIL_CACHE_TTL; that's the accepted tradeoff.
     cache_action_dependent_labels: tuple[str, ...] = ()
 
     def _cached_paginated_action(self, *, build_queryset, serializer_class):
@@ -271,3 +282,35 @@ class IssueListMixin(CachedDetailActionMixin):
         _pk, modified = self.get_object_modified()
 
         return modified
+
+
+# The two classes below deliberately use comments instead of docstrings:
+# drf-spectacular falls back to an inherited class docstring as the operation
+# description, so a docstring here would leak into the OpenAPI schema of any
+# viewset that has no docstring of its own.
+
+
+# Choose the serializer by action from ``serializer_classes``; actions missing
+# from the mapping fall back to ``serializer_class``.
+class ActionSerializerMixin:
+    serializer_classes: dict = {}
+
+    def get_serializer_class(self):
+        if self.action in self.serializer_classes:
+            return self.serializer_classes[self.action]
+        return super().get_serializer_class()
+
+
+# Base for the catalog resources (arc, character, issue, series, ...): cached
+# list/retrieve, plus create/update that record ``created_by``/``edited_by``.
+# Combine with ``IssueListMixin`` for an ``issue_list`` action.
+class CatalogViewSet(
+    ActionSerializerMixin,
+    UserTrackingMixin,
+    mixins.CreateModelMixin,
+    ConditionalRetrieveModelMixin,
+    CachedListModelMixin,
+    mixins.UpdateModelMixin,
+    viewsets.GenericViewSet,
+):
+    pass

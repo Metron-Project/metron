@@ -15,18 +15,23 @@ from api.v1_0.serializers.wish_list import (
     WishListItemReadSerializer,
     WishListSerializer,
 )
-from api.v1_0.views.mixins import ConditionalRetrieveModelMixin
+from api.v1_0.views.mixins import ActionSerializerMixin, ConditionalRetrieveModelMixin
 from comicsdb.models import Issue
 from user_collection.models import CollectionItem
 from wish_list.models import WishList, WishListItem
 
 
 class WishListViewSet(
+    ActionSerializerMixin,
     ConditionalRetrieveModelMixin,
     mixins.ListModelMixin,
     viewsets.GenericViewSet,
 ):
     permission_classes = [IsAuthenticated]
+    serializer_class = WishListSerializer
+    serializer_classes = {
+        "items": WishListItemListSerializer,
+    }
 
     def get_queryset(self):
         return (
@@ -34,11 +39,6 @@ class WishListViewSet(
             .annotate(item_count=Count("wish_list_items", distinct=True))
             .order_by("user")
         )
-
-    def get_serializer_class(self):
-        if self.action == "items":
-            return WishListItemListSerializer
-        return WishListSerializer
 
     @extend_schema(responses=WishListItemListSerializer(many=True))
     @action(detail=False, methods=["get"])

@@ -1,4 +1,3 @@
-from rest_framework import mixins, viewsets
 from rest_framework.parsers import FormParser, MultiPartParser
 
 from api.cache import ModelLabel
@@ -8,25 +7,12 @@ from api.v1_0.serializers import (
     TeamReadSerializer,
     TeamSerializer,
 )
-from api.v1_0.views.mixins import (
-    CachedListModelMixin,
-    ConditionalRetrieveModelMixin,
-    IssueListMixin,
-    UserTrackingMixin,
-)
+from api.v1_0.views.mixins import CatalogViewSet, IssueListMixin
 from comicsdb.filters.name import ComicVineFilter
 from comicsdb.models import Team
 
 
-class TeamViewSet(
-    UserTrackingMixin,
-    IssueListMixin,
-    mixins.CreateModelMixin,
-    ConditionalRetrieveModelMixin,
-    CachedListModelMixin,
-    mixins.UpdateModelMixin,
-    viewsets.GenericViewSet,
-):
+class TeamViewSet(IssueListMixin, CatalogViewSet):
     """
     list:
     Return a list of all the teams.
@@ -36,6 +22,12 @@ class TeamViewSet(
     """
 
     queryset = Team.objects.all()
+    serializer_class = TeamSerializer
+    serializer_classes = {
+        "list": TeamListSerializer,
+        "issue_list": IssueListSerializer,
+        "retrieve": TeamReadSerializer,
+    }
     filterset_class = ComicVineFilter
     cache_model_label = ModelLabel.TEAM
     parser_classes = (MultiPartParser, FormParser)
@@ -52,28 +44,8 @@ class TeamViewSet(
     # staleness stays bounded (TTL-limited) as the tradeoff.
     cache_detail_dependent_labels = (ModelLabel.UNIVERSE,)
 
-    # issue_list embeds fields from Issue rows (and their Series) that don't
-    # cascade a `modified` bump onto this Team except on M2M add/remove/
-    # clear. ModelLabel.ISSUE/SERIES are deliberately NOT used as
-    # cache_action_dependent_labels here either, for the same reason as
-    # CREATOR above: both are bumped by update_series_modified_on_issue_save()
-    # on *every* issue write anywhere on the site, so tying this 24h-TTL
-    # cache to either invalidates every Team's issue_list on essentially
-    # any issue edit site-wide.
-
     def get_queryset(self):
         queryset = super().get_queryset()
         if self.action == "retrieve":
             queryset = queryset.prefetch_related("creators", "universes")
         return queryset
-
-    def get_serializer_class(self):
-        match self.action:
-            case "list":
-                return TeamListSerializer
-            case "issue_list":
-                return IssueListSerializer
-            case "retrieve":
-                return TeamReadSerializer
-            case _:
-                return TeamSerializer

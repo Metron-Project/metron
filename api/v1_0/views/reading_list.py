@@ -10,7 +10,7 @@ from api.v1_0.serializers import (
     ReadingListListSerializer,
     ReadingListReadSerializer,
 )
-from api.v1_0.views.mixins import ConditionalRetrieveModelMixin
+from api.v1_0.views.mixins import ActionSerializerMixin, ConditionalRetrieveModelMixin
 from comicsdb.filters.reading_list import ReadingListFilter
 from reading_lists.models import ReadingList
 from users.models import CustomUser
@@ -23,6 +23,7 @@ class ReadingListItemsPagination(PageNumberPagination):
 
 
 class ReadingListViewSet(
+    ActionSerializerMixin,
     ConditionalRetrieveModelMixin,
     mixins.ListModelMixin,
     viewsets.GenericViewSet,
@@ -42,6 +43,11 @@ class ReadingListViewSet(
     queryset = ReadingList.objects.all()
     filterset_class = ReadingListFilter
     pagination_class = ReadingListItemsPagination
+    serializer_class = ReadingListReadSerializer
+    serializer_classes = {
+        "list": ReadingListListSerializer,
+        "items": ReadingListItemSerializer,
+    }
 
     def get_queryset(self):
         """Filter reading lists based on user permissions and visibility rules."""
@@ -70,13 +76,6 @@ class ReadingListViewSet(
 
         # Authenticated users - public lists + own lists
         return queryset.filter(Q(is_private=False) | Q(user=self.request.user)).distinct()
-
-    def get_serializer_class(self):
-        if self.action == "list":
-            return ReadingListListSerializer
-        if self.action == "items":
-            return ReadingListItemSerializer
-        return ReadingListReadSerializer
 
     @extend_schema(
         responses={200: ReadingListItemSerializer(many=True)},
