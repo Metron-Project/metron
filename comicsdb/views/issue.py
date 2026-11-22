@@ -414,6 +414,132 @@ class IssueAttributionAddRowView(IssueFormsetAddRowView):
     prefix = "attribution"
 
 
+# Publishers whose credits must not be copied between issues.
+CREDIT_DUPLICATION_EXCLUDED_PUBLISHERS = ("DC Comics", "Marvel")
+
+
+class CreditDuplicationBlockedError(Exception):
+    """Credits can't be duplicated onto an issue; carries the user-facing message."""
+
+    def __init__(self, level: int, message: str):
+        super().__init__(message)
+        self.level = level
+        self.message = message
+
+
+def credit_duplication_source(issue: Issue) -> tuple[Issue, list[Credits]]:
+    """Return the previous issue in the series and the credits to copy from it.
+
+    Raises:
+        CreditDuplicationBlockedError: if the publisher is excluded, ``issue``
+            already has credits, there is no previous issue, or it has no credits.
+    """
+    publisher = issue.series.publisher.name
+    if publisher in CREDIT_DUPLICATION_EXCLUDED_PUBLISHERS:
+        raise CreditDuplicationBlockedError(
+            messages.ERROR,
+            _("Credit duplication is not allowed for %(publisher)s issues.")
+            % {"publisher": publisher},
+        )
+
+    if issue.credits_set.exists():
+        raise CreditDuplicationBlockedError(
+            messages.INFO,
+            _(
+                "%(issue)s already has credits assigned. "
+                "Duplicate operation cancelled to preserve existing data."
+            )
+            % {"issue": issue},
+        )
+
+    try:
+        previous_issue = issue.get_previous_by_cover_date(series=issue.series)
+    except ObjectDoesNotExist:
+        raise CreditDuplicationBlockedError(
+            messages.WARNING, _("No previous issue found for %(issue)s.") % {"issue": issue}
+        ) from None
+
+    previous_credits = list(
+        Credits.objects.filter(issue=previous_issue)
+        .select_related("creator")
+        .prefetch_related("role")
+    )
+    if not previous_credits:
+        raise CreditDuplicationBlockedError(
+            messages.INFO,
+            _("No credits found in %(issue)s to duplicate.") % {"issue": previous_issue},
+        )
+    return previous_issue, previous_credits
+
+
+def split_variant_cover_credits(source_credits: list[Credits], issue: Issue):
+    """Split ``source_credits`` into ``(to_copy, skipped)``.
+
+    A credit whose only role is "Cover" is most likely for a variant cover, so
+    it's skipped rather than copied.
+    """
+    try:
+        cover_role = Role.objects.get(name="Cover")
+    except Role.DoesNotExist:
+        return source_credits, []
+
+    to_copy, skipped = [], []
+    for credit in source_credits:
+        roles = list(credit.role.all())
+        if roles == [cover_role]:
+            skipped.append(credit)
+            LOGGER.info(
+                "Skipping possible variant cover credit for '%s' when duplicating to %s",
+                credit.creator,
+                issue,
+            )
+        else:
+            to_copy.append(credit)
+    return to_copy, skipped
+
+
+def copy_credits(issue: Issue, source_credits: list[Credits], user) -> None:
+    """Copy ``source_credits`` (creator and roles) onto ``issue`` and record ``user`` as editor.
+
+    Uses bulk inserts, which skip the per-credit cache signals; the final
+    ``issue.save()`` updates the issue's ``modified`` and bumps the issue cache
+    version itself, which is everything those signals would have done.
+    """
+    through = Credits.role.through
+    with transaction.atomic():
+        new_credits = Credits.objects.bulk_create(
+            Credits(issue=issue, creator=credit.creator) for credit in source_credits
+        )
+        through.objects.bulk_create(
+            through(credits=new_credit, role=role)
+            for new_credit, credit in zip(new_credits, source_credits, strict=True)
+            for role in credit.role.all()
+        )
+        issue.edited_by = user
+        issue.save(update_fields=["edited_by", "modified"])
+
+
+def _duplicate_credits_result(copied: int, skipped: int, previous_issue: Issue):
+    """Return ``(message_level, message)`` describing what was duplicated."""
+    if copied and skipped:
+        return messages.SUCCESS, _(
+            "Successfully duplicated %(credits)s credit(s) from %(issue)s."
+            " Skipped %(skipped)s variant cover credit(s)."
+        ) % {"credits": copied, "issue": previous_issue, "skipped": skipped}
+    if copied:
+        return messages.SUCCESS, _(
+            "Successfully duplicated %(credits)s credit(s) from %(issue)s."
+        ) % {"credits": copied, "issue": previous_issue}
+    if skipped:
+        return messages.INFO, _(
+            "No credits were duplicated. Skipped %(skipped)s variant cover credit(s)"
+            " from %(issue)s."
+        ) % {"skipped": skipped, "issue": previous_issue}
+    return messages.INFO, _("No credits found in %(issue)s to duplicate.") % {
+        "issue": previous_issue
+    }
+
+
 class IssueDuplicateCreditsView(LoginRequiredMixin, View):
     """
     View to duplicate credits from the previous issue in the same series.
@@ -431,132 +557,31 @@ class IssueDuplicateCreditsView(LoginRequiredMixin, View):
         Returns:
             HttpResponseRedirect to the issue detail page
         """
+        redirect = HttpResponseRedirect(reverse("issue:detail", args=[slug]))
         issue = get_object_or_404(
-            Issue.objects.select_related("series", "series__publisher").prefetch_related(
-                "credits_set"
-            ),
-            slug=slug,
+            Issue.objects.select_related("series", "series__publisher"), slug=slug
         )
 
-        # Check if publisher is DC Comics or Marvel (not allowed for credit duplication)
-        excluded_publishers = ["DC Comics", "Marvel"]
-        if issue.series.publisher.name in excluded_publishers:
-            messages.error(
-                request,
-                _("Credit duplication is not allowed for %(publisher)s issues.")
-                % {"publisher": issue.series.publisher.name},
-            )
-            return HttpResponseRedirect(reverse("issue:detail", args=[slug]))
-
-        # Check if issue already has credits
-        if issue.credits_set.exists():
-            messages.info(
-                request,
-                _(
-                    "%(issue)s already has credits assigned. "
-                    "Duplicate operation cancelled to preserve existing data."
-                )
-                % {"issue": issue},
-            )
-            return HttpResponseRedirect(reverse("issue:detail", args=[slug]))
-
-        # Try to get the previous issue by cover_date
         try:
-            previous_issue = issue.get_previous_by_cover_date(series=issue.series)
-        except ObjectDoesNotExist:
-            messages.warning(
-                request, _("No previous issue found for %(issue)s.") % {"issue": issue}
-            )
-            return HttpResponseRedirect(reverse("issue:detail", args=[slug]))
+            previous_issue, previous_credits = credit_duplication_source(issue)
+        except CreditDuplicationBlockedError as blocked:
+            messages.add_message(request, blocked.level, blocked.message)
+            return redirect
 
-        # Get all credits from the previous issue
-        previous_credits = Credits.objects.filter(issue=previous_issue).prefetch_related("role")
+        to_copy, skipped = split_variant_cover_credits(previous_credits, issue)
+        copy_credits(issue, to_copy, request.user)
+        LOGGER.info(
+            "Duplicated %d credit(s) from %s to %s by %s (skipped %d cover credit(s))",
+            len(to_copy),
+            previous_issue,
+            issue,
+            request.user,
+            len(skipped),
+        )
 
-        if not previous_credits.exists():
-            messages.info(
-                request,
-                _("No credits found in %(issue)s to duplicate.") % {"issue": previous_issue},
-            )
-            return HttpResponseRedirect(reverse("issue:detail", args=[slug]))
-
-        # Get the Cover role to check for variant cover credits
-        try:
-            cover_role = Role.objects.get(name="Cover")
-        except Role.DoesNotExist:
-            cover_role = None
-
-        # Duplicate the credits
-        credits_count = 0
-        skipped_count = 0
-        max_roles_for_cover_skip = 2
-
-        with transaction.atomic():
-            for credit in previous_credits:
-                roles = credit.role.all()
-
-                # Skip credits that are likely variant cover credits
-                # (credits with only one role and that role is "Cover")
-                if cover_role and len(roles) < max_roles_for_cover_skip and cover_role in roles:
-                    skipped_count += 1
-                    LOGGER.info(
-                        "Skipping possible variant cover credit for '%s' when duplicating to %s",
-                        credit.creator,
-                        issue,
-                    )
-                    continue
-
-                # Create new credit for current issue
-                new_credit = Credits.objects.create(issue=issue, creator=credit.creator)
-                # Copy the roles (many-to-many relationship)
-                new_credit.role.set(roles)
-                credits_count += 1
-
-            # Update edited_by field
-            issue.edited_by = request.user
-            issue.save(update_fields=["edited_by", "modified"])
-
-            LOGGER.info(
-                "Duplicated %d credit(s) from %s to %s by %s (skipped %d cover credit(s))",
-                credits_count,
-                previous_issue,
-                issue,
-                request.user,
-                skipped_count,
-            )
-
-        # Provide appropriate feedback based on what was duplicated
-        if credits_count > 0:
-            if skipped_count > 0:
-                message = _(
-                    "Successfully duplicated %(credits)s credit(s) from %(issue)s."
-                    " Skipped %(skipped)s variant cover credit(s)."
-                ) % {
-                    "credits": credits_count,
-                    "issue": previous_issue,
-                    "skipped": skipped_count,
-                }
-            else:
-                message = _("Successfully duplicated %(credits)s credit(s) from %(issue)s.") % {
-                    "credits": credits_count,
-                    "issue": previous_issue,
-                }
-            messages.success(request, message)
-        elif skipped_count > 0:
-            messages.info(
-                request,
-                _(
-                    "No credits were duplicated. Skipped %(skipped)s variant cover credit(s)"
-                    " from %(issue)s."
-                )
-                % {"skipped": skipped_count, "issue": previous_issue},
-            )
-        else:
-            messages.info(
-                request,
-                _("No credits found in %(issue)s to duplicate.") % {"issue": previous_issue},
-            )
-
-        return HttpResponseRedirect(reverse("issue:detail", args=[slug]))
+        level, message = _duplicate_credits_result(len(to_copy), len(skipped), previous_issue)
+        messages.add_message(request, level, message)
+        return redirect
 
 
 REPRINT_SYNC_SERIES_TYPES = ("Trade Paperback", "Omnibus", "Hardcover")
