@@ -7,14 +7,10 @@ from api.cache import ModelLabel
 from comicsdb.signals import (
     bump_cache,
     bump_cache_on_name_change,
+    bump_owner_modified_on_m2m_change,
     pre_delete_credit,
     pre_delete_image,
     track_name_change,
-    update_arc_modified,
-    update_character_modified,
-    update_character_modified_on_creator_change,
-    update_character_modified_on_team_change,
-    update_character_modified_on_universe_change,
     update_issue_modified_on_credit_change,
     update_issue_modified_on_credit_role_change,
     update_issue_modified_on_reprint_change,
@@ -22,13 +18,10 @@ from comicsdb.signals import (
     update_issue_modified_on_variant_change,
     update_parent_modified_on_attribution_delete,
     update_parent_modified_on_attribution_save,
+    update_related_modified_on_m2m_change,
     update_series_modified_on_associated_change,
-    update_series_modified_on_genre_change,
     update_series_modified_on_issue_delete,
     update_series_modified_on_issue_save,
-    update_team_modified,
-    update_team_modified_on_creator_change,
-    update_team_modified_on_universe_change,
 )
 
 
@@ -38,31 +31,68 @@ class ComicsdbConfig(AppConfig):
 
     def ready(self):
         arc = self.get_model("Arc")
-        pre_delete.connect(pre_delete_image, sender=arc, dispatch_uid="pre_delete_arc")
-
         character = self.get_model("Character")
-        pre_delete.connect(pre_delete_image, sender=character, dispatch_uid="pre_delete_character")
-        m2m_changed.connect(
-            update_character_modified_on_creator_change,
-            sender=character.creators.through,
-            dispatch_uid="m2m_changed_character_creator_modified",
-        )
-        m2m_changed.connect(
-            update_character_modified_on_team_change,
-            sender=character.teams.through,
-            dispatch_uid="m2m_changed_character_team_modified",
-        )
-        m2m_changed.connect(
-            update_character_modified_on_universe_change,
-            sender=character.universes.through,
-            dispatch_uid="m2m_changed_character_universe_modified",
-        )
-
         creator = self.get_model("Creator")
-        pre_delete.connect(pre_delete_image, sender=creator, dispatch_uid="pre_delete_creator")
-
+        imprint = self.get_model("Imprint")
         issue = self.get_model("Issue")
-        pre_delete.connect(pre_delete_image, sender=issue, dispatch_uid="pre_delete_issue")
+        publisher = self.get_model("Publisher")
+        series = self.get_model("Series")
+        team = self.get_model("Team")
+        universe = self.get_model("Universe")
+        variant = self.get_model("Variant")
+        attribution = self.get_model("Attribution")
+        credits_ = self.get_model("Credits")
+
+        # Note on weak=False below: receivers built with `partial` have no other
+        # strong reference, so Django's default weak-reference receiver storage
+        # would let them be garbage-collected right after connecting, silently
+        # dropping the connection.
+
+        # Delete the stored image (and its thumbnails) along with the object.
+        for model in (arc, character, creator, issue, publisher, team, variant):
+            pre_delete.connect(
+                pre_delete_image, sender=model, dispatch_uid=f"pre_delete_{model._meta.model_name}"
+            )
+
+        # Issue.arcs/characters/teams: bump `modified` on both sides plus the
+        # parent's cache version (see update_related_modified_on_m2m_change).
+        issue_parent_m2m = (
+            ("arcs", arc, ModelLabel.ARC),
+            ("characters", character, ModelLabel.CHARACTER),
+            ("teams", team, ModelLabel.TEAM),
+        )
+        for field_name, parent_model, label in issue_parent_m2m:
+            m2m_changed.connect(
+                partial(update_related_modified_on_m2m_change, parent_model, label),
+                sender=getattr(issue, field_name).through,
+                weak=False,
+                dispatch_uid=f"m2m_changed_issue_{parent_model._meta.model_name}_modified",
+            )
+
+        # Plain m2m fields whose relation is embedded only in the owner's own
+        # responses: bump the owner's `modified` and cache version (see
+        # bump_owner_modified_on_m2m_change).
+        owner_m2m = (
+            (character, "creators", ModelLabel.CHARACTER),
+            (character, "teams", ModelLabel.CHARACTER),
+            (character, "universes", ModelLabel.CHARACTER),
+            (series, "genres", ModelLabel.SERIES),
+            (team, "creators", ModelLabel.TEAM),
+            (team, "universes", ModelLabel.TEAM),
+        )
+        for owner_model, field_name, label in owner_m2m:
+            field = owner_model._meta.get_field(field_name)
+            m2m_changed.connect(
+                partial(bump_owner_modified_on_m2m_change, owner_model, label),
+                sender=field.remote_field.through,
+                weak=False,
+                dispatch_uid=(
+                    f"m2m_changed_{owner_model._meta.model_name}_"
+                    f"{field.related_model._meta.model_name}_modified"
+                ),
+            )
+
+        # Handlers with relation-specific behavior.
         post_save.connect(
             update_series_modified_on_issue_save,
             sender=issue,
@@ -74,21 +104,6 @@ class ComicsdbConfig(AppConfig):
             dispatch_uid="post_delete_issue_series_modified",
         )
         m2m_changed.connect(
-            update_arc_modified,
-            sender=issue.arcs.through,
-            dispatch_uid="m2m_changed_issue_arc_modified",
-        )
-        m2m_changed.connect(
-            update_character_modified,
-            sender=issue.characters.through,
-            dispatch_uid="m2m_changed_issue_character_modified",
-        )
-        m2m_changed.connect(
-            update_team_modified,
-            sender=issue.teams.through,
-            dispatch_uid="m2m_changed_issue_team_modified",
-        )
-        m2m_changed.connect(
             update_issue_modified_on_universe_change,
             sender=issue.universes.through,
             dispatch_uid="m2m_changed_issue_universe_modified",
@@ -98,41 +113,11 @@ class ComicsdbConfig(AppConfig):
             sender=issue.reprints.through,
             dispatch_uid="m2m_changed_issue_reprint_modified",
         )
-
-        imprint = self.get_model("Imprint")
-
-        publisher = self.get_model("Publisher")
-        pre_delete.connect(pre_delete_image, sender=publisher, dispatch_uid="pre_delete_publisher")
-
-        series = self.get_model("Series")
-        m2m_changed.connect(
-            update_series_modified_on_genre_change,
-            sender=series.genres.through,
-            dispatch_uid="m2m_changed_series_genre_modified",
-        )
         m2m_changed.connect(
             update_series_modified_on_associated_change,
             sender=series.associated.through,
             dispatch_uid="m2m_changed_series_associated_modified",
         )
-
-        team = self.get_model("Team")
-        pre_delete.connect(pre_delete_image, sender=team, dispatch_uid="pre_delete_team")
-        m2m_changed.connect(
-            update_team_modified_on_creator_change,
-            sender=team.creators.through,
-            dispatch_uid="m2m_changed_team_creator_modified",
-        )
-        m2m_changed.connect(
-            update_team_modified_on_universe_change,
-            sender=team.universes.through,
-            dispatch_uid="m2m_changed_team_universe_modified",
-        )
-
-        universe = self.get_model("Universe")
-
-        variant = self.get_model("Variant")
-        pre_delete.connect(pre_delete_image, sender=variant, dispatch_uid="pre_delete_variant")
         post_save.connect(
             update_issue_modified_on_variant_change,
             sender=variant,
@@ -143,8 +128,6 @@ class ComicsdbConfig(AppConfig):
             sender=variant,
             dispatch_uid="post_delete_variant_issue_modified",
         )
-
-        attribution = self.get_model("Attribution")
         post_save.connect(
             update_parent_modified_on_attribution_save,
             sender=attribution,
@@ -155,8 +138,6 @@ class ComicsdbConfig(AppConfig):
             sender=attribution,
             dispatch_uid="post_delete_attribution_parent_modified",
         )
-
-        credits_ = self.get_model("Credits")
         pre_delete.connect(pre_delete_credit, sender=credits_, dispatch_uid="pre_delete_credits")
         post_save.connect(
             update_issue_modified_on_credit_change,
@@ -191,11 +172,6 @@ class ComicsdbConfig(AppConfig):
         )
         for model, label in cache_bump_models:
             bumper = partial(bump_cache, label)
-            # weak=False: `bumper` is a local `partial` with no other
-            # strong reference, so Django's default weak-reference
-            # receiver storage would let it be garbage-collected right
-            # after this loop iteration ends, silently dropping the
-            # connection.
             post_save.connect(
                 bumper, sender=model, weak=False, dispatch_uid=f"post_save_{label}_cache"
             )
