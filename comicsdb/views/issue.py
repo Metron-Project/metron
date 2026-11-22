@@ -166,23 +166,11 @@ class IssueDetail(DetailView):
         if credits_count > 0:
             context["credits"] = credits_qs[:DETAIL_PAGINATE_BY]
 
-        characters = list(issue.characters.all())
-        characters_count = len(characters)
-        context["characters_count"] = characters_count
-        if characters_count > 0:
-            context["characters"] = characters[:DETAIL_PAGINATE_BY]
-
-        teams = list(issue.teams.all())
-        teams_count = len(teams)
-        context["teams_count"] = teams_count
-        if teams_count > 0:
-            context["teams"] = teams[:DETAIL_PAGINATE_BY]
-
-        universes = list(issue.universes.all())
-        universes_count = len(universes)
-        context["universes_count"] = universes_count
-        if universes_count > 0:
-            context["universes"] = universes[:DETAIL_PAGINATE_BY]
+        # Prefetched in get_queryset(), so counting the full list costs no query.
+        for relation in ("characters", "teams", "universes"):
+            related = list(getattr(issue, relation).all())
+            context[f"{relation}_count"] = len(related)
+            context[relation] = related[:DETAIL_PAGINATE_BY]
 
         if self.request.user.is_authenticated:
             context["on_wish_list"] = WishListItem.objects.filter(

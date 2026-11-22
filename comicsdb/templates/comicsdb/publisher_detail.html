@@ -186,11 +186,11 @@
                             </div>
                         {% endfor %}
                     </div>
-                    {% if imprint_count > 30 %}
+                    {% if imprint_count > detail_page_size %}
                         <div id="imprints-load-more-wrapper"
                              class="column is-12 has-text-centered mt-4">
                             <button class="button is-link"
-                                    hx-get="{% url 'publisher:imprints-load-more' publisher.slug %}?offset=30"
+                                    hx-get="{% url 'publisher:imprints-load-more' publisher.slug %}?offset={{ detail_page_size }}"
                                     hx-target="#imprints-container"
                                     hx-swap="beforeend"
                                     hx-indicator="#imprints-spinner">
@@ -248,11 +248,11 @@
                             </div>
                         {% endfor %}
                     </div>
-                    {% if universe_count > 30 %}
+                    {% if universe_count > detail_page_size %}
                         <div id="universes-load-more-wrapper"
                              class="column is-12 has-text-centered mt-4">
                             <button class="button is-link"
-                                    hx-get="{% url 'publisher:universes-load-more' publisher.slug %}?offset=30"
+                                    hx-get="{% url 'publisher:universes-load-more' publisher.slug %}?offset={{ detail_page_size }}"
                                     hx-target="#universes-container"
                                     hx-swap="beforeend"
                                     hx-indicator="#universes-spinner">

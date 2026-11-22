@@ -113,6 +113,7 @@ TEMPLATES = [
                 "django.contrib.auth.context_processors.auth",
                 "django.contrib.messages.context_processors.messages",
                 "comicsdb.context_processors.announcement_context_processor",
+                "comicsdb.context_processors.detail_page_size_context_processor",
                 "sekizai.context_processors.sekizai",
                 "django.template.context_processors.i18n",
             ],

@@ -1,0 +1,39 @@
+{% load thumbnail %}
+{% load i18n static %}
+{% comment %}
+    One linked item with a 64x64 thumbnail, in a three-per-row column.
+    Params: obj (has .image and .slug), detail_url_name (e.g. "character:detail"),
+    crop (sorl crop, e.g. "top" or "center").
+{% endcomment %}
+{% blocktrans with name=obj asvar no_image_alt %}No image for {{ name }}{% endblocktrans %}
+<div class="column is-4">
+    <article class="media">
+        <figure class="media-left">
+            <div class="image is-64x64">
+                {% if obj.image %}
+                    {% thumbnail obj.image "64x64" crop=crop format="WEBP" as im %}
+                        <img class="is-rounded"
+                             src="{{ im.url }}"
+                             width="{{ im.width }}"
+                             height="{{ im.height }}"
+                             alt="{{ obj }}"
+                             loading="lazy">
+                    {% empty %}
+                        <img class="is-rounded"
+                             src="{% static 'site/img/creator-not-found.webp' %}"
+                             alt="{{ no_image_alt }}"
+                             loading="lazy">
+                    {% endthumbnail %}
+                {% else %}
+                    <img class="is-rounded"
+                         src="{% static 'site/img/creator-not-found.webp' %}"
+                         alt="{{ no_image_alt }}"
+                         loading="lazy">
+                {% endif %}
+            </div>
+        </figure>
+        <div class="media-content">
+            <a href="{% url detail_url_name obj.slug %}">{{ obj }}</a>
+        </div>
+    </article>
+</div>
