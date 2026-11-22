@@ -1,5 +1,5 @@
 from django.db import models
-from django.db.models import Case, Count, F, IntegerField, Sum, When
+from django.db.models import Count, F
 from django.utils import timezone
 from djmoney.money import Money
 from drf_spectacular.utils import OpenApiParameter, extend_schema
@@ -22,6 +22,7 @@ from api.v1_0.views.mixins import ActionSerializerMixin, ConditionalRetrieveMode
 from comicsdb.filters.collection import CollectionFilter
 from comicsdb.models import Issue, Series
 from user_collection.models import CollectionItem
+from user_collection.stats import collection_summary
 
 
 class CollectionViewSet(
@@ -143,24 +144,15 @@ class CollectionViewSet(
     @action(detail=False, methods=["get"])
     def stats(self, request):
         """Return statistics about the user's collection."""
-        queryset = CollectionItem.objects.filter(user=self.request.user)
-        stats = queryset.aggregate(
-            total_items=Count("id"),
-            total_quantity=Sum("quantity"),
-            total_value=Sum("purchase_price"),
-            read_count=Count(Case(When(is_read=True, then=1), output_field=IntegerField())),
-            unread_count=Count(Case(When(is_read=False, then=1), output_field=IntegerField())),
-        )
-        format_counts = queryset.values("book_format").annotate(count=Count("id"))
-
+        stats = collection_summary(request.user)
         return Response(
             {
-                "total_items": stats["total_items"] or 0,
-                "total_quantity": stats["total_quantity"] or 0,
+                "total_items": stats["total_items"],
+                "total_quantity": stats["total_quantity"],
                 "total_value": str(stats["total_value"]) if stats["total_value"] else "0.00",
                 "read_count": stats["read_count"],
                 "unread_count": stats["unread_count"],
-                "by_format": format_counts,
+                "by_format": stats["format_counts"],
             }
         )
 
