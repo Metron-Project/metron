@@ -7,23 +7,9 @@ from django.db.models import Count, Q, Sum
 from django.db.models.functions import TruncDate, TruncMonth
 from django.utils.translation import gettext as _
 
-from comicsdb.models.credits import Credits
+from comicsdb.models.credits import ARTIST_ROLE_NAMES, WRITER_ROLE_NAMES, Credits
 from user_collection.models import CollectionItem, ReadDate
 
-# Role.name values (exact database names -- do not translate) counted as writers/artists
-# for the "Top Writers" / "Top Artists" charts.
-WRITER_ROLES = ("Writer", "Script", "Story", "Plot")
-ARTIST_ROLES = (
-    "Artist",
-    "Penciller",
-    "Illustrator",
-    "Layouts",
-    "Breakdowns",
-    "Inker",
-    "Embellisher",
-    "Finishes",
-    "Ink Assists",
-)
 TOP_CREATORS_LIMIT = 10
 TOP_SERIES_LIMIT = 10
 DAILY_READS_DAYS = 30
@@ -155,6 +141,6 @@ def collection_charts(user, format_counts) -> dict:
         ),
         "reading_daily_chart": daily_chart,
         "reading_monthly_chart": monthly_chart,
-        "top_writers_chart": _top_creators_chart(issue_ids, WRITER_ROLES, _("Top Writers")),
-        "top_artists_chart": _top_creators_chart(issue_ids, ARTIST_ROLES, _("Top Artists")),
+        "top_writers_chart": _top_creators_chart(issue_ids, WRITER_ROLE_NAMES, _("Top Writers")),
+        "top_artists_chart": _top_creators_chart(issue_ids, ARTIST_ROLE_NAMES, _("Top Artists")),
     }

@@ -15,7 +15,7 @@ from django.views.generic import CreateView, DeleteView, DetailView, FormView, L
 from comicsdb.filters.reading_list import ReadingListViewFilter
 from comicsdb.models.character import Character
 from comicsdb.models.creator import Creator
-from comicsdb.models.credits import Credits, Role
+from comicsdb.models.credits import ARTIST_ROLE_NAMES, WRITER_ROLE_NAMES, Credits, Role
 from comicsdb.models.issue import Issue
 from comicsdb.views.filter_chips import build_filter_chips
 from comicsdb.views.issue_list_helpers import filter_issues_by_number_range
@@ -66,17 +66,11 @@ _ISSUE_TYPE_META = {
     "EPILOGUE": (_("Epilogue"), "#48c78e"),
 }
 
-# These keys must match Role.name values in the database exactly - do not translate.
-_CREDIT_ROLE_NAMES = ["Artist", "Finishes", "Inker", "Penciller", "Script", "Story", "Writer"]
-
+# Featured creators are the writers and artists; each role is shown as "Writer" or "Artist".
+_CREDIT_ROLE_NAMES = (*WRITER_ROLE_NAMES, *ARTIST_ROLE_NAMES)
 _CREDIT_ROLE_DISPLAY = {
-    "Artist": _("Artist"),
-    "Finishes": _("Artist"),
-    "Inker": _("Artist"),
-    "Penciller": _("Artist"),
-    "Script": _("Writer"),
-    "Story": _("Writer"),
-    "Writer": _("Writer"),
+    **dict.fromkeys(WRITER_ROLE_NAMES, _("Writer")),
+    **dict.fromkeys(ARTIST_ROLE_NAMES, _("Artist")),
 }
 
 

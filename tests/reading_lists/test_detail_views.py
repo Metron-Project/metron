@@ -7,8 +7,11 @@ import pytest
 from django.urls import reverse
 from django.utils.html import escape
 
+from comicsdb.models.creator import Creator
+from comicsdb.models.credits import Credits, Role
 from comicsdb.models.issue import Issue
 from reading_lists.models import ReadingList, ReadingListItem
+from reading_lists.views import build_reading_list_breakdown_context
 from users.models import CustomUser
 
 HTTP_200_OK = 200
@@ -302,3 +305,33 @@ class TestReadingListItemsLoadMore:
         url = f"/reading-lists/{private_reading_list.slug}/items-load-more/"
         resp = client.get(url, {"offset": 0})
         assert resp.status_code == HTTP_404_NOT_FOUND
+
+
+def test_breakdown_featured_creators_use_shared_writer_and_artist_roles(
+    reading_list_with_issues, reading_list_issue_1, reading_list_issue_2, create_user
+):
+    """Plot counts as a writer role and Layouts as an artist role; Colorist isn't featured."""
+    user = create_user()
+    roles = {
+        name: Role.objects.create(name=name, order=order)
+        for order, name in enumerate(["Plot", "Layouts", "Colorist"], start=100)
+    }
+    for name, role, issue in [
+        ("Plotter", "Plot", reading_list_issue_1),
+        ("Layout Artist", "Layouts", reading_list_issue_2),
+        ("Colorist Person", "Colorist", reading_list_issue_1),
+    ]:
+        creator = Creator.objects.create(
+            name=name, slug=name.lower().replace(" ", "-"), edited_by=user, created_by=user
+        )
+        Credits.objects.create(issue=issue, creator=creator).role.add(roles[role])
+
+    items = list(
+        reading_list_with_issues.reading_list_items.select_related("issue__series__publisher")
+    )
+    featured = build_reading_list_breakdown_context(items)["featured_creators"]
+
+    assert {f["creator"].name: f["roles"] for f in featured} == {
+        "Plotter": "Writer",
+        "Layout Artist": "Artist",
+    }

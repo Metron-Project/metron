@@ -4,6 +4,21 @@ from django.utils.translation import gettext_lazy as _
 from comicsdb.models.creator import Creator
 from comicsdb.models.issue import Issue
 
+# Role.name values (exact database names -- do not translate) that count as a
+# writer or an artist, e.g. for "top writers/artists" and featured-creator lists.
+WRITER_ROLE_NAMES = ("Writer", "Script", "Story", "Plot")
+ARTIST_ROLE_NAMES = (
+    "Artist",
+    "Penciller",
+    "Illustrator",
+    "Layouts",
+    "Breakdowns",
+    "Inker",
+    "Embellisher",
+    "Finishes",
+    "Ink Assists",
+)
+
 
 class Role(models.Model):
     name = models.CharField(max_length=25)
