@@ -30,6 +30,7 @@ from comicsdb.views.issue_list_helpers import filter_issues_by_number_range
 from comicsdb.views.ratings import parse_rating_action
 from user_collection.forms import AddIssuesFromSeriesForm, CollectionItemForm
 from user_collection.models import GRADE_CHOICES, CollectionItem, ReadDate
+from user_collection.services import add_issues_to_collection
 from user_collection.stats import collection_charts, collection_summary, top_series
 
 
@@ -185,6 +186,32 @@ class CollectionStatsView(LoginRequiredMixin, TemplateView):
         return context
 
 
+def _bulk_add_message(added_count, skipped_count, mark_as_read):
+    """Return ``(message_level, message)`` summarizing a bulk add to the collection."""
+    if not added_count:
+        return messages.INFO, _("All issues from this series are already in your collection.")
+
+    added_phrase = ngettext(
+        "Added %(count)d issue to your collection",
+        "Added %(count)d issues to your collection",
+        added_count,
+    ) % {"count": added_count}
+    if mark_as_read:
+        added_phrase = _("%(phrase)s (marked as read)") % {"phrase": added_phrase}
+
+    if not skipped_count:
+        return messages.SUCCESS, _("%(added)s!") % {"added": added_phrase}
+    skipped_phrase = ngettext(
+        "Skipped %(count)d issue already in your collection.",
+        "Skipped %(count)d issues already in your collection.",
+        skipped_count,
+    ) % {"count": skipped_count}
+    return messages.SUCCESS, _("%(added)s. %(skipped)s") % {
+        "added": added_phrase,
+        "skipped": skipped_phrase,
+    }
+
+
 class AddIssuesFromSeriesView(LoginRequiredMixin, FormView):
     """Add multiple issues from a series to the collection."""
 
@@ -208,60 +235,14 @@ class AddIssuesFromSeriesView(LoginRequiredMixin, FormView):
         else:
             issues_to_add = list(issues_queryset)
 
-        # Get existing issue IDs to avoid duplicates
-        existing_issue_ids = set(
-            CollectionItem.objects.filter(user=self.request.user).values_list("issue_id", flat=True)
+        added_count, skipped_count = add_issues_to_collection(
+            self.request.user,
+            issues_to_add,
+            book_format=default_format,
+            mark_as_read=mark_as_read,
         )
-
-        # Create collection items for new issues
-        new_items = []
-        skipped_count = 0
-
-        for issue in issues_to_add:
-            if issue.id not in existing_issue_ids:
-                new_items.append(
-                    CollectionItem(
-                        user=self.request.user,
-                        issue=issue,
-                        quantity=1,
-                        book_format=default_format,
-                        is_read=mark_as_read,
-                    )
-                )
-            else:
-                skipped_count += 1
-
-        # Bulk create all new items
-        if new_items:
-            CollectionItem.objects.bulk_create(new_items)
-            added_count = len(new_items)
-
-            added_phrase = ngettext(
-                "Added %(count)d issue to your collection",
-                "Added %(count)d issues to your collection",
-                added_count,
-            ) % {"count": added_count}
-            if mark_as_read:
-                added_phrase = _("%(phrase)s (marked as read)") % {"phrase": added_phrase}
-
-            if skipped_count > 0:
-                skipped_phrase = ngettext(
-                    "Skipped %(count)d issue already in your collection.",
-                    "Skipped %(count)d issues already in your collection.",
-                    skipped_count,
-                ) % {"count": skipped_count}
-                message = _("%(added)s. %(skipped)s") % {
-                    "added": added_phrase,
-                    "skipped": skipped_phrase,
-                }
-            else:
-                message = _("%(added)s!") % {"added": added_phrase}
-            messages.success(self.request, message)
-        else:
-            messages.info(
-                self.request,
-                _("All issues from this series are already in your collection."),
-            )
+        level, message = _bulk_add_message(added_count, skipped_count, mark_as_read)
+        messages.add_message(self.request, level, message)
 
         return super().form_valid(form)
 
