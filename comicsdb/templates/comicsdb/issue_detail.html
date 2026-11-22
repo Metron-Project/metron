@@ -108,7 +108,7 @@
                         <span class="icon is-small"><i class="fas fa-plus" aria-hidden="true"></i></span>
                         <span>{% trans "New" %}</span>
                     </a>
-                    {% if issue.series.series_type.name != "Trade Paperback" and issue.series.series_type.name != "Omnibus" and issue.series.series_type.name != "Hardcover" and issue.series.publisher.name != "DC Comics" and issue.series.publisher.name != "Marvel" %}
+                    {% if show_duplicate_credits %}
                         {% if navigation.previous_issue and not issue.credits_set.exists %}
                             <form method="post"
                                   action="{% url 'issue:duplicate-credits' slug=issue.slug %}"
@@ -131,7 +131,7 @@
                             </button>
                         {% endif %}
                     {% endif %}
-                    {% if issue.series.series_type.name == "Trade Paperback" or issue.series.series_type.name == "Omnibus" or issue.series.series_type.name == "Hardcover" %}
+                    {% if show_reprint_sync %}
                         {% if issue.reprints.exists and not issue.characters.exists and not issue.teams.exists and not issue.name|length > 0 %}
                             <form method="post"
                                   action="{% url 'issue:sync-reprints' slug=issue.slug %}"

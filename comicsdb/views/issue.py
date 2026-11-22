@@ -33,6 +33,8 @@ from comicsdb.services import (
     credit_duplication_source,
     reprint_sync_blocker,
     split_variant_cover_credits,
+    supports_credit_duplication,
+    supports_reprint_sync,
 )
 from comicsdb.views.constants import DETAIL_PAGINATE_BY, PAGINATE_BY
 from comicsdb.views.history import HistoryListView
@@ -191,6 +193,8 @@ class IssueDetail(DetailView):
                 user=self.request.user,
             ).first()
 
+        context["show_duplicate_credits"] = supports_credit_duplication(issue)
+        context["show_reprint_sync"] = supports_reprint_sync(issue)
         context["can_rate"] = self.request.user.is_authenticated and issue.is_released
         context["average_rating"] = issue.average_rating
         context["rating_count"] = issue.rating_count

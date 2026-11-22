@@ -32,6 +32,7 @@ class SeriesType(models.Model):
     GRAPHIC_NOVEL = 9
     TRADE_PAPERBACK = 10
     DIGITAL_CHAPTERS = 12
+    OMNIBUS = 14
 
     name = models.CharField(max_length=255)
     notes = models.TextField(blank=True)

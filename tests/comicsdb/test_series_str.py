@@ -12,6 +12,7 @@ from comicsdb.models.series import SeriesType
         (SeriesType.GRAPHIC_NOVEL, "Graphic Novel"),
         (SeriesType.TRADE_PAPERBACK, "Trade Paperback"),
         (SeriesType.DIGITAL_CHAPTERS, "Digital Chapters"),
+        (SeriesType.OMNIBUS, "Omnibus"),
     ],
 )
 def test_series_type_constants_match_fixture(db, type_id, name):

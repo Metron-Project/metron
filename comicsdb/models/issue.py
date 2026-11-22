@@ -38,7 +38,7 @@ class GraphicNovelManager(models.Manager):
         return (
             super()
             .get_queryset()
-            .filter(series__series_type__name="Graphic Novel")
+            .filter(series__series_type_id=SeriesType.GRAPHIC_NOVEL)
             .select_related("series", "series__series_type")
         )
 
@@ -48,7 +48,7 @@ class TradePaperbackManager(models.Manager):
         return (
             super()
             .get_queryset()
-            .filter(series__series_type__name="Trade Paperback")
+            .filter(series__series_type_id=SeriesType.TRADE_PAPERBACK)
             .select_related("series", "series__series_type")
         )
 

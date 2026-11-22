@@ -13,6 +13,7 @@ from django.db import transaction
 from django.utils.translation import gettext as _
 
 from comicsdb.models import Credits, Issue, Role
+from comicsdb.models.series import SeriesType
 
 LOGGER = logging.getLogger(__name__)
 
@@ -122,7 +123,25 @@ def copy_credits(issue: Issue, source_credits: list[Credits], user) -> None:
         issue.save(update_fields=["edited_by", "modified"])
 
 
-REPRINT_SYNC_SERIES_TYPES = ("Trade Paperback", "Omnibus", "Hardcover")
+# Collected editions: reprint sync applies to them, credit duplication doesn't.
+COLLECTED_EDITION_SERIES_TYPES = (
+    SeriesType.TRADE_PAPERBACK,
+    SeriesType.OMNIBUS,
+    SeriesType.HARDCOVER,
+)
+
+
+def supports_reprint_sync(issue: Issue) -> bool:
+    """Whether the "sync from reprints" tool applies to ``issue`` (a collected edition)."""
+    return issue.series.series_type_id in COLLECTED_EDITION_SERIES_TYPES
+
+
+def supports_credit_duplication(issue: Issue) -> bool:
+    """Whether to offer "duplicate credits": not a collected edition or excluded publisher."""
+    return (
+        issue.series.series_type_id not in COLLECTED_EDITION_SERIES_TYPES
+        and issue.series.publisher.name not in CREDIT_DUPLICATION_EXCLUDED_PUBLISHERS
+    )
 
 
 @dataclass
@@ -137,14 +156,18 @@ class ReprintContent:
 
 def reprint_sync_blocker(issue: Issue) -> tuple[int, str] | None:
     """Return ``(message_level, message)`` if ``issue`` can't be synced, else ``None``."""
-    series_type = issue.series.series_type.name
-    if series_type not in REPRINT_SYNC_SERIES_TYPES:
-        types = REPRINT_SYNC_SERIES_TYPES
+    if not supports_reprint_sync(issue):
+        names = dict(
+            SeriesType.objects.filter(pk__in=COLLECTED_EDITION_SERIES_TYPES).values_list(
+                "pk", "name"
+            )
+        )
+        types = [names[pk] for pk in COLLECTED_EDITION_SERIES_TYPES]
         type_list = f"{', '.join(types[:-1])} and {types[-1]}"
         return messages.ERROR, _(
             "This function only works for %(types)s series types. "
             "This issue is of type '%(current_type)s'."
-        ) % {"types": type_list, "current_type": series_type}
+        ) % {"types": type_list, "current_type": issue.series.series_type.name}
 
     if not issue.reprints.exists():
         return messages.WARNING, _("No reprinted issues found for %(issue)s.") % {"issue": issue}
