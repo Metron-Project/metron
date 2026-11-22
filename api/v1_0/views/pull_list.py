@@ -40,7 +40,7 @@ class PullListViewSet(
     @action(detail=False, methods=["get"])
     def series(self, request):
         """Returns the authenticated user's pull list series."""
-        pull_list, _ = PullList.objects.get_or_create(user=request.user)
+        pull_list = PullList.objects.for_user(request.user)
         queryset = pull_list.pull_list_series.select_related(
             "series__series_type", "series__publisher"
         ).order_by("series__sort_name")
@@ -70,7 +70,7 @@ class PullListViewSet(
                 {"detail": f"Series with id {series_id} not found."},
                 status=status.HTTP_404_NOT_FOUND,
             )
-        pull_list, _ = PullList.objects.get_or_create(user=request.user)
+        pull_list = PullList.objects.for_user(request.user)
         pls, created = PullListSeries.objects.get_or_create(pull_list=pull_list, series=series)
         serializer = PullListSeriesSerializer(pls, context={"request": request})
         return Response(
@@ -101,7 +101,7 @@ class PullListViewSet(
 
         Optionally filter by store date using store_date_after and store_date_before.
         """
-        pull_list, _ = PullList.objects.get_or_create(user=request.user)
+        pull_list = PullList.objects.for_user(request.user)
         series_ids = PullListSeries.objects.filter(pull_list=pull_list).values_list(
             "series_id", flat=True
         )
@@ -133,7 +133,7 @@ class PullListViewSet(
     )
     def remove_series(self, request, series_pk=None):
         """Remove a series from the authenticated user's pull list."""
-        pull_list, _ = PullList.objects.get_or_create(user=request.user)
+        pull_list = PullList.objects.for_user(request.user)
         deleted, _ = PullListSeries.objects.filter(
             pull_list=pull_list, series_id=series_pk
         ).delete()

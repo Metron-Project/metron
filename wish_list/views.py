@@ -12,18 +12,13 @@ from wish_list.forms import AcquireWishListItemForm, WishListItemForm
 from wish_list.models import WishList, WishListItem
 
 
-def get_or_create_wish_list(user):
-    wish_list, _created = WishList.objects.get_or_create(user=user)
-    return wish_list
-
-
 class WishListDetailView(LoginRequiredMixin, FormView):
     template_name = "wish_list/wishlist_detail.html"
     form_class = WishListItemForm
 
     def get_wish_list(self):
         if not hasattr(self, "_wish_list"):
-            self._wish_list = get_or_create_wish_list(self.request.user)
+            self._wish_list = WishList.objects.for_user(self.request.user)
         return self._wish_list
 
     def form_valid(self, form):
@@ -128,7 +123,7 @@ class AcquireWishListItemView(LoginRequiredMixin, UserPassesTestMixin, FormView)
 @require_POST
 def toggle_wish_list_item(request, slug):
     issue = get_object_or_404(Issue, slug=slug)
-    wish_list, _created = WishList.objects.get_or_create(user=request.user)
+    wish_list = WishList.objects.for_user(request.user)
     item, created = WishListItem.objects.get_or_create(wish_list=wish_list, issue=issue)
     if not created:
         item.delete()

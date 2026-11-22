@@ -6,6 +6,7 @@ from djmoney.models.fields import MoneyField
 
 from comicsdb.models.issue import Issue
 from user_collection.models import GRADE_CHOICES, CollectionItem
+from users.managers import OnePerUserManager
 from users.models import CustomUser
 
 
@@ -17,6 +18,8 @@ class WishList(models.Model):
     )
     modified = models.DateTimeField(auto_now=True)
     created_on = models.DateTimeField(db_default=Now())
+
+    objects = OnePerUserManager()
 
     class Meta:
         ordering = ["user"]

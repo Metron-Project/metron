@@ -22,13 +22,6 @@ UPCOMING_LIMIT = 50
 UNDO_SESSION_KEY = "pull_list_undo_series"
 
 
-def get_or_create_pull_list(user):
-    pull_list, _created = PullList.objects.get_or_create(user=user)
-    # Reuse the user we already have, so pull_list.user (e.g. in __str__) doesn't re-query it.
-    pull_list.user = user
-    return pull_list
-
-
 def detail_query(params, drop_series_pk=None) -> str:
     """Rebuild the detail page's ?view=/?series= state from ``params`` (e.g. request.GET).
 
@@ -50,7 +43,7 @@ class PullListDetailView(LoginRequiredMixin, FormView):
 
     def get_pull_list(self):
         if not hasattr(self, "_pull_list"):
-            self._pull_list = get_or_create_pull_list(self.request.user)
+            self._pull_list = PullList.objects.for_user(self.request.user)
         return self._pull_list
 
     def form_valid(self, form):
@@ -196,7 +189,7 @@ class RemoveSeriesFromPullListView(LoginRequiredMixin, DeleteView):
 @require_POST
 def toggle_pull_list_series(request, slug):
     series = get_object_or_404(Series, slug=slug)
-    pull_list, _created = PullList.objects.get_or_create(user=request.user)
+    pull_list = PullList.objects.for_user(request.user)
     pull_list_series, created = PullListSeries.objects.get_or_create(
         pull_list=pull_list, series=series
     )

@@ -43,7 +43,7 @@ class WishListViewSet(
     @action(detail=False, methods=["get"])
     def items(self, request):
         """Returns paginated wish list items for the authenticated user."""
-        wish_list, _ = WishList.objects.get_or_create(user=request.user)
+        wish_list = WishList.objects.for_user(request.user)
         queryset = wish_list.wish_list_items.select_related(
             "issue__series__series_type", "issue__series__publisher"
         ).order_by("priority", "issue__series__sort_name")
@@ -64,7 +64,7 @@ class WishListViewSet(
         serializer.is_valid(raise_exception=True)
         data = serializer.validated_data
         issue = Issue.objects.get(pk=data["issue_id"])
-        wish_list, _ = WishList.objects.get_or_create(user=request.user)
+        wish_list = WishList.objects.for_user(request.user)
         max_price = data.get("max_price")
         max_price_currency = data.get("max_price_currency", "USD")
         item, created = WishListItem.objects.get_or_create(
@@ -95,7 +95,7 @@ class WishListViewSet(
     )
     def acquire_item(self, request, item_pk=None):
         """Mark a wish list item as acquired and create a collection item."""
-        wish_list, _ = WishList.objects.get_or_create(user=request.user)
+        wish_list = WishList.objects.for_user(request.user)
         item = get_object_or_404(WishListItem, pk=item_pk, wish_list=wish_list)
         item.wish_list = wish_list  # already loaded; saves acquire() a query
         serializer = AcquireWishListItemSerializer(data=request.data)
@@ -132,7 +132,7 @@ class WishListViewSet(
     )
     def remove_item(self, request, item_pk=None):
         """Remove an item from the authenticated user's wish list."""
-        wish_list, _ = WishList.objects.get_or_create(user=request.user)
+        wish_list = WishList.objects.for_user(request.user)
         item = get_object_or_404(WishListItem, pk=item_pk, wish_list=wish_list)
         item.delete()
         return Response(status=status.HTTP_204_NO_CONTENT)
