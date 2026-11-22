@@ -1792,7 +1792,12 @@ For complete API documentation including pagination and response formats, see th
 
 **Files:**
 
-- `tests/reading_lists/test_views.py`
+- `tests/reading_lists/test_list_views.py`
+- `tests/reading_lists/test_detail_views.py`
+- `tests/reading_lists/test_crud_views.py`
+- `tests/reading_lists/test_item_views.py`
+- `tests/reading_lists/test_bulk_add_views.py`
+- `tests/reading_lists/test_rating_and_issue_type_views.py`
 - `tests/reading_lists/test_forms.py`
 - `tests/reading_lists/test_models.py`
 - `tests/reading_lists/test_signals.py`
