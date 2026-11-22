@@ -11,7 +11,7 @@ from comicsdb.forms.character import CharacterForm
 from comicsdb.models import Character, Issue, Series
 from comicsdb.views.constants import DETAIL_PAGINATE_BY, PAGINATE_BY
 from comicsdb.views.history import HistoryListView
-from comicsdb.views.issue_list_helpers import SORT_OPTIONS, apply_sort
+from comicsdb.views.issue_list_helpers import apply_sort
 from comicsdb.views.mixins import (
     AttributionCreateMixin,
     AttributionUpdateMixin,
@@ -19,12 +19,13 @@ from comicsdb.views.mixins import (
     NavigationMixin,
     SearchMixin,
     SlugRedirectView,
+    SortableIssueListMixin,
 )
 
 LOGGER = logging.getLogger(__name__)
 
 
-class CharacterSeriesList(ListView):
+class CharacterSeriesList(SortableIssueListMixin, ListView):
     paginate_by = PAGINATE_BY
     template_name = "comicsdb/issue_list.html"
 
@@ -36,12 +37,6 @@ class CharacterSeriesList(ListView):
             characters=self.character, series=self.series
         )
         return apply_sort(queryset, self.request)
-
-    def get_context_data(self, **kwargs):
-        context = super().get_context_data(**kwargs)
-        context["sort_options"] = SORT_OPTIONS
-        context["current_sort"] = self.request.GET.get("sort", "")
-        return context
 
 
 _issue_count_qs = (
@@ -58,7 +53,7 @@ class CharacterList(ListView):
     queryset = Character.objects.annotate(issue_count=Subquery(_issue_count_qs))
 
 
-class CharacterIssueList(ListView):
+class CharacterIssueList(SortableIssueListMixin, ListView):
     paginate_by = PAGINATE_BY
     template_name = "comicsdb/issue_list.html"
 
@@ -70,8 +65,6 @@ class CharacterIssueList(ListView):
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         context["title"] = self.character
-        context["sort_options"] = SORT_OPTIONS
-        context["current_sort"] = self.request.GET.get("sort", "")
         return context
 
 

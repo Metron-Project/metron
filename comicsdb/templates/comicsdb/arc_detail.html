@@ -147,10 +147,10 @@
                                 </li>
                             {% endfor %}
                         </ul>
-                        {% if issue_count > 30 %}
+                        {% if issue_count > detail_page_size %}
                             <div id="issues-load-more-wrapper" class="has-text-centered mt-4">
                                 <button class="button is-link"
-                                        hx-get="{% url 'arc:issues-load-more' arc.slug %}?offset=30"
+                                        hx-get="{% url 'arc:issues-load-more' arc.slug %}?offset={{ detail_page_size }}"
                                         hx-target="#issues-list"
                                         hx-swap="beforeend"
                                         hx-indicator="#issues-spinner">

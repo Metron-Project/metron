@@ -24,7 +24,7 @@ from comicsdb.models.character import Character
 from comicsdb.models.common import CommonInfo
 from comicsdb.models.creator import Creator
 from comicsdb.models.rating import Rating
-from comicsdb.models.series import Series
+from comicsdb.models.series import Series, SeriesType
 from comicsdb.models.team import Team
 from comicsdb.models.universe import Universe
 from comicsdb.validators import clean_upc, validate_upc_format
@@ -38,7 +38,7 @@ class GraphicNovelManager(models.Manager):
         return (
             super()
             .get_queryset()
-            .filter(series__series_type__name="Graphic Novel")
+            .filter(series__series_type_id=SeriesType.GRAPHIC_NOVEL)
             .select_related("series", "series__series_type")
         )
 
@@ -48,7 +48,7 @@ class TradePaperbackManager(models.Manager):
         return (
             super()
             .get_queryset()
-            .filter(series__series_type__name="Trade Paperback")
+            .filter(series__series_type_id=SeriesType.TRADE_PAPERBACK)
             .select_related("series", "series__series_type")
         )
 
@@ -190,7 +190,7 @@ class Issue(CommonInfo):
 
     def __str__(self) -> str:
         match self.series.series_type_id:
-            case 12:
+            case SeriesType.DIGITAL_CHAPTERS:
                 return f"{self.series} Chapter #{self.number}"
             case _:
                 return f"{self.series} #{self.number}"

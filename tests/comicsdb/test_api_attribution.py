@@ -37,7 +37,11 @@ MARVEL_URL = "https://www.marvel.com/characters/example"
 def local_cache():
     """Isolate the response cache from concurrent xdist workers sharing Redis."""
     test_cache = LocMemCache(f"test-api-attribution-{uuid.uuid4()}", {})
-    with patch("api.views.cache", test_cache), patch("api.cache.cache", test_cache):
+    with (
+        patch("api.v1_0.views.mixins.cache", test_cache),
+        patch("api.v1_0.views.publisher.cache", test_cache),
+        patch("api.cache.cache", test_cache),
+    ):
         yield test_cache
 
 

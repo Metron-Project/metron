@@ -1,37 +1,6 @@
-{% load thumbnail %}
-{% load i18n static %}
+{% load i18n %}
 {% for team in teams %}
-    <div class="column is-4">
-        <article class="media">
-            <figure class="media-left">
-                <div class="image is-64x64">
-                    {% if team.image %}
-                        {% thumbnail team.image "64x64" crop="center" format="WEBP" as im %}
-                            <img class="is-rounded"
-                                 src="{{ im.url }}"
-                                 width="{{ im.width }}"
-                                 height="{{ im.height }}"
-                                 alt="{{ team }}"
-                                 loading="lazy">
-                        {% empty %}
-                            <img class="is-rounded"
-                                 src="{% static 'site/img/creator-not-found.webp' %}"
-                                 alt="{% blocktrans %}No image for {{ team }}{% endblocktrans %}"
-                                 loading="lazy">
-                        {% endthumbnail %}
-                    {% else %}
-                        <img class="is-rounded"
-                             src="{% static 'site/img/creator-not-found.webp' %}"
-                             alt="{% blocktrans %}No image for {{ team }}{% endblocktrans %}"
-                             loading="lazy">
-                    {% endif %}
-                </div>
-            </figure>
-            <div class="media-content">
-                <a href="{% url 'team:detail' team.slug %}">{{ team }}</a>
-            </div>
-        </article>
-    </div>
+    {% include "comicsdb/partials/thumbnail_link_card.html" with obj=team detail_url_name="team:detail" crop="center" %}
 {% endfor %}
 <div id="teams-load-more-wrapper"
      class="has-text-centered mt-4"

@@ -108,7 +108,7 @@
                         <span class="icon is-small"><i class="fas fa-plus" aria-hidden="true"></i></span>
                         <span>{% trans "New" %}</span>
                     </a>
-                    {% if issue.series.series_type.name != "Trade Paperback" and issue.series.series_type.name != "Omnibus" and issue.series.series_type.name != "Hardcover" and issue.series.publisher.name != "DC Comics" and issue.series.publisher.name != "Marvel" %}
+                    {% if show_duplicate_credits %}
                         {% if navigation.previous_issue and not issue.credits_set.exists %}
                             <form method="post"
                                   action="{% url 'issue:duplicate-credits' slug=issue.slug %}"
@@ -131,7 +131,7 @@
                             </button>
                         {% endif %}
                     {% endif %}
-                    {% if issue.series.series_type.name == "Trade Paperback" or issue.series.series_type.name == "Omnibus" or issue.series.series_type.name == "Hardcover" %}
+                    {% if show_reprint_sync %}
                         {% if issue.reprints.exists and not issue.characters.exists and not issue.teams.exists and not issue.name|length > 0 %}
                             <form method="post"
                                   action="{% url 'issue:sync-reprints' slug=issue.slug %}"
@@ -375,10 +375,10 @@
                             </div>
                         {% endfor %}
                     </div>
-                    {% if credits_count > 30 %}
+                    {% if credits_count > detail_page_size %}
                         <div id="credits-load-more-wrapper" class="has-text-centered mt-4">
                             <button class="button is-link"
-                                    hx-get="{% url 'issue:credits-load-more' issue.slug %}?offset=30"
+                                    hx-get="{% url 'issue:credits-load-more' issue.slug %}?offset={{ detail_page_size }}"
                                     hx-target="#credits-container"
                                     hx-swap="beforeend"
                                     hx-indicator="#credits-spinner">
@@ -393,168 +393,24 @@
             {% endif %}
             {# Characters #}
             {% if characters_count > 0 %}
-                <div class="box">
-                    <h2 class="title is-5">{% blocktrans count counter=characters_count %}Character ({{ counter }}){% plural %}Characters ({{ counter }}){% endblocktrans %}</h2>
-                    <div id="characters-container" class="columns is-multiline">
-                        {% for character in characters %}
-                            <div class="column is-4">
-                                <article class="media">
-                                    <figure class="media-left">
-                                        <div class="image is-64x64">
-                                            {% if character.image %}
-                                                {% thumbnail character.image "64x64" crop="top" format="WEBP" as im %}
-                                                    <img class="is-rounded"
-                                                         src="{{ im.url }}"
-                                                         width="{{ im.width }}"
-                                                         height="{{ im.height }}"
-                                                         alt="{{ character }}"
-                                                         loading="lazy">
-                                                {% empty %}
-                                                    <img class="is-rounded"
-                                                         src="{% static 'site/img/creator-not-found.webp' %}"
-                                                         alt="{% blocktrans %}No image for {{ character }}{% endblocktrans %}"
-                                                         loading="lazy">
-                                                {% endthumbnail %}
-                                            {% else %}
-                                                <img class="is-rounded"
-                                                     src="{% static 'site/img/creator-not-found.webp' %}"
-                                                     alt="{% blocktrans %}No image for {{ character }}{% endblocktrans %}"
-                                                     loading="lazy">
-                                            {% endif %}
-                                        </div>
-                                    </figure>
-                                    <div class="media-content">
-                                        <a href="{% url 'character:detail' character.slug %}">{{ character }}</a>
-                                    </div>
-                                </article>
-                            </div>
-                        {% endfor %}
-                    </div>
-                    {% if characters_count > 30 %}
-                        <div id="characters-load-more-wrapper" class="has-text-centered mt-4">
-                            <button class="button is-link"
-                                    hx-get="{% url 'issue:characters-load-more' issue.slug %}?offset=30"
-                                    hx-target="#characters-container"
-                                    hx-swap="beforeend"
-                                    hx-indicator="#characters-spinner">
-                                <span>{% trans "Load More Characters" %}</span>
-                            </button>
-                            <span id="characters-spinner" class="htmx-indicator ml-2">
-                                <i class="fas fa-spinner fa-spin"></i>
-                            </span>
-                        </div>
-                    {% endif %}
-                </div>
+                {% blocktrans count counter=characters_count asvar characters_heading %}Character ({{ counter }}){% plural %}Characters ({{ counter }}){% endblocktrans %}
+                {% trans "Load More Characters" as characters_more_label %}
+                {% url 'issue:characters-load-more' issue.slug as characters_more_url %}
+                {% include "comicsdb/partials/issue_related_section.html" with items=characters count=characters_count heading=characters_heading kind="characters" detail_url_name="character:detail" crop="top" load_more_url=characters_more_url load_more_label=characters_more_label %}
             {% endif %}
             {# Teams #}
             {% if teams_count > 0 %}
-                <div class="box">
-                    <h2 class="title is-5">{% blocktrans count counter=teams_count %}Team ({{ counter }}){% plural %}Teams ({{ counter }}){% endblocktrans %}</h2>
-                    <div id="teams-container" class="columns is-multiline">
-                        {% for team in teams %}
-                            <div class="column is-4">
-                                <article class="media">
-                                    <figure class="media-left">
-                                        <div class="image is-64x64">
-                                            {% if team.image %}
-                                                {% thumbnail team.image "64x64" crop="center" format="WEBP" as im %}
-                                                    <img class="is-rounded"
-                                                         src="{{ im.url }}"
-                                                         width="{{ im.width }}"
-                                                         height="{{ im.height }}"
-                                                         alt="{{ team }}"
-                                                         loading="lazy">
-                                                {% empty %}
-                                                    <img class="is-rounded"
-                                                         src="{% static 'site/img/creator-not-found.webp' %}"
-                                                         alt="{% blocktrans %}No image for {{ team }}{% endblocktrans %}"
-                                                         loading="lazy">
-                                                {% endthumbnail %}
-                                            {% else %}
-                                                <img class="is-rounded"
-                                                     src="{% static 'site/img/creator-not-found.webp' %}"
-                                                     alt="{% blocktrans %}No image for {{ team }}{% endblocktrans %}"
-                                                     loading="lazy">
-                                            {% endif %}
-                                        </div>
-                                    </figure>
-                                    <div class="media-content">
-                                        <a href="{% url 'team:detail' team.slug %}">{{ team }}</a>
-                                    </div>
-                                </article>
-                            </div>
-                        {% endfor %}
-                    </div>
-                    {% if teams_count > 30 %}
-                        <div id="teams-load-more-wrapper" class="has-text-centered mt-4">
-                            <button class="button is-link"
-                                    hx-get="{% url 'issue:teams-load-more' issue.slug %}?offset=30"
-                                    hx-target="#teams-container"
-                                    hx-swap="beforeend"
-                                    hx-indicator="#teams-spinner">
-                                <span>{% trans "Load More Teams" %}</span>
-                            </button>
-                            <span id="teams-spinner" class="htmx-indicator ml-2">
-                                <i class="fas fa-spinner fa-spin"></i>
-                            </span>
-                        </div>
-                    {% endif %}
-                </div>
+                {% blocktrans count counter=teams_count asvar teams_heading %}Team ({{ counter }}){% plural %}Teams ({{ counter }}){% endblocktrans %}
+                {% trans "Load More Teams" as teams_more_label %}
+                {% url 'issue:teams-load-more' issue.slug as teams_more_url %}
+                {% include "comicsdb/partials/issue_related_section.html" with items=teams count=teams_count heading=teams_heading kind="teams" detail_url_name="team:detail" crop="center" load_more_url=teams_more_url load_more_label=teams_more_label %}
             {% endif %}
             {# Universes #}
             {% if universes_count > 0 %}
-                <div class="box">
-                    <h2 class="title is-5">{% blocktrans count counter=universes_count %}Universe ({{ counter }}){% plural %}Universes ({{ counter }}){% endblocktrans %}</h2>
-                    <div id="universes-container" class="columns is-multiline">
-                        {% for universe in universes %}
-                            <div class="column is-4">
-                                <article class="media">
-                                    <figure class="media-left">
-                                        <div class="image is-64x64">
-                                            {% if universe.image %}
-                                                {% thumbnail universe.image "64x64" crop="center" format="WEBP" as im %}
-                                                    <img class="is-rounded"
-                                                         src="{{ im.url }}"
-                                                         width="{{ im.width }}"
-                                                         height="{{ im.height }}"
-                                                         alt="{{ universe }}"
-                                                         loading="lazy">
-                                                {% empty %}
-                                                    <img class="is-rounded"
-                                                         src="{% static 'site/img/creator-not-found.webp' %}"
-                                                         alt="{% blocktrans %}No image for {{ universe }}{% endblocktrans %}"
-                                                         loading="lazy">
-                                                {% endthumbnail %}
-                                            {% else %}
-                                                <img class="is-rounded"
-                                                     src="{% static 'site/img/creator-not-found.webp' %}"
-                                                     alt="{% blocktrans %}No image for {{ universe }}{% endblocktrans %}"
-                                                     loading="lazy">
-                                            {% endif %}
-                                        </div>
-                                    </figure>
-                                    <div class="media-content">
-                                        <a href="{% url 'universe:detail' universe.slug %}">{{ universe }}</a>
-                                    </div>
-                                </article>
-                            </div>
-                        {% endfor %}
-                    </div>
-                    {% if universes_count > 30 %}
-                        <div id="universes-load-more-wrapper" class="has-text-centered mt-4">
-                            <button class="button is-link"
-                                    hx-get="{% url 'issue:universes-load-more' issue.slug %}?offset=30"
-                                    hx-target="#universes-container"
-                                    hx-swap="beforeend"
-                                    hx-indicator="#universes-spinner">
-                                <span>{% trans "Load More Universes" %}</span>
-                            </button>
-                            <span id="universes-spinner" class="htmx-indicator ml-2">
-                                <i class="fas fa-spinner fa-spin"></i>
-                            </span>
-                        </div>
-                    {% endif %}
-                </div>
+                {% blocktrans count counter=universes_count asvar universes_heading %}Universe ({{ counter }}){% plural %}Universes ({{ counter }}){% endblocktrans %}
+                {% trans "Load More Universes" as universes_more_label %}
+                {% url 'issue:universes-load-more' issue.slug as universes_more_url %}
+                {% include "comicsdb/partials/issue_related_section.html" with items=universes count=universes_count heading=universes_heading kind="universes" detail_url_name="universe:detail" crop="center" load_more_url=universes_more_url load_more_label=universes_more_label %}
             {% endif %}
             {# Reprints #}
             {% with reprints=issue.reprints.all %}

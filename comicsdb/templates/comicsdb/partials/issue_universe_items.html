@@ -1,37 +1,6 @@
-{% load thumbnail %}
-{% load i18n static %}
+{% load i18n %}
 {% for universe in universes %}
-    <div class="column is-4">
-        <article class="media">
-            <figure class="media-left">
-                <div class="image is-64x64">
-                    {% if universe.image %}
-                        {% thumbnail universe.image "64x64" crop="center" format="WEBP" as im %}
-                            <img class="is-rounded"
-                                 src="{{ im.url }}"
-                                 width="{{ im.width }}"
-                                 height="{{ im.height }}"
-                                 alt="{{ universe }}"
-                                 loading="lazy">
-                        {% empty %}
-                            <img class="is-rounded"
-                                 src="{% static 'site/img/creator-not-found.webp' %}"
-                                 alt="{% blocktrans %}No image for {{ universe }}{% endblocktrans %}"
-                                 loading="lazy">
-                        {% endthumbnail %}
-                    {% else %}
-                        <img class="is-rounded"
-                             src="{% static 'site/img/creator-not-found.webp' %}"
-                             alt="{% blocktrans %}No image for {{ universe }}{% endblocktrans %}"
-                             loading="lazy">
-                    {% endif %}
-                </div>
-            </figure>
-            <div class="media-content">
-                <a href="{% url 'universe:detail' universe.slug %}">{{ universe }}</a>
-            </div>
-        </article>
-    </div>
+    {% include "comicsdb/partials/thumbnail_link_card.html" with obj=universe detail_url_name="universe:detail" crop="center" %}
 {% endfor %}
 <div id="universes-load-more-wrapper"
      class="has-text-centered mt-4"

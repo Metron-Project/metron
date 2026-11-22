@@ -1,4 +1,3 @@
-from datetime import date
 from typing import Any
 
 from django.contrib import admin, messages
@@ -11,6 +10,7 @@ from sorl.thumbnail.admin.current import AdminImageMixin
 from comicsdb.admin.util import AttributionInline, CreatedOnDateListFilter
 from comicsdb.forms.issue import SolicitationFlagFormMixin
 from comicsdb.models import Creator, Credits, Issue, Rating, Role, Variant
+from comicsdb.release_week import release_week_bounds
 
 MAX_STORIES = 1
 
@@ -24,16 +24,14 @@ class FutureStoreDateListFilter(admin.SimpleListFilter):
         return (("thisWeek", "This week"), ("nextWeek", "Next week"))
 
     def queryset(self, request: Any, queryset: QuerySet) -> QuerySet | None:
-        today = date.today()
-        year, week, _ = today.isocalendar()
-
         match self.value():
             case "thisWeek":
-                return queryset.filter(store_date__week=week, store_date__year=year)
+                week_offset = 0
             case "nextWeek":
-                return queryset.filter(store_date__week=week + 1, store_date__year=year)
+                week_offset = 1
             case _:
                 return None
+        return queryset.filter(store_date__range=release_week_bounds(week_offset))
 
 
 class CreditsInline(admin.TabularInline):

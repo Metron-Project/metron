@@ -1275,7 +1275,7 @@ done
 ### Daily cache hit rate (from access logs)
 
 Gunicorn's access log includes `cache=HIT`/`cache=MISS` (the `X-Cache` header
-set by `_mark_cache_status` in `api/views.py`), so today's hit rate can be
+set by `mark_cache_status` in `api/v1_0/views/mixins.py`), so today's hit rate can be
 read straight from the log without touching Redis:
 
 ```bash
@@ -1286,7 +1286,7 @@ journalctl _SYSTEMD_USER_UNIT=metron-web.service --since today \
 
 Swap `--since today` for e.g. `--since "2026-09-10" --until "2026-09-11"` to
 check a specific past day. Note this only counts requests that hit a
-cacheable endpoint (list/detail views using `_mark_cache_status`) — other
+cacheable endpoint (list/detail views using `mark_cache_status`) — other
 requests have no `cache=` field and are excluded by the `grep -oP`.
 
 List endpoints use a short 2-minute TTL (`LIST_CACHE_TTL`) and will almost

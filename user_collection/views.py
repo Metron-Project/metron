@@ -1,12 +1,11 @@
-from datetime import datetime, timedelta
+from datetime import datetime
 
-from chartkick.django import BarChart, ColumnChart, PieChart
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
 from django.db import models
-from django.db.models import Count, F, Sum
-from django.db.models.functions import TruncDate, TruncMonth
+from django.db.models import Count, F
+from django.db.models.functions import TruncDate
 from django.shortcuts import get_object_or_404, render
 from django.urls import reverse, reverse_lazy
 from django.utils import timezone
@@ -24,13 +23,15 @@ from django.views.generic import (
 )
 
 from comicsdb.filters.collection import CollectionViewFilter
-from comicsdb.models.credits import Credits
 from comicsdb.models.issue import Issue
 from comicsdb.models.publisher import Publisher
 from comicsdb.models.series import Series, SeriesType
+from comicsdb.views.issue_list_helpers import filter_issues_by_number_range
 from comicsdb.views.ratings import parse_rating_action
 from user_collection.forms import AddIssuesFromSeriesForm, CollectionItemForm
 from user_collection.models import GRADE_CHOICES, CollectionItem, ReadDate
+from user_collection.services import add_issues_to_collection
+from user_collection.stats import collection_charts, collection_summary, top_series
 
 
 class CollectionListView(LoginRequiredMixin, ListView):
@@ -176,179 +177,39 @@ class CollectionStatsView(LoginRequiredMixin, TemplateView):
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-
-        queryset = CollectionItem.objects.filter(user=self.request.user)
-
-        # Calculate statistics
-        total_items = queryset.count()
-        total_quantity = queryset.aggregate(Sum("quantity"))["quantity__sum"] or 0
-
-        # Calculate total value
-        total_value_result = queryset.aggregate(Sum("purchase_price"))
-        total_value = total_value_result["purchase_price__sum"]
-
-        # Reading statistics
-        read_count = queryset.filter(is_read=True).count()
-        unread_count = queryset.filter(is_read=False).count()
-
-        # Format breakdown
-        format_counts = queryset.values("book_format").annotate(count=Count("id"))
-
-        # Get top series
-        top_series = (
-            queryset.values("issue__series__name", "issue__series__id")
-            .annotate(count=Count("id"))
-            .order_by("-count")[:10]
-        )
-
-        # Create chart data
-        # Publisher distribution
-        publisher_data = (
-            queryset.values("issue__series__publisher__name")
-            .annotate(count=Count("id"))
-            .order_by("-count")
-        )
-        publisher_dict = {
-            item["issue__series__publisher__name"] or _("Unknown"): item["count"]
-            for item in publisher_data
-        }
-        publisher_chart = PieChart(
-            publisher_dict,
-            title=_("Issues by Publisher"),
-            thousands=",",
-            legend="bottom",
-        )
-
-        # Series type distribution
-        series_type_data = (
-            queryset.values("issue__series__series_type__name")
-            .annotate(count=Count("id"))
-            .order_by("-count")
-        )
-        series_type_dict = {
-            item["issue__series__series_type__name"] or _("Unknown"): item["count"]
-            for item in series_type_data
-        }
-        series_type_chart = PieChart(
-            series_type_dict,
-            title=_("Issues by Series Type"),
-            thousands=",",
-            legend="bottom",
-        )
-
-        # Format distribution
-        format_dict = {}
-        for item in format_counts:
-            format_name = dict(CollectionItem.BookFormat.choices).get(
-                item["book_format"], _("Unknown")
-            )
-            format_dict[format_name] = item["count"]
-        format_chart = PieChart(
-            format_dict,
-            title=_("Issues by Format"),
-            thousands=",",
-            legend="bottom",
-        )
-
-        # Reading history charts
-        read_dates_qs = ReadDate.objects.filter(collection_item__user=self.request.user)
-
-        daily_reads = (
-            read_dates_qs.annotate(day=TruncDate("read_date"))
-            .values("day")
-            .annotate(c=Count("day"))
-            .order_by("-day")[:30]
-        )
-        daily_counts = {r["day"]: r["c"] for r in daily_reads}
-        today = datetime.now().date()
-        daily_dict = {
-            (today - timedelta(days=i)).strftime("%m/%d"): daily_counts.get(
-                today - timedelta(days=i), 0
-            )
-            for i in range(29, -1, -1)
-        }
-        reading_daily_chart = ColumnChart(
-            daily_dict,
-            title=_("Issues Read (Last 30 Days)"),
-            thousands=",",
-        )
-
-        monthly_reads = (
-            read_dates_qs.annotate(month=TruncMonth("read_date"))
-            .values("month")
-            .annotate(c=Count("month"))
-            .order_by("-month")[:12]
-        )
-        monthly_dict = {r["month"].strftime("%b %Y"): r["c"] for r in monthly_reads[::-1]}
-        reading_monthly_chart = ColumnChart(
-            monthly_dict,
-            title=_("Issues Read (Last 12 Months)"),
-            thousands=",",
-        )
-
-        # Favorite Creators charts
-        user_issue_ids = queryset.values_list("issue_id", flat=True)
-
-        writer_roles = ["Writer", "Script", "Story", "Plot"]
-        top_writers_data = (
-            Credits.objects.filter(issue_id__in=user_issue_ids, role__name__in=writer_roles)
-            .values("creator__name")
-            .annotate(count=Count("issue", distinct=True))
-            .order_by("-count")[:10]
-        )
-        writers_dict = {item["creator__name"]: item["count"] for item in top_writers_data}
-        top_writers_chart = BarChart(
-            writers_dict,
-            title=_("Top Writers"),
-            thousands=",",
-            library={"scales": {"x": {"ticks": {"precision": 0}}}},
-        )
-
-        artist_roles = [
-            "Artist",
-            "Penciller",
-            "Illustrator",
-            "Layouts",
-            "Breakdowns",
-            "Inker",
-            "Embellisher",
-            "Finishes",
-            "Ink Assists",
-        ]
-        top_artists_data = (
-            Credits.objects.filter(issue_id__in=user_issue_ids, role__name__in=artist_roles)
-            .values("creator__name")
-            .annotate(count=Count("issue", distinct=True))
-            .order_by("-count")[:10]
-        )
-        artists_dict = {item["creator__name"]: item["count"] for item in top_artists_data}
-        top_artists_chart = BarChart(
-            artists_dict,
-            title=_("Top Artists"),
-            thousands=",",
-            library={"scales": {"x": {"ticks": {"precision": 0}}}},
-        )
-
-        context.update(
-            {
-                "total_items": total_items,
-                "total_quantity": total_quantity,
-                "total_value": total_value or 0,
-                "read_count": read_count,
-                "unread_count": unread_count,
-                "format_counts": format_counts,
-                "top_series": top_series,
-                "publisher_chart": publisher_chart,
-                "series_type_chart": series_type_chart,
-                "format_chart": format_chart,
-                "reading_daily_chart": reading_daily_chart,
-                "reading_monthly_chart": reading_monthly_chart,
-                "top_writers_chart": top_writers_chart,
-                "top_artists_chart": top_artists_chart,
-            }
-        )
-
+        user = self.request.user
+        summary = collection_summary(user)
+        context.update(summary)
+        context["total_value"] = summary["total_value"] or 0
+        context["top_series"] = top_series(user)
+        context.update(collection_charts(user, summary["format_counts"]))
         return context
+
+
+def _bulk_add_message(added_count, skipped_count, mark_as_read):
+    """Return ``(message_level, message)`` summarizing a bulk add to the collection."""
+    if not added_count:
+        return messages.INFO, _("All issues from this series are already in your collection.")
+
+    added_phrase = ngettext(
+        "Added %(count)d issue to your collection",
+        "Added %(count)d issues to your collection",
+        added_count,
+    ) % {"count": added_count}
+    if mark_as_read:
+        added_phrase = _("%(phrase)s (marked as read)") % {"phrase": added_phrase}
+
+    if not skipped_count:
+        return messages.SUCCESS, _("%(added)s!") % {"added": added_phrase}
+    skipped_phrase = ngettext(
+        "Skipped %(count)d issue already in your collection.",
+        "Skipped %(count)d issues already in your collection.",
+        skipped_count,
+    ) % {"count": skipped_count}
+    return messages.SUCCESS, _("%(added)s. %(skipped)s") % {
+        "added": added_phrase,
+        "skipped": skipped_phrase,
+    }
 
 
 class AddIssuesFromSeriesView(LoginRequiredMixin, FormView):
@@ -358,7 +219,7 @@ class AddIssuesFromSeriesView(LoginRequiredMixin, FormView):
     template_name = "user_collection/add_issues_from_series.html"
     success_url = reverse_lazy("user_collection:list")
 
-    def form_valid(self, form):  # noqa: PLR0912, PLR0915
+    def form_valid(self, form):
         series = form.cleaned_data["series"]
         range_type = form.cleaned_data["range_type"]
         start_number = form.cleaned_data.get("start_number")
@@ -369,113 +230,19 @@ class AddIssuesFromSeriesView(LoginRequiredMixin, FormView):
         # Get all issues from the series, ordered by cover date
         issues_queryset = Issue.objects.filter(series=series).order_by("cover_date", "number")
 
-        # Apply range filtering if specified
         if range_type == "range":
-            # Build filter conditions based on provided numbers
-            if start_number and end_number:
-                # Filter issues between start and end numbers
-                all_issues = list(issues_queryset)
-                filtered_issues = []
-                in_range = False
-
-                for issue in all_issues:
-                    # Check if this is the start issue
-                    if issue.number == start_number:
-                        in_range = True
-
-                    # If we're in range, add the issue
-                    if in_range:
-                        filtered_issues.append(issue)
-
-                    # Check if this is the end issue
-                    if issue.number == end_number:
-                        break
-
-                issues_to_add = filtered_issues
-            elif start_number:
-                # Start from a specific issue to the end
-                all_issues = list(issues_queryset)
-                filtered_issues = []
-                found_start = False
-
-                for issue in all_issues:
-                    if issue.number == start_number:
-                        found_start = True
-                    if found_start:
-                        filtered_issues.append(issue)
-
-                issues_to_add = filtered_issues
-            elif end_number:
-                # From beginning to a specific issue
-                all_issues = list(issues_queryset)
-                filtered_issues = []
-
-                for issue in all_issues:
-                    filtered_issues.append(issue)
-                    if issue.number == end_number:
-                        break
-
-                issues_to_add = filtered_issues
-            else:
-                issues_to_add = list(issues_queryset)
+            issues_to_add = filter_issues_by_number_range(issues_queryset, start_number, end_number)
         else:
-            # Add all issues
             issues_to_add = list(issues_queryset)
 
-        # Get existing issue IDs to avoid duplicates
-        existing_issue_ids = set(
-            CollectionItem.objects.filter(user=self.request.user).values_list("issue_id", flat=True)
+        added_count, skipped_count = add_issues_to_collection(
+            self.request.user,
+            issues_to_add,
+            book_format=default_format,
+            mark_as_read=mark_as_read,
         )
-
-        # Create collection items for new issues
-        new_items = []
-        skipped_count = 0
-
-        for issue in issues_to_add:
-            if issue.id not in existing_issue_ids:
-                new_items.append(
-                    CollectionItem(
-                        user=self.request.user,
-                        issue=issue,
-                        quantity=1,
-                        book_format=default_format,
-                        is_read=mark_as_read,
-                    )
-                )
-            else:
-                skipped_count += 1
-
-        # Bulk create all new items
-        if new_items:
-            CollectionItem.objects.bulk_create(new_items)
-            added_count = len(new_items)
-
-            added_phrase = ngettext(
-                "Added %(count)d issue to your collection",
-                "Added %(count)d issues to your collection",
-                added_count,
-            ) % {"count": added_count}
-            if mark_as_read:
-                added_phrase = _("%(phrase)s (marked as read)") % {"phrase": added_phrase}
-
-            if skipped_count > 0:
-                skipped_phrase = ngettext(
-                    "Skipped %(count)d issue already in your collection.",
-                    "Skipped %(count)d issues already in your collection.",
-                    skipped_count,
-                ) % {"count": skipped_count}
-                message = _("%(added)s. %(skipped)s") % {
-                    "added": added_phrase,
-                    "skipped": skipped_phrase,
-                }
-            else:
-                message = _("%(added)s!") % {"added": added_phrase}
-            messages.success(self.request, message)
-        else:
-            messages.info(
-                self.request,
-                _("All issues from this series are already in your collection."),
-            )
+        level, message = _bulk_add_message(added_count, skipped_count, mark_as_read)
+        messages.add_message(self.request, level, message)
 
         return super().form_valid(form)
 

@@ -19,15 +19,8 @@ def pre_delete_credit(sender, instance, **kwargs):
     LOGGER.info("Deleting %s credit for %s", instance.creator, instance.issue)
 
 
-def update_series_modified_on_issue_save(sender, instance, **kwargs):
-    from comicsdb.models import Series  # noqa: PLC0415
-
-    Series.objects.filter(pk=instance.series_id).update(modified=timezone.now())
-    bump_model_version(ModelLabel.ISSUE)
-    bump_model_version(ModelLabel.SERIES)
-
-
-def update_series_modified_on_issue_delete(sender, instance, **kwargs):
+def update_series_modified_on_issue_change(sender, instance, **kwargs):
+    """post_save/post_delete receiver for Issue: touch its Series and bump both caches."""
     from comicsdb.models import Series  # noqa: PLC0415
 
     Series.objects.filter(pk=instance.series_id).update(modified=timezone.now())
@@ -65,28 +58,18 @@ def update_related_modified(parent_model, instance, action, pk_set):
             Issue.objects.filter(pk__in=pk_set).update(modified=now)
 
 
-def update_arc_modified(sender, instance, action, pk_set, **kwargs):
-    from comicsdb.models import Arc  # noqa: PLC0415
+def update_related_modified_on_m2m_change(
+    parent_model, cache_label, instance, action, pk_set, **kwargs
+):
+    """m2m_changed receiver for Issue.arcs/characters/teams.
 
-    update_related_modified(Arc, instance, action, pk_set)
+    Connected in comicsdb/apps.py as ``partial(receiver, parent_model, cache_label)``.
+    Bumps ``modified`` on both sides (see update_related_modified) and the
+    parent's cache version.
+    """
+    update_related_modified(parent_model, instance, action, pk_set)
     if action in ("post_add", "post_remove", "post_clear"):
-        bump_model_version(ModelLabel.ARC)
-
-
-def update_character_modified(sender, instance, action, pk_set, **kwargs):
-    from comicsdb.models import Character  # noqa: PLC0415
-
-    update_related_modified(Character, instance, action, pk_set)
-    if action in ("post_add", "post_remove", "post_clear"):
-        bump_model_version(ModelLabel.CHARACTER)
-
-
-def update_team_modified(sender, instance, action, pk_set, **kwargs):
-    from comicsdb.models import Team  # noqa: PLC0415
-
-    update_related_modified(Team, instance, action, pk_set)
-    if action in ("post_add", "post_remove", "post_clear"):
-        bump_model_version(ModelLabel.TEAM)
+        bump_model_version(cache_label)
 
 
 def update_issue_modified_on_universe_change(sender, instance, action, pk_set, **kwargs):
@@ -166,13 +149,15 @@ def update_issue_modified_on_credit_role_change(sender, instance, action, pk_set
     bump_model_version(ModelLabel.ISSUE)
 
 
-def bump_owner_modified_on_m2m_change(owner_model, cache_label, instance, action, pk_set):
+def bump_owner_modified_on_m2m_change(owner_model, cache_label, instance, action, pk_set, **kwargs):
     """Shared logic for m2m_changed signals on a plain (non-Issue) m2m field
     where only the owning side's own cached response embeds the relation --
     Character.creators/teams/universes, Team.creators/universes,
     Series.genres. Bumps the owner's `modified` (self-invalidates its
     detail cache, which embeds the relation) and its cache version (its
     list response also embeds `modified`, which just changed).
+
+    Connected in comicsdb/apps.py as ``partial(receiver, owner_model, cache_label)``.
     """
     if action not in ("post_add", "post_remove", "post_clear"):
         return
@@ -188,42 +173,6 @@ def bump_owner_modified_on_m2m_change(owner_model, cache_label, instance, action
         # for post_clear from this side, so skip (affected owners unknown).
         owner_model.objects.filter(pk__in=pk_set).update(modified=now)
         bump_model_version(cache_label)
-
-
-def update_character_modified_on_creator_change(sender, instance, action, pk_set, **kwargs):
-    from comicsdb.models import Character  # noqa: PLC0415
-
-    bump_owner_modified_on_m2m_change(Character, ModelLabel.CHARACTER, instance, action, pk_set)
-
-
-def update_character_modified_on_team_change(sender, instance, action, pk_set, **kwargs):
-    from comicsdb.models import Character  # noqa: PLC0415
-
-    bump_owner_modified_on_m2m_change(Character, ModelLabel.CHARACTER, instance, action, pk_set)
-
-
-def update_character_modified_on_universe_change(sender, instance, action, pk_set, **kwargs):
-    from comicsdb.models import Character  # noqa: PLC0415
-
-    bump_owner_modified_on_m2m_change(Character, ModelLabel.CHARACTER, instance, action, pk_set)
-
-
-def update_team_modified_on_creator_change(sender, instance, action, pk_set, **kwargs):
-    from comicsdb.models import Team  # noqa: PLC0415
-
-    bump_owner_modified_on_m2m_change(Team, ModelLabel.TEAM, instance, action, pk_set)
-
-
-def update_team_modified_on_universe_change(sender, instance, action, pk_set, **kwargs):
-    from comicsdb.models import Team  # noqa: PLC0415
-
-    bump_owner_modified_on_m2m_change(Team, ModelLabel.TEAM, instance, action, pk_set)
-
-
-def update_series_modified_on_genre_change(sender, instance, action, pk_set, **kwargs):
-    from comicsdb.models import Series  # noqa: PLC0415
-
-    bump_owner_modified_on_m2m_change(Series, ModelLabel.SERIES, instance, action, pk_set)
 
 
 def update_series_modified_on_associated_change(sender, instance, action, pk_set, **kwargs):

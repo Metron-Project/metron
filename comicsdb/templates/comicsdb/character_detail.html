@@ -162,10 +162,10 @@
                                 </li>
                             {% endfor %}
                         </ul>
-                        {% if series_count > 30 %}
+                        {% if series_count > detail_page_size %}
                             <div id="series-load-more-wrapper" class="has-text-centered mt-4">
                                 <button class="button is-link"
-                                        hx-get="{% url 'character:series-load-more' character.slug %}?offset=30"
+                                        hx-get="{% url 'character:series-load-more' character.slug %}?offset={{ detail_page_size }}"
                                         hx-target="#series-list"
                                         hx-swap="beforeend"
                                         hx-indicator="#series-spinner">

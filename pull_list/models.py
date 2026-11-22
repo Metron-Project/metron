@@ -4,6 +4,7 @@ from django.urls import reverse
 from django.utils.translation import gettext_lazy as _
 
 from comicsdb.models.series import Series
+from users.managers import OnePerUserManager
 from users.models import CustomUser
 
 
@@ -21,6 +22,8 @@ class PullList(models.Model):
     )
     modified = models.DateTimeField(auto_now=True)
     created_on = models.DateTimeField(db_default=Now())
+
+    objects = OnePerUserManager()
 
     class Meta:
         ordering = ["user"]

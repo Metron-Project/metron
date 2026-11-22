@@ -174,10 +174,10 @@
                             </div>
                         {% endfor %}
                     </div>
-                    {% if member_count > 30 %}
+                    {% if member_count > detail_page_size %}
                         <div id="members-load-more-wrapper" class="has-text-centered mt-4">
                             <button class="button is-link"
-                                    hx-get="{% url 'team:members-load-more' team.slug %}?offset=30"
+                                    hx-get="{% url 'team:members-load-more' team.slug %}?offset={{ detail_page_size }}"
                                     hx-target="#members-container"
                                     hx-swap="beforeend"
                                     hx-indicator="#members-spinner">

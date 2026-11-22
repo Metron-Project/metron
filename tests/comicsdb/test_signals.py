@@ -6,8 +6,7 @@ from django.utils import timezone
 from comicsdb.models import Arc, Character, Issue, Series, Team
 from comicsdb.signals import (
     update_related_modified,
-    update_series_modified_on_issue_delete,
-    update_series_modified_on_issue_save,
+    update_series_modified_on_issue_change,
 )
 
 
@@ -17,7 +16,7 @@ def test_issue_save_updates_series_modified_on_create(basic_issue):
     basic_issue.series.refresh_from_db()
     old_modified = basic_issue.series.modified
 
-    update_series_modified_on_issue_save(sender=Issue, instance=basic_issue, created=True)
+    update_series_modified_on_issue_change(sender=Issue, instance=basic_issue, created=True)
     basic_issue.series.refresh_from_db()
     assert basic_issue.series.modified > old_modified
 
@@ -28,7 +27,7 @@ def test_issue_save_updates_series_modified_on_update(basic_issue):
     basic_issue.series.refresh_from_db()
     old_modified = basic_issue.series.modified
 
-    update_series_modified_on_issue_save(sender=Issue, instance=basic_issue, created=False)
+    update_series_modified_on_issue_change(sender=Issue, instance=basic_issue, created=False)
     basic_issue.series.refresh_from_db()
     assert basic_issue.series.modified > old_modified
 
@@ -39,7 +38,7 @@ def test_issue_delete_updates_series_modified(basic_issue):
     basic_issue.series.refresh_from_db()
     old_modified = basic_issue.series.modified
 
-    update_series_modified_on_issue_delete(sender=Issue, instance=basic_issue)
+    update_series_modified_on_issue_change(sender=Issue, instance=basic_issue)
     basic_issue.series.refresh_from_db()
     assert basic_issue.series.modified > old_modified
 

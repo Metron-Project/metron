@@ -14,11 +14,12 @@ from comicsdb.models import Series, SeriesType
 from comicsdb.models.issue import Issue
 from comicsdb.views.constants import PAGINATE_BY
 from comicsdb.views.history import HistoryListView
-from comicsdb.views.issue_list_helpers import SORT_OPTIONS, apply_sort
+from comicsdb.views.issue_list_helpers import apply_sort
 from comicsdb.views.mixins import (
     AttributionCreateMixin,
     AttributionUpdateMixin,
     SlugRedirectView,
+    SortableIssueListMixin,
 )
 from comicsdb.views.series_list_helpers import build_active_filters
 from issue_ratings.models import IssueRating
@@ -74,7 +75,7 @@ class SeriesList(ListView):
         return context
 
 
-class SeriesIssueList(ListView):
+class SeriesIssueList(SortableIssueListMixin, ListView):
     template_name = "comicsdb/issue_list.html"
     paginate_by = PAGINATE_BY
 
@@ -86,8 +87,6 @@ class SeriesIssueList(ListView):
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         context["title"] = self.series
-        context["sort_options"] = SORT_OPTIONS
-        context["current_sort"] = self.request.GET.get("sort", "")
         return context
 
 

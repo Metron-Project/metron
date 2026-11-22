@@ -2224,6 +2224,11 @@ msgstr[1] "Personaggi (%(counter)s)"
 msgid "No image for %(character)s"
 msgstr "Nessuna immagine per %(character)s"
 
+#: comicsdb/templates/comicsdb/partials/thumbnail_link_card.html:8
+#, python-format
+msgid "No image for %(name)s"
+msgstr "Nessuna immagine per %(name)s"
+
 #: comicsdb/templates/comicsdb/issue_detail.html:411
 #: comicsdb/templates/comicsdb/partials/issue_character_items.html:40
 #: comicsdb/templates/comicsdb/partials/universe_character_items.html:40

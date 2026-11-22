@@ -174,11 +174,11 @@
                             </div>
                         {% endfor %}
                     </div>
-                    {% if universe.character_count > 30 %}
+                    {% if universe.character_count > detail_page_size %}
                         <div id="characters-load-more-wrapper"
                              class="column is-12 has-text-centered mt-4">
                             <button class="button is-link"
-                                    hx-get="{% url 'universe:characters-load-more' universe.slug %}?offset=30"
+                                    hx-get="{% url 'universe:characters-load-more' universe.slug %}?offset={{ detail_page_size }}"
                                     hx-target="#characters-container"
                                     hx-swap="beforeend"
                                     hx-indicator="#characters-spinner">
@@ -230,11 +230,11 @@
                             </div>
                         {% endfor %}
                     </div>
-                    {% if universe.team_count > 30 %}
+                    {% if universe.team_count > detail_page_size %}
                         <div id="teams-load-more-wrapper"
                              class="column is-12 has-text-centered mt-4">
                             <button class="button is-link"
-                                    hx-get="{% url 'universe:teams-load-more' universe.slug %}?offset=30"
+                                    hx-get="{% url 'universe:teams-load-more' universe.slug %}?offset={{ detail_page_size }}"
                                     hx-target="#teams-container"
                                     hx-swap="beforeend"
                                     hx-indicator="#teams-spinner">
@@ -274,10 +274,10 @@
                                 </li>
                             {% endfor %}
                         </ul>
-                        {% if series_count > 30 %}
+                        {% if series_count > detail_page_size %}
                             <div id="series-load-more-wrapper" class="has-text-centered mt-4">
                                 <button class="button is-link"
-                                        hx-get="{% url 'universe:series-load-more' universe.slug %}?offset=30"
+                                        hx-get="{% url 'universe:series-load-more' universe.slug %}?offset={{ detail_page_size }}"
                                         hx-target="#series-list"
                                         hx-swap="beforeend"
                                         hx-indicator="#series-spinner">

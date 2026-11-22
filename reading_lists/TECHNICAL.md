@@ -282,7 +282,7 @@ class Meta:
 
 Most views are class-based views (CBVs) inheriting from Django's generic views; several inline-editing/HTMX endpoints are plain function-based views decorated with `@login_required`/`@require_POST`.
 
-**File:** `reading_lists/views.py`
+**Files:** `reading_lists/views/` (one module per area: `lists`, `detail`, `edit`, `items`, `inline` for the HTMX endpoints, and `mixins`), plus `reading_lists/services.py` for the permission helpers, `add_issues_to_reading_list()` and `build_reading_list_breakdown_context()`
 
 ### Permission Helpers
 
@@ -369,7 +369,7 @@ class ReadingListDetailView(DetailView):
 - `user_rating`: User's own rating, pulled from the prefetched `user_rating_list` (if authenticated and has rated)
 - `average_rating` / `rating_count`: From the annotated queryset
 - `start_year` / `end_year`: From the annotated queryset
-- `issue_type_breakdown`, `series_breakdown`, `publisher_breakdown`, `featured_creators`, `top_characters`: All five computed by `build_reading_list_breakdown_context(reading_list_items)`, a module-level function in `reading_lists/views.py` (not a view method) — see below
+- `issue_type_breakdown`, `series_breakdown`, `publisher_breakdown`, `featured_creators`, `top_characters`: All five computed by `build_reading_list_breakdown_context(reading_list_items)`, a function in `reading_lists/services.py` (not a view method) — see below
 
 **`build_reading_list_breakdown_context()`:**
 
@@ -377,7 +377,7 @@ A standalone function, separate from `get_context_data()`, that takes the prefet
 
 - `issue_type_breakdown`: Per-`issue_type` counts (Prologue/Core/Tie-In/Epilogue) with a display label and bar color (from module-level `_ISSUE_TYPE_META`), computed in Python from the items
 - `series_breakdown` / `publisher_breakdown`: Per-series and per-publisher issue counts, also computed from the items (no extra queries)
-- `featured_creators`: Top 6 creators by issue count across the list's issues (roles in module-level `_CREDIT_ROLE_NAMES`), with a `roles` string ("Writer", "Artist", or both) built from `_CREDIT_ROLE_DISPLAY`
+- `featured_creators`: Top 6 creators by issue count across the list's issues (roles in module-level `_CREDIT_ROLE_NAMES`, built from the shared `WRITER_ROLE_NAMES` and `ARTIST_ROLE_NAMES` in `comicsdb/models/credits.py`, so secondary roles such as Plot, Layouts and Breakdowns count too), with a `roles` string ("Writer", "Artist", or both) built from `_CREDIT_ROLE_DISPLAY`
 - `top_characters`: Top 12 characters by appearance count across the list's issues
 
 **Query Optimizations:**
@@ -894,7 +894,7 @@ Designed for adding complete story arcs that span multiple series (crossover eve
 
 ### Permission Strategy
 
-The app uses `UserPassesTestMixin` for permission checks rather than object-level permissions. Rather than each view duplicating the ownership/group logic in its own `test_func()`, two shared functions in `reading_lists/views.py` are reused everywhere (see [Permission Helpers](#views-and-urls)):
+The app uses `UserPassesTestMixin` for permission checks rather than object-level permissions. Rather than each view duplicating the ownership/group logic in its own `test_func()`, two shared functions in `reading_lists/services.py` are reused everywhere (see [Permission Helpers](#views-and-urls)):
 
 ```python
 def can_manage_reading_list(user, reading_list):
@@ -914,7 +914,7 @@ def can_assign_reading_list_to_metron(user):
 
 **`ReadingListFromSlugMixin` / `ManageReadingListMixin`:**
 
-Several views need the same three things: fetch the parent `ReadingList` from the `slug` URL kwarg, gate access with `can_manage_reading_list()`, and redirect back to the detail page on success. Rather than repeating `dispatch()`/`test_func()`/`get_success_url()` per view, these are factored into two mixins in `reading_lists/views.py`:
+Several views need the same three things: fetch the parent `ReadingList` from the `slug` URL kwarg, gate access with `can_manage_reading_list()`, and redirect back to the detail page on success. Rather than repeating `dispatch()`/`test_func()`/`get_success_url()` per view, these are factored into two mixins in `reading_lists/views/mixins.py`:
 
 ```python
 class ReadingListFromSlugMixin:
@@ -1202,7 +1202,7 @@ class ReadingListViewFilter(df.FilterSet):
 - `q` (`QuickSearchFilter`): Splits the query on whitespace and AND-matches every term against `name` (unaccent-aware) — distinct from `SearchReadingListListView`'s `SearchMixin`-based search, which also matches `username`/`attribution_source` and is used only on the dedicated `/search/` URL
 - Individual field filters (`name`, `username`, `attribution_source`, `list_type`, `publisher`, `is_private`, `average_rating__gte`) power the collapsible "Advanced Filters" panel
 - Integrated with `ReadingListListView` (applied via `filtered.qs` in `get_queryset()`) — **not** used by `SearchReadingListListView`, which applies `q` through `SearchMixin` instead
-- Removable filter chips are built separately in `build_active_filters()` (`reading_lists/views.py`), not by this FilterSet
+- Removable filter chips are built separately in `build_active_filters()` (`reading_lists/views/lists.py`), not by this FilterSet
 
 **Rating Filter Options:**
 
@@ -1561,7 +1561,7 @@ return queryset.visible_to(request.user)
 - `Prefetch()`: Fine-grained control over prefetch querysets
 - **Rating Optimizations**: All rating data fetched in initial query
 - **Year Range Annotations**: Replaces the `start_year`/`end_year` model properties with database aggregation for list/detail views (the properties still exist on the model and run their own queries if accessed directly, e.g. from a shell or the import command)
-- **Breakdown/Stats Extraction**: `issue_type_breakdown`, `series_breakdown`, `publisher_breakdown`, `featured_creators`, and `top_characters` are all computed by `build_reading_list_breakdown_context()` (module-level function in `reading_lists/views.py`) from the already-prefetched `reading_list_items`, called from `ReadingListDetailView.get_context_data()` — avoids a separate query per breakdown and avoids the `publishers` property's own `Publisher.objects.filter(...).distinct()` query
+- **Breakdown/Stats Extraction**: `issue_type_breakdown`, `series_breakdown`, `publisher_breakdown`, `featured_creators`, and `top_characters` are all computed by `build_reading_list_breakdown_context()` (in `reading_lists/services.py`) from the already-prefetched `reading_list_items`, called from `ReadingListDetailView.get_context_data()` — avoids a separate query per breakdown and avoids the `publishers` property's own `Publisher.objects.filter(...).distinct()` query
 
 ### Indexes
 
@@ -1724,7 +1724,7 @@ python manage.py import_reading_lists <path> [<path> ...] [--dry-run] [--skip-mi
 
 ### REST API Endpoints
 
-The reading lists feature provides read-only REST API endpoints via `ReadingListViewSet` (`api/views.py`), registered at basename `reading_list`. Complete API documentation is available in the main [API README](/api/README.md).
+The reading lists feature provides read-only REST API endpoints via `ReadingListViewSet` (`api/v1_0/views/reading_list.py`), registered at basename `reading_list`. Complete API documentation is available in the main [API README](/api/README.md).
 
 **Available Endpoints:**
 
@@ -1792,7 +1792,12 @@ For complete API documentation including pagination and response formats, see th
 
 **Files:**
 
-- `tests/reading_lists/test_views.py`
+- `tests/reading_lists/test_list_views.py`
+- `tests/reading_lists/test_detail_views.py`
+- `tests/reading_lists/test_crud_views.py`
+- `tests/reading_lists/test_item_views.py`
+- `tests/reading_lists/test_bulk_add_views.py`
+- `tests/reading_lists/test_rating_and_issue_type_views.py`
 - `tests/reading_lists/test_forms.py`
 - `tests/reading_lists/test_models.py`
 - `tests/reading_lists/test_signals.py`

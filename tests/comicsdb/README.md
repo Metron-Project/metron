@@ -27,7 +27,10 @@ Tests for the web interface views and templates:
 - [test_creator_views.py](test_creator_views.py) - Creator detail and list views
 - [test_home_view.py](test_home_view.py) - Homepage and dashboard views
 - [test_imprint_views.py](test_imprint_views.py) - Imprint detail and list views
-- [test_issue_views.py](test_issue_views.py) - Issue detail and list views
+- [test_issue_duplicate_credits.py](test_issue_duplicate_credits.py) - Copying credits from the previous issue
+- [test_issue_list_filters.py](test_issue_list_filters.py) - Issue list filtering
+- [test_issue_reprint_sync.py](test_issue_reprint_sync.py) - Syncing characters, teams and stories from reprints
+- [test_issue_views.py](test_issue_views.py) - Issue detail, create/update, list, search and history views
 - [test_publisher_views.py](test_publisher_views.py) - Publisher detail and list views
 - [test_series_views.py](test_series_views.py) - Series detail and list views
 - [test_team_views.py](test_team_views.py) - Team detail and list views

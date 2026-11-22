@@ -41,7 +41,7 @@ def get_pagination_range(context, page_obj, paginator):
     page_range = range(max(1, current_page - 2), min(total_pages + 1, current_page + 3))
 
     for page_num in range(1, total_pages + 1):
-        if page_num == 1 or page_num == total_pages or page_num in page_range:  # noqa: PLR1714
+        if page_num in (1, total_pages) or page_num in page_range:
             pages.append(page_num)
         elif pages and pages[-1] != "ellipsis":
             pages.append("ellipsis")

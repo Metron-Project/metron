@@ -1,6 +1,5 @@
 import logging
-from datetime import date, datetime
-from typing import Any
+from datetime import date
 
 from django.contrib import messages
 from django.contrib.auth.mixins import LoginRequiredMixin, PermissionRequiredMixin
@@ -23,25 +22,31 @@ from comicsdb.forms.issue import MINIMUM_YEAR, IssueForm
 from comicsdb.forms.variant import VariantFormset
 from comicsdb.models import Credits, Issue, Role
 from comicsdb.models.attribution import Attribution
-from comicsdb.models.series import SeriesType
 from comicsdb.models.variant import Variant
+from comicsdb.release_week import release_week_bounds
+from comicsdb.services import (
+    CreditDuplicationBlockedError,
+    ReprintContent,
+    apply_reprint_content,
+    collect_reprint_content,
+    copy_credits,
+    credit_duplication_source,
+    reprint_sync_blocker,
+    split_variant_cover_credits,
+    supports_credit_duplication,
+    supports_reprint_sync,
+)
 from comicsdb.views.constants import DETAIL_PAGINATE_BY, PAGINATE_BY
 from comicsdb.views.history import HistoryListView
-from comicsdb.views.issue_list_helpers import (
-    SORT_OPTIONS,
-    apply_sort,
-    build_active_filters,
-)
-from comicsdb.views.mixins import LazyLoadMixin, SlugRedirectView
+from comicsdb.views.issue_list_helpers import apply_sort
+from comicsdb.views.mixins import FilterableIssueListMixin, LazyLoadMixin, SlugRedirectView
 from issue_ratings.models import IssueRating
 from wish_list.models import WishListItem
-
-TOTAL_WEEKS_YEAR = 52
 
 LOGGER = logging.getLogger(__name__)
 
 
-class IssueList(ListView):
+class IssueList(FilterableIssueListMixin, ListView):
     model = Issue
     paginate_by = PAGINATE_BY
 
@@ -52,18 +57,6 @@ class IssueList(ListView):
         # Apply filters
         filtered = IssueViewFilter(self.request.GET, queryset=queryset)
         return apply_sort(filtered.qs, self.request)
-
-    def get_context_data(self, **kwargs: Any) -> dict[str, Any]:
-        context = super().get_context_data(**kwargs)
-        series_types = list(SeriesType.objects.values("id", "name").order_by("name"))
-        context["series_type"] = series_types
-        # Active filters = any GET param that isn't paging or sorting.
-        context["has_active_filters"] = any(key not in ("page", "sort") for key in self.request.GET)
-        type_names = {str(t["id"]): t["name"] for t in series_types}
-        context["active_filters"] = build_active_filters(self.request, type_names=type_names)
-        context["sort_options"] = SORT_OPTIONS
-        context["current_sort"] = self.request.GET.get("sort", "")
-        return context
 
 
 class IssueDetail(DetailView):
@@ -184,23 +177,11 @@ class IssueDetail(DetailView):
         if credits_count > 0:
             context["credits"] = credits_qs[:DETAIL_PAGINATE_BY]
 
-        characters = list(issue.characters.all())
-        characters_count = len(characters)
-        context["characters_count"] = characters_count
-        if characters_count > 0:
-            context["characters"] = characters[:DETAIL_PAGINATE_BY]
-
-        teams = list(issue.teams.all())
-        teams_count = len(teams)
-        context["teams_count"] = teams_count
-        if teams_count > 0:
-            context["teams"] = teams[:DETAIL_PAGINATE_BY]
-
-        universes = list(issue.universes.all())
-        universes_count = len(universes)
-        context["universes_count"] = universes_count
-        if universes_count > 0:
-            context["universes"] = universes[:DETAIL_PAGINATE_BY]
+        # Prefetched in get_queryset(), so counting the full list costs no query.
+        for relation in ("characters", "teams", "universes"):
+            related = list(getattr(issue, relation).all())
+            context[f"{relation}_count"] = len(related)
+            context[relation] = related[:DETAIL_PAGINATE_BY]
 
         if self.request.user.is_authenticated:
             context["on_wish_list"] = WishListItem.objects.filter(
@@ -212,6 +193,8 @@ class IssueDetail(DetailView):
                 user=self.request.user,
             ).first()
 
+        context["show_duplicate_credits"] = supports_credit_duplication(issue)
+        context["show_reprint_sync"] = supports_reprint_sync(issue)
         context["can_rate"] = self.request.user.is_authenticated and issue.is_released
         context["average_rating"] = issue.average_rating
         context["rating_count"] = issue.rating_count
@@ -432,6 +415,27 @@ class IssueAttributionAddRowView(IssueFormsetAddRowView):
     prefix = "attribution"
 
 
+def _duplicate_credits_result(copied: int, skipped: int, previous_issue: Issue):
+    """Return ``(message_level, message)`` describing what was duplicated."""
+    if copied and skipped:
+        return messages.SUCCESS, _(
+            "Successfully duplicated %(credits)s credit(s) from %(issue)s."
+            " Skipped %(skipped)s variant cover credit(s)."
+        ) % {"credits": copied, "issue": previous_issue, "skipped": skipped}
+    if copied:
+        return messages.SUCCESS, _(
+            "Successfully duplicated %(credits)s credit(s) from %(issue)s."
+        ) % {"credits": copied, "issue": previous_issue}
+    if skipped:
+        return messages.INFO, _(
+            "No credits were duplicated. Skipped %(skipped)s variant cover credit(s)"
+            " from %(issue)s."
+        ) % {"skipped": skipped, "issue": previous_issue}
+    return messages.INFO, _("No credits found in %(issue)s to duplicate.") % {
+        "issue": previous_issue
+    }
+
+
 class IssueDuplicateCreditsView(LoginRequiredMixin, View):
     """
     View to duplicate credits from the previous issue in the same series.
@@ -449,132 +453,50 @@ class IssueDuplicateCreditsView(LoginRequiredMixin, View):
         Returns:
             HttpResponseRedirect to the issue detail page
         """
+        redirect = HttpResponseRedirect(reverse("issue:detail", args=[slug]))
         issue = get_object_or_404(
-            Issue.objects.select_related("series", "series__publisher").prefetch_related(
-                "credits_set"
-            ),
-            slug=slug,
+            Issue.objects.select_related("series", "series__publisher"), slug=slug
         )
 
-        # Check if publisher is DC Comics or Marvel (not allowed for credit duplication)
-        excluded_publishers = ["DC Comics", "Marvel"]
-        if issue.series.publisher.name in excluded_publishers:
-            messages.error(
-                request,
-                _("Credit duplication is not allowed for %(publisher)s issues.")
-                % {"publisher": issue.series.publisher.name},
-            )
-            return HttpResponseRedirect(reverse("issue:detail", args=[slug]))
-
-        # Check if issue already has credits
-        if issue.credits_set.exists():
-            messages.info(
-                request,
-                _(
-                    "%(issue)s already has credits assigned. "
-                    "Duplicate operation cancelled to preserve existing data."
-                )
-                % {"issue": issue},
-            )
-            return HttpResponseRedirect(reverse("issue:detail", args=[slug]))
-
-        # Try to get the previous issue by cover_date
         try:
-            previous_issue = issue.get_previous_by_cover_date(series=issue.series)
-        except ObjectDoesNotExist:
-            messages.warning(
-                request, _("No previous issue found for %(issue)s.") % {"issue": issue}
-            )
-            return HttpResponseRedirect(reverse("issue:detail", args=[slug]))
+            previous_issue, previous_credits = credit_duplication_source(issue)
+        except CreditDuplicationBlockedError as blocked:
+            messages.add_message(request, blocked.level, blocked.message)
+            return redirect
 
-        # Get all credits from the previous issue
-        previous_credits = Credits.objects.filter(issue=previous_issue).prefetch_related("role")
+        to_copy, skipped = split_variant_cover_credits(previous_credits, issue)
+        copy_credits(issue, to_copy, request.user)
+        LOGGER.info(
+            "Duplicated %d credit(s) from %s to %s by %s (skipped %d cover credit(s))",
+            len(to_copy),
+            previous_issue,
+            issue,
+            request.user,
+            len(skipped),
+        )
 
-        if not previous_credits.exists():
-            messages.info(
-                request,
-                _("No credits found in %(issue)s to duplicate.") % {"issue": previous_issue},
-            )
-            return HttpResponseRedirect(reverse("issue:detail", args=[slug]))
+        level, message = _duplicate_credits_result(len(to_copy), len(skipped), previous_issue)
+        messages.add_message(request, level, message)
+        return redirect
 
-        # Get the Cover role to check for variant cover credits
-        try:
-            cover_role = Role.objects.get(name="Cover")
-        except Role.DoesNotExist:
-            cover_role = None
 
-        # Duplicate the credits
-        credits_count = 0
-        skipped_count = 0
-        max_roles_for_cover_skip = 2
+# How many skipped reprint names to list in the warning before truncating.
+MAX_SKIPPED_REPRINT_NAMES = 3
 
-        with transaction.atomic():
-            for credit in previous_credits:
-                roles = credit.role.all()
 
-                # Skip credits that are likely variant cover credits
-                # (credits with only one role and that role is "Cover")
-                if cover_role and len(roles) < max_roles_for_cover_skip and cover_role in roles:
-                    skipped_count += 1
-                    LOGGER.info(
-                        "Skipping possible variant cover credit for '%s' when duplicating to %s",
-                        credit.creator,
-                        issue,
-                    )
-                    continue
+def _reprint_sync_summary(content: ReprintContent) -> str:
+    """Return e.g. "3 character(s), 1 team(s) and 2 story title(s)"."""
+    parts = []
+    if content.characters:
+        parts.append(_("%(count)s character(s)") % {"count": len(content.characters)})
+    if content.teams:
+        parts.append(_("%(count)s team(s)") % {"count": len(content.teams)})
+    if content.stories:
+        parts.append(_("%(count)s story title(s)") % {"count": len(content.stories)})
 
-                # Create new credit for current issue
-                new_credit = Credits.objects.create(issue=issue, creator=credit.creator)
-                # Copy the roles (many-to-many relationship)
-                new_credit.role.set(roles)
-                credits_count += 1
-
-            # Update edited_by field
-            issue.edited_by = request.user
-            issue.save(update_fields=["edited_by", "modified"])
-
-            LOGGER.info(
-                "Duplicated %d credit(s) from %s to %s by %s (skipped %d cover credit(s))",
-                credits_count,
-                previous_issue,
-                issue,
-                request.user,
-                skipped_count,
-            )
-
-        # Provide appropriate feedback based on what was duplicated
-        if credits_count > 0:
-            if skipped_count > 0:
-                message = _(
-                    "Successfully duplicated %(credits)s credit(s) from %(issue)s."
-                    " Skipped %(skipped)s variant cover credit(s)."
-                ) % {
-                    "credits": credits_count,
-                    "issue": previous_issue,
-                    "skipped": skipped_count,
-                }
-            else:
-                message = _("Successfully duplicated %(credits)s credit(s) from %(issue)s.") % {
-                    "credits": credits_count,
-                    "issue": previous_issue,
-                }
-            messages.success(request, message)
-        elif skipped_count > 0:
-            messages.info(
-                request,
-                _(
-                    "No credits were duplicated. Skipped %(skipped)s variant cover credit(s)"
-                    " from %(issue)s."
-                )
-                % {"skipped": skipped_count, "issue": previous_issue},
-            )
-        else:
-            messages.info(
-                request,
-                _("No credits found in %(issue)s to duplicate.") % {"issue": previous_issue},
-            )
-
-        return HttpResponseRedirect(reverse("issue:detail", args=[slug]))
+    if len(parts) > 1:
+        return _("%(first)s and %(last)s") % {"first": ", ".join(parts[:-1]), "last": parts[-1]}
+    return parts[0]
 
 
 class IssueReprintSyncView(LoginRequiredMixin, View):
@@ -583,7 +505,7 @@ class IssueReprintSyncView(LoginRequiredMixin, View):
     to the current issue.
     """
 
-    def post(self, request, slug):  # noqa: PLR0912, PLR0915
+    def post(self, request, slug):
         """
         Add characters, teams, and story titles from all reprinted issues to the current issue.
         Only works for Trade Paperback, Omnibus, and Hardcover series types.
@@ -600,6 +522,7 @@ class IssueReprintSyncView(LoginRequiredMixin, View):
         Returns:
             HttpResponseRedirect to the issue detail page
         """
+        redirect = HttpResponseRedirect(reverse("issue:detail", args=[slug]))
         issue = get_object_or_404(
             Issue.objects.select_related("series", "series__series_type").prefetch_related(
                 "reprints", "reprints__characters", "reprints__teams", "characters", "teams"
@@ -607,135 +530,35 @@ class IssueReprintSyncView(LoginRequiredMixin, View):
             slug=slug,
         )
 
-        # Check if series type is Trade Paperback or Omnibus
-        allowed_types = ["Trade Paperback", "Omnibus", "Hardcover"]
-        if issue.series.series_type.name not in allowed_types:
-            type_list = f"{', '.join(allowed_types[:-1])} and {allowed_types[-1]}"
-            messages.error(
-                request,
-                _(
-                    "This function only works for %(types)s series types. "
-                    "This issue is of type '%(current_type)s'."
-                )
-                % {"types": type_list, "current_type": issue.series.series_type.name},
-            )
-            return HttpResponseRedirect(reverse("issue:detail", args=[slug]))
+        if blocker := reprint_sync_blocker(issue):
+            level, message = blocker
+            messages.add_message(request, level, message)
+            return redirect
 
-        # Check if there are any reprints
-        if not issue.reprints.exists():
-            messages.warning(
-                request, _("No reprinted issues found for %(issue)s.") % {"issue": issue}
-            )
-            return HttpResponseRedirect(reverse("issue:detail", args=[slug]))
+        content = collect_reprint_content(issue)
 
-        # Check if issue already has characters, teams, or stories
-        has_stories = issue.name and len(issue.name) > 0
-        if issue.characters.exists() or issue.teams.exists() or has_stories:
-            messages.info(
-                request,
-                _(
-                    "%(issue)s already has characters, teams, or stories assigned. "
-                    "Sync operation cancelled to preserve existing data."
-                )
-                % {"issue": issue},
-            )
-            return HttpResponseRedirect(reverse("issue:detail", args=[slug]))
-
-        # Collect all characters and teams from reprints
-        # Only include reprints with one story title or less
-        characters_to_add = set()
-        teams_to_add = set()
-        stories_to_add = []
-        skipped_reprints = []
-
-        for reprint in issue.reprints.all():
-            story_count = len(reprint.name) if reprint.name else 0
-            if story_count > 1:
-                skipped_reprints.append(str(reprint))
-                continue
-
-            characters_to_add.update(reprint.characters.all())
-            teams_to_add.update(reprint.teams.all())
-
-            # Add story title or [Untitled] if no story
-            if reprint.name and len(reprint.name) > 0:
-                stories_to_add.append(reprint.name[0])
-            else:
-                stories_to_add.append("[Untitled]")
-
-        # Inform user if any reprints were skipped
-        if skipped_reprints:
-            reprint_names = ", ".join(skipped_reprints[:3])
-            if len(skipped_reprints) > 3:  # noqa: PLR2004
+        if skipped := content.skipped_reprints:
+            reprint_names = ", ".join(skipped[:MAX_SKIPPED_REPRINT_NAMES])
+            if len(skipped) > MAX_SKIPPED_REPRINT_NAMES:
                 reprint_names += "..."
             messages.warning(
                 request,
                 _("Skipped %(count)s reprinted issue(s) with multiple story titles: %(names)s")
-                % {"count": len(skipped_reprints), "names": reprint_names},
+                % {"count": len(skipped), "names": reprint_names},
             )
 
-        # Check if we found any characters or teams to add
-        if not characters_to_add and not teams_to_add:
+        if not content.characters and not content.teams:
             messages.info(request, _("No characters or teams found in the reprinted issues."))
-            return HttpResponseRedirect(reverse("issue:detail", args=[slug]))
+            return redirect
 
-        # Add all characters, teams, and stories from reprints
-        with transaction.atomic():
-            if characters_to_add:
-                issue.characters.add(*characters_to_add)
-                LOGGER.info(
-                    "Added %d characters to %s from reprints by %s",
-                    len(characters_to_add),
-                    issue,
-                    request.user,
-                )
-
-            if teams_to_add:
-                issue.teams.add(*teams_to_add)
-                LOGGER.info(
-                    "Added %d teams to %s from reprints by %s",
-                    len(teams_to_add),
-                    issue,
-                    request.user,
-                )
-
-            # Add stories to the issue's name field
-            if stories_to_add:
-                issue.name = stories_to_add
-                LOGGER.info(
-                    "Added %d story title(s) to %s from reprints by %s",
-                    len(stories_to_add),
-                    issue,
-                    request.user,
-                )
-
-            # Update edited_by field
-            issue.edited_by = request.user
-            issue.save(update_fields=["edited_by", "modified", "name"])
-
-        # Provide feedback
-        message_parts = []
-        if characters_to_add:
-            message_parts.append(_("%(count)s character(s)") % {"count": len(characters_to_add)})
-        if teams_to_add:
-            message_parts.append(_("%(count)s team(s)") % {"count": len(teams_to_add)})
-        if stories_to_add:
-            message_parts.append(_("%(count)s story title(s)") % {"count": len(stories_to_add)})
-
-        if len(message_parts) > 1:
-            parts_text = _("%(first)s and %(last)s") % {
-                "first": ", ".join(message_parts[:-1]),
-                "last": message_parts[-1],
-            }
-        else:
-            parts_text = message_parts[0]
+        apply_reprint_content(issue, content, request.user)
 
         messages.success(
             request,
-            _("Successfully added %(parts)s from reprinted issues.") % {"parts": parts_text},
+            _("Successfully added %(parts)s from reprinted issues.")
+            % {"parts": _reprint_sync_summary(content)},
         )
-
-        return HttpResponseRedirect(reverse("issue:detail", args=[slug]))
+        return redirect
 
 
 class IssueDelete(PermissionRequiredMixin, DeleteView):
@@ -749,142 +572,56 @@ class IssueHistory(HistoryListView):
     model = Issue
 
 
-class WeekList(ListView):
+class _ReleaseWeekListBase(FilterableIssueListMixin, ListView):
+    """Issues by store date, relative to an ISO week (Monday-Sunday).
+
+    Subclasses set ``week_offset`` (0 = this week, 1 = next week) and ``future``.
+    A non-future view lists that week's issues; a future view lists everything
+    released after it.
+    """
+
     model = Issue
     paginate_by = PAGINATE_BY
     template_name = "comicsdb/week_list.html"
+    week_offset = 0
+    future = False
 
-    def get_week_info(self):
-        """Get the current year and week number."""
-        year, week, _ = date.today().isocalendar()
-        return year, week
+    def get_week_start(self) -> date:
+        """Return the Monday of the target ISO week."""
+        return release_week_bounds(self.week_offset)[0]
 
     def get_queryset(self):
-        year, week = self.get_week_info()
-        # Get the Monday of the ISO week (start of week)
-        week_start = datetime.strptime(f"{year}-{week}-1", "%G-%V-%u").date()
-        # Get the Sunday of the ISO week (end of week)
-        week_end = datetime.strptime(f"{year}-{week}-7", "%G-%V-%u").date()
-
-        queryset = Issue.objects.filter(
-            store_date__gte=week_start, store_date__lte=week_end
-        ).select_related("series", "series__series_type", "series__publisher")
-        # Apply filters
-        filtered = IssueViewFilter(self.request.GET, queryset=queryset)
-        return apply_sort(filtered.qs, self.request)
-
-    def get_context_data(self, **kwargs):
-        year, week = self.get_week_info()
-        # The '1' in the format string gives the date for Monday
-        release_day = datetime.strptime(f"{year}-{week}-1", "%G-%V-%u")
-        context = super().get_context_data(**kwargs)
-        context["release_day"] = release_day
-        context["future"] = False
-        series_types = list(SeriesType.objects.values("id", "name").order_by("name"))
-        context["series_type"] = series_types
-        # Active filters = any GET param that isn't paging or sorting.
-        context["has_active_filters"] = any(key not in ("page", "sort") for key in self.request.GET)
-        type_names = {str(t["id"]): t["name"] for t in series_types}
-        context["active_filters"] = build_active_filters(self.request, type_names=type_names)
-        context["sort_options"] = SORT_OPTIONS
-        context["current_sort"] = self.request.GET.get("sort", "")
-        return context
-
-
-class NextWeekList(ListView):
-    model = Issue
-    paginate_by = PAGINATE_BY
-    template_name = "comicsdb/week_list.html"
-
-    def get_week_info(self):
-        """Get the next week's year and week number."""
-        year, week, _ = date.today().isocalendar()
-        # Check if we're at the last week of the year.
-        if week != TOTAL_WEEKS_YEAR:
-            week += 1
+        week_start, week_end = release_week_bounds(self.week_offset)
+        if self.future:
+            queryset = Issue.objects.filter(store_date__gt=week_end)
         else:
-            year += 1
-            week = 1
-        return year, week
-
-    def get_queryset(self):
-        year, week = self.get_week_info()
-        # Get the Monday of the ISO week (start of week)
-        week_start = datetime.strptime(f"{year}-{week}-1", "%G-%V-%u").date()
-        # Get the Sunday of the ISO week (end of week)
-        week_end = datetime.strptime(f"{year}-{week}-7", "%G-%V-%u").date()
-
-        queryset = Issue.objects.filter(
-            store_date__gte=week_start, store_date__lte=week_end
-        ).select_related("series", "series__series_type", "series__publisher")
-        # Apply filters
+            queryset = Issue.objects.filter(store_date__gte=week_start, store_date__lte=week_end)
+        queryset = queryset.select_related("series", "series__series_type", "series__publisher")
         filtered = IssueViewFilter(self.request.GET, queryset=queryset)
         return apply_sort(filtered.qs, self.request)
 
     def get_context_data(self, **kwargs):
-        year, week = self.get_week_info()
-        # The '1' in the format string gives the date for Monday
-        release_day = datetime.strptime(f"{year}-{week}-1", "%G-%V-%u")
         context = super().get_context_data(**kwargs)
-        context["release_day"] = release_day
-        context["future"] = False
-        series_types = list(SeriesType.objects.values("id", "name").order_by("name"))
-        context["series_type"] = series_types
-        # Active filters = any GET param that isn't paging or sorting.
-        context["has_active_filters"] = any(key not in ("page", "sort") for key in self.request.GET)
-        type_names = {str(t["id"]): t["name"] for t in series_types}
-        context["active_filters"] = build_active_filters(self.request, type_names=type_names)
-        context["sort_options"] = SORT_OPTIONS
-        context["current_sort"] = self.request.GET.get("sort", "")
+        context["release_day"] = self.get_week_start()
+        context["future"] = self.future
         return context
 
 
-# View to show any issues released after next weeks.
-class FutureList(ListView):
-    model = Issue
-    paginate_by = PAGINATE_BY
-    template_name = "comicsdb/week_list.html"
+class WeekList(_ReleaseWeekListBase):
+    """Issues released this week."""
 
-    def get_week_info(self):
-        """Get the next week's year and week number for filtering future issues."""
-        year, week, _ = date.today().isocalendar()
-        # Check if we're at the last week of the year.
-        if week != TOTAL_WEEKS_YEAR:
-            week += 1
-        else:
-            year += 1
-            week = 1
-        return year, week
 
-    def get_queryset(self):
-        year, week = self.get_week_info()
-        # Get the Sunday of next week (end of next week)
-        week_end = datetime.strptime(f"{year}-{week}-7", "%G-%V-%u").date()
+class NextWeekList(_ReleaseWeekListBase):
+    """Issues released next week."""
 
-        # Show all issues after next week
-        queryset = Issue.objects.filter(store_date__gt=week_end).select_related(
-            "series", "series__series_type", "series__publisher"
-        )
-        # Apply filters
-        filtered = IssueViewFilter(self.request.GET, queryset=queryset)
-        return apply_sort(filtered.qs, self.request)
+    week_offset = 1
 
-    def get_context_data(self, **kwargs):
-        year, week = self.get_week_info()
-        # The '1' in the format string gives the date for Monday
-        release_day = datetime.strptime(f"{year}-{week}-1", "%G-%V-%u")
-        context = super().get_context_data(**kwargs)
-        context["release_day"] = release_day
-        context["future"] = True
-        series_types = list(SeriesType.objects.values("id", "name").order_by("name"))
-        context["series_type"] = series_types
-        # Active filters = any GET param that isn't paging or sorting.
-        context["has_active_filters"] = any(key not in ("page", "sort") for key in self.request.GET)
-        type_names = {str(t["id"]): t["name"] for t in series_types}
-        context["active_filters"] = build_active_filters(self.request, type_names=type_names)
-        context["sort_options"] = SORT_OPTIONS
-        context["current_sort"] = self.request.GET.get("sort", "")
-        return context
+
+class FutureList(_ReleaseWeekListBase):
+    """Issues released after next week."""
+
+    week_offset = 1
+    future = True
 
 
 class IssueCreditsLoadMore(LazyLoadMixin):

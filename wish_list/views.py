@@ -8,14 +8,8 @@ from django.views.decorators.http import require_POST
 from django.views.generic import DeleteView, FormView, UpdateView
 
 from comicsdb.models.issue import Issue
-from user_collection.models import CollectionItem
 from wish_list.forms import AcquireWishListItemForm, WishListItemForm
 from wish_list.models import WishList, WishListItem
-
-
-def get_or_create_wish_list(user):
-    wish_list, _created = WishList.objects.get_or_create(user=user)
-    return wish_list
 
 
 class WishListDetailView(LoginRequiredMixin, FormView):
@@ -24,7 +18,7 @@ class WishListDetailView(LoginRequiredMixin, FormView):
 
     def get_wish_list(self):
         if not hasattr(self, "_wish_list"):
-            self._wish_list = get_or_create_wish_list(self.request.user)
+            self._wish_list = WishList.objects.for_user(self.request.user)
         return self._wish_list
 
     def form_valid(self, form):
@@ -99,19 +93,12 @@ class AcquireWishListItemView(LoginRequiredMixin, UserPassesTestMixin, FormView)
 
     def form_valid(self, form):
         item = self.wish_list_item
-        _obj, created = CollectionItem.objects.get_or_create(
-            user=self.request.user,
-            issue=item.issue,
-            defaults={
-                "purchase_date": form.cleaned_data.get("purchase_date"),
-                "purchase_price": form.cleaned_data.get("purchase_price"),
-                "purchase_store": form.cleaned_data.get("purchase_store", ""),
-                "notes": form.cleaned_data.get("notes", ""),
-                "grade": item.desired_grade,
-            },
+        _obj, created = item.acquire(
+            purchase_date=form.cleaned_data.get("purchase_date"),
+            purchase_price=form.cleaned_data.get("purchase_price"),
+            purchase_store=form.cleaned_data.get("purchase_store", ""),
+            notes=form.cleaned_data.get("notes", ""),
         )
-        item.status = WishListItem.Status.ACQUIRED
-        item.save(update_fields=["status", "modified"])
         if created:
             message = _("%(issue)s marked as acquired! Added to your collection.") % {
                 "issue": item.issue
@@ -136,7 +123,7 @@ class AcquireWishListItemView(LoginRequiredMixin, UserPassesTestMixin, FormView)
 @require_POST
 def toggle_wish_list_item(request, slug):
     issue = get_object_or_404(Issue, slug=slug)
-    wish_list, _created = WishList.objects.get_or_create(user=request.user)
+    wish_list = WishList.objects.for_user(request.user)
     item, created = WishListItem.objects.get_or_create(wish_list=wish_list, issue=issue)
     if not created:
         item.delete()

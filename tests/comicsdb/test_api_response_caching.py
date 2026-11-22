@@ -7,13 +7,13 @@ from django.db import connection, transaction
 from django.test.utils import CaptureQueriesContext
 from django.urls import reverse
 from django.utils import timezone
-from rest_framework import status
+from rest_framework import mixins as drf_mixins, status
 from rest_framework.pagination import PageNumberPagination
 from rest_framework.request import Request
 
-from api import cache as api_cache, views as api_views
+from api import cache as api_cache
 from api.cache import ModelLabel, get_model_version
-from api.views import CollectionViewSet, PullListViewSet, WishListViewSet
+from api.v1_0.views import CollectionViewSet, PullListViewSet, WishListViewSet
 from comicsdb.models import Credits, Issue, Variant
 from comicsdb.models.genre import Genre
 from issue_ratings.models import IssueRating
@@ -25,7 +25,11 @@ def local_cache():
     behavior aren't affected by concurrent xdist workers sharing the real
     Redis backend (the `cachever:*` counters are global-per-model)."""
     test_cache = LocMemCache(f"test-api-response-caching-{uuid.uuid4()}", {})
-    with patch("api.views.cache", test_cache), patch("api.cache.cache", test_cache):
+    with (
+        patch("api.v1_0.views.mixins.cache", test_cache),
+        patch("api.v1_0.views.publisher.cache", test_cache),
+        patch("api.cache.cache", test_cache),
+    ):
         yield test_cache
 
 
@@ -205,7 +209,7 @@ def test_arc_issue_list_after_issue_field_edit_is_accepted_staleness(
     only bumps on M2M add/remove/clear -- not on a plain field edit to one
     of the linked issues. cache_action_dependent_labels deliberately does
     NOT include ModelLabel.ISSUE/SERIES (see the comment on ArcViewSet):
-    both are bumped by update_series_modified_on_issue_save() on *every*
+    both are bumped by update_series_modified_on_issue_change() on *every*
     issue write anywhere on the site, so tying this 24h-TTL cache to either
     would invalidate every Arc's issue_list on essentially any issue edit
     site-wide -- confirmed as a live problem for IssueViewSet's own
@@ -278,7 +282,7 @@ def test_issue_retrieve_after_series_rename_is_accepted_staleness(
     doesn't bump the owning Issue's `modified` -- but ModelLabel.SERIES is
     deliberately NOT one of IssueViewSet's cache_detail_dependent_labels
     (see the comment there): that counter is also bumped by
-    update_series_modified_on_issue_save() on every issue write anywhere,
+    update_series_modified_on_issue_change() on every issue write anywhere,
     so tying Issue's detail cache to it invalidated every cached issue
     detail response on essentially any issue edit site-wide (confirmed in
     production -- an unrelated issue write elsewhere flipped an
@@ -975,13 +979,13 @@ def test_cached_retrieve_receives_real_request_object(
     regressing by capturing what actually reaches
     mixins.RetrieveModelMixin.retrieve's `request` argument."""
     captured = {}
-    original = api_views.mixins.RetrieveModelMixin.retrieve
+    original = drf_mixins.RetrieveModelMixin.retrieve
 
     def spy(self, request, *args, **kwargs):
         captured["request"] = request
         return original(self, request, *args, **kwargs)
 
-    monkeypatch.setattr(api_views.mixins.RetrieveModelMixin, "retrieve", spy)
+    monkeypatch.setattr(drf_mixins.RetrieveModelMixin, "retrieve", spy)
 
     url = reverse("api:issue-detail", kwargs={"pk": basic_issue.pk})
     resp = api_client_with_credentials.get(url)
@@ -994,7 +998,7 @@ def test_user_scoped_viewsets_are_not_list_cached():
     (get_queryset filters by request.user) -- they must never use
     CachedListModelMixin, since a shared list cache key would serve one
     user's private data to another. This is a cheap regression guard for
-    that intentional exclusion; see api/views.py."""
+    that intentional exclusion; see api/v1_0/views/."""
     for viewset in (CollectionViewSet, PullListViewSet, WishListViewSet):
         assert getattr(viewset, "cache_model_label", None) is None
 

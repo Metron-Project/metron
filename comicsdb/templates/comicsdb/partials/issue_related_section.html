@@ -1,0 +1,29 @@
+{% load i18n %}
+{% comment %}
+    A box of linked items (characters, teams, universes) on the issue detail page,
+    showing the first page and a "load more" button when there are more.
+    Params: items, count, heading, kind (DOM id prefix, e.g. "characters"),
+    detail_url_name, crop, load_more_url, load_more_label.
+{% endcomment %}
+<div class="box">
+    <h2 class="title is-5">{{ heading }}</h2>
+    <div id="{{ kind }}-container" class="columns is-multiline">
+        {% for obj in items %}
+            {% include "comicsdb/partials/thumbnail_link_card.html" with obj=obj detail_url_name=detail_url_name crop=crop %}
+        {% endfor %}
+    </div>
+    {% if count > detail_page_size %}
+        <div id="{{ kind }}-load-more-wrapper" class="has-text-centered mt-4">
+            <button class="button is-link"
+                    hx-get="{{ load_more_url }}?offset={{ detail_page_size }}"
+                    hx-target="#{{ kind }}-container"
+                    hx-swap="beforeend"
+                    hx-indicator="#{{ kind }}-spinner">
+                <span>{{ load_more_label }}</span>
+            </button>
+            <span id="{{ kind }}-spinner" class="htmx-indicator ml-2">
+                <i class="fas fa-spinner fa-spin"></i>
+            </span>
+        </div>
+    {% endif %}
+</div>
