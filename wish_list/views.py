@@ -8,7 +8,6 @@ from django.views.decorators.http import require_POST
 from django.views.generic import DeleteView, FormView, UpdateView
 
 from comicsdb.models.issue import Issue
-from user_collection.models import CollectionItem
 from wish_list.forms import AcquireWishListItemForm, WishListItemForm
 from wish_list.models import WishList, WishListItem
 
@@ -99,19 +98,12 @@ class AcquireWishListItemView(LoginRequiredMixin, UserPassesTestMixin, FormView)
 
     def form_valid(self, form):
         item = self.wish_list_item
-        _obj, created = CollectionItem.objects.get_or_create(
-            user=self.request.user,
-            issue=item.issue,
-            defaults={
-                "purchase_date": form.cleaned_data.get("purchase_date"),
-                "purchase_price": form.cleaned_data.get("purchase_price"),
-                "purchase_store": form.cleaned_data.get("purchase_store", ""),
-                "notes": form.cleaned_data.get("notes", ""),
-                "grade": item.desired_grade,
-            },
+        _obj, created = item.acquire(
+            purchase_date=form.cleaned_data.get("purchase_date"),
+            purchase_price=form.cleaned_data.get("purchase_price"),
+            purchase_store=form.cleaned_data.get("purchase_store", ""),
+            notes=form.cleaned_data.get("notes", ""),
         )
-        item.status = WishListItem.Status.ACQUIRED
-        item.save(update_fields=["status", "modified"])
         if created:
             message = _("%(issue)s marked as acquired! Added to your collection.") % {
                 "issue": item.issue

@@ -17,7 +17,6 @@ from api.v1_0.serializers.wish_list import (
 )
 from api.v1_0.views.mixins import ActionSerializerMixin, ConditionalRetrieveModelMixin
 from comicsdb.models import Issue
-from user_collection.models import CollectionItem
 from wish_list.models import WishList, WishListItem
 
 
@@ -98,26 +97,20 @@ class WishListViewSet(
         """Mark a wish list item as acquired and create a collection item."""
         wish_list, _ = WishList.objects.get_or_create(user=request.user)
         item = get_object_or_404(WishListItem, pk=item_pk, wish_list=wish_list)
+        item.wish_list = wish_list  # already loaded; saves acquire() a query
         serializer = AcquireWishListItemSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         data = serializer.validated_data
         purchase_price = data.get("purchase_price")
         purchase_price_currency = data.get("purchase_price_currency", "USD")
-        collection_item, created = CollectionItem.objects.get_or_create(
-            user=request.user,
-            issue=item.issue,
-            defaults={
-                "purchase_date": data.get("purchase_date"),
-                "purchase_price": Money(purchase_price, purchase_price_currency)
-                if purchase_price
-                else None,
-                "purchase_store": data.get("purchase_store", ""),
-                "notes": data.get("notes", ""),
-                "grade": item.desired_grade,
-            },
+        collection_item, created = item.acquire(
+            purchase_date=data.get("purchase_date"),
+            purchase_price=Money(purchase_price, purchase_price_currency)
+            if purchase_price
+            else None,
+            purchase_store=data.get("purchase_store", ""),
+            notes=data.get("notes", ""),
         )
-        item.status = WishListItem.Status.ACQUIRED
-        item.save(update_fields=["status", "modified"])
         return Response(
             {
                 "wish_list_item_id": item.pk,

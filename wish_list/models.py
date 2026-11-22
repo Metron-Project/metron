@@ -1,11 +1,11 @@
-from django.db import models
+from django.db import models, transaction
 from django.db.models.functions import Now
 from django.urls import reverse
 from django.utils.translation import gettext_lazy as _
 from djmoney.models.fields import MoneyField
 
 from comicsdb.models.issue import Issue
-from user_collection.models import GRADE_CHOICES
+from user_collection.models import GRADE_CHOICES, CollectionItem
 from users.models import CustomUser
 
 
@@ -88,3 +88,32 @@ class WishListItem(models.Model):
 
     def get_absolute_url(self) -> str:
         return reverse("wish-list:detail")
+
+    def acquire(
+        self, *, purchase_date=None, purchase_price=None, purchase_store="", notes=""
+    ) -> tuple[CollectionItem, bool]:
+        """Mark this item acquired and add its issue to the owner's collection.
+
+        If the issue is already in the collection, the existing item is left as-is.
+        Otherwise a new collection item is created with the given purchase details
+        (``purchase_price`` is a ``Money`` or ``None``) and this item's desired
+        grade.
+
+        Returns:
+            ``(collection_item, created)``
+        """
+        with transaction.atomic():
+            collection_item, created = CollectionItem.objects.get_or_create(
+                user_id=self.wish_list.user_id,
+                issue_id=self.issue_id,
+                defaults={
+                    "purchase_date": purchase_date,
+                    "purchase_price": purchase_price,
+                    "purchase_store": purchase_store,
+                    "notes": notes,
+                    "grade": self.desired_grade,
+                },
+            )
+            self.status = self.Status.ACQUIRED
+            self.save(update_fields=["status", "modified"])
+        return collection_item, created
