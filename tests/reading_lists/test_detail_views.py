@@ -11,7 +11,7 @@ from comicsdb.models.creator import Creator
 from comicsdb.models.credits import Credits, Role
 from comicsdb.models.issue import Issue
 from reading_lists.models import ReadingList, ReadingListItem
-from reading_lists.views import build_reading_list_breakdown_context
+from reading_lists.services import build_reading_list_breakdown_context
 from users.models import CustomUser
 
 HTTP_200_OK = 200

@@ -2,7 +2,7 @@
 
 from comicsdb.views.filter_chips import build_filter_chips, series_type_names
 from comicsdb.views.series_list_helpers import build_active_filters as series_filters
-from reading_lists.views import build_active_filters as reading_list_filters
+from reading_lists.views.lists import build_active_filters as reading_list_filters
 
 
 def _chip(chips, label):

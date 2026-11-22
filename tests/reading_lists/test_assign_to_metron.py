@@ -3,7 +3,7 @@
 from django.urls import reverse
 
 from reading_lists.models import ReadingList
-from reading_lists.views import can_assign_reading_list_to_metron
+from reading_lists.services import can_assign_reading_list_to_metron
 
 HTTP_200_OK = 200
 HTTP_302_FOUND = 302
