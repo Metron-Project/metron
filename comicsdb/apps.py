@@ -20,8 +20,7 @@ from comicsdb.signals import (
     update_parent_modified_on_attribution_save,
     update_related_modified_on_m2m_change,
     update_series_modified_on_associated_change,
-    update_series_modified_on_issue_delete,
-    update_series_modified_on_issue_save,
+    update_series_modified_on_issue_change,
 )
 
 
@@ -94,12 +93,12 @@ class ComicsdbConfig(AppConfig):
 
         # Handlers with relation-specific behavior.
         post_save.connect(
-            update_series_modified_on_issue_save,
+            update_series_modified_on_issue_change,
             sender=issue,
             dispatch_uid="post_save_issue_series_modified",
         )
         post_delete.connect(
-            update_series_modified_on_issue_delete,
+            update_series_modified_on_issue_change,
             sender=issue,
             dispatch_uid="post_delete_issue_series_modified",
         )

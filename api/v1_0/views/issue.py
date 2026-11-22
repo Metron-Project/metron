@@ -48,7 +48,7 @@ class IssueViewSet(CatalogViewSet):
     # embedded UniverseListSerializer includes `modified`; its write volume
     # is low enough that this costs little:
     # - SERIES is deliberately excluded even though it's also embedded --
-    #   ModelLabel.SERIES is bumped by update_series_modified_on_issue_save()
+    #   ModelLabel.SERIES is bumped by update_series_modified_on_issue_change()
     #   on *every* issue write anywhere (PublisherViewSet.series_list needs
     #   that), so including it here invalidated every cached issue detail
     #   response on essentially every issue edit site-wide, not just ones

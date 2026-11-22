@@ -19,15 +19,8 @@ def pre_delete_credit(sender, instance, **kwargs):
     LOGGER.info("Deleting %s credit for %s", instance.creator, instance.issue)
 
 
-def update_series_modified_on_issue_save(sender, instance, **kwargs):
-    from comicsdb.models import Series  # noqa: PLC0415
-
-    Series.objects.filter(pk=instance.series_id).update(modified=timezone.now())
-    bump_model_version(ModelLabel.ISSUE)
-    bump_model_version(ModelLabel.SERIES)
-
-
-def update_series_modified_on_issue_delete(sender, instance, **kwargs):
+def update_series_modified_on_issue_change(sender, instance, **kwargs):
+    """post_save/post_delete receiver for Issue: touch its Series and bump both caches."""
     from comicsdb.models import Series  # noqa: PLC0415
 
     Series.objects.filter(pk=instance.series_id).update(modified=timezone.now())

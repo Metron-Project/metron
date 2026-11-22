@@ -213,7 +213,7 @@ class CachedDetailActionMixin(CachedObjectMixin):
     #:
     #: ModelLabel.ISSUE/SERIES are deliberately NOT used here by any
     #: issue_list viewset: both are bumped by
-    #: update_series_modified_on_issue_save() on *every* issue write anywhere
+    #: update_series_modified_on_issue_change() on *every* issue write anywhere
     #: on the site, so tying this 24h-TTL cache to either would invalidate
     #: every parent's issue_list on essentially any issue edit site-wide --
     #: confirmed as a live problem for IssueViewSet's own retrieve cache in

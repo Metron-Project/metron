@@ -4,6 +4,7 @@ import logging
 import ssl
 import time
 import urllib.parse
+from http import HTTPStatus
 
 from django.conf import settings
 from django.core.cache import cache
@@ -84,7 +85,7 @@ def _has_credits() -> bool | None:
         return cached
     try:
         status, reason, body = _usercheck_request("/status")
-        data = json.loads(body.decode("utf-8")) if status == 200 else None  # noqa: PLR2004
+        data = json.loads(body.decode("utf-8")) if status == HTTPStatus.OK else None
     except (http.client.HTTPException, OSError, ValueError) as e:
         LOGGER.warning("UserCheck status lookup failed: %s: %s", type(e).__name__, e)
         return None
@@ -154,7 +155,7 @@ def check_email_domain(email: str, domain: str) -> dict | None:
     path = f"/email/{urllib.parse.quote(email, safe='')}"
     try:
         status, reason, body = _usercheck_request(path)
-        if status == 429:  # noqa: PLR2004
+        if status == HTTPStatus.TOO_MANY_REQUESTS:
             time.sleep(RETRY_DELAY)
             status, reason, body = _usercheck_request(path)
     except (http.client.HTTPException, OSError) as e:

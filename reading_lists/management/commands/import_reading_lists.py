@@ -46,7 +46,7 @@ class Command(BaseCommand):
             help="Skip issues that don't exist in the database instead of failing",
         )
 
-    def handle(self, *args, **options) -> None:  # noqa: PLR0912
+    def handle(self, *args, **options) -> None:
         dry_run = options["dry_run"]
         skip_missing = options["skip_missing"]
 
@@ -57,23 +57,7 @@ class Command(BaseCommand):
             msg = 'User "Metron" does not exist. Please create this user first.'
             raise CommandError(msg) from err
 
-        # Collect all JSON files from provided paths
-        json_files = []
-        for path_str in options["paths"]:
-            path = Path(path_str)
-            if not path.exists():
-                raise CommandError(f"Path does not exist: {path}")
-
-            if path.is_file():
-                if path.suffix == ".json":
-                    json_files.append(path)
-                else:
-                    self.stdout.write(self.style.WARNING(f"Skipping non-JSON file: {path}"))
-            elif path.is_dir():
-                json_files.extend(path.glob("*.json"))
-            else:
-                raise CommandError(f"Invalid path: {path}")
-
+        json_files = self._collect_json_files(options["paths"])
         if not json_files:
             raise CommandError("No JSON files found to import")
 
@@ -95,7 +79,28 @@ class Command(BaseCommand):
                 error_count += 1
                 self.stdout.write(self.style.ERROR(f"Error importing {json_file.name}: {e}"))
 
-        # Print summary
+        self._print_summary(dry_run, created_count, skipped_count, error_count)
+
+    def _collect_json_files(self, paths) -> list[Path]:
+        """Return the JSON files named by ``paths`` (files, or directories to search)."""
+        json_files = []
+        for path_str in paths:
+            path = Path(path_str)
+            if not path.exists():
+                raise CommandError(f"Path does not exist: {path}")
+
+            if path.is_file():
+                if path.suffix == ".json":
+                    json_files.append(path)
+                else:
+                    self.stdout.write(self.style.WARNING(f"Skipping non-JSON file: {path}"))
+            elif path.is_dir():
+                json_files.extend(path.glob("*.json"))
+            else:
+                raise CommandError(f"Invalid path: {path}")
+        return json_files
+
+    def _print_summary(self, dry_run, created_count, skipped_count, error_count) -> None:
         self.stdout.write(self.style.SUCCESS("\n" + "=" * 50))
         if dry_run:
             self.stdout.write(self.style.WARNING("DRY RUN - No changes were made"))

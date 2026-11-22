@@ -209,7 +209,7 @@ def test_arc_issue_list_after_issue_field_edit_is_accepted_staleness(
     only bumps on M2M add/remove/clear -- not on a plain field edit to one
     of the linked issues. cache_action_dependent_labels deliberately does
     NOT include ModelLabel.ISSUE/SERIES (see the comment on ArcViewSet):
-    both are bumped by update_series_modified_on_issue_save() on *every*
+    both are bumped by update_series_modified_on_issue_change() on *every*
     issue write anywhere on the site, so tying this 24h-TTL cache to either
     would invalidate every Arc's issue_list on essentially any issue edit
     site-wide -- confirmed as a live problem for IssueViewSet's own
@@ -282,7 +282,7 @@ def test_issue_retrieve_after_series_rename_is_accepted_staleness(
     doesn't bump the owning Issue's `modified` -- but ModelLabel.SERIES is
     deliberately NOT one of IssueViewSet's cache_detail_dependent_labels
     (see the comment there): that counter is also bumped by
-    update_series_modified_on_issue_save() on every issue write anywhere,
+    update_series_modified_on_issue_change() on every issue write anywhere,
     so tying Issue's detail cache to it invalidated every cached issue
     detail response on essentially any issue edit site-wide (confirmed in
     production -- an unrelated issue write elsewhere flipped an
