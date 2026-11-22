@@ -19,6 +19,7 @@ from comicsdb.models.character import Character
 from comicsdb.models.creator import Creator
 from comicsdb.models.credits import Credits, Role
 from comicsdb.models.issue import Issue
+from comicsdb.views.issue_list_helpers import filter_issues_by_number_range
 from comicsdb.views.mixins import LazyLoadMixin, SearchMixin
 from comicsdb.views.ratings import apply_rating_update
 from reading_lists.forms import (
@@ -144,27 +145,6 @@ def can_assign_reading_list_to_metron(user):
     Allowed for staff or members of the 'reading list editor' group.
     """
     return user.is_staff or user.groups.filter(name=READING_LIST_EDITOR_GROUP).exists()
-
-
-def filter_issues_by_number_range(issues, start_number, end_number):
-    """Restrict an ordered iterable of issues to the inclusive range of issue numbers.
-
-    Either bound may be omitted to mean "from the beginning" / "through the end".
-    Matching is by ``Issue.number`` string equality, in the given iteration order.
-    """
-    if not start_number and not end_number:
-        return list(issues)
-
-    filtered = []
-    in_range = not start_number
-    for issue in issues:
-        if start_number and issue.number == start_number:
-            in_range = True
-        if in_range:
-            filtered.append(issue)
-        if end_number and issue.number == end_number:
-            break
-    return filtered
 
 
 def add_issues_to_reading_list(reading_list, candidate_issues, position):

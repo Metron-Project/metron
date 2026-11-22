@@ -1,4 +1,5 @@
-"""Shared helpers for issue list views: result sorting + active-filter chips.
+"""Shared helpers for issue list views: result sorting, active-filter chips and
+issue-number range filtering.
 
 Kept in its own module so the four issue list views
 (IssueList, WeekList, NextWeekList, FutureList) can share one definition and the
@@ -138,3 +139,27 @@ def build_active_filters(request, type_names=None):
             }
         )
     return chips
+
+
+# ---------------------------------------------------------------------------
+# Issue-number ranges
+# ---------------------------------------------------------------------------
+def filter_issues_by_number_range(issues, start_number, end_number):
+    """Restrict an ordered iterable of issues to the inclusive range of issue numbers.
+
+    Either bound may be omitted to mean "from the beginning" / "through the end".
+    Matching is by ``Issue.number`` string equality, in the given iteration order.
+    """
+    if not start_number and not end_number:
+        return list(issues)
+
+    filtered = []
+    in_range = not start_number
+    for issue in issues:
+        if start_number and issue.number == start_number:
+            in_range = True
+        if in_range:
+            filtered.append(issue)
+        if end_number and issue.number == end_number:
+            break
+    return filtered

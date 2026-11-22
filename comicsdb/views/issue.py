@@ -1,5 +1,5 @@
 import logging
-from datetime import date, datetime
+from datetime import date, timedelta
 from typing import Any
 
 from django.contrib import messages
@@ -35,8 +35,6 @@ from comicsdb.views.issue_list_helpers import (
 from comicsdb.views.mixins import LazyLoadMixin, SlugRedirectView
 from issue_ratings.models import IssueRating
 from wish_list.models import WishListItem
-
-TOTAL_WEEKS_YEAR = 52
 
 LOGGER = logging.getLogger(__name__)
 
@@ -749,85 +747,41 @@ class IssueHistory(HistoryListView):
     model = Issue
 
 
-class WeekList(ListView):
+class _ReleaseWeekListBase(ListView):
+    """Issues by store date, relative to an ISO week (Monday-Sunday).
+
+    Subclasses set ``week_offset`` (0 = this week, 1 = next week) and ``future``.
+    A non-future view lists that week's issues; a future view lists everything
+    released after it.
+    """
+
     model = Issue
     paginate_by = PAGINATE_BY
     template_name = "comicsdb/week_list.html"
+    week_offset = 0
+    future = False
 
-    def get_week_info(self):
-        """Get the current year and week number."""
-        year, week, _ = date.today().isocalendar()
-        return year, week
+    def get_week_start(self) -> date:
+        """Return the Monday of the target ISO week."""
+        today = date.today()
+        this_monday = today - timedelta(days=today.weekday())
+        return this_monday + timedelta(weeks=self.week_offset)
 
     def get_queryset(self):
-        year, week = self.get_week_info()
-        # Get the Monday of the ISO week (start of week)
-        week_start = datetime.strptime(f"{year}-{week}-1", "%G-%V-%u").date()
-        # Get the Sunday of the ISO week (end of week)
-        week_end = datetime.strptime(f"{year}-{week}-7", "%G-%V-%u").date()
-
-        queryset = Issue.objects.filter(
-            store_date__gte=week_start, store_date__lte=week_end
-        ).select_related("series", "series__series_type", "series__publisher")
-        # Apply filters
-        filtered = IssueViewFilter(self.request.GET, queryset=queryset)
-        return apply_sort(filtered.qs, self.request)
-
-    def get_context_data(self, **kwargs):
-        year, week = self.get_week_info()
-        # The '1' in the format string gives the date for Monday
-        release_day = datetime.strptime(f"{year}-{week}-1", "%G-%V-%u")
-        context = super().get_context_data(**kwargs)
-        context["release_day"] = release_day
-        context["future"] = False
-        series_types = list(SeriesType.objects.values("id", "name").order_by("name"))
-        context["series_type"] = series_types
-        # Active filters = any GET param that isn't paging or sorting.
-        context["has_active_filters"] = any(key not in ("page", "sort") for key in self.request.GET)
-        type_names = {str(t["id"]): t["name"] for t in series_types}
-        context["active_filters"] = build_active_filters(self.request, type_names=type_names)
-        context["sort_options"] = SORT_OPTIONS
-        context["current_sort"] = self.request.GET.get("sort", "")
-        return context
-
-
-class NextWeekList(ListView):
-    model = Issue
-    paginate_by = PAGINATE_BY
-    template_name = "comicsdb/week_list.html"
-
-    def get_week_info(self):
-        """Get the next week's year and week number."""
-        year, week, _ = date.today().isocalendar()
-        # Check if we're at the last week of the year.
-        if week != TOTAL_WEEKS_YEAR:
-            week += 1
+        week_start = self.get_week_start()
+        week_end = week_start + timedelta(days=6)
+        if self.future:
+            queryset = Issue.objects.filter(store_date__gt=week_end)
         else:
-            year += 1
-            week = 1
-        return year, week
-
-    def get_queryset(self):
-        year, week = self.get_week_info()
-        # Get the Monday of the ISO week (start of week)
-        week_start = datetime.strptime(f"{year}-{week}-1", "%G-%V-%u").date()
-        # Get the Sunday of the ISO week (end of week)
-        week_end = datetime.strptime(f"{year}-{week}-7", "%G-%V-%u").date()
-
-        queryset = Issue.objects.filter(
-            store_date__gte=week_start, store_date__lte=week_end
-        ).select_related("series", "series__series_type", "series__publisher")
-        # Apply filters
+            queryset = Issue.objects.filter(store_date__gte=week_start, store_date__lte=week_end)
+        queryset = queryset.select_related("series", "series__series_type", "series__publisher")
         filtered = IssueViewFilter(self.request.GET, queryset=queryset)
         return apply_sort(filtered.qs, self.request)
 
     def get_context_data(self, **kwargs):
-        year, week = self.get_week_info()
-        # The '1' in the format string gives the date for Monday
-        release_day = datetime.strptime(f"{year}-{week}-1", "%G-%V-%u")
         context = super().get_context_data(**kwargs)
-        context["release_day"] = release_day
-        context["future"] = False
+        context["release_day"] = self.get_week_start()
+        context["future"] = self.future
         series_types = list(SeriesType.objects.values("id", "name").order_by("name"))
         context["series_type"] = series_types
         # Active filters = any GET param that isn't paging or sorting.
@@ -839,52 +793,21 @@ class NextWeekList(ListView):
         return context
 
 
-# View to show any issues released after next weeks.
-class FutureList(ListView):
-    model = Issue
-    paginate_by = PAGINATE_BY
-    template_name = "comicsdb/week_list.html"
+class WeekList(_ReleaseWeekListBase):
+    """Issues released this week."""
 
-    def get_week_info(self):
-        """Get the next week's year and week number for filtering future issues."""
-        year, week, _ = date.today().isocalendar()
-        # Check if we're at the last week of the year.
-        if week != TOTAL_WEEKS_YEAR:
-            week += 1
-        else:
-            year += 1
-            week = 1
-        return year, week
 
-    def get_queryset(self):
-        year, week = self.get_week_info()
-        # Get the Sunday of next week (end of next week)
-        week_end = datetime.strptime(f"{year}-{week}-7", "%G-%V-%u").date()
+class NextWeekList(_ReleaseWeekListBase):
+    """Issues released next week."""
 
-        # Show all issues after next week
-        queryset = Issue.objects.filter(store_date__gt=week_end).select_related(
-            "series", "series__series_type", "series__publisher"
-        )
-        # Apply filters
-        filtered = IssueViewFilter(self.request.GET, queryset=queryset)
-        return apply_sort(filtered.qs, self.request)
+    week_offset = 1
 
-    def get_context_data(self, **kwargs):
-        year, week = self.get_week_info()
-        # The '1' in the format string gives the date for Monday
-        release_day = datetime.strptime(f"{year}-{week}-1", "%G-%V-%u")
-        context = super().get_context_data(**kwargs)
-        context["release_day"] = release_day
-        context["future"] = True
-        series_types = list(SeriesType.objects.values("id", "name").order_by("name"))
-        context["series_type"] = series_types
-        # Active filters = any GET param that isn't paging or sorting.
-        context["has_active_filters"] = any(key not in ("page", "sort") for key in self.request.GET)
-        type_names = {str(t["id"]): t["name"] for t in series_types}
-        context["active_filters"] = build_active_filters(self.request, type_names=type_names)
-        context["sort_options"] = SORT_OPTIONS
-        context["current_sort"] = self.request.GET.get("sort", "")
-        return context
+
+class FutureList(_ReleaseWeekListBase):
+    """Issues released after next week."""
+
+    week_offset = 1
+    future = True
 
 
 class IssueCreditsLoadMore(LazyLoadMixin):
