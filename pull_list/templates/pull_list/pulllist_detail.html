@@ -159,6 +159,8 @@
                                                         {% if issue.image %}
                                                             {% thumbnail issue.image "320x480" crop="center" format="WEBP" as im %}
                                                                 <img src="{{ im.url }}" alt="{{ issue }}" loading="lazy" style="border-radius: 4px;">
+                                                            {% empty %}
+                                                                <img src="{% static 'site/img/image-not-found.webp' %}" alt="" style="border-radius: 4px;">
                                                             {% endthumbnail %}
                                                         {% else %}
                                                             <img src="{% static 'site/img/image-not-found.webp' %}" alt="" style="border-radius: 4px;">
@@ -178,6 +180,8 @@
                                                     {% if issue.image %}
                                                         {% thumbnail issue.image "72x108" crop="center" format="WEBP" as im %}
                                                             <img src="{{ im.url }}" alt="" loading="lazy">
+                                                        {% empty %}
+                                                            <img src="{% static 'site/img/image-not-found.webp' %}" alt="">
                                                         {% endthumbnail %}
                                                     {% else %}
                                                         <img src="{% static 'site/img/image-not-found.webp' %}" alt="">
