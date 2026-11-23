@@ -114,9 +114,11 @@ class TestUploadWidgetInForms:
         assert f'data-heggra-max-size="{MAX_IMAGE_SIZE}"' in rendered
 
     def test_base_template_loads_heggra_script(self, client):
-        """Test that every page loads heggra.js, which the upload widgets need."""
+        """Test that every page loads heggra.js and heggra.css, which the upload widgets need."""
         resp = client.get(reverse("home"))
-        assert static("heggra/heggra.js") in resp.content.decode()
+        content = resp.content.decode()
+        assert static("heggra/heggra.js") in content
+        assert static("site/css/heggra.css") in content
 
 
 class TestWikiFormFieldFileUpload:

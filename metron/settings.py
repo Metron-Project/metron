@@ -150,7 +150,7 @@ HEGGRA_CLASSES = {
     "file_name": "has-text-weight-semibold",
     "remove": "button is-small",
     "clear": "checkbox",
-    # The preview is sized in static/site/css/base.css; Bulma's .image classes force a square.
+    # The preview is sized in static/site/css/heggra.css; Bulma's .image classes force a square.
 }
 
 # Site app id
