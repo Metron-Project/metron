@@ -19,7 +19,10 @@
         HTMX requests inside this wrapper aren't affected.
     {% endcomment %}
     <div id="pull-list-content">
-        <header class="level is-mobile mb-5" style="flex-wrap: wrap; gap: 1rem; align-items: flex-end;">
+        <header class="level is-mobile mb-5"
+                style="flex-wrap: wrap;
+                       gap: 1rem;
+                       align-items: flex-end">
             <div class="level-left">
                 <div>
                     <h1 class="title mb-2">
@@ -40,9 +43,12 @@
                 </div>
             </div>
             <div class="level-right" style="flex: 0 1 380px; min-width: 260px;">
-                <form method="post" action="{% url 'pull-list:detail' %}" style="width: 100%;">
+                <form method="post"
+                      action="{% url 'pull-list:detail' %}"
+                      style="width: 100%">
                     {% csrf_token %}
-                    <label class="label is-small" for="{{ form.series.id_for_label }}">{% trans "Add a series" %}</label>
+                    <label class="label is-small"
+                           for="{{ form.series.id_for_label }}">{% trans "Add a series" %}</label>
                     <div class="field has-addons pull-list-add">
                         <div class="control is-expanded">{{ form.series }}</div>
                         <div class="control">
@@ -57,14 +63,18 @@
                 </form>
             </div>
         </header>
-
         {% if undo_series %}
             {# Undo re-uses the existing add-series POST #}
             <div class="notification is-info">
-                <form method="post" action="{% url 'pull-list:detail' %}{{ filter_query }}"
-                      hx-post="{% url 'pull-list:detail' %}{{ filter_query }}" hx-replace-url="true"
-                      hx-target="#pull-list-content" hx-select="#pull-list-content" hx-swap="outerHTML"
-                      class="is-flex is-align-items-center" style="gap: .75rem;">
+                <form method="post"
+                      action="{% url 'pull-list:detail' %}{{ filter_query }}"
+                      hx-post="{% url 'pull-list:detail' %}{{ filter_query }}"
+                      hx-replace-url="true"
+                      hx-target="#pull-list-content"
+                      hx-select="#pull-list-content"
+                      hx-swap="outerHTML"
+                      class="is-flex is-align-items-center"
+                      style="gap: .75rem">
                     {% csrf_token %}
                     <input type="hidden" name="series" value="{{ undo_series.pk }}">
                     <span>{% blocktrans with series=undo_series.name %}Removed {{ series }} from your pull list.{% endblocktrans %}</span>
@@ -75,7 +85,6 @@
                 </form>
             </div>
         {% endif %}
-
         {% if series_on_list %}
             {% if foc_soon_issues %}
                 <div class="notification is-warning is-light">
@@ -95,7 +104,6 @@
                     </div>
                 </div>
             {% endif %}
-
             <div class="columns">
                 <div class="column is-two-thirds">
                     <div class="box">
@@ -109,47 +117,57 @@
                             <div class="level-right">
                                 <div class="buttons has-addons">
                                     <a href="?view=list{% if active_series %}&series={{ active_series.pk }}{% endif %}"
-                                       hx-get="?view=list{% if active_series %}&series={{ active_series.pk }}{% endif %}" hx-push-url="true" hx-target="#pull-list-content" hx-select="#pull-list-content" hx-swap="outerHTML"
+                                       hx-get="?view=list{% if active_series %}&series={{ active_series.pk }}{% endif %}"
+                                       hx-push-url="true"
+                                       hx-target="#pull-list-content"
+                                       hx-select="#pull-list-content"
+                                       hx-swap="outerHTML"
                                        class="button is-small {% if view_mode == 'list' %}is-primary{% endif %}"
-                                       title="{% trans 'List view' %}" aria-label="{% trans 'List view' %}">
+                                       title="{% trans 'List view' %}"
+                                       aria-label="{% trans 'List view' %}">
                                         <span class="icon is-small"><i class="fas fa-list"></i></span>
                                     </a>
                                     <a href="?view=covers{% if active_series %}&series={{ active_series.pk }}{% endif %}"
-                                       hx-get="?view=covers{% if active_series %}&series={{ active_series.pk }}{% endif %}" hx-push-url="true" hx-target="#pull-list-content" hx-select="#pull-list-content" hx-swap="outerHTML"
+                                       hx-get="?view=covers{% if active_series %}&series={{ active_series.pk }}{% endif %}"
+                                       hx-push-url="true"
+                                       hx-target="#pull-list-content"
+                                       hx-select="#pull-list-content"
+                                       hx-swap="outerHTML"
                                        class="button is-small {% if view_mode == 'covers' %}is-primary{% endif %}"
-                                       title="{% trans 'Cover view' %}" aria-label="{% trans 'Cover view' %}">
+                                       title="{% trans 'Cover view' %}"
+                                       aria-label="{% trans 'Cover view' %}">
                                         <span class="icon is-small"><i class="fas fa-th-large"></i></span>
                                     </a>
                                 </div>
                             </div>
                         </div>
-
                         {% if active_series %}
                             <div class="notification is-link is-light py-2 px-3 is-flex is-justify-content-space-between">
                                 <span>{% trans "Showing only" %} <strong>{{ active_series }}</strong></span>
                                 <a href="?view={{ view_mode }}"
-                                   hx-get="?view={{ view_mode }}" hx-push-url="true" hx-target="#pull-list-content" hx-select="#pull-list-content" hx-swap="outerHTML">{% trans "Show all series" %}</a>
+                                   hx-get="?view={{ view_mode }}"
+                                   hx-push-url="true"
+                                   hx-target="#pull-list-content"
+                                   hx-select="#pull-list-content"
+                                   hx-swap="outerHTML">{% trans "Show all series" %}</a>
                             </div>
                         {% endif %}
-
                         {% if shown_count > upcoming_issues|length %}
                             <p class="is-size-7 has-text-grey mb-3">
                                 {% blocktrans count counter=upcoming_issues|length %}Showing the next {{ counter }} issue.{% plural %}Showing the next {{ counter }} issues.{% endblocktrans %}
                             </p>
                         {% endif %}
-
                         {% regroup upcoming_issues by store_date as release_days %}
                         {% for day in release_days %}
                             <section class="mb-5">
                                 <div class="is-flex is-justify-content-space-between is-align-items-baseline pb-2 mb-1"
-                                     style="border-bottom: 2px solid var(--bulma-border);">
+                                     style="border-bottom: 2px solid var(--bulma-border)">
                                     <h3 class="has-text-weight-semibold">{{ day.grouper|date:"l, F j" }}</h3>
                                     <span class="is-size-7 has-text-grey">
                                         {% if day.grouper == today %}{% trans "Today" %}{% else %}{% blocktrans with when=day.grouper|timeuntil:today %}In {{ when }}{% endblocktrans %}{% endif %}
                                         · {% blocktrans count counter=day.list|length %}{{ counter }} issue{% plural %}{{ counter }} issues{% endblocktrans %}
                                     </span>
                                 </div>
-
                                 {% if view_mode == "covers" %}
                                     <div class="columns is-multiline is-mobile mt-2">
                                         {% for issue in day.list %}
@@ -158,12 +176,19 @@
                                                     <figure class="image is-2by3 mb-2">
                                                         {% if issue.image %}
                                                             {% thumbnail issue.image "320x480" crop="center" format="WEBP" as im %}
-                                                                <img src="{{ im.url }}" alt="{{ issue }}" loading="lazy" style="border-radius: 4px;">
+                                                                <img src="{{ im.url }}"
+                                                                     alt="{{ issue }}"
+                                                                     loading="lazy"
+                                                                     style="border-radius: 4px">
                                                             {% empty %}
-                                                                <img src="{% static 'site/img/image-not-found.webp' %}" alt="" style="border-radius: 4px;">
+                                                                <img src="{% static 'site/img/image-not-found.webp' %}"
+                                                                     alt=""
+                                                                     style="border-radius: 4px">
                                                             {% endthumbnail %}
                                                         {% else %}
-                                                            <img src="{% static 'site/img/image-not-found.webp' %}" alt="" style="border-radius: 4px;">
+                                                            <img src="{% static 'site/img/image-not-found.webp' %}"
+                                                                 alt=""
+                                                                 style="border-radius: 4px">
                                                         {% endif %}
                                                     </figure>
                                                     <p class="is-size-7 has-text-weight-semibold has-text-text-bold">{{ issue }}</p>
@@ -181,7 +206,8 @@
                                                         {% thumbnail issue.image "72x108" crop="center" format="WEBP" as im %}
                                                             <img src="{{ im.url }}" alt="" loading="lazy">
                                                         {% empty %}
-                                                            <img src="{% static 'site/img/image-not-found.webp' %}" alt="">
+                                                            <img src="{% static 'site/img/image-not-found.webp' %}"
+                                                                 alt="">
                                                         {% endthumbnail %}
                                                     {% else %}
                                                         <img src="{% static 'site/img/image-not-found.webp' %}" alt="">
@@ -189,7 +215,8 @@
                                                 </p>
                                             </figure>
                                             <div class="media-content">
-                                                <a href="{{ issue.get_absolute_url }}" class="has-text-weight-semibold">{{ issue }}</a>
+                                                <a href="{{ issue.get_absolute_url }}"
+                                                   class="has-text-weight-semibold">{{ issue }}</a>
                                                 <p class="is-size-7 has-text-grey">{{ issue.series.publisher }}</p>
                                             </div>
                                             <div class="media-right">
@@ -210,7 +237,6 @@
                         {% endfor %}
                     </div>
                 </div>
-
                 <div class="column">
                     <div class="box">
                         <div class="level is-mobile mb-3">
@@ -222,8 +248,13 @@
                             </div>
                             <div class="level-right">
                                 {% if active_series %}
-                                    <a href="?view={{ view_mode }}" class="is-size-7"
-                                       hx-get="?view={{ view_mode }}" hx-push-url="true" hx-target="#pull-list-content" hx-select="#pull-list-content" hx-swap="outerHTML">
+                                    <a href="?view={{ view_mode }}"
+                                       class="is-size-7"
+                                       hx-get="?view={{ view_mode }}"
+                                       hx-push-url="true"
+                                       hx-target="#pull-list-content"
+                                       hx-select="#pull-list-content"
+                                       hx-swap="outerHTML">
                                         <span class="icon-text">
                                             <span class="icon is-small"><i class="fas fa-times-circle"></i></span>
                                             <span>{% trans "Clear filter" %}</span>
@@ -237,22 +268,37 @@
                         {% for pls in series_on_list %}
                             {# Selecting the active series again clears the filter #}
                             <div class="is-flex is-align-items-center py-2 px-2 {% if active_series.pk == pls.series_id %}has-background-link-soft{% endif %}"
-                                 style="gap: .5rem; border-radius: 4px; margin: 0 -.5rem;">
+                                 style="gap: .5rem;
+                                        border-radius: 4px;
+                                        margin: 0 -.5rem">
                                 <a href="{% if active_series.pk == pls.series_id %}?view={{ view_mode }}{% else %}?series={{ pls.series_id }}&view={{ view_mode }}{% endif %}"
-                                   hx-get="{% if active_series.pk == pls.series_id %}?view={{ view_mode }}{% else %}?series={{ pls.series_id }}&view={{ view_mode }}{% endif %}" hx-push-url="true" hx-target="#pull-list-content" hx-select="#pull-list-content" hx-swap="outerHTML"
+                                   hx-get="{% if active_series.pk == pls.series_id %}?view={{ view_mode }}{% else %}?series={{ pls.series_id }}&view={{ view_mode }}{% endif %}"
+                                   hx-push-url="true"
+                                   hx-target="#pull-list-content"
+                                   hx-select="#pull-list-content"
+                                   hx-swap="outerHTML"
                                    {% if active_series.pk == pls.series_id %}aria-current="true" title="{% trans 'Show all series' %}"{% endif %}
-                                   class="is-flex-grow-1" style="min-width: 0;">
-                                    <p class="has-text-weight-semibold has-text-text-bold is-size-7-mobile" style="overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">{{ pls.series }}</p>
+                                   class="is-flex-grow-1"
+                                   style="min-width: 0">
+                                    <p class="has-text-weight-semibold has-text-text-bold is-size-7-mobile"
+                                       style="overflow: hidden;
+                                              text-overflow: ellipsis;
+                                              white-space: nowrap">{{ pls.series }}</p>
                                     <p class="is-size-7 has-text-grey">{{ pls.series.publisher }}</p>
                                     <p class="is-size-7 {% if pls.next_store_date %}has-text-text-bold{% else %}has-text-grey{% endif %}">
                                         {% if pls.next_store_date %}{% trans "Next:" %} {{ pls.next_store_date|date:"D, M j" }}{% else %}{% trans "No upcoming issues" %}{% endif %}
                                     </p>
                                 </a>
-                                <form method="post" action="{% url 'pull-list:remove-series' pls.series_id %}{{ filter_query }}"
-                                      hx-post="{% url 'pull-list:remove-series' pls.series_id %}{{ filter_query }}" hx-replace-url="true"
-                                      hx-target="#pull-list-content" hx-select="#pull-list-content" hx-swap="outerHTML">
+                                <form method="post"
+                                      action="{% url 'pull-list:remove-series' pls.series_id %}{{ filter_query }}"
+                                      hx-post="{% url 'pull-list:remove-series' pls.series_id %}{{ filter_query }}"
+                                      hx-replace-url="true"
+                                      hx-target="#pull-list-content"
+                                      hx-select="#pull-list-content"
+                                      hx-swap="outerHTML">
                                     {% csrf_token %}
-                                    <button type="submit" class="button is-small"
+                                    <button type="submit"
+                                            class="button is-small"
                                             title="{% trans 'Remove from pull list' %}"
                                             aria-label="{% blocktrans with series=pls.series %}Remove {{ series }} from pull list{% endblocktrans %}">
                                         <span class="icon is-small"><i class="fas fa-times"></i></span>

@@ -1,6 +1,8 @@
 {% extends parent_template|default:"base.html" %}
 {% load i18n static %}
-{% block title %}{% trans "Story Arcs - Metron" %}{% endblock %}
+{% block title %}
+    {% trans "Story Arcs - Metron" %}
+{% endblock %}
 {% block content %}
     <header class="block has-text-centered">
         <h1 class="title">{% trans "Story Arcs List" %}</h1>

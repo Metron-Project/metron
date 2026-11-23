@@ -107,7 +107,9 @@
                         <label class="label" for="list_type">{% trans "List Type" %}</label>
                         <div class="control has-icons-left">
                             <div class="select is-fullwidth">
-                                <select id="list_type" name="list_type" aria-label="{% trans 'Filter by list type' %}">
+                                <select id="list_type"
+                                        name="list_type"
+                                        aria-label="{% trans 'Filter by list type' %}">
                                     <option value="">{% trans "All Types" %}</option>
                                     {% for value, label in list_types %}
                                         <option value="{{ value }}"
@@ -192,7 +194,9 @@
                             <label class="label" for="is_private">{% trans "Privacy" %}</label>
                             <div class="control has-icons-left">
                                 <div class="select is-fullwidth">
-                                    <select id="is_private" name="is_private" aria-label="{% trans 'Filter by privacy' %}">
+                                    <select id="is_private"
+                                            name="is_private"
+                                            aria-label="{% trans 'Filter by privacy' %}">
                                         <option value="">{% trans "All Lists" %}</option>
                                         <option value="false"
                                                 {% if request.GET.is_private == "false" %}selected{% endif %}>

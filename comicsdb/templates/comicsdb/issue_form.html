@@ -71,48 +71,79 @@
             <h2 class="title is-5">{% trans "Primary Information" %}</h2>
             {% include "comicsdb/partials/form_errors.html" with form=form %}
             {% for field in form.hidden_fields %}{{ field }}{% endfor %}
-
             <div class="usab-group">
                 <h3 class="usab-group-label">{% trans "Identity" %}</h3>
                 <div class="columns is-multiline">
-                    <div class="column is-full">{% include "comicsdb/partials/form_field.html" with field=form.series %}</div>
-                    <div class="column is-half">{% include "comicsdb/partials/form_field.html" with field=form.number %}</div>
-                    <div class="column is-half">{% include "comicsdb/partials/form_field.html" with field=form.alt_number %}</div>
-                    <div class="column is-half">{% include "comicsdb/partials/form_field.html" with field=form.rating %}</div>
-                    <div class="column is-half">{% include "comicsdb/partials/form_field.html" with field=form.title %}</div>
-                    <div class="column is-full">{% include "comicsdb/partials/form_field.html" with field=form.name %}</div>
-                    <div class="column is-full">{% include "comicsdb/partials/form_field.html" with field=form.desc %}</div>
-                    <div class="column is-full">{% include "comicsdb/partials/form_field.html" with field=form.desc_is_solicitation %}</div>
+                    <div class="column is-full">
+                        {% include "comicsdb/partials/form_field.html" with field=form.series %}
+                    </div>
+                    <div class="column is-half">
+                        {% include "comicsdb/partials/form_field.html" with field=form.number %}
+                    </div>
+                    <div class="column is-half">
+                        {% include "comicsdb/partials/form_field.html" with field=form.alt_number %}
+                    </div>
+                    <div class="column is-half">
+                        {% include "comicsdb/partials/form_field.html" with field=form.rating %}
+                    </div>
+                    <div class="column is-half">
+                        {% include "comicsdb/partials/form_field.html" with field=form.title %}
+                    </div>
+                    <div class="column is-full">
+                        {% include "comicsdb/partials/form_field.html" with field=form.name %}
+                    </div>
+                    <div class="column is-full">
+                        {% include "comicsdb/partials/form_field.html" with field=form.desc %}
+                    </div>
+                    <div class="column is-full">
+                        {% include "comicsdb/partials/form_field.html" with field=form.desc_is_solicitation %}
+                    </div>
                 </div>
             </div>
-
             <div class="usab-group">
                 <h3 class="usab-group-label">{% trans "Publication" %}</h3>
                 <div class="columns is-multiline">
-                    <div class="column is-half">{% include "comicsdb/partials/form_field.html" with field=form.cover_date %}</div>
-                    <div class="column is-half">{% include "comicsdb/partials/form_field.html" with field=form.store_date %}</div>
-                    <div class="column is-half">{% include "comicsdb/partials/form_field.html" with field=form.foc_date %}</div>
-                    <div class="column is-half">{% include "comicsdb/partials/form_field.html" with field=form.price %}</div>
-                    <div class="column is-half">{% include "comicsdb/partials/form_field.html" with field=form.page %}</div>
+                    <div class="column is-half">
+                        {% include "comicsdb/partials/form_field.html" with field=form.cover_date %}
+                    </div>
+                    <div class="column is-half">
+                        {% include "comicsdb/partials/form_field.html" with field=form.store_date %}
+                    </div>
+                    <div class="column is-half">
+                        {% include "comicsdb/partials/form_field.html" with field=form.foc_date %}
+                    </div>
+                    <div class="column is-half">
+                        {% include "comicsdb/partials/form_field.html" with field=form.price %}
+                    </div>
+                    <div class="column is-half">
+                        {% include "comicsdb/partials/form_field.html" with field=form.page %}
+                    </div>
                 </div>
             </div>
-
             <div class="usab-group">
                 <h3 class="usab-group-label">{% trans "Codes & IDs" %}</h3>
                 <div class="columns is-multiline">
-                    <div class="column is-half">{% include "comicsdb/partials/form_field.html" with field=form.sku %}</div>
-                    <div class="column is-half">{% include "comicsdb/partials/form_field.html" with field=form.isbn %}</div>
-                    <div class="column is-half">{% include "comicsdb/partials/form_field.html" with field=form.upc %}</div>
-                    <div class="column is-half">{% include "comicsdb/partials/form_field.html" with field=form.cv_id %}</div>
-                    <div class="column is-half">{% include "comicsdb/partials/form_field.html" with field=form.gcd_id %}</div>
+                    <div class="column is-half">
+                        {% include "comicsdb/partials/form_field.html" with field=form.sku %}
+                    </div>
+                    <div class="column is-half">
+                        {% include "comicsdb/partials/form_field.html" with field=form.isbn %}
+                    </div>
+                    <div class="column is-half">
+                        {% include "comicsdb/partials/form_field.html" with field=form.upc %}
+                    </div>
+                    <div class="column is-half">
+                        {% include "comicsdb/partials/form_field.html" with field=form.cv_id %}
+                    </div>
+                    <div class="column is-half">
+                        {% include "comicsdb/partials/form_field.html" with field=form.gcd_id %}
+                    </div>
                 </div>
             </div>
-
             <div class="usab-group">
                 <h3 class="usab-group-label">{% trans "Cover Image" %}</h3>
                 {% include "comicsdb/partials/form_field.html" with field=form.image %}
             </div>
-
             <div class="usab-group">
                 <h3 class="usab-group-label">{% trans "Relationships" %}</h3>
                 {% include "comicsdb/partials/form_field.html" with field=form.characters %}

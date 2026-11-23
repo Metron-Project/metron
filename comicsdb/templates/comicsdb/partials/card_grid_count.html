@@ -23,5 +23,6 @@
         {% endwith %}
     {% endif %}
 {% else %}
-    <span class="card-footer-item is-size-7" aria-label="{% blocktrans %}No {{ count_label_plural }}{% endblocktrans %}">{% blocktrans %}0 {{ count_label_plural }}{% endblocktrans %}</span>
+    <span class="card-footer-item is-size-7"
+          aria-label="{% blocktrans %}No {{ count_label_plural }}{% endblocktrans %}">{% blocktrans %}0 {{ count_label_plural }}{% endblocktrans %}</span>
 {% endif %}

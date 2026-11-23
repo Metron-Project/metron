@@ -34,7 +34,7 @@
         {% for form in formset.forms %}
             <tr class="formset-row">
                 {% for field in form.visible_fields %}
-                    {% if field.name != 'DELETE' %}
+                    {% if field.name != "DELETE" %}
                         <td style="overflow: hidden; word-break: break-word;">
                             {# Hidden fields and non-field errors in first column only #}
                             {% if forloop.first %}
@@ -56,7 +56,7 @@
                                 <div class="control is-expanded">
                                     {% if field|is_field_type:"select" %}
                                         <span class="select{% if field.errors %} is-danger{% endif %} is-fullwidth">{{ field }}</span>
-                                    {% elif field|is_field_type:'input' %}
+                                    {% elif field|is_field_type:"input" %}
                                         {{ field|add_field_class:"input is-fullwidth" }}
                                     {% else %}
                                         {{ field }}

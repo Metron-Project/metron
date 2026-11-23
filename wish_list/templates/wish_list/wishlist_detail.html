@@ -24,7 +24,8 @@
                     </div>
                     <div class="column is-one-quarter">
                         <div class="field">
-                            <label class="label" for="{{ form.priority.id_for_label }}">{{ form.priority.label }}</label>
+                            <label class="label"
+                                   for="{{ form.priority.id_for_label }}">{{ form.priority.label }}</label>
                             <div class="control">
                                 <span class="select is-fullwidth">{{ form.priority }}</span>
                             </div>
@@ -42,7 +43,8 @@
                     </div>
                     <div class="column is-one-quarter">
                         <div class="field">
-                            <label class="label" for="{{ form.desired_grade.id_for_label }}">{{ form.desired_grade.label }}</label>
+                            <label class="label"
+                                   for="{{ form.desired_grade.id_for_label }}">{{ form.desired_grade.label }}</label>
                             <div class="control">
                                 <span class="select is-fullwidth">{{ form.desired_grade }}</span>
                             </div>
@@ -51,7 +53,8 @@
                     </div>
                     <div class="column is-one-quarter">
                         <div class="field">
-                            <label class="label" for="{{ form.max_price.id_for_label }}">{{ form.max_price.label }}</label>
+                            <label class="label"
+                                   for="{{ form.max_price.id_for_label }}">{{ form.max_price.label }}</label>
                             <div class="control">{{ form.max_price }}</div>
                             {% for error in form.max_price.errors %}<p class="help is-danger">{{ error }}</p>{% endfor %}
                         </div>
@@ -59,7 +62,7 @@
                 </div>
                 <div class="field is-grouped is-grouped-right">
                     <div class="control">
-                        <button type="submit" class="button is-primary ">
+                        <button type="submit" class="button is-primary">
                             <span class="icon is-small"><i class="fas fa-plus"></i></span>
                             <span>{% trans "Add to Wish List" %}</span>
                         </button>
@@ -68,7 +71,6 @@
             </form>
         </div>
     {% endif %}
-
     <div class="box">
         <h2 class="title is-5">
             {% blocktrans with count=wish_list_items|length %}Items ({{ count }}){% endblocktrans %}
@@ -98,9 +100,9 @@
                                     <a href="{{ item.issue.series.get_absolute_url }}">{{ item.issue.series }}</a>
                                 </td>
                                 <td>
-                                    {% if item.status == 'ACQUIRED' %}
+                                    {% if item.status == "ACQUIRED" %}
                                         <span class="tag is-success">{{ item.get_status_display }}</span>
-                                    {% elif item.status == 'FOUND' %}
+                                    {% elif item.status == "FOUND" %}
                                         <span class="tag is-info">{{ item.get_status_display }}</span>
                                     {% else %}
                                         <span class="tag is-warning">{{ item.get_status_display }}</span>
@@ -111,7 +113,7 @@
                                 {% if is_owner %}
                                     <td>
                                         <div class="buttons are-small">
-                                            {% if item.status != 'ACQUIRED' %}
+                                            {% if item.status != "ACQUIRED" %}
                                                 <a href="{% url 'wish-list:item-acquire' item.pk %}"
                                                    class="button is-success is-outlined"
                                                    title="{% trans 'Acquire' %}">

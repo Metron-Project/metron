@@ -1,6 +1,8 @@
 {% extends parent_template|default:"base.html" %}
 {% load i18n %}
-{% block title %}{% trans "Delete Poll - Metron" %}{% endblock %}
+{% block title %}
+    {% trans "Delete Poll - Metron" %}
+{% endblock %}
 {% block content %}
     <section class="section">
         <div class="container">
@@ -21,8 +23,7 @@
                                     </button>
                                 </div>
                                 <div class="control">
-                                    <a href="{% url 'polls:detail' object.pk %}"
-                                       class="button">{% trans "Cancel" %}</a>
+                                    <a href="{% url 'polls:detail' object.pk %}" class="button">{% trans "Cancel" %}</a>
                                 </div>
                             </div>
                         </form>

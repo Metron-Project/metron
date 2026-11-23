@@ -61,13 +61,11 @@
                         </div>
                         <div class="dropdown-menu" id="creator-actions-menu" role="menu">
                             <div class="dropdown-content">
-                                <a class="dropdown-item"
-                                   href="{% url 'creator:update' creator.slug %}">
+                                <a class="dropdown-item" href="{% url 'creator:update' creator.slug %}">
                                     <span class="icon is-small"><i class="fas fa-edit" aria-hidden="true"></i></span>
                                     <span>{% trans "Edit" %}</span>
                                 </a>
-                                <a class="dropdown-item"
-                                   href="{% url 'creator:history' creator.slug %}">
+                                <a class="dropdown-item" href="{% url 'creator:history' creator.slug %}">
                                     <span class="icon is-small"><i class="fas fa-history" aria-hidden="true"></i></span>
                                     <span>{% trans "History" %}</span>
                                 </a>
@@ -75,7 +73,8 @@
                                     <hr class="dropdown-divider">
                                     <a class="dropdown-item has-text-danger"
                                        href="{% url 'creator:delete' creator.slug %}">
-                                        <span class="icon is-small"><i class="fas fa-trash" aria-hidden="true"></i></span>
+                                        <span class="icon is-small"><i class="fas fa-trash"
+                                                                       aria-hidden="true"></i></span>
                                         <span>{% trans "Delete" %}</span>
                                     </a>
                                 {% endif %}

@@ -21,7 +21,7 @@
                             {% endif %}
                             {% for field in form %}
                                 <div class="field">
-                                    {% if field|is_field_type:'textarea' %}
+                                    {% if field|is_field_type:"textarea" %}
                                         <label class="label" for="{{ field.id_for_label }}">{{ field.label }}</label>
                                         <div class="control">{{ field|add_field_class:'textarea' }}</div>
                                     {% else %}
@@ -37,7 +37,8 @@
                                     <a href="{% url 'wish-list:detail' %}" class="button">{% trans "Cancel" %}</a>
                                 </div>
                                 <div class="control">
-                                    <button type="submit" class="button is-success">{% trans "Mark as Acquired" %}</button>
+                                    <button type="submit"
+                                            class="button is-success">{% trans "Mark as Acquired" %}</button>
                                 </div>
                             </div>
                         </form>

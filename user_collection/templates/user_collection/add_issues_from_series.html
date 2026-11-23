@@ -1,6 +1,8 @@
 {% extends parent_template|default:"base.html" %}
 {% load static i18n %}
-{% block title %}{% trans "Add from Series - My Collection - Metron" %}{% endblock %}
+{% block title %}
+    {% trans "Add from Series - My Collection - Metron" %}
+{% endblock %}
 {% block content %}
     <header class="block has-text-centered">
         <h1 class="title">{% trans "Add Issues from Series" %}</h1>
@@ -16,7 +18,8 @@
                             {% if form.non_field_errors %}<div class="notification is-danger">{{ form.non_field_errors }}</div>{% endif %}
                             <!-- Series Selection -->
                             <div class="field">
-                                <label class="label" for="{{ form.series.id_for_label }}">{{ form.series.label }}</label>
+                                <label class="label"
+                                       for="{{ form.series.id_for_label }}">{{ form.series.label }}</label>
                                 <div class="control">{{ form.series }}</div>
                                 {% if form.series.help_text %}<p class="help">{{ form.series.help_text }}</p>{% endif %}
                                 {% if form.series.errors %}<p class="help is-danger">{{ form.series.errors.0 }}</p>{% endif %}
@@ -40,13 +43,15 @@
                                 <div class="field is-horizontal">
                                     <div class="field-body">
                                         <div class="field">
-                                            <label class="label" for="{{ form.start_number.id_for_label }}">{{ form.start_number.label }}</label>
+                                            <label class="label"
+                                                   for="{{ form.start_number.id_for_label }}">{{ form.start_number.label }}</label>
                                             <div class="control">{{ form.start_number }}</div>
                                             {% if form.start_number.help_text %}<p class="help">{{ form.start_number.help_text }}</p>{% endif %}
                                             {% if form.start_number.errors %}<p class="help is-danger">{{ form.start_number.errors.0 }}</p>{% endif %}
                                         </div>
                                         <div class="field">
-                                            <label class="label" for="{{ form.end_number.id_for_label }}">{{ form.end_number.label }}</label>
+                                            <label class="label"
+                                                   for="{{ form.end_number.id_for_label }}">{{ form.end_number.label }}</label>
                                             <div class="control">{{ form.end_number }}</div>
                                             {% if form.end_number.help_text %}<p class="help">{{ form.end_number.help_text }}</p>{% endif %}
                                             {% if form.end_number.errors %}<p class="help is-danger">{{ form.end_number.errors.0 }}</p>{% endif %}
@@ -56,7 +61,8 @@
                             </div>
                             <!-- Default Format -->
                             <div class="field mt-4">
-                                <label class="label" for="{{ form.default_format.id_for_label }}">{{ form.default_format.label }}</label>
+                                <label class="label"
+                                       for="{{ form.default_format.id_for_label }}">{{ form.default_format.label }}</label>
                                 <div class="control">
                                     <div class="select">{{ form.default_format }}</div>
                                 </div>

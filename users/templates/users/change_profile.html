@@ -33,21 +33,21 @@
                         {% if field.name != "password" %}
                             <div class="field" data-field-name="{{ field.name }}">
                                 {# Text Input Fields #}
-                                {% if field|is_field_type:'input' %}
+                                {% if field|is_field_type:"input" %}
                                     <label class="label{% if field.field.required %} {{ form.required_css_class }}{% endif %}"
                                            for="{{ field.id_for_label }}">{{ field.label }}</label>
                                     <div class="control has-icons-left">
                                         {{ field|add_field_class:'input' }}
                                         <span class="icon is-small is-left">
-                                            {% if field.name == 'username' %}
+                                            {% if field.name == "username" %}
                                                 <i class="fas fa-user"></i>
-                                            {% elif field.name == 'email' %}
+                                            {% elif field.name == "email" %}
                                                 <i class="fas fa-envelope"></i>
-                                            {% elif field.name == 'first_name' %}
+                                            {% elif field.name == "first_name" %}
                                                 <i class="fas fa-id-badge"></i>
-                                            {% elif field.name == 'last_name' %}
+                                            {% elif field.name == "last_name" %}
                                                 <i class="fas fa-id-card"></i>
-                                            {% elif field.name == 'current_password' %}
+                                            {% elif field.name == "current_password" %}
                                                 <i class="fas fa-lock"></i>
                                             {% else %}
                                                 <i class="fas fa-pen"></i>
@@ -57,14 +57,14 @@
                                     {% for error in field.errors %}<p class="help is-danger {{ form.error_css_class }}">{{ error }}</p>{% endfor %}
                                     {% if field.help_text %}<p class="help">{{ field.help_text|safe }}</p>{% endif %}
                                     {# Textarea Fields #}
-                                {% elif field|is_field_type:'textarea' %}
+                                {% elif field|is_field_type:"textarea" %}
                                     <label class="label{% if field.field.required %} {{ form.required_css_class }}{% endif %}"
                                            for="{{ field.id_for_label }}">{{ field.label }}</label>
                                     <div class="control">{{ field|add_field_class:'textarea' }}</div>
                                     {% for error in field.errors %}<p class="help is-danger {{ form.error_css_class }}">{{ error }}</p>{% endfor %}
                                     {% if field.help_text %}<p class="help">{{ field.help_text|safe }}</p>{% endif %}
                                     {# Select Fields #}
-                                {% elif field|is_field_type:'select' %}
+                                {% elif field|is_field_type:"select" %}
                                     <label class="label{% if field.field.required %} {{ form.required_css_class }}{% endif %}"
                                            for="{{ field.id_for_label }}">{{ field.label }}</label>
                                     <div class="control">
@@ -98,7 +98,8 @@
                                     <i class="fas fa-lock"></i>
                                 </span>
                                 {% trans "To change your password, please use the" %}
-                                <a href="{% url 'change_password' %}" class="has-text-weight-bold">{% trans "password change form" %}</a>.
+                                <a href="{% url 'change_password' %}"
+                                   class="has-text-weight-bold">{% trans "password change form" %}</a>.
                             </p>
                         </div>
                     </div>

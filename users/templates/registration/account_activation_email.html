@@ -1,4 +1,5 @@
-{% load i18n %}{% autoescape off %}
+{% load i18n %}
+{% autoescape off %}
     <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
     <html xmlns="http://www.w3.org/1999/xhtml">
         <head>
@@ -65,7 +66,9 @@
                                             <td align="center" style="padding: 20px 0 30px 0;">
                                                 <table border="0" cellpadding="0" cellspacing="0">
                                                     <tr>
-                                                        <td align="center" style="background-color: #3273dc; border-radius: 6px;">
+                                                        <td align="center"
+                                                            style="background-color: #3273dc;
+                                                                   border-radius: 6px">
                                                             <a href="{{ protocol }}://{{ domain }}{% url 'activate' uidb64=uid token=token %}"
                                                                target="_blank"
                                                                style="display: inline-block;
@@ -131,7 +134,7 @@
                                                                    font-size: 14px;
                                                                    color: #4a4a4a;
                                                                    font-family: Arial, Helvetica, sans-serif">
-                                                            &#8226; {% trans "Contribute to the comic book database by adding and editing information" %}
+                                                            • {% trans "Contribute to the comic book database by adding and editing information" %}
                                                         </td>
                                                     </tr>
                                                     <tr>
@@ -139,7 +142,7 @@
                                                                    font-size: 14px;
                                                                    color: #4a4a4a;
                                                                    font-family: Arial, Helvetica, sans-serif">
-                                                            &#8226; {% trans "Access our comprehensive API for developers" %}
+                                                            • {% trans "Access our comprehensive API for developers" %}
                                                         </td>
                                                     </tr>
                                                     <tr>
@@ -147,7 +150,7 @@
                                                                    font-size: 14px;
                                                                    color: #4a4a4a;
                                                                    font-family: Arial, Helvetica, sans-serif">
-                                                            &#8226; {% trans "Join discussions with fellow comic book fans" %}
+                                                            • {% trans "Join discussions with fellow comic book fans" %}
                                                         </td>
                                                     </tr>
                                                     <tr>
@@ -155,7 +158,7 @@
                                                                    font-size: 14px;
                                                                    color: #4a4a4a;
                                                                    font-family: Arial, Helvetica, sans-serif">
-                                                            &#8226; {% trans "Help build the most accurate comic book database" %}
+                                                            • {% trans "Help build the most accurate comic book database" %}
                                                         </td>
                                                     </tr>
                                                 </table>

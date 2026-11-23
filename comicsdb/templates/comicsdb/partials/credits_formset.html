@@ -22,7 +22,7 @@
         {% for form in formset.forms %}
             <tr class="formset-row">
                 {% for field in form.visible_fields %}
-                    {% if field.name != 'DELETE' %}
+                    {% if field.name != "DELETE" %}
                         <td>
                             {# Hidden fields and non-field errors in first column only #}
                             {% if forloop.first %}

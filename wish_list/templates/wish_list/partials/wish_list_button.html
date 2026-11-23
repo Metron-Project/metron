@@ -6,7 +6,8 @@
         hx-swap="outerHTML"
         title="{% if on_wish_list %}{% trans 'Remove from wish list' %}{% else %}{% trans 'Add to wish list' %}{% endif %}">
     <span class="icon is-small">
-        <i class="{% if on_wish_list %}fas{% else %}far{% endif %} fa-bookmark" aria-hidden="true"></i>
+        <i class="{% if on_wish_list %}fas{% else %}far{% endif %} fa-bookmark"
+           aria-hidden="true"></i>
     </span>
     <span>{% trans "Wish List" %}</span>
 </button>

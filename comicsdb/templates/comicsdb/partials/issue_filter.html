@@ -52,7 +52,6 @@
                     <span>{% trans "Advanced Filters" %}</span>
                 </span>
             </summary>
-
             {# ── Group: Series ───────────────────────────────────────────── #}
             <h4 class="title is-6 has-text-grey mt-4 mb-3">{% trans "Series" %}</h4>
             <div class="columns is-multiline">
@@ -135,7 +134,6 @@
                     </div>
                 </div>
             </div>
-
             {# ── Group: Issue Numbers ────────────────────────────────────── #}
             <h4 class="title is-6 has-text-grey mt-4 mb-3">{% trans "Issue Numbers" %}</h4>
             <div class="columns is-multiline">
@@ -176,7 +174,6 @@
                     </div>
                 </div>
             </div>
-
             {# ── Group: Dates ────────────────────────────────────────────── #}
             <h4 class="title is-6 has-text-grey mt-4 mb-3">{% trans "Dates" %}</h4>
             <div class="columns is-multiline">
@@ -186,11 +183,13 @@
                         <label class="label" for="cover_year">{% trans "Cover Year" %}</label>
                         <div class="control has-icons-left">
                             <div class="select is-fullwidth">
-                                <select id="cover_year" name="cover_year" aria-label="{% trans 'Filter by cover year' %}">
+                                <select id="cover_year"
+                                        name="cover_year"
+                                        aria-label="{% trans 'Filter by cover year' %}">
                                     <option value="">{% trans "All Years" %}</option>
                                     {% now "m" as current_month %}
                                     {% now "Y" as current_year %}
-                                    {% if current_month >= '10' %}
+                                    {% if current_month >= "10" %}
                                         {% with next_year=current_year|add:"1" %}
                                             <option value="{{ next_year }}"
                                                     {% if request.GET.cover_year == next_year|stringformat:"s" %}selected{% endif %}>
@@ -222,15 +221,24 @@
                                         name="cover_month"
                                         aria-label="{% trans 'Filter by cover month' %}">
                                     <option value="">{% trans "All Months" %}</option>
-                                    <option value="1" {% if request.GET.cover_month == "1" %}selected{% endif %}>{% trans "January" %}</option>
-                                    <option value="2" {% if request.GET.cover_month == "2" %}selected{% endif %}>{% trans "February" %}</option>
-                                    <option value="3" {% if request.GET.cover_month == "3" %}selected{% endif %}>{% trans "March" %}</option>
-                                    <option value="4" {% if request.GET.cover_month == "4" %}selected{% endif %}>{% trans "April" %}</option>
-                                    <option value="5" {% if request.GET.cover_month == "5" %}selected{% endif %}>{% trans "May" %}</option>
-                                    <option value="6" {% if request.GET.cover_month == "6" %}selected{% endif %}>{% trans "June" %}</option>
-                                    <option value="7" {% if request.GET.cover_month == "7" %}selected{% endif %}>{% trans "July" %}</option>
-                                    <option value="8" {% if request.GET.cover_month == "8" %}selected{% endif %}>{% trans "August" %}</option>
-                                    <option value="9" {% if request.GET.cover_month == "9" %}selected{% endif %}>{% trans "September" %}</option>
+                                    <option value="1"
+                                            {% if request.GET.cover_month == "1" %}selected{% endif %}>{% trans "January" %}</option>
+                                    <option value="2"
+                                            {% if request.GET.cover_month == "2" %}selected{% endif %}>{% trans "February" %}</option>
+                                    <option value="3"
+                                            {% if request.GET.cover_month == "3" %}selected{% endif %}>{% trans "March" %}</option>
+                                    <option value="4"
+                                            {% if request.GET.cover_month == "4" %}selected{% endif %}>{% trans "April" %}</option>
+                                    <option value="5"
+                                            {% if request.GET.cover_month == "5" %}selected{% endif %}>{% trans "May" %}</option>
+                                    <option value="6"
+                                            {% if request.GET.cover_month == "6" %}selected{% endif %}>{% trans "June" %}</option>
+                                    <option value="7"
+                                            {% if request.GET.cover_month == "7" %}selected{% endif %}>{% trans "July" %}</option>
+                                    <option value="8"
+                                            {% if request.GET.cover_month == "8" %}selected{% endif %}>{% trans "August" %}</option>
+                                    <option value="9"
+                                            {% if request.GET.cover_month == "9" %}selected{% endif %}>{% trans "September" %}</option>
                                     <option value="10"
                                             {% if request.GET.cover_month == "10" %}selected{% endif %}>
                                         {% trans "October" %}
@@ -312,7 +320,6 @@
                     </div>
                 </div>
             </div>
-
             {# ── Group: Codes & IDs ──────────────────────────────────────── #}
             <h4 class="title is-6 has-text-grey mt-4 mb-3">{% trans "Codes & IDs" %}</h4>
             <div class="columns is-multiline">
@@ -391,7 +398,6 @@
                     </div>
                 </div>
             </div>
-
             {# ── Group: Description ──────────────────────────────────────── #}
             <h4 class="title is-6 has-text-grey mt-4 mb-3">{% trans "Description" %}</h4>
             <div class="columns is-multiline">
@@ -446,7 +452,8 @@
         </div>
     </form>
 </div>
-<link rel="stylesheet" href="{% static 'site/css/bulma-calendar.min.css' %}">
+<link rel="stylesheet"
+      href="{% static 'site/css/bulma-calendar.min.css' %}">
 <script src="{% static 'extensions/bulma-calendar/dist/js/bulma-calendar.min.js' %}"></script>
 <script>
 document.addEventListener('DOMContentLoaded', function() {

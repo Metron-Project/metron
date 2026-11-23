@@ -21,7 +21,8 @@
                         <h2 id="card-title-{{ issue.slug }}"
                             class="card-header-title is-centered">
                             {{ issue }}
-                            {% if is_new %}&nbsp;<span class="tag is-primary is-rounded" aria-label="{% trans 'Recently added' %}">{% trans "New!" %}</span>{% endif %}
+                            {% if is_new %}&nbsp;<span class="tag is-primary is-rounded"
+                                                       aria-label="{% trans 'Recently added' %}">{% trans "New!" %}</span>{% endif %}
                         </h2>
                     {% endwith %}
                 </header>
@@ -64,9 +65,11 @@
                 <footer class="card-footer">
                     <span class="card-footer-item is-size-7"
                           title="{{ issue.series.publisher }}"
-                          style="overflow: hidden; text-overflow: ellipsis; white-space: nowrap; display: block; text-align: center;">
-                        {{ issue.series.publisher }}
-                    </span>
+                          style="overflow: hidden;
+                                 text-overflow: ellipsis;
+                                 white-space: nowrap;
+                                 display: block;
+                                 text-align: center">{{ issue.series.publisher }}</span>
                     <span class="card-footer-item is-size-7 has-text-weight-semibold">
                         <time datetime="{{ issue.cover_date|date:'Y-m' }}">
                             {{ issue.cover_date|date:"M Y" }}

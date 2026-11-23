@@ -15,13 +15,13 @@ Required context:
 <span id="rating-summary-{{ rated_object.pk }}"
       {% if oob %}hx-swap-oob="true"{% endif %}>
     {% if average_rating %}
-        <span class="has-text-grey">&middot;</span>
+        <span class="has-text-grey">·</span>
         <span class="rating-summary-stars">
             {% for star_num in "12345" %}
                 <span class="rating-summary-star">
                     <i class="far fa-star" style="color: #dbdbdb;"></i>
                     <span class="rating-summary-star-fill"
-                          style="width: {{ average_rating|star_fill_percent:star_num }}%;">
+                          style="width: {{ average_rating|star_fill_percent:star_num }}%">
                         <i class="fas fa-star" style="color: #ffce54;"></i>
                     </span>
                 </span>

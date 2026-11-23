@@ -130,7 +130,9 @@
                         <label class="label" for="book_format">{% trans "Format" %}</label>
                         <div class="control has-icons-left">
                             <div class="select is-fullwidth">
-                                <select id="book_format" name="book_format" aria-label="{% trans 'Filter by format' %}">
+                                <select id="book_format"
+                                        name="book_format"
+                                        aria-label="{% trans 'Filter by format' %}">
                                     <option value="">{% trans "All Formats" %}</option>
                                     {% for value, label in book_formats %}
                                         <option value="{{ value }}"
@@ -152,7 +154,9 @@
                         <label class="label" for="is_read">{% trans "Read Status" %}</label>
                         <div class="control has-icons-left">
                             <div class="select is-fullwidth">
-                                <select id="is_read" name="is_read" aria-label="{% trans 'Filter by read status' %}">
+                                <select id="is_read"
+                                        name="is_read"
+                                        aria-label="{% trans 'Filter by read status' %}">
                                     <option value="">{% trans "All" %}</option>
                                     <option value="true"
                                             {% if request.GET.is_read == "true" %}selected{% endif %}>{% trans "Read" %}</option>

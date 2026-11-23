@@ -32,8 +32,7 @@
             <div class="level-left"></div>
             <div class="level-right">
                 <div class="buttons">
-                    <a class="button is-danger"
-                       href="{% url 'polls:delete' poll.pk %}">
+                    <a class="button is-danger" href="{% url 'polls:delete' poll.pk %}">
                         <span class="icon is-small"><i class="fas fa-trash"></i></span>
                         <span>{% trans "Delete" %}</span>
                     </a>
@@ -61,10 +60,7 @@
                                 <div class="field">
                                     <div class="control">
                                         <label class="radio">
-                                            <input type="radio"
-                                                   name="choice"
-                                                   value="{{ choice.pk }}"
-                                                   required>
+                                            <input type="radio" name="choice" value="{{ choice.pk }}" required>
                                             {{ choice.text }}
                                         </label>
                                     </div>
@@ -72,7 +68,7 @@
                             {% endfor %}
                             <div class="field mt-4">
                                 <div class="control">
-                                    <button type="submit" class="button is-primary ">
+                                    <button type="submit" class="button is-primary">
                                         <span class="icon"><i class="fas fa-vote-yea"></i></span>
                                         <span>{% trans "Cast Vote" %}</span>
                                     </button>
@@ -101,17 +97,31 @@
                 <dl>
                     <dt class="has-text-weight-bold">{% trans "Status:" %}</dt>
                     <dd class="mb-3">
-                        {% if poll.status == "active" %}{% trans "Active" %}{% elif poll.status == "upcoming" %}{% trans "Upcoming" %}{% else %}{% trans "Closed" %}{% endif %}
+                        {% if poll.status == "active" %}
+                            {% trans "Active" %}
+                        {% elif poll.status == "upcoming" %}
+                            {% trans "Upcoming" %}
+                        {% else %}
+                            {% trans "Closed" %}
+                        {% endif %}
                     </dd>
                     <dt class="has-text-weight-bold">{% trans "Voting Opens:" %}</dt>
-                    <dd class="mb-3">{{ poll.start_date|date:"F j, Y" }}</dd>
+                    <dd class="mb-3">
+                        {{ poll.start_date|date:"F j, Y" }}
+                    </dd>
                     <dt class="has-text-weight-bold">{% trans "Voting Closes:" %}</dt>
-                    <dd class="mb-3">{{ poll.end_date|date:"F j, Y" }}</dd>
+                    <dd class="mb-3">
+                        {{ poll.end_date|date:"F j, Y" }}
+                    </dd>
                     <dt class="has-text-weight-bold">{% trans "Total Votes:" %}</dt>
-                    <dd class="mb-3">{{ total_votes }}</dd>
+                    <dd class="mb-3">
+                        {{ total_votes }}
+                    </dd>
                     {% if poll.created_by %}
                         <dt class="has-text-weight-bold">{% trans "Created By:" %}</dt>
-                        <dd class="mb-3">{{ poll.created_by.username }}</dd>
+                        <dd class="mb-3">
+                            {{ poll.created_by.username }}
+                        </dd>
                     {% endif %}
                 </dl>
             </div>

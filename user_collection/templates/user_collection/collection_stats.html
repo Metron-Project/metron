@@ -48,7 +48,9 @@
     </script>
     <script src="{% static 'chartkick/chartkick.js' %}"></script>
 {% endblock %}
-{% block title %}{% trans "Collection Statistics - Metron" %}{% endblock %}
+{% block title %}
+    {% trans "Collection Statistics - Metron" %}
+{% endblock %}
 {% block content %}
     <header class="block has-text-centered">
         <h1 class="title">{% trans "Collection Statistics" %}</h1>
@@ -195,11 +197,11 @@
                                         <tr>
                                             <td>
                                                 <span class="tag {% if format.book_format == 'DIGITAL' %}is-info{% elif format.book_format == 'BOTH' %}is-success{% else %}is-dark{% endif %}">
-                                                    {% if format.book_format == 'PRINT' %}
+                                                    {% if format.book_format == "PRINT" %}
                                                         {% trans "Print" %}
-                                                    {% elif format.book_format == 'DIGITAL' %}
+                                                    {% elif format.book_format == "DIGITAL" %}
                                                         {% trans "Digital" %}
-                                                    {% elif format.book_format == 'BOTH' %}
+                                                    {% elif format.book_format == "BOTH" %}
                                                         {% trans "Both" %}
                                                     {% endif %}
                                                 </span>
