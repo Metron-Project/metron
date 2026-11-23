@@ -4,12 +4,15 @@ import io
 import json
 from unittest.mock import patch
 
+import heggra.views
 import pytest
+from django.core.cache import cache
 from django.core.files.uploadedfile import SimpleUploadedFile
 from django.urls import reverse
 from PIL import Image
 
 from comicsdb.forms.widgets import ImageUploadWidget
+from metron import heggra_urls
 
 LIMIT = 2
 
@@ -68,6 +71,37 @@ def test_refused_uploads_do_not_count(media_root, low_limit, auto_login_user):
         assert resp.status_code == 422
 
     assert _post_image(client).status_code == 200
+
+
+def test_simultaneous_uploads_cannot_pass_the_limit(media_root, low_limit, auto_login_user):
+    """An upload that arrives while another is still being saved sees that one's slot taken."""
+    client, _ = auto_login_user()
+    for _attempt in range(LIMIT - 1):
+        _post_image(client)
+    save_upload = heggra.views.upload
+    arrived_meanwhile = []
+
+    def save_while_another_arrives(request):
+        if not arrived_meanwhile:
+            arrived_meanwhile.append(_post_image(client))
+        return save_upload(request)
+
+    with patch("heggra.views.upload", save_while_another_arrives):
+        first = _post_image(client)
+
+    assert first.status_code == 200
+    assert arrived_meanwhile[0].status_code == 429
+
+
+def test_refused_uploads_give_their_slot_back(media_root, low_limit, auto_login_user):
+    client, user = auto_login_user()
+    for _attempt in range(LIMIT):
+        _post_image(client)
+    for _attempt in range(3):
+        _post_image(client)
+
+    # Over-limit attempts don't pile up, so the window only holds the saved uploads.
+    assert cache.get(heggra_urls._key(user)) == LIMIT
 
 
 def test_limit_is_per_user(media_root, low_limit, client, create_user, test_password):
