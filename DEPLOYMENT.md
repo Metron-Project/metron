@@ -615,8 +615,9 @@ systemctl --user list-timers metron-history-cleanup.timer
 
 The image upload widget ([heggra](https://heggra.readthedocs.io/)) uploads a picked file
 right away and holds it in private storage (`uploads/heggra/` in Spaces) until its form is
-saved. A file from a form that was never saved stays behind, so delete the expired ones once a
-day.
+saved. A file from a form that was never saved stays behind. `heggra_cleanup` deletes the
+ones older than a day plus an hour, so run it hourly: a daily run would leave files that just
+missed the cutoff for close to two days.
 
 Create the service unit at `~/.config/systemd/user/metron-upload-cleanup.service`:
 
@@ -635,10 +636,10 @@ Create the timer unit at `~/.config/systemd/user/metron-upload-cleanup.timer`:
 
 ```ini
 [Unit]
-Description=Daily cleanup of expired temporary image uploads
+Description=Hourly cleanup of expired temporary image uploads
 
 [Timer]
-OnCalendar=daily
+OnCalendar=hourly
 Persistent=true
 
 [Install]
