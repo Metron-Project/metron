@@ -7,7 +7,6 @@ from django.contrib.auth.forms import AuthenticationForm, UserChangeForm, UserCr
 from django.core.exceptions import ValidationError
 from django.forms import (
     CharField,
-    ClearableFileInput,
     EmailField,
     EmailInput,
     Form,
@@ -15,6 +14,7 @@ from django.forms import (
 )
 from django.utils.translation import gettext_lazy as _
 
+from comicsdb.forms.widgets import ImageUploadWidget
 from users import login_throttle
 from users.models import CustomUser
 from users.utils import check_email_domain
@@ -164,7 +164,7 @@ class CustomUserChangeForm(UserChangeForm):
         model = CustomUser
         fields = ("username", "first_name", "last_name", "email", "bio", "image")
         widgets = {
-            "image": ClearableFileInput(),
+            "image": ImageUploadWidget(),
         }
 
     def __init__(self, *args, request=None, **kwargs):

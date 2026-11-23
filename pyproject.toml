@@ -22,6 +22,7 @@ dependencies = [
     "djangorestframework",
     "drf-spectacular",
     "gunicorn",
+    "heggra>=0.1.0",
     "imagehash",
     "isbnlib",
     "izaya>=0.4.0",

@@ -1,0 +1,26 @@
+/* ========================================
+   heggra Upload Widget
+   ======================================== */
+
+/* Bound previews without forcing a square, so tall covers keep their shape */
+.heggra-preview {
+    display: block;
+    width: auto;
+    height: auto;
+    max-width: 8rem;
+    max-height: 12rem;
+}
+
+/* Lay out the current or uploaded file's preview, name, size and buttons in a row */
+.heggra-current,
+.heggra-file {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.75rem;
+    margin-top: 0.75rem;
+}
+
+.heggra-current {
+    margin-bottom: 0.75rem;
+}

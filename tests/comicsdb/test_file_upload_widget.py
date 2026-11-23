@@ -2,10 +2,22 @@
 
 import pytest
 from django.forms import ClearableFileInput, Form, ImageField
-from django.template import Context, Template
 from django.template.loader import get_template
+from django.templatetags.static import static
+from django.urls import reverse
+from heggra import UploadWidget
 
+from comicsdb.forms.arc import ArcForm
+from comicsdb.forms.character import CharacterForm
 from comicsdb.forms.creator import CreatorForm
+from comicsdb.forms.imprint import ImprintForm
+from comicsdb.forms.issue import IssueForm
+from comicsdb.forms.publisher import PublisherForm
+from comicsdb.forms.team import TeamForm
+from comicsdb.forms.universe import UniverseForm
+from comicsdb.forms.widgets import MAX_IMAGE_SIZE
+from reading_lists.forms import ReadingListForm
+from users.forms import CustomUserChangeForm
 
 
 class TestFileUploadWidgetTemplate:
@@ -69,28 +81,44 @@ class TestFileUploadWidgetTemplate:
         assert "Choose a file" in rendered
 
 
-class TestFileUploadWidgetInContext:
-    """Test file upload widget rendered in the context of actual forms."""
+class TestUploadWidgetInForms:
+    """Test that every image form except the variant formset uses heggra's upload widget."""
 
-    @pytest.fixture
-    def creator_form_template(self):
-        """Return a template that renders the creator form."""
-        return Template(
-            """
-            {% load bulma_tags %}
-            {{ form.image }}
-            """
-        )
+    @pytest.mark.parametrize(
+        "form_class",
+        [
+            ArcForm,
+            CharacterForm,
+            CreatorForm,
+            CustomUserChangeForm,
+            ImprintForm,
+            IssueForm,
+            PublisherForm,
+            ReadingListForm,
+            TeamForm,
+            UniverseForm,
+        ],
+    )
+    def test_image_field_uses_upload_widget(self, db, form_class):
+        """Test that the image field is an image UploadWidget that renders the htmx uploader."""
+        form = form_class()
+        widget = form.fields["image"].widget
+        assert isinstance(widget, UploadWidget)
+        assert widget.image
+        assert widget.max_size == MAX_IMAGE_SIZE
 
-    def test_creator_form_image_field_has_onchange_handler(self, db, creator_form_template):
-        """Test that creator form image field includes onchange handler."""
-        form = CreatorForm()
-        context = Context({"form": form})
-        rendered = creator_form_template.render(context)
+        rendered = form["image"].as_widget()
+        assert "data-heggra" in rendered
+        assert f'hx-post="{reverse("heggra:upload")}"' in rendered
+        assert 'accept="image/*"' in rendered
+        assert f'data-heggra-max-size="{MAX_IMAGE_SIZE}"' in rendered
 
-        # Verify onchange handler is present
-        assert "onchange" in rendered
-        assert "filename-image" in rendered
+    def test_base_template_loads_heggra_script(self, client):
+        """Test that every page loads heggra.js and heggra.css, which the upload widgets need."""
+        resp = client.get(reverse("home"))
+        content = resp.content.decode()
+        assert static("heggra/heggra.js") in content
+        assert static("site/css/heggra.css") in content
 
 
 class TestWikiFormFieldFileUpload:

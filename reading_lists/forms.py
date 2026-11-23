@@ -3,6 +3,7 @@ from django.db.models import Q
 from django.utils.translation import gettext_lazy as _
 from izaya import LookupWidget
 
+from comicsdb.forms.widgets import ImageUploadWidget
 from comicsdb.lookups import ArcLookup, IssueLookup, SeriesLookup
 from comicsdb.models.arc import Arc
 from comicsdb.models.issue import Issue
@@ -52,7 +53,7 @@ class ReadingListForm(forms.ModelForm):
         )
         widgets = {
             "name": forms.TextInput(attrs={"placeholder": _("Enter a name for your reading list")}),
-            "image": forms.ClearableFileInput(),
+            "image": ImageUploadWidget(),
             "desc": forms.Textarea(
                 attrs={
                     "placeholder": _("Describe the reading list (optional)"),

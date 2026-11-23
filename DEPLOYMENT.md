@@ -30,6 +30,7 @@ with Quadlet (systemd-managed containers).
   - [Reserved IP (~zero downtime)](#reserved-ip-zero-downtime)
 - [Updating the application](#updating-the-application)
 - [History cleanup](#history-cleanup)
+- [Upload cleanup](#upload-cleanup)
 - [OpenCollective donor sync](#opencollective-donor-sync)
   - [Initial setup](#initial-setup)
   - [Automated sync with a systemd timer](#automated-sync-with-a-systemd-timer)
@@ -610,6 +611,53 @@ systemctl --user list-timers metron-history-cleanup.timer
 
 ---
 
+## Upload cleanup
+
+The image upload widget ([heggra](https://heggra.readthedocs.io/)) uploads a picked file
+right away and holds it in private storage (`uploads/heggra/` in Spaces) until its form is
+saved. A file from a form that was never saved stays behind. `heggra_cleanup` deletes the
+ones older than a day plus an hour, so run it hourly: a daily run would leave files that just
+missed the cutoff for close to two days.
+
+Create the service unit at `~/.config/systemd/user/metron-upload-cleanup.service`:
+
+```ini
+[Unit]
+Description=Delete expired temporary image uploads
+After=metron-web.service
+Requires=metron-web.service
+
+[Service]
+Type=oneshot
+ExecStart=podman exec metron-web python manage.py heggra_cleanup
+```
+
+Create the timer unit at `~/.config/systemd/user/metron-upload-cleanup.timer`:
+
+```ini
+[Unit]
+Description=Hourly cleanup of expired temporary image uploads
+
+[Timer]
+OnCalendar=hourly
+Persistent=true
+
+[Install]
+WantedBy=timers.target
+```
+
+Enable and start the timer:
+
+```bash
+systemctl --user daemon-reload
+systemctl --user enable --now metron-upload-cleanup.timer
+
+# Verify it is scheduled
+systemctl --user list-timers metron-upload-cleanup.timer
+```
+
+---
+
 ## OpenCollective donor sync
 
 Metron rewards OpenCollective donors with a temporary elevated API rate limit
@@ -875,12 +923,13 @@ podman exec metron-postgres psql -U {db_username} -d metron -Atc \
 
 **2. Stop everything that writes to the database**, including the timers.
 `certbot-renew.timer` doesn't touch the database, but a renewal restarts
-`metron-nginx`, which would start the whole stack again mid-upgrade:
+`metron-nginx`, which would start the whole stack again mid-upgrade. Likewise,
+`metron-upload-cleanup.service` requires `metron-web`, so its timer would start it:
 
 ```bash
 systemctl --user stop metron-nginx metron-anubis metron-web
 systemctl --user stop metron-backup.timer metron-history-cleanup.timer \
-    metron-opencollective-sync.timer certbot-renew.timer
+    metron-opencollective-sync.timer metron-upload-cleanup.timer certbot-renew.timer
 ```
 
 **3. Take the final dump.** Run the backup service first so there is also an
@@ -985,7 +1034,7 @@ podman exec metron-postgres psql -U {db_username} -d metron -Atc \
 ```bash
 systemctl --user start metron-web metron-anubis metron-nginx
 systemctl --user start metron-backup.timer metron-history-cleanup.timer \
-    metron-opencollective-sync.timer certbot-renew.timer
+    metron-opencollective-sync.timer metron-upload-cleanup.timer certbot-renew.timer
 ```
 
 Check that the site loads, that a name search with an accented name works
@@ -1004,7 +1053,7 @@ systemctl --user daemon-reload
 systemctl --user start metron-postgres
 systemctl --user start metron-web metron-anubis metron-nginx
 systemctl --user start metron-backup.timer metron-history-cleanup.timer \
-    metron-opencollective-sync.timer certbot-renew.timer
+    metron-opencollective-sync.timer metron-upload-cleanup.timer certbot-renew.timer
 ```
 
 If the repo `.quadlet/` change was already merged, revert it too. Otherwise the

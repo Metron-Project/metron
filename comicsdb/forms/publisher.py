@@ -1,9 +1,10 @@
 from django.conf import settings
 from django.contrib.postgres.forms import SimpleArrayField
-from django.forms import CharField, ClearableFileInput, ModelForm, ValidationError
+from django.forms import CharField, ModelForm, ValidationError
 from django.utils.translation import gettext_lazy as _
 from izaya import LookupWidget
 
+from comicsdb.forms.widgets import ImageUploadWidget
 from comicsdb.lookups import PublisherLookup
 from comicsdb.models import Publisher
 
@@ -23,7 +24,7 @@ class PublisherForm(ModelForm):
         model = Publisher
         fields = ["name", "alt_names", "desc", "founded", "country", "cv_id", "gcd_id", "image"]
         widgets = {
-            "image": ClearableFileInput(),
+            "image": ImageUploadWidget(),
         }
 
     field_order = [
