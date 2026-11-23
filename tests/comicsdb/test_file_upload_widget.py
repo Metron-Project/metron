@@ -3,6 +3,7 @@
 import pytest
 from django.forms import ClearableFileInput, Form, ImageField
 from django.template.loader import get_template
+from django.templatetags.static import static
 from django.urls import reverse
 from heggra import UploadWidget
 
@@ -10,9 +11,12 @@ from comicsdb.forms.arc import ArcForm
 from comicsdb.forms.character import CharacterForm
 from comicsdb.forms.creator import CreatorForm
 from comicsdb.forms.imprint import ImprintForm
+from comicsdb.forms.issue import IssueForm
 from comicsdb.forms.publisher import PublisherForm
 from comicsdb.forms.team import TeamForm
 from comicsdb.forms.universe import UniverseForm
+from reading_lists.forms import ReadingListForm
+from users.forms import CustomUserChangeForm
 
 
 class TestFileUploadWidgetTemplate:
@@ -77,11 +81,22 @@ class TestFileUploadWidgetTemplate:
 
 
 class TestUploadWidgetInForms:
-    """Test that the metadata forms use heggra's upload widget for their images."""
+    """Test that every image form except the variant formset uses heggra's upload widget."""
 
     @pytest.mark.parametrize(
         "form_class",
-        [ArcForm, CharacterForm, CreatorForm, ImprintForm, PublisherForm, TeamForm, UniverseForm],
+        [
+            ArcForm,
+            CharacterForm,
+            CreatorForm,
+            CustomUserChangeForm,
+            ImprintForm,
+            IssueForm,
+            PublisherForm,
+            ReadingListForm,
+            TeamForm,
+            UniverseForm,
+        ],
     )
     def test_image_field_uses_upload_widget(self, db, form_class):
         """Test that the image field is an image UploadWidget that renders the htmx uploader."""
@@ -94,6 +109,11 @@ class TestUploadWidgetInForms:
         assert "data-heggra" in rendered
         assert f'hx-post="{reverse("heggra:upload")}"' in rendered
         assert 'accept="image/*"' in rendered
+
+    def test_base_template_loads_heggra_script(self, client):
+        """Test that every page loads heggra.js, which the upload widgets need."""
+        resp = client.get(reverse("home"))
+        assert static("heggra/heggra.js") in resp.content.decode()
 
 
 class TestWikiFormFieldFileUpload:
