@@ -29,9 +29,9 @@ def low_limit():
         yield
 
 
-def _post_image(client):
-    """Post an image to the upload view the way the widget does."""
-    widget = ImageUploadWidget()
+def _post_image(client, widget=None):
+    """Post an image to the upload view the way ``widget`` does."""
+    widget = widget or ImageUploadWidget()
     hx_vals = json.loads(widget.get_context("image", None, {})["widget"]["hx_vals"])
     buffer = io.BytesIO()
     Image.new("RGB", (30, 45), "red").save(buffer, "PNG")
@@ -59,6 +59,31 @@ def test_upload_over_the_limit_is_refused(media_root, low_limit, auto_login_user
     assert resp.headers["X-Heggra-Error"] == "true"
     assert "too many files" in resp.content.decode()
     assert len(list((media_root / "heggra").iterdir())) == LIMIT
+
+
+def test_limit_error_uses_the_widget_classes(media_root, low_limit, auto_login_user):
+    """Like heggra's own errors, the limit's message is styled with the posting widget's classes."""
+    client, _ = auto_login_user()
+    for _attempt in range(LIMIT):
+        _post_image(client)
+
+    resp = _post_image(client, ImageUploadWidget(classes={"error": "notification is-danger"}))
+
+    assert resp.status_code == 429
+    assert 'class="heggra-error notification is-danger"' in resp.content.decode()
+
+
+def test_limit_error_without_a_valid_config_uses_the_setting(
+    media_root, low_limit, auto_login_user, settings
+):
+    client, _ = auto_login_user()
+    for _attempt in range(LIMIT):
+        _post_image(client)
+
+    resp = client.post(reverse("heggra:upload"), {"heggra-config": "forged"})
+
+    assert resp.status_code == 429
+    assert f'class="heggra-error {settings.HEGGRA_CLASSES["error"]}"' in resp.content.decode()
 
 
 def test_refused_uploads_do_not_count(media_root, low_limit, auto_login_user):

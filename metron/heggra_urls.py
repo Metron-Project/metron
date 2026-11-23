@@ -10,6 +10,7 @@ users.login_throttle) it fails open while Redis is unavailable.
 import contextlib
 
 from django.conf import settings
+from django.core import signing
 from django.core.cache import cache
 from django.http import HttpRequest, HttpResponse
 from django.shortcuts import render
@@ -18,6 +19,7 @@ from django.utils.translation import gettext as _
 from django.views.decorators.cache import never_cache
 from django.views.decorators.http import require_POST
 from heggra import views as heggra_views
+from heggra.storage import CONFIG_SALT, get_max_age
 
 UPLOAD_WINDOW = 60 * 60  # seconds
 # Enough for a contributor adding a week's covers in one sitting.
@@ -53,6 +55,21 @@ def _release(user) -> None:
         cache.decr(_key(user))
 
 
+def _error_classes(request: HttpRequest) -> dict[str, str]:
+    """Return the CSS classes of the widget that posted ``request``, as heggra's errors use.
+
+    The widget signs its classes into its config, merged from HEGGRA_CLASSES and its own
+    classes=. A request without a valid config falls back to the setting.
+    """
+    try:
+        config = signing.loads(
+            request.POST.get("heggra-config", ""), salt=CONFIG_SALT, max_age=get_max_age()
+        )
+    except signing.BadSignature:
+        return getattr(settings, "HEGGRA_CLASSES", {})
+    return config.get("classes", {})
+
+
 @never_cache
 @require_POST
 def upload(request: HttpRequest) -> HttpResponse:
@@ -67,7 +84,7 @@ def upload(request: HttpRequest) -> HttpResponse:
     if limited and _reserve(user) > UPLOAD_LIMIT:
         _release(user)
         context = {
-            "classes": getattr(settings, "HEGGRA_CLASSES", {}),
+            "classes": _error_classes(request),
             "messages": [_("You've uploaded too many files. Please try again in an hour.")],
         }
         response = render(request, "heggra/error.html", context, status=429)
