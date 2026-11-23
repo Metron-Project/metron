@@ -1,6 +1,5 @@
 from django.forms import (
     BooleanField,
-    ClearableFileInput,
     DateInput,
     Form,
     HiddenInput,
@@ -9,6 +8,7 @@ from django.forms import (
     ValidationError,
 )
 from django.utils.translation import gettext_lazy as _
+from heggra import UploadWidget
 from isbnlib import canonical, is_isbn10, is_isbn13
 from izaya import LookupWidget
 
@@ -100,7 +100,7 @@ class IssueForm(SolicitationFlagFormMixin, ModelForm):
             "teams": TeamsWidget,
             "universes": UniversesWidget,
             "reprints": IssuesWidget,
-            "image": ClearableFileInput(),
+            "image": UploadWidget(image=True),
         }
         help_texts = {
             "alt_number": _("Primarily used for legacy numbering for DC and Marvel comics."),

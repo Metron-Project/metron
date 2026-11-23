@@ -7,13 +7,13 @@ from django.contrib.auth.forms import AuthenticationForm, UserChangeForm, UserCr
 from django.core.exceptions import ValidationError
 from django.forms import (
     CharField,
-    ClearableFileInput,
     EmailField,
     EmailInput,
     Form,
     PasswordInput,
 )
 from django.utils.translation import gettext_lazy as _
+from heggra import UploadWidget
 
 from users import login_throttle
 from users.models import CustomUser
@@ -164,7 +164,7 @@ class CustomUserChangeForm(UserChangeForm):
         model = CustomUser
         fields = ("username", "first_name", "last_name", "email", "bio", "image")
         widgets = {
-            "image": ClearableFileInput(),
+            "image": UploadWidget(image=True),
         }
 
     def __init__(self, *args, request=None, **kwargs):
