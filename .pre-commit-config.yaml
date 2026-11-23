@@ -5,8 +5,10 @@ repos:
     hooks:
       - id: ruff-check
       - id: ruff-format
-#   - repo: https://github.com/djlint/djLint
-#     rev: v1.54.0
-#     hooks:
-#       - id: djlint-reformat-django
-# #      - id: djlint-django
+  - repo: https://github.com/djlint/djLint
+    rev: v1.54.0
+    hooks:
+      - id: djlint-reformat-django
+        # wiki/ and django_nyt/ are vendored third-party apps.
+        exclude: ^(wiki|django_nyt)/
+#      - id: djlint-django
