@@ -1,0 +1,11 @@
+# Commits listed here are skipped by `git blame`, so bulk formatting changes
+# don't hide who last changed a line. GitHub uses this file automatically; for
+# local blame, run once:
+#
+#   git config blame.ignoreRevsFile .git-blame-ignore-revs
+#
+# Add a commit's full 40-character hash with a comment saying what it was.
+# Only list commits that change formatting, never behavior.
+
+# Reformat templates with djLint
+784ef5f644ae6136aeff56f24a4a5d9a87276d2c
