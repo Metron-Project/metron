@@ -149,8 +149,8 @@ HEGGRA_CLASSES = {
     "file": "box",
     "file_name": "has-text-weight-semibold",
     "remove": "button is-small",
-    "preview": "image is-128x128",
     "clear": "checkbox",
+    # The preview is sized in static/site/css/base.css; Bulma's .image classes force a square.
 }
 
 # Site app id
