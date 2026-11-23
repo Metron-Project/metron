@@ -8,13 +8,12 @@ from django.forms import (
     ValidationError,
 )
 from django.utils.translation import gettext_lazy as _
-from heggra import UploadWidget
 from isbnlib import canonical, is_isbn10, is_isbn13
 from izaya import LookupWidget
 
 from comicsdb.forms.team import TeamsWidget
 from comicsdb.forms.universe import UniversesWidget
-from comicsdb.forms.widgets import BulmaMoneyWidget
+from comicsdb.forms.widgets import BulmaMoneyWidget, ImageUploadWidget
 from comicsdb.lookups import ArcLookup, CharacterLookup, IssueLookup, SeriesLookup
 from comicsdb.models import Issue, Rating, Series
 from comicsdb.models.issue import desc_changed
@@ -100,7 +99,7 @@ class IssueForm(SolicitationFlagFormMixin, ModelForm):
             "teams": TeamsWidget,
             "universes": UniversesWidget,
             "reprints": IssuesWidget,
-            "image": UploadWidget(image=True),
+            "image": ImageUploadWidget(),
         }
         help_texts = {
             "alt_number": _("Primarily used for legacy numbering for DC and Marvel comics."),

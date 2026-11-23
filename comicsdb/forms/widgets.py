@@ -1,5 +1,10 @@
 from django import forms
 from djmoney.forms.widgets import MoneyWidget
+from heggra import UploadWidget
+
+# Largest image the upload widgets accept, in bytes. nginx's client_max_body_size (20M)
+# stays a hard cap above it.
+MAX_IMAGE_SIZE = 5 * 1024 * 1024
 
 
 class BulmaMoneyWidget(MoneyWidget):
@@ -43,3 +48,12 @@ class BulmaMoneyWidget(MoneyWidget):
                 value.currency.code if hasattr(value, "currency") else value.currency,
             ]
         return [None, "USD"]
+
+
+class ImageUploadWidget(UploadWidget):
+    """heggra upload widget for images, limited to MAX_IMAGE_SIZE."""
+
+    def __init__(self, **kwargs):
+        kwargs.setdefault("image", True)
+        kwargs.setdefault("max_size", MAX_IMAGE_SIZE)
+        super().__init__(**kwargs)

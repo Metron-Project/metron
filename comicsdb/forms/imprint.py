@@ -1,7 +1,7 @@
 from django.forms import ModelForm
-from heggra import UploadWidget
 
 from comicsdb.forms.publisher import PublisherWidget
+from comicsdb.forms.widgets import ImageUploadWidget
 from comicsdb.models import Imprint
 
 
@@ -10,7 +10,7 @@ class ImprintForm(ModelForm):
         model = Imprint
         fields = ["name", "desc", "founded", "publisher", "cv_id", "gcd_id", "image"]
         widgets = {
-            "image": UploadWidget(image=True),
+            "image": ImageUploadWidget(),
             "publisher": PublisherWidget,
         }
         field_order = ["name", "desc", "founded", "publisher", "cv_id", "gcd_id", "image"]

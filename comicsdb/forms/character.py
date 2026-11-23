@@ -1,10 +1,10 @@
 from django.forms import ModelForm
 from django.utils.translation import gettext_lazy as _
-from heggra import UploadWidget
 
 from comicsdb.forms.creator import CreatorsWidget
 from comicsdb.forms.team import TeamsWidget
 from comicsdb.forms.universe import UniversesWidget
+from comicsdb.forms.widgets import ImageUploadWidget
 from comicsdb.models import Character
 
 
@@ -26,7 +26,7 @@ class CharacterForm(ModelForm):
             "creators": CreatorsWidget,
             "teams": TeamsWidget,
             "universes": UniversesWidget,
-            "image": UploadWidget(image=True),
+            "image": ImageUploadWidget(),
         }
         help_texts = {
             "alias": _("Separate multiple aliases by a comma"),

@@ -13,8 +13,8 @@ from django.forms import (
     PasswordInput,
 )
 from django.utils.translation import gettext_lazy as _
-from heggra import UploadWidget
 
+from comicsdb.forms.widgets import ImageUploadWidget
 from users import login_throttle
 from users.models import CustomUser
 from users.utils import check_email_domain
@@ -164,7 +164,7 @@ class CustomUserChangeForm(UserChangeForm):
         model = CustomUser
         fields = ("username", "first_name", "last_name", "email", "bio", "image")
         widgets = {
-            "image": UploadWidget(image=True),
+            "image": ImageUploadWidget(),
         }
 
     def __init__(self, *args, request=None, **kwargs):

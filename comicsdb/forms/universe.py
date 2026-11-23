@@ -1,8 +1,8 @@
 from django.forms import ModelForm
 from django.utils.translation import gettext_lazy as _
-from heggra import UploadWidget
 from izaya import LookupWidget
 
+from comicsdb.forms.widgets import ImageUploadWidget
 from comicsdb.lookups import UniverseLookup
 from comicsdb.models import Universe
 
@@ -20,7 +20,7 @@ class UniverseForm(ModelForm):
             "gcd_id",
             "image",
         )  # CV doesn't have universe resource
-        widgets = {"image": UploadWidget(image=True)}
+        widgets = {"image": ImageUploadWidget()}
         help_texts = {
             "name": _(
                 "Do not use a hyphen to separate text in this field. For example, "

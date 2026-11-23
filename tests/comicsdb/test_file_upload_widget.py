@@ -15,6 +15,7 @@ from comicsdb.forms.issue import IssueForm
 from comicsdb.forms.publisher import PublisherForm
 from comicsdb.forms.team import TeamForm
 from comicsdb.forms.universe import UniverseForm
+from comicsdb.forms.widgets import MAX_IMAGE_SIZE
 from reading_lists.forms import ReadingListForm
 from users.forms import CustomUserChangeForm
 
@@ -104,11 +105,13 @@ class TestUploadWidgetInForms:
         widget = form.fields["image"].widget
         assert isinstance(widget, UploadWidget)
         assert widget.image
+        assert widget.max_size == MAX_IMAGE_SIZE
 
         rendered = form["image"].as_widget()
         assert "data-heggra" in rendered
         assert f'hx-post="{reverse("heggra:upload")}"' in rendered
         assert 'accept="image/*"' in rendered
+        assert f'data-heggra-max-size="{MAX_IMAGE_SIZE}"' in rendered
 
     def test_base_template_loads_heggra_script(self, client):
         """Test that every page loads heggra.js, which the upload widgets need."""
