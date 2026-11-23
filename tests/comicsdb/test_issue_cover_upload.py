@@ -48,7 +48,7 @@ def test_pending_cover_is_saved_and_hashed(media_root, fc_series, create_user):
 
 
 @pytest.mark.django_db
-def test_expired_cover_token_is_an_error(media_root, fc_series):
+def test_invalid_cover_token_is_an_error(media_root, fc_series):
     data = {
         "series": fc_series.id,
         "number": "1",

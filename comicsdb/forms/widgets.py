@@ -3,7 +3,8 @@ from djmoney.forms.widgets import MoneyWidget
 from heggra import UploadWidget
 
 # Largest image the upload widgets accept, in bytes. nginx's client_max_body_size (20M)
-# stays a hard cap above it.
+# stays a hard cap above it. heggra signs this limit into each upload's token, so changing it
+# turns away uploads made before the deploy: their forms report the file as no longer available.
 MAX_IMAGE_SIZE = 5 * 1024 * 1024
 
 
