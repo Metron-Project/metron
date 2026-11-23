@@ -58,6 +58,18 @@ def test_upload_over_the_limit_is_refused(media_root, low_limit, auto_login_user
     assert len(list((media_root / "heggra").iterdir())) == LIMIT
 
 
+def test_refused_uploads_do_not_count(media_root, low_limit, auto_login_user):
+    client, _ = auto_login_user()
+    widget = ImageUploadWidget()
+    hx_vals = json.loads(widget.get_context("image", None, {})["widget"]["hx_vals"])
+    for _attempt in range(LIMIT + 1):
+        not_an_image = SimpleUploadedFile("cover.png", b"not an image", content_type="image/png")
+        resp = client.post(reverse("heggra:upload"), {**hx_vals, "image": not_an_image})
+        assert resp.status_code == 422
+
+    assert _post_image(client).status_code == 200
+
+
 def test_limit_is_per_user(media_root, low_limit, client, create_user, test_password):
     first, second = create_user(), create_user()
     client.login(username=first.username, password=test_password)

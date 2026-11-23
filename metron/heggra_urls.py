@@ -22,26 +22,34 @@ UPLOAD_LIMIT = 100
 KEY_PREFIX = "heggra_upload"
 
 
-def _count_upload(user) -> int:
-    """Count an upload by ``user`` and return how many they've made in the current window."""
-    key = f"{KEY_PREFIX}:{user.pk}"
+def _key(user) -> str:
+    return f"{KEY_PREFIX}:{user.pk}"
+
+
+def _count_upload(user) -> None:
+    """Count an upload that ``user`` saved to temporary storage."""
+    key = _key(user)
     # The window starts at the first upload; add() is a no-op once it exists.
     cache.add(key, 0, timeout=UPLOAD_WINDOW)
     try:
-        return cache.incr(key)
+        cache.incr(key)
     except ValueError:
         # Expired between add() and incr(); start a fresh window.
         cache.add(key, 1, timeout=UPLOAD_WINDOW)
-        return 1
 
 
 @never_cache
 @require_POST
 def upload(request: HttpRequest) -> HttpResponse:
-    """Refuse an upload once its user is over the limit, otherwise hand it to heggra."""
+    """Refuse an upload once its user is at the limit, otherwise hand it to heggra.
+
+    Only uploads heggra saved count, so files it refused, such as ones too large or not images,
+    don't use up the user's allowance.
+    """
     user = request.user
     # Anonymous requests are left to heggra, which refuses them itself.
-    if user.is_authenticated and not user.is_staff and _count_upload(user) > UPLOAD_LIMIT:
+    limited = user.is_authenticated and not user.is_staff
+    if limited and cache.get(_key(user), 0) >= UPLOAD_LIMIT:
         context = {
             "classes": getattr(settings, "HEGGRA_CLASSES", {}),
             "messages": [_("You've uploaded too many files. Please try again in an hour.")],
@@ -50,7 +58,11 @@ def upload(request: HttpRequest) -> HttpResponse:
         # heggra.js shows a response with this header in the widget, as it does heggra's errors.
         response.headers["X-Heggra-Error"] = "true"
         return response
-    return heggra_views.upload(request)
+    response = heggra_views.upload(request)
+    # heggra sets this header only on an upload it saved.
+    if limited and response.headers.get("X-Heggra-Upload"):
+        _count_upload(user)
+    return response
 
 
 app_name = "heggra"
