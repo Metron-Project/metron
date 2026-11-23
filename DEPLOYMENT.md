@@ -922,12 +922,13 @@ podman exec metron-postgres psql -U {db_username} -d metron -Atc \
 
 **2. Stop everything that writes to the database**, including the timers.
 `certbot-renew.timer` doesn't touch the database, but a renewal restarts
-`metron-nginx`, which would start the whole stack again mid-upgrade:
+`metron-nginx`, which would start the whole stack again mid-upgrade. Likewise,
+`metron-upload-cleanup.service` requires `metron-web`, so its timer would start it:
 
 ```bash
 systemctl --user stop metron-nginx metron-anubis metron-web
 systemctl --user stop metron-backup.timer metron-history-cleanup.timer \
-    metron-opencollective-sync.timer certbot-renew.timer
+    metron-opencollective-sync.timer metron-upload-cleanup.timer certbot-renew.timer
 ```
 
 **3. Take the final dump.** Run the backup service first so there is also an
@@ -1032,7 +1033,7 @@ podman exec metron-postgres psql -U {db_username} -d metron -Atc \
 ```bash
 systemctl --user start metron-web metron-anubis metron-nginx
 systemctl --user start metron-backup.timer metron-history-cleanup.timer \
-    metron-opencollective-sync.timer certbot-renew.timer
+    metron-opencollective-sync.timer metron-upload-cleanup.timer certbot-renew.timer
 ```
 
 Check that the site loads, that a name search with an accented name works
@@ -1051,7 +1052,7 @@ systemctl --user daemon-reload
 systemctl --user start metron-postgres
 systemctl --user start metron-web metron-anubis metron-nginx
 systemctl --user start metron-backup.timer metron-history-cleanup.timer \
-    metron-opencollective-sync.timer certbot-renew.timer
+    metron-opencollective-sync.timer metron-upload-cleanup.timer certbot-renew.timer
 ```
 
 If the repo `.quadlet/` change was already merged, revert it too. Otherwise the
