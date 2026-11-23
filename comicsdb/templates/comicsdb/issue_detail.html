@@ -3,11 +3,11 @@
 {% load humanize %}
 {% load i18n static %}
 {% block sitedesc %}
-    <meta name="description" content="{% blocktrans %}{{ issue }} Information{% endblocktrans %}">
+    <meta name="description"
+          content="{% blocktrans %}{{ issue }} Information{% endblocktrans %}">
 {% endblock sitedesc %}
 {% block sitekeywords %}
-    <meta name="keywords"
-          content="{{ issue.series.publisher }}, {{ issue.series.name }}, {{ issue.cover_date|date:'F Y' }}{% with characters=issue.characters.all %}{% if characters %}{% for character in characters %}, {{ character.name }}{% endfor %}{% endif %}{% endwith %}">
+    <meta name="keywords" content="{{ issue.series.publisher }}, {{ issue.series.name }}, {{ issue.cover_date|date:'F Y' }}{% with characters=issue.characters.all %}{% if characters %}{% for character in characters %}, {{ character.name }}{% endfor %}{% endif %}{% endwith %}">
 {% endblock sitekeywords %}
 {% block title %}
     {{ issue }}
@@ -50,7 +50,8 @@
                 <a href="{% url 'series:detail' issue.series.slug %}">{{ issue.series }}</a>
             </li>
             <li class="is-active">
-                <a href="#" aria-current="page">{% blocktrans with issue_number=issue.number %}Issue #{{ issue_number }}{% endblocktrans %}</a>
+                <a href="#"
+                   aria-current="page">{% blocktrans with issue_number=issue.number %}Issue #{{ issue_number }}{% endblocktrans %}</a>
             </li>
         </ul>
     </nav>
@@ -59,8 +60,9 @@
         <h1 class="title mb-2">{{ issue }}</h1>
         <p class="subtitle is-5">
             <a href="{% url 'series:detail' issue.series.slug %}">{{ issue.series }}</a>
-            <span class="has-text-grey">&middot;</span>
-            <time datetime="{{ issue.cover_date|date:'Y-m-d' }}" class="has-text-grey">{{ issue.cover_date|date:"M Y" }}</time>
+            <span class="has-text-grey">·</span>
+            <time datetime="{{ issue.cover_date|date:'Y-m-d' }}"
+                  class="has-text-grey">{{ issue.cover_date|date:"M Y" }}</time>
             {% if issue.rating.name and issue.rating.name != "Unknown" %}
                 <span class="tag is-warning is-light is-rounded ml-2"
                       title="{{ issue.rating.short_description }}">{{ issue.rating.name }}</span>
@@ -166,13 +168,11 @@
                         </div>
                         <div class="dropdown-menu" id="issue-actions-menu" role="menu">
                             <div class="dropdown-content">
-                                <a class="dropdown-item"
-                                   href="{% url 'issue:update' issue.slug %}">
+                                <a class="dropdown-item" href="{% url 'issue:update' issue.slug %}">
                                     <span class="icon is-small"><i class="fas fa-edit" aria-hidden="true"></i></span>
                                     <span>{% trans "Edit" %}</span>
                                 </a>
-                                <a class="dropdown-item"
-                                   href="{% url 'issue:history' issue.slug %}">
+                                <a class="dropdown-item" href="{% url 'issue:history' issue.slug %}">
                                     <span class="icon is-small"><i class="fas fa-history" aria-hidden="true"></i></span>
                                     <span>{% trans "History" %}</span>
                                 </a>
@@ -180,7 +180,8 @@
                                     <hr class="dropdown-divider">
                                     <a class="dropdown-item has-text-danger"
                                        href="{% url 'issue:delete' issue.slug %}">
-                                        <span class="icon is-small"><i class="fas fa-trash" aria-hidden="true"></i></span>
+                                        <span class="icon is-small"><i class="fas fa-trash"
+                                                                       aria-hidden="true"></i></span>
                                         <span>{% trans "Delete" %}</span>
                                     </a>
                                 {% endif %}

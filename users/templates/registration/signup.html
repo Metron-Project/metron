@@ -40,11 +40,11 @@
                             <div class="control has-icons-left">
                                 {{ field|add_field_class:'input' }}
                                 <span class="icon is-small is-left">
-                                    {% if field.name == 'username' %}
+                                    {% if field.name == "username" %}
                                         <i class="fas fa-user"></i>
-                                    {% elif field.name == 'email' %}
+                                    {% elif field.name == "email" %}
                                         <i class="fas fa-envelope"></i>
-                                    {% elif 'password' in field.name %}
+                                    {% elif "password" in field.name %}
                                         <i class="fas fa-lock"></i>
                                     {% else %}
                                         <i class="fas fa-info-circle"></i>
@@ -74,7 +74,8 @@
                     <div class="field mt-4">
                         <p class="has-text-centered">
                             {% trans "Already have an account?" %}
-                            <a href="{% url 'login' %}" class="has-text-link has-text-weight-bold">{% trans "Log in here" %}</a>
+                            <a href="{% url 'login' %}"
+                               class="has-text-link has-text-weight-bold">{% trans "Log in here" %}</a>
                         </p>
                     </div>
                 </form>

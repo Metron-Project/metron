@@ -30,7 +30,8 @@
                   aria-label="{% blocktrans %}Search {{ title_plural }}{% endblocktrans %}">
                 <div class="field has-addons">
                     <div class="control">
-                        <label for="search-input-{{ title|lower }}" class="is-sr-only">{% blocktrans %}Search {{ title_plural }}{% endblocktrans %}</label>
+                        <label for="search-input-{{ title|lower }}"
+                               class="is-sr-only">{% blocktrans %}Search {{ title_plural }}{% endblocktrans %}</label>
                         <input id="search-input-{{ title|lower }}"
                                class="input"
                                name="q"

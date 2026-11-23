@@ -18,7 +18,8 @@
                             {% csrf_token %}
                             {% if form.non_field_errors %}<div class="notification is-danger">{{ form.non_field_errors }}</div>{% endif %}
                             <div class="field">
-                                <label class="label" for="{{ form.issues.id_for_label }}">{{ form.issues.label }}</label>
+                                <label class="label"
+                                       for="{{ form.issues.id_for_label }}">{{ form.issues.label }}</label>
                                 <div class="control">{{ form.issues }}</div>
                                 {% if form.issues.help_text %}<p class="help">{{ form.issues.help_text }}</p>{% endif %}
                                 {% if form.issues.errors %}<p class="help is-danger">{{ form.issues.errors.0 }}</p>{% endif %}

@@ -24,10 +24,9 @@
                         </div>
                     </div>
                 </div>
-                <progress
-                    class="progress {% if user_vote and user_vote.choice == choice %}is-success{% else %}is-link{% endif %} is-small"
-                    value="{{ choice.vote_count }}"
-                    max="{{ total_votes }}">
+                <progress class="progress {% if user_vote and user_vote.choice == choice %}is-success{% else %}is-link{% endif %} is-small"
+                          value="{{ choice.vote_count }}"
+                          max="{{ total_votes }}">
                     {% widthratio choice.vote_count total_votes 100 %}%
                 </progress>
             </div>

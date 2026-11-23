@@ -48,7 +48,11 @@
                         <a href="{% url 'publisher:detail' series.publisher.slug %}"
                            class="card-footer-item is-size-7"
                            title="{{ series.publisher }}"
-                           style="overflow: hidden; text-overflow: ellipsis; white-space: nowrap; display: block; text-align: center;"
+                           style="overflow: hidden;
+                                  text-overflow: ellipsis;
+                                  white-space: nowrap;
+                                  display: block;
+                                  text-align: center"
                            aria-label="{% blocktrans with publisher=series.publisher %}View publisher {{ publisher }}{% endblocktrans %}">{{ series.publisher }}</a>
                     {% endif %}
                     {% with count=series.issue_count %}
@@ -59,7 +63,8 @@
                                 {% blocktrans count counter=count with counter_fmt=count|intcomma %}{{ counter_fmt }} issue{% plural %}{{ counter_fmt }} issues{% endblocktrans %}
                             </a>
                         {% else %}
-                            <span class="card-footer-item is-size-7" aria-label="{% trans 'No issues' %}">{% trans "0 issues" %}</span>
+                            <span class="card-footer-item is-size-7"
+                                  aria-label="{% trans 'No issues' %}">{% trans "0 issues" %}</span>
                         {% endif %}
                     {% endwith %}
                 </footer>

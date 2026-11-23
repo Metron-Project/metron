@@ -28,10 +28,12 @@
                             {% csrf_token %}
                             <div class="field is-grouped is-grouped-right">
                                 <div class="control">
-                                    <a href="{% url 'user_collection:detail' item.pk %}" class="button">{% trans "Cancel" %}</a>
+                                    <a href="{% url 'user_collection:detail' item.pk %}"
+                                       class="button">{% trans "Cancel" %}</a>
                                 </div>
                                 <div class="control">
-                                    <button type="submit" class="button is-danger">{% trans "Remove from Collection" %}</button>
+                                    <button type="submit"
+                                            class="button is-danger">{% trans "Remove from Collection" %}</button>
                                 </div>
                             </div>
                         </form>

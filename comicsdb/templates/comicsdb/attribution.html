@@ -15,7 +15,7 @@
                 {% elif attribution.source == "M" %}
                     <p>
                         {% blocktrans with url=attribution.url %}Some data provided by <a href="{{ url }}" target="_blank" rel="noopener noreferrer">Marvel</a>.{% endblocktrans %}
-                        &copy; 2014 Marvel
+                        © 2014 Marvel
                     </p>
                 {% elif attribution.source == "G" %}
                     <p>
@@ -24,7 +24,7 @@
                 {% elif attribution.source == "D" %}
                     <p>
                         {% blocktrans with url=attribution.url %}Some data provided by <a href="{{ url }}" target="_blank" rel="noopener noreferrer">DC</a>.{% endblocktrans %}
-                        &copy; &amp; &trade; DC
+                        © &amp; ™ DC
                     </p>
                 {% else %}
                     {# Fallback for unknown source types #}

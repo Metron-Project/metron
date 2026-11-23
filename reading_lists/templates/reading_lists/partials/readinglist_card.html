@@ -1,6 +1,8 @@
 {% load thumbnail i18n %}
 <div class="column is-one-third-desktop is-half-tablet">
-    <a class="rlc" href="{% url 'reading-list:detail' reading_list.slug %}" data-type="{{ reading_list.list_type }}">
+    <a class="rlc"
+       href="{% url 'reading-list:detail' reading_list.slug %}"
+       data-type="{{ reading_list.list_type }}">
         <div class="rlc__band">
             {% thumbnail reading_list.image "640x320" crop="center" format="WEBP" as im %}
                 <span class="rlc__img" style="background-image: url('{{ im.url }}');"></span>
@@ -33,7 +35,7 @@
                 {% if reading_list.start_year_annotated %}
                     <span class="rlc__span">
                         <span class="icon is-small"><i class="far fa-calendar"></i></span>
-                        <span>{{ reading_list.start_year_annotated }}{% if reading_list.end_year_annotated and reading_list.end_year_annotated != reading_list.start_year_annotated %}&ndash;{{ reading_list.end_year_annotated }}{% endif %}</span>
+                        <span>{{ reading_list.start_year_annotated }}{% if reading_list.end_year_annotated and reading_list.end_year_annotated != reading_list.start_year_annotated %}–{{ reading_list.end_year_annotated }}{% endif %}</span>
                     </span>
                 {% endif %}
             </div>

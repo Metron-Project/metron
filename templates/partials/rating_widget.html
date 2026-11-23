@@ -13,7 +13,9 @@ Required context:
     can_rate       - bool; gates the interactive "Your Rating" stars
 {% endcomment %}
 {% if show_ratings %}
-    <div id="rating-widget-{{ rated_object.pk }}" class="rating-widget" style="scroll-margin-top: 4rem;">
+    <div id="rating-widget-{{ rated_object.pk }}"
+         class="rating-widget"
+         style="scroll-margin-top: 4rem">
         {# Display average rating #}
         <div class="average-rating mb-2">
             <span class="has-text-weight-bold">{% trans "Average Rating:" %}</span>
@@ -23,7 +25,7 @@ Required context:
                         <span class="rating-widget-star">
                             <i class="far fa-star" style="color: #dbdbdb;"></i>
                             <span class="rating-widget-star-fill"
-                                  style="width: {{ average_rating|star_fill_percent:star_num }}%;">
+                                  style="width: {{ average_rating|star_fill_percent:star_num }}%">
                                 <i class="fas fa-star" style="color: #ffd700;"></i>
                             </span>
                         </span>

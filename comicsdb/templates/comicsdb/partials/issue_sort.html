@@ -25,8 +25,7 @@
                     onchange="this.form.submit()"
                     aria-label="{% trans 'Sort order' %}">
                 {% for key, opt in sort_options.items %}
-                    <option value="{{ key }}"
-                            {% if key == current_sort %}selected{% endif %}>{{ opt.label }}</option>
+                    <option value="{{ key }}" {% if key == current_sort %}selected{% endif %}>{{ opt.label }}</option>
                 {% endfor %}
             </select>
         </div>

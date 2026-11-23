@@ -1,6 +1,8 @@
 {% extends parent_template|default:"base.html" %}
 {% load static i18n %}
-{% block title %}{% trans "Remove Series from Pull List - Metron" %}{% endblock %}
+{% block title %}
+    {% trans "Remove Series from Pull List - Metron" %}
+{% endblock %}
 {% block content %}
     <header class="block has-text-centered">
         <h1 class="title">{% trans "Remove Series" %}</h1>

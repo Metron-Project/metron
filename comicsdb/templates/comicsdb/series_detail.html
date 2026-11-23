@@ -23,7 +23,7 @@
         <p class="subtitle is-5">
             <a href="{% url 'publisher:detail' series.publisher.slug %}">{{ series.publisher }}</a>
             {% if series.imprint %}
-                <span class="has-text-grey">&middot;</span>
+                <span class="has-text-grey">·</span>
                 <a href="{% url 'imprint:detail' series.imprint.slug %}">{{ series.imprint }}</a>
             {% endif %}
             {% include "partials/rating_summary.html" with rated_object=series average_rating=series.average_rating rating_count=series.rating_count %}
@@ -87,13 +87,11 @@
                         </div>
                         <div class="dropdown-menu" id="series-actions-menu" role="menu">
                             <div class="dropdown-content">
-                                <a class="dropdown-item"
-                                   href="{% url 'series:update' series.slug %}">
+                                <a class="dropdown-item" href="{% url 'series:update' series.slug %}">
                                     <span class="icon is-small"><i class="fas fa-edit" aria-hidden="true"></i></span>
                                     <span>{% trans "Edit" %}</span>
                                 </a>
-                                <a class="dropdown-item"
-                                   href="{% url 'series:history' series.slug %}">
+                                <a class="dropdown-item" href="{% url 'series:history' series.slug %}">
                                     <span class="icon is-small"><i class="fas fa-history" aria-hidden="true"></i></span>
                                     <span>{% trans "History" %}</span>
                                 </a>
@@ -101,7 +99,8 @@
                                     <hr class="dropdown-divider">
                                     <a class="dropdown-item has-text-danger"
                                        href="{% url 'series:delete' series.slug %}">
-                                        <span class="icon is-small"><i class="fas fa-trash" aria-hidden="true"></i></span>
+                                        <span class="icon is-small"><i class="fas fa-trash"
+                                                                       aria-hidden="true"></i></span>
                                         <span>{% trans "Delete" %}</span>
                                     </a>
                                 {% endif %}
@@ -400,7 +399,6 @@
                 </dl>
             </div>
             {# Associated Series #}
-
             {% with assoc=series.associated.all %}
                 {% if assoc %}
                     <div class="box">
