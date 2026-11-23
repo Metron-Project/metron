@@ -57,6 +57,14 @@ def isolated_login_throttle():
         yield
 
 
+@pytest.fixture(autouse=True)
+def isolated_upload_throttle():
+    """Give each test its own heggra upload counters. They're keyed by user pk in the
+    shared Redis cache, and pks repeat across xdist workers and runs."""
+    with patch("metron.heggra_urls.KEY_PREFIX", f"heggra_upload:test:{uuid.uuid4().hex}"):
+        yield
+
+
 CLEAN_EMAIL_VERDICT = {
     "disposable": False,
     "spam": False,

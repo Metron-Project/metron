@@ -6619,6 +6619,10 @@ msgstr "Completa il captcha e riprova."
 msgid "Too many failed attempts. Please try again in 15 minutes."
 msgstr "Troppi tentativi non riusciti. Riprova tra 15 minuti."
 
+#: metron/heggra_urls.py
+msgid "You've uploaded too many files. Please try again in an hour."
+msgstr "Hai caricato troppi file. Riprova tra un'ora."
+
 #: users/forms.py
 msgid "Current password"
 msgstr "Password attuale"
