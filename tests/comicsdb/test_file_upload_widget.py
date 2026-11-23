@@ -2,10 +2,17 @@
 
 import pytest
 from django.forms import ClearableFileInput, Form, ImageField
-from django.template import Context, Template
 from django.template.loader import get_template
+from django.urls import reverse
+from heggra import UploadWidget
 
+from comicsdb.forms.arc import ArcForm
+from comicsdb.forms.character import CharacterForm
 from comicsdb.forms.creator import CreatorForm
+from comicsdb.forms.imprint import ImprintForm
+from comicsdb.forms.publisher import PublisherForm
+from comicsdb.forms.team import TeamForm
+from comicsdb.forms.universe import UniverseForm
 
 
 class TestFileUploadWidgetTemplate:
@@ -69,28 +76,24 @@ class TestFileUploadWidgetTemplate:
         assert "Choose a file" in rendered
 
 
-class TestFileUploadWidgetInContext:
-    """Test file upload widget rendered in the context of actual forms."""
+class TestUploadWidgetInForms:
+    """Test that the metadata forms use heggra's upload widget for their images."""
 
-    @pytest.fixture
-    def creator_form_template(self):
-        """Return a template that renders the creator form."""
-        return Template(
-            """
-            {% load bulma_tags %}
-            {{ form.image }}
-            """
-        )
+    @pytest.mark.parametrize(
+        "form_class",
+        [ArcForm, CharacterForm, CreatorForm, ImprintForm, PublisherForm, TeamForm, UniverseForm],
+    )
+    def test_image_field_uses_upload_widget(self, db, form_class):
+        """Test that the image field is an image UploadWidget that renders the htmx uploader."""
+        form = form_class()
+        widget = form.fields["image"].widget
+        assert isinstance(widget, UploadWidget)
+        assert widget.image
 
-    def test_creator_form_image_field_has_onchange_handler(self, db, creator_form_template):
-        """Test that creator form image field includes onchange handler."""
-        form = CreatorForm()
-        context = Context({"form": form})
-        rendered = creator_form_template.render(context)
-
-        # Verify onchange handler is present
-        assert "onchange" in rendered
-        assert "filename-image" in rendered
+        rendered = form["image"].as_widget()
+        assert "data-heggra" in rendered
+        assert f'hx-post="{reverse("heggra:upload")}"' in rendered
+        assert 'accept="image/*"' in rendered
 
 
 class TestWikiFormFieldFileUpload:

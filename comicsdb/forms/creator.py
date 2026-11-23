@@ -1,5 +1,6 @@
-from django.forms import ClearableFileInput, DateInput, ModelForm
+from django.forms import DateInput, ModelForm
 from django.utils.translation import gettext_lazy as _
+from heggra import UploadWidget
 from izaya import LookupWidget
 
 from comicsdb.lookups import CreatorLookup
@@ -24,7 +25,7 @@ class CreatorForm(ModelForm):
         widgets = {
             "birth": DateInput(attrs={"type": "date", "data-bulma-calendar": "on"}),
             "death": DateInput(attrs={"type": "date", "data-bulma-calendar": "on"}),
-            "image": ClearableFileInput(),
+            "image": UploadWidget(image=True),
         }
         help_texts = {
             "alias": _("Separate multiple aliases by a comma"),

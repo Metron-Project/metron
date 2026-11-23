@@ -1,5 +1,6 @@
-from django.forms import ClearableFileInput, ModelForm
+from django.forms import ModelForm
 from django.utils.translation import gettext_lazy as _
+from heggra import UploadWidget
 
 from comicsdb.forms.creator import CreatorsWidget
 from comicsdb.forms.team import TeamsWidget
@@ -25,7 +26,7 @@ class CharacterForm(ModelForm):
             "creators": CreatorsWidget,
             "teams": TeamsWidget,
             "universes": UniversesWidget,
-            "image": ClearableFileInput(),
+            "image": UploadWidget(image=True),
         }
         help_texts = {
             "alias": _("Separate multiple aliases by a comma"),

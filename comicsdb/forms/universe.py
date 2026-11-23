@@ -1,5 +1,6 @@
-from django.forms import ClearableFileInput, ModelForm
+from django.forms import ModelForm
 from django.utils.translation import gettext_lazy as _
+from heggra import UploadWidget
 from izaya import LookupWidget
 
 from comicsdb.lookups import UniverseLookup
@@ -19,7 +20,7 @@ class UniverseForm(ModelForm):
             "gcd_id",
             "image",
         )  # CV doesn't have universe resource
-        widgets = {"image": ClearableFileInput()}
+        widgets = {"image": UploadWidget(image=True)}
         help_texts = {
             "name": _(
                 "Do not use a hyphen to separate text in this field. For example, "

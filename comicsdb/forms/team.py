@@ -1,4 +1,5 @@
-from django.forms import ClearableFileInput, ModelForm
+from django.forms import ModelForm
+from heggra import UploadWidget
 from izaya import LookupWidget
 
 from comicsdb.forms.creator import CreatorsWidget
@@ -16,5 +17,5 @@ class TeamForm(ModelForm):
         widgets = {
             "creators": CreatorsWidget,
             "universes": UniversesWidget,
-            "image": ClearableFileInput(),
+            "image": UploadWidget(image=True),
         }
