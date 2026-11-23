@@ -492,6 +492,18 @@ wheels = [
 ]
 
 [[package]]
+name = "heggra"
+version = "0.1.0"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "django" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/da/8c/d7f9dc529007de8d835d496a177b33835eb97ef4df0ec52147eb530a1698/heggra-0.1.0.tar.gz", hash = "sha256:0fdbd4d12cd434afc725bee8995e731656b94dcf95d3c272714c198ddefbd780", size = 31651, upload-time = "2026-11-23T14:56:36.316Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/13/15/81f96d75a26fa95c4cea2243b5fdef91ec3ec92ae27875a9a01823ed6b83/heggra-0.1.0-py3-none-any.whl", hash = "sha256:5701cb3b1db71ee4c3eabedc52d64dcf7358d76d12fc40e987cb6a1b5f85d518", size = 34729, upload-time = "2026-11-23T14:56:35.489Z" },
+]
+
+[[package]]
 name = "identify"
 version = "2.6.20"
 source = { registry = "https://pypi.org/simple" }
@@ -657,6 +669,7 @@ dependencies = [
     { name = "djangorestframework" },
     { name = "drf-spectacular" },
     { name = "gunicorn" },
+    { name = "heggra" },
     { name = "imagehash" },
     { name = "isbnlib" },
     { name = "izaya" },
@@ -704,6 +717,7 @@ requires-dist = [
     { name = "djangorestframework" },
     { name = "drf-spectacular" },
     { name = "gunicorn" },
+    { name = "heggra", specifier = ">=0.1.0" },
     { name = "imagehash" },
     { name = "isbnlib" },
     { name = "izaya", specifier = ">=0.4.0" },

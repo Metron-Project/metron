@@ -30,6 +30,7 @@ with Quadlet (systemd-managed containers).
   - [Reserved IP (~zero downtime)](#reserved-ip-zero-downtime)
 - [Updating the application](#updating-the-application)
 - [History cleanup](#history-cleanup)
+- [Upload cleanup](#upload-cleanup)
 - [OpenCollective donor sync](#opencollective-donor-sync)
   - [Initial setup](#initial-setup)
   - [Automated sync with a systemd timer](#automated-sync-with-a-systemd-timer)
@@ -606,6 +607,52 @@ systemctl --user enable --now metron-history-cleanup.timer
 
 # Verify it is scheduled
 systemctl --user list-timers metron-history-cleanup.timer
+```
+
+---
+
+## Upload cleanup
+
+The image upload widget ([heggra](https://heggra.readthedocs.io/)) uploads a picked file
+right away and holds it in private storage (`uploads/heggra/` in Spaces) until its form is
+saved. A file from a form that was never saved stays behind, so delete the expired ones once a
+day.
+
+Create the service unit at `~/.config/systemd/user/metron-upload-cleanup.service`:
+
+```ini
+[Unit]
+Description=Delete expired temporary image uploads
+After=metron-web.service
+Requires=metron-web.service
+
+[Service]
+Type=oneshot
+ExecStart=podman exec metron-web python manage.py heggra_cleanup
+```
+
+Create the timer unit at `~/.config/systemd/user/metron-upload-cleanup.timer`:
+
+```ini
+[Unit]
+Description=Daily cleanup of expired temporary image uploads
+
+[Timer]
+OnCalendar=daily
+Persistent=true
+
+[Install]
+WantedBy=timers.target
+```
+
+Enable and start the timer:
+
+```bash
+systemctl --user daemon-reload
+systemctl --user enable --now metron-upload-cleanup.timer
+
+# Verify it is scheduled
+systemctl --user list-timers metron-upload-cleanup.timer
 ```
 
 ---

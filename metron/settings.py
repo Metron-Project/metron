@@ -71,6 +71,7 @@ INSTALLED_APPS = [
     "wiki.plugins.images.apps.ImagesConfig",
     "wiki.plugins.macros.apps.MacrosConfig",
     "django_htmx",
+    "heggra",
     "izaya",
     "knox",
     "api",
@@ -134,6 +135,23 @@ AUTHENTICATION_BACKENDS = ["users.backends.RateLimitedModelBackend"]
 
 # Needed to override form widgets template
 FORM_RENDERER = "django.forms.renderers.TemplatesSetting"
+
+# Bulma classes for heggra's htmx upload widget (https://heggra.readthedocs.io/)
+HEGGRA_CLASSES = {
+    "dropzone": "file is-boxed",
+    "dropzone_active": "is-primary",
+    "label": "file-label",
+    "input": "file-input",
+    "button": "file-cta",
+    "hint": "help",
+    "progress": "progress is-small is-primary",
+    "error": "help is-danger",
+    "file": "box",
+    "file_name": "has-text-weight-semibold",
+    "remove": "button is-small",
+    "preview": "image is-128x128",
+    "clear": "checkbox",
+}
 
 # Site app id
 SITE_ID = 1
@@ -434,7 +452,10 @@ if not DEBUG:
     STORAGES = {
         "default": {"BACKEND": "metron.storage_backends.MediaStorage"},
         "staticfiles": {"BACKEND": "storages.backends.s3boto3.S3Boto3Storage"},
+        # Private storage for heggra's pending uploads, so they aren't public-read like media.
+        "heggra": {"BACKEND": "metron.storage_backends.TemporaryUploadStorage"},
     }
+    HEGGRA_STORAGE = "heggra"
 
     STATICFILES_DIRS = (BASE_DIR / "static",)
     STATIC_URL = f"{AWS_S3_CUSTOM_DOMAIN}/{AWS_LOCATION}/"
