@@ -1415,3 +1415,5 @@ User-agent: zauba\.io
 Disallow:/
 User-agent: zgrab
 Disallow:/
+User-agent: ShapBot
+Disallow: /
