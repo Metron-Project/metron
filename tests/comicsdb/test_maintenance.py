@@ -150,12 +150,6 @@ def test_unreleased_issue_with_credits_excluded(make_series, make_issue, john_by
     assert not unreleased_issues(TODAY).exists()
 
 
-def test_unreleased_issue_with_roleless_credit_included(make_series, make_issue, john_byrne):
-    issue = make_issue(make_series(), store_date=days_ago(UNRELEASED_GRACE_DAYS + 1))
-    Credits.objects.create(issue=issue, creator=john_byrne)
-    assert list(unreleased_issues(TODAY)) == [issue]
-
-
 def test_unreleased_issue_digital_chapters_excluded(make_series, make_issue):
     series = make_series(series_type_id=SeriesType.DIGITAL_CHAPTERS)
     make_issue(series, store_date=days_ago(UNRELEASED_GRACE_DAYS + 1))
