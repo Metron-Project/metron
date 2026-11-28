@@ -7682,10 +7682,10 @@ msgstr "Correzione suggerita:"
 
 #: comicsdb/templates/comicsdb/maintenance_check.html
 #, python-format
-msgid "<strong>%(counter)s</strong> item"
-msgid_plural "<strong>%(counter)s</strong> items"
-msgstr[0] "<strong>%(counter)s</strong> elemento"
-msgstr[1] "<strong>%(counter)s</strong> elementi"
+msgid "<strong>%(amount)s</strong> item"
+msgid_plural "<strong>%(amount)s</strong> items"
+msgstr[0] "<strong>%(amount)s</strong> elemento"
+msgstr[1] "<strong>%(amount)s</strong> elementi"
 
 #: comicsdb/templates/comicsdb/maintenance_check.html
 msgid "Latest Issue"

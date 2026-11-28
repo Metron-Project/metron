@@ -1,5 +1,5 @@
 {% extends parent_template|default:"base.html" %}
-{% load i18n %}
+{% load i18n humanize %}
 {% block title %}
     {% blocktrans with title=maintenance_check.title %}{{ title }} - Maintenance - Metron{% endblocktrans %}
 {% endblock title %}
@@ -27,7 +27,7 @@
             </div>
             {% if items %}
                 <p class="subtitle is-5">
-                    {% blocktrans count counter=page_obj.paginator.count %}<strong>{{ counter }}</strong> item{% plural %}<strong>{{ counter }}</strong> items{% endblocktrans %}
+                    {% blocktrans with amount=page_obj.paginator.count|intcomma count counter=page_obj.paginator.count %}<strong>{{ amount }}</strong> item{% plural %}<strong>{{ amount }}</strong> items{% endblocktrans %}
                 </p>
                 <div class="table-container">
                     <table class="table is-fullwidth is-striped is-hoverable">

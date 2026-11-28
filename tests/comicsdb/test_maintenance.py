@@ -1,8 +1,10 @@
 from datetime import date, timedelta
-from unittest.mock import MagicMock, patch
+from unittest.mock import MagicMock, PropertyMock, patch
 
 import pytest
+from django.core.paginator import Paginator
 from django.urls import reverse
+from django.utils import timezone
 
 from comicsdb.maintenance import (
     CHECKS,
@@ -189,6 +191,12 @@ def test_check_requires_login(client):
     assert resp.status_code == 302
 
 
+def test_unknown_check_requires_login(client):
+    resp = client.get(reverse("maintenance:check", args=["does-not-exist"]))
+    assert resp.status_code == 302
+    assert "login" in resp.url
+
+
 def test_overview_logged_in(auto_login_user):
     client, _ = auto_login_user()
     resp = client.get(reverse("maintenance:overview"))
@@ -202,9 +210,11 @@ def test_check_list_logged_in(auto_login_user, make_series, make_issue, slug):
         SeriesType.SINGLE_ISSUE if slug == "stale-ongoing-series" else SeriesType.LIMITED_SERIES
     )
     series = make_series(series_type_id=series_type)
-    make_issue(series, store_date=date.today() - timedelta(days=ONGOING_STALE_DAYS + 1))
+    make_issue(series, store_date=timezone.localdate() - timedelta(days=ONGOING_STALE_DAYS + 1))
     if slug == "unreleased-issues":
-        make_issue(series, store_date=date.today() - timedelta(days=UNRELEASED_GRACE_DAYS + 1))
+        make_issue(
+            series, store_date=timezone.localdate() - timedelta(days=UNRELEASED_GRACE_DAYS + 1)
+        )
     client, _ = auto_login_user()
     resp = client.get(reverse("maintenance:check", args=[slug]))
     assert resp.status_code == 200
@@ -220,7 +230,7 @@ def test_unknown_check_404(auto_login_user):
 
 def test_overview_counts_match_check_pages(auto_login_user, make_series, make_issue):
     series = make_series()
-    make_issue(series, store_date=date.today() - timedelta(days=LIMITED_STALE_DAYS + 1))
+    make_issue(series, store_date=timezone.localdate() - timedelta(days=LIMITED_STALE_DAYS + 1))
     client, _ = auto_login_user()
     overview = client.get(reverse("maintenance:overview"))
     for check, count in overview.context["checks"]:
@@ -246,3 +256,14 @@ def test_overview_count_uses_intcomma(auto_login_user):
     with patch("comicsdb.views.maintenance.CHECKS", {fake.slug: fake}):
         resp = client.get(reverse("maintenance:overview"))
     assert "12,345 items" in resp.content.decode()
+
+
+def test_check_page_count_uses_intcomma(auto_login_user, make_series, make_issue):
+    make_issue(
+        make_series(),
+        store_date=timezone.localdate() - timedelta(days=UNRELEASED_GRACE_DAYS + 1),
+    )
+    client, _ = auto_login_user()
+    with patch.object(Paginator, "count", new_callable=PropertyMock, return_value=12345):
+        resp = client.get(reverse("maintenance:check", args=["unreleased-issues"]))
+    assert "<strong>12,345</strong> items" in resp.content.decode()
