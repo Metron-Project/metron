@@ -7715,10 +7715,10 @@ msgstr ""
 
 #: comicsdb/templates/comicsdb/maintenance_overview.html
 #, python-format
-msgid "%(counter)s item"
-msgid_plural "%(counter)s items"
-msgstr[0] "%(counter)s elemento"
-msgstr[1] "%(counter)s elementi"
+msgid "%(amount)s item"
+msgid_plural "%(amount)s items"
+msgstr[0] "%(amount)s elemento"
+msgstr[1] "%(amount)s elementi"
 
 #: comicsdb/templates/comicsdb/maintenance_overview.html
 msgid "Review"

@@ -20,7 +20,7 @@
                                 <p class="title is-5">{{ check.title }}</p>
                                 <p class="content">{{ check.description }}</p>
                                 <span class="tag is-medium {% if count %}is-warning{% else %}is-success{% endif %}">
-                                    {% blocktrans count counter=count %}{{ counter }} item{% plural %}{{ counter }} items{% endblocktrans %}
+                                    {% blocktrans with amount=count|intcomma count counter=count %}{{ amount }} item{% plural %}{{ amount }} items{% endblocktrans %}
                                 </span>
                             </div>
                             <footer class="card-footer">

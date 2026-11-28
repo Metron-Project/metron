@@ -66,13 +66,18 @@ def stale_ongoing_series(today: date) -> QuerySet:
 
 
 def unreleased_issues(today: date) -> QuerySet:
-    """Issues whose store date has passed but that still have no credits."""
+    """Issues whose store date has passed but that still have no credits.
+
+    Only credits with a role count, since a credit without one carries no real information.
+    Digital Chapters are excluded because their credits are rarely entered.
+    """
     return (
         Issue.objects.filter(
             store_date__gte=today - timedelta(days=UNRELEASED_WINDOW_DAYS),
             store_date__lt=today - timedelta(days=UNRELEASED_GRACE_DAYS),
         )
-        .annotate(credit_count=Count("credits"))
+        .exclude(series__series_type_id=SeriesType.DIGITAL_CHAPTERS)
+        .annotate(credit_count=Count("credits__role"))
         .filter(credit_count=0)
         .select_related("series", "series__series_type")
         .order_by("-store_date", "series__sort_name", "id")

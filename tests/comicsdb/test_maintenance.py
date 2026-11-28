@@ -1,4 +1,5 @@
 from datetime import date, timedelta
+from unittest.mock import MagicMock, patch
 
 import pytest
 from django.urls import reverse
@@ -9,6 +10,7 @@ from comicsdb.maintenance import (
     ONGOING_STALE_DAYS,
     UNRELEASED_GRACE_DAYS,
     UNRELEASED_WINDOW_DAYS,
+    MaintenanceCheck,
     stale_limited_series,
     stale_ongoing_series,
     unreleased_issues,
@@ -146,6 +148,18 @@ def test_unreleased_issue_with_credits_excluded(make_series, make_issue, john_by
     assert not unreleased_issues(TODAY).exists()
 
 
+def test_unreleased_issue_with_roleless_credit_included(make_series, make_issue, john_byrne):
+    issue = make_issue(make_series(), store_date=days_ago(UNRELEASED_GRACE_DAYS + 1))
+    Credits.objects.create(issue=issue, creator=john_byrne)
+    assert list(unreleased_issues(TODAY)) == [issue]
+
+
+def test_unreleased_issue_digital_chapters_excluded(make_series, make_issue):
+    series = make_series(series_type_id=SeriesType.DIGITAL_CHAPTERS)
+    make_issue(series, store_date=days_ago(UNRELEASED_GRACE_DAYS + 1))
+    assert not unreleased_issues(TODAY).exists()
+
+
 def test_unreleased_issue_within_grace_excluded(make_series, make_issue):
     make_issue(make_series(), store_date=days_ago(UNRELEASED_GRACE_DAYS - 1))
     assert not unreleased_issues(TODAY).exists()
@@ -215,3 +229,20 @@ def test_overview_counts_match_check_pages(auto_login_user, make_series, make_is
         assert count == expected
     counts = {check.slug: count for check, count in overview.context["checks"]}
     assert counts["stale-limited-series"] == 1
+
+
+def test_overview_count_uses_intcomma(auto_login_user):
+    queryset = MagicMock()
+    queryset.count.return_value = 12345
+    fake = MaintenanceCheck(
+        slug="fake-check",
+        title="Fake",
+        description="Fake",
+        suggested_fix="Fake",
+        kind="issue",
+        queryset=lambda _today: queryset,
+    )
+    client, _ = auto_login_user()
+    with patch("comicsdb.views.maintenance.CHECKS", {fake.slug: fake}):
+        resp = client.get(reverse("maintenance:overview"))
+    assert "12,345 items" in resp.content.decode()
