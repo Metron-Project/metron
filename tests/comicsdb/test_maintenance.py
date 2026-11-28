@@ -1,0 +1,159 @@
+from datetime import date, timedelta
+
+import pytest
+
+from comicsdb.maintenance import (
+    LIMITED_STALE_DAYS,
+    ONGOING_STALE_DAYS,
+    UNRELEASED_GRACE_DAYS,
+    UNRELEASED_WINDOW_DAYS,
+    stale_limited_series,
+    stale_ongoing_series,
+    unreleased_issues,
+)
+from comicsdb.models import Credits, Issue, Series, SeriesType
+
+TODAY = date(2026, 6, 15)
+
+
+@pytest.fixture
+def make_series(create_user, dc_comics):
+    user = create_user()
+    counter = iter(range(1000))
+
+    def _make(series_type_id=SeriesType.LIMITED_SERIES, status=Series.Status.ONGOING):
+        n = next(counter)
+        return Series.objects.create(
+            name=f"Test Series {n}",
+            slug=f"test-series-{n}",
+            sort_name=f"Test Series {n}",
+            publisher=dc_comics,
+            volume=1,
+            year_began=2024,
+            series_type_id=series_type_id,
+            status=status,
+            edited_by=user,
+            created_by=user,
+        )
+
+    return _make
+
+
+@pytest.fixture
+def make_issue(create_user):
+    user = create_user()
+    counter = iter(range(1000))
+
+    def _make(series, store_date=None, cover_date=None):
+        n = next(counter)
+        return Issue.objects.create(
+            series=series,
+            number=str(n),
+            slug=f"{series.slug}-{n}",
+            cover_date=cover_date or store_date or TODAY,
+            store_date=store_date,
+            edited_by=user,
+            created_by=user,
+        )
+
+    return _make
+
+
+def days_ago(days: int) -> date:
+    return TODAY - timedelta(days=days)
+
+
+# Stale Limited Series
+
+
+def test_stale_limited_series_included(make_series, make_issue):
+    series = make_series()
+    make_issue(series, store_date=days_ago(LIMITED_STALE_DAYS + 200))
+    make_issue(series, store_date=days_ago(LIMITED_STALE_DAYS + 1))
+    result = list(stale_limited_series(TODAY))
+    assert result == [series]
+    assert result[0].issue_count == 2
+    assert result[0].last_date == days_ago(LIMITED_STALE_DAYS + 1)
+
+
+def test_stale_limited_series_recent_issue_excluded(make_series, make_issue):
+    series = make_series()
+    make_issue(series, store_date=days_ago(LIMITED_STALE_DAYS - 1))
+    assert not stale_limited_series(TODAY).exists()
+
+
+def test_stale_limited_series_future_issue_excluded(make_series, make_issue):
+    series = make_series()
+    make_issue(series, store_date=days_ago(LIMITED_STALE_DAYS + 200))
+    make_issue(series, store_date=TODAY + timedelta(days=30))
+    assert not stale_limited_series(TODAY).exists()
+
+
+def test_stale_limited_series_falls_back_to_cover_date(make_series, make_issue):
+    series = make_series()
+    make_issue(series, cover_date=days_ago(LIMITED_STALE_DAYS + 30))
+    assert list(stale_limited_series(TODAY)) == [series]
+
+
+def test_stale_limited_series_completed_excluded(make_series, make_issue):
+    series = make_series(status=Series.Status.COMPLETED)
+    make_issue(series, store_date=days_ago(LIMITED_STALE_DAYS + 200))
+    assert not stale_limited_series(TODAY).exists()
+
+
+def test_stale_limited_series_other_type_excluded(make_series, make_issue):
+    series = make_series(series_type_id=SeriesType.SINGLE_ISSUE)
+    make_issue(series, store_date=days_ago(LIMITED_STALE_DAYS + 200))
+    assert not stale_limited_series(TODAY).exists()
+
+
+def test_stale_limited_series_no_issues_excluded(make_series):
+    make_series()
+    assert not stale_limited_series(TODAY).exists()
+
+
+# Stale ongoing series
+
+
+def test_stale_ongoing_series_threshold(make_series, make_issue):
+    stale = make_series(series_type_id=SeriesType.SINGLE_ISSUE)
+    make_issue(stale, store_date=days_ago(ONGOING_STALE_DAYS + 1))
+    fresh = make_series(series_type_id=SeriesType.SINGLE_ISSUE)
+    make_issue(fresh, store_date=days_ago(ONGOING_STALE_DAYS - 1))
+    assert list(stale_ongoing_series(TODAY)) == [stale]
+
+
+def test_stale_ongoing_series_hiatus_excluded(make_series, make_issue):
+    series = make_series(series_type_id=SeriesType.SINGLE_ISSUE, status=Series.Status.HIATUS)
+    make_issue(series, store_date=days_ago(ONGOING_STALE_DAYS + 100))
+    assert not stale_ongoing_series(TODAY).exists()
+
+
+# Unreleased issues
+
+
+def test_unreleased_issue_included(make_series, make_issue):
+    issue = make_issue(make_series(), store_date=days_ago(UNRELEASED_GRACE_DAYS + 1))
+    assert list(unreleased_issues(TODAY)) == [issue]
+
+
+def test_unreleased_issue_with_credits_excluded(make_series, make_issue, john_byrne, writer):
+    issue = make_issue(make_series(), store_date=days_ago(UNRELEASED_GRACE_DAYS + 1))
+    credit = Credits.objects.create(issue=issue, creator=john_byrne)
+    credit.role.add(writer)
+    assert not unreleased_issues(TODAY).exists()
+
+
+def test_unreleased_issue_within_grace_excluded(make_series, make_issue):
+    make_issue(make_series(), store_date=days_ago(UNRELEASED_GRACE_DAYS - 1))
+    assert not unreleased_issues(TODAY).exists()
+
+
+def test_unreleased_issue_outside_window_excluded(make_series, make_issue):
+    make_issue(make_series(), store_date=days_ago(UNRELEASED_WINDOW_DAYS + 1))
+    assert not unreleased_issues(TODAY).exists()
+
+
+def test_unreleased_issue_no_store_date_excluded(make_series, make_issue):
+    make_issue(make_series(), cover_date=days_ago(UNRELEASED_GRACE_DAYS + 30))
+    assert not unreleased_issues(TODAY).exists()
