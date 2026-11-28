@@ -31,7 +31,9 @@ class SeriesType(models.Model):
     HARDCOVER = 8
     GRAPHIC_NOVEL = 9
     TRADE_PAPERBACK = 10
+    LIMITED_SERIES = 11
     DIGITAL_CHAPTERS = 12
+    SINGLE_ISSUE = 13
     OMNIBUS = 14
 
     name = models.CharField(max_length=255)

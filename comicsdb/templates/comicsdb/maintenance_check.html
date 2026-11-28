@@ -1,0 +1,99 @@
+{% extends parent_template|default:"base.html" %}
+{% load i18n humanize %}
+{% block title %}
+    {% blocktrans with title=maintenance_check.title %}{{ title }} - Maintenance - Metron{% endblocktrans %}
+{% endblock title %}
+{% block content %}
+    <header class="block has-text-centered">
+        <h1 class="title is-3">{{ maintenance_check.title }}</h1>
+    </header>
+    <section class="section pt-0">
+        <div class="container">
+            <nav class="breadcrumb" aria-label="breadcrumbs">
+                <ul>
+                    <li>
+                        <a href="{% url 'maintenance:overview' %}">{% trans "Maintenance" %}</a>
+                    </li>
+                    <li class="is-active">
+                        <a href="#" aria-current="page">{{ maintenance_check.title }}</a>
+                    </li>
+                </ul>
+            </nav>
+            <div class="notification is-info">
+                <p>{{ maintenance_check.description }}</p>
+                <p>
+                    <strong>{% trans "Suggested fix:" %}</strong> {{ maintenance_check.suggested_fix }}
+                </p>
+            </div>
+            {% if items %}
+                <p class="subtitle is-5">
+                    {% blocktrans with amount=page_obj.paginator.count|intcomma count counter=page_obj.paginator.count %}<strong>{{ amount }}</strong> item{% plural %}<strong>{{ amount }}</strong> items{% endblocktrans %}
+                </p>
+                <div class="table-container">
+                    <table class="table is-fullwidth is-striped is-hoverable">
+                        <thead>
+                            {% if maintenance_check.kind == "series" %}
+                                <tr>
+                                    <th>{% trans "Series" %}</th>
+                                    <th>{% trans "Publisher" %}</th>
+                                    <th>{% trans "Issues" %}</th>
+                                    <th>{% trans "Latest Issue" %}</th>
+                                    <th>
+                                        <span class="is-sr-only">{% trans "Edit" %}</span>
+                                    </th>
+                                </tr>
+                            {% else %}
+                                <tr>
+                                    <th>{% trans "Issue" %}</th>
+                                    <th>{% trans "In Store Date" %}</th>
+                                    <th>{% trans "Cover Date" %}</th>
+                                    <th>
+                                        <span class="is-sr-only">{% trans "Edit" %}</span>
+                                    </th>
+                                </tr>
+                            {% endif %}
+                        </thead>
+                        <tbody>
+                            {% for item in items %}
+                                {% if maintenance_check.kind == "series" %}
+                                    <tr>
+                                        <td>
+                                            <a href="{{ item.get_absolute_url }}">{{ item }}</a>
+                                        </td>
+                                        <td>{{ item.publisher }}</td>
+                                        <td>{{ item.issue_count }}</td>
+                                        <td>{{ item.last_date|date:"M d, Y" }}</td>
+                                        <td class="has-text-right">
+                                            <a class="button is-small is-primary"
+                                               href="{% url 'series:update' item.slug %}">{% trans "Edit" %}</a>
+                                        </td>
+                                    </tr>
+                                {% else %}
+                                    <tr>
+                                        <td>
+                                            <a href="{{ item.get_absolute_url }}">{{ item }}</a>
+                                        </td>
+                                        <td>{{ item.store_date|date:"M d, Y" }}</td>
+                                        <td>{{ item.cover_date|date:"M Y" }}</td>
+                                        <td class="has-text-right">
+                                            <a class="button is-small is-primary"
+                                               href="{% url 'issue:update' item.slug %}">{% trans "Edit" %}</a>
+                                        </td>
+                                    </tr>
+                                {% endif %}
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                {% include "comicsdb/partials/pagination.html" %}
+            {% else %}
+                <div class="has-text-centered">
+                    <span class="icon is-large has-text-success" aria-hidden="true">
+                        <i class="fas fa-check-circle fa-3x"></i>
+                    </span>
+                    <p class="title is-4">{% trans "Nothing needs attention" %}</p>
+                </div>
+            {% endif %}
+        </div>
+    </section>
+{% endblock content %}
