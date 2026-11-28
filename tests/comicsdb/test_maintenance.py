@@ -1,8 +1,10 @@
 from datetime import date, timedelta
 
 import pytest
+from django.urls import reverse
 
 from comicsdb.maintenance import (
+    CHECKS,
     LIMITED_STALE_DAYS,
     ONGOING_STALE_DAYS,
     UNRELEASED_GRACE_DAYS,
@@ -157,3 +159,46 @@ def test_unreleased_issue_outside_window_excluded(make_series, make_issue):
 def test_unreleased_issue_no_store_date_excluded(make_series, make_issue):
     make_issue(make_series(), cover_date=days_ago(UNRELEASED_GRACE_DAYS + 30))
     assert not unreleased_issues(TODAY).exists()
+
+
+# Views
+
+
+def test_overview_requires_login(client):
+    resp = client.get(reverse("maintenance:overview"))
+    assert resp.status_code == 302
+    assert "login" in resp.url
+
+
+def test_check_requires_login(client):
+    resp = client.get(reverse("maintenance:check", args=["unreleased-issues"]))
+    assert resp.status_code == 302
+
+
+def test_overview_logged_in(auto_login_user):
+    client, _ = auto_login_user()
+    resp = client.get(reverse("maintenance:overview"))
+    assert resp.status_code == 200
+    assert len(resp.context["checks"]) == len(CHECKS)
+
+
+@pytest.mark.parametrize("slug", list(CHECKS))
+def test_check_list_logged_in(auto_login_user, make_series, make_issue, slug):
+    series_type = (
+        SeriesType.SINGLE_ISSUE if slug == "stale-ongoing-series" else SeriesType.LIMITED_SERIES
+    )
+    series = make_series(series_type_id=series_type)
+    make_issue(series, store_date=date.today() - timedelta(days=ONGOING_STALE_DAYS + 1))
+    if slug == "unreleased-issues":
+        make_issue(series, store_date=date.today() - timedelta(days=UNRELEASED_GRACE_DAYS + 1))
+    client, _ = auto_login_user()
+    resp = client.get(reverse("maintenance:check", args=[slug]))
+    assert resp.status_code == 200
+    assert resp.context["maintenance_check"] is CHECKS[slug]
+    assert len(resp.context["items"]) >= 1
+
+
+def test_unknown_check_404(auto_login_user):
+    client, _ = auto_login_user()
+    resp = client.get(reverse("maintenance:check", args=["does-not-exist"]))
+    assert resp.status_code == 404
