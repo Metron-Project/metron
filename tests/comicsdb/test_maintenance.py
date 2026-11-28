@@ -202,3 +202,16 @@ def test_unknown_check_404(auto_login_user):
     client, _ = auto_login_user()
     resp = client.get(reverse("maintenance:check", args=["does-not-exist"]))
     assert resp.status_code == 404
+
+
+def test_overview_counts_match_check_pages(auto_login_user, make_series, make_issue):
+    series = make_series()
+    make_issue(series, store_date=date.today() - timedelta(days=LIMITED_STALE_DAYS + 1))
+    client, _ = auto_login_user()
+    overview = client.get(reverse("maintenance:overview"))
+    for check, count in overview.context["checks"]:
+        resp = client.get(reverse("maintenance:check", args=[check.slug]))
+        expected = resp.context["paginator"].count if resp.context["items"] else 0
+        assert count == expected
+    counts = {check.slug: count for check, count in overview.context["checks"]}
+    assert counts["stale-limited-series"] == 1

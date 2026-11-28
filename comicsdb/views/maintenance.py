@@ -1,24 +1,11 @@
 from datetime import date
 
 from django.contrib.auth.mixins import LoginRequiredMixin
-from django.core.cache import cache
 from django.http import Http404
 from django.views.generic import ListView, TemplateView
 
-from comicsdb.maintenance import CHECKS, MaintenanceCheck
+from comicsdb.maintenance import CHECKS
 from comicsdb.views.constants import PAGINATE_BY
-
-# Cache time to live is 30 minutes.
-CACHE_TTL = 60 * 30
-
-
-def check_count(check: MaintenanceCheck) -> int:
-    key = f"maintenance_count_{check.slug}"
-    count = cache.get(key)
-    if count is None:
-        count = check.queryset(date.today()).count()
-        cache.set(key, count, CACHE_TTL)
-    return count
 
 
 class MaintenanceOverview(LoginRequiredMixin, TemplateView):
@@ -26,7 +13,9 @@ class MaintenanceOverview(LoginRequiredMixin, TemplateView):
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        context["checks"] = [(check, check_count(check)) for check in CHECKS.values()]
+        # Counts are computed live (not cached) so they always match the check pages' totals.
+        today = date.today()
+        context["checks"] = [(check, check.queryset(today).count()) for check in CHECKS.values()]
         return context
 
 
