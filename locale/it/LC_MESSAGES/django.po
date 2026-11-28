@@ -7602,6 +7602,128 @@ msgstr "%(issue)s segnato come acquisito! Aggiunto alla tua collezione."
 msgid "%(issue)s marked as acquired! Already in your collection."
 msgstr "%(issue)s segnato come acquisito! Già nella tua collezione."
 
+#: comicsdb/maintenance.py
+msgid "Limited Series Possibly Completed"
+msgstr "Serie limitate forse concluse"
+
+#: comicsdb/maintenance.py
+#, python-brace-format
+msgid ""
+"Limited Series still marked Ongoing whose most recent issue was released "
+"more than {days} days ago, with no future issues scheduled."
+msgstr ""
+"Serie limitate ancora segnate come In Corso il cui albo più recente è uscito "
+"più di {days} giorni fa, senza albi futuri in programma."
+
+#: comicsdb/maintenance.py
+msgid ""
+"If the series has finished its run, change its status to Completed. If more "
+"issues are coming, add them or set the status to Hiatus."
+msgstr ""
+"Se la serie è terminata, cambia il suo stato in Completata. Se sono previsti "
+"altri albi, aggiungili o imposta lo stato su In Pausa."
+
+#: comicsdb/maintenance.py
+msgid "Ongoing Series With No Recent Issues"
+msgstr "Serie in corso senza albi recenti"
+
+#: comicsdb/maintenance.py
+#, python-brace-format
+msgid ""
+"Single Issue series still marked Ongoing whose most recent issue was "
+"released more than {days} days ago, with no future issues scheduled."
+msgstr ""
+"Serie regolari ancora segnate come In Corso il cui albo più recente è uscito "
+"più di {days} giorni fa, senza albi futuri in programma."
+
+#: comicsdb/maintenance.py
+msgid ""
+"Change the series status to Completed, Cancelled, or Hiatus as appropriate."
+msgstr ""
+"Cambia lo stato della serie in Completata, Annullata o In Pausa, a seconda "
+"del caso."
+
+#: comicsdb/maintenance.py
+msgid "Issues Possibly Never Released"
+msgstr "Albi forse mai pubblicati"
+
+#: comicsdb/maintenance.py
+#, python-brace-format
+msgid ""
+"Issues whose in store date passed more than {days} days ago but that still "
+"have no credits. These may have been solicited and then delayed or cancelled."
+msgstr ""
+"Albi la cui data di uscita è passata da più di {days} giorni ma che non hanno "
+"ancora crediti. Potrebbero essere stati annunciati e poi rinviati o "
+"cancellati."
+
+#: comicsdb/maintenance.py
+msgid ""
+"If the issue was released, add its credits. If it was delayed or cancelled, "
+"correct or remove its in store date and note this in the description."
+msgstr ""
+"Se l'albo è stato pubblicato, aggiungi i suoi crediti. Se è stato rinviato o "
+"cancellato, correggi o rimuovi la data di uscita e indicalo nella "
+"descrizione."
+
+#: comicsdb/templates/comicsdb/maintenance_check.html
+#, python-format
+msgid "%(title)s - Maintenance - Metron"
+msgstr "%(title)s - Manutenzione - Metron"
+
+#: comicsdb/templates/comicsdb/maintenance_check.html
+#: templates/partials/navbar.html
+msgid "Maintenance"
+msgstr "Manutenzione"
+
+#: comicsdb/templates/comicsdb/maintenance_check.html
+msgid "Suggested fix:"
+msgstr "Correzione suggerita:"
+
+#: comicsdb/templates/comicsdb/maintenance_check.html
+#, python-format
+msgid "<strong>%(counter)s</strong> item"
+msgid_plural "<strong>%(counter)s</strong> items"
+msgstr[0] "<strong>%(counter)s</strong> elemento"
+msgstr[1] "<strong>%(counter)s</strong> elementi"
+
+#: comicsdb/templates/comicsdb/maintenance_check.html
+msgid "Latest Issue"
+msgstr "Ultimo albo"
+
+#: comicsdb/templates/comicsdb/maintenance_check.html
+msgid "Nothing needs attention"
+msgstr "Nulla richiede attenzione"
+
+#: comicsdb/templates/comicsdb/maintenance_overview.html
+msgid "Maintenance - Metron"
+msgstr "Manutenzione - Metron"
+
+#: comicsdb/templates/comicsdb/maintenance_overview.html
+msgid "Database Maintenance"
+msgstr "Manutenzione del database"
+
+#: comicsdb/templates/comicsdb/maintenance_overview.html
+msgid ""
+"Records that may have gone out of date since they were added. Each list is a "
+"suggestion, so please check before changing anything. An item leaves its "
+"list once its data has been corrected."
+msgstr ""
+"Record che potrebbero non essere più aggiornati da quando sono stati "
+"aggiunti. Ogni elenco è un suggerimento, quindi verifica prima di modificare "
+"qualcosa. Un elemento esce dal suo elenco una volta corretti i suoi dati."
+
+#: comicsdb/templates/comicsdb/maintenance_overview.html
+#, python-format
+msgid "%(counter)s item"
+msgid_plural "%(counter)s items"
+msgstr[0] "%(counter)s elemento"
+msgstr[1] "%(counter)s elementi"
+
+#: comicsdb/templates/comicsdb/maintenance_overview.html
+msgid "Review"
+msgstr "Rivedi"
+
 #, python-format
 #~ msgid "<strong>%(counter|intcomma)s</strong> Issue"
 #~ msgid_plural "<strong>%(counter|intcomma)s</strong> Issues"
